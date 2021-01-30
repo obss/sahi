@@ -1,5 +1,9 @@
 # SAHI: Slicing Aided Hyper Inference
 
+[![PyPI version](https://badge.fury.io/py/sahi.svg)](https://badge.fury.io/py/sahi)
+[![Conda version](https://anaconda.org/obss/sahi/badges/version.svg)](https://anaconda.org/obss/sahi)
+[![CI](https://github.com/obss/sahi/workflows/CI/badge.svg)](https://github.com/obss/sahi/actions?query=event%3Apush+branch%3Amain+is%3Acompleted+workflow%3ACI)
+
 A vision library for performing sliced inference on large images/small objects
 
 <img width="700" alt="teaser" src="./demo/sliced_inference.gif">
