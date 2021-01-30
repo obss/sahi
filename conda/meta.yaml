@@ -1,0 +1,38 @@
+{% set data = load_setup_py_data() %}
+
+package:
+  name: slicevision
+  version: {{ data['version'] }}
+
+source:
+  path: ..
+
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  build:
+    - python
+    - opencv>=4.2.0.32
+    - shapely>=1.7.0
+    - tqdm>=4.48.2
+    - imantics>=0.1.12
+    - scikit-image>=0.14.2
+
+  run:
+    - python
+    - opencv>=4.2.0.32
+    - shapely>=1.7.0
+    - tqdm>=4.48.2
+    - imantics>=0.1.12
+    - scikit-image>=0.14.2
+
+test:
+  imports:
+    - slicevision
+
+about:
+  home: {{ data['url'] }}
+  license: {{ data['license'] }}
+summary: {{ data['description'] }}
