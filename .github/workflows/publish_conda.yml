@@ -1,0 +1,23 @@
+name: Publish Conda Package
+
+on: 
+  release:
+    types: [published, edited]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: free disk space
+      run: |
+        sudo swapoff -a
+        sudo rm -f /swapfile
+        sudo apt clean
+        df -h
+    - name: publish-to-conda
+      uses: fcakyon/conda-publish-action@v1.3
+      with:
+        subdir: 'conda'
+        anacondatoken: ${{ secrets.ANACONDA_TOKEN }}
+        platforms: 'osx linux win'
