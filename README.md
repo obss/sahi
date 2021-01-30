@@ -12,7 +12,7 @@ Object detection and instance segmentation are by far the most important fields 
 
 ### Blogpost
 
-Check the [official SAHI blog post](https://medium.com/@fcakyon/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80).
+Check the [official SAHI blog post](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80).
 
 
 ### Installation
