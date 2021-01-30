@@ -1,0 +1,219 @@
+import json
+import ntpath
+import os
+import pickle
+import zipfile
+
+# import gdown
+import numpy as np
+
+
+def create_dir(_dir):
+    """
+    Creates given directory if it is not present.
+    """
+    if not os.path.exists(_dir):
+        os.makedirs(_dir)
+
+
+def unzip(file_path: str, dest_dir: str):
+    """
+    Unzips compressed .zip file.
+    Example inputs:
+        file_path: 'data/01_alb_id.zip'
+        dest_dir: 'data/'
+    """
+
+    # unzip file
+    with zipfile.ZipFile(file_path) as zf:
+        zf.extractall(dest_dir)
+
+
+def save_json(data, save_path):
+    """
+    Saves json formatted data (given as "data") as save_path
+    Example inputs:
+        data: {"image_id": 5}
+        save_path: "dirname/coco.json"
+    """
+    # create dir if not present
+    save_dir = os.path.dirname(save_path)
+    create_dir(save_dir)
+
+    # export as json
+    with open(save_path, "w", encoding="utf-8") as outfile:
+        json.dump(data, outfile, indent=4, separators=(",", ": "), cls=NumpyEncoder)
+
+
+# type check when save json files
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyEncoder, self).default(obj)
+
+
+def load_json(load_path):
+    """
+    Loads json formatted data (given as "data") from load_path
+    Example inputs:
+        load_path: "dirname/coco.json"
+    """
+    # read from path
+    with open(load_path) as json_file:
+        data = json.load(json_file)
+    return data
+
+
+def list_files(
+    directory: str,
+    contains: list = [".json"],
+    verbose: bool = True,
+) -> list:
+    """
+    Walk given directory and return a list of file path with desired extension
+
+    Arguments
+    -------
+    directory : str
+        "data/coco/"
+    contains : list
+        A list of strings to check if the target file contains them, example: ["coco.png", ".jpg", "jpeg"]
+    verbose : bool
+        If true, prints some results
+
+    Returns
+    -------
+    filepath_list : list
+        List of file paths
+    """
+    # define verboseprint
+    verboseprint = print if verbose else lambda *a, **k: None
+
+    filepath_list = []
+
+    for file in os.listdir(directory):
+        # check if filename contains any of the terms given in contains list
+        if any(strtocheck in file for strtocheck in contains):
+            filepath = os.path.join(directory, file)
+            filepath_list.append(filepath)
+
+    number_of_files = len(filepath_list)
+    folder_name = directory.split(os.sep)[-1]
+
+    verboseprint(
+        "There are {} listed files in folder {}.".format(number_of_files, folder_name)
+    )
+
+    return filepath_list
+
+
+def list_files_recursively(
+    directory: str, contains: list = [".json"], verbose: str = True
+) -> (list, list):
+    """
+    Walk given directory recursively and return a list of file path with desired extension
+
+    Arguments
+    -------
+        directory : str
+            "data/coco/"
+        contains : list
+            A list of strings to check if the target file contains them, example: ["coco.png", ".jpg", "jpeg"]
+        verbose : bool
+            If true, prints some results
+    Returns
+    -------
+        relative_filepath_list : list
+            List of file paths relative to given directory
+        abs_filepath_list : list
+            List of absolute file paths
+    """
+
+    # define verboseprint
+    verboseprint = print if verbose else lambda *a, **k: None
+
+    # walk directories recursively and find json files
+    abs_filepath_list = []
+    relative_filepath_list = []
+
+    # r=root, d=directories, f=files
+    for r, _, f in os.walk(directory):
+        for file in f:
+            # check if filename contains any of the terms given in contains list
+            if any(strtocheck in file for strtocheck in contains):
+                abs_filepath = os.path.join(r, file)
+                abs_filepath_list.append(abs_filepath)
+                relative_filepath = abs_filepath.split(directory)[-1]
+                relative_filepath_list.append(relative_filepath)
+
+    number_of_files = len(relative_filepath_list)
+    folder_name = directory.split(os.sep)[-1]
+
+    verboseprint(
+        "There are {} listed files in folder {}.".format(number_of_files, folder_name)
+    )
+
+    return relative_filepath_list, abs_filepath_list
+
+
+def get_base_filename(path: str):
+    """
+    Takes a file path, returns (base_filename_with_extension, base_filename_without_extension)
+    """
+    base_filename_with_extension = ntpath.basename(path)
+    base_filename_without_extension, _ = os.path.splitext(base_filename_with_extension)
+    return base_filename_with_extension, base_filename_without_extension
+
+
+def get_file_extension(path: str):
+    filename, file_extension = os.path.splitext(path)
+    return file_extension
+
+
+def load_pickle(load_path):
+    """
+    Loads pickle formatted data (given as "data") from load_path
+    Example inputs:
+        load_path: "dirname/coco.pickle"
+    """
+    # read from path
+    with open(load_path) as json_file:
+        data = pickle.load(json_file)
+    return data
+
+
+def save_pickle(data, save_path):
+    """
+    Saves pickle formatted data (given as "data") as save_path
+    Example inputs:
+        data: {"image_id": 5}
+        save_path: "dirname/coco.pickle"
+    """
+    # create dir if not present
+    save_dir = os.path.dirname(save_path)
+    create_dir(save_dir)
+
+    # export as json
+    with open(save_path, "wb") as outfile:
+        pickle.dump(data, outfile)
+
+
+def import_class(model_name):
+    """
+    Imports a predefined detection class by class name.
+
+    Args:
+        model_name: str
+            Name of the detection model class (example: "MmdetDetectionModel")
+    Returns:
+        class_: class with given path
+    """
+    module = __import__("sahi.model", fromlist=[model_name])
+    class_ = getattr(module, model_name)
+    return class_
