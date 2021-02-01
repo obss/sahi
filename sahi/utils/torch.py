@@ -1,3 +1,6 @@
+# OBSS SAHI Tool
+# Code written by Fatih C Akyon, 2020.
+
 import torch
 from torch import stack as torch_stack
 from torch.cuda import empty_cache as empty_cuda_cache

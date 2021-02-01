@@ -1,3 +1,7 @@
+# OBSS SAHI Tool
+# Code written by Cemil Cengiz, 2020.
+# Modified by Fatih C Akyon, 2020.
+
 import os
 import pickle
 from enum import Enum
