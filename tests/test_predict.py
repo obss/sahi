@@ -42,17 +42,17 @@ class TestPredict(unittest.TestCase):
         from sahi.prediction import PredictionInput
 
         from tests.test_utils import (
+            MMDET_CASCADEMASKRCNN_CONFIG_PATH,
+            MMDET_CASCADEMASKRCNN_MODEL_PATH,
             download_mmdet_cascade_mask_rcnn_model,
-            mmdet_cascade_mask_rcnn_config_path,
-            mmdet_cascade_mask_rcnn_model_path,
         )
 
         # init model
         download_mmdet_cascade_mask_rcnn_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=mmdet_cascade_mask_rcnn_model_path,
-            config_path=mmdet_cascade_mask_rcnn_config_path,
+            model_path=MMDET_CASCADEMASKRCNN_MODEL_PATH,
+            config_path=MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             prediction_score_threshold=0.3,
             device=None,
             category_remapping=None,
@@ -97,17 +97,17 @@ class TestPredict(unittest.TestCase):
         from sahi.predict import get_sliced_prediction
 
         from tests.test_utils import (
+            MMDET_CASCADEMASKRCNN_CONFIG_PATH,
+            MMDET_CASCADEMASKRCNN_MODEL_PATH,
             download_mmdet_cascade_mask_rcnn_model,
-            mmdet_cascade_mask_rcnn_config_path,
-            mmdet_cascade_mask_rcnn_model_path,
         )
 
         # init model
         download_mmdet_cascade_mask_rcnn_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=mmdet_cascade_mask_rcnn_model_path,
-            config_path=mmdet_cascade_mask_rcnn_config_path,
+            model_path=MMDET_CASCADEMASKRCNN_MODEL_PATH,
+            config_path=MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             prediction_score_threshold=0.3,
             device=None,
             category_remapping=None,
