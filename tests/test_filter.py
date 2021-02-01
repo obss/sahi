@@ -1,3 +1,6 @@
+# OBSS SAHI Tool
+# Code written by Cemil Cengiz, 2020.
+
 import pickle
 from copy import deepcopy
 from math import floor

@@ -1,3 +1,7 @@
+# OBSS SAHI Tool
+# Code written by Cemil Cengiz, 2020.
+# Modified by Fatih C Akyon, 2020.
+
 import numpy as np
 from sahi.prediction import ObjectPrediction
 

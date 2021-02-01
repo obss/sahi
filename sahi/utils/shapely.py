@@ -1,5 +1,9 @@
-from shapely.geometry import box, Polygon, MultiPolygon, CAP_STYLE, JOIN_STYLE
+# OBSS SAHI Tool
+# Code written by Fatih C Akyon, 2020.
+
 from typing import List, Tuple
+
+from shapely.geometry import CAP_STYLE, JOIN_STYLE, MultiPolygon, Polygon, box
 
 
 def get_shapely_box(x: int, y: int, width: int, height: int) -> Polygon:
