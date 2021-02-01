@@ -61,6 +61,8 @@ if __name__ == "__main__":
     parser.add_argument("--slice_width", type=int, default=512)
     parser.add_argument("--overlap_height_ratio", type=float, default=0.2)
     parser.add_argument("--overlap_width_ratio", type=float, default=0.2)
+    parser.add_argument("--match_iou_threshold", type=float, default=0.5)
+
     opt = parser.parse_args()
 
     model_parameters = {
@@ -83,4 +85,5 @@ if __name__ == "__main__":
         slice_width=opt.slice_width,
         overlap_height_ratio=opt.overlap_height_ratio,
         overlap_width_ratio=opt.overlap_width_ratio,
+        match_iou_threshold=opt.match_iou_threshold,
     )

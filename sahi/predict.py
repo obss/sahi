@@ -93,6 +93,7 @@ def get_sliced_prediction(
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
+    match_iou_threshold: float = 0.5,
 ):
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -113,8 +114,8 @@ def get_sliced_prediction(
             Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
             of size 256 yields an overlap of 51 pixels).
             Default to ``0.2``.
-        num_batch: int
-            number of batches for the sliced inference
+        match_iou_threshold: float
+            Sliced predictions having higher iou than match_iou_threshold will be merged.
 
     Returns:
         A Dict with fields:
@@ -144,7 +145,7 @@ def get_sliced_prediction(
     merger = PredictionMerger(
         score_merging=ScoreMergingPolicy.LARGER_SCORE, box_merger=box_union
     )
-    matcher = PredictionMatcher(threshold=0.5, scorer=box_ios)
+    matcher = PredictionMatcher(threshold=match_iou_threshold, scorer=box_ios)
 
     # create prediction input
     num_group = int(num_slices / num_batch)
@@ -213,6 +214,7 @@ def predict_folder(
     slice_width: int = 256,
     overlap_height_ratio: float = 0.1,
     overlap_width_ratio: float = 0.2,
+    match_iou_threshold: float = 0.5,
     visual_bbox_thickness: int = 1,
     visual_text_size: float = 1,
     visual_text_thickness: int = 1,
@@ -256,6 +258,8 @@ def predict_folder(
             Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
             of size 256 yields an overlap of 51 pixels).
             Default to ``0.2``.
+        match_iou_threshold: float
+            Sliced predictions having higher iou than match_iou_threshold will be merged.
         visual_bbox_thickness: int
         visual_text_size: float
         visual_text_thickness: int
@@ -295,6 +299,7 @@ def predict_folder(
                 slice_width=slice_width,
                 overlap_height_ratio=overlap_height_ratio,
                 overlap_width_ratio=overlap_width_ratio,
+                match_iou_threshold=match_iou_threshold,
             )
             object_prediction_list = prediction_result["object_prediction_list"]
         else:
