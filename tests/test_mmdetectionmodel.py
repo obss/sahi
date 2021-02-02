@@ -7,10 +7,7 @@ import numpy as np
 from sahi.utils.cv import read_image
 
 from tests.test_utils import (
-    MMDET_CASCADEMASKRCNN_CONFIG_PATH,
-    MMDET_CASCADEMASKRCNN_MODEL_PATH,
-    MMDET_RETINANET_CONFIG_PATH,
-    MMDET_RETINANET_MODEL_PATH,
+    MmdetTestConstants,
     download_mmdet_cascade_mask_rcnn_model,
     download_mmdet_retinanet_model,
 )
@@ -23,8 +20,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
         download_mmdet_cascade_mask_rcnn_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MMDET_CASCADEMASKRCNN_MODEL_PATH,
-            config_path=MMDET_CASCADEMASKRCNN_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             prediction_score_threshold=0.3,
             device=None,
             category_remapping=None,
@@ -41,8 +38,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
         download_mmdet_cascade_mask_rcnn_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MMDET_CASCADEMASKRCNN_MODEL_PATH,
-            config_path=MMDET_CASCADEMASKRCNN_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             prediction_score_threshold=0.5,
             device=None,
             category_remapping=None,
@@ -80,8 +77,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
         download_mmdet_retinanet_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MMDET_RETINANET_MODEL_PATH,
-            config_path=MMDET_RETINANET_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
             prediction_score_threshold=0.5,
             device=None,
             category_remapping=None,
@@ -117,8 +114,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
         download_mmdet_cascade_mask_rcnn_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MMDET_CASCADEMASKRCNN_MODEL_PATH,
-            config_path=MMDET_CASCADEMASKRCNN_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             prediction_score_threshold=0.5,
             device=None,
             category_remapping=None,
@@ -165,8 +162,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
         download_mmdet_retinanet_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MMDET_RETINANET_MODEL_PATH,
-            config_path=MMDET_RETINANET_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
             prediction_score_threshold=0.5,
             device=None,
             category_remapping=None,
@@ -209,8 +206,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
         download_mmdet_cascade_mask_rcnn_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MMDET_CASCADEMASKRCNN_MODEL_PATH,
-            config_path=MMDET_CASCADEMASKRCNN_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             prediction_score_threshold=0.5,
             device=None,
             category_remapping=None,
@@ -273,8 +270,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
         download_mmdet_retinanet_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MMDET_RETINANET_MODEL_PATH,
-            config_path=MMDET_RETINANET_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
             prediction_score_threshold=0.5,
             device=None,
             category_remapping=None,
