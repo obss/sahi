@@ -27,6 +27,7 @@ def get_prediction(
     full_image_size=None,
     merger=None,
     matcher=None,
+    verbose: int = 0,
 ):
     """
     Function for performing prediction for given image using given detection_model.
@@ -42,6 +43,9 @@ def get_prediction(
             Size of the full image, should be in the form of [height, width]
         merger: postprocess.PredictionMerger
         matcher: postprocess.PredictionMatcher
+        verbose: int
+            0: no print (default)
+            1: print prediction duration
 
     Returns:
         A dict with fields:
@@ -83,6 +87,13 @@ def get_prediction(
     time_end = time.time() - time_start
     durations_in_seconds["postprocess"] = time_end
 
+    if verbose == 1:
+        print(
+            "Prediction performed in",
+            durations_in_seconds["prediction"],
+            "seconds.",
+        )
+
     return {
         "object_prediction_list": filtered_object_prediction_list,
         "durations_in_seconds": durations_in_seconds,
@@ -97,6 +108,7 @@ def get_sliced_prediction(
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     match_iou_threshold: float = 0.5,
+    verbose: int = 1,
 ):
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -119,6 +131,10 @@ def get_sliced_prediction(
             Default to ``0.2``.
         match_iou_threshold: float
             Sliced predictions having higher iou than match_iou_threshold will be merged.
+        verbose: int
+            0: no print
+            1: print number of slices (default)
+            2: print number of slices and slice/prediction durations
 
     Returns:
         A Dict with fields:
@@ -142,7 +158,7 @@ def get_sliced_prediction(
     )
     num_slices = len(slice_image_result)
     time_end = time.time() - time_start
-    durations_in_seconds["slice_image"] = time_end
+    durations_in_seconds["slice"] = time_end
 
     # init match merge instances
     merger = PredictionMerger(
@@ -152,6 +168,8 @@ def get_sliced_prediction(
 
     # create prediction input
     num_group = int(num_slices / num_batch)
+    if verbose == 1 or verbose == 2:
+        print("Number of slices:", num_slices)
     object_prediction_list = []
     for group_ind in range(num_group):
         # prepare batch (currently supports only 1 batch)
@@ -189,7 +207,19 @@ def get_sliced_prediction(
         full_object_prediction_list.append(full_object_prediction)
 
     time_end = time.time() - time_start
-    durations_in_seconds["get_slice_predictions"] = time_end
+    durations_in_seconds["prediction"] = time_end
+
+    if verbose == 2:
+        print(
+            "Slicing performed in",
+            durations_in_seconds["slice"],
+            "seconds.",
+        )
+        print(
+            "Prediction performed in",
+            durations_in_seconds["prediction"],
+            "seconds.",
+        )
 
     # merge matching predictions
     full_object_prediction_list = merger.merge_batch(
@@ -221,6 +251,7 @@ def predict_folder(
     visual_bbox_thickness: int = 1,
     visual_text_size: float = 1,
     visual_text_thickness: int = 1,
+    verbose: int = 1,
 ):
     """
     Performs prediction for all present images in given folder.
@@ -266,11 +297,23 @@ def predict_folder(
         visual_bbox_thickness: int
         visual_text_size: float
         visual_text_thickness: int
+        verbose: int
+            0: no print
+            1: print slice/prediction durations, number of slices, model loading/file exporting durations
     """
+    # for profiling
+    durations_in_seconds = dict()
+
+    # list image files in directory
+    time_start = time.time()
     image_path_list = list_files(
-        directory=image_dir, contains=[".jpg", ".jpeg", ".png"]
+        directory=image_dir, contains=[".jpg", ".jpeg", ".png"], verbose=verbose
     )
+    time_end = time.time() - time_start
+    durations_in_seconds["list_files"] = time_end
+
     # init model instance
+    time_start = time.time()
     DetectionModel = import_class(model_name)
     detection_model = DetectionModel(
         model_path=model_parameters["model_path"],
@@ -279,10 +322,15 @@ def predict_folder(
         device=model_parameters["device"],
         category_mapping=model_parameters["category_mapping"],
         category_remapping=model_parameters["category_remapping"],
+        load_at_init=False,
     )
     detection_model.load_model()
+    time_end = time.time() - time_start
+    durations_in_seconds["model_load"] = time_end
 
     # iterate over source images
+    durations_in_seconds["prediction"] = 0
+    durations_in_seconds["slice"] = 0
     for image_path in tqdm(image_path_list):
         # get filename
         (
@@ -303,6 +351,7 @@ def predict_folder(
                 overlap_height_ratio=overlap_height_ratio,
                 overlap_width_ratio=overlap_width_ratio,
                 match_iou_threshold=match_iou_threshold,
+                verbose=verbose,
             )
             object_prediction_list = prediction_result["object_prediction_list"]
         else:
@@ -314,9 +363,18 @@ def predict_folder(
                 full_image_size=None,
                 merger=None,
                 matcher=None,
+                verbose=0,
             )
             object_prediction_list = prediction_result["object_prediction_list"]
 
+        durations_in_seconds["prediction"] += prediction_result["durations_in_seconds"][
+            "prediction"
+        ]
+        durations_in_seconds["slice"] += prediction_result["durations_in_seconds"][
+            "slice"
+        ]
+
+        time_start = time.time()
         # export prediction boxes
         if crop_dir:
             crop_object_predictions(
@@ -343,3 +401,28 @@ def predict_folder(
                 output_dir=visual_output_dir,
                 file_name=filename_without_extension,
             )
+        time_end = time.time() - time_start
+        durations_in_seconds["export_files"] = time_end
+
+    # print prediction duration
+    if verbose == 1:
+        print(
+            "Model loaded in",
+            durations_in_seconds["model_load"],
+            "seconds.",
+        )
+        print(
+            "Slicing performed in",
+            durations_in_seconds["slice"],
+            "seconds.",
+        )
+        print(
+            "Prediction performed in",
+            durations_in_seconds["prediction"],
+            "seconds.",
+        )
+        print(
+            "Exporting performed in",
+            durations_in_seconds["export_files"],
+            "seconds.",
+        )

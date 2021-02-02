@@ -76,24 +76,23 @@ def load_json(load_path):
 def list_files(
     directory: str,
     contains: list = [".json"],
-    verbose: bool = True,
+    verbose: int = 1,
 ) -> list:
     """
     Walk given directory and return a list of file path with desired extension
 
-    Arguments
-    -------
-    directory : str
-        "data/coco/"
-    contains : list
-        A list of strings to check if the target file contains them, example: ["coco.png", ".jpg", "jpeg"]
-    verbose : bool
-        If true, prints some results
+    Args:
+        directory: str
+            "data/coco/"
+        contains: list
+            A list of strings to check if the target file contains them, example: ["coco.png", ".jpg", "jpeg"]
+        verbose: int
+            0: no print
+            1: print number of files
 
-    Returns
-    -------
-    filepath_list : list
-        List of file paths
+    Returns:
+        filepath_list : list
+            List of file paths
     """
     # define verboseprint
     verboseprint = print if verbose else lambda *a, **k: None
