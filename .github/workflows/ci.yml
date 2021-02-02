@@ -14,6 +14,7 @@ jobs:
       matrix:
         operating-system: [ubuntu-latest, windows-latest, macos-latest]
         python-version: [3.6, 3.7, 3.8]
+        mmdet-version : [2.8.0, 2.9.0]
       fail-fast: false
 
     steps:
@@ -61,7 +62,7 @@ jobs:
       run: pip install torch==1.7.1 torchvision==0.8.2
     - name: Install MMDetection
       run: >
-        pip install mmcv-full==1.2.5 mmdet==2.8.0
+        pip install mmcv-full==1.2.5 mmdet==${{ matrix.mmdet-version }}
     - name: Lint with flake8
       run: |
         pip install flake8
