@@ -354,6 +354,9 @@ def predict_folder(
                 verbose=verbose,
             )
             object_prediction_list = prediction_result["object_prediction_list"]
+            durations_in_seconds["slice"] += prediction_result["durations_in_seconds"][
+                "slice"
+            ]
         else:
             # get full sized prediction
             prediction_result = get_prediction(
@@ -369,9 +372,6 @@ def predict_folder(
 
         durations_in_seconds["prediction"] += prediction_result["durations_in_seconds"][
             "prediction"
-        ]
-        durations_in_seconds["slice"] += prediction_result["durations_in_seconds"][
-            "slice"
         ]
 
         time_start = time.time()
