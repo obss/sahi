@@ -93,3 +93,9 @@ coco_dict, coco_path = slice_coco(
 sahi library currently only supports [MMDetection models](https://github.com/open-mmlab/mmdetection/blob/master/docs/model_zoo.md). However it is easy to add new frameworks.
 
 All you need to do is, creating a new class in [model.py](sahi/model.py) that implements [DetectionModel class](https://github.com/obss/sahi/blob/651f8e6cdb20467815748764bb198dd50241ab2b/sahi/model.py#L10). You can take the [MMDetection wrapper](https://github.com/obss/sahi/blob/651f8e6cdb20467815748764bb198dd50241ab2b/sahi/model.py#L164) as a reference.
+
+
+## Contributers
+- [Fatih Cagatay Akyon](https://github.com/fcakyon)
+- [Cemil Cengiz](https://github.com/cemilcengiz)
+- [Sinan Onur Altinuc](https://github.com/sinanonur)
