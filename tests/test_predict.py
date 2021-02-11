@@ -67,14 +67,14 @@ class TestPredict(unittest.TestCase):
             image=image,
             detection_model=mmdet_detection_model,
             shift_amount=[0, 0],
-            full_image_size=None,
+            full_shape=None,
             merger=None,
             matcher=None,
         )
         object_prediction_list = prediction_result["object_prediction_list"]
 
         # compare
-        self.assertEqual(len(object_prediction_list), 23)
+        self.assertEqual(len(object_prediction_list), 19)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -84,12 +84,12 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "truck":
                 num_truck += 1
-        self.assertEqual(num_truck, 3)
+        self.assertEqual(num_truck, 0)
         num_car = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 20)
+        self.assertEqual(num_car, 19)
 
     def test_get_sliced_prediction(self):
         from sahi.model import MmdetDetectionModel

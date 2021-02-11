@@ -64,7 +64,7 @@ def _perturb(box: BoundingBox):
     miny = floor((box.miny + box.maxy) * 2 / 5)
     maxy = floor(box.maxy * 10 / 9)
 
-    return BoundingBox([minx, miny, maxx, maxy], [box.shift_x, box.shift_y])
+    return BoundingBox(box=[minx, miny, maxx, maxy], shift_amount=box.shift_amount)
 
 
 def perturb_boxes(

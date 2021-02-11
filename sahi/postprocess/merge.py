@@ -132,21 +132,23 @@ class PredictionMerger:
         box2 = extract_box(pred2)
         merged_box = list(self._merge_box(box1, box2))
         score = self._merge_score(pred1, pred2)
+        shift_amount = pred1.bbox.shift_amount
         if pred1.mask and pred2.mask:
             mask = self._merge_mask(pred1, pred2)
             bool_mask = mask.bool_mask
-            full_image_size = mask.get_full_image_size()
+            full_shape = mask.full_shape
         else:
             bool_mask = None
-            full_image_size = None
+            full_shape = None
         category = self._merge_label(pred1, pred2)
         return ObjectPrediction(
             bbox=merged_box,
-            category_id=category.id,
             score=score,
-            bool_mask=bool_mask,
+            category_id=category.id,
             category_name=category.name,
-            full_image_size=full_image_size,
+            bool_mask=bool_mask,
+            shift_amount=shift_amount,
+            full_shape=full_shape,
         )
 
     @staticmethod
@@ -190,7 +192,11 @@ class PredictionMerger:
         mask1 = pred1.mask
         mask2 = pred2.mask
         union_mask = np.logical_or(mask1.bool_mask, mask2.bool_mask)
-        return Mask(bool_mask=union_mask, full_image_size=mask1.get_full_image_size())
+        return Mask(
+            bool_mask=union_mask,
+            full_shape=mask1.full_shape,
+            shift_amount=mask1.shift_amount,
+        )
 
     def _validate_box_merger(self, box_merger: Callable):
         if box_merger.__name__ not in self.BOX_MERGERS:

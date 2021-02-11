@@ -44,7 +44,7 @@ class ObjectPrediction(ObjectAnnotation):
         category_name=None,
         bool_mask=None,
         shift_amount: list = [0, 0],
-        full_image_size: list = [1024, 1024],
+        full_shape: list = [1024, 1024],
     ):
         """
         Creates ObjectPrediction from bbox, score, category_id, category_name, bool_mask.
@@ -63,7 +63,7 @@ class ObjectPrediction(ObjectAnnotation):
             shift_amount: list
                 To shift the box and mask predictions from sliced image
                 to full sized image, should be in the form of [shift_x, shift_y]
-            full_image_size: list
+            full_shape: list
                 Size of the full image after shifting, should be in
                 the form of [height, width]
         """
@@ -74,7 +74,7 @@ class ObjectPrediction(ObjectAnnotation):
             bool_mask=bool_mask,
             category_name=category_name,
             shift_amount=shift_amount,
-            full_image_size=full_image_size,
+            full_shape=full_shape,
         )
 
     def get_shifted_object_prediction(self):
@@ -91,7 +91,7 @@ class ObjectPrediction(ObjectAnnotation):
                 bool_mask=self.mask.get_shifted_mask().bool_mask,
                 category_name=self.category.name,
                 shift_amount=[0, 0],
-                full_image_size=self.mask.get_shifted_mask().get_full_image_size(),
+                full_shape=self.mask.get_shifted_mask().full_shape,
             )
         else:
             return ObjectPrediction(
@@ -101,7 +101,7 @@ class ObjectPrediction(ObjectAnnotation):
                 bool_mask=None,
                 category_name=self.category.name,
                 shift_amount=[0, 0],
-                full_image_size=None,
+                full_shape=None,
             )
 
     def __repr__(self):
@@ -117,13 +117,13 @@ class PredictionInput:
         self,
         image_list,
         shift_amount_list=None,
-        full_image_size=None,
+        full_shape=None,
     ):
         """
         Arguments:
             image_list: list of images to be predicted
             shift_amount_list: To shift the box and mask predictions from sliced image to full sized image, should be in the form of [shift_x, shift_y]
-            full_image_size: Size of the full image after shifting, should be in the form of [height, width]
+            full_shape: Size of the full image after shifting, should be in the form of [height, width]
 
         image_list and shift_amount_list should have same length
         """
@@ -142,4 +142,4 @@ class PredictionInput:
             self.shift_amount_list = shift_amount_list
         else:
             self.shift_amount_list = [[0, 0] for ind in range(len(image_list))]
-        self.full_image_size = full_image_size
+        self.full_shape = full_shape
