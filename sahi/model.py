@@ -91,7 +91,7 @@ class DetectionModel:
     def _create_object_prediction_list_from_original_predictions(
         self,
         shift_amount=[0, 0],
-        full_image_size=None,
+        full_shape=None,
     ):
         """
         This function should be implemented in a way that self._original_predictions should
@@ -101,7 +101,7 @@ class DetectionModel:
         Args:
             shift_amount: list
                 To shift the box and mask predictions from sliced image to full sized image, should be in the form of [shift_x, shift_y]
-            full_image_size: list
+            full_shape: list
                 Size of the full image after shifting, should be in the form of [height, width]
         """
         NotImplementedError()
@@ -123,7 +123,7 @@ class DetectionModel:
     def convert_original_predictions(
         self,
         shift_amount=[0, 0],
-        full_image_size=None,
+        full_shape=None,
     ):
         """
         Converts original predictions of the detection model to a list of
@@ -132,12 +132,12 @@ class DetectionModel:
         Args:
             shift_amount: list
                 To shift the box and mask predictions from sliced image to full sized image, should be in the form of [shift_x, shift_y]
-            full_image_size: list
+            full_shape: list
                 Size of the full image after shifting, should be in the form of [height, width]
         """
         self._create_object_prediction_list_from_original_predictions(
             shift_amount=shift_amount,
-            full_image_size=full_image_size,
+            full_shape=full_shape,
         )
         if self.category_remapping:
             self._apply_category_remapping()
@@ -236,7 +236,7 @@ class MmdetDetectionModel(DetectionModel):
     def _create_object_prediction_list_from_original_predictions(
         self,
         shift_amount=[0, 0],
-        full_image_size=None,
+        full_shape=None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -245,7 +245,7 @@ class MmdetDetectionModel(DetectionModel):
         Args:
             shift_amount: list
                 To shift the box and mask predictions from sliced image to full sized image, should be in the form of [shift_x, shift_y]
-            full_image_size: list
+            full_shape: list
                 Size of the full image after shifting, should be in the form of [height, width]
         """
         original_predictions = self._original_predictions
@@ -284,7 +284,7 @@ class MmdetDetectionModel(DetectionModel):
                     bool_mask=bool_mask,
                     category_name=category_name,
                     shift_amount=shift_amount,
-                    full_image_size=full_image_size,
+                    full_shape=full_shape,
                 )
                 object_prediction_list.append(object_prediction)
 

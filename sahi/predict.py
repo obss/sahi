@@ -24,7 +24,7 @@ def get_prediction(
     image,
     detection_model,
     shift_amount: list = [0, 0],
-    full_image_size=None,
+    full_shape=None,
     merger=None,
     matcher=None,
     verbose: int = 0,
@@ -39,7 +39,7 @@ def get_prediction(
         shift_amount: List
             To shift the box and mask predictions from sliced image to full
             sized image, should be in the form of [shift_x, shift_y]
-        full_image_size: List
+        full_shape: List
             Size of the full image, should be in the form of [height, width]
         merger: postprocess.PredictionMerger
         matcher: postprocess.PredictionMatcher
@@ -68,9 +68,10 @@ def get_prediction(
     # works only with 1 batch
     detection_model.convert_original_predictions(
         shift_amount=shift_amount,
-        full_image_size=full_image_size,
+        full_shape=full_shape,
     )
     object_prediction_list = detection_model.object_prediction_list
+    # filter out predictions with lower score
     filtered_object_prediction_list = [
         object_prediction
         for object_prediction in object_prediction_list
@@ -82,6 +83,19 @@ def get_prediction(
             matcher,
             filtered_object_prediction_list,
             merge_type="merge",
+        )
+    else:
+        # init match merge instances
+        merger = PredictionMerger(
+            score_merging=ScoreMergingPolicy.LARGER_SCORE, box_merger=box_union
+        )
+        matcher = PredictionMatcher(threshold=0.5, scorer=box_ios)
+        # merge matching predictions
+        filtered_object_prediction_list = merger.merge_batch(
+            matcher,
+            filtered_object_prediction_list,
+            merge_type="merge",
+            ignore_class_label=True,
         )
 
     time_end = time.time() - time_start
@@ -187,7 +201,7 @@ def get_sliced_prediction(
             image=image_list[0],
             detection_model=detection_model,
             shift_amount=shift_amount_list[0],
-            full_image_size=[
+            full_shape=[
                 slice_image_result.original_image_height,
                 slice_image_result.original_image_width,
             ],

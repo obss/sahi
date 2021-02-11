@@ -37,15 +37,15 @@ class TestAnnotation(unittest.TestCase):
         from sahi.annotation import Mask
 
         coco_segmentation = [[1, 1, 325, 125, 250, 200, 5, 200]]
-        full_image_height, full_image_width = 500, 600
-        full_image_size = [full_image_height, full_image_width]
+        full_shape_height, full_shape_width = 500, 600
+        full_shape = [full_shape_height, full_shape_width]
 
         mask = Mask.from_coco_segmentation(
-            segmentation=coco_segmentation, full_image_size=full_image_size
+            segmentation=coco_segmentation, full_shape=full_shape
         )
 
-        self.assertEqual(mask.full_image_height, full_image_height)
-        self.assertEqual(mask.full_image_width, full_image_width)
+        self.assertEqual(mask.full_shape_height, full_shape_height)
+        self.assertEqual(mask.full_shape_width, full_shape_width)
         self.assertEqual(mask.bool_mask[11, 2], True)
 
     def test_object_annotation(self):
