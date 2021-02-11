@@ -71,6 +71,7 @@ def get_prediction(
         full_image_size=full_image_size,
     )
     object_prediction_list = detection_model.object_prediction_list
+    # filter out predictions with lower score
     filtered_object_prediction_list = [
         object_prediction
         for object_prediction in object_prediction_list
@@ -82,6 +83,19 @@ def get_prediction(
             matcher,
             filtered_object_prediction_list,
             merge_type="merge",
+        )
+    else:
+        # init match merge instances
+        merger = PredictionMerger(
+            score_merging=ScoreMergingPolicy.LARGER_SCORE, box_merger=box_union
+        )
+        matcher = PredictionMatcher(threshold=0.5, scorer=box_ios)
+        # merge matching predictions
+        filtered_object_prediction_list = merger.merge_batch(
+            matcher,
+            filtered_object_prediction_list,
+            merge_type="merge",
+            ignore_class_label=True,
         )
 
     time_end = time.time() - time_start
