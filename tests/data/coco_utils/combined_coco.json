@@ -4,13 +4,13 @@
             "height": 1365,
             "width": 2048,
             "id": 1,
-            "file_name": "test_data/terrain1.png"
+            "file_name": "terrain1.jpg"
         },
         {
             "height": 682,
             "width": 1024,
             "id": 2,
-            "file_name": "test_data/terrain2.png"
+            "file_name": "terrain2.png"
         }
     ],
     "annotations": [

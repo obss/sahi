@@ -4,7 +4,7 @@
             "height": 1680,
             "width": 2986,
             "id": 1,
-            "file_name": "/terrain3.png"
+            "file_name": "terrain3.png"
         },
         {
             "height": 682,
@@ -16,7 +16,7 @@
             "height": 1365,
             "width": 2048,
             "id": 3,
-            "file_name": "terrain1.png"
+            "file_name": "terrain1.jpg"
         }
     ],
     "categories": [
