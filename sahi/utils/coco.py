@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Dict, List
 
 import numpy as np
-from sahi.utils.file import load_json, save_json
+from sahi.utils.file import create_dir, get_base_filename, load_json, save_json
 from sahi.utils.shapely import ShapelyAnnotation, get_shapely_multipolygon
 from tqdm import tqdm
 
@@ -464,6 +464,183 @@ class Coco:
         self.images = coco_image_list
         self.category_mapping = category_mapping
         self.imageid2annotationlist = imageid2annotationlist
+        self.coco_dict = coco_dict
+
+    def split_coco_as_train_val(
+        self, file_name=None, target_dir=None, train_split_rate=0.9, numpy_seed=0
+    ):
+        """
+        Split images into train-val and saves as seperate coco dataset files.
+
+        Args:
+            coco_file_path_or_dict: str or dict
+            file_name: str
+            target_dir: str
+            train_split_rate: float
+            numpy_seed: int
+                To fix the numpy seed.
+
+        Returns:
+            result : dict
+                {
+                    "train_dict": "",
+                    "val_dict": "",
+                    "train_path": "",
+                    "val_path": "",
+                }
+        """
+        # fix numpy numpy seed
+        np.random.seed(numpy_seed)
+
+        # set output coco file name
+        if file_name:
+            None
+        elif target_dir:
+            raise ValueError("file_name should be specified.")
+
+        # divide images
+        num_images = len(self.images)
+        shuffled_images = copy.deepcopy(self.images)
+        np.random.shuffle(shuffled_images)
+        num_train = int(num_images * train_split_rate)
+        train_images = shuffled_images[:num_train]
+        val_images = shuffled_images[num_train:]
+
+        # form train val coco dicts
+        train_coco_dict = create_coco_dict(
+            images=train_images,
+            categories=self.coco_dict["categories"],
+            ignore_negative_samples=False,
+        )
+        val_coco_dict = create_coco_dict(
+            images=val_images,
+            categories=self.coco_dict["categories"],
+            ignore_negative_samples=False,
+        )
+        # return result
+        if not target_dir:
+            return {
+                "train_dict": train_coco_dict,
+                "val_dict": val_coco_dict,
+                "train_path": "",
+                "val_path": "",
+            }
+        else:
+            train_coco_dict_path = os.path.join(target_dir, file_name + "_train.json")
+            save_json(train_coco_dict, train_coco_dict_path)
+            val_coco_dict_path = os.path.join(target_dir, file_name + "_val.json")
+            save_json(val_coco_dict, val_coco_dict_path)
+            return {
+                "train_dict": train_coco_dict,
+                "val_dict": val_coco_dict,
+                "train_path": train_coco_dict_path,
+                "val_path": val_coco_dict_path,
+            }
+
+    def export_as_yolov5(self, image_dir, output_dir, train_split_rate=1, numpy_seed=0):
+        """
+        Exports current COCO dataset in ultralytics/yolov5 format.
+        Creates train val folders with image symlinks and txt files and a data yaml file.
+
+        Args:
+            image_dir: str
+                Source image directory that contains coco images.
+            output_dir: str
+                Export directory.
+            train_split_rate: float
+            numpy_seed: int
+                To fix the numpy seed.
+        """
+        import yaml
+
+        result = self.split_coco_as_train_val(
+            file_name=None,
+            target_dir=None,
+            train_split_rate=train_split_rate,
+            numpy_seed=numpy_seed,
+        )
+        # create train val image dirs
+        train_dir = os.path.join(os.path.abspath(output_dir), "train/")
+        val_dir = os.path.join(os.path.abspath(output_dir), "val/")
+        create_dir(train_dir)
+        create_dir(val_dir)
+
+        # create image symlinks and annotation txts
+        export_yolov5_images_and_txts_from_coco_dict(
+            image_dir, output_dir=train_dir, coco_dict_or_path=result["train_dict"]
+        )
+        export_yolov5_images_and_txts_from_coco_dict(
+            image_dir, output_dir=val_dir, coco_dict_or_path=result["val_dict"]
+        )
+
+        # create yolov5 data yaml
+        data = {
+            "train": train_dir,
+            "val": val_dir,
+            "nc": len(self.category_mapping),
+            "names": list(self.category_mapping.values()),
+        }
+        yaml_path = os.path.join(output_dir, "data.yml")
+        with open(yaml_path, "w") as outfile:
+            yaml.dump(data, outfile, default_flow_style=None)
+
+
+def export_yolov5_images_and_txts_from_coco_dict(
+    image_dir, output_dir, coco_dict_or_path
+):
+    """
+    Creates image symlinks and annotation txts in yolo format from coco dataset.
+
+    Args:
+        image_dir: str
+            Source image directory that contains coco images.
+        output_dir: str
+            Export directory.
+        coco_dict_or_path: str or dict
+            Path for the coco dataset file or coco dataset as python dictionary.
+    """
+    # create coco instance from coco_dict_or_path
+    if isinstance(coco_dict_or_path, str):
+        coco = Coco.from_coco_path(coco_dict_or_path)
+    else:
+        coco = Coco(coco_dict_or_path)
+
+    for image in coco.images:
+        # Create a symbolic link pointing to src named dst
+        src = os.path.abspath(os.path.join(image_dir, image.file_name))
+        dst = os.path.join(output_dir, image.file_name)
+        os.symlink(src, dst)
+        # calculate annotation normalization ratios
+        width = image.width
+        height = image.height
+        dw = 1.0 / (width)
+        dh = 1.0 / (height)
+        # set annotation filepath
+        file_name = get_base_filename(image.file_name)[1]
+        yolo_annotation_filepath = "{}.txt".format(os.path.join(output_dir, file_name))
+        # create annotation file
+        annotations = image.annotations
+        if len(annotations) > 0:
+            for annotation in annotations:
+                # convert coco bbox to yolo bbox
+                x_center = annotation.bbox[0] + annotation.bbox[2] / 2.0
+                y_center = annotation.bbox[1] + annotation.bbox[3] / 2.0
+                bbox_width = annotation.bbox[2]
+                bbox_height = annotation.bbox[3]
+                x_center = x_center * dw
+                y_center = y_center * dh
+                bbox_width = bbox_width * dw
+                bbox_height = bbox_height * dh
+                category_id = annotation.category_id
+                yolo_bbox = (x_center, y_center, bbox_width, bbox_height)
+                # save yolo annotation
+                with open(yolo_annotation_filepath, "w") as outfile:
+                    outfile.write(
+                        str(category_id)
+                        + " "
+                        + " ".join([str(value) for value in yolo_bbox])
+                        + "\n"
+                    )
 
 
 def get_category_mapping(coco_dict):
@@ -759,28 +936,47 @@ def create_coco_dict(images, categories, ignore_negative_samples=True):
 
 
 def split_coco_as_train_val(
-    coco_file_path: str,
-    target_dir: str = "",
-    train_split_rate: float = 0.9,
-    numpy_seed: int = 0,
+    coco_file_path_or_dict,
+    file_name=None,
+    target_dir=None,
+    train_split_rate=0.9,
+    numpy_seed=0,
 ):
     """
     Takes single coco dataset file path, split images into train-val and saves as seperate coco dataset files.
 
-    coco_file_path: str
-    target_dir: str
-    train_split_rate: float
-    numpy_seed: int
+    Args:
+        coco_file_path_or_dict: str or dict
+        file_name: str
+        target_dir: str
+        train_split_rate: float
+        numpy_seed: int
 
     Returns:
-    coco_dict_paths : dict
-        Constains exported coco file paths as {"train": "", "val": ""}
+        result : dict
+            {
+                "train_dict": "",
+                "val_dict": "",
+                "train_path": "",
+                "val_path": "",
+            }
     """
     # fix numpy numpy seed
     np.random.seed(numpy_seed)
 
+    # set output coco file name
+    if file_name:
+        None
+    elif isinstance(coco_file_path_or_dict, str):
+        file_name = os.path.basename(coco_file_path_or_dict).replace(".json", "")
+    elif target_dir:
+        raise ValueError("file_name should be specified.")
+
     # read coco dict
-    coco_dict = load_json(coco_file_path)
+    if isinstance(coco_file_path_or_dict, str):
+        coco_dict = load_json(coco_file_path_or_dict)
+    else:
+        coco_dict = coco_file_path_or_dict
 
     # divide coco dict into train val coco dicts
     num_images = len(coco_dict["images"])
@@ -819,17 +1015,25 @@ def split_coco_as_train_val(
         "annotations": val_annotations,
         "categories": coco_dict["categories"],
     }
-    # get filename of the base coco file
-    base_coco_filename = os.path.basename(coco_file_path).replace(".json", "")
-    # save train val coco files
+    # return result
     if not target_dir:
-        target_dir = os.path.dirname(coco_file_path)
-    train_coco_dict_path = os.path.join(target_dir, base_coco_filename + "_train.json")
-    save_json(train_coco_dict, train_coco_dict_path)
-    val_coco_dict_path = os.path.join(target_dir, base_coco_filename + "_val.json")
-    save_json(val_coco_dict, val_coco_dict_path)
-    coco_dict_paths = {"train": train_coco_dict_path, "val": val_coco_dict_path}
-    return coco_dict_paths
+        return {
+            "train_dict": train_coco_dict,
+            "val_dict": val_coco_dict,
+            "train_path": "",
+            "val_path": "",
+        }
+    else:
+        train_coco_dict_path = os.path.join(target_dir, file_name + "_train.json")
+        save_json(train_coco_dict, train_coco_dict_path)
+        val_coco_dict_path = os.path.join(target_dir, file_name + "_val.json")
+        save_json(val_coco_dict, val_coco_dict_path)
+        return {
+            "train_dict": train_coco_dict,
+            "val_dict": val_coco_dict,
+            "train_path": train_coco_dict_path,
+            "val_path": val_coco_dict_path,
+        }
 
 
 def add_bbox_and_area_to_coco(
