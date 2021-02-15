@@ -55,12 +55,12 @@ jobs:
       run: |
         python -m unittest
     - name: Test scripts for mmdet < 2.9.0
-      if: matrix.mmdet-version < 2.9.0
+      if: matrix.mmdet-version < ${{ 2.9.0 }}
       run: |
         # predict_folder
         python scripts/predict_folder.py --image_dir tests/data/coco_utils/ --visual_output_dir outputs/ --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
     - name: Test SAHI scripts for mmdet >= 2.9.0
-      if: matrix.mmdet-version >= 2.9.0
+      if: matrix.mmdet-version >= ${{ 2.9.0 }}
       run: |
         # predict_folder
         python scripts/predict_folder.py --image_dir tests/data/coco_utils/ --visual_output_dir outputs/ --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v290.py
