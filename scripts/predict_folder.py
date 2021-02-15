@@ -87,5 +87,5 @@ if __name__ == "__main__":
         overlap_height_ratio=opt.overlap_height_ratio,
         overlap_width_ratio=opt.overlap_width_ratio,
         match_iou_threshold=opt.match_iou_threshold,
-        visual_export_format=visual_export_format,
+        visual_export_format=opt.visual_export_format,
     )
