@@ -377,7 +377,7 @@ def predict_folder(
                 image=image,
                 detection_model=detection_model,
                 shift_amount=[0, 0],
-                full_image_size=None,
+                full_shape=None,
                 merger=None,
                 matcher=None,
                 verbose=0,
