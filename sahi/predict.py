@@ -265,6 +265,7 @@ def predict_folder(
     visual_bbox_thickness: int = 1,
     visual_text_size: float = 1,
     visual_text_thickness: int = 1,
+    visual_export_format: str = "png",
     verbose: int = 1,
 ):
     """
@@ -311,6 +312,8 @@ def predict_folder(
         visual_bbox_thickness: int
         visual_text_size: float
         visual_text_thickness: int
+        visual_export_format: str
+            Can be specified as 'jpg' or 'png'
         verbose: int
             0: no print
             1: print slice/prediction durations, number of slices, model loading/file exporting durations
@@ -377,7 +380,7 @@ def predict_folder(
                 image=image,
                 detection_model=detection_model,
                 shift_amount=[0, 0],
-                full_image_size=None,
+                full_shape=None,
                 merger=None,
                 matcher=None,
                 verbose=0,
@@ -414,6 +417,7 @@ def predict_folder(
                 text_th=visual_text_thickness,
                 output_dir=visual_output_dir,
                 file_name=filename_without_extension,
+                export_format=visual_export_format,
             )
         time_end = time.time() - time_start
         durations_in_seconds["export_files"] = time_end
