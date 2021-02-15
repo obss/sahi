@@ -62,6 +62,7 @@ if __name__ == "__main__":
     parser.add_argument("--overlap_height_ratio", type=float, default=0.2)
     parser.add_argument("--overlap_width_ratio", type=float, default=0.2)
     parser.add_argument("--match_iou_threshold", type=float, default=0.5)
+    parser.add_argument("--visual_export_format", type=str, default="png")
 
     opt = parser.parse_args()
 
@@ -86,4 +87,5 @@ if __name__ == "__main__":
         overlap_height_ratio=opt.overlap_height_ratio,
         overlap_width_ratio=opt.overlap_width_ratio,
         match_iou_threshold=opt.match_iou_threshold,
+        visual_export_format=visual_export_format,
     )

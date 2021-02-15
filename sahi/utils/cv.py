@@ -195,6 +195,7 @@ def visualize_object_predictions(
     color: tuple = (0, 0, 0),
     output_dir: str = "",
     file_name: str = "prediction_visual",
+    export_format: str = "png",
 ):
     """
     Visualizes prediction category names, bounding boxes over the source image
@@ -207,6 +208,7 @@ def visualize_object_predictions(
         color: annotation color in the form: (0, 255, 0)
         output_dir: directory for resulting visualization to be exported
         file_name: exported file will be saved as: output_dir+file_name+".png"
+        export_format: can be specified as 'jpg' or 'png'
     """
     elapsed_time = time.time()
     # deepcopy image so that original is not altered
@@ -258,7 +260,7 @@ def visualize_object_predictions(
         # create output folder if not present
         create_dir(output_dir)
         # save inference result
-        save_path = os.path.join(output_dir, file_name + ".png")
+        save_path = os.path.join(output_dir, file_name + "." + export_format)
         cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
     elapsed_time = time.time() - elapsed_time
     return {"image": image, "elapsed_time": elapsed_time}
