@@ -4,6 +4,7 @@ from sahi.predict import predict_folder
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--image_dir", type=str, default="", help="image directory")
     parser.add_argument(
         "--model_name",
         type=str,
@@ -25,7 +26,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--prediction_score_threshold",
         type=float,
-        default="",
+        default=0.25,
         help="all predictions with score < prediction_score_threshold will be discarded",
     )
     parser.add_argument(
@@ -46,7 +47,6 @@ if __name__ == "__main__":
         default=None,
         help='remap category ids based on category names, after performing inference e.g. {"car": 3}',
     )
-    parser.add_argument("--image_dir", type=str, default="", help="image directory")
     parser.add_argument(
         "--visual_output_dir", type=str, default="", help="output visual directory"
     )
