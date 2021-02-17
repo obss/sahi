@@ -48,6 +48,16 @@ jobs:
     - name: Install latest SAHI package
       run: >
         pip install --upgrade --force-reinstall sahi
+    - name: Install PyTorch on Linux and Windows
+      if: >
+        matrix.operating-system == 'ubuntu-latest' ||
+        matrix.operating-system == 'windows-latest'
+      run: >
+        pip install torch==1.7.1+cpu torchvision==0.8.2+cpu
+        -f https://download.pytorch.org/whl/torch_stable.html
+    - name: Install PyTorch on MacOS
+      if: matrix.operating-system == 'macos-latest'
+      run: pip install torch==1.7.1 torchvision==0.8.2
     - name: Install MMDetection
       run: >
         pip install mmcv-full==1.2.5 mmdet==${{ matrix.mmdet-version }}
