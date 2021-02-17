@@ -3,3 +3,4 @@ shapely>=1.7.0
 tqdm>=4.48.2
 imantics>=0.1.12
 scikit-image>=0.14.2
+dataclasses; python_version<"3.7"
