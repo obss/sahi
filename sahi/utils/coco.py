@@ -203,6 +203,17 @@ class CocoAnnotation:
         """
         return self._iscrowd
 
+    def serialize(self):
+        return {
+            "image_id": self.image_id,
+            "bbox": self.bbox,
+            "category_id": self.category_id,
+            "category_name": self.category_name,
+            "segmentation": self.segmentation,
+            "iscrowd": self.iscrowd,
+            "area": self.area,
+        }
+
     def __repr__(self):
         return f"""CocoAnnotation<
     image_id: {self.image_id},
@@ -211,7 +222,7 @@ class CocoAnnotation:
     category_id: {self.category_id},
     category_name: {self.category_name},
     iscrowd: {self.iscrowd},
-    "area": {self.area}>"""
+    area: {self.area}>"""
 
 
 class CocoPrediction(CocoAnnotation):
@@ -363,7 +374,7 @@ class CocoPrediction(CocoAnnotation):
     category_id: {self.category_id},
     category_name: {self.category_name},
     iscrowd: {self.iscrowd},
-    "area": {self.area}>"""
+    area: {self.area}>"""
 
 
 class CocoImage:
