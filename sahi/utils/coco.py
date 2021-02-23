@@ -381,23 +381,26 @@ class CocoImage:
     @classmethod
     def from_coco_image_dict(cls, image_dict):
         """
-        Creates CocoImage object from COCO formatted image dict (with fields "file_name", "height" and "weight").
+        Creates CocoImage object from COCO formatted image dict (with fields "id", "file_name", "height" and "weight").
 
         Args:
             image_dict: dict
-                COCO formatted image dict (with fields "file_name", "height" and "weight")
+                COCO formatted image dict (with fields "id", "file_name", "height" and "weight")
         """
         return cls(
+            id=image_dict["id"],
             file_name=image_dict["file_name"],
             height=image_dict["height"],
             width=image_dict["width"],
         )
 
-    def __init__(self, file_name: str, height: int, width: int):
+    def __init__(self, file_name: str, height: int, width: int, id: int = None):
         """
         Creates CocoImage object
 
         Args:
+            id : int
+                Image id
             file_name : str
                 Image path
             height : int
@@ -405,6 +408,7 @@ class CocoImage:
             width : int
                 Image width in pixels
         """
+        self.id = id
         self.file_name = file_name
         self.height = height
         self.width = width
@@ -424,6 +428,7 @@ class CocoImage:
 
     def __repr__(self):
         return f"""CocoImage<
+    id: {self.id},
     file_name: {self.file_name},
     height: {self.height},
     width: {self.width},
@@ -431,30 +436,25 @@ class CocoImage:
 
 
 class Coco:
-    @classmethod
-    def from_coco_path(cls, coco_path):
+    def __init__(self, coco_dict_or_path):
         """
-        Creates Coco object from COCO dataset file path.
+        Creates coco object from COCO formatted dictor COCO dataset file path.
 
         Args:
-            coco_path: str
-                Location of the coco dataset file.
-        """
-        coco_dict = load_json(coco_path)
-        return cls(coco_dict)
-
-    def __init__(self, coco_dict):
-        """
-        Creates coco object from COCO formatted dict.
-
-        Args:
-            coco_dict: dict
-                COCO formatted dict
+            coco_dict_or_path: dict or str
+                COCO formatted dictor COCO dataset file path
 
         Properties:
             images: list of CocoImage
             category_mapping: dict
         """
+        # load coco dict if path is given
+        if isinstance(coco_dict_or_path, str):
+            coco_dict = load_json(coco_dict_or_path)
+        else:
+            coco_dict = coco_dict_or_path
+
+        # arrange image id to annotation id mapping
         imageid2annotationlist = get_imageid2annotationlist_mapping(coco_dict)
         category_mapping = get_category_mapping(coco_dict)
 
@@ -611,10 +611,7 @@ def export_yolov5_images_and_txts_from_coco_dict(
             Path for the coco dataset file or coco dataset as python dictionary.
     """
     # create coco instance from coco_dict_or_path
-    if isinstance(coco_dict_or_path, str):
-        coco = Coco.from_coco_path(coco_dict_or_path)
-    else:
-        coco = Coco(coco_dict_or_path)
+    coco = Coco(coco_dict_or_path)
 
     for image in coco.images:
         # Create a symbolic link pointing to src named dst
