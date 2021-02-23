@@ -61,6 +61,12 @@ if __name__ == "__main__":
         "--crop", action="store_true", help="export predictions as cropped images"
     )
     parser.add_argument(
+        "--coco_file",
+        type=str,
+        default=None,
+        help="perform detection from coco file and export results in coco json format",
+    )
+    parser.add_argument(
         "--sliced_pred", action="store_false", help="apply sliced prediction"
     )
     parser.add_argument("--slice_height", type=int, default=512)
@@ -89,6 +95,7 @@ if __name__ == "__main__":
         export_visual=opt.visual,
         export_pickle=opt.pickle,
         export_crop=opt.crop,
+        coco_file_path=opt.coco_file,
         apply_sliced_prediction=opt.sliced_pred,
         slice_height=opt.slice_height,
         slice_width=opt.slice_width,
