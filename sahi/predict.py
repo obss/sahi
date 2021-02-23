@@ -11,12 +11,21 @@ from sahi.postprocess.merge import PredictionMerger, ScoreMergingPolicy
 from sahi.postprocess.ops import box_intersection, box_ios, box_union
 from sahi.prediction import ObjectPrediction, PredictionInput
 from sahi.slicing import slice_image
+from sahi.utils.coco import Coco
 from sahi.utils.cv import (
     crop_object_predictions,
     read_image,
     visualize_object_predictions,
 )
-from sahi.utils.file import get_base_filename, import_class, list_files, save_pickle
+from sahi.utils.file import (
+    Path,
+    get_base_filename,
+    import_class,
+    increment_path,
+    list_files,
+    save_json,
+    save_pickle,
+)
 from sahi.utils.torch import to_float_tensor
 
 
@@ -249,21 +258,24 @@ def get_sliced_prediction(
     }
 
 
-def predict_folder(
+def predict(
     model_name="MmdetDetectionModel",
     model_parameters=None,
-    image_dir=None,
-    visual_output_dir=None,
-    pickle_dir=None,
-    crop_dir=None,
+    source=None,
     apply_sliced_prediction: bool = True,
     slice_height: int = 256,
     slice_width: int = 256,
-    overlap_height_ratio: float = 0.1,
+    overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     match_iou_threshold: float = 0.5,
+    export_visual=True,
+    export_pickle=False,
+    export_crop=False,
+    coco_file_path=None,
+    project="runs/predict",
+    name="exp",
     visual_bbox_thickness: int = 1,
-    visual_text_size: float = 1,
+    visual_text_size: float = 0.3,
     visual_text_thickness: int = 1,
     visual_export_format: str = "png",
     verbose: int = 1,
@@ -285,14 +297,8 @@ def predict_folder(
                 Torch device, "cpu" or "cuda"
             category_remapping: dict: str to int
                 Remap category ids after performing inference
-        image_dir: str
-            Directory that contain images to be predicted.
-        visual_output_dir: str
-            Directory that prediction visuals are going to be exported. Set to None for no visuals.
-        pickle_dir: str
-            Directory that object prediction list pickles are going to be exported. Set to None for no pickles.
-        crop_dir: str
-            Directory that detected bounding boxes will be cropped&exported. Set to None for no crops.
+        source: str
+            Folder directory that contains images or path of the image to be predicted.
         apply_sliced_prediction: bool
             Set to True if you want sliced prediction, set to False for full prediction.
         slice_height: int
@@ -309,6 +315,16 @@ def predict_folder(
             Default to ``0.2``.
         match_iou_threshold: float
             Sliced predictions having higher iou than match_iou_threshold will be merged.
+        export_pickle: bool
+            Export predictions as .pickle
+        export_crop: bool
+            Export predictions as cropped images.
+        coco_file_path: str
+            If coco file path is provided, detection results will be exported in coco json format.
+        project: str
+            Save results to project/name.
+        name: str
+            Save results to project/name.
         visual_bbox_thickness: int
         visual_text_size: float
         visual_text_thickness: int
@@ -322,12 +338,34 @@ def predict_folder(
     durations_in_seconds = dict()
 
     # list image files in directory
-    time_start = time.time()
-    image_path_list = list_files(
-        directory=image_dir, contains=[".jpg", ".jpeg", ".png"], verbose=verbose
-    )
-    time_end = time.time() - time_start
-    durations_in_seconds["list_files"] = time_end
+    if coco_file_path:
+        coco = Coco(coco_file_path)
+        image_path_list = [
+            str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images
+        ]
+        image_id_list = [coco_image.id for coco_image in coco.images]
+        coco_json = []
+    elif os.path.isdir(source):
+        time_start = time.time()
+        image_path_list = list_files(
+            directory=source,
+            contains=[".jpg", ".jpeg", ".png"],
+            verbose=verbose,
+        )
+        time_end = time.time() - time_start
+        durations_in_seconds["list_files"] = time_end
+    else:
+        image_path_list = [source]
+        durations_in_seconds["list_files"] = 0
+
+    # init export directories
+    save_dir = Path(
+        increment_path(Path(project) / name, exist_ok=False)
+    )  # increment run
+    crop_dir = save_dir / "crops"
+    visual_dir = save_dir / "visuals"
+    pickle_dir = save_dir / "pickles"
+    save_dir.mkdir(parents=True, exist_ok=True)  # make dir
 
     # init model instance
     time_start = time.time()
@@ -348,12 +386,9 @@ def predict_folder(
     # iterate over source images
     durations_in_seconds["prediction"] = 0
     durations_in_seconds["slice"] = 0
-    for image_path in tqdm(image_path_list):
+    for ind, image_path in enumerate(tqdm(image_path_list)):
         # get filename
-        (
-            filename_with_extension,
-            filename_without_extension,
-        ) = get_base_filename(path=image_path)
+        filename_without_extension = str(Path(image_path).stem)
         # load image
         image = read_image(image_path)
 
@@ -391,36 +426,47 @@ def predict_folder(
             "prediction"
         ]
 
+        if coco_file_path:
+            image_id = image_id_list[ind]
+            for object_prediction in object_prediction_list:
+                coco_prediction = object_prediction.to_coco_prediction()
+                coco_prediction.image_id = image_id
+                coco_prediction_json = coco_prediction.serialize()
+                coco_json.append(coco_prediction_json)
+
         time_start = time.time()
         # export prediction boxes
-        if crop_dir:
+        if export_crop:
             crop_object_predictions(
                 image=image,
                 object_prediction_list=object_prediction_list,
-                output_dir=crop_dir,
+                output_dir=str(crop_dir),
                 file_name=filename_without_extension,
+                export_format=visual_export_format,
             )
         # export prediction list as pickle
-        if pickle_dir:
-            save_path = os.path.join(
-                pickle_dir,
-                filename_without_extension + ".pickle",
-            )
+        if export_pickle:
+            save_path = str(pickle_dir / (filename_without_extension + ".pickle"))
             save_pickle(data=object_prediction_list, save_path=save_path)
         # export visualization
-        if visual_output_dir:
+        if export_visual:
             visualize_object_predictions(
                 image,
                 object_prediction_list=object_prediction_list,
                 rect_th=visual_bbox_thickness,
                 text_size=visual_text_size,
                 text_th=visual_text_thickness,
-                output_dir=visual_output_dir,
+                output_dir=str(visual_dir),
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
             )
         time_end = time.time() - time_start
         durations_in_seconds["export_files"] = time_end
+
+    # export coco results
+    if coco_file_path:
+        save_path = str(save_dir / "result.json")
+        save_json(coco_json, save_path)
 
     # print prediction duration
     if verbose == 1:

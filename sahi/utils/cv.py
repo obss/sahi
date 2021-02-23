@@ -17,6 +17,7 @@ def crop_object_predictions(
     object_prediction_list,
     output_dir: str = "",
     file_name: str = "prediction_visual",
+    export_format: str = "png",
 ):
     """
     Crops bounding boxes over the source image and exports it to output folder.
@@ -24,6 +25,7 @@ def crop_object_predictions(
         object_predictions: a list of prediction.ObjectPrediction
         output_dir: directory for resulting visualization to be exported
         file_name: exported file will be saved as: output_dir+file_name+".png"
+        export_format: can be specified as 'jpg' or 'png'
     """
     # create output folder if not present
     create_dir(output_dir)
@@ -44,7 +46,13 @@ def crop_object_predictions(
         )
         save_path = os.path.join(
             output_dir,
-            file_name + "_box" + str(ind) + "_class" + str(category_id) + ".png",
+            file_name
+            + "_box"
+            + str(ind)
+            + "_class"
+            + str(category_id)
+            + "."
+            + export_format,
         )
         cv2.imwrite(save_path, cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR))
 

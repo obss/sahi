@@ -1,6 +1,8 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
+import os
+import shutil
 import unittest
 
 from sahi.utils.coco import (
@@ -92,7 +94,7 @@ class TestCocoUtils(unittest.TestCase):
         coco_path = "tests/data/coco_utils/terrain_all_coco.json"
         coco_dict = load_json(coco_path)
         coco1 = Coco(coco_dict)
-        coco2 = Coco.from_coco_path(coco_path)
+        coco2 = Coco(coco_path)
 
         # compare
         self.assertEqual(len(coco1.images), 3)
@@ -114,6 +116,19 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(
             coco2.category_mapping,
             category_mapping,
+        )
+
+    def test_coco2yolo(self):
+        from sahi.utils.coco import Coco
+
+        coco_dict_path = "tests/data/coco_utils/combined_coco.json"
+        image_dir = "tests/data/coco_utils/"
+        output_dir = "tests/data/coco2yolo/"
+        if os.path.isdir(output_dir):
+            shutil.rmtree(output_dir)
+        coco = Coco(coco_dict_path)
+        coco.export_as_yolov5(
+            image_dir, output_dir=output_dir, train_split_rate=0.5, numpy_seed=0
         )
 
     def test_update_categories(self):

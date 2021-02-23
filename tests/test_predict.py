@@ -1,10 +1,13 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
+import os
+import shutil
 import unittest
 
 import numpy as np
 from sahi.utils.cv import read_image
+from sahi.utils.file import list_files
 
 
 class TestPredict(unittest.TestCase):
@@ -39,7 +42,6 @@ class TestPredict(unittest.TestCase):
     def test_get_prediction(self):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import get_prediction
-        from sahi.prediction import PredictionInput
 
         from tests.test_utils import (
             MmdetTestConstants,
@@ -109,6 +111,7 @@ class TestPredict(unittest.TestCase):
             prediction_score_threshold=0.3,
             device=None,
             category_remapping=None,
+            load_at_init=False,
         )
         mmdet_detection_model.load_model()
 
@@ -119,6 +122,7 @@ class TestPredict(unittest.TestCase):
         slice_width = 512
         overlap_height_ratio = 0.1
         overlap_width_ratio = 0.2
+        match_iou_threshold = 0.5
 
         # get sliced prediction
         prediction_result = get_sliced_prediction(
@@ -128,6 +132,7 @@ class TestPredict(unittest.TestCase):
             slice_width=slice_width,
             overlap_height_ratio=overlap_height_ratio,
             overlap_width_ratio=overlap_width_ratio,
+            match_iou_threshold=match_iou_threshold,
         )
         object_prediction_list = prediction_result["object_prediction_list"]
 
@@ -148,6 +153,53 @@ class TestPredict(unittest.TestCase):
             if object_prediction.category.name == "car":
                 num_car += 1
         self.assertEqual(num_car, 22)
+
+    def test_coco_json_prediction(self):
+        from sahi.model import MmdetDetectionModel
+        from sahi.predict import predict
+
+        from tests.test_utils import (
+            MmdetTestConstants,
+            download_mmdet_cascade_mask_rcnn_model,
+        )
+
+        # init model
+        download_mmdet_cascade_mask_rcnn_model()
+
+        model_parameters = {
+            "model_path": MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
+            "config_path": MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
+            "prediction_score_threshold": 0.4,
+            "device": None,  # cpu or cuda
+            "category_mapping": None,
+            "category_remapping": None,  # {"0": 1, "1": 2, "2": 3}
+        }
+
+        # prepare paths
+        coco_file_path = "tests/data/coco_utils/terrain_all_coco.json"
+        source = "tests/data/coco_utils/"
+        project_dir = "tests/data/predict_result"
+
+        # get full sized prediction
+        if os.path.isdir(project_dir):
+            shutil.rmtree(project_dir)
+        predict(
+            model_name="MmdetDetectionModel",
+            model_parameters=model_parameters,
+            source=source,
+            apply_sliced_prediction=True,
+            slice_height=512,
+            slice_width=512,
+            overlap_height_ratio=0.2,
+            overlap_width_ratio=0.2,
+            match_iou_threshold=0.5,
+            export_pickle=False,
+            export_crop=False,
+            coco_file_path=coco_file_path,
+            project=project_dir,
+            name="exp",
+            verbose=1,
+        )
 
 
 if __name__ == "__main__":
