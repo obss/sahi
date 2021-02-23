@@ -52,6 +52,9 @@ if __name__ == "__main__":
     )
     parser.add_argument("--name", default="exp", help="save results to project/name")
     parser.add_argument(
+        "--visual", action="store_true", help="export prediction visualizations"
+    )
+    parser.add_argument(
         "--pickle", action="store_true", help="export predictions as .pickle"
     )
     parser.add_argument(
@@ -83,6 +86,7 @@ if __name__ == "__main__":
         source=opt.source,
         project=opt.project,
         name=opt.name,
+        export_visual=opt.visual,
         export_pickle=opt.pickle,
         export_crop=opt.crop,
         apply_sliced_prediction=opt.sliced_pred,
