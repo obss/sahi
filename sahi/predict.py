@@ -11,6 +11,7 @@ from sahi.postprocess.merge import PredictionMerger, ScoreMergingPolicy
 from sahi.postprocess.ops import box_intersection, box_ios, box_union
 from sahi.prediction import ObjectPrediction, PredictionInput
 from sahi.slicing import slice_image
+from sahi.utils.coco import Coco
 from sahi.utils.cv import (
     crop_object_predictions,
     read_image,
@@ -22,6 +23,7 @@ from sahi.utils.file import (
     import_class,
     increment_path,
     list_files,
+    save_json,
     save_pickle,
 )
 from sahi.utils.torch import to_float_tensor
@@ -260,16 +262,18 @@ def predict(
     model_name="MmdetDetectionModel",
     model_parameters=None,
     source=None,
-    project="runs/predict",
-    name="exp",
-    export_pickle=False,
-    export_crop=False,
     apply_sliced_prediction: bool = True,
     slice_height: int = 256,
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     match_iou_threshold: float = 0.5,
+    export_visual=True,
+    export_pickle=False,
+    export_crop=False,
+    coco_file_path=None,
+    project="runs/predict",
+    name="exp",
     visual_bbox_thickness: int = 1,
     visual_text_size: float = 0.3,
     visual_text_thickness: int = 1,
@@ -295,14 +299,6 @@ def predict(
                 Remap category ids after performing inference
         source: str
             Folder directory that contains images or path of the image to be predicted.
-        project: str
-            Save results to project/name.
-        name: str
-            Save results to project/name.
-        export_pickle: bool
-            Export predictions as .pickle
-        export_crop: bool
-            Export predictions as cropped images.
         apply_sliced_prediction: bool
             Set to True if you want sliced prediction, set to False for full prediction.
         slice_height: int
@@ -319,6 +315,16 @@ def predict(
             Default to ``0.2``.
         match_iou_threshold: float
             Sliced predictions having higher iou than match_iou_threshold will be merged.
+        export_pickle: bool
+            Export predictions as .pickle
+        export_crop: bool
+            Export predictions as cropped images.
+        coco_file_path: str
+            If coco file path is provided, detection results will be exported in coco json format.
+        project: str
+            Save results to project/name.
+        name: str
+            Save results to project/name.
         visual_bbox_thickness: int
         visual_text_size: float
         visual_text_thickness: int
@@ -332,7 +338,14 @@ def predict(
     durations_in_seconds = dict()
 
     # list image files in directory
-    if os.path.isdir(source):
+    if coco_file_path:
+        coco = Coco(coco_file_path)
+        image_path_list = [
+            str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images
+        ]
+        image_id_list = [coco_image.id for coco_image in coco.images]
+        coco_json = []
+    elif os.path.isdir(source):
         time_start = time.time()
         image_path_list = list_files(
             directory=source,
@@ -353,7 +366,6 @@ def predict(
     visual_dir = save_dir / "visuals"
     pickle_dir = save_dir / "pickles"
     save_dir.mkdir(parents=True, exist_ok=True)  # make dir
-    export_visual = True
 
     # init model instance
     time_start = time.time()
@@ -374,7 +386,7 @@ def predict(
     # iterate over source images
     durations_in_seconds["prediction"] = 0
     durations_in_seconds["slice"] = 0
-    for image_path in tqdm(image_path_list):
+    for ind, image_path in enumerate(tqdm(image_path_list)):
         # get filename
         filename_without_extension = str(Path(image_path).stem)
         # load image
@@ -414,6 +426,14 @@ def predict(
             "prediction"
         ]
 
+        if coco_file_path:
+            image_id = image_id_list[ind]
+            for object_prediction in object_prediction_list:
+                coco_prediction = object_prediction.to_coco_prediction()
+                coco_prediction.image_id = image_id
+                coco_prediction_json = coco_prediction.serialize()
+                coco_json.append(coco_prediction_json)
+
         time_start = time.time()
         # export prediction boxes
         if export_crop:
@@ -442,6 +462,11 @@ def predict(
             )
         time_end = time.time() - time_start
         durations_in_seconds["export_files"] = time_end
+
+    # export coco results
+    if coco_file_path:
+        save_path = str(save_dir / "result.json")
+        save_json(coco_json, save_path)
 
     # print prediction duration
     if verbose == 1:
