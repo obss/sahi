@@ -17,7 +17,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--train_split",
         type=float,
-        default=0.25,
+        default=0.9,
         help="set the training split ratio",
     )
     parser.add_argument(
