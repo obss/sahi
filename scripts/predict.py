@@ -67,7 +67,7 @@ if __name__ == "__main__":
         help="perform detection from coco file and export results in coco json format",
     )
     parser.add_argument(
-        "--standard_pred", action="store_false", help="dont apply sliced prediction"
+        "--standard_pred", action="store_true", help="dont apply sliced prediction"
     )
     parser.add_argument("--slice_height", type=int, default=512)
     parser.add_argument("--slice_width", type=int, default=512)
