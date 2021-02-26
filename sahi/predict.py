@@ -192,28 +192,45 @@ def get_sliced_prediction(
     # create prediction input
     num_group = int(num_slices / num_batch)
     if verbose == 1 or verbose == 2:
-        print("Number of slices:", num_slices)
+        if num_slices > 0:
+            print("Number of slices:", num_slices)
+        else:
+            print("Number of slices:", 1)
     object_prediction_list = []
-    for group_ind in range(num_group):
-        # prepare batch (currently supports only 1 batch)
-        image_list = []
-        shift_amount_list = []
-        for image_ind in range(num_batch):
-            image_list.append(
-                slice_image_result.images[group_ind * num_batch + image_ind]
+    if num_slices > 0:  # if zero_frac < max_allowed_zeros_ratio from slice_image
+        for group_ind in range(num_group):
+            # prepare batch (currently supports only 1 batch)
+            image_list = []
+            shift_amount_list = []
+            for image_ind in range(num_batch):
+                image_list.append(
+                    slice_image_result.images[group_ind * num_batch + image_ind]
+                )
+                shift_amount_list.append(
+                    slice_image_result.starting_pixels[
+                        group_ind * num_batch + image_ind
+                    ]
+                )
+            # perform batch prediction
+            prediction_result = get_prediction(
+                image=image_list[0],
+                detection_model=detection_model,
+                shift_amount=shift_amount_list[0],
+                full_shape=[
+                    slice_image_result.original_image_height,
+                    slice_image_result.original_image_width,
+                ],
             )
-            shift_amount_list.append(
-                slice_image_result.starting_pixels[group_ind * num_batch + image_ind]
-            )
-        # perform batch prediction
+            object_prediction_list.extend(prediction_result["object_prediction_list"])
+    else:  # if zero_frac >= max_allowed_zeros_ratio from slice_image
         prediction_result = get_prediction(
-            image=image_list[0],
+            image=image,
             detection_model=detection_model,
-            shift_amount=shift_amount_list[0],
-            full_shape=[
-                slice_image_result.original_image_height,
-                slice_image_result.original_image_width,
-            ],
+            shift_amount=[0, 0],
+            full_shape=None,
+            merger=None,
+            matcher=None,
+            verbose=0,
         )
         object_prediction_list.extend(prediction_result["object_prediction_list"])
 
