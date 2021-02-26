@@ -18,7 +18,6 @@ Object detection and instance segmentation are by far the most important fields 
 
 Check the [official SAHI blog post](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80).
 
-
 ### Installation
 
 - Install sahi using conda:
@@ -34,11 +33,13 @@ pip install sahi
 ```
 
 - Install your desired version of pytorch and torchvision:
+
 ```console
 pip install torch torchvision
 ```
 
 - Install your desired detection framework (such as mmdet):
+
 ```console
 pip install mmdet
 ```
@@ -46,6 +47,7 @@ pip install mmdet
 ## Usage
 
 - Sliced inference:
+
 ```python
 result = get_sliced_prediction(
     image,
@@ -57,9 +59,11 @@ result = get_sliced_prediction(
 )
 
 ```
+
 Refer to [inference notebook](demo/inference.ipynb) for detailed usage.
 
 - Slice an image:
+
 ```python
 from sahi.slicing import slice_image
 
@@ -75,6 +79,7 @@ slice_image_result, num_total_invalid_segmentation = slice_image(
 ```
 
 - Slice a coco formatted dataset:
+
 ```python
 from sahi.slicing import slice_coco
 
@@ -88,14 +93,48 @@ coco_dict, coco_path = slice_coco(
 )
 ```
 
+- `predict.py` script usage:
+
+```bash
+python scripts/predict.py --source image/file/or/folder --model_path path/to/model --config_path path/to/config
+```
+
+will perform sliced inference on default parameters and export the prediction visuals to runs/predict/exp folder.
+
+You can specify sliced inference parameters as:
+
+```bash
+python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --iou_thresh 0.25 --source image/file/or/folder --model_path path/to/model --config_path path/to/config
+```
+
+If you want to export prediction pickles and cropped predictions add `--pickle` and `--crop` arguments. If you want to change crop extension type, set it as `--visual_export_format JPG`.
+
+If you want to perform standard prediction instead of sliced prediction, add `--standard_pred` argument.
+
+```bash
+python scripts/predict.py --coco_file path/to/coco/file --source coco/images/directory --model_path path/to/model --config_path path/to/config
+```
+
+will perform inference using provided coco file, then export results as a coco json file to runs/predict/exp/results.json
+
+If you don't want to export prediction visuals, add `--novisual` argument.
+
+- `coco2yolov5.py` script usage:
+
+```bash
+python scripts/coco2yolov5.py --coco_file path/to/coco/file --source coco/images/directory --train_split 0.9
+```
+
+will convert given coco dataset to yolov5 format and export to runs/coco2yolov5/exp folder .
+
 ## Adding new detection framework support
 
 sahi library currently only supports [MMDetection models](https://github.com/open-mmlab/mmdetection/blob/master/docs/model_zoo.md). However it is easy to add new frameworks.
 
 All you need to do is, creating a new class in [model.py](sahi/model.py) that implements [DetectionModel class](https://github.com/obss/sahi/blob/651f8e6cdb20467815748764bb198dd50241ab2b/sahi/model.py#L10). You can take the [MMDetection wrapper](https://github.com/obss/sahi/blob/651f8e6cdb20467815748764bb198dd50241ab2b/sahi/model.py#L164) as a reference.
 
-
 ## Contributers
+
 - [Fatih Cagatay Akyon](https://github.com/fcakyon)
 - [Cemil Cengiz](https://github.com/cemilcengiz)
 - [Sinan Onur Altinuc](https://github.com/sinanonur)
