@@ -2,82 +2,94 @@ name: Package Testing
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
+    - cron: '0 0 * * *' # Runs at 00:00 UTC every day
 
 jobs:
   build:
     runs-on: ubuntu-latest
-  
+
     strategy:
       matrix:
         operating-system: [ubuntu-latest, windows-latest, macos-latest]
         python-version: [3.6, 3.7, 3.8]
-        mmdet-version : [2.8.0, 2.9.0]
+        mmdet-version: [2.8.0, 2.9.0]
       fail-fast: false
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Restore Ubuntu cache
-      uses: actions/cache@v1
-      if: matrix.operating-system == 'ubuntu-latest'
-      with:
-        path: ~/.cache/pip
-        key: ${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/setup.py')}}
-        restore-keys: ${{ matrix.os }}-${{ matrix.python-version }}-
-    - name: Restore MacOS cache
-      uses: actions/cache@v1
-      if:  matrix.operating-system == 'macos-latest'
-      with:
-        path: ~/Library/Caches/pip
-        key: ${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/setup.py')}}
-        restore-keys: ${{ matrix.os }}-${{ matrix.python-version }}-
-    - name: Restore Windows cache
-      uses: actions/cache@v1
-      if: matrix.operating-system == 'windows-latest'
-      with:
-        path: ~\AppData\Local\pip\Cache
-        key: ${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/setup.py')}}
-        restore-keys: ${{ matrix.os }}-${{ matrix.python-version }}-
-    - name: Update pip
-      run: python -m pip install --upgrade pip
-    - name: Install latest SAHI package
-      run: >
-        pip install --upgrade --force-reinstall sahi
-    - name: Install PyTorch on Linux and Windows
-      if: >
-        matrix.operating-system == 'ubuntu-latest' ||
-        matrix.operating-system == 'windows-latest'
-      run: >
-        pip install torch==1.7.1+cpu torchvision==0.8.2+cpu
-        -f https://download.pytorch.org/whl/torch_stable.html
-    - name: Install PyTorch on MacOS
-      if: matrix.operating-system == 'macos-latest'
-      run: pip install torch==1.7.1 torchvision==0.8.2
-    - name: Install MMDetection
-      run: >
-        pip install mmcv-full==1.2.5 mmdet==${{ matrix.mmdet-version }}
-    - name: Test with unittest
-      run: |
-        pip install pytest
-        python -m unittest
-    - name: Test SAHI scripts for mmdet < 2.9.0
-      if: matrix.mmdet-version == '2.8.0'
-      run: |
-        # predict
-        python scripts/predict.py --source tests/data/ --visual --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
-        python scripts/predict.py --source tests/data/coco_utils/terrain1.jpg --pickle --crop --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
-        python scripts/predict.py --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
-    - name: Test SAHI scripts for mmdet == 2.9.0
-      if: matrix.mmdet-version == '2.9.0'
-      run: |
-        # predict
-        python scripts/predict.py --source tests/data/ --visual --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v290.py
-        python scripts/predict.py --source tests/data/coco_utils/terrain1.jpg --pickle --crop --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v290.py
-        python scripts/predict.py --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v290.py
-        # coco2yolov5
-        python scripts/coco2yolov5.py --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --train_split 0.9
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Restore Ubuntu cache
+        uses: actions/cache@v1
+        if: matrix.operating-system == 'ubuntu-latest'
+        with:
+          path: ~/.cache/pip
+          key: ${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/setup.py')}}
+          restore-keys: ${{ matrix.os }}-${{ matrix.python-version }}-
+
+      - name: Restore MacOS cache
+        uses: actions/cache@v1
+        if: matrix.operating-system == 'macos-latest'
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/setup.py')}}
+          restore-keys: ${{ matrix.os }}-${{ matrix.python-version }}-
+
+      - name: Restore Windows cache
+        uses: actions/cache@v1
+        if: matrix.operating-system == 'windows-latest'
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/setup.py')}}
+          restore-keys: ${{ matrix.os }}-${{ matrix.python-version }}-
+
+      - name: Update pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install latest SAHI package
+        run: >
+          pip install --upgrade --force-reinstall sahi
+
+      - name: Install PyTorch on Linux and Windows
+        if: >
+          matrix.operating-system == 'ubuntu-latest' ||
+          matrix.operating-system == 'windows-latest'
+        run: >
+          pip install torch==1.7.1+cpu torchvision==0.8.2+cpu
+          -f https://download.pytorch.org/whl/torch_stable.html
+
+      - name: Install PyTorch on MacOS
+        if: matrix.operating-system == 'macos-latest'
+        run: pip install torch==1.7.1 torchvision==0.8.2
+
+      - name: Install MMDetection
+        run: >
+          pip install mmcv-full==1.2.5 mmdet==${{ matrix.mmdet-version }}
+
+      - name: Test with unittest
+        run: |
+          pip install pytest
+          python -m unittest
+
+      - name: Test SAHI scripts for mmdet < 2.9.0
+        if: matrix.mmdet-version == '2.8.0'
+        run: |
+          # predict
+          python scripts/predict.py --source tests/data/--model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
+          python scripts/predict.py --source tests/data/coco_utils/terrain1.jpg --novisual --pickle --crop --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
+          python scripts/predict.py --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
+
+      - name: Test SAHI scripts for mmdet == 2.9.0
+        if: matrix.mmdet-version == '2.9.0'
+        run: |
+          # predict
+          python scripts/predict.py --source tests/data/--model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v290.py
+          python scripts/predict.py --source tests/data/coco_utils/terrain1.jpg --novisual --pickle --crop --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v290.py
+          python scripts/predict.py --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v290.py
+          # coco2yolov5
+          python scripts/coco2yolov5.py --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --train_split 0.9

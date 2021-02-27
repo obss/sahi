@@ -52,7 +52,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--name", default="exp", help="save results to project/name")
     parser.add_argument(
-        "--visual", action="store_true", help="export prediction visualizations"
+        "--novisual", action="store_true", help="export prediction visualizations"
     )
     parser.add_argument(
         "--pickle", action="store_true", help="export predictions as .pickle"
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         help="perform detection from coco file and export results in coco json format",
     )
     parser.add_argument(
-        "--sliced_pred", action="store_false", help="apply sliced prediction"
+        "--standard_pred", action="store_true", help="dont apply sliced prediction"
     )
     parser.add_argument("--slice_height", type=int, default=512)
     parser.add_argument("--slice_width", type=int, default=512)
@@ -92,11 +92,11 @@ if __name__ == "__main__":
         source=opt.source,
         project=opt.project,
         name=opt.name,
-        export_visual=opt.visual,
+        export_visual=not (opt.novisual),
         export_pickle=opt.pickle,
         export_crop=opt.crop,
         coco_file_path=opt.coco_file,
-        apply_sliced_prediction=opt.sliced_pred,
+        apply_sliced_prediction=not (opt.standard_pred),
         slice_height=opt.slice_height,
         slice_width=opt.slice_width,
         overlap_height_ratio=opt.overlap_height_ratio,
