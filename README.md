@@ -94,7 +94,7 @@ coco_dict, coco_path = slice_coco(
 )
 ```
 
-- `predict.py` script usage:
+### `predict.py` script usage:
 
 ```bash
 python scripts/predict.py --source image/file/or/folder --model_path path/to/model --config_path path/to/config
@@ -120,13 +120,27 @@ will perform inference using provided coco file, then export results as a coco j
 
 If you don't want to export prediction visuals, add `--novisual` argument.
 
-- `coco2yolov5.py` script usage:
+### `coco2yolov5.py` script usage:
 
 ```bash
 python scripts/coco2yolov5.py --coco_file path/to/coco/file --source coco/images/directory --train_split 0.9
 ```
 
-will convert given coco dataset to yolov5 format and export to runs/coco2yolov5/exp folder .
+will convert given coco dataset to yolov5 format and export to runs/coco2yolov5/exp folder.
+
+### `coco_error_analysis.py` script usage:
+
+```bash
+python scripts/coco_error_analysis.py results.json output/folder/directory --ann coco/annotation/path
+```
+
+will calculate coco error plots and export them to given output folder directory.
+
+If you want to specify mAP result type, set it as `--types bbox mask`.
+
+If you want to export extra mAP bar plots and annotation area stats add `--extraplots` argument.
+
+If you want to specify area regions, set it as `--areas 1024 9216 10000000000`.
 
 ## Adding new detection framework support
 
