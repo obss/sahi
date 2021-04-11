@@ -834,6 +834,14 @@ class Coco:
     def imageid2annotationlist(self):
         return get_imageid2annotationlist_mapping(self.json)
 
+    @property
+    def json(self):
+        return create_coco_dict(
+            images=self.images,
+            categories=self.json_categories,
+            ignore_negative_samples=True,
+        )
+
     def split_coco_as_train_val(
         self, file_name=None, target_dir=None, train_split_rate=0.9, numpy_seed=0
     ):
