@@ -258,12 +258,12 @@ class TestCocoUtils(unittest.TestCase):
     def test_coco(self):
         from sahi.utils.coco import Coco
 
-        category_mapping = {"1": "human", "2": "car"}
+        category_mapping = {1: "human", 2: "car"}
         # init coco
         coco_path = "tests/data/coco_utils/terrain_all_coco.json"
         coco_dict = load_json(coco_path)
-        coco1 = Coco(coco_dict)
-        coco2 = Coco(coco_path)
+        coco1 = Coco.from_coco_dict_or_path(coco_dict)
+        coco2 = Coco.from_coco_dict_or_path(coco_path)
 
         # compare
         self.assertEqual(len(coco1.images), 3)
@@ -295,7 +295,7 @@ class TestCocoUtils(unittest.TestCase):
         output_dir = "tests/data/coco2yolo/"
         if os.path.isdir(output_dir):
             shutil.rmtree(output_dir)
-        coco = Coco(coco_dict_path)
+        coco = Coco.from_coco_dict_or_path(coco_dict_path)
         coco.export_as_yolov5(
             image_dir, output_dir=output_dir, train_split_rate=0.5, numpy_seed=0
         )

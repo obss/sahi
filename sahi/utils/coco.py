@@ -724,9 +724,60 @@ class CocoVideo:
 
 
 class Coco:
-    def __init__(self, coco_dict_or_path):
+    def __init__(self, name=None, remapping_dict=None):
         """
-        Creates coco object from COCO formatted dictor COCO dataset file path.
+        Creates Coco object.
+
+        Args:
+            name: str
+                Name of the Coco dataset, it determines exported json name.
+            remapping_dict: dict
+                {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
+        """
+        self.name = name
+        self.remapping_dict = remapping_dict  # TODO: utilize remapping_dict
+        self.categories = []
+        self.images = []
+
+    def add_categories_from_coco_category_list(self, coco_category_list):
+        """
+        Creates CocoCategory object using coco category list.
+
+        Args:
+            coco_category_list: List[Dict]
+                [
+                    {"supercategory": "person", "id": 1, "name": "person"},
+                    {"supercategory": "vehicle", "id": 2, "name": "bicycle"}
+                ]
+        """
+
+        for coco_category in coco_category_list:
+            if self.remapping_dict is not None:
+                for source_id in self.remapping_dict.keys():
+                    if coco_category["id"] == source_id:
+                        target_id = self.remapping_dict[source_id]
+                        coco_category["id"] = target_id
+
+            self.add_category(CocoCategory.from_coco_category(coco_category))
+
+    def add_category(self, category):
+        """
+        Adds category to this CocoVid instance
+
+        Args:
+            category: CocoCategory
+        """
+
+        assert (
+            type(category) == CocoCategory
+        ), "category must be a CocoCategory instance"
+
+        self.categories.append(category)
+
+    @classmethod
+    def from_coco_dict_or_path(cls, coco_dict_or_path):
+        """
+        Creates coco object from COCO formatted dict or COCO dataset file path.
 
         Args:
             coco_dict_or_path: dict or str
@@ -736,6 +787,9 @@ class Coco:
             images: list of CocoImage
             category_mapping: dict
         """
+        # init coco object
+        coco = cls()
+
         # load coco dict if path is given
         if isinstance(coco_dict_or_path, str):
             coco_dict = load_json(coco_dict_or_path)
@@ -743,27 +797,42 @@ class Coco:
             coco_dict = coco_dict_or_path
 
         # arrange image id to annotation id mapping
+        coco.add_categories_from_coco_category_list(coco_dict["categories"])
         imageid2annotationlist = get_imageid2annotationlist_mapping(coco_dict)
-        category_mapping = get_category_mapping(coco_dict)
+        category_mapping = coco.category_mapping
 
         coco_image_list = []
         for coco_image_dict in coco_dict["images"]:
             coco_image = CocoImage.from_coco_image_dict(coco_image_dict)
             annotation_list = imageid2annotationlist[coco_image_dict["id"]]
             for coco_annotation_dict in annotation_list:
-                category_name = category_mapping[
-                    str(coco_annotation_dict["category_id"])
-                ]
+                category_name = category_mapping[coco_annotation_dict["category_id"]]
                 coco_annotation = CocoAnnotation.from_coco_annotation_dict(
                     category_name=category_name, annotation_dict=coco_annotation_dict
                 )
                 coco_image.add_annotation(coco_annotation)
             coco_image_list.append(coco_image)
 
-        self.images = coco_image_list
-        self.category_mapping = category_mapping
-        self.imageid2annotationlist = imageid2annotationlist
-        self.coco_dict = coco_dict
+        coco.images = coco_image_list
+        return coco
+
+    @property
+    def json_categories(self):
+        categories = []
+        for category in self.categories:
+            categories.append(category.json)
+        return categories
+
+    @property
+    def category_mapping(self):
+        category_mapping = {}
+        for category in self.categories:
+            category_mapping[category.id] = category.name
+        return category_mapping
+
+    @property
+    def imageid2annotationlist(self):
+        return get_imageid2annotationlist_mapping(self.json)
 
     def split_coco_as_train_val(
         self, file_name=None, target_dir=None, train_split_rate=0.9, numpy_seed=0
@@ -772,7 +841,6 @@ class Coco:
         Split images into train-val and saves as seperate coco dataset files.
 
         Args:
-            coco_file_path_or_dict: str or dict
             file_name: str
             target_dir: str
             train_split_rate: float
@@ -808,12 +876,12 @@ class Coco:
         # form train val coco dicts
         train_coco_dict = create_coco_dict(
             images=train_images,
-            categories=self.coco_dict["categories"],
+            categories=self.json_categories,
             ignore_negative_samples=False,
         )
         val_coco_dict = create_coco_dict(
             images=val_images,
-            categories=self.coco_dict["categories"],
+            categories=self.json_categories,
             ignore_negative_samples=False,
         )
         # return result
@@ -899,7 +967,7 @@ def export_yolov5_images_and_txts_from_coco_dict(
             Path for the coco dataset file or coco dataset as python dictionary.
     """
     # create coco instance from coco_dict_or_path
-    coco = Coco(coco_dict_or_path)
+    coco = Coco.from_coco_dict_or_path(coco_dict_or_path)
 
     for image in coco.images:
         # Create a symbolic link pointing to src named dst
@@ -937,24 +1005,6 @@ def export_yolov5_images_and_txts_from_coco_dict(
                         + " ".join([str(value) for value in yolo_bbox])
                         + "\n"
                     )
-
-
-def get_category_mapping(coco_dict):
-    """
-    Creates category mapping from COCO formatted dict.
-
-    Args:
-        coco_dict: dict
-            COCO formatted dict
-
-    Returns:
-        category_mapping: dict
-            e.g. {"0": "person", "1":"car"}
-    """
-    category_mapping = {
-        str(category["id"]): category["name"] for category in coco_dict["categories"]
-    }
-    return category_mapping
 
 
 def update_categories(desired_name2id: dict, coco_dict: dict) -> dict:

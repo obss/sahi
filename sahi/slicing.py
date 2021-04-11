@@ -451,7 +451,7 @@ def slice_coco(
     # read coco file
     coco_dict = load_json(coco_annotation_file_path)
     # create coco_utils.Coco object
-    coco = Coco(coco_dict)
+    coco = Coco.from_coco_dict_or_path(coco_dict)
     # init sliced coco_utils.CocoImage list
     sliced_coco_images = []
 

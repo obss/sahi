@@ -356,7 +356,7 @@ def predict(
 
     # list image files in directory
     if coco_file_path:
-        coco = Coco(coco_file_path)
+        coco = Coco.from_coco_dict_or_path(coco_file_path)
         image_path_list = [
             str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images
         ]
@@ -502,8 +502,9 @@ def predict(
             durations_in_seconds["prediction"],
             "seconds.",
         )
-        print(
-            "Exporting performed in",
-            durations_in_seconds["export_files"],
-            "seconds.",
-        )
+        if export_visual:
+            print(
+                "Exporting performed in",
+                durations_in_seconds["export_files"],
+                "seconds.",
+            )

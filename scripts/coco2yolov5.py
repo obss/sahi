@@ -33,7 +33,7 @@ if __name__ == "__main__":
     # increment run
     save_dir = Path(increment_path(Path(opt.project) / opt.name, exist_ok=False))
     # load coco dict
-    coco = Coco(coco_dict_or_path=opt.coco_file)
+    coco = Coco.from_coco_dict_or_path(coco_dict_or_path=opt.coco_file)
     # export as yolov5
     coco.export_as_yolov5(
         image_dir=opt.source,

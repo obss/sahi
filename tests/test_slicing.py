@@ -14,7 +14,7 @@ class TestSlicing(unittest.TestCase):
         coco_path = "tests/data/coco_utils/terrain1_coco.json"
         coco_dict = load_json(coco_path)
         # create coco_utils.Coco object
-        coco = Coco(coco_dict)
+        coco = Coco.from_coco_dict_or_path(coco_dict)
 
         output_file_name = None
         output_dir = None
