@@ -14,6 +14,46 @@ from sahi.utils.shapely import ShapelyAnnotation, get_shapely_multipolygon
 from tqdm import tqdm
 
 
+class CocoCategory:
+    """
+    COCO formatted category.
+    """
+
+    def __init__(self, id=None, name=None, supercategory=None):
+        self.id = id
+        self.name = name
+        self.supercategory = supercategory if supercategory else name
+
+    @classmethod
+    def from_coco_category(cls, category):
+        """
+        Creates CocoCategory object using coco category.
+
+        Args:
+            category: Dict
+                {"supercategory": "person", "id": 1, "name": "person"},
+        """
+        return cls(
+            id=category["id"],
+            name=category["name"],
+            supercategory=category["supercategory"],
+        )
+
+    @property
+    def json(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "supercategory": self.supercategory,
+        }
+
+    def __repr__(self):
+        return f"""CocoCategory<
+    id: {self.id},
+    name: {self.name},
+    supercategory: {self.supercategory}>"""
+
+
 class CocoAnnotation:
     """
     COCO formatted annotation.
@@ -203,7 +243,8 @@ class CocoAnnotation:
         """
         return self._iscrowd
 
-    def serialize(self):
+    @property
+    def json(self):
         return {
             "image_id": self.image_id,
             "bbox": self.bbox,
@@ -213,6 +254,9 @@ class CocoAnnotation:
             "iscrowd": self.iscrowd,
             "area": self.area,
         }
+
+    def serialize(self):
+        print(".serialize() is deprectaed, use .json instead")
 
     def __repr__(self):
         return f"""CocoAnnotation<
@@ -353,7 +397,8 @@ class CocoPrediction(CocoAnnotation):
             iscrowd=iscrowd,
         )
 
-    def serialize(self):
+    @property
+    def json(self):
         return {
             "image_id": self.image_id,
             "bbox": self.bbox,
@@ -365,6 +410,9 @@ class CocoPrediction(CocoAnnotation):
             "area": self.area,
         }
 
+    def serialize(self):
+        print(".serialize() is deprectaed, use .json instead")
+
     def __repr__(self):
         return f"""CocoPrediction<
     image_id: {self.image_id},
@@ -373,6 +421,74 @@ class CocoPrediction(CocoAnnotation):
     score: {self.score},
     category_id: {self.category_id},
     category_name: {self.category_name},
+    iscrowd: {self.iscrowd},
+    area: {self.area}>"""
+
+
+class CocoVidAnnotation(CocoAnnotation):
+    """
+    COCOVid formatted annotation.
+    https://github.com/open-mmlab/mmtracking/blob/master/docs/tutorials/customize_dataset.md#the-cocovid-annotation-file
+    """
+
+    def __init__(
+        self,
+        bbox=None,
+        category_id=None,
+        category_name=None,
+        image_id=None,
+        instance_id=None,
+        iscrowd=0,
+        id=None,
+    ):
+        """
+        Args:
+            bbox: List
+                [xmin, ymin, width, height]
+            category_id: int
+                Category id of the annotation
+            category_name: str
+                Category name of the annotation
+            image_id: int
+                Image ID of the annotation
+            instance_id: int
+                Used for tracking
+            iscrowd: int
+                0 or 1
+            id: int
+                Annotation id
+        """
+        super(CocoVidAnnotation, self).__init__(
+            bbox=bbox,
+            category_id=category_id,
+            category_name=category_name,
+            image_id=image_id,
+            iscrowd=iscrowd,
+        )
+        self.instance_id = instance_id
+        self.id = id
+
+    @property
+    def json(self):
+        return {
+            "id": self.id,
+            "image_id": self.image_id,
+            "bbox": self.bbox,
+            "category_id": self.category_id,
+            "category_name": self.category_name,
+            "instance_id": self.instance_id,
+            "iscrowd": self.iscrowd,
+            "area": self.area,
+        }
+
+    def __repr__(self):
+        return f"""CocoAnnotation<
+    id: {self.id},
+    image_id: {self.image_id},
+    bbox: {self.bbox},
+    category_id: {self.category_id},
+    category_name: {self.category_name},
+    instance_id: {self.instance_id},
     iscrowd: {self.iscrowd},
     area: {self.area}>"""
 
@@ -435,10 +551,233 @@ class CocoImage:
     annotations: List[CocoAnnotation]>"""
 
 
-class Coco:
-    def __init__(self, coco_dict_or_path):
+class CocoVidImage(CocoImage):
+    """
+    COCOVid formatted image.
+    https://github.com/open-mmlab/mmtracking/blob/master/docs/tutorials/customize_dataset.md#the-cocovid-annotation-file
+    """
+
+    def __init__(
+        self,
+        file_name,
+        height,
+        width,
+        video_id=None,
+        frame_id=None,
+        id=None,
+    ):
         """
-        Creates coco object from COCO formatted dictor COCO dataset file path.
+        Creates CocoVidImage object
+
+        Args:
+            id: int
+                Image id
+            file_name: str
+                Image path
+            height: int
+                Image height in pixels
+            width: int
+                Image width in pixels
+            frame_id: int
+                0-indexed frame id
+            video_id: int
+                Video id
+        """
+        super(CocoVidImage, self).__init__(
+            file_name=file_name, height=height, width=width, id=id
+        )
+        self.frame_id = frame_id
+        self.video_id = video_id
+
+    @classmethod
+    def from_coco_image(cls, coco_image, video_id=None, frame_id=None):
+        """
+        Creates CocoVidImage object using CocoImage object.
+        Args:
+            coco_image: CocoImage
+            frame_id: int
+                0-indexed frame id
+            video_id: int
+                Video id
+
+        """
+        return cls(
+            file_name=coco_image.file_name,
+            height=coco_image.height,
+            width=coco_image.width,
+            id=coco_image.id,
+            video_id=video_id,
+            frame_id=frame_id,
+        )
+
+    def add_annotation(self, annotation):
+        """
+        Adds annotation to this CocoImage instance
+        annotation : CocoVidAnnotation
+        """
+
+        assert (
+            type(annotation) == CocoVidAnnotation
+        ), "annotation must be a CocoVidAnnotation instance"
+        self.annotations.append(annotation)
+
+    @property
+    def json(self):
+        return {
+            "file_name": self.file_name,
+            "height": self.height,
+            "width": self.width,
+            "id": self.id,
+            "video_id": self.video_id,
+            "frame_id": self.frame_id,
+        }
+
+    def __repr__(self):
+        return f"""CocoVidImage<
+    file_name: {self.file_name},
+    height: {self.height},
+    width: {self.width},
+    id: {self.id},
+    video_id: {self.video_id},
+    frame_id: {self.frame_id},
+    annotations: List[CocoVidAnnotation]>"""
+
+
+class CocoVideo:
+    """
+    COCO formatted video.
+    https://github.com/open-mmlab/mmtracking/blob/master/docs/tutorials/customize_dataset.md#the-cocovid-annotation-file
+    """
+
+    def __init__(
+        self,
+        name: str,
+        id: int = None,
+        fps: float = None,
+        height: int = None,
+        width: int = None,
+    ):
+        """
+        Creates CocoVideo object
+
+        Args:
+            name: str
+                Video name
+            id: int
+                Video id
+            fps: float
+                Video fps
+            height: int
+                Video height in pixels
+            width: int
+                Video width in pixels
+        """
+        self.name = name
+        self.id = id
+        self.fps = fps
+        self.height = height
+        self.width = width
+        self.images = []  # list of CocoImage that belong to this video
+
+    def add_image(self, image):
+        """
+        Adds image to this CocoVideo instance
+        Args:
+            image: CocoImage
+        """
+
+        assert type(image) == CocoImage, "image must be a CocoImage instance"
+
+        self.images.append(CocoVidImage.from_coco_image(image))
+
+    def add_cocovidimage(self, cocovidimage):
+        """
+        Adds CocoVidImage to this CocoVideo instance
+        Args:
+            cocovidimage: CocoVidImage
+        """
+
+        assert (
+            type(cocovidimage) == CocoVidImage
+        ), "cocovidimage must be a CocoVidImage instance"
+
+        self.images.append(cocovidimage)
+
+    @property
+    def json(self):
+        return {
+            "name": self.name,
+            "id": self.id,
+            "fps": self.fps,
+            "height": self.height,
+            "width": self.width,
+        }
+
+    def __repr__(self):
+        return f"""CocoVideo<
+    id: {self.id},
+    name: {self.name},
+    fps: {self.fps},
+    height: {self.height},
+    width: {self.width},
+    images: List[CocoVidImage]>"""
+
+
+class Coco:
+    def __init__(self, name=None, remapping_dict=None):
+        """
+        Creates Coco object.
+
+        Args:
+            name: str
+                Name of the Coco dataset, it determines exported json name.
+            remapping_dict: dict
+                {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
+        """
+        self.name = name
+        self.remapping_dict = remapping_dict  # TODO: utilize remapping_dict
+        self.categories = []
+        self.images = []
+
+    def add_categories_from_coco_category_list(self, coco_category_list):
+        """
+        Creates CocoCategory object using coco category list.
+
+        Args:
+            coco_category_list: List[Dict]
+                [
+                    {"supercategory": "person", "id": 1, "name": "person"},
+                    {"supercategory": "vehicle", "id": 2, "name": "bicycle"}
+                ]
+        """
+
+        for coco_category in coco_category_list:
+            if self.remapping_dict is not None:
+                for source_id in self.remapping_dict.keys():
+                    if coco_category["id"] == source_id:
+                        target_id = self.remapping_dict[source_id]
+                        coco_category["id"] = target_id
+
+            self.add_category(CocoCategory.from_coco_category(coco_category))
+
+    def add_category(self, category):
+        """
+        Adds category to this CocoVid instance
+
+        Args:
+            category: CocoCategory
+        """
+
+        assert (
+            type(category) == CocoCategory
+        ), "category must be a CocoCategory instance"
+
+        self.categories.append(category)
+
+    @classmethod
+    def from_coco_dict_or_path(cls, coco_dict_or_path):
+        """
+        Creates coco object from COCO formatted dict or COCO dataset file path.
 
         Args:
             coco_dict_or_path: dict or str
@@ -448,6 +787,9 @@ class Coco:
             images: list of CocoImage
             category_mapping: dict
         """
+        # init coco object
+        coco = cls()
+
         # load coco dict if path is given
         if isinstance(coco_dict_or_path, str):
             coco_dict = load_json(coco_dict_or_path)
@@ -455,27 +797,50 @@ class Coco:
             coco_dict = coco_dict_or_path
 
         # arrange image id to annotation id mapping
+        coco.add_categories_from_coco_category_list(coco_dict["categories"])
         imageid2annotationlist = get_imageid2annotationlist_mapping(coco_dict)
-        category_mapping = get_category_mapping(coco_dict)
+        category_mapping = coco.category_mapping
 
         coco_image_list = []
         for coco_image_dict in coco_dict["images"]:
             coco_image = CocoImage.from_coco_image_dict(coco_image_dict)
             annotation_list = imageid2annotationlist[coco_image_dict["id"]]
             for coco_annotation_dict in annotation_list:
-                category_name = category_mapping[
-                    str(coco_annotation_dict["category_id"])
-                ]
+                category_name = category_mapping[coco_annotation_dict["category_id"]]
                 coco_annotation = CocoAnnotation.from_coco_annotation_dict(
                     category_name=category_name, annotation_dict=coco_annotation_dict
                 )
                 coco_image.add_annotation(coco_annotation)
             coco_image_list.append(coco_image)
 
-        self.images = coco_image_list
-        self.category_mapping = category_mapping
-        self.imageid2annotationlist = imageid2annotationlist
-        self.coco_dict = coco_dict
+        coco.images = coco_image_list
+        return coco
+
+    @property
+    def json_categories(self):
+        categories = []
+        for category in self.categories:
+            categories.append(category.json)
+        return categories
+
+    @property
+    def category_mapping(self):
+        category_mapping = {}
+        for category in self.categories:
+            category_mapping[category.id] = category.name
+        return category_mapping
+
+    @property
+    def imageid2annotationlist(self):
+        return get_imageid2annotationlist_mapping(self.json)
+
+    @property
+    def json(self):
+        return create_coco_dict(
+            images=self.images,
+            categories=self.json_categories,
+            ignore_negative_samples=True,
+        )
 
     def split_coco_as_train_val(
         self, file_name=None, target_dir=None, train_split_rate=0.9, numpy_seed=0
@@ -484,7 +849,6 @@ class Coco:
         Split images into train-val and saves as seperate coco dataset files.
 
         Args:
-            coco_file_path_or_dict: str or dict
             file_name: str
             target_dir: str
             train_split_rate: float
@@ -520,12 +884,12 @@ class Coco:
         # form train val coco dicts
         train_coco_dict = create_coco_dict(
             images=train_images,
-            categories=self.coco_dict["categories"],
+            categories=self.json_categories,
             ignore_negative_samples=False,
         )
         val_coco_dict = create_coco_dict(
             images=val_images,
-            categories=self.coco_dict["categories"],
+            categories=self.json_categories,
             ignore_negative_samples=False,
         )
         # return result
@@ -611,7 +975,7 @@ def export_yolov5_images_and_txts_from_coco_dict(
             Path for the coco dataset file or coco dataset as python dictionary.
     """
     # create coco instance from coco_dict_or_path
-    coco = Coco(coco_dict_or_path)
+    coco = Coco.from_coco_dict_or_path(coco_dict_or_path)
 
     for image in coco.images:
         # Create a symbolic link pointing to src named dst
@@ -649,24 +1013,6 @@ def export_yolov5_images_and_txts_from_coco_dict(
                         + " ".join([str(value) for value in yolo_bbox])
                         + "\n"
                     )
-
-
-def get_category_mapping(coco_dict):
-    """
-    Creates category mapping from COCO formatted dict.
-
-    Args:
-        coco_dict: dict
-            COCO formatted dict
-
-    Returns:
-        category_mapping: dict
-            e.g. {"0": "person", "1":"car"}
-    """
-    category_mapping = {
-        str(category["id"]): category["name"] for category in coco_dict["categories"]
-    }
-    return category_mapping
 
 
 def update_categories(desired_name2id: dict, coco_dict: dict) -> dict:
@@ -1145,3 +1491,124 @@ def count_images_with_category(coco_file_path):
     category_2_count = dict(category_2_count)
     total_images = len(image_id_2_category_2_count.keys())
     return DatasetClassCounts(category_2_count, total_images)
+
+
+class CocoVid:
+    def __init__(self, name=None, remapping_dict=None):
+        """
+        Creates CocoVid object.
+
+        Args:
+            name: str
+                Name of the CocoVid dataset, it determines exported json name.
+            remapping_dict: dict
+                {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
+        """
+        self.name = name
+        self.remapping_dict = remapping_dict
+        self.categories = []
+        self.videos = []
+
+    def add_categories_from_coco_category_list(self, coco_category_list):
+        """
+        Creates CocoCategory object using coco category list.
+
+        Args:
+            coco_category_list: List[Dict]
+                [
+                    {"supercategory": "person", "id": 1, "name": "person"},
+                    {"supercategory": "vehicle", "id": 2, "name": "bicycle"}
+                ]
+        """
+
+        for coco_category in coco_category_list:
+            if self.remapping_dict is not None:
+                for source_id in self.remapping_dict.keys():
+                    if coco_category["id"] == source_id:
+                        target_id = self.remapping_dict[source_id]
+                        coco_category["id"] = target_id
+
+            self.add_category(CocoCategory.from_coco_category(coco_category))
+
+    def add_category(self, category):
+        """
+        Adds category to this CocoVid instance
+
+        Args:
+            category: CocoCategory
+        """
+
+        assert (
+            type(category) == CocoCategory
+        ), "category must be a CocoCategory instance"
+
+        self.categories.append(category)
+
+    @property
+    def json_categories(self):
+        categories = []
+        for category in self.categories:
+            categories.append(category.json)
+        return categories
+
+    @property
+    def category_mapping(self):
+        category_mapping = {}
+        for category in self.categories:
+            category_mapping[category.id] = category.name
+        return category_mapping
+
+    def add_video(self, video):
+        """
+        Adds video to this CocoVid instance
+
+        Args:
+            video: CocoVideo
+        """
+
+        assert isinstance(video, CocoVideo), "video must be a CocoVideo instance"
+
+        self.videos.append(video)
+
+    @property
+    def json(self):
+        coco_dict = {
+            "videos": [],
+            "images": [],
+            "annotations": [],
+            "categories": self.json_categories,
+        }
+        annotation_id = 1
+        image_id = 1
+        video_id = 1
+        global_instance_id = 1
+        for coco_video in self.videos:
+            coco_video.id = video_id
+            coco_dict["videos"].append(coco_video.json)
+
+            frame_id = 0
+            instance_id_set = set()
+            for cocovid_image in coco_video.images:
+                cocovid_image.id = image_id
+                cocovid_image.frame_id = frame_id
+                cocovid_image.video_id = coco_video.id
+                coco_dict["images"].append(cocovid_image.json)
+
+                for cocovid_annotation in cocovid_image.annotations:
+                    instance_id_set.add(cocovid_annotation.instance_id)
+                    cocovid_annotation.instance_id += global_instance_id
+
+                    cocovid_annotation.id = annotation_id
+                    cocovid_annotation.image_id = cocovid_image.id
+                    coco_dict["annotations"].append(cocovid_annotation.json)
+
+                    # increment annotation_id
+                    annotation_id = copy.deepcopy(annotation_id + 1)
+                # increment image_id and frame_id
+                image_id = copy.deepcopy(image_id + 1)
+                frame_id = copy.deepcopy(frame_id + 1)
+            # increment video_id and global_instance_id
+            video_id = copy.deepcopy(video_id + 1)
+            global_instance_id += len(instance_id_set)
+
+        return coco_dict
