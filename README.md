@@ -1,5 +1,6 @@
 # SAHI: Slicing Aided Hyper Inference
 
+[![Downloads](https://pepy.tech/badge/sahi/month)](https://pepy.tech/project/sahi)
 [![PyPI version](https://badge.fury.io/py/sahi.svg)](https://badge.fury.io/py/sahi)
 [![Conda version](https://anaconda.org/obss/sahi/badges/version.svg)](https://anaconda.org/obss/sahi)
 [![CI](https://github.com/obss/sahi/workflows/CI/badge.svg)](https://github.com/obss/sahi/actions?query=event%3Apush+branch%3Amain+is%3Acompleted+workflow%3ACI)
