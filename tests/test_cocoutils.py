@@ -5,17 +5,48 @@ import os
 import shutil
 import unittest
 
-from sahi.utils.coco import (
-    CocoAnnotation,
-    get_imageid2annotationlist_mapping,
-    merge,
-    update_categories,
-)
+from sahi.utils.coco import get_imageid2annotationlist_mapping, merge, update_categories
 from sahi.utils.file import load_json
 
 
 class TestCocoUtils(unittest.TestCase):
+    def test_coco_categories(self):
+        from sahi.utils.coco import CocoCategory
+
+        category_id = 0
+        category_name = "human"
+        supercategory = "human"
+        coco_category1 = CocoCategory(
+            id=category_id, name=category_name, supercategory=supercategory
+        )
+        coco_category2 = CocoCategory(id=category_id, name=category_name)
+        coco_category3 = CocoCategory.from_coco_category(
+            {
+                "id": category_id,
+                "name": category_name,
+                "supercategory": supercategory,
+            }
+        )
+
+        self.assertEqual(coco_category1.id, category_id)
+        self.assertEqual(coco_category1.id, coco_category2.id)
+        self.assertEqual(coco_category1.id, coco_category3.id)
+
+        self.assertEqual(coco_category1.name, category_name)
+        self.assertEqual(coco_category1.name, coco_category2.name)
+        self.assertEqual(coco_category1.name, coco_category3.name)
+
+        self.assertEqual(coco_category1.supercategory, supercategory)
+        self.assertEqual(coco_category1.supercategory, coco_category2.supercategory)
+        self.assertEqual(coco_category1.supercategory, coco_category3.supercategory)
+
+        self.assertEqual(coco_category1.json["id"], category_id)
+        self.assertEqual(coco_category1.json["name"], category_name)
+        self.assertEqual(coco_category1.json["supercategory"], supercategory)
+
     def test_coco_annotation(self):
+        from sahi.utils.coco import CocoAnnotation
+
         coco_segmentation = [[1, 1, 325, 125, 250, 200, 5, 200]]
         category_id = 3
         category_name = "car"
@@ -45,8 +76,33 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(coco_annotation.category_name, category_name)
         self.assertEqual(coco_annotation.segmentation, [])
 
+    def test_cocovid_annotation(self):
+        from sahi.utils.coco import CocoVidAnnotation
+
+        bbox = [1, 1, 324, 199]
+        category_id = 3
+        category_name = "car"
+        image_id = 13
+        instance_id = 22
+        iscrowd = 0
+        cocovid_annotation = CocoVidAnnotation(
+            bbox=bbox,
+            category_id=category_id,
+            category_name=category_name,
+            image_id=image_id,
+            instance_id=instance_id,
+            iscrowd=iscrowd,
+        )
+
+        self.assertEqual(cocovid_annotation.json["bbox"], bbox)
+        self.assertEqual(cocovid_annotation.json["category_id"], category_id)
+        self.assertEqual(cocovid_annotation.json["category_name"], category_name)
+        self.assertEqual(cocovid_annotation.json["image_id"], image_id)
+        self.assertEqual(cocovid_annotation.json["instance_id"], instance_id)
+        self.assertEqual(cocovid_annotation.json["iscrowd"], iscrowd)
+
     def test_coco_image(self):
-        from sahi.utils.coco import CocoImage
+        from sahi.utils.coco import CocoAnnotation, CocoImage
 
         # init coco image
         file_name = "tests/data/small-vehicles1.jpeg"
@@ -85,6 +141,119 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(coco_image.annotations[1].category_id, 2)
         self.assertEqual(coco_image.annotations[1].category_name, "bus")
         self.assertEqual(coco_image.annotations[1].bbox, coco_bbox)
+
+    def test_cocovid_image(self):
+        from sahi.utils.coco import CocoVidAnnotation, CocoVidImage
+
+        # init coco image
+        file_name = "tests/data/small-vehicles1.jpeg"
+        height = 580
+        width = 1068
+        cocovid_image = CocoVidImage(file_name, height, width)
+
+        # create and add first annotation
+        bbox1 = [1, 1, 324, 199]
+        category_id1 = 3
+        category_name1 = "car"
+        image_id1 = 13
+        instance_id1 = 22
+        iscrowd1 = 0
+        cocovid_annotation_1 = CocoVidAnnotation(
+            bbox=bbox1,
+            category_id=category_id1,
+            category_name=category_name1,
+            image_id=image_id1,
+            instance_id=instance_id1,
+            iscrowd=iscrowd1,
+        )
+        cocovid_image.add_annotation(cocovid_annotation_1)
+
+        # create and add second annotation
+        bbox2 = [1, 1, 50, 150]
+        category_id2 = 2
+        category_name2 = "human"
+        image_id2 = 14
+        instance_id2 = 23
+        iscrowd2 = 0
+        cocovid_annotation_2 = CocoVidAnnotation(
+            bbox=bbox2,
+            category_id=category_id2,
+            category_name=category_name2,
+            image_id=image_id2,
+            instance_id=instance_id2,
+            iscrowd=iscrowd2,
+        )
+        cocovid_image.add_annotation(cocovid_annotation_2)
+
+        # compare
+        self.assertEqual(cocovid_image.file_name, file_name)
+        self.assertEqual(cocovid_image.json["file_name"], file_name)
+        self.assertEqual(cocovid_image.height, height)
+        self.assertEqual(cocovid_image.json["height"], height)
+        self.assertEqual(cocovid_image.width, width)
+        self.assertEqual(cocovid_image.json["width"], width)
+        self.assertEqual(len(cocovid_image.annotations), 2)
+        self.assertEqual(cocovid_image.annotations[0].category_id, category_id1)
+        self.assertEqual(cocovid_image.annotations[0].category_name, category_name1)
+        self.assertEqual(cocovid_image.annotations[0].image_id, image_id1)
+        self.assertEqual(cocovid_image.annotations[0].bbox, bbox1)
+
+        self.assertEqual(cocovid_image.annotations[1].category_id, category_id2)
+        self.assertEqual(cocovid_image.annotations[1].category_name, category_name2)
+        self.assertEqual(cocovid_image.annotations[1].instance_id, instance_id2)
+        self.assertEqual(cocovid_image.annotations[1].bbox, bbox2)
+
+    def test_coco_video(self):
+        from sahi.utils.coco import CocoVidAnnotation, CocoVideo, CocoVidImage
+
+        # init coco image
+        file_name = "tests/data/small-vehicles1.jpeg"
+        height1 = 519
+        width1 = 1067
+        cocovid_image = CocoVidImage(file_name, height1, width1)
+
+        # create and add first annotation
+        bbox1 = [1, 1, 324, 199]
+        category_id1 = 3
+        category_name1 = "car"
+        image_id1 = 13
+        instance_id1 = 22
+        iscrowd1 = 0
+        cocovid_annotation_1 = CocoVidAnnotation(
+            bbox=bbox1,
+            category_id=category_id1,
+            category_name=category_name1,
+            image_id=image_id1,
+            instance_id=instance_id1,
+            iscrowd=iscrowd1,
+        )
+        cocovid_image.add_annotation(cocovid_annotation_1)
+
+        # init coco video
+        name = "small-vehicles"
+        height2 = 580
+        width2 = 1068
+        coco_video = CocoVideo(name=name, height=height2, width=width2)
+
+        # add first image
+        coco_video.add_cocovidimage(cocovid_image)
+
+        # compare
+        self.assertEqual(coco_video.name, name)
+        self.assertEqual(coco_video.json["name"], name)
+        self.assertEqual(coco_video.height, height2)
+        self.assertEqual(coco_video.json["height"], height2)
+        self.assertEqual(coco_video.width, width2)
+        self.assertEqual(coco_video.json["width"], width2)
+        self.assertEqual(len(coco_video.images), 1)
+        self.assertEqual(coco_video.images[0].file_name, file_name)
+        self.assertEqual(coco_video.images[0].json["file_name"], file_name)
+        self.assertEqual(coco_video.images[0].height, height1)
+        self.assertEqual(coco_video.images[0].json["height"], height1)
+        self.assertEqual(coco_video.images[0].width, width1)
+        self.assertEqual(coco_video.images[0].json["width"], width1)
+        self.assertEqual(coco_video.images[0].annotations[0].bbox, bbox1)
+        self.assertEqual(coco_video.images[0].annotations[0].json["bbox"], bbox1)
 
     def test_coco(self):
         from sahi.utils.coco import Coco
@@ -212,6 +381,11 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(merged_coco_dict["annotations"][7]["category_id"], 2)
         self.assertEqual(merged_coco_dict["annotations"][7]["image_id"], 2)
         self.assertEqual(merged_coco_dict["annotations"][7]["id"], 8)
+
+    def test_cocovid(self):
+        from sahi.utils.coco import CocoVid
+
+        # TODO
 
 
 if __name__ == "__main__":

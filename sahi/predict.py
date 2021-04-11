@@ -448,7 +448,7 @@ def predict(
             for object_prediction in object_prediction_list:
                 coco_prediction = object_prediction.to_coco_prediction()
                 coco_prediction.image_id = image_id
-                coco_prediction_json = coco_prediction.serialize()
+                coco_prediction_json = coco_prediction.json
                 coco_json.append(coco_prediction_json)
 
         time_start = time.time()
