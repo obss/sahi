@@ -356,7 +356,7 @@ def predict(
 
     # list image files in directory
     if coco_file_path:
-        coco = Coco(coco_file_path)
+        coco = Coco.from_coco_dict_or_path(coco_file_path)
         image_path_list = [
             str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images
         ]
@@ -448,7 +448,7 @@ def predict(
             for object_prediction in object_prediction_list:
                 coco_prediction = object_prediction.to_coco_prediction()
                 coco_prediction.image_id = image_id
-                coco_prediction_json = coco_prediction.serialize()
+                coco_prediction_json = coco_prediction.json
                 coco_json.append(coco_prediction_json)
 
         time_start = time.time()
@@ -502,8 +502,9 @@ def predict(
             durations_in_seconds["prediction"],
             "seconds.",
         )
-        print(
-            "Exporting performed in",
-            durations_in_seconds["export_files"],
-            "seconds.",
-        )
+        if export_visual:
+            print(
+                "Exporting performed in",
+                durations_in_seconds["export_files"],
+                "seconds.",
+            )
