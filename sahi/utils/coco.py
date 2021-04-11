@@ -774,6 +774,18 @@ class Coco:
 
         self.categories.append(category)
 
+    def add_image(self, image):
+        """
+        Adds image to this Coco instance
+
+        Args:
+            image: CocoImage
+        """
+
+        assert type(image) == CocoImage, "image must be a CocoImage instance"
+
+        self.images.append(image)
+
     @classmethod
     def from_coco_dict_or_path(cls, coco_dict_or_path):
         """
@@ -1566,7 +1578,7 @@ class CocoVid:
             video: CocoVideo
         """
 
-        assert isinstance(video, CocoVideo), "video must be a CocoVideo instance"
+        assert type(video) == CocoVideo, "video must be a CocoVideo instance"
 
         self.videos.append(video)
 
