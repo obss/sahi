@@ -762,7 +762,7 @@ class Coco:
 
     def add_category(self, category):
         """
-        Adds category to this CocoVid instance
+        Adds category to this Coco instance
 
         Args:
             category: CocoCategory
