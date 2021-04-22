@@ -163,8 +163,8 @@ class CocoAnnotation:
         self._bbox = [round(point) for point in bbox] if bbox else bbox
         self._category_id = category_id
         self._category_name = category_name
-        self._image_id = int(image_id)
-        self._iscrowd = int(iscrowd)
+        self._image_id = image_id
+        self._iscrowd = iscrowd
 
         if self._segmentation:
             shapely_annotation = ShapelyAnnotation.from_coco_segmentation(
