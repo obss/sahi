@@ -56,7 +56,7 @@ class TestCocoUtils(unittest.TestCase):
             category_name=category_name,
         )
 
-        self.assertAlmostEqual(coco_annotation.area, 41177.5, 1)
+        self.assertAlmostEqual(coco_annotation.area, 41177, 1)
         self.assertEqual(coco_annotation.bbox, [1, 1, 324, 199])
         self.assertEqual(coco_annotation.category_id, category_id)
         self.assertEqual(coco_annotation.category_name, category_name)
