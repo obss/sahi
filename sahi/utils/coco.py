@@ -160,11 +160,11 @@ class CocoAnnotation:
         assert bbox or segmentation, "you must provide a bbox or polygon"
 
         self._segmentation = segmentation
-        self._bbox = [int(coord) for coord in bbox]
-        self._category_id = int(category_id)
+        self._bbox = [int(coord) for coord in bbox] if bbox else bbox
+        self._category_id = category_id
         self._category_name = category_name
-        self._image_id = int(image_id)
-        self._iscrowd = int(iscrowd)
+        self._image_id = image_id
+        self._iscrowd = iscrowd
 
         if self._segmentation:
             shapely_annotation = ShapelyAnnotation.from_coco_segmentation(
@@ -525,7 +525,7 @@ class CocoImage:
             width : int
                 Image width in pixels
         """
-        self.id = int(id)
+        self.id = int(id) if id else id
         self.file_name = file_name
         self.height = int(height)
         self.width = int(width)
