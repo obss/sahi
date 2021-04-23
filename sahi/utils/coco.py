@@ -788,7 +788,7 @@ class Coco:
         self.images.append(image)
 
     @classmethod
-    def from_coco_dict_or_path(cls, coco_dict_or_path):
+    def from_coco_dict_or_path(cls, coco_dict_or_path, desired_name2id=None):
         """
         Creates coco object from COCO formatted dict or COCO dataset file path.
 
@@ -796,6 +796,8 @@ class Coco:
             coco_dict_or_path: dict/str or List[dict/str]
                 COCO formatted dict or COCO dataset file path
                 List of COCO formatted dict or COCO dataset file path
+            desired_name2id : dict
+                {"human": 1, "car": 2, "big_vehicle": 3}
 
         Properties:
             images: list of CocoImage
@@ -1214,7 +1216,7 @@ def merge(coco_dict1: dict, coco_dict2: dict, desired_name2id: dict = None) -> d
     return merged_coco_dict
 
 
-def merge_from_list(coco_dict_list, desired_name2id=None):
+def merge_from_list(coco_dict_list, desired_name2id=None, verbose=1):
     """
     Combines a list of coco formatted annotations dicts, and returns the combined coco dict.
 
@@ -1229,11 +1231,33 @@ def merge_from_list(coco_dict_list, desired_name2id=None):
         merged_coco_dict : dict
             Merged COCO dict.
     """
+    if verbose:
+        if not desired_name2id:
+            print("'desired_name2id' is not specified, combining all categories.")
+
+    # create desired_name2id by combinin all categories, if desired_name2id is not specified
+    if desired_name2id is None:
+        desired_name2id = {}
+        for ind, coco_dict in enumerate(coco_dict_list):
+            temp_categories = copy.deepcopy(coco_dict["categories"])
+            for temp_category in temp_categories:
+                if temp_category["name"] not in desired_name2id:
+                    desired_name2id[temp_category["name"]] = ind + 1
+                else:
+                    continue
+
     for ind, coco_dict in enumerate(coco_dict_list):
         if ind == 0:
             merged_coco_dict = copy.deepcopy(coco_dict)
         else:
             merged_coco_dict = merge(merged_coco_dict, coco_dict, desired_name2id)
+
+    # print categories
+    if verbose:
+        print(
+            "Categories are formed as:\n",
+            merged_coco_dict["categories"],
+        )
 
     return merged_coco_dict
 
