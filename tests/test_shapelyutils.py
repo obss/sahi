@@ -19,8 +19,8 @@ class TestShapelyUtils(unittest.TestCase):
         self.assertListEqual(
             shapely_box.exterior.coords.xy[0].tolist(), [257.0, 257.0, 1.0, 1.0, 257.0]
         )
-        self.assertEqual(shapely_box.area, 65536.0)
-        self.assertTupleEqual(shapely_box.bounds, (1.0, 1.0, 257.0, 257.0))
+        self.assertEqual(shapely_box.area, 65536)
+        self.assertTupleEqual(shapely_box.bounds, (1, 1, 257, 257))
 
     def test_get_shapely_multipolygon(self):
         coco_segmentation = [[1, 1, 325, 125, 250, 200, 5, 200]]
@@ -28,10 +28,10 @@ class TestShapelyUtils(unittest.TestCase):
 
         self.assertListEqual(
             shapely_multipolygon[0].exterior.coords.xy[0].tolist(),
-            [1.0, 325.0, 250.0, 5.0, 1.0],
+            [1.0, 325, 250, 5, 1],
         )
         self.assertEqual(shapely_multipolygon.area, 41177.5)
-        self.assertTupleEqual(shapely_multipolygon.bounds, (1.0, 1.0, 325.0, 200.0))
+        self.assertTupleEqual(shapely_multipolygon.bounds, (1, 1, 325, 200))
 
     def test_shapely_annotation(self):
         # init shapely_annotation from coco segmentation
@@ -72,7 +72,7 @@ class TestShapelyUtils(unittest.TestCase):
         # test properties
         self.assertEqual(
             shapely_annotation.area,
-            shapely_multipolygon.area,
+            int(shapely_multipolygon.area),
         )
         self.assertEqual(
             shapely_annotation.multipolygon,
@@ -147,16 +147,16 @@ class TestShapelyUtils(unittest.TestCase):
             intersection_shapely_annotation.to_coco_segmentation(),
             [
                 [
-                    256.0,
-                    97.97530864197532,
-                    0.0,
-                    0.0,
-                    4.0,
-                    199.0,
-                    249.0,
-                    199.0,
-                    256.0,
-                    192.0,
+                    256,
+                    97,
+                    0,
+                    0,
+                    4,
+                    199,
+                    249,
+                    199,
+                    256,
+                    192,
                 ]
             ],
         )
@@ -180,7 +180,7 @@ class TestShapelyUtils(unittest.TestCase):
             shapely_box
         )
 
-        self.assertEqual(intersection_shapely_annotation.area, 0.0)
+        self.assertEqual(intersection_shapely_annotation.area, 0)
 
         self.assertEqual(intersection_shapely_annotation.to_coco_bbox(), [])
 

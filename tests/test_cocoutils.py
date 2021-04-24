@@ -56,7 +56,7 @@ class TestCocoUtils(unittest.TestCase):
             category_name=category_name,
         )
 
-        self.assertAlmostEqual(coco_annotation.area, 41177.5, 1)
+        self.assertAlmostEqual(coco_annotation.area, 41177, 1)
         self.assertEqual(coco_annotation.bbox, [1, 1, 324, 199])
         self.assertEqual(coco_annotation.category_id, category_id)
         self.assertEqual(coco_annotation.category_name, category_name)
@@ -381,6 +381,92 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(merged_coco_dict["annotations"][7]["category_id"], 2)
         self.assertEqual(merged_coco_dict["annotations"][7]["image_id"], 2)
         self.assertEqual(merged_coco_dict["annotations"][7]["id"], 8)
+
+    def test_merge_from_list(self):
+        from sahi.utils.coco import merge_from_list
+
+        # load coco files to be combined
+        coco_path1 = "tests/data/coco_utils/terrain1_coco.json"
+        coco_path2 = "tests/data/coco_utils/terrain2_coco.json"
+        coco_path3 = "tests/data/coco_utils/terrain3_coco.json"
+        coco_dict1 = load_json(coco_path1)
+        self.assertEqual(len(coco_dict1["images"]), 1)
+        self.assertEqual(len(coco_dict1["annotations"]), 7)
+        self.assertEqual(len(coco_dict1["categories"]), 1)
+
+        coco_dict2 = load_json(coco_path2)
+        self.assertEqual(len(coco_dict2["images"]), 1)
+        self.assertEqual(len(coco_dict2["annotations"]), 5)
+        self.assertEqual(len(coco_dict2["categories"]), 1)
+
+        coco_dict3 = load_json(coco_path3)
+        self.assertEqual(len(coco_dict3["images"]), 1)
+        self.assertEqual(len(coco_dict3["annotations"]), 10)
+        self.assertEqual(len(coco_dict3["categories"]), 1)
+
+        # merge without desired_name2id
+        merged_coco_dict = merge_from_list([coco_dict1, coco_dict2, coco_dict3])
+        self.assertEqual(len(merged_coco_dict["images"]), 3)
+        self.assertEqual(len(merged_coco_dict["annotations"]), 22)
+        self.assertEqual(len(merged_coco_dict["categories"]), 2)
+        self.assertEqual(
+            merged_coco_dict["annotations"][12]["bbox"],
+            coco_dict3["annotations"][0]["bbox"],
+        )
+        self.assertEqual(
+            merged_coco_dict["annotations"][12]["id"],
+            13,
+        )
+        self.assertEqual(
+            merged_coco_dict["annotations"][12]["category_id"],
+            coco_dict3["annotations"][0]["category_id"],
+        )
+        self.assertEqual(
+            merged_coco_dict["annotations"][12]["image_id"],
+            3,
+        )
+        self.assertEqual(
+            merged_coco_dict["annotations"][12]["category_id"],
+            coco_dict3["annotations"][0]["category_id"],
+        )
+        self.assertEqual(
+            merged_coco_dict["annotations"][9]["category_id"],
+            2,
+        )
+        self.assertEqual(
+            merged_coco_dict["annotations"][9]["image_id"],
+            2,
+        )
+
+    def test_multi_coco_init(self):
+        from sahi.utils.coco import Coco
+
+        # load coco files to be combined
+        coco_path1 = "tests/data/coco_utils/terrain1_coco.json"
+        coco_path2 = "tests/data/coco_utils/terrain2_coco.json"
+        coco_path3 = "tests/data/coco_utils/terrain3_coco.json"
+        coco = Coco.from_coco_dict_or_path([coco_path1, coco_path2, coco_path3])
+        self.assertEqual(len(coco.json["images"]), 3)
+        self.assertEqual(len(coco.json["annotations"]), 22)
+        self.assertEqual(len(coco.json["categories"]), 2)
+        self.assertEqual(len(coco.images), 3)
+
+        self.assertEqual(
+            coco.json["annotations"][12]["id"],
+            13,
+        )
+        self.assertEqual(
+            coco.json["annotations"][12]["image_id"],
+            3,
+        )
+        self.assertEqual(
+            coco.json["annotations"][9]["category_id"],
+            2,
+        )
+        self.assertEqual(
+            coco.json["annotations"][9]["image_id"],
+            2,
+        )
 
     def test_cocovid(self):
         from sahi.utils.coco import CocoVid

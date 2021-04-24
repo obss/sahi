@@ -6,10 +6,11 @@ import copy
 import os
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, List
 
 import numpy as np
-from sahi.utils.file import create_dir, get_base_filename, load_json, save_json
+from sahi.utils.file import get_base_filename, load_json, save_json
 from sahi.utils.shapely import ShapelyAnnotation, get_shapely_multipolygon
 from tqdm import tqdm
 
@@ -20,7 +21,7 @@ class CocoCategory:
     """
 
     def __init__(self, id=None, name=None, supercategory=None):
-        self.id = id
+        self.id = int(id)
         self.name = name
         self.supercategory = supercategory if supercategory else name
 
@@ -159,7 +160,7 @@ class CocoAnnotation:
         assert bbox or segmentation, "you must provide a bbox or polygon"
 
         self._segmentation = segmentation
-        self._bbox = bbox
+        self._bbox = [int(coord) for coord in bbox] if bbox else bbox
         self._category_id = category_id
         self._category_name = category_name
         self._image_id = image_id
@@ -524,10 +525,10 @@ class CocoImage:
             width : int
                 Image width in pixels
         """
-        self.id = id
+        self.id = int(id) if id else id
         self.file_name = file_name
-        self.height = height
-        self.width = width
+        self.height = int(height)
+        self.width = int(width)
         self.annotations = []  # list of CocoAnnotation that belong to this image
 
     def add_annotation(self, annotation):
@@ -787,13 +788,16 @@ class Coco:
         self.images.append(image)
 
     @classmethod
-    def from_coco_dict_or_path(cls, coco_dict_or_path):
+    def from_coco_dict_or_path(cls, coco_dict_or_path, desired_name2id=None):
         """
         Creates coco object from COCO formatted dict or COCO dataset file path.
 
         Args:
-            coco_dict_or_path: dict or str
-                COCO formatted dictor COCO dataset file path
+            coco_dict_or_path: dict/str or List[dict/str]
+                COCO formatted dict or COCO dataset file path
+                List of COCO formatted dict or COCO dataset file path
+            desired_name2id : dict
+                {"human": 1, "car": 2, "big_vehicle": 3}
 
         Properties:
             images: list of CocoImage
@@ -802,11 +806,26 @@ class Coco:
         # init coco object
         coco = cls()
 
-        # load coco dict if path is given
-        if isinstance(coco_dict_or_path, str):
-            coco_dict = load_json(coco_dict_or_path)
+        if type(coco_dict_or_path) == list:  # merge coco datasets if given as list
+            # create coco_dict_list
+            coco_dict_list = []
+            coco_dict_or_path_list = copy.deepcopy(coco_dict_or_path)
+            for coco_dict_or_path in coco_dict_or_path_list:
+                # load coco dataset dict
+                if type(coco_dict_or_path) == str:
+                    coco_dict = load_json(coco_dict_or_path)
+                else:
+                    coco_dict = coco_dict_or_path
+                # append to list
+                coco_dict_list.append(coco_dict)
+            # merge coco dicts
+            coco_dict = merge_from_list(coco_dict_list, desired_name2id=None)
         else:
-            coco_dict = coco_dict_or_path
+            # load coco dict if path is given
+            if type(coco_dict_or_path) == str:
+                coco_dict = load_json(coco_dict_or_path)
+            else:
+                coco_dict = coco_dict_or_path
 
         # arrange image id to annotation id mapping
         coco.add_categories_from_coco_category_list(coco_dict["categories"])
@@ -935,30 +954,60 @@ class Coco:
             output_dir: str
                 Export directory.
             train_split_rate: float
+                If given 1, will be exported as train split.
+                If given 0, will be exported as val split.
+                If in between 0-1, both train/val splits will be calculated and exported.
             numpy_seed: int
                 To fix the numpy seed.
         """
         import yaml
 
-        result = self.split_coco_as_train_val(
-            file_name=None,
-            target_dir=None,
-            train_split_rate=train_split_rate,
-            numpy_seed=numpy_seed,
-        )
+        # set split_mode
+        if 0 < train_split_rate and train_split_rate < 1:
+            split_mode = "TRAINVAL"
+        elif train_split_rate == 0:
+            split_mode = "VAL"
+        elif train_split_rate == 1:
+            split_mode = "TRAIN"
+        else:
+            ValueError("train_split_rate cannot be <0 or >1")
+
+        # split dataset
+        if split_mode == "TRAINVAL":
+            result = self.split_coco_as_train_val(
+                file_name=None,
+                target_dir=None,
+                train_split_rate=train_split_rate,
+                numpy_seed=numpy_seed,
+            )
+            train_coco_dict = result["train_dict"]
+            val_coco_dict = result["val_dict"]
+        elif split_mode == "TRAIN":
+            train_coco_dict = self.json
+            val_coco_dict = None
+        elif split_mode == "VAL":
+            train_coco_dict = None
+            val_coco_dict = self.json
+
         # create train val image dirs
-        train_dir = os.path.join(os.path.abspath(output_dir), "train/")
-        val_dir = os.path.join(os.path.abspath(output_dir), "val/")
-        create_dir(train_dir)
-        create_dir(val_dir)
+        train_dir = ""
+        val_dir = ""
+        if split_mode in ["TRAINVAL", "TRAIN"]:
+            train_dir = Path(os.path.abspath(output_dir)) / "train/"
+            train_dir.mkdir(parents=True, exist_ok=True)  # create dir
+        if split_mode in ["TRAINVAL", "VAL"]:
+            val_dir = Path(os.path.abspath(output_dir)) / "val/"
+            val_dir.mkdir(parents=True, exist_ok=True)  # create dir
 
         # create image symlinks and annotation txts
-        export_yolov5_images_and_txts_from_coco_dict(
-            image_dir, output_dir=train_dir, coco_dict_or_path=result["train_dict"]
-        )
-        export_yolov5_images_and_txts_from_coco_dict(
-            image_dir, output_dir=val_dir, coco_dict_or_path=result["val_dict"]
-        )
+        if split_mode in ["TRAINVAL", "TRAIN"]:
+            export_yolov5_images_and_txts_from_coco_dict(
+                image_dir, output_dir=train_dir, coco_dict_or_path=train_coco_dict
+            )
+        if split_mode in ["TRAINVAL", "VAL"]:
+            export_yolov5_images_and_txts_from_coco_dict(
+                image_dir, output_dir=val_dir, coco_dict_or_path=val_coco_dict
+            )
 
         # create yolov5 data yaml
         data = {
@@ -967,7 +1016,7 @@ class Coco:
             "nc": len(self.category_mapping),
             "names": list(self.category_mapping.values()),
         }
-        yaml_path = os.path.join(output_dir, "data.yml")
+        yaml_path = str(Path(output_dir) / "data.yml")
         with open(yaml_path, "w") as outfile:
             yaml.dump(data, outfile, default_flow_style=None)
 
@@ -1114,9 +1163,9 @@ def update_categories_from_file(
     save_json(coco_target, save_path)
 
 
-def merge(coco_dict1: dict, coco_dict2: dict, desired_name2id: dict = {}) -> dict:
+def merge(coco_dict1: dict, coco_dict2: dict, desired_name2id: dict = None) -> dict:
     """
-    Combines 2 coco formatted annotations files given their paths, and returns the combined coco dict.
+    Combines 2 coco formatted annotations dicts, and returns the combined coco dict.
 
     Arguments:
     ---------
@@ -1137,7 +1186,7 @@ def merge(coco_dict1: dict, coco_dict2: dict, desired_name2id: dict = {}) -> dic
     temp_coco_dict2 = copy.deepcopy(coco_dict2)
 
     # rearrange categories if any desired_name2id mapping is given
-    if desired_name2id != {}:
+    if desired_name2id is not None:
         temp_coco_dict1 = update_categories(desired_name2id, temp_coco_dict1)
         temp_coco_dict2 = update_categories(desired_name2id, temp_coco_dict2)
 
@@ -1163,6 +1212,52 @@ def merge(coco_dict1: dict, coco_dict2: dict, desired_name2id: dict = {}) -> dic
         annotation["image_id"] += last_image_id
         annotation["id"] += last_annotation_id
         merged_coco_dict["annotations"].append(annotation)
+
+    return merged_coco_dict
+
+
+def merge_from_list(coco_dict_list, desired_name2id=None, verbose=1):
+    """
+    Combines a list of coco formatted annotations dicts, and returns the combined coco dict.
+
+    Arguments:
+    ---------
+        coco_dict)list : list of dict
+            A list of coco dicts
+        desired_name2id : dict
+            {"human": 1, "car": 2, "big_vehicle": 3}
+    Returns:
+    ---------
+        merged_coco_dict : dict
+            Merged COCO dict.
+    """
+    if verbose:
+        if not desired_name2id:
+            print("'desired_name2id' is not specified, combining all categories.")
+
+    # create desired_name2id by combinin all categories, if desired_name2id is not specified
+    if desired_name2id is None:
+        desired_name2id = {}
+        for ind, coco_dict in enumerate(coco_dict_list):
+            temp_categories = copy.deepcopy(coco_dict["categories"])
+            for temp_category in temp_categories:
+                if temp_category["name"] not in desired_name2id:
+                    desired_name2id[temp_category["name"]] = ind + 1
+                else:
+                    continue
+
+    for ind, coco_dict in enumerate(coco_dict_list):
+        if ind == 0:
+            merged_coco_dict = copy.deepcopy(coco_dict)
+        else:
+            merged_coco_dict = merge(merged_coco_dict, coco_dict, desired_name2id)
+
+    # print categories
+    if verbose:
+        print(
+            "Categories are formed as:\n",
+            merged_coco_dict["categories"],
+        )
 
     return merged_coco_dict
 

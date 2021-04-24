@@ -96,7 +96,7 @@ class ShapelyAnnotation:
 
     @property
     def area(self):
-        return self.__area
+        return int(self.__area)
 
     @multipolygon.setter
     def multipolygon(self, multipolygon: MultiPolygon):
@@ -158,8 +158,8 @@ class ShapelyAnnotation:
                     y_coords = [y_coord - miny for y_coord in y_coords]
                 # convert intersection to coco style segmentation annotation
                 coco_polygon = [None] * len(x_coords) * 2
-                coco_polygon[0::2] = x_coords
-                coco_polygon[1::2] = y_coords
+                coco_polygon[0::2] = [int(coord) for coord in x_coords]
+                coco_polygon[1::2] = [int(coord) for coord in y_coords]
             else:
                 coco_polygon = []
             # remove if first and last points are duplicate
@@ -207,10 +207,10 @@ class ShapelyAnnotation:
             coco_bbox, _ = get_bbox_from_shapely(self.multipolygon)
             # fix coord by slice box
             if self.slice_box:
-                minx = self.slice_box[0]
-                miny = self.slice_box[1]
-                coco_bbox[0] = coco_bbox[0] - minx
-                coco_bbox[1] = coco_bbox[1] - miny
+                minx = int(self.slice_box[0])
+                miny = int(self.slice_box[1])
+                coco_bbox[0] = int(coco_bbox[0] - minx)
+                coco_bbox[1] = int(coco_bbox[1] - miny)
         else:
             coco_bbox = []
         return coco_bbox
@@ -225,10 +225,10 @@ class ShapelyAnnotation:
             if self.slice_box:
                 minx = self.slice_box[0]
                 miny = self.slice_box[1]
-                voc_bbox[0] = voc_bbox[0] - minx
-                voc_bbox[2] = voc_bbox[2] - minx
-                voc_bbox[1] = voc_bbox[1] - miny
-                voc_bbox[3] = voc_bbox[3] - miny
+                voc_bbox[0] = int(voc_bbox[0] - minx)
+                voc_bbox[2] = int(voc_bbox[2] - minx)
+                voc_bbox[1] = int(voc_bbox[1] - miny)
+                voc_bbox[3] = int(voc_bbox[3] - miny)
         else:
             voc_bbox = []
         return voc_bbox

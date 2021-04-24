@@ -193,6 +193,7 @@ class TestPredict(unittest.TestCase):
             overlap_height_ratio=0.2,
             overlap_width_ratio=0.2,
             match_iou_threshold=0.5,
+            export_visual=False,
             export_pickle=False,
             export_crop=False,
             coco_file_path=coco_file_path,
