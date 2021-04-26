@@ -468,6 +468,30 @@ class TestCocoUtils(unittest.TestCase):
             2,
         )
 
+    def test_get_subsampled_coco(self):
+        from sahi.utils.coco import Coco
+        from sahi.utils.file import load_json
+
+        coco_path = "tests/data/coco_utils/visdrone2019-det-train-first50image.json"
+        coco = Coco.from_coco_dict_or_path(coco_path)
+        subsampled_coco = coco.get_subsampled_coco(subsample_ratio=5)
+        self.assertEqual(
+            len(coco.json["images"]),
+            50,
+        )
+        self.assertEqual(
+            len(subsampled_coco.json["images"]),
+            10,
+        )
+        self.assertEqual(
+            len(coco.images[5].annotations),
+            len(subsampled_coco.images[1].annotations),
+        )
+        self.assertEqual(
+            len(coco.images[5].annotations),
+            len(subsampled_coco.images[1].annotations),
+        )
+
     def test_cocovid(self):
         from sahi.utils.coco import CocoVid
 

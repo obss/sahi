@@ -1020,6 +1020,23 @@ class Coco:
         with open(yaml_path, "w") as outfile:
             yaml.dump(data, outfile, default_flow_style=None)
 
+    def get_subsampled_coco(self, subsample_ratio=10):
+        """
+        Subsamples images with subsample_ratio and returns as sahi.utils.coco.Coco object.
+
+        Args:
+            subsample_ratio: int
+                10 means take every 10th image with its annotations
+        Returns:
+            subsampled_coco: sahi.utils.coco.Coco
+        """
+        subsampled_coco = Coco(name=self.name, remapping_dict=self.remapping_dict)
+        subsampled_coco.add_categories_from_coco_category_list(self.json_categories)
+        for image_ind in range(0, len(self.images), subsample_ratio):
+            subsampled_coco.add_image(self.images[image_ind])
+
+        return subsampled_coco
+
 
 def export_yolov5_images_and_txts_from_coco_dict(
     image_dir, output_dir, coco_dict_or_path
