@@ -10,7 +10,7 @@ class TestFileUtils(unittest.TestCase):
 
         directory = "tests/data/coco_utils/"
         filepath_list = list_files(directory, contains=["json"], verbose=False)
-        self.assertEqual(len(filepath_list), 10)
+        self.assertEqual(len(filepath_list), 11)
 
     def test_list_files_recursively(self):
         from sahi.utils.file import list_files_recursively
