@@ -307,7 +307,7 @@ def get_bool_mask_from_coco_segmentation(coco_segmentation, width, height):
     ]
     bool_mask = np.zeros(size)
     bool_mask = cv2.fillPoly(bool_mask, points, 1)
-    bool_mask.astype(np.bool)
+    bool_mask.astype(bool)
     return bool_mask
 
 

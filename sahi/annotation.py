@@ -180,7 +180,7 @@ class Mask:
     ):
         """
         Args:
-            bool_mask: np.ndarray with np.bool elements
+            bool_mask: np.ndarray with bool elements
                 2D mask of object, should have a shape of height*width
             full_shape: List
                 Size of the full image, should be in the form of [height, width]
@@ -195,7 +195,7 @@ class Mask:
             has_bool_mask = False
 
         if has_bool_mask:
-            self.bool_mask = bool_mask.astype(np.bool)
+            self.bool_mask = bool_mask.astype(bool)
         else:
             self.bool_mask = None
 
@@ -299,7 +299,7 @@ class ObjectAnnotation:
         Creates ObjectAnnotation from bool_mask (2D np.ndarray)
 
         Args:
-            bool_mask: np.ndarray with np.bool elements
+            bool_mask: np.ndarray with bool elements
                 2D mask of object, should have a shape of height*width
             category_id: int
                 ID of the object category
@@ -474,7 +474,7 @@ class ObjectAnnotation:
         Args:
             bbox: List
                 [minx, miny, maxx, maxy]
-            bool_mask: np.ndarray with np.bool elements
+            bool_mask: np.ndarray with bool elements
                 2D mask of object, should have a shape of height*width
             category_id: int
                 ID of the object category

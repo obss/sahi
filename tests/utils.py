@@ -16,14 +16,14 @@ class MmdetTestConstants:
     MMDET_RETINANET_MODEL_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
 
     if mmdet_version_as_integer() < 290:
+        MMDET_CASCADEMASKRCNN_CONFIG_PATH = "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco_v280.py"
+        MMDET_RETINANET_CONFIG_PATH = (
+            "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v280.py"
+        )
+    else:
         MMDET_CASCADEMASKRCNN_CONFIG_PATH = "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco.py"
         MMDET_RETINANET_CONFIG_PATH = (
             "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py"
-        )
-    else:
-        MMDET_CASCADEMASKRCNN_CONFIG_PATH = "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco_v290.py"
-        MMDET_RETINANET_CONFIG_PATH = (
-            "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v290.py"
         )
 
 

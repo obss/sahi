@@ -43,7 +43,7 @@ class TestPredict(unittest.TestCase):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import get_prediction
 
-        from tests.test_utils import (
+        from tests.utils import (
             MmdetTestConstants,
             download_mmdet_cascade_mask_rcnn_model,
         )
@@ -97,7 +97,7 @@ class TestPredict(unittest.TestCase):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import get_sliced_prediction
 
-        from tests.test_utils import (
+        from tests.utils import (
             MmdetTestConstants,
             download_mmdet_cascade_mask_rcnn_model,
         )
@@ -158,7 +158,7 @@ class TestPredict(unittest.TestCase):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import predict
 
-        from tests.test_utils import (
+        from tests.utils import (
             MmdetTestConstants,
             download_mmdet_cascade_mask_rcnn_model,
         )
