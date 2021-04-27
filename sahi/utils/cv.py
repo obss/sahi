@@ -8,7 +8,6 @@ import time
 
 import cv2
 import numpy as np
-import skimage.io
 from sahi.utils.file import create_dir
 
 
@@ -78,6 +77,12 @@ def read_large_image(image_path):
         img_cv2 = cv2.imread(image_path, 1)
         image0 = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
     except:
+        try:
+            import skimage.io
+        except ImportError:
+            raise ImportError(
+                'Please run "pip install -U scikit-image" '
+                'to install scikit-image first for large image handling.')
         image0 = skimage.io.imread(image_path, as_grey=False).astype(np.uint8)  # [::-1]
         use_cv2 = False
     return image0, use_cv2

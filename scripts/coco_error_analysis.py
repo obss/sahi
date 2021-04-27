@@ -3,10 +3,21 @@ import os
 from argparse import ArgumentParser
 from multiprocessing import Pool
 
-import matplotlib.pyplot as plt
 import numpy as np
-from pycocotools.coco import COCO
-from pycocotools.cocoeval import COCOeval
+
+try:
+    from pycocotools.coco import COCO
+    from pycocotools.cocoeval import COCOeval
+except ImportError:
+    raise ImportError(
+        'Please run "pip install -U pycocotools" '
+        'to install pycocotools first for coco evaluation.')
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    raise ImportError(
+        'Please run "pip install -U matplotlib" '
+        'to install matplotlib first for visualization.')
 
 
 def makeplot(rs, ps, outDir, class_name, iou_type):
