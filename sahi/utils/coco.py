@@ -1032,7 +1032,7 @@ class Coco:
         """
         subsampled_coco = Coco(name=self.name, remapping_dict=self.remapping_dict)
         subsampled_coco.add_categories_from_coco_category_list(self.json_categories)
-        for image_ind in range(0, len(self.images), subsample_ratio):
+        for image_ind in tqdm(range(0, len(self.images), subsample_ratio)):
             subsampled_coco.add_image(self.images[image_ind])
 
         return subsampled_coco
@@ -1055,7 +1055,7 @@ def export_yolov5_images_and_txts_from_coco_dict(
     # create coco instance from coco_dict_or_path
     coco = Coco.from_coco_dict_or_path(coco_dict_or_path)
 
-    for image in coco.images:
+    for image in tqdm(coco.images):
         # Create a symbolic link pointing to src named dst
         src = os.path.abspath(os.path.join(image_dir, image.file_name))
         dst = os.path.join(output_dir, image.file_name)
