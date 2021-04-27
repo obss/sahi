@@ -1,13 +1,21 @@
-# SAHI: Slicing Aided Hyper Inference
+<h1 align="center">
+  SAHI: Slicing Aided Hyper Inference
+</h1>
 
-[![Downloads](https://pepy.tech/badge/sahi/month)](https://pepy.tech/project/sahi)
-[![PyPI version](https://badge.fury.io/py/sahi.svg)](https://badge.fury.io/py/sahi)
-[![Conda version](https://anaconda.org/obss/sahi/badges/version.svg)](https://anaconda.org/obss/sahi)
-[![CI](https://github.com/obss/sahi/workflows/CI/badge.svg)](https://github.com/obss/sahi/actions?query=event%3Apush+branch%3Amain+is%3Acompleted+workflow%3ACI)
+<h4 align="center">
+  A vision library for performing sliced inference on large images/small objects.
+</h4>
 
-A vision library for performing sliced inference on large images/small objects
+<h4 align="center">
+    <img width="700" alt="teaser" src="./resources/sliced_inference.gif">
+</h4>
 
-<img width="700" alt="teaser" src="./resources/sliced_inference.gif">
+<div align="center">
+    <a href="https://pepy.tech/project/sahi"><img src="https://pepy.tech/badge/sahi/month" alt="downloads"></a>
+    <a href="https://badge.fury.io/py/sahi"><img src="https://badge.fury.io/py/sahi.svg" alt="pypi version"></a>
+    <a href="https://anaconda.org/obss/sahi"><img src="https://anaconda.org/obss/sahi/badges/version.svg" alt="conda version"></a>
+    <a href="https://github.com/obss/sahi/actions?query=event%3Apush+branch%3Amain+is%3Acompleted+workflow%3ACI"><img src="https://github.com/obss/sahi/workflows/CI/badge.svg" alt="ci"></a>
+</div>
 
 ## Overview
 
