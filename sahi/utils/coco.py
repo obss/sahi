@@ -1013,8 +1013,8 @@ class Coco:
 
         # create yolov5 data yaml
         data = {
-            "train": train_dir,
-            "val": val_dir,
+            "train": str(train_dir),
+            "val": str(val_dir),
             "nc": len(self.category_mapping),
             "names": list(self.category_mapping.values()),
         }
