@@ -169,6 +169,13 @@ class MmdetDetectionModel(DetectionModel):
         """
         Detection model is initialized and set to self.model.
         """
+        try:
+            import mmdet
+        except ImportError:
+            raise ImportError(
+                'Please run "pip install -U mmcv mmdet" '
+                'to install MMDetection first for MMDetection inference.')
+
         from mmdet.apis import init_detector
 
         # set model
@@ -195,6 +202,13 @@ class MmdetDetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted.
         """
+        try:
+            import mmdet
+        except ImportError:
+            raise ImportError(
+                'Please run "pip install -U mmcv mmdet" '
+                'to install MMDetection first for MMDetection inference.')
+
         # Confirm model is loaded
         assert (
             self.model is not None
@@ -228,8 +242,9 @@ class MmdetDetectionModel(DetectionModel):
 
     @property
     def category_names(self):
-        if self.num_categories == 1:
-            return [self.model.CLASSES]
+        if type(self.model.CLASSES) == str:
+            # https://github.com/open-mmlab/mmdetection/pull/4973
+            return (self.model.CLASSES,)
         else:
             return self.model.CLASSES
 
