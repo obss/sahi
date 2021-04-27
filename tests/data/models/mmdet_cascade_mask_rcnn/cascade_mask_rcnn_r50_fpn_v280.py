@@ -139,7 +139,7 @@ train_cfg = dict(
         nms_pre=2000,
         nms_post=2000,
         max_per_img=2000,
-        nms_the=0.7,
+        nms_thr=0.7,
         min_bbox_size=0,
     ),
     rcnn=[
