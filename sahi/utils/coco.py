@@ -736,6 +736,9 @@ class Coco:
                 Name of the Coco dataset, it determines exported json name.
             remapping_dict: dict
                 {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
+                Applied in these methods:
+                    add_categories_from_coco_category_list
+                    from_coco_dict_or_path
         """
         self.name = name
         self.remapping_dict = remapping_dict  # TODO: utilize remapping_dict
@@ -839,7 +842,9 @@ class Coco:
             coco_image = CocoImage.from_coco_image_dict(coco_image_dict)
             annotation_list = imageid2annotationlist[coco_image_dict["id"]]
             for coco_annotation_dict in annotation_list:
-                category_name = category_mapping[coco_annotation_dict["category_id"]]
+                remapped_category_id = self.remapping_dict[coco_annotation_dict["category_id"]] # apply category remapping (id:id)
+                coco_annotation_dict["category_id"] = remapped_category_id # update category id
+                category_name = category_mapping[remapped_category_id] # get category name (id:name)
                 coco_annotation = CocoAnnotation.from_coco_annotation_dict(
                     category_name=category_name, annotation_dict=coco_annotation_dict
                 )
