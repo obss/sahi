@@ -6,6 +6,7 @@ import copy
 import os
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass
+from multiprocessing import Pool
 from pathlib import Path
 from typing import Dict, List
 
@@ -736,9 +737,6 @@ class Coco:
                 Name of the Coco dataset, it determines exported json name.
             remapping_dict: dict
                 {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
-                Applied in these methods:
-                    add_categories_from_coco_category_list
-                    from_coco_dict_or_path
         """
         self.name = name
         self.remapping_dict = remapping_dict  # TODO: utilize remapping_dict
@@ -793,7 +791,7 @@ class Coco:
         self.images.append(image)
 
     @classmethod
-    def from_coco_dict_or_path(cls, coco_dict_or_path, desired_name2id=None):
+    def from_coco_dict_or_path(cls, coco_dict_or_path, desired_name2id=None, remapping_dict=None):
         """
         Creates coco object from COCO formatted dict or COCO dataset file path.
 
@@ -803,13 +801,15 @@ class Coco:
                 List of COCO formatted dict or COCO dataset file path
             desired_name2id : dict
                 {"human": 1, "car": 2, "big_vehicle": 3}
+            remapping_dict: dict
+                {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
 
         Properties:
             images: list of CocoImage
             category_mapping: dict
         """
         # init coco object
-        coco = cls()
+        coco = cls(remapping_dict=remapping_dict)
 
         if type(coco_dict_or_path) == list:  # merge coco datasets if given as list
             # create coco_dict_list
@@ -842,7 +842,7 @@ class Coco:
             coco_image = CocoImage.from_coco_image_dict(coco_image_dict)
             annotation_list = imageid2annotationlist[coco_image_dict["id"]]
             for coco_annotation_dict in annotation_list:
-                remapped_category_id = self.remapping_dict[coco_annotation_dict["category_id"]] # apply category remapping (id:id)
+                remapped_category_id = coco.remapping_dict[coco_annotation_dict["category_id"]] # apply category remapping (id:id)
                 coco_annotation_dict["category_id"] = remapped_category_id # update category id
                 category_name = category_mapping[remapped_category_id] # get category name (id:name)
                 coco_annotation = CocoAnnotation.from_coco_annotation_dict(
@@ -1309,6 +1309,27 @@ def merge_from_file(coco_path1: str, coco_path2: str, save_path: str):
 
     # save merged coco dict
     save_json(merged_coco_dict, save_path)
+
+
+def if_ann_has_matched_with_image(annotation, image):
+    if annotation["image_id"] == image["id"]:
+        has_matched = 1
+    else: 
+        has_matched = 0
+    return annotation["id"], has_matched
+
+
+def get_imageid2annotationlist_mapping_mt(coco_dict):
+    imageid2annotationlist_mapping = {}
+    for image in coco_dict["images"]:
+        image_id = image["id"]
+        imageid2annotationlist_mapping[image_id] = []
+
+        for annotation in coco_dict["annotations"]:
+            if annotation["image_id"] == image_id:
+                imageid2annotationlist_mapping[image_id].append(annotation)
+
+    return imageid2annotationlist_mapping
 
 
 def get_imageid2annotationlist_mapping(coco_dict: dict) -> dict:
