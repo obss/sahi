@@ -737,9 +737,6 @@ class Coco:
                 Name of the Coco dataset, it determines exported json name.
             remapping_dict: dict
                 {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
-                Applied in these methods:
-                    add_categories_from_coco_category_list
-                    from_coco_dict_or_path
         """
         self.name = name
         self.remapping_dict = remapping_dict  # TODO: utilize remapping_dict
