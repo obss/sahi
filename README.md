@@ -7,7 +7,7 @@
 
 A vision library for performing sliced inference on large images/small objects
 
-<img width="700" alt="teaser" src="./demo/sliced_inference.gif">
+<img width="700" alt="teaser" src="./resources/sliced_inference.gif">
 
 ## Overview
 
@@ -93,6 +93,8 @@ coco_dict, coco_path = slice_coco(
     overlap_width_ratio=0.2,
 )
 ```
+
+Refer to [slicing notebook](demo/slicing.ipynb) for detailed usage.
 
 ## Scripts
 
