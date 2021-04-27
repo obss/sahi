@@ -5,7 +5,7 @@ import os
 import shutil
 import unittest
 
-from sahi.utils.coco import get_imageid2annotationlist_mapping, merge, update_categories
+from sahi.utils.coco import merge, update_categories
 from sahi.utils.file import load_json
 
 
@@ -333,9 +333,30 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(target_coco_dict["annotations"][1]["category_id"], 2)
 
     def test_get_imageid2annotationlist_mapping(self):
+        from sahi.utils.coco import get_imageid2annotationlist_mapping
+
         coco_path = "tests/data/coco_utils/combined_coco.json"
         coco_dict = load_json(coco_path)
         imageid2annotationlist_mapping = get_imageid2annotationlist_mapping(coco_dict)
+        self.assertEqual(len(imageid2annotationlist_mapping), 2)
+
+        def check_image_id(image_id):
+
+            image_ids = [
+                annotationlist["image_id"]
+                for annotationlist in imageid2annotationlist_mapping[image_id]
+            ]
+            self.assertEqual(image_ids, [image_id] * len(image_ids))
+
+        check_image_id(image_id=1)
+        check_image_id(image_id=2)
+
+    def test_get_imageid2annotationlist_mapping_mt(self):
+        from sahi.utils.coco import get_imageid2annotationlist_mapping_mt
+
+        coco_path = "tests/data/coco_utils/combined_coco.json"
+        coco_dict = load_json(coco_path)
+        imageid2annotationlist_mapping = get_imageid2annotationlist_mapping_mt(coco_dict)
         self.assertEqual(len(imageid2annotationlist_mapping), 2)
 
         def check_image_id(image_id):
