@@ -47,7 +47,7 @@ def save_json(data, save_path):
 
     # export as json
     with open(save_path, "w", encoding="utf-8") as outfile:
-        json.dump(data, outfile, indent=4, separators=(",", ": "), cls=NumpyEncoder)
+        json.dump(data, outfile, separators=(",", ":"), cls=NumpyEncoder)
 
 
 # type check when save json files
