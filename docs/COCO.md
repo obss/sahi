@@ -92,12 +92,14 @@ coco_path = "coco.json"
 # init Coco object
 coco = Coco.from_coco_dict_or_path(coco_path)
 
-# split and export COCO dataset into given target_dir with a 85% train/15% val split
-coco.split_coco_as_train_val(
-  file_name="splitted_coco",
-  target_dir="output/folder/dir",
+# split COCO dataset with a 85% train/15% val split
+result = coco.split_coco_as_train_val(
   train_split_rate=0.85
 )
+
+# export train val split files
+save_json(result["train_coco"].json, "train_split.json")
+save_json(result["val_coco"].json, "val_split.json")
 ```
 
 ## Combine COCO dataset files:
