@@ -890,14 +890,12 @@ class Coco:
         )
 
     def split_coco_as_train_val(
-        self, file_name=None, target_dir=None, train_split_rate=0.9, numpy_seed=0
+        self, train_split_rate=0.9, numpy_seed=0
     ):
         """
-        Split images into train-val and saves as seperate coco dataset files.
+        Split images into train-val and returns them as sahi.utils.coco.Coco objects.
 
         Args:
-            file_name: str
-            target_dir: str
             train_split_rate: float
             numpy_seed: int
                 To fix the numpy seed.
@@ -905,20 +903,12 @@ class Coco:
         Returns:
             result : dict
                 {
-                    "train_dict": "",
-                    "val_dict": "",
-                    "train_path": "",
-                    "val_path": "",
+                    "train_coco": "",
+                    "val_coco": "",
                 }
         """
         # fix numpy numpy seed
         np.random.seed(numpy_seed)
-
-        # set output coco file name
-        if file_name:
-            None
-        elif target_dir:
-            raise ValueError("file_name should be specified.")
 
         # divide images
         num_images = len(self.images)
@@ -928,36 +918,20 @@ class Coco:
         train_images = shuffled_images[:num_train]
         val_images = shuffled_images[num_train:]
 
-        # form train val coco dicts
-        train_coco_dict = create_coco_dict(
-            images=train_images,
-            categories=self.json_categories,
-            ignore_negative_samples=False,
-        )
-        val_coco_dict = create_coco_dict(
-            images=val_images,
-            categories=self.json_categories,
-            ignore_negative_samples=False,
-        )
+        # form train val coco objects
+        train_coco = Coco(name=self.name if self.name else "split" + '_train')
+        train_coco.images = train_images
+        train_coco.categories = self.categories
+
+        val_coco = Coco(name=self.name if self.name else "split" + '_val')
+        val_coco.images = val_images
+        val_coco.categories = self.categories
+
         # return result
-        if not target_dir:
-            return {
-                "train_dict": train_coco_dict,
-                "val_dict": val_coco_dict,
-                "train_path": "",
-                "val_path": "",
-            }
-        else:
-            train_coco_dict_path = os.path.join(target_dir, file_name + "_train.json")
-            save_json(train_coco_dict, train_coco_dict_path)
-            val_coco_dict_path = os.path.join(target_dir, file_name + "_val.json")
-            save_json(val_coco_dict, val_coco_dict_path)
-            return {
-                "train_dict": train_coco_dict,
-                "val_dict": val_coco_dict,
-                "train_path": train_coco_dict_path,
-                "val_path": val_coco_dict_path,
-            }
+        return {
+            "train_coco": train_coco,
+            "val_coco": val_coco,
+        }
 
     def export_as_yolov5(self, image_dir, output_dir, train_split_rate=1, numpy_seed=0):
         """
@@ -991,19 +965,17 @@ class Coco:
         # split dataset
         if split_mode == "TRAINVAL":
             result = self.split_coco_as_train_val(
-                file_name=None,
-                target_dir=None,
                 train_split_rate=train_split_rate,
                 numpy_seed=numpy_seed,
             )
-            train_coco_dict = result["train_dict"]
-            val_coco_dict = result["val_dict"]
+            train_coco = result["train_coco"]
+            val_coco = result["val_coco"]
         elif split_mode == "TRAIN":
-            train_coco_dict = self.json
-            val_coco_dict = None
+            train_coco = self
+            val_coco = None
         elif split_mode == "VAL":
-            train_coco_dict = None
-            val_coco_dict = self.json
+            train_coco = None
+            val_coco = self
 
         # create train val image dirs
         train_dir = ""
@@ -1017,12 +989,12 @@ class Coco:
 
         # create image symlinks and annotation txts
         if split_mode in ["TRAINVAL", "TRAIN"]:
-            export_yolov5_images_and_txts_from_coco_dict(
-                image_dir, output_dir=train_dir, coco_dict_or_path=train_coco_dict
+            export_yolov5_images_and_txts_from_coco_object(
+                image_dir, output_dir=train_dir, coco=train_coco
             )
         if split_mode in ["TRAINVAL", "VAL"]:
-            export_yolov5_images_and_txts_from_coco_dict(
-                image_dir, output_dir=val_dir, coco_dict_or_path=val_coco_dict
+            export_yolov5_images_and_txts_from_coco_object(
+                image_dir, output_dir=val_dir, coco=val_coco
             )
 
         # create yolov5 data yaml
@@ -1054,8 +1026,8 @@ class Coco:
         return subsampled_coco
 
 
-def export_yolov5_images_and_txts_from_coco_dict(
-    image_dir, output_dir, coco_dict_or_path
+def export_yolov5_images_and_txts_from_coco_object(
+    image_dir, output_dir, coco
 ):
     """
     Creates image symlinks and annotation txts in yolo format from coco dataset.
@@ -1065,11 +1037,9 @@ def export_yolov5_images_and_txts_from_coco_dict(
             Source image directory that contains coco images.
         output_dir: str
             Export directory.
-        coco_dict_or_path: str or dict
-            Path for the coco dataset file or coco dataset as python dictionary.
+        coco: sahi.utils.coco.Coco
+            Initialized Coco object that contains images and categories.
     """
-    # create coco instance from coco_dict_or_path
-    coco = Coco.from_coco_dict_or_path(coco_dict_or_path)
 
     for image in tqdm(coco.images):
         # Create a symbolic link pointing to src named dst

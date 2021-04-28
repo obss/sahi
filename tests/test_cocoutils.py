@@ -287,6 +287,22 @@ class TestCocoUtils(unittest.TestCase):
             category_mapping,
         )
 
+    def test_split_coco_as_train_val(self):
+        from sahi.utils.coco import Coco
+
+        coco_dict_path = "tests/data/coco_utils/combined_coco.json"
+        coco = Coco.from_coco_dict_or_path(coco_dict_path)
+        result = coco.split_coco_as_train_val(
+            train_split_rate=0.5, numpy_seed=0
+        )
+        self.assertEqual(len(result["train_coco"].json["images"]), 1)
+        self.assertEqual(len(result["train_coco"].json["annotations"]), 5)
+        self.assertEqual(result["train_coco"].json["images"][0]["height"], 682)
+
+        self.assertEqual(len(result["val_coco"].json["images"]), 1)
+        self.assertEqual(len(result["val_coco"].json["annotations"]), 7)
+        self.assertEqual(result["val_coco"].json["images"][0]["height"], 1365)
+
     def test_coco2yolo(self):
         from sahi.utils.coco import Coco
 
