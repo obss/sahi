@@ -791,7 +791,7 @@ class Coco:
         self.images.append(image)
 
     @classmethod
-    def from_coco_dict_or_path(cls, coco_dict_or_path, desired_name2id=None, remapping_dict=None):
+    def from_coco_dict_or_path(cls, coco_dict_or_path, desired_name2id=None, remapping_dict=None, mp=False):
         """
         Creates coco object from COCO formatted dict or COCO dataset file path.
 
@@ -803,6 +803,9 @@ class Coco:
                 {"human": 1, "car": 2, "big_vehicle": 3}
             remapping_dict: dict
                 {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
+            mp: bool
+                If True, multiprocess mode is on.
+                Should be called in 'if __name__ == __main__:' block.
 
         Properties:
             images: list of CocoImage
@@ -834,7 +837,10 @@ class Coco:
 
         # arrange image id to annotation id mapping
         coco.add_categories_from_coco_category_list(coco_dict["categories"])
-        imageid2annotationlist = get_imageid2annotationlist_mapping_mt(coco_dict)
+        if mp:
+            imageid2annotationlist = get_imageid2annotationlist_mapping_mp(coco_dict)
+        else:
+            imageid2annotationlist = get_imageid2annotationlist_mapping(coco_dict)
         category_mapping = coco.category_mapping
 
         coco_image_list = []
@@ -874,10 +880,6 @@ class Coco:
         for category in self.categories:
             category_mapping[category.id] = category.name
         return category_mapping
-
-    @property
-    def imageid2annotationlist(self):
-        return get_imageid2annotationlist_mapping_mt(self.json)
 
     @property
     def json(self):
@@ -1326,9 +1328,9 @@ def get_image_annotations(image_id, annotations):
     return image_id, image_annotations
 
 
-def get_imageid2annotationlist_mapping_mt(coco_dict):
+def get_imageid2annotationlist_mapping_mp(coco_dict):
     """
-    Multithreaded version of sahi.utils.coco.get_imageid2annotationlist_mapping. (3 times faster)
+    Multiprocess version of sahi.utils.coco.get_imageid2annotationlist_mapping. (3 times faster)
     """
     imageid2annotationlist_mapping = {}
     annotations = coco_dict["annotations"]

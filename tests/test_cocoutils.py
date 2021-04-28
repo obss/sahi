@@ -352,11 +352,11 @@ class TestCocoUtils(unittest.TestCase):
         check_image_id(image_id=2)
 
     def test_get_imageid2annotationlist_mapping_mt(self):
-        from sahi.utils.coco import get_imageid2annotationlist_mapping_mt
+        from sahi.utils.coco import get_imageid2annotationlist_mapping_mp
 
         coco_path = "tests/data/coco_utils/combined_coco.json"
         coco_dict = load_json(coco_path)
-        imageid2annotationlist_mapping = get_imageid2annotationlist_mapping_mt(coco_dict)
+        imageid2annotationlist_mapping = get_imageid2annotationlist_mapping_mp(coco_dict)
         self.assertEqual(len(imageid2annotationlist_mapping), 2)
 
         def check_image_id(image_id):
