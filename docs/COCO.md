@@ -102,22 +102,42 @@ save_json(result["train_coco"].json, "train_split.json")
 save_json(result["val_coco"].json, "val_split.json")
 ```
 
-## Combine COCO dataset files:
+## Filter/Update COCO dataset by categories:
 
 ```python
 from sahi.utils.coco import Coco
 from sahi.utils.file import save_json
 
-# specify coco dataset json paths
-coco_path_1 = "coco1.json"
-coco_path_2 = "coco2.json"
-coco_path_3 = "coco3.json"
+# init Coco objects by specifying coco dataset paths and image folder directories
+coco = Coco.from_coco_dict_or_path("coco.json")
 
-# init Coco object with a list of Coco path
-combined_coco = Coco.from_coco_dict_or_path([coco_path_1, coco_path_2, coco_path_3])
+# select only 3 categories; and map them to ids 1, 2 and 3
+desired_name2id = {
+  "big_vehicle": 1,
+  "car": 2,
+  "human": 3
+}
+coco.update_categories(desired_name2id)
 
-# export combined COCO dataset
-save_json(combined_coco.json, "combined_coco.json")
+# export updated/filtered COCO dataset
+save_json(coco.json, "updated_coco.json")
+```
+
+## Merge COCO dataset files:
+
+```python
+from sahi.utils.coco import Coco
+from sahi.utils.file import save_json
+
+# init Coco objects by specifying coco dataset paths and image folder directories
+coco_1 = Coco.from_coco_dict_or_path("coco1.json", image_dir="images_1/")
+coco_2 = Coco.from_coco_dict_or_path("coco2.json", image_dir="images_2/")
+
+# merge Coco datasets
+coco_1.merge(coco_2)
+
+# export merged COCO dataset
+save_json(coco_1.json, "merged_coco.json")
 ```
 
 ## Convert COCO dataset to ultralytics/yolov5 format:
