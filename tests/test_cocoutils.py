@@ -348,6 +348,38 @@ class TestCocoUtils(unittest.TestCase):
         )
         self.assertEqual(target_coco_dict["annotations"][1]["category_id"], 2)
 
+    def test_coco_update_categories(self):
+        from sahi.utils.coco import Coco
+
+        coco_path = "tests/data/coco_utils/terrain2_coco.json"
+        coco = Coco.from_coco_dict_or_path(coco_path)
+
+        self.assertEqual(len(coco.json["annotations"]), 5)
+        self.assertEqual(len(coco.json["images"]), 1)
+        self.assertEqual(len(coco.json["categories"]), 1)
+        self.assertEqual(
+            coco.json["categories"],
+            [{"id": 1, "name": "car", "supercategory": "car"}],
+        )
+        self.assertEqual(coco.json["annotations"][1]["category_id"], 1)
+
+        # update categories
+        desired_name2id = {"human": 1, "car": 2, "big_vehicle": 3}
+        coco.update_categories(desired_name2id=desired_name2id)
+
+        self.assertEqual(len(coco.json["annotations"]), 5)
+        self.assertEqual(len(coco.json["images"]), 1)
+        self.assertEqual(len(coco.json["categories"]), 3)
+        self.assertEqual(
+            coco.json["categories"],
+            [
+                {"id": 1, "name": "human", "supercategory": "human"},
+                {"id": 2, "name": "car", "supercategory": "car"},
+                {"id": 3, "name": "big_vehicle", "supercategory": "big_vehicle"},
+            ],
+        )
+        self.assertEqual(coco.json["annotations"][1]["category_id"], 2)
+
     def test_get_imageid2annotationlist_mapping(self):
         from sahi.utils.coco import get_imageid2annotationlist_mapping
 
@@ -455,53 +487,50 @@ class TestCocoUtils(unittest.TestCase):
             13,
         )
         self.assertEqual(
-            merged_coco_dict["annotations"][12]["category_id"],
-            coco_dict3["annotations"][0]["category_id"],
-        )
-        self.assertEqual(
             merged_coco_dict["annotations"][12]["image_id"],
             3,
         )
         self.assertEqual(
-            merged_coco_dict["annotations"][12]["category_id"],
-            coco_dict3["annotations"][0]["category_id"],
-        )
-        self.assertEqual(
             merged_coco_dict["annotations"][9]["category_id"],
-            2,
+            1,
         )
         self.assertEqual(
             merged_coco_dict["annotations"][9]["image_id"],
             2,
         )
 
-    def test_multi_coco_init(self):
+    def test_coco_merge(self):
         from sahi.utils.coco import Coco
 
         # load coco files to be combined
         coco_path1 = "tests/data/coco_utils/terrain1_coco.json"
         coco_path2 = "tests/data/coco_utils/terrain2_coco.json"
         coco_path3 = "tests/data/coco_utils/terrain3_coco.json"
-        coco = Coco.from_coco_dict_or_path([coco_path1, coco_path2, coco_path3])
-        self.assertEqual(len(coco.json["images"]), 3)
-        self.assertEqual(len(coco.json["annotations"]), 22)
-        self.assertEqual(len(coco.json["categories"]), 2)
-        self.assertEqual(len(coco.images), 3)
+        image_dir = "tests/data/coco_utils/"
+        coco1 = Coco.from_coco_dict_or_path(coco_path1, image_dir=image_dir)
+        coco2 = Coco.from_coco_dict_or_path(coco_path2, image_dir=image_dir)
+        coco3 = Coco.from_coco_dict_or_path(coco_path3, image_dir=image_dir)
+        coco1.merge(coco2)
+        coco1.merge(coco3)
+        self.assertEqual(len(coco1.json["images"]), 3)
+        self.assertEqual(len(coco1.json["annotations"]), 22)
+        self.assertEqual(len(coco1.json["categories"]), 2)
+        self.assertEqual(len(coco1.images), 3)
 
         self.assertEqual(
-            coco.json["annotations"][12]["id"],
+            coco1.json["annotations"][12]["id"],
             13,
         )
         self.assertEqual(
-            coco.json["annotations"][12]["image_id"],
+            coco1.json["annotations"][12]["image_id"],
             3,
         )
         self.assertEqual(
-            coco.json["annotations"][9]["category_id"],
-            2,
+            coco1.json["annotations"][9]["category_id"],
+            1,
         )
         self.assertEqual(
-            coco.json["annotations"][9]["image_id"],
+            coco1.json["annotations"][9]["image_id"],
             2,
         )
 
