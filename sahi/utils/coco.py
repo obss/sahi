@@ -802,7 +802,7 @@ class Coco:
 
         self.images.append(image)
 
-    def update_categories(self, desired_name2id, update_image_filepaths=False):
+    def update_categories(self, desired_name2id, update_image_filenames=False):
         """
         Rearranges category mapping of given COCO object based on given desired_name2id.
         Can also be used to filter some of the categories.
@@ -810,8 +810,8 @@ class Coco:
         Args:
             desired_name2id: dict
                 {"big_vehicle": 1, "car": 2, "human": 3}
-            update_image_filepaths: bool
-                If True, updates image file_paths with absolute file paths.
+            update_image_filenames: bool
+                If True, updates coco image file_names with absolute file paths.
         """
         # init vars
         currentid2desiredid_mapping = {}
@@ -844,8 +844,11 @@ class Coco:
         # add updated images & annotations
         for coco_image in copy.deepcopy(self.images):
             updated_coco_image = CocoImage.from_coco_image_dict(coco_image.json)
-            if update_image_filepaths:
+            # update filename to abspath
+            file_name_is_abspath = True if os.path.abspath(coco_image.file_name) == coco_image.file_name else False
+            if update_image_filenames and not file_name_is_abspath:
                 updated_coco_image.file_name = str(Path(os.path.abspath(self.image_dir)) / coco_image.file_name)
+            # update annotations
             for coco_annotation in coco_image.annotations:
                 current_category_id = coco_annotation.category_id
                 desired_category_id = currentid2desiredid_mapping[current_category_id]
@@ -896,7 +899,7 @@ class Coco:
 
         # update categories and image paths
         for coco in [coco1, coco2]:
-            coco.update_categories(desired_name2id=desired_name2id, update_image_filepaths=True)
+            coco.update_categories(desired_name2id=desired_name2id, update_image_filenames=True)
 
         # combine images and categories
         coco1.images.extend(coco2.images)
