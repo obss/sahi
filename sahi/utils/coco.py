@@ -1028,11 +1028,17 @@ class Coco:
         val_images = shuffled_images[num_train:]
 
         # form train val coco objects
-        train_coco = Coco(name=self.name if self.name else "split" + '_train')
+        train_coco = Coco(
+            name=self.name if self.name else "split" + '_train',
+            image_dir=self.image_dir
+        )
         train_coco.images = train_images
         train_coco.categories = self.categories
 
-        val_coco = Coco(name=self.name if self.name else "split" + '_val')
+        val_coco = Coco(
+            name=self.name if self.name else "split" + '_val',
+            image_dir=self.image_dir
+        )
         val_coco.images = val_images
         val_coco.categories = self.categories
 
@@ -1042,14 +1048,12 @@ class Coco:
             "val_coco": val_coco,
         }
 
-    def export_as_yolov5(self, image_dir, output_dir, train_split_rate=1, numpy_seed=0):
+    def export_as_yolov5(self, output_dir, train_split_rate=1, numpy_seed=0):
         """
         Exports current COCO dataset in ultralytics/yolov5 format.
         Creates train val folders with image symlinks and txt files and a data yaml file.
 
         Args:
-            image_dir: str
-                Source image directory that contains coco images.
             output_dir: str
                 Export directory.
             train_split_rate: float
@@ -1099,11 +1103,11 @@ class Coco:
         # create image symlinks and annotation txts
         if split_mode in ["TRAINVAL", "TRAIN"]:
             export_yolov5_images_and_txts_from_coco_object(
-                image_dir, output_dir=train_dir, coco=train_coco
+                output_dir=train_dir, coco=train_coco
             )
         if split_mode in ["TRAINVAL", "VAL"]:
             export_yolov5_images_and_txts_from_coco_object(
-                image_dir, output_dir=val_dir, coco=val_coco
+                output_dir=val_dir, coco=val_coco
             )
 
         # create yolov5 data yaml
@@ -1136,14 +1140,12 @@ class Coco:
 
 
 def export_yolov5_images_and_txts_from_coco_object(
-    image_dir, output_dir, coco
+    output_dir, coco
 ):
     """
     Creates image symlinks and annotation txts in yolo format from coco dataset.
 
     Args:
-        image_dir: str
-            Source image directory that contains coco images.
         output_dir: str
             Export directory.
         coco: sahi.utils.coco.Coco
@@ -1152,8 +1154,13 @@ def export_yolov5_images_and_txts_from_coco_object(
 
     for image in tqdm(coco.images):
         # Create a symbolic link pointing to src named dst
-        src = os.path.abspath(os.path.join(image_dir, image.file_name))
-        dst = os.path.join(output_dir, image.file_name)
+        if Path(image.file_name).is_file():
+            src = os.path.abspath(image.file_name)
+        else:
+            assert coco.image_dir, "You have to specify image_dir " \
+                "of Coco object for yolov5 conversion."
+            src = os.path.abspath(str(Path(coco.image_dir) / image.file_name))
+        dst = str(Path(output_dir) / ((coco.name if coco.name else "") + "_" + Path(image.file_name).name))
         os.symlink(src, dst)
         # calculate annotation normalization ratios
         width = image.width
@@ -1161,7 +1168,7 @@ def export_yolov5_images_and_txts_from_coco_object(
         dw = 1.0 / (width)
         dh = 1.0 / (height)
         # set annotation filepath
-        file_name = get_base_filename(image.file_name)[1]
+        file_name = Path(image.file_name).stem
         yolo_annotation_filepath = "{}.txt".format(os.path.join(output_dir, file_name))
         # create annotation file
         annotations = image.annotations

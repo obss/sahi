@@ -311,9 +311,9 @@ class TestCocoUtils(unittest.TestCase):
         output_dir = "tests/data/coco2yolo/"
         if os.path.isdir(output_dir):
             shutil.rmtree(output_dir)
-        coco = Coco.from_coco_dict_or_path(coco_dict_path)
+        coco = Coco.from_coco_dict_or_path(coco_dict_path, image_dir=image_dir)
         coco.export_as_yolov5(
-            image_dir, output_dir=output_dir, train_split_rate=0.5, numpy_seed=0
+            output_dir=output_dir, train_split_rate=0.5, numpy_seed=0
         )
 
     def test_update_categories(self):
