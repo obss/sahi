@@ -1131,7 +1131,11 @@ class Coco:
         Returns:
             subsampled_coco: sahi.utils.coco.Coco
         """
-        subsampled_coco = Coco(name=self.name, remapping_dict=self.remapping_dict)
+        subsampled_coco = Coco(
+            name=self.name,
+            image_dir=self.image_dir,
+            remapping_dict=self.remapping_dict
+        )
         subsampled_coco.add_categories_from_coco_category_list(self.json_categories)
         for image_ind in tqdm(range(0, len(self.images), subsample_ratio)):
             subsampled_coco.add_image(self.images[image_ind])
