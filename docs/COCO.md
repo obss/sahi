@@ -145,15 +145,11 @@ save_json(coco_1.json, "merged_coco.json")
 ```python
 from sahi.utils.coco import Coco
 
-# specify coco dataset path
-coco_path = "coco.json"
-
 # init Coco object
-coco = Coco.from_coco_dict_or_path(coco_path)
+coco = Coco.from_coco_dict_or_path("coco.json", image_dir="coco_images/")
 
 # export converted YoloV5 formatted dataset into given output_dir with a 85% train/15% val split
 coco.export_as_yolov5(
-  image_dir="source/coco/image/dir",
   output_dir="output/folder/dir",
   train_split_rate=0.85
 )
