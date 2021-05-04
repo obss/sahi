@@ -1066,7 +1066,12 @@ class Coco:
             numpy_seed: int
                 To fix the numpy seed.
         """
-        import yaml
+        try:
+            import yaml
+        except ImportError:
+            raise ImportError(
+                'Please run "pip install -U pyyaml" '
+                'to install yaml first for yolov5 formatted exporting.')
 
         # set split_mode
         if 0 < train_split_rate and train_split_rate < 1:
@@ -1160,23 +1165,33 @@ def export_yolov5_images_and_txts_from_coco_object(
     """
 
     for image in tqdm(coco.images):
-        # Create a symbolic link pointing to src named dst
+        # set coco and yolo image paths
         if Path(image.file_name).is_file():
-            src = os.path.abspath(image.file_name)
+            coco_image_path = os.path.abspath(image.file_name)
         else:
             assert coco.image_dir, "You have to specify image_dir " \
                 "of Coco object for yolov5 conversion."
-            src = os.path.abspath(str(Path(coco.image_dir) / image.file_name))
-        dst = str(Path(output_dir) / ((coco.name if coco.name else "") + "_" + Path(image.file_name).name))
-        os.symlink(src, dst)
+            coco_image_path = os.path.abspath(str(Path(coco.image_dir) / image.file_name))
+        yolo_image_path_temp = str(Path(output_dir) / ((coco.name if coco.name else "") + "_" + Path(image.file_name).name))
+        # increment target file name if already present
+        yolo_image_path = copy.deepcopy(yolo_image_path_temp)
+        name_increment = 2
+        while Path(yolo_image_path).is_file():
+            yolo_image_path = yolo_image_path_temp.replace(
+                Path(image.file_name).stem,
+                Path(image.file_name).stem + "_" + str(name_increment)
+            )
+            name_increment += 1
+        # create a symbolic link pointing to coco_image_path named yolo_image_path
+        os.symlink(coco_image_path, yolo_image_path)
         # calculate annotation normalization ratios
         width = image.width
         height = image.height
         dw = 1.0 / (width)
         dh = 1.0 / (height)
         # set annotation filepath
-        file_name = Path(image.file_name).stem
-        yolo_annotation_filepath = "{}.txt".format(os.path.join(output_dir, file_name))
+        image_file_suffix = Path(yolo_image_path).suffix
+        yolo_annotation_path = yolo_image_path.replace(image_file_suffix, ".txt")
         # create annotation file
         annotations = image.annotations
         if len(annotations) > 0:
@@ -1193,7 +1208,7 @@ def export_yolov5_images_and_txts_from_coco_object(
                 category_id = annotation.category_id
                 yolo_bbox = (x_center, y_center, bbox_width, bbox_height)
                 # save yolo annotation
-                with open(yolo_annotation_filepath, "w") as outfile:
+                with open(yolo_annotation_path, "w") as outfile:
                     outfile.write(
                         str(category_id)
                         + " "
