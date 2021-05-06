@@ -1260,7 +1260,7 @@ def export_yolov5_images_and_txts_from_coco_object(
         yolo_annotation_path = yolo_image_path.replace(image_file_suffix, ".txt")
         # create annotation file
         annotations = image.annotations
-        if len(annotations) > 0:
+        with open(yolo_annotation_path, "w") as outfile:
             for annotation in annotations:
                 # convert coco bbox to yolo bbox
                 x_center = annotation.bbox[0] + annotation.bbox[2] / 2.0
@@ -1274,13 +1274,12 @@ def export_yolov5_images_and_txts_from_coco_object(
                 category_id = annotation.category_id
                 yolo_bbox = (x_center, y_center, bbox_width, bbox_height)
                 # save yolo annotation
-                with open(yolo_annotation_path, "w") as outfile:
-                    outfile.write(
-                        str(category_id)
-                        + " "
-                        + " ".join([str(value) for value in yolo_bbox])
-                        + "\n"
-                    )
+                outfile.write(
+                    str(category_id)
+                    + " "
+                    + " ".join([str(value) for value in yolo_bbox])
+                    + "\n"
+                )
 
 
 def update_categories(desired_name2id: dict, coco_dict: dict) -> dict:
