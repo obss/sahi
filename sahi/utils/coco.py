@@ -4,7 +4,7 @@
 
 import copy
 import os
-from collections import OrderedDict, defaultdict
+from collections import Counter, OrderedDict, defaultdict
 from dataclasses import dataclass
 from multiprocessing import Pool
 from pathlib import Path
@@ -737,7 +737,7 @@ class CocoVideo:
 
 
 class Coco:
-    def __init__(self, name=None, image_dir=None, remapping_dict=None):
+    def __init__(self, name=None, image_dir=None, remapping_dict=None, ignore_negative_samples=True):
         """
         Creates Coco object.
 
@@ -748,12 +748,16 @@ class Coco:
                 Base file directory that contains dataset images. Required for dataset merging.
             remapping_dict: dict
                 {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
+            ignore_negative_samples: bool
+                If True ignores images without annotations in all operations.
         """
         self.name = name
         self.image_dir = image_dir
         self.remapping_dict = remapping_dict
+        self.ignore_negative_samples = ignore_negative_samples
         self.categories = []
         self.images = []
+        self._stats = None
 
     def add_categories_from_coco_category_list(self, coco_category_list):
         """
@@ -998,8 +1002,40 @@ class Coco:
         return create_coco_dict(
             images=self.images,
             categories=self.json_categories,
-            ignore_negative_samples=True,
+            ignore_negative_samples=self.ignore_negative_samples,
         )
+
+    @property
+    def stats(self):
+        if not self._stats:
+            self.calculate_stats()
+        return self._stats
+
+    def calculate_stats(self):
+        """
+        Iterates over all annotations and calculates total number of
+        """
+        num_annotations = 0
+        num_images = len(self.images)
+        category_name_to_zero = {category["name"]:0 for category in self.json_categories}
+        num_images_per_category = copy.deepcopy(category_name_to_zero)
+        num_annotations_per_category = copy.deepcopy(category_name_to_zero)
+        for image in self.images:
+            image_contains_category = {}
+            for annotation in image.annotations:
+                num_annotations += 1
+                num_annotations_per_category[annotation.category_name] += 1
+                image_contains_category[annotation.category_name] = 1
+            num_images_per_category = dict(
+                Counter(num_images_per_category) + Counter(image_contains_category)
+            )
+
+        self._stats = {
+            "num_images": num_images,
+            "num_annotations": num_annotations,
+            "num_images_per_category": num_images_per_category,
+            "num_annotations_per_category": num_annotations_per_category,
+        }
 
     def split_coco_as_train_val(
         self, train_split_rate=0.9, numpy_seed=0
