@@ -4,7 +4,7 @@
 
 import copy
 import os
-from collections import OrderedDict, defaultdict
+from collections import Counter, OrderedDict, defaultdict
 from dataclasses import dataclass
 from multiprocessing import Pool
 from pathlib import Path
@@ -737,7 +737,7 @@ class CocoVideo:
 
 
 class Coco:
-    def __init__(self, name=None, image_dir=None, remapping_dict=None):
+    def __init__(self, name=None, image_dir=None, remapping_dict=None, ignore_negative_samples=True):
         """
         Creates Coco object.
 
@@ -748,12 +748,16 @@ class Coco:
                 Base file directory that contains dataset images. Required for dataset merging.
             remapping_dict: dict
                 {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
+            ignore_negative_samples: bool
+                If True ignores images without annotations in all operations.
         """
         self.name = name
         self.image_dir = image_dir
         self.remapping_dict = remapping_dict
+        self.ignore_negative_samples = ignore_negative_samples
         self.categories = []
         self.images = []
+        self._stats = None
 
     def add_categories_from_coco_category_list(self, coco_category_list):
         """
@@ -998,8 +1002,70 @@ class Coco:
         return create_coco_dict(
             images=self.images,
             categories=self.json_categories,
-            ignore_negative_samples=True,
+            ignore_negative_samples=self.ignore_negative_samples,
         )
+
+    @property
+    def stats(self):
+        if not self._stats:
+            self.calculate_stats()
+        return self._stats
+
+    def calculate_stats(self):
+        """
+        Iterates over all annotations and calculates total number of
+        """
+        num_annotations = 0
+        num_images = len(self.images)
+        num_categories = len(self.json_categories)
+        category_name_to_zero = {category["name"]:0 for category in self.json_categories}
+        num_images_per_category = copy.deepcopy(category_name_to_zero)
+        num_annotations_per_category = copy.deepcopy(category_name_to_zero)
+        min_num_annotations_in_image = 1e10
+        max_num_annotations_in_image = 0
+        total_annotation_area = 0
+        min_annotation_area = 1e10
+        max_annotation_area = 0
+        for image in self.images:
+            image_contains_category = {}
+            for annotation in image.annotations:
+                annotation_area = annotation.area
+                total_annotation_area += annotation_area
+                num_annotations_per_category[annotation.category_name] += 1
+                image_contains_category[annotation.category_name] = 1
+                # update min&max annotation area
+                if annotation_area>max_annotation_area:
+                    max_annotation_area = annotation_area
+                if annotation_area<min_annotation_area:
+                    min_annotation_area = annotation_area
+            # update num_annotations
+            num_annotations += len(image.annotations)
+            # update num_images_per_category
+            num_images_per_category = dict(
+                Counter(num_images_per_category) + Counter(image_contains_category)
+            )
+            # update min&max_num_annotations_in_image
+            num_annotations_in_image = len(image.annotations)
+            if num_annotations_in_image>max_num_annotations_in_image:
+                max_num_annotations_in_image = num_annotations_in_image
+            if num_annotations_in_image<min_num_annotations_in_image:
+                min_num_annotations_in_image = num_annotations_in_image
+        avg_num_annotations_in_image = num_annotations/num_images
+        avg_annotation_area = total_annotation_area/num_annotations
+
+        self._stats = {
+            "num_images": num_images,
+            "num_annotations": num_annotations,
+            "num_categories": num_categories,
+            "num_images_per_category": num_images_per_category,
+            "num_annotations_per_category": num_annotations_per_category,
+            "min_num_annotations_in_image": min_num_annotations_in_image,
+            "max_num_annotations_in_image": max_num_annotations_in_image,
+            "avg_num_annotations_in_image": avg_num_annotations_in_image,
+            "min_annotation_area": min_annotation_area,
+            "max_annotation_area": max_annotation_area,
+            "avg_annotation_area": avg_annotation_area
+        }
 
     def split_coco_as_train_val(
         self, train_split_rate=0.9, numpy_seed=0

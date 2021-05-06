@@ -172,3 +172,35 @@ subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10)
 # export subsampled COCO dataset
 save_json(subsampled_coco.json, "subsampled_coco.json")
 ```
+
+## Get dataset stats:
+
+```python
+from sahi.utils.coco import Coco
+
+# init Coco object
+coco = Coco.from_coco_dict_or_path("coco.json")
+
+# get dataset stats
+coco.stats
+{
+    'avg_annotation_area': 2448.405738278109,
+    'avg_num_annotations_in_image': 53.037243084530985,
+    'max_annotation_area': 328640,
+    'max_num_annotations_in_image': 902,
+    'min_annotation_area': 3,
+    'min_num_annotations_in_image': 1,
+    'num_annotations': 343204,
+    'num_annotations_per_category': {
+        'human': 106396,
+        'vehicle': 236808
+    },
+    'num_categories': 2,
+    'num_images': 6471,
+    'num_images_per_category': {
+        'human': 5684,
+        'vehicle': 6323
+    }
+}
+
+```
