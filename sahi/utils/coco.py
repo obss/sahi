@@ -1118,7 +1118,7 @@ class Coco:
             "val_coco": val_coco,
         }
 
-    def export_as_yolov5(self, output_dir, train_split_rate=1, numpy_seed=0):
+    def export_as_yolov5(self, output_dir, train_split_rate=1, numpy_seed=0, mp=False):
         """
         Exports current COCO dataset in ultralytics/yolov5 format.
         Creates train val folders with image symlinks and txt files and a data yaml file.
@@ -1132,6 +1132,9 @@ class Coco:
                 If in between 0-1, both train/val splits will be calculated and exported.
             numpy_seed: int
                 To fix the numpy seed.
+            mp: bool
+                If True, multiprocess mode is on.
+                Should be called in 'if __name__ == __main__:' block.
         """
         try:
             import yaml
@@ -1178,11 +1181,11 @@ class Coco:
         # create image symlinks and annotation txts
         if split_mode in ["TRAINVAL", "TRAIN"]:
             export_yolov5_images_and_txts_from_coco_object(
-                output_dir=train_dir, coco=train_coco
+                output_dir=train_dir, coco=train_coco, mp=mp
             )
         if split_mode in ["TRAINVAL", "VAL"]:
             export_yolov5_images_and_txts_from_coco_object(
-                output_dir=val_dir, coco=val_coco
+                output_dir=val_dir, coco=val_coco, mp=mp
             )
 
         # create yolov5 data yaml
