@@ -12,7 +12,7 @@ jobs:
       matrix:
         operating-system: [ubuntu-latest, windows-latest, macos-latest]
         python-version: [3.6, 3.7, 3.8]
-        mmdet-version: [2.8.0, 2.11.0]
+        mmdet-version: [2.12.0]
       fail-fast: false
 
     steps:
@@ -60,32 +60,24 @@ jobs:
           matrix.operating-system == 'ubuntu-latest' ||
           matrix.operating-system == 'windows-latest'
         run: >
-          pip install torch==1.7.1+cpu torchvision==0.8.2+cpu
+          pip install torch==1.8.1+cpu torchvision==0.9.1+cpu
           -f https://download.pytorch.org/whl/torch_stable.html
 
       - name: Install PyTorch on MacOS
         if: matrix.operating-system == 'macos-latest'
-        run: pip install torch==1.7.1 torchvision==0.8.2
+        run: pip install torch==1.8.1 torchvision==0.9.1
 
       - name: Install MMDetection
         run: >
-          pip install mmcv-full==1.2.5 mmdet==${{ matrix.mmdet-version }}
+          pip install mmcv-full==1.3.3 mmdet==${{ matrix.mmdet-version }}
 
       - name: Test with unittest
         run: |
           pip install pytest
           python -m unittest
 
-      - name: Test SAHI scripts for mmdet <= 2.8.0
-        if: matrix.mmdet-version == '2.8.0'
-        run: |
-          # predict
-          python scripts/predict.py --source tests/data/ --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v280.py
-          python scripts/predict.py --source tests/data/coco_utils/terrain1.jpg --novisual --pickle --crop --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v280.py
-          python scripts/predict.py --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v280.py
-
-      - name: Test SAHI scripts for mmdet > 2.8.0
-        if: matrix.mmdet-version == '2.11.0'
+      - name: Test SAHI scripts for mmdet > 2.12.0
+        if: matrix.mmdet-version == '2.12.0'
         run: |
           # predict
           python scripts/predict.py --source tests/data/ --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
