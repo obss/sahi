@@ -822,7 +822,8 @@ class Coco:
         updated_coco = Coco(
             name=self.name,
             image_dir=self.image_dir,
-            remapping_dict=self.remapping_dict
+            remapping_dict=self.remapping_dict,
+            ignore_negative_samples=self.ignore_negative_samples
         )
         # create category id mapping (currentid2desiredid_mapping)
         for coco_category in copy.deepcopy(self.categories):
@@ -1021,7 +1022,7 @@ class Coco:
         category_name_to_zero = {category["name"]:0 for category in self.json_categories}
         num_images_per_category = copy.deepcopy(category_name_to_zero)
         num_annotations_per_category = copy.deepcopy(category_name_to_zero)
-        min_num_annotations_in_image = 1e10
+        min_num_annotations_in_image = float('inf')
         max_num_annotations_in_image = 0
         total_annotation_area = 0
         min_annotation_area = 1e10
@@ -1208,13 +1209,44 @@ class Coco:
         subsampled_coco = Coco(
             name=self.name,
             image_dir=self.image_dir,
-            remapping_dict=self.remapping_dict
+            remapping_dict=self.remapping_dict,
+            ignore_negative_samples=self.ignore_negative_samples
         )
         subsampled_coco.add_categories_from_coco_category_list(self.json_categories)
         for image_ind in range(0, len(self.images), subsample_ratio):
             subsampled_coco.add_image(self.images[image_ind])
 
         return subsampled_coco
+
+    def get_area_filtered_coco(self, min=0, max=float('inf')):
+        """
+        Filters annotation areas with given min and max values and returns remaining
+        images as sahi.utils.coco.Coco object.
+
+        Args:
+            min: int
+                minimum allowed area
+            max: int
+                maximum allowed area
+        Returns:
+            area_filtered_coco: sahi.utils.coco.Coco
+        """
+        area_filtered_coco = Coco(
+            name=self.name,
+            image_dir=self.image_dir,
+            remapping_dict=self.remapping_dict,
+            ignore_negative_samples=self.ignore_negative_samples
+        )
+        area_filtered_coco.add_categories_from_coco_category_list(self.json_categories)
+        for image in self.images:
+            is_valid_image = True
+            for annotation in image.annotations:
+                if annotation.area < min or annotation.area > max:
+                    is_valid_image = False
+            if is_valid_image:
+                area_filtered_coco.add_image(image)
+
+        return area_filtered_coco
 
 
 def export_yolov5_images_and_txts_from_coco_object(
