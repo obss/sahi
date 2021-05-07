@@ -123,6 +123,24 @@ coco.update_categories(desired_name2id)
 save_json(coco.json, "updated_coco.json")
 ```
 
+## Filter COCO dataset by annotation area:
+
+```python
+from sahi.utils.coco import Coco
+from sahi.utils.file import save_json
+
+# init Coco objects by specifying coco dataset paths and image folder directories
+coco = Coco.from_coco_dict_or_path("coco.json")
+
+# filter out images that contain annotations with smaller area than 50
+area_filtered_coco = coco.get_area_filtered_coco(min=50)
+# filter out images that contain annotations with smaller area than 50 and larger area than 10000
+area_filtered_coco = coco.get_area_filtered_coco(min=50, max=10000)
+
+# export filtered COCO dataset
+save_json(area_filtered_coco.json, "area_filtered_coco.json")
+```
+
 ## Merge COCO dataset files:
 
 ```python
