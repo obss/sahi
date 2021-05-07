@@ -605,6 +605,38 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(subsampled_coco.stats["num_images"], len(subsampled_coco.images))
         self.assertEqual(subsampled_coco.stats["num_annotations"], len(subsampled_coco.json["annotations"]))
 
+    def test_get_area_filtered_coco(self):
+        from sahi.utils.coco import Coco
+
+        coco_path = "tests/data/coco_utils/visdrone2019-det-train-first50image.json"
+        image_dir = "tests/data/coco_utils/"
+        min_area = 50
+        max_area = 10000
+        coco = Coco.from_coco_dict_or_path(coco_path, image_dir=image_dir)
+        area_filtered_coco = coco.get_area_filtered_coco(min=min_area, max=max_area)
+        self.assertEqual(
+            len(coco.json["images"]),
+            50,
+        )
+        self.assertEqual(
+            len(area_filtered_coco.json["images"]),
+            15,
+        )
+        self.assertGreater(
+            area_filtered_coco.stats["min_annotation_area"],
+            min_area,
+        )
+        self.assertLess(
+            area_filtered_coco.stats["max_annotation_area"],
+            max_area,
+        )
+        self.assertEqual(
+            area_filtered_coco.image_dir,
+            image_dir,
+        )
+        self.assertEqual(area_filtered_coco.stats["num_images"], len(area_filtered_coco.images))
+        self.assertEqual(area_filtered_coco.stats["num_annotations"], len(area_filtered_coco.json["annotations"]))
+
     def test_cocovid(self):
         from sahi.utils.coco import CocoVid
 
