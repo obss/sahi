@@ -1195,7 +1195,7 @@ class Coco:
         with open(yaml_path, "w") as outfile:
             yaml.dump(data, outfile, default_flow_style=None)
 
-    def get_subsampled_coco(self, subsample_ratio=10):
+    def get_subsampled_coco(self, subsample_ratio=2):
         """
         Subsamples images with subsample_ratio and returns as sahi.utils.coco.Coco object.
 
@@ -1211,7 +1211,7 @@ class Coco:
             remapping_dict=self.remapping_dict
         )
         subsampled_coco.add_categories_from_coco_category_list(self.json_categories)
-        for image_ind in tqdm(range(0, len(self.images), subsample_ratio)):
+        for image_ind in range(0, len(self.images), subsample_ratio):
             subsampled_coco.add_image(self.images[image_ind])
 
         return subsampled_coco
@@ -1230,6 +1230,7 @@ def export_yolov5_images_and_txts_from_coco_object(
             Initialized Coco object that contains images and categories.
     """
 
+    print('generating image symlinks and annotation files for yolov5...')
     for image in tqdm(coco.images):
         # set coco and yolo image paths
         if Path(image.file_name).is_file():
@@ -1694,7 +1695,7 @@ def split_coco_as_train_val(
     train_annotations = list()
     val_annotations = list()
     print("splitting coco dataset into train/val...")
-    for annotation in tqdm(coco_dict["annotations"]):
+    for annotation in coco_dict["annotations"]:
         image_index_for_annotation = image_id_2_idx[annotation["image_id"]]
         if image_index_for_annotation in train_indices:
             train_annotations.append(annotation)
