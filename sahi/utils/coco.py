@@ -1018,6 +1018,7 @@ class Coco:
         """
         num_annotations = 0
         num_images = len(self.images)
+        num_negative_images = 0
         num_categories = len(self.json_categories)
         category_name_to_zero = {category["name"]:0 for category in self.json_categories}
         num_images_per_category = copy.deepcopy(category_name_to_zero)
@@ -1039,6 +1040,9 @@ class Coco:
                     max_annotation_area = annotation_area
                 if annotation_area<min_annotation_area:
                     min_annotation_area = annotation_area
+            # update num_negative_images
+            if len(image.annotations) == 0:
+                num_negative_images += 1
             # update num_annotations
             num_annotations += len(image.annotations)
             # update num_images_per_category
@@ -1058,6 +1062,7 @@ class Coco:
             "num_images": num_images,
             "num_annotations": num_annotations,
             "num_categories": num_categories,
+            "num_negative_images": num_negative_images,
             "num_images_per_category": num_images_per_category,
             "num_annotations_per_category": num_annotations_per_category,
             "min_num_annotations_in_image": min_num_annotations_in_image,
