@@ -215,23 +215,20 @@ coco = Coco.from_coco_dict_or_path("coco.json")
 # get dataset stats
 coco.stats
 {
-    'avg_annotation_area': 2448.405738278109,
-    'avg_num_annotations_in_image': 53.037243084530985,
-    'max_annotation_area': 328640,
-    'max_num_annotations_in_image': 902,
-    'min_annotation_area': 3,
-    'min_num_annotations_in_image': 1,
-    'num_annotations': 343204,
-    'num_annotations_per_category': {
-        'human': 106396,
-        'vehicle': 236808
-    },
-    'num_categories': 2,
-    'num_images': 6471,
-    'num_images_per_category': {
-        'human': 5684,
-        'vehicle': 6323
-    }
+  'num_images': 6471,
+  'num_annotations': 343204,
+  'num_categories': 2,
+  'num_negative_images': 0,
+  'num_images_per_category': {'human': 5684, 'vehicle': 6323},
+  'num_annotations_per_category': {'human': 106396, 'vehicle': 236808},
+  'min_num_annotations_in_image': 1,
+  'max_num_annotations_in_image': 902,
+  'avg_num_annotations_in_image': 53.037243084530985,
+  'min_annotation_area': 3,
+  'max_annotation_area': 328640,
+  'avg_annotation_area': 2448.405738278109,
+  'min_annotation_area_per_category': {'human': 3, 'vehicle': 3},
+  'max_annotation_area_per_category': {'human': 72670, 'vehicle': 328640},
 }
 
 ```
