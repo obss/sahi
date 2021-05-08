@@ -1044,10 +1044,10 @@ class Coco:
                     max_annotation_area = annotation_area
                 if annotation_area<min_annotation_area:
                     min_annotation_area = annotation_area
-                if annotation_area>max_area_per_category[annotation.category_name]:
-                    max_area_per_category[annotation.category_name] = annotation_area
-                if annotation_area<min_area_per_category[annotation.category_name]:
-                    min_area_per_category[annotation.category_name] = annotation_area
+                if annotation_area>max_annotation_area_per_category[annotation.category_name]:
+                    max_annotation_area_per_category[annotation.category_name] = annotation_area
+                if annotation_area<min_annotation_area_per_category[annotation.category_name]:
+                    min_annotation_area_per_category[annotation.category_name] = annotation_area
             # update num_negative_images
             if len(image.annotations) == 0:
                 num_negative_images += 1
@@ -1079,8 +1079,8 @@ class Coco:
             "min_annotation_area": min_annotation_area,
             "max_annotation_area": max_annotation_area,
             "avg_annotation_area": avg_annotation_area,
-            "min_area_per_category": min_area_per_category,
-            "max_area_per_category": max_area_per_category,
+            "min_annotation_area_per_category": min_annotation_area_per_category,
+            "max_annotation_area_per_category": max_annotation_area_per_category,
         }
 
     def split_coco_as_train_val(
