@@ -1023,6 +1023,8 @@ class Coco:
         category_name_to_zero = {category["name"]:0 for category in self.json_categories}
         num_images_per_category = copy.deepcopy(category_name_to_zero)
         num_annotations_per_category = copy.deepcopy(category_name_to_zero)
+        min_area_per_category = copy.deepcopy(category_name_to_zero)
+        max_area_per_category = copy.deepcopy(category_name_to_zero)
         min_num_annotations_in_image = float('inf')
         max_num_annotations_in_image = 0
         total_annotation_area = 0
@@ -1040,6 +1042,10 @@ class Coco:
                     max_annotation_area = annotation_area
                 if annotation_area<min_annotation_area:
                     min_annotation_area = annotation_area
+                if annotation_area>max_area_per_category[annotation.category_name]:
+                    max_area_per_category[annotation.category_name] = annotation_area
+                if annotation_area<min_area_per_category[annotation.category_name]:
+                    min_area_per_category[annotation.category_name] = annotation_area
             # update num_negative_images
             if len(image.annotations) == 0:
                 num_negative_images += 1
@@ -1070,7 +1076,9 @@ class Coco:
             "avg_num_annotations_in_image": avg_num_annotations_in_image,
             "min_annotation_area": min_annotation_area,
             "max_annotation_area": max_annotation_area,
-            "avg_annotation_area": avg_annotation_area
+            "avg_annotation_area": avg_annotation_area,
+            "min_area_per_category": min_area_per_category,
+            "max_area_per_category": max_area_per_category,
         }
 
     def split_coco_as_train_val(
