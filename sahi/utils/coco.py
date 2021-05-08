@@ -1016,12 +1016,17 @@ class Coco:
         """
         Iterates over all annotations and calculates total number of
         """
+        # init all stats
         num_annotations = 0
         num_images = len(self.images)
+        num_negative_images = 0
         num_categories = len(self.json_categories)
         category_name_to_zero = {category["name"]:0 for category in self.json_categories}
+        category_name_to_inf = {category["name"]:float('inf') for category in self.json_categories}
         num_images_per_category = copy.deepcopy(category_name_to_zero)
         num_annotations_per_category = copy.deepcopy(category_name_to_zero)
+        min_annotation_area_per_category = copy.deepcopy(category_name_to_inf)
+        max_annotation_area_per_category = copy.deepcopy(category_name_to_zero)
         min_num_annotations_in_image = float('inf')
         max_num_annotations_in_image = 0
         total_annotation_area = 0
@@ -1039,6 +1044,13 @@ class Coco:
                     max_annotation_area = annotation_area
                 if annotation_area<min_annotation_area:
                     min_annotation_area = annotation_area
+                if annotation_area>max_annotation_area_per_category[annotation.category_name]:
+                    max_annotation_area_per_category[annotation.category_name] = annotation_area
+                if annotation_area<min_annotation_area_per_category[annotation.category_name]:
+                    min_annotation_area_per_category[annotation.category_name] = annotation_area
+            # update num_negative_images
+            if len(image.annotations) == 0:
+                num_negative_images += 1
             # update num_annotations
             num_annotations += len(image.annotations)
             # update num_images_per_category
@@ -1051,13 +1063,14 @@ class Coco:
                 max_num_annotations_in_image = num_annotations_in_image
             if num_annotations_in_image<min_num_annotations_in_image:
                 min_num_annotations_in_image = num_annotations_in_image
-        avg_num_annotations_in_image = num_annotations/num_images
+        avg_num_annotations_in_image = num_annotations/(num_images-num_negative_images)
         avg_annotation_area = total_annotation_area/num_annotations
 
         self._stats = {
             "num_images": num_images,
             "num_annotations": num_annotations,
             "num_categories": num_categories,
+            "num_negative_images": num_negative_images,
             "num_images_per_category": num_images_per_category,
             "num_annotations_per_category": num_annotations_per_category,
             "min_num_annotations_in_image": min_num_annotations_in_image,
@@ -1065,7 +1078,9 @@ class Coco:
             "avg_num_annotations_in_image": avg_num_annotations_in_image,
             "min_annotation_area": min_annotation_area,
             "max_annotation_area": max_annotation_area,
-            "avg_annotation_area": avg_annotation_area
+            "avg_annotation_area": avg_annotation_area,
+            "min_annotation_area_per_category": min_annotation_area_per_category,
+            "max_annotation_area_per_category": max_annotation_area_per_category,
         }
 
     def split_coco_as_train_val(
