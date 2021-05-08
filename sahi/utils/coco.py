@@ -1236,7 +1236,7 @@ class Coco:
 
         return subsampled_coco
 
-    def get_area_filtered_coco(self, min=0, max=float('inf')):
+    def get_area_filtered_coco(self, min=0, max=float('inf'), intervals_per_category=None):
         """
         Filters annotation areas with given min and max values and returns remaining
         images as sahi.utils.coco.Coco object.
@@ -1246,6 +1246,11 @@ class Coco:
                 minimum allowed area
             max: int
                 maximum allowed area
+            intervals_per_category: dict of dicts
+                {
+                    "human": {"min": 20, "max": 10000},
+                    "vehicle": {"min": 50, "max": 15000},
+                }
         Returns:
             area_filtered_coco: sahi.utils.coco.Coco
         """
@@ -1259,6 +1264,13 @@ class Coco:
         for image in self.images:
             is_valid_image = True
             for annotation in image.annotations:
+                if intervals_per_category is not None:
+                    category_based_min = intervals_per_category[annotation.category_name]["min"]
+                    category_based_max = intervals_per_category[annotation.category_name]["max"]
+                    if (annotation.area < category_based_min
+                        or
+                        annotation.area > category_based_max):
+                        is_valid_image = False
                 if annotation.area < min or annotation.area > max:
                     is_valid_image = False
             if is_valid_image:
