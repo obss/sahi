@@ -136,6 +136,12 @@ coco = Coco.from_coco_dict_or_path("coco.json")
 area_filtered_coco = coco.get_area_filtered_coco(min=50)
 # filter out images that contain annotations with smaller area than 50 and larger area than 10000
 area_filtered_coco = coco.get_area_filtered_coco(min=50, max=10000)
+# filter out images with seperate area intervals per category
+intervals_per_category = {
+  "human": {"min": 20, "max": 10000},
+  "vehicle": {"min": 50, "max": 15000},
+}
+area_filtered_coco = coco.get_area_filtered_coco(intervals_per_category=intervals_per_category)
 
 # export filtered COCO dataset
 save_json(area_filtered_coco.json, "area_filtered_coco.json")
