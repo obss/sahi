@@ -1264,7 +1264,7 @@ class Coco:
         for image in self.images:
             is_valid_image = True
             for annotation in image.annotations:
-                if intervals_per_category is not None and annotation.name in intervals_per_category.keys():
+                if intervals_per_category is not None and annotation.category_name in intervals_per_category.keys():
                     category_based_min = intervals_per_category[annotation.category_name]["min"]
                     category_based_max = intervals_per_category[annotation.category_name]["max"]
                     if (annotation.area < category_based_min
