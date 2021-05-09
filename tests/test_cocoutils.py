@@ -665,6 +665,35 @@ class TestCocoUtils(unittest.TestCase):
         )
         self.assertEqual(area_filtered_coco.stats["num_images"], len(area_filtered_coco.images))
         self.assertEqual(area_filtered_coco.stats["num_annotations"], len(area_filtered_coco.json["annotations"]))
+        
+        intervals_per_category = {
+            "human": {"min": 20, "max": 10000},
+            "vehicle": {"min": 50, "max": 15000},
+            }
+        area_filtered_coco = coco.get_area_filtered_coco(intervals_per_category=intervals_per_category)
+
+        self.assertEqual(
+            len(coco.json["images"]),
+            50,
+        )
+        self.assertEqual(
+            len(area_filtered_coco.json["images"]),
+            22,
+        )
+        self.assertGreater(
+            area_filtered_coco.stats["min_annotation_area"],
+            min(intervals_per_category["human"]["min"], intervals_per_category["vehicle"]["min"]),
+        )
+        self.assertLess(
+            area_filtered_coco.stats["max_annotation_area"],
+            max(intervals_per_category["human"]["max"], intervals_per_category["vehicle"]["max"]),
+        )
+        self.assertEqual(
+            area_filtered_coco.image_dir,
+            image_dir,
+        )
+        self.assertEqual(area_filtered_coco.stats["num_images"], len(area_filtered_coco.images))
+        self.assertEqual(area_filtered_coco.stats["num_annotations"], len(area_filtered_coco.json["annotations"]))
 
     def test_cocovid(self):
         from sahi.utils.coco import CocoVid
