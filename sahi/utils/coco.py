@@ -1198,11 +1198,17 @@ class Coco:
         # create image symlinks and annotation txts
         if split_mode in ["TRAINVAL", "TRAIN"]:
             export_yolov5_images_and_txts_from_coco_object(
-                output_dir=train_dir, coco=train_coco, mp=mp
+                output_dir=train_dir,
+                coco=train_coco,
+                ignore_negative_samples=self.ignore_negative_samples,
+                mp=mp
             )
         if split_mode in ["TRAINVAL", "VAL"]:
             export_yolov5_images_and_txts_from_coco_object(
-                output_dir=val_dir, coco=val_coco, mp=mp
+                output_dir=train_dir,
+                coco=val_coco,
+                ignore_negative_samples=self.ignore_negative_samples,
+                mp=mp
             )
 
         # create yolov5 data yaml
@@ -1282,7 +1288,7 @@ class Coco:
 
 
 def export_yolov5_images_and_txts_from_coco_object(
-    output_dir, coco, mp=False
+    output_dir, coco, ignore_negative_samples=True, mp=False
 ):
     """
     Creates image symlinks and annotation txts in yolo format from coco dataset.
@@ -1292,6 +1298,8 @@ def export_yolov5_images_and_txts_from_coco_object(
             Export directory.
         coco: sahi.utils.coco.Coco
             Initialized Coco object that contains images and categories.
+        ignore_negative_samples: bool
+            If True ignores images without annotations in all operations.
         mp: bool
             If True, multiprocess mode is on.
             Should be called in 'if __name__ == __main__:' block.
@@ -1300,13 +1308,13 @@ def export_yolov5_images_and_txts_from_coco_object(
     print('generating image symlinks and annotation files for yolov5...'),
     if mp:
         with Pool(processes=48) as pool:
-            args = [(coco_image, coco.image_dir, output_dir) for coco_image in coco.images]
+            args = [(coco_image, coco.image_dir, output_dir, ignore_negative_samples) for coco_image in coco.images]
             pool.starmap(export_single_yolov5_image_and_corresponding_txt, tqdm(args, total=len(args)))
     else:
         for coco_image in tqdm(coco.images):
-            export_single_yolov5_image_and_corresponding_txt(coco_image, coco.image_dir, output_dir)
+            export_single_yolov5_image_and_corresponding_txt(coco_image, coco.image_dir, output_dir, ignore_negative_samples)
 
-def export_single_yolov5_image_and_corresponding_txt(coco_image, coco_image_dir, output_dir):
+def export_single_yolov5_image_and_corresponding_txt(coco_image, coco_image_dir, output_dir, ignore_negative_samples=True):
     """
     Generates yolov5 formatted image symlink and annotation txt file.
 
@@ -1314,56 +1322,60 @@ def export_single_yolov5_image_and_corresponding_txt(coco_image, coco_image_dir,
         coco_image: sahi.utils.coco.CocoImage
         coco_image_dir: str
         output_dir: str
+            Export directory.
+        ignore_negative_samples: bool
+            If True ignores images without annotations in all operations.
     """
-    # set coco and yolo image paths
-    if Path(coco_image.file_name).is_file():
-        coco_image_path = os.path.abspath(coco_image.file_name)
-    else:
-        assert coco_image_dir is not None, "You have to specify image_dir " \
-            "of Coco object for yolov5 conversion."
-        coco_image_path = os.path.abspath(str(Path(coco_image_dir) / coco_image.file_name))
-    yolo_image_path_temp = str(Path(output_dir) / Path(coco_image.file_name).name)
-    # increment target file name if already present
-    yolo_image_path = copy.deepcopy(yolo_image_path_temp)
-    name_increment = 2
-    while Path(yolo_image_path).is_file():
-        yolo_image_path = yolo_image_path_temp.replace(
-            Path(coco_image.file_name).stem,
-            Path(coco_image.file_name).stem + "_" + str(name_increment)
-        )
-        name_increment += 1
-    # create a symbolic link pointing to coco_image_path named yolo_image_path
-    os.symlink(coco_image_path, yolo_image_path)
-    # calculate annotation normalization ratios
-    width = coco_image.width
-    height = coco_image.height
-    dw = 1.0 / (width)
-    dh = 1.0 / (height)
-    # set annotation filepath
-    image_file_suffix = Path(yolo_image_path).suffix
-    yolo_annotation_path = yolo_image_path.replace(image_file_suffix, ".txt")
-    # create annotation file
-    annotations = coco_image.annotations
-    with open(yolo_annotation_path, "w") as outfile:
-        for annotation in annotations:
-            # convert coco bbox to yolo bbox
-            x_center = annotation.bbox[0] + annotation.bbox[2] / 2.0
-            y_center = annotation.bbox[1] + annotation.bbox[3] / 2.0
-            bbox_width = annotation.bbox[2]
-            bbox_height = annotation.bbox[3]
-            x_center = x_center * dw
-            y_center = y_center * dh
-            bbox_width = bbox_width * dw
-            bbox_height = bbox_height * dh
-            category_id = annotation.category_id
-            yolo_bbox = (x_center, y_center, bbox_width, bbox_height)
-            # save yolo annotation
-            outfile.write(
-                str(category_id)
-                + " "
-                + " ".join([str(value) for value in yolo_bbox])
-                + "\n"
+    if not ignore_negative_samples or len(coco_image.annotations)>0:
+        # set coco and yolo image paths
+        if Path(coco_image.file_name).is_file():
+            coco_image_path = os.path.abspath(coco_image.file_name)
+        else:
+            assert coco_image_dir is not None, "You have to specify image_dir " \
+                "of Coco object for yolov5 conversion."
+            coco_image_path = os.path.abspath(str(Path(coco_image_dir) / coco_image.file_name))
+        yolo_image_path_temp = str(Path(output_dir) / Path(coco_image.file_name).name)
+        # increment target file name if already present
+        yolo_image_path = copy.deepcopy(yolo_image_path_temp)
+        name_increment = 2
+        while Path(yolo_image_path).is_file():
+            yolo_image_path = yolo_image_path_temp.replace(
+                Path(coco_image.file_name).stem,
+                Path(coco_image.file_name).stem + "_" + str(name_increment)
             )
+            name_increment += 1
+        # create a symbolic link pointing to coco_image_path named yolo_image_path
+        os.symlink(coco_image_path, yolo_image_path)
+        # calculate annotation normalization ratios
+        width = coco_image.width
+        height = coco_image.height
+        dw = 1.0 / (width)
+        dh = 1.0 / (height)
+        # set annotation filepath
+        image_file_suffix = Path(yolo_image_path).suffix
+        yolo_annotation_path = yolo_image_path.replace(image_file_suffix, ".txt")
+        # create annotation file
+        annotations = coco_image.annotations
+        with open(yolo_annotation_path, "w") as outfile:
+            for annotation in annotations:
+                # convert coco bbox to yolo bbox
+                x_center = annotation.bbox[0] + annotation.bbox[2] / 2.0
+                y_center = annotation.bbox[1] + annotation.bbox[3] / 2.0
+                bbox_width = annotation.bbox[2]
+                bbox_height = annotation.bbox[3]
+                x_center = x_center * dw
+                y_center = y_center * dh
+                bbox_width = bbox_width * dw
+                bbox_height = bbox_height * dh
+                category_id = annotation.category_id
+                yolo_bbox = (x_center, y_center, bbox_width, bbox_height)
+                # save yolo annotation
+                outfile.write(
+                    str(category_id)
+                    + " "
+                    + " ".join([str(value) for value in yolo_bbox])
+                    + "\n"
+                )
 
 def update_categories(desired_name2id: dict, coco_dict: dict) -> dict:
     """
