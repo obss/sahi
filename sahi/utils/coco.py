@@ -737,7 +737,7 @@ class CocoVideo:
 
 
 class Coco:
-    def __init__(self, name=None, image_dir=None, remapping_dict=None, ignore_negative_samples=True):
+    def __init__(self, name=None, image_dir=None, remapping_dict=None, ignore_negative_samples=False):
         """
         Creates Coco object.
 
@@ -919,7 +919,7 @@ class Coco:
             )
 
     @classmethod
-    def from_coco_dict_or_path(cls, coco_dict_or_path, desired_name2id=None, image_dir=None, remapping_dict=None, ignore_negative_samples=True, mp=False):
+    def from_coco_dict_or_path(cls, coco_dict_or_path, desired_name2id=None, image_dir=None, remapping_dict=None, ignore_negative_samples=False, mp=False):
         """
         Creates coco object from COCO formatted dict or COCO dataset file path.
 
@@ -1288,7 +1288,7 @@ class Coco:
 
 
 def export_yolov5_images_and_txts_from_coco_object(
-    output_dir, coco, ignore_negative_samples=True, mp=False
+    output_dir, coco, ignore_negative_samples=False, mp=False
 ):
     """
     Creates image symlinks and annotation txts in yolo format from coco dataset.
@@ -1314,7 +1314,7 @@ def export_yolov5_images_and_txts_from_coco_object(
         for coco_image in tqdm(coco.images):
             export_single_yolov5_image_and_corresponding_txt(coco_image, coco.image_dir, output_dir, ignore_negative_samples)
 
-def export_single_yolov5_image_and_corresponding_txt(coco_image, coco_image_dir, output_dir, ignore_negative_samples=True):
+def export_single_yolov5_image_and_corresponding_txt(coco_image, coco_image_dir, output_dir, ignore_negative_samples=False):
     """
     Generates yolov5 formatted image symlink and annotation txt file.
 
@@ -1655,7 +1655,7 @@ def get_imageid2annotationlist_mapping(coco_dict: dict) -> dict:
     return imageid2annotationlist_mapping
 
 
-def create_coco_dict(images, categories, ignore_negative_samples=True):
+def create_coco_dict(images, categories, ignore_negative_samples=False):
     """
     Creates COCO dict with fields "images", "annotations", "categories".
 
