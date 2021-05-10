@@ -147,6 +147,16 @@ area_filtered_coco = coco.get_area_filtered_coco(intervals_per_category=interval
 save_json(area_filtered_coco.json, "area_filtered_coco.json")
 ```
 
+## Filter out images that does not contain any annotation
+
+```python
+from sahi.utils.coco import Coco
+
+# set ignore_negative_samples as False if you want images without annotations present in json and yolov5 exports
+coco = Coco.from_coco_dict_or_path("coco.json", ignore_negative_samples=True)
+
+```
+
 ## Merge COCO dataset files:
 
 ```python
