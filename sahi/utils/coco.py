@@ -919,7 +919,7 @@ class Coco:
             )
 
     @classmethod
-    def from_coco_dict_or_path(cls, coco_dict_or_path, desired_name2id=None, image_dir=None, remapping_dict=None, mp=False):
+    def from_coco_dict_or_path(cls, coco_dict_or_path, desired_name2id=None, image_dir=None, remapping_dict=None, ignore_negative_samples=True, mp=False):
         """
         Creates coco object from COCO formatted dict or COCO dataset file path.
 
@@ -933,6 +933,8 @@ class Coco:
                 Base file directory that contains dataset images. Required for merging and yolov5 conversion.
             remapping_dict: dict
                 {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
+            ignore_negative_samples: bool
+                If True ignores images without annotations in all operations.
             mp: bool
                 If True, multiprocess mode is on.
                 Should be called in 'if __name__ == __main__:' block.
