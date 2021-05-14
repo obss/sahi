@@ -193,7 +193,6 @@ if __name__ == __main__:
   coco = Coco.from_coco_dict_or_path(
     "coco.json",
     image_dir="coco_images/"
-    mp=True
   )
   coco.export_as_yolov5(
     output_dir="output/folder/dir",
