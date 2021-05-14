@@ -35,7 +35,10 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=["conda", "demo", "tests"]),
     python_requires=">=3.6",
     install_requires=get_requirements(),
-    extras_require={"tests": ["pytest", "mmdet"]},
+    extras_require={
+        "tests": ["pytest", "mmdet"],
+        "dev": ["black==21.5b1", "flake==3.9.2", "isort==5.8.0"],
+    },
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",

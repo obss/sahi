@@ -737,7 +737,13 @@ class CocoVideo:
 
 
 class Coco:
-    def __init__(self, name=None, image_dir=None, remapping_dict=None, ignore_negative_samples=False):
+    def __init__(
+        self,
+        name=None,
+        image_dir=None,
+        remapping_dict=None,
+        ignore_negative_samples=False,
+    ):
         """
         Creates Coco object.
 
@@ -823,7 +829,7 @@ class Coco:
             name=self.name,
             image_dir=self.image_dir,
             remapping_dict=self.remapping_dict,
-            ignore_negative_samples=self.ignore_negative_samples
+            ignore_negative_samples=self.ignore_negative_samples,
         )
         # create category id mapping (currentid2desiredid_mapping)
         for coco_category in copy.deepcopy(self.categories):
@@ -840,9 +846,7 @@ class Coco:
         # add updated categories
         for name in desired_name2id.keys():
             updated_coco_category = CocoCategory(
-                id=desired_name2id[name],
-                name=name,
-                supercategory=name
+                id=desired_name2id[name], name=name, supercategory=name
             )
             updated_coco.add_category(updated_coco_category)
 
@@ -850,9 +854,15 @@ class Coco:
         for coco_image in copy.deepcopy(self.images):
             updated_coco_image = CocoImage.from_coco_image_dict(coco_image.json)
             # update filename to abspath
-            file_name_is_abspath = True if os.path.abspath(coco_image.file_name) == coco_image.file_name else False
+            file_name_is_abspath = (
+                True
+                if os.path.abspath(coco_image.file_name) == coco_image.file_name
+                else False
+            )
             if update_image_filenames and not file_name_is_abspath:
-                updated_coco_image.file_name = str(Path(os.path.abspath(self.image_dir)) / coco_image.file_name)
+                updated_coco_image.file_name = str(
+                    Path(os.path.abspath(self.image_dir)) / coco_image.file_name
+                )
             # update annotations
             for coco_annotation in coco_image.annotations:
                 current_category_id = coco_annotation.category_id
@@ -881,7 +891,9 @@ class Coco:
             verbose: bool
                 If True, merging info is printed
         """
-        assert self.image_dir and coco.image_dir, "image_dir should be provided for merging."
+        assert (
+            self.image_dir and coco.image_dir
+        ), "image_dir should be provided for merging."
 
         if verbose:
             if not desired_name2id:
@@ -904,7 +916,9 @@ class Coco:
 
         # update categories and image paths
         for coco in [coco1, coco2]:
-            coco.update_categories(desired_name2id=desired_name2id, update_image_filenames=True)
+            coco.update_categories(
+                desired_name2id=desired_name2id, update_image_filenames=True
+            )
 
         # combine images and categories
         coco1.images.extend(coco2.images)
@@ -919,7 +933,15 @@ class Coco:
             )
 
     @classmethod
-    def from_coco_dict_or_path(cls, coco_dict_or_path, desired_name2id=None, image_dir=None, remapping_dict=None, ignore_negative_samples=False, mp=False):
+    def from_coco_dict_or_path(
+        cls,
+        coco_dict_or_path,
+        desired_name2id=None,
+        image_dir=None,
+        remapping_dict=None,
+        ignore_negative_samples=False,
+        mp=False,
+    ):
         """
         Creates coco object from COCO formatted dict or COCO dataset file path.
 
@@ -946,9 +968,9 @@ class Coco:
         # init coco object
         coco = cls(image_dir=image_dir, remapping_dict=remapping_dict)
 
-        assert (type(coco_dict_or_path) == str
-            or type(coco_dict_or_path) == dict), \
-            "coco_dict_or_path should be dict or str"
+        assert (
+            type(coco_dict_or_path) == str or type(coco_dict_or_path) == dict
+        ), "coco_dict_or_path should be dict or str"
 
         # load coco dict if path is given
         if type(coco_dict_or_path) == str:
@@ -971,7 +993,9 @@ class Coco:
                 # apply category remapping if remapping_dict is provided
                 if coco.remapping_dict is not None:
                     # apply category remapping (id:id)
-                    category_id = coco.remapping_dict[coco_annotation_dict["category_id"]]
+                    category_id = coco.remapping_dict[
+                        coco_annotation_dict["category_id"]
+                    ]
                     # update category id
                     coco_annotation_dict["category_id"] = category_id
                 else:
@@ -1023,13 +1047,17 @@ class Coco:
         num_images = len(self.images)
         num_negative_images = 0
         num_categories = len(self.json_categories)
-        category_name_to_zero = {category["name"]:0 for category in self.json_categories}
-        category_name_to_inf = {category["name"]:float('inf') for category in self.json_categories}
+        category_name_to_zero = {
+            category["name"]: 0 for category in self.json_categories
+        }
+        category_name_to_inf = {
+            category["name"]: float("inf") for category in self.json_categories
+        }
         num_images_per_category = copy.deepcopy(category_name_to_zero)
         num_annotations_per_category = copy.deepcopy(category_name_to_zero)
         min_annotation_area_per_category = copy.deepcopy(category_name_to_inf)
         max_annotation_area_per_category = copy.deepcopy(category_name_to_zero)
-        min_num_annotations_in_image = float('inf')
+        min_num_annotations_in_image = float("inf")
         max_num_annotations_in_image = 0
         total_annotation_area = 0
         min_annotation_area = 1e10
@@ -1042,14 +1070,24 @@ class Coco:
                 num_annotations_per_category[annotation.category_name] += 1
                 image_contains_category[annotation.category_name] = 1
                 # update min&max annotation area
-                if annotation_area>max_annotation_area:
+                if annotation_area > max_annotation_area:
                     max_annotation_area = annotation_area
-                if annotation_area<min_annotation_area:
+                if annotation_area < min_annotation_area:
                     min_annotation_area = annotation_area
-                if annotation_area>max_annotation_area_per_category[annotation.category_name]:
-                    max_annotation_area_per_category[annotation.category_name] = annotation_area
-                if annotation_area<min_annotation_area_per_category[annotation.category_name]:
-                    min_annotation_area_per_category[annotation.category_name] = annotation_area
+                if (
+                    annotation_area
+                    > max_annotation_area_per_category[annotation.category_name]
+                ):
+                    max_annotation_area_per_category[
+                        annotation.category_name
+                    ] = annotation_area
+                if (
+                    annotation_area
+                    < min_annotation_area_per_category[annotation.category_name]
+                ):
+                    min_annotation_area_per_category[
+                        annotation.category_name
+                    ] = annotation_area
             # update num_negative_images
             if len(image.annotations) == 0:
                 num_negative_images += 1
@@ -1061,12 +1099,14 @@ class Coco:
             )
             # update min&max_num_annotations_in_image
             num_annotations_in_image = len(image.annotations)
-            if num_annotations_in_image>max_num_annotations_in_image:
+            if num_annotations_in_image > max_num_annotations_in_image:
                 max_num_annotations_in_image = num_annotations_in_image
-            if num_annotations_in_image<min_num_annotations_in_image:
+            if num_annotations_in_image < min_num_annotations_in_image:
                 min_num_annotations_in_image = num_annotations_in_image
-        avg_num_annotations_in_image = num_annotations/(num_images-num_negative_images)
-        avg_annotation_area = total_annotation_area/num_annotations
+        avg_num_annotations_in_image = num_annotations / (
+            num_images - num_negative_images
+        )
+        avg_annotation_area = total_annotation_area / num_annotations
 
         self._stats = {
             "num_images": num_images,
@@ -1085,9 +1125,7 @@ class Coco:
             "max_annotation_area_per_category": max_annotation_area_per_category,
         }
 
-    def split_coco_as_train_val(
-        self, train_split_rate=0.9, numpy_seed=0
-    ):
+    def split_coco_as_train_val(self, train_split_rate=0.9, numpy_seed=0):
         """
         Split images into train-val and returns them as sahi.utils.coco.Coco objects.
 
@@ -1116,15 +1154,14 @@ class Coco:
 
         # form train val coco objects
         train_coco = Coco(
-            name=self.name if self.name else "split" + '_train',
-            image_dir=self.image_dir
+            name=self.name if self.name else "split" + "_train",
+            image_dir=self.image_dir,
         )
         train_coco.images = train_images
         train_coco.categories = self.categories
 
         val_coco = Coco(
-            name=self.name if self.name else "split" + '_val',
-            image_dir=self.image_dir
+            name=self.name if self.name else "split" + "_val", image_dir=self.image_dir
         )
         val_coco.images = val_images
         val_coco.categories = self.categories
@@ -1158,7 +1195,8 @@ class Coco:
         except ImportError:
             raise ImportError(
                 'Please run "pip install -U pyyaml" '
-                'to install yaml first for yolov5 formatted exporting.')
+                "to install yaml first for yolov5 formatted exporting."
+            )
 
         # set split_mode
         if 0 < train_split_rate and train_split_rate < 1:
@@ -1201,14 +1239,14 @@ class Coco:
                 output_dir=train_dir,
                 coco=train_coco,
                 ignore_negative_samples=self.ignore_negative_samples,
-                mp=mp
+                mp=mp,
             )
         if split_mode in ["TRAINVAL", "VAL"]:
             export_yolov5_images_and_txts_from_coco_object(
                 output_dir=train_dir,
                 coco=val_coco,
                 ignore_negative_samples=self.ignore_negative_samples,
-                mp=mp
+                mp=mp,
             )
 
         # create yolov5 data yaml
@@ -1236,7 +1274,7 @@ class Coco:
             name=self.name,
             image_dir=self.image_dir,
             remapping_dict=self.remapping_dict,
-            ignore_negative_samples=self.ignore_negative_samples
+            ignore_negative_samples=self.ignore_negative_samples,
         )
         subsampled_coco.add_categories_from_coco_category_list(self.json_categories)
         for image_ind in range(0, len(self.images), subsample_ratio):
@@ -1244,7 +1282,9 @@ class Coco:
 
         return subsampled_coco
 
-    def get_area_filtered_coco(self, min=0, max=float('inf'), intervals_per_category=None):
+    def get_area_filtered_coco(
+        self, min=0, max=float("inf"), intervals_per_category=None
+    ):
         """
         Filters annotation areas with given min and max values and returns remaining
         images as sahi.utils.coco.Coco object.
@@ -1266,18 +1306,26 @@ class Coco:
             name=self.name,
             image_dir=self.image_dir,
             remapping_dict=self.remapping_dict,
-            ignore_negative_samples=self.ignore_negative_samples
+            ignore_negative_samples=self.ignore_negative_samples,
         )
         area_filtered_coco.add_categories_from_coco_category_list(self.json_categories)
         for image in self.images:
             is_valid_image = True
             for annotation in image.annotations:
-                if intervals_per_category is not None and annotation.category_name in intervals_per_category.keys():
-                    category_based_min = intervals_per_category[annotation.category_name]["min"]
-                    category_based_max = intervals_per_category[annotation.category_name]["max"]
-                    if (annotation.area < category_based_min
-                        or
-                        annotation.area > category_based_max):
+                if (
+                    intervals_per_category is not None
+                    and annotation.category_name in intervals_per_category.keys()
+                ):
+                    category_based_min = intervals_per_category[
+                        annotation.category_name
+                    ]["min"]
+                    category_based_max = intervals_per_category[
+                        annotation.category_name
+                    ]["max"]
+                    if (
+                        annotation.area < category_based_min
+                        or annotation.area > category_based_max
+                    ):
                         is_valid_image = False
                 if annotation.area < min or annotation.area > max:
                     is_valid_image = False
@@ -1305,16 +1353,27 @@ def export_yolov5_images_and_txts_from_coco_object(
             Should be called in 'if __name__ == __main__:' block.
     """
 
-    print('generating image symlinks and annotation files for yolov5...'),
+    print("generating image symlinks and annotation files for yolov5..."),
     if mp:
         with Pool(processes=48) as pool:
-            args = [(coco_image, coco.image_dir, output_dir, ignore_negative_samples) for coco_image in coco.images]
-            pool.starmap(export_single_yolov5_image_and_corresponding_txt, tqdm(args, total=len(args)))
+            args = [
+                (coco_image, coco.image_dir, output_dir, ignore_negative_samples)
+                for coco_image in coco.images
+            ]
+            pool.starmap(
+                export_single_yolov5_image_and_corresponding_txt,
+                tqdm(args, total=len(args)),
+            )
     else:
         for coco_image in tqdm(coco.images):
-            export_single_yolov5_image_and_corresponding_txt(coco_image, coco.image_dir, output_dir, ignore_negative_samples)
+            export_single_yolov5_image_and_corresponding_txt(
+                coco_image, coco.image_dir, output_dir, ignore_negative_samples
+            )
 
-def export_single_yolov5_image_and_corresponding_txt(coco_image, coco_image_dir, output_dir, ignore_negative_samples=False):
+
+def export_single_yolov5_image_and_corresponding_txt(
+    coco_image, coco_image_dir, output_dir, ignore_negative_samples=False
+):
     """
     Generates yolov5 formatted image symlink and annotation txt file.
 
@@ -1326,14 +1385,17 @@ def export_single_yolov5_image_and_corresponding_txt(coco_image, coco_image_dir,
         ignore_negative_samples: bool
             If True ignores images without annotations in all operations.
     """
-    if not ignore_negative_samples or len(coco_image.annotations)>0:
+    if not ignore_negative_samples or len(coco_image.annotations) > 0:
         # set coco and yolo image paths
         if Path(coco_image.file_name).is_file():
             coco_image_path = os.path.abspath(coco_image.file_name)
         else:
-            assert coco_image_dir is not None, "You have to specify image_dir " \
-                "of Coco object for yolov5 conversion."
-            coco_image_path = os.path.abspath(str(Path(coco_image_dir) / coco_image.file_name))
+            assert coco_image_dir is not None, (
+                "You have to specify image_dir " "of Coco object for yolov5 conversion."
+            )
+            coco_image_path = os.path.abspath(
+                str(Path(coco_image_dir) / coco_image.file_name)
+            )
         yolo_image_path_temp = str(Path(output_dir) / Path(coco_image.file_name).name)
         # increment target file name if already present
         yolo_image_path = copy.deepcopy(yolo_image_path_temp)
@@ -1341,7 +1403,7 @@ def export_single_yolov5_image_and_corresponding_txt(coco_image, coco_image_dir,
         while Path(yolo_image_path).is_file():
             yolo_image_path = yolo_image_path_temp.replace(
                 Path(coco_image.file_name).stem,
-                Path(coco_image.file_name).stem + "_" + str(name_increment)
+                Path(coco_image.file_name).stem + "_" + str(name_increment),
             )
             name_increment += 1
         # create a symbolic link pointing to coco_image_path named yolo_image_path
@@ -1376,6 +1438,7 @@ def export_single_yolov5_image_and_corresponding_txt(coco_image, coco_image_dir,
                     + " ".join([str(value) for value in yolo_bbox])
                     + "\n"
                 )
+
 
 def update_categories(desired_name2id: dict, coco_dict: dict) -> dict:
     """
@@ -1609,7 +1672,9 @@ def get_imageid2annotationlist_mapping_mp(coco_dict):
     print("indexing coco dataset annotations...")
     with Pool(processes=48) as pool:
         args = [(image["id"], annotations) for image in coco_dict["images"]]
-        imageid_annotationlist_pairs = pool.starmap(get_image_annotations, tqdm(args, total=len(args)))
+        imageid_annotationlist_pairs = pool.starmap(
+            get_image_annotations, tqdm(args, total=len(args))
+        )
     imageid2annotationlist_mapping = dict(imageid_annotationlist_pairs)
 
     return imageid2annotationlist_mapping

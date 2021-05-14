@@ -82,7 +82,8 @@ def read_large_image(image_path):
         except ImportError:
             raise ImportError(
                 'Please run "pip install -U scikit-image" '
-                'to install scikit-image first for large image handling.')
+                "to install scikit-image first for large image handling."
+            )
         image0 = skimage.io.imread(image_path, as_grey=False).astype(np.uint8)  # [::-1]
         use_cv2 = False
     return image0, use_cv2

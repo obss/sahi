@@ -7,9 +7,11 @@ from typing import Dict, List
 import numpy as np
 
 from sahi.utils.coco import CocoAnnotation, CocoPrediction
-from sahi.utils.cv import (get_bbox_from_bool_mask,
-                           get_bool_mask_from_coco_segmentation,
-                           get_coco_segmentation_from_bool_mask)
+from sahi.utils.cv import (
+    get_bbox_from_bool_mask,
+    get_bool_mask_from_coco_segmentation,
+    get_coco_segmentation_from_bool_mask,
+)
 from sahi.utils.shapely import ShapelyAnnotation
 
 
@@ -569,7 +571,8 @@ class ObjectAnnotation:
         except ImportError:
             raise ImportError(
                 'Please run "pip install -U imantics" '
-                'to install imantics first for imantics conversion.')
+                "to install imantics first for imantics conversion."
+            )
 
         imantics_category = imantics.Category(
             id=self.category.id, name=self.category.name
