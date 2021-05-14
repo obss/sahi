@@ -172,7 +172,7 @@ def get_sliced_prediction(
 
     # create slices from full image
     time_start = time.time()
-    slice_image_result, num_total_invalid_segmentation = slice_image(
+    slice_image_result = slice_image(
         image=image,
         slice_height=slice_height,
         slice_width=slice_width,
