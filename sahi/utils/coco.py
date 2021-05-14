@@ -940,7 +940,6 @@ class Coco:
         image_dir=None,
         remapping_dict=None,
         ignore_negative_samples=False,
-        mp=False,
     ):
         """
         Creates coco object from COCO formatted dict or COCO dataset file path.
@@ -957,9 +956,6 @@ class Coco:
                 {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
             ignore_negative_samples: bool
                 If True ignores images without annotations in all operations.
-            mp: bool
-                If True, multiprocess mode is on.
-                Should be called in 'if __name__ == __main__:' block.
 
         Properties:
             images: list of CocoImage
@@ -980,15 +976,12 @@ class Coco:
 
         # arrange image id to annotation id mapping
         coco.add_categories_from_coco_category_list(coco_dict["categories"])
-        if mp:
-            imageid2annotationlist = get_imageid2annotationlist_mapping_mp(coco_dict)
-        else:
-            imageid2annotationlist = get_imageid2annotationlist_mapping(coco_dict)
+        image_id_to_annotation_list = get_imageid2annotationlist_mapping(coco_dict)
         category_mapping = coco.category_mapping
 
         for coco_image_dict in coco_dict["images"]:
             coco_image = CocoImage.from_coco_image_dict(coco_image_dict)
-            annotation_list = imageid2annotationlist[coco_image_dict["id"]]
+            annotation_list = image_id_to_annotation_list[coco_image_dict["id"]]
             for coco_annotation_dict in annotation_list:
                 # apply category remapping if remapping_dict is provided
                 if coco.remapping_dict is not None:
@@ -1655,31 +1648,6 @@ def merge_from_file(coco_path1: str, coco_path2: str, save_path: str):
     save_json(merged_coco_dict, save_path)
 
 
-def get_image_annotations(image_id, annotations):
-    image_annotations = []
-    for annotation in annotations:
-        if annotation["image_id"] == image_id:
-            image_annotations.append(annotation)
-    return image_id, image_annotations
-
-
-def get_imageid2annotationlist_mapping_mp(coco_dict):
-    """
-    Multiprocess version of sahi.utils.coco.get_imageid2annotationlist_mapping. (3 times faster)
-    """
-    imageid2annotationlist_mapping = {}
-    annotations = coco_dict["annotations"]
-    print("indexing coco dataset annotations...")
-    with Pool(processes=48) as pool:
-        args = [(image["id"], annotations) for image in coco_dict["images"]]
-        imageid_annotationlist_pairs = pool.starmap(
-            get_image_annotations, tqdm(args, total=len(args))
-        )
-    imageid2annotationlist_mapping = dict(imageid_annotationlist_pairs)
-
-    return imageid2annotationlist_mapping
-
-
 def get_imageid2annotationlist_mapping(coco_dict: dict) -> dict:
     """
     Get image_id to annotationlist mapping for faster indexing.
@@ -1690,7 +1658,7 @@ def get_imageid2annotationlist_mapping(coco_dict: dict) -> dict:
             coco dict with fields "images", "annotations", "categories"
     Returns
     -------
-        imageid2annotationlist_mapping : dict
+        image_id_to_annotation_list : dict
         {
             1: [COCOAnnotation, COCOAnnotation, COCOAnnotation],
             2: [COCOAnnotation]
@@ -1707,17 +1675,13 @@ def get_imageid2annotationlist_mapping(coco_dict: dict) -> dict:
             'segmentation': [[491.0, 1035.0, 644.0, 1035.0, 644.0, 1217.0, 491.0, 1217.0]]
         }
     """
-    imageid2annotationlist_mapping = {}
+    image_id_to_annotation_list: Dict = defaultdict(list)
     print("indexing coco dataset annotations...")
-    for image in tqdm(coco_dict["images"]):
-        image_id = image["id"]
-        imageid2annotationlist_mapping[image_id] = []
+    for annotation in tqdm(coco_dict["annotations"]):
+        image_id = annotation["image_id"]
+        image_id_to_annotation_list[image_id].append(annotation)
 
-        for annotation in coco_dict["annotations"]:
-            if annotation["image_id"] == image_id:
-                imageid2annotationlist_mapping[image_id].append(annotation)
-
-    return imageid2annotationlist_mapping
+    return image_id_to_annotation_list
 
 
 def create_coco_dict(images, categories, ignore_negative_samples=False):
