@@ -174,7 +174,8 @@ class MmdetDetectionModel(DetectionModel):
         except ImportError:
             raise ImportError(
                 'Please run "pip install -U mmcv mmdet" '
-                'to install MMDetection first for MMDetection inference.')
+                "to install MMDetection first for MMDetection inference."
+            )
 
         from mmdet.apis import init_detector
 
@@ -207,7 +208,8 @@ class MmdetDetectionModel(DetectionModel):
         except ImportError:
             raise ImportError(
                 'Please run "pip install -U mmcv mmdet" '
-                'to install MMDetection first for MMDetection inference.')
+                "to install MMDetection first for MMDetection inference."
+            )
 
         # Confirm model is loaded
         assert (

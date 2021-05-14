@@ -12,8 +12,12 @@ from tqdm import tqdm
 from sahi.utils.coco import Coco, CocoAnnotation, CocoImage, create_coco_dict
 from sahi.utils.cv import read_large_image
 from sahi.utils.file import create_dir, load_json, save_json
-from sahi.utils.shapely import (ShapelyAnnotation, get_bbox_from_shapely,
-                                get_shapely_box, get_shapely_multipolygon)
+from sahi.utils.shapely import (
+    ShapelyAnnotation,
+    get_bbox_from_shapely,
+    get_shapely_box,
+    get_shapely_multipolygon,
+)
 
 
 def slice_coco_annotations_by_box(
@@ -342,7 +346,8 @@ def slice_image(
                         except ImportError:
                             raise ImportError(
                                 'Please run "pip install -U scikit-image" '
-                                'to install scikit-image first for large image handling.')
+                                "to install scikit-image first for large image handling."
+                            )
                         skimage.io.imsave(outpath, window_c)
                     else:
                         window_c = cv2.cvtColor(window_c, cv2.COLOR_RGB2BGR)
