@@ -6,26 +6,13 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-import cv2
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
-from sahi.utils.coco import (
-    Coco,
-    CocoAnnotation,
-    CocoImage,
-    create_coco_dict,
-    get_imageid2annotationlist_mapping,
-)
-from sahi.utils.cv import read_large_image
+from sahi.utils.coco import Coco, CocoAnnotation, CocoImage, create_coco_dict
+from sahi.utils.cv import read_image_as_pil
 from sahi.utils.file import create_dir, load_json, save_json
-from sahi.utils.shapely import (
-    box,
-    get_bbox_from_shapely,
-    get_shapely_box,
-    get_shapely_multipolygon,
-)
 
 
 def get_slice_bboxes(
@@ -110,6 +97,35 @@ def annotation_inside_slice(annotation: Dict, slice_bbox: List[int]) -> bool:
     return True
 
 
+def process_coco_annotations(
+    coco_annotation_list: List[CocoAnnotation], slice_bbox: List[int], min_area_ratio
+) -> bool:
+    """Slices and filters given list of CocoAnnotation objects with given
+    'slice_bbox' and 'min_area_ratio'.
+
+    Args:
+        coco_annotation_list (List[CocoAnnotation])
+        slice_bbox (List[int]): Generated from `get_slice_bboxes`.
+            Format for each slice bbox: [x_min, y_min, x_max, y_max].
+        min_area_ratio (float): If the cropped annotation area to original
+            annotation ratio is smaller than this value, the annotation is
+            filtered out. Default 0.1.
+
+    Returns:
+        (List[CocoAnnotation]): Sliced annotations.
+    """
+
+    sliced_coco_annotation_list: List[CocoAnnotation] = []
+    for coco_annotation in coco_annotation_list:
+        if annotation_inside_slice(coco_annotation.json, slice_bbox):
+            sliced_coco_annotation = coco_annotation.get_sliced_coco_annotation(
+                slice_bbox
+            )
+            if sliced_coco_annotation.area / coco_annotation.area >= min_area_ratio:
+                sliced_coco_annotation_list.append(sliced_coco_annotation)
+    return sliced_coco_annotation_list
+
+
 class SlicedImage:
     def __init__(self, image, coco_image, starting_pixel):
         """
@@ -191,7 +207,7 @@ class SliceImageResult:
 
 def slice_image(
     image: Union[str, Image.Image],
-    coco_annotation_list: Optional[List[Dict]] = None,
+    coco_annotation_list: Optional[CocoAnnotation] = None,
     output_file_name: Optional[str] = None,
     output_dir: Optional[str] = None,
     slice_height: int = 512,
@@ -209,7 +225,7 @@ def slice_image(
 
     Args:
         image (str or PIL.Image): File path of image or Pillow Image to be sliced.
-        coco_annotation_list (List[Dict]): List of coco annotation jsons.
+        coco_annotation_list (CocoAnnotation): List of CocoAnnotation objects.
         output_file_name (str, optional): Root name of output files (coordinates will
             be appended to this)
         output_dir (str, optional): Output directory
@@ -248,19 +264,8 @@ def slice_image(
     if output_dir:
         create_dir(output_dir)
 
-    # read image if str image path is provided
-    if isinstance(image, str):
-        # read in image, cv2 fails on large files
-        verboseprint("Read in image:", image)
-        image_pil = Image.open(image)
-    elif isinstance(image, np.ndarray):
-        if image.shape[0] < 5:  # image in CHW
-            image = image[:, :, ::-1]
-        image_pil = Image.fromarray(image)
-    elif isinstance(image, Image.Image):
-        image_pil = image
-    else:
-        TypeError("read image with 'pillow' using 'Image.open()'")
+    # read image
+    image_pil = read_image_as_pil(image)
     verboseprint("image.shape:", image_pil.size)
 
     image_width, image_height = image_pil.size
@@ -275,7 +280,6 @@ def slice_image(
 
     t0 = time.time()
     n_ims = 0
-    n_ims_nonull = 0
 
     # init images and annotations lists
     sliced_image_result = SliceImageResult(
@@ -286,31 +290,17 @@ def slice_image(
     for slice_bbox in slice_bboxes:
         n_ims += 1
 
-        if (n_ims % 50) == 0:
-            verboseprint(n_ims)
-
         # extract image
         image_pil_slice = image_pil.crop(slice_bbox)
 
         # process annotations if coco_annotations is given
-        sliced_coco_annotation_list: List[CocoAnnotation] = []
         if coco_annotation_list is not None:
-            for coco_annotation_dict in coco_annotation_list:
-                if annotation_inside_slice(coco_annotation_dict, slice_bbox):
-                    coco_annotation = CocoAnnotation.from_coco_annotation_dict(
-                        coco_annotation_dict
-                    )
-                    sliced_coco_annotation = coco_annotation.get_sliced_coco_annotation(
-                        slice_bbox
-                    )
-                    if (
-                        sliced_coco_annotation.area / coco_annotation.area
-                        >= min_area_ratio
-                    ):
-                        sliced_coco_annotation_list.append(sliced_coco_annotation)
+            sliced_coco_annotation_list = process_coco_annotations(
+                coco_annotation_list, slice_bbox, min_area_ratio
+            )
 
+        # set image file suffixes
         slice_suffixes = "_".join(map(str, slice_bbox))
-        # set image file suffix
         if out_ext:
             suffix = out_ext
         else:
@@ -349,8 +339,6 @@ def slice_image(
     verboseprint(
         "Num slices:",
         n_ims,
-        "Num non-null slices:",
-        n_ims_nonull,
         "slice_height",
         slice_height,
         "slice_width",
@@ -364,8 +352,8 @@ def slice_image(
 def slice_coco(
     coco_annotation_file_path: str,
     image_dir: str,
-    output_coco_annotation_file_name: str = "",
-    output_dir: str = "",
+    output_coco_annotation_file_name: str,
+    output_dir: Optional[str] = None,
     ignore_negative_samples: bool = True,
     slice_height: int = 512,
     slice_width: int = 512,
@@ -385,7 +373,7 @@ def slice_coco(
         image_dir (str): Base directory for the images
         output_coco_annotation_file_name (str): File name of the exported coco
             datatset json.
-        output_dir (str): Output directory
+        output_dir (str, optional): Output directory
         ignore_negative_samples (bool): If True, images without annotations
             are ignored. Defaults to True.
         slice_height (int): Height of each slice. Default 512.
@@ -415,25 +403,20 @@ def slice_coco(
     # read coco file
     coco_dict: Dict = load_json(coco_annotation_file_path)
     # create image_id_to_annotation_list mapping
-    image_id_to_annotation_list: Dict[
-        id, List[CocoAnnotation]
-    ] = get_imageid2annotationlist_mapping(coco_dict)
+    coco = Coco.from_coco_dict_or_path(coco_dict)
     # init sliced coco_utils.CocoImage list
     sliced_coco_images: List = []
 
     # iterate over images and slice
-    for coco_image_json in tqdm(coco_dict["images"]):
+    for coco_image in tqdm(coco.images):
         # get image path
-        image_path: str = os.path.join(image_dir, coco_image_json["file_name"])
+        image_path: str = os.path.join(image_dir, coco_image.file_name)
         # get annotation json list corresponding to selected coco image
-        coco_annotation_list: List[Dict] = image_id_to_annotation_list[
-            coco_image_json["id"]
-        ]
         # slice image
         slice_image_result = slice_image(
             image=image_path,
-            coco_annotation_list=coco_annotation_list,
-            output_file_name=Path(coco_image_json["file_name"]).stem,
+            coco_annotation_list=coco_image.annotations,
+            output_file_name=Path(coco_image.file_name).stem,
             output_dir=output_dir,
             slice_height=slice_height,
             slice_width=slice_width,
