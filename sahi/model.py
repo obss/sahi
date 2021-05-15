@@ -1,12 +1,9 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
-import os
-import sys
-
 import numpy as np
 
-from sahi.prediction import ObjectPrediction, PredictionInput
+from sahi.prediction import ObjectPrediction
 from sahi.utils.torch import cuda_is_available, empty_cuda_cache
 
 

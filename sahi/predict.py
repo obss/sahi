@@ -19,7 +19,6 @@ from sahi.utils.cv import (
 )
 from sahi.utils.file import (
     Path,
-    get_base_filename,
     import_class,
     increment_path,
     list_files,
