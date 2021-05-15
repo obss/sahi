@@ -8,11 +8,11 @@ from collections import Counter, OrderedDict, defaultdict
 from dataclasses import dataclass
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 from sahi.utils.file import get_base_filename, load_json, save_json
-from sahi.utils.shapely import ShapelyAnnotation, get_shapely_multipolygon
+from sahi.utils.shapely import ShapelyAnnotation, box, get_shapely_multipolygon
 from tqdm import tqdm
 
 
@@ -108,7 +108,9 @@ class CocoAnnotation:
         )
 
     @classmethod
-    def from_coco_annotation_dict(cls, category_name, annotation_dict):
+    def from_coco_annotation_dict(
+        cls, annotation_dict: Dict, category_name: Optional[str] = None
+    ):
         """
         Creates CocoAnnotation object from category name and COCO formatted
         annotation dict (with fields "bbox", "segmentation", "category_id").
@@ -131,6 +133,32 @@ class CocoAnnotation:
                 category_id=annotation_dict["category_id"],
                 category_name=category_name,
             )
+
+    @classmethod
+    def from_shapely_annotation(
+        cls,
+        shapely_annotation: ShapelyAnnotation,
+        category_id: int,
+        category_name: str,
+        iscrowd: int,
+    ):
+        """
+        Creates CocoAnnotation object from ShapelyAnnotation object.
+
+        Args:
+            shapely_annotation (ShapelyAnnotation)
+            category_id (int): Category id of the annotation
+            category_name (str): Category name of the annotation
+            iscrowd (int): 0 or 1
+        """
+        coco_annotation = cls(
+            bbox=[0, 0, 0, 0],
+            category_id=category_id,
+            category_name=category_name,
+            iscrowd=iscrowd,
+        )
+        coco_annotation._shapely_annotation = shapely_annotation
+        return coco_annotation
 
     def __init__(
         self,
@@ -161,7 +189,7 @@ class CocoAnnotation:
         assert bbox or segmentation, "you must provide a bbox or polygon"
 
         self._segmentation = segmentation
-        self._bbox = [round(point) for point in bbox] if bbox else bbox
+        bbox = [round(point) for point in bbox] if bbox else bbox
         self._category_id = category_id
         self._category_name = category_name
         self._image_id = image_id
@@ -172,8 +200,22 @@ class CocoAnnotation:
                 segmentation=self._segmentation
             )
         else:
-            shapely_annotation = ShapelyAnnotation.from_coco_bbox(bbox=self._bbox)
+            shapely_annotation = ShapelyAnnotation.from_coco_bbox(bbox=bbox)
         self._shapely_annotation = shapely_annotation
+
+    def get_sliced_coco_annotation(self, slice_bbox: List[int]):
+        shapely_polygon = box(
+            slice_bbox[0], slice_bbox[1], slice_bbox[2], slice_bbox[3]
+        )
+        intersection_shapely_annotation = self._shapely_annotation.get_intersection(
+            shapely_polygon
+        )
+        return CocoAnnotation.from_shapely_annotation(
+            intersection_shapely_annotation,
+            category_id=self.category_id,
+            category_name=self.category_name,
+            iscrowd=self.iscrowd,
+        )
 
     @property
     def area(self):
@@ -251,7 +293,6 @@ class CocoAnnotation:
             "image_id": self.image_id,
             "bbox": self.bbox,
             "category_id": self.category_id,
-            "category_name": self.category_name,
             "segmentation": self.segmentation,
             "iscrowd": self.iscrowd,
             "area": self.area,
@@ -1648,7 +1689,9 @@ def merge_from_file(coco_path1: str, coco_path2: str, save_path: str):
     save_json(merged_coco_dict, save_path)
 
 
-def get_imageid2annotationlist_mapping(coco_dict: dict) -> dict:
+def get_imageid2annotationlist_mapping(
+    coco_dict: dict,
+) -> Dict[int, List[CocoAnnotation]]:
     """
     Get image_id to annotationlist mapping for faster indexing.
 
@@ -1660,12 +1703,12 @@ def get_imageid2annotationlist_mapping(coco_dict: dict) -> dict:
     -------
         image_id_to_annotation_list : dict
         {
-            1: [COCOAnnotation, COCOAnnotation, COCOAnnotation],
-            2: [COCOAnnotation]
+            1: [CocoAnnotation, CocoAnnotation, CocoAnnotation],
+            2: [CocoAnnotation]
         }
 
         where
-        COCOAnnotation = {
+        CocoAnnotation = {
             'area': 2795520,
             'bbox': [491.0, 1035.0, 153.0, 182.0],
             'category_id': 1,

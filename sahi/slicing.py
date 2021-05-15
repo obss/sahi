@@ -3,78 +3,127 @@
 
 import os
 import time
-from typing import Dict, List
+from pathlib import Path
+from typing import Dict, List, Optional, Union
 
-import cv2
 import numpy as np
+from PIL import Image
 from tqdm import tqdm
 
 from sahi.utils.coco import Coco, CocoAnnotation, CocoImage, create_coco_dict
-from sahi.utils.cv import read_large_image
+from sahi.utils.cv import read_image_as_pil
 from sahi.utils.file import create_dir, load_json, save_json
-from sahi.utils.shapely import (
-    ShapelyAnnotation,
-    get_bbox_from_shapely,
-    get_shapely_box,
-    get_shapely_multipolygon,
-)
 
 
-def slice_coco_annotations_by_box(
-    coco_annotation_list, box
-) -> (List[CocoAnnotation], int):
-    """
-    Crops all annotations for a given grid. Returns processed annotation list.
+def get_slice_bboxes(
+    image_height: int,
+    image_width: int,
+    slice_height: int = 512,
+    slice_width: int = 512,
+    overlap_height_ratio: int = 0.2,
+    overlap_width_ratio: int = 0.2,
+) -> List[List[int]]:
+    """Slices `image_pil` in crops.
+    Corner values of each slice will be generated using the `slice_height`,
+    `slice_width`, `overlap_height_ratio` and `overlap_width_ratio` arguments.
 
     Args:
-        coco_annotations: list of CocoAnnotation
-            List of CocoAnnotation objects that belong to given COCO image
-        box: list
-            Points of slice box [x: int, y: int, width: int, height: int]
+        image_height (int): Height of the original image.
+        image_width (int): Width of the original image.
+        slice_height (int): Height of each slice. Default 512.
+        slice_width (int): Width of each slice. Default 512.
+        overlap_height_ratio(float): Fractional overlap in height of each
+            slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
+            overlap of 20 pixels). Default 0.2.
+        overlap_width_ratio(float): Fractional overlap in width of each
+            slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
+            overlap of 20 pixels). Default 0.2.
+
     Returns:
-        sliced_annotations: list of CocoAnnotation
-            Sliced list of CocoAnnotation objects that belong to given COCO image
+        List[List[int]]: List of 4 corner coordinates for each N slices.
+            [
+                [slice_0_left, slice_0_top, slice_0_right, slice_0_bottom],
+                ...
+                [slice_N_left, slice_N_top, slice_N_right, slice_N_bottom]
+            ]
+    """
+    slice_bboxes = []
+    y_max = y_min = 0
+    y_overlap = int(overlap_height_ratio * slice_height)
+    x_overlap = int(overlap_width_ratio * slice_width)
+    while y_max - y_overlap < image_height:
+        x_min = x_max = 0
+        y_max = y_min + slice_height
+        while x_max - x_overlap < image_width:
+            x_max = x_min + slice_width
+            if y_max > image_height or x_max > image_width:
+                ymax = min(image_height, y_max)
+                xmax = min(image_width, x_max)
+                slice_bboxes.append(
+                    [xmax - slice_width, ymax - slice_height, xmax, ymax]
+                )
+            else:
+                slice_bboxes.append([x_min, y_min, x_max, y_max])
+            x_min = x_max - x_overlap
+        y_min = y_max - y_overlap
+    return slice_bboxes
+
+
+def annotation_inside_slice(annotation: Dict, slice_bbox: List[int]) -> bool:
+    """Check whether annotation coordinates lie inside slice coordinates.
+
+    Args:
+        annotation (dict): Single annotation entry in COCO format.
+        slice_bbox (List[int]): Generated from `get_slice_bboxes`.
+            Format for each slice bbox: [x_min, y_min, x_max, y_max].
+
+    Returns:
+        (bool): True if any annotation coordinate lies inside slice.
+    """
+    left, top, width, height = annotation["bbox"]
+
+    right = left + width
+    bottom = top + height
+
+    if left >= slice_bbox[2]:
+        return False
+    if top >= slice_bbox[3]:
+        return False
+    if right <= slice_bbox[0]:
+        return False
+    if bottom <= slice_bbox[1]:
+        return False
+
+    return True
+
+
+def process_coco_annotations(
+    coco_annotation_list: List[CocoAnnotation], slice_bbox: List[int], min_area_ratio
+) -> bool:
+    """Slices and filters given list of CocoAnnotation objects with given
+    'slice_bbox' and 'min_area_ratio'.
+
+    Args:
+        coco_annotation_list (List[CocoAnnotation])
+        slice_bbox (List[int]): Generated from `get_slice_bboxes`.
+            Format for each slice bbox: [x_min, y_min, x_max, y_max].
+        min_area_ratio (float): If the cropped annotation area to original
+            annotation ratio is smaller than this value, the annotation is
+            filtered out. Default 0.1.
+
+    Returns:
+        (List[CocoAnnotation]): Sliced annotations.
     """
 
-    sliced_annotations = []
-    num_invalid_segmentation = 0
+    sliced_coco_annotation_list: List[CocoAnnotation] = []
     for coco_annotation in coco_annotation_list:
-        # calculate intersection polygon btw slice and annotation
-        x, y, width, height = box
-        shapely_box = get_shapely_box(x, y, width, height)
-
-        shapely_annotation = coco_annotation._shapely_annotation
-
-        invalid_segmentation = False
-        if shapely_annotation.multipolygon.is_valid is True:
-            intersection_shapely_annotation = shapely_annotation.get_intersection(
-                shapely_box
+        if annotation_inside_slice(coco_annotation.json, slice_bbox):
+            sliced_coco_annotation = coco_annotation.get_sliced_coco_annotation(
+                slice_bbox
             )
-        else:
-            try:
-                shapely_annotation = shapely_annotation.get_buffered_shapely_annotation(
-                    distance=3
-                )
-                intersection_shapely_annotation = shapely_annotation.get_intersection(
-                    shapely_box
-                )
-            except:
-                invalid_segmentation = True
-                num_invalid_segmentation += 1
-
-        # store intersection polygon if intersection area is greater than 0
-        if (invalid_segmentation is False) and (
-            intersection_shapely_annotation.area > 0
-        ):
-            new_annotation = CocoAnnotation.from_coco_segmentation(
-                segmentation=intersection_shapely_annotation.to_coco_segmentation(),
-                category_id=coco_annotation.category_id,
-                category_name=coco_annotation.category_name,
-            )
-
-            sliced_annotations.append(new_annotation)
-
-    return sliced_annotations, num_invalid_segmentation
+            if sliced_coco_annotation.area / coco_annotation.area >= min_area_ratio:
+                sliced_coco_annotation_list.append(sliced_coco_annotation)
+    return sliced_coco_annotation_list
 
 
 class SlicedImage:
@@ -118,8 +167,7 @@ class SliceImageResult:
 
     @property
     def images(self):
-        """
-        Returns sliced images.
+        """Returns sliced images.
 
         Returns:
             images: a list of np.array
@@ -130,22 +178,20 @@ class SliceImageResult:
         return images
 
     @property
-    def coco_images(self):
-        """
-        Returns CocoImage representation of SliceImageResult.
+    def coco_images(self) -> List[CocoImage]:
+        """Returns CocoImage representation of SliceImageResult.
 
         Returns:
             coco_images: a list of CocoImage
         """
-        coco_images = []
+        coco_images: List = []
         for sliced_image in self._sliced_image_list:
             coco_images.append(sliced_image.coco_image)
         return coco_images
 
     @property
-    def starting_pixels(self):
-        """
-        Returns a list of starting pixels for each slice.
+    def starting_pixels(self) -> List[int]:
+        """Returns a list of starting pixels for each slice.
 
         Returns:
             starting_pixels: a list of starting pixel coords [x,y]
@@ -160,54 +206,45 @@ class SliceImageResult:
 
 
 def slice_image(
-    image,
-    coco_annotation_list=None,
-    output_file_name: str = "",
-    output_dir: str = "",
-    slice_height: int = 256,
-    slice_width: int = 256,
-    max_allowed_zeros_ratio: float = 0.2,
+    image: Union[str, Image.Image],
+    coco_annotation_list: Optional[CocoAnnotation] = None,
+    output_file_name: Optional[str] = None,
+    output_dir: Optional[str] = None,
+    slice_height: int = 512,
+    slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
+    min_area_ratio: float = 0.1,
     slice_sep: str = "_",
-    out_ext: str = ".png",
+    out_ext: Optional[str] = None,
     verbose: bool = False,
-) -> (SliceImageResult, int):
+) -> SliceImageResult:
 
-    """
-    Slice a large image into smaller windows. If output_file_name is given export sliced images.
+    """Slice a large image into smaller windows. If output_file_name is given export
+    sliced images.
 
     Args:
-        image: str or np.ndarray
-            Location of image or numpy image matrix to slice
-        coco_annotation_list: list of CocoAnnotation
-            List of CocoAnnotation objects that belong to given COCO image.
-        output_file_name: str
-            Root name of output files (coordinates will be appended to this)
-        output_dir: str
-            Output directory
-        slice_height: int
-            Height of each slice. Defaults to ``256``.
-        slice_width: int
-            Width of each slice. Defaults to ``256``.
-        max_allowed_zeros_ratio: float
-            Maximum fraction of window that is allowed to be zeros or null.
-            Defaults to ``0.2``.
-        overlap_height_ratio: float
-            Fractional overlap in height of each window (e.g. an overlap of 0.2 for a window
-            of size 256 yields an overlap of 51 pixels).
-            Default to ``0.2``.
-        overlap_width_ratio: float
-            Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
-            of size 256 yields an overlap of 51 pixels).
-            Default to ``0.2``.
-        slice_sep: str
-            Character used to separate outname from coordinates in the saved
-            windows. Defaults to ``|``
-        out_ext: str
-            Extension of saved images. Defaults to ``.png``.
-        verbose: bool
-            Switch to print relevant values to screen. Defaults to ``False``
+        image (str or PIL.Image): File path of image or Pillow Image to be sliced.
+        coco_annotation_list (CocoAnnotation): List of CocoAnnotation objects.
+        output_file_name (str, optional): Root name of output files (coordinates will
+            be appended to this)
+        output_dir (str, optional): Output directory
+        slice_height (int): Height of each slice. Default 512.
+        slice_width (int): Width of each slice. Default 512.
+        overlap_height_ratio (float): Fractional overlap in height of each
+            slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
+            overlap of 20 pixels). Default 0.2.
+        overlap_width_ratio (float): Fractional overlap in width of each
+            slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
+            overlap of 20 pixels). Default 0.2.
+        min_area_ratio (float): If the cropped annotation area to original annotation
+            ratio is smaller than this value, the annotation is filtered out. Default 0.1.
+        slice_sep (str, optional): Character used to separate outname from
+            coordinates in the saved windows. Default '_'.
+        out_ext (str, optional): Extension of saved images. Default is the
+            original suffix.
+        verbose (bool, optional): Switch to print relevant values to screen.
+            Default 'False'.
 
     Returns:
         sliced_image_result: SliceImageResult:
@@ -227,158 +264,81 @@ def slice_image(
     if output_dir:
         create_dir(output_dir)
 
-    # read image if str image path is provided
-    if isinstance(image, str):
-        # read in image, cv2 fails on large files
-        verboseprint("Read in image:", image)
-        image0, use_cv2 = read_large_image(image)
-    else:
-        image0 = image
-    verboseprint("image.shape:", image0.shape)
+    # read image
+    image_pil = read_image_as_pil(image)
+    verboseprint("image.shape:", image_pil.size)
 
-    if len(out_ext) == 0:
-        ext = "." + image.split(".")[-1]
-    else:
-        ext = out_ext
-
-    win_h, win_w = image0.shape[:2]
-
-    # if slice sizes are large than image, pad the edges
-    pad = 0
-    if slice_height > win_h:
-        pad = slice_height - win_h
-    if slice_width > win_w:
-        pad = max(pad, slice_width - win_w)
-    # pad the edge of the image with black pixels
-    if pad > 0:
-        border_color = (0, 0, 0)
-        image0 = cv2.copyMakeBorder(
-            image0, 0, pad, 0, pad, cv2.BORDER_CONSTANT, value=border_color
-        )
-
-    win_size = slice_height * slice_width
+    image_width, image_height = image_pil.size
+    slice_bboxes = get_slice_bboxes(
+        image_height=image_height,
+        image_width=image_width,
+        slice_height=slice_height,
+        slice_width=slice_width,
+        overlap_height_ratio=overlap_height_ratio,
+        overlap_width_ratio=overlap_width_ratio,
+    )
 
     t0 = time.time()
     n_ims = 0
-    n_ims_nonull = 0
-    dx = int((1.0 - overlap_width_ratio) * slice_width)
-    dy = int((1.0 - overlap_height_ratio) * slice_height)
 
     # init images and annotations lists
     sliced_image_result = SliceImageResult(
-        original_image_size=[win_h, win_w], image_dir=output_dir
+        original_image_size=[image_height, image_width], image_dir=output_dir
     )
-    num_total_invalid_segmentation = 0
 
     # iterate over slices
-    for y0 in range(0, image0.shape[0], dy):  # slice_height):
-        for x0 in range(0, image0.shape[1], dx):  # slice_width):
-            n_ims += 1
+    for slice_bbox in slice_bboxes:
+        n_ims += 1
 
-            if (n_ims % 50) == 0:
-                verboseprint(n_ims)
+        # extract image
+        image_pil_slice = image_pil.crop(slice_bbox)
 
-            # make sure we don't have a tiny image on the edge
-            if y0 + slice_height > image0.shape[0]:
-                y = image0.shape[0] - slice_height
-            else:
-                y = y0
-            if x0 + slice_width > image0.shape[1]:
-                x = image0.shape[1] - slice_width
-            else:
-                x = x0
+        # process annotations if coco_annotations is given
+        if coco_annotation_list is not None:
+            sliced_coco_annotation_list = process_coco_annotations(
+                coco_annotation_list, slice_bbox, min_area_ratio
+            )
 
-            # extract image
-            window_c = image0[y : y + slice_height, x : x + slice_width]
+        # set image file suffixes
+        slice_suffixes = "_".join(map(str, slice_bbox))
+        if out_ext:
+            suffix = out_ext
+        else:
+            try:
+                suffix = Path(image_pil.filename).suffix
+            except AttributeError:
+                suffix = ".jpg"
 
-            # process annotations if coco_annotations is given
-            if coco_annotation_list:
-                slice_box = [x, y, slice_width, slice_height]
-                (
-                    sliced_coco_annotation_list,
-                    num_invalid_segmentation,
-                ) = slice_coco_annotations_by_box(coco_annotation_list, box=slice_box)
-                num_total_invalid_segmentation = (
-                    num_total_invalid_segmentation + num_invalid_segmentation
-                )
+        # set image file name and path
+        slice_file_name = f"{output_file_name}_{slice_suffixes}{suffix}"
+        # export image if output directory is provided
+        if output_file_name and output_dir:
+            slice_file_path = str(Path(output_dir) / slice_file_name)
+            # export sliced image
+            image_pil_slice.save(slice_file_path)
+            verboseprint("sliced image path:", slice_file_path)
 
-            # get black and white image
-            window = cv2.cvtColor(window_c, cv2.COLOR_RGB2GRAY)
+        # create coco image
+        coco_image = CocoImage(
+            file_name=slice_file_name, height=slice_height, width=slice_width
+        )
 
-            # find threshold that's not black
-            # https://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_imgproc/py_thresholding/py_thresholding.html?highlight=threshold
-            ret, thresh1 = cv2.threshold(window, 2, 255, cv2.THRESH_BINARY)
-            non_zero_counts = cv2.countNonZero(thresh1)
-            zero_counts = win_size - non_zero_counts
-            zero_frac = float(zero_counts) / win_size
-            # skip if image is mostly empty
-            if zero_frac >= max_allowed_zeros_ratio:
-                verboseprint("Zero frac too high at:", zero_frac)
-                continue
-            else:
-                # save if out_name is given
-                if output_file_name and output_dir:
-                    outpath = os.path.join(
-                        output_dir,
-                        output_file_name
-                        + slice_sep
-                        + str(y)
-                        + "_"
-                        + str(x)
-                        + "_"
-                        + str(slice_height)
-                        + "_"
-                        + str(slice_width)
-                        + "_"
-                        + str(pad)
-                        + "_"
-                        + str(win_w)
-                        + "_"
-                        + str(win_h)
-                        + ext,
-                    )
+        # append coco annotations (if present) to coco image
+        if coco_annotation_list:
+            for coco_annotation in sliced_coco_annotation_list:
+                coco_image.add_annotation(coco_annotation)
 
-                    verboseprint("outpath:", outpath)
-                    # if large image, convert to bgr prior to saving
-                    if not use_cv2:
-                        try:
-                            import skimage.io
-                        except ImportError:
-                            raise ImportError(
-                                'Please run "pip install -U scikit-image" '
-                                "to install scikit-image first for large image handling."
-                            )
-                        skimage.io.imsave(outpath, window_c)
-                    else:
-                        window_c = cv2.cvtColor(window_c, cv2.COLOR_RGB2BGR)
-                        cv2.imwrite(outpath, window_c)
-                    n_ims_nonull += 1
-
-                    file_name = outpath.split(output_dir)[-1].replace(os.sep, "")
-                else:
-                    file_name = ""
-
-                # create coco image
-                coco_image = CocoImage(
-                    file_name=file_name, height=slice_height, width=slice_width
-                )
-
-                # append coco annotations (if present) to coco image
-                if coco_annotation_list:
-                    for coco_annotation in sliced_coco_annotation_list:
-                        coco_image.add_annotation(coco_annotation)
-
-                # create sliced image and append to sliced_image_result
-                sliced_image = SlicedImage(
-                    image=window_c, coco_image=coco_image, starting_pixel=[x, y]
-                )
-                sliced_image_result.add_sliced_image(sliced_image)
+        # create sliced image and append to sliced_image_result
+        sliced_image = SlicedImage(
+            image=np.asarray(image_pil_slice),
+            coco_image=coco_image,
+            starting_pixel=[slice_bbox[0], slice_bbox[1]],
+        )
+        sliced_image_result.add_sliced_image(sliced_image)
 
     verboseprint(
         "Num slices:",
         n_ims,
-        "Num non-null slices:",
-        n_ims_nonull,
         "slice_height",
         slice_height,
         "slice_width",
@@ -386,64 +346,52 @@ def slice_image(
     )
     verboseprint("Time to slice", image, time.time() - t0, "seconds")
 
-    return (
-        sliced_image_result,
-        num_total_invalid_segmentation,
-    )
+    return sliced_image_result
 
 
 def slice_coco(
     coco_annotation_file_path: str,
     image_dir: str,
-    output_coco_annotation_file_name: str = "",
-    output_dir: str = "",
+    output_coco_annotation_file_name: str,
+    output_dir: Optional[str] = None,
     ignore_negative_samples: bool = True,
-    slice_height: int = 256,
-    slice_width: int = 256,
-    max_allowed_zeros_ratio: float = 0.2,
+    slice_height: int = 512,
+    slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
+    min_area_ratio: float = 0.1,
     slice_sep: str = "_",
-    out_ext: str = ".png",
+    out_ext: Optional[str] = None,
     verbose: bool = False,
-):
+) -> List[Union[Dict, str]]:
 
     """
     Slice large images given in a directory, into smaller windows. If out_name is given export sliced images and coco file.
 
     Args:
-        coco_annotation_file_path: str
-            Location of the coco annotation file
-        image_dir: str
-            Base diectory for the images
-        output_coco_annotation_file_name : str
-            Root name of the exported coco datatset file
-        output_dir: str
-            Output directory
-        ignore_negative_samples: bool
-            If True, images without annotations are ignored. Defaults to True.
-        slice_height: int
-            Height of each slice.  Defaults to ``256``.
-        slice_width: int
-            Width of each slice.  Defaults to ``256``.
-        max_allowed_zeros_ratio: float
-            Maximum fraction of window that is allowed to be zeros or null.
-            Defaults to ``0.2``.
-        overlap_height_ratio: float
-            Fractional overlap in height of each window (e.g. an overlap of 0.2 for a window
-            of size 256 yields an overlap of 51 pixels).
-            Default to ``0.2``.
-        overlap_width_ratio: float
-            Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
-            of size 256 yields an overlap of 51 pixels).
-            Default to ``0.2``.
-        slice_sep: str
-            Character used to separate outname from coordinates in the saved
-            windows. Defaults to ``|``
-        out_ext: str
-            Extension of saved images. Defaults to ``.png``.
-        verbose: bool
-            Switch to print relevant values to screen. Defaults to ``False``
+        coco_annotation_file_pat (str): Location of the coco annotation file
+        image_dir (str): Base directory for the images
+        output_coco_annotation_file_name (str): File name of the exported coco
+            datatset json.
+        output_dir (str, optional): Output directory
+        ignore_negative_samples (bool): If True, images without annotations
+            are ignored. Defaults to True.
+        slice_height (int): Height of each slice. Default 512.
+        slice_width (int): Width of each slice. Default 512.
+        overlap_height_ratio (float): Fractional overlap in height of each
+            slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
+            overlap of 20 pixels). Default 0.2.
+        overlap_width_ratio (float): Fractional overlap in width of each
+            slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
+            overlap of 20 pixels). Default 0.2.
+        min_area_ratio (float): If the cropped annotation area to original annotation
+            ratio is smaller than this value, the annotation is filtered out. Default 0.1.
+        slice_sep (str, optional): Character used to separate outname from
+            coordinates in the saved windows. Default '_'.
+        out_ext (str, optional): Extension of saved images. Default is the
+            original suffix.
+        verbose (bool, optional): Switch to print relevant values to screen.
+            Default 'False'.
 
     Returns:
         coco_dict: dict
@@ -451,41 +399,33 @@ def slice_coco(
         save_path: str
             Path to the saved coco file
     """
-    # define verboseprint
-    verboseprint = print if verbose else lambda *a, **k: None
 
     # read coco file
-    coco_dict = load_json(coco_annotation_file_path)
-    # create coco_utils.Coco object
+    coco_dict: Dict = load_json(coco_annotation_file_path)
+    # create image_id_to_annotation_list mapping
     coco = Coco.from_coco_dict_or_path(coco_dict)
     # init sliced coco_utils.CocoImage list
-    sliced_coco_images = []
-
-    num_total_invalid_segmentation = 0
+    sliced_coco_images: List = []
 
     # iterate over images and slice
     for coco_image in tqdm(coco.images):
         # get image path
-        image_path = os.path.join(image_dir, coco_image.file_name)
-        # get coco_utils.CocoAnnotation list corresponding to selected coco_utils.CocoImage
-        coco_annotation_list = coco_image.annotations
+        image_path: str = os.path.join(image_dir, coco_image.file_name)
+        # get annotation json list corresponding to selected coco image
         # slice image
-        slice_image_result, num_invalid_segmentation = slice_image(
+        slice_image_result = slice_image(
             image=image_path,
-            coco_annotation_list=coco_annotation_list,
-            output_file_name=os.path.basename(coco_image.file_name),
+            coco_annotation_list=coco_image.annotations,
+            output_file_name=Path(coco_image.file_name).stem,
             output_dir=output_dir,
             slice_height=slice_height,
             slice_width=slice_width,
-            max_allowed_zeros_ratio=max_allowed_zeros_ratio,
             overlap_height_ratio=overlap_height_ratio,
             overlap_width_ratio=overlap_width_ratio,
-            slice_sep="_",
-            out_ext=".png",
+            min_area_ratio=min_area_ratio,
+            slice_sep=slice_sep,
+            out_ext=out_ext,
             verbose=False,
-        )
-        num_total_invalid_segmentation = (
-            num_total_invalid_segmentation + num_invalid_segmentation
         )
         # append slice outputs
         sliced_coco_images.extend(slice_image_result.coco_images)
@@ -502,6 +442,5 @@ def slice_coco(
             output_dir, output_coco_annotation_file_name + "_coco.json"
         )
         save_json(coco_dict, save_path)
-    verboseprint("There are", num_total_invalid_segmentation, "invalid segmentations")
 
     return coco_dict, save_path

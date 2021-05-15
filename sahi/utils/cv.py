@@ -5,9 +5,10 @@ import copy
 import os
 import random
 import time
-
+from typing import Union
 import cv2
 import numpy as np
+from PIL import Image
 from sahi.utils.file import create_dir
 
 
@@ -98,6 +99,28 @@ def read_image(image_path):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # return image
     return image
+
+
+def read_image_as_pil(image: Union[Image.Image, str, np.ndarray]):
+    """
+    Loads an image as PIL.Image.Image.
+
+    Args:
+        image : Can be image path (str), opencv image (np.ndarray) or PIL.Image
+    """
+    # read image if str image path is provided
+    if isinstance(image, str):
+        # read in image, cv2 fails on large files
+        image_pil = Image.open(image)
+    elif isinstance(image, np.ndarray):
+        if image.shape[0] < 5:  # image in CHW
+            image = image[:, :, ::-1]
+        image_pil = Image.fromarray(image)
+    elif isinstance(image, Image.Image):
+        image_pil = image
+    else:
+        TypeError("read image with 'pillow' using 'Image.open()'")
+    return image_pil
 
 
 def select_random_color():
