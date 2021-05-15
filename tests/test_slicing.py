@@ -15,18 +15,14 @@ class TestSlicing(unittest.TestCase):
     def test_slice_image(self):
         # read coco file
         coco_path = "tests/data/coco_utils/terrain1_coco.json"
-        coco_dict = load_json(coco_path)
-        # create image_id_to_annotation_list mapping
-        image_id_to_annotation_list = get_imageid2annotationlist_mapping(coco_dict)
+        coco = Coco.from_coco_dict_or_path(coco_path)
 
         output_file_name = None
         output_dir = None
-        image_path = "tests/data/coco_utils/" + coco_dict["images"][0]["file_name"]
+        image_path = "tests/data/coco_utils/" + coco.images[0].file_name
         slice_image_result = slice_image(
             image=image_path,
-            coco_annotation_list=image_id_to_annotation_list[
-                coco_dict["images"][0]["id"]
-            ],
+            coco_annotation_list=coco.images[0].annotations,
             output_file_name=output_file_name,
             output_dir=output_dir,
             slice_height=512,
@@ -51,9 +47,7 @@ class TestSlicing(unittest.TestCase):
         image_cv = read_image(image_path)
         slice_image_result = slice_image(
             image=image_cv,
-            coco_annotation_list=image_id_to_annotation_list[
-                coco_dict["images"][0]["id"]
-            ],
+            coco_annotation_list=coco.images[0].annotations,
             output_file_name=output_file_name,
             output_dir=output_dir,
             slice_height=512,
@@ -78,9 +72,7 @@ class TestSlicing(unittest.TestCase):
         image_pil = Image.open(image_path)
         slice_image_result = slice_image(
             image=image_pil,
-            coco_annotation_list=image_id_to_annotation_list[
-                coco_dict["images"][0]["id"]
-            ],
+            coco_annotation_list=coco.images[0].annotations,
             output_file_name=output_file_name,
             output_dir=output_dir,
             slice_height=512,
