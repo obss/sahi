@@ -8,7 +8,7 @@ from collections import Counter, OrderedDict, defaultdict
 from dataclasses import dataclass
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 from sahi.utils.file import get_base_filename, load_json, save_json
@@ -108,7 +108,9 @@ class CocoAnnotation:
         )
 
     @classmethod
-    def from_coco_annotation_dict(cls, category_name, annotation_dict):
+    def from_coco_annotation_dict(
+        cls, annotation_dict: Dict, category_name: Optional[str] = None
+    ):
         """
         Creates CocoAnnotation object from category name and COCO formatted
         annotation dict (with fields "bbox", "segmentation", "category_id").
@@ -291,7 +293,6 @@ class CocoAnnotation:
             "image_id": self.image_id,
             "bbox": self.bbox,
             "category_id": self.category_id,
-            "category_name": self.category_name,
             "segmentation": self.segmentation,
             "iscrowd": self.iscrowd,
             "area": self.area,
@@ -1688,7 +1689,9 @@ def merge_from_file(coco_path1: str, coco_path2: str, save_path: str):
     save_json(merged_coco_dict, save_path)
 
 
-def get_imageid2annotationlist_mapping(coco_dict: dict) -> dict:
+def get_imageid2annotationlist_mapping(
+    coco_dict: dict,
+) -> Dict[int, List[CocoAnnotation]]:
     """
     Get image_id to annotationlist mapping for faster indexing.
 
@@ -1700,12 +1703,12 @@ def get_imageid2annotationlist_mapping(coco_dict: dict) -> dict:
     -------
         image_id_to_annotation_list : dict
         {
-            1: [COCOAnnotation, COCOAnnotation, COCOAnnotation],
-            2: [COCOAnnotation]
+            1: [CocoAnnotation, CocoAnnotation, CocoAnnotation],
+            2: [CocoAnnotation]
         }
 
         where
-        COCOAnnotation = {
+        CocoAnnotation = {
             'area': 2795520,
             'bbox': [491.0, 1035.0, 153.0, 182.0],
             'category_id': 1,

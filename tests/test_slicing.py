@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 from PIL import Image
 from sahi.slicing import slice_coco, slice_image
-from sahi.utils.coco import Coco
+from sahi.utils.coco import Coco, get_imageid2annotationlist_mapping
 from sahi.utils.cv import read_image
 from sahi.utils.file import load_json
 
@@ -16,22 +16,24 @@ class TestSlicing(unittest.TestCase):
         # read coco file
         coco_path = "tests/data/coco_utils/terrain1_coco.json"
         coco_dict = load_json(coco_path)
-        # create coco_utils.Coco object
-        coco = Coco.from_coco_dict_or_path(coco_dict)
+        # create image_id_to_annotation_list mapping
+        image_id_to_annotation_list = get_imageid2annotationlist_mapping(coco_dict)
 
         output_file_name = None
         output_dir = None
-        image_path = "tests/data/coco_utils/" + coco.images[0].file_name
+        image_path = "tests/data/coco_utils/" + coco_dict["images"][0]["file_name"]
         slice_image_result = slice_image(
             image=image_path,
-            coco_annotation_list=coco.images[0].annotations,
+            coco_annotation_list=image_id_to_annotation_list[
+                coco_dict["images"][0]["id"]
+            ],
             output_file_name=output_file_name,
             output_dir=output_dir,
             slice_height=512,
             slice_width=512,
-            max_allowed_zeros_ratio=0.2,
             overlap_height_ratio=0.1,
             overlap_width_ratio=0.4,
+            min_area_ratio=0.1,
             slice_sep="_",
             out_ext=".png",
             verbose=False,
@@ -49,14 +51,16 @@ class TestSlicing(unittest.TestCase):
         image_cv = read_image(image_path)
         slice_image_result = slice_image(
             image=image_cv,
-            coco_annotation_list=coco.images[0].annotations,
+            coco_annotation_list=image_id_to_annotation_list[
+                coco_dict["images"][0]["id"]
+            ],
             output_file_name=output_file_name,
             output_dir=output_dir,
             slice_height=512,
             slice_width=512,
-            max_allowed_zeros_ratio=0.2,
             overlap_height_ratio=0.1,
             overlap_width_ratio=0.4,
+            min_area_ratio=0.1,
             slice_sep="_",
             out_ext=".png",
             verbose=False,
@@ -74,14 +78,16 @@ class TestSlicing(unittest.TestCase):
         image_pil = Image.open(image_path)
         slice_image_result = slice_image(
             image=image_pil,
-            coco_annotation_list=coco.images[0].annotations,
+            coco_annotation_list=image_id_to_annotation_list[
+                coco_dict["images"][0]["id"]
+            ],
             output_file_name=output_file_name,
             output_dir=output_dir,
             slice_height=512,
             slice_width=512,
-            max_allowed_zeros_ratio=0.2,
             overlap_height_ratio=0.1,
             overlap_width_ratio=0.4,
+            min_area_ratio=0.1,
             slice_sep="_",
             out_ext=".png",
             verbose=False,
@@ -112,9 +118,9 @@ class TestSlicing(unittest.TestCase):
             ignore_negative_samples=ignore_negative_samples,
             slice_height=512,
             slice_width=512,
-            max_allowed_zeros_ratio=0.2,
             overlap_height_ratio=0.1,
             overlap_width_ratio=0.4,
+            min_area_ratio=0.1,
             slice_sep="_",
             out_ext=".png",
             verbose=False,
@@ -148,9 +154,9 @@ class TestSlicing(unittest.TestCase):
             ignore_negative_samples=ignore_negative_samples,
             slice_height=512,
             slice_width=512,
-            max_allowed_zeros_ratio=0.2,
             overlap_height_ratio=0.1,
             overlap_width_ratio=0.4,
+            min_area_ratio=0.1,
             slice_sep="|",
             out_ext=".png",
             verbose=False,
