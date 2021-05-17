@@ -1289,7 +1289,7 @@ class Coco:
             )
         if split_mode in ["TRAINVAL", "VAL"]:
             export_yolov5_images_and_txts_from_coco_object(
-                output_dir=train_dir,
+                output_dir=val_dir,
                 coco=val_coco,
                 ignore_negative_samples=self.ignore_negative_samples,
                 mp=mp,
