@@ -8,7 +8,7 @@ from collections import Counter, OrderedDict, defaultdict
 from dataclasses import dataclass
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set, Union
 
 import numpy as np
 from sahi.utils.file import get_base_filename, load_json, save_json
@@ -976,11 +976,10 @@ class Coco:
     @classmethod
     def from_coco_dict_or_path(
         cls,
-        coco_dict_or_path,
-        desired_name2id=None,
-        image_dir=None,
-        remapping_dict=None,
-        ignore_negative_samples=False,
+        coco_dict_or_path: Union[Dict, str],
+        image_dir: Optional[str] = None,
+        remapping_dict: Optional[Dict] = None,
+        ignore_negative_samples: bool = False,
     ):
         """
         Creates coco object from COCO formatted dict or COCO dataset file path.
@@ -989,8 +988,6 @@ class Coco:
             coco_dict_or_path: dict/str or List[dict/str]
                 COCO formatted dict or COCO dataset file path
                 List of COCO formatted dict or COCO dataset file path
-            desired_name2id : dict
-                {"human": 1, "car": 2, "big_vehicle": 3}
             image_dir: str
                 Base file directory that contains dataset images. Required for merging and yolov5 conversion.
             remapping_dict: dict
@@ -1003,7 +1000,11 @@ class Coco:
             category_mapping: dict
         """
         # init coco object
-        coco = cls(image_dir=image_dir, remapping_dict=remapping_dict)
+        coco = cls(
+            image_dir=image_dir,
+            remapping_dict=remapping_dict,
+            ignore_negative_samples=ignore_negative_samples,
+        )
 
         assert (
             type(coco_dict_or_path) == str or type(coco_dict_or_path) == dict
@@ -1020,9 +1021,20 @@ class Coco:
         image_id_to_annotation_list = get_imageid2annotationlist_mapping(coco_dict)
         category_mapping = coco.category_mapping
 
+        # https://github.com/obss/sahi/issues/98
+        image_id_set: Set = set()
+
         for coco_image_dict in coco_dict["images"]:
             coco_image = CocoImage.from_coco_image_dict(coco_image_dict)
-            annotation_list = image_id_to_annotation_list[coco_image_dict["id"]]
+            image_id = coco_image_dict["id"]
+            # https://github.com/obss/sahi/issues/98
+            if image_id in image_id_set:
+                print(f"duplicate image_id: {image_id}, will be ignored.")
+                continue
+            else:
+                image_id_set.add(image_id)
+            # select annotations of the image
+            annotation_list = image_id_to_annotation_list[image_id]
             for coco_annotation_dict in annotation_list:
                 # apply category remapping if remapping_dict is provided
                 if coco.remapping_dict is not None:
@@ -1277,7 +1289,7 @@ class Coco:
             )
         if split_mode in ["TRAINVAL", "VAL"]:
             export_yolov5_images_and_txts_from_coco_object(
-                output_dir=train_dir,
+                output_dir=val_dir,
                 coco=val_coco,
                 ignore_negative_samples=self.ignore_negative_samples,
                 mp=mp,
