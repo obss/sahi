@@ -577,10 +577,16 @@ class ObjectAnnotation:
         imantics_category = imantics.Category(
             id=self.category.id, name=self.category.name
         )
-        imantics_mask = imantics.Mask.create(self.mask.bool_mask)
-        imantics_annotation = imantics.annotation.Annotation.from_mask(
-            mask=imantics_mask, category=imantics_category
-        )
+        if self.mask is not None:
+            imantics_mask = imantics.Mask.create(self.mask.bool_mask)
+            imantics_annotation = imantics.annotation.Annotation.from_mask(
+                mask=imantics_mask, category=imantics_category
+            )
+        else:
+            imantics_bbox = imantics.BBox.create(self.bbox.to_voc_bbox())
+            imantics_annotation = imantics.annotation.Annotation.from_bbox(
+                bbox=imantics_bbox, category=imantics_category
+            )
         return imantics_annotation
 
     def deepcopy(self):

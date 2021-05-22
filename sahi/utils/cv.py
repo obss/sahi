@@ -5,7 +5,7 @@ import copy
 import os
 import random
 import time
-from typing import Union
+from typing import Union, Optional, List
 import cv2
 import numpy as np
 from PIL import Image
@@ -13,7 +13,7 @@ from sahi.utils.file import create_dir
 
 
 def crop_object_predictions(
-    image: np.array,
+    image: np.ndarray,
     object_prediction_list,
     output_dir: str = "",
     file_name: str = "prediction_visual",
@@ -57,7 +57,7 @@ def crop_object_predictions(
         cv2.imwrite(save_path, cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR))
 
 
-def convert_image_to(read_path, extension="jpg", grayscale=False):
+def convert_image_to(read_path, extension: str = "jpg", grayscale: bool = False):
     """
     Reads image from path and saves as given extension.
     """
@@ -70,7 +70,7 @@ def convert_image_to(read_path, extension="jpg", grayscale=False):
     cv2.imwrite(save_path, image)
 
 
-def read_large_image(image_path):
+def read_large_image(image_path: str):
     use_cv2 = True
     # read image, cv2 fails on large files
     try:
@@ -90,7 +90,7 @@ def read_large_image(image_path):
     return image0, use_cv2
 
 
-def read_image(image_path):
+def read_image(image_path: str):
     """
     Loads image as numpy array from given path.
     """
@@ -143,7 +143,7 @@ def select_random_color():
     return colors[random.randrange(0, 10)]
 
 
-def apply_color_mask(image: np.array, color: tuple):
+def apply_color_mask(image: np.ndarray, color: tuple):
     """
     Applies color mask to given input image.
     """
@@ -157,16 +157,16 @@ def apply_color_mask(image: np.array, color: tuple):
 
 
 def visualize_prediction(
-    image: np.array,
-    boxes,
-    classes,
-    masks=None,
+    image: np.ndarray,
+    boxes: List[List],
+    classes: List[str],
+    masks: Optional[List[np.ndarray]] = None,
     rect_th: float = 3,
     text_size: float = 3,
     text_th: float = 3,
     color: tuple = (0, 0, 0),
-    output_dir: str = "",
-    file_name: str = "prediction_visual",
+    output_dir: Optional[str] = None,
+    file_name: Optional[str] = "prediction_visual",
 ):
     """
     Visualizes prediction classes, bounding boxes over the source image
@@ -213,7 +213,7 @@ def visualize_prediction(
             color,
             thickness=text_th,
         )
-    if output_dir != "":
+    if output_dir:
         # create output folder if not present
         create_dir(output_dir)
         # save inference result
@@ -230,7 +230,7 @@ def visualize_object_predictions(
     text_size: float = 0.3,
     text_th: float = 1,
     color: tuple = (0, 0, 0),
-    output_dir: str = "",
+    output_dir: Optional[str] = None,
     file_name: str = "prediction_visual",
     export_format: str = "png",
 ):
@@ -293,7 +293,7 @@ def visualize_object_predictions(
             color,
             thickness=text_th,
         )
-    if output_dir != "":
+    if output_dir:
         # create output folder if not present
         create_dir(output_dir)
         # save inference result
@@ -365,7 +365,7 @@ def normalize_numpy_image(image: np.ndarray):
     return image / np.max(image)
 
 
-def ipython_display(image):
+def ipython_display(image: np.ndarray):
     """
     Displays numpy image in notebook.
 

@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 from sahi.utils.cv import read_image
 
-from tests.utils import (
+from sahi.utils.test import (
     MmdetTestConstants,
     download_mmdet_cascade_mask_rcnn_model,
     download_mmdet_retinanet_model,
@@ -32,7 +32,6 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
     def test_perform_inference_with_mask_output(self):
         from sahi.model import MmdetDetectionModel
-        from sahi.prediction import PredictionInput
 
         # init model
         download_mmdet_cascade_mask_rcnn_model()
@@ -71,7 +70,6 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
     def test_perform_inference_without_mask_output(self):
         from sahi.model import MmdetDetectionModel
-        from sahi.prediction import PredictionInput
 
         # init model
         download_mmdet_retinanet_model()
@@ -108,7 +106,6 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
     def test_convert_original_predictions_with_mask_output(self):
         from sahi.model import MmdetDetectionModel
-        from sahi.prediction import PredictionInput
 
         # init model
         download_mmdet_cascade_mask_rcnn_model()
@@ -156,7 +153,6 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
     def test_convert_original_predictions_without_mask_output(self):
         from sahi.model import MmdetDetectionModel
-        from sahi.prediction import PredictionInput
 
         # init model
         download_mmdet_retinanet_model()
@@ -200,7 +196,6 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self,
     ):
         from sahi.model import MmdetDetectionModel
-        from sahi.prediction import PredictionInput
 
         # init model
         download_mmdet_cascade_mask_rcnn_model()
@@ -264,7 +259,6 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self,
     ):
         from sahi.model import MmdetDetectionModel
-        from sahi.prediction import PredictionInput
 
         # init model
         download_mmdet_retinanet_model()

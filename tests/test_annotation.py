@@ -3,8 +3,6 @@
 
 import unittest
 
-import numpy as np
-
 
 class TestAnnotation(unittest.TestCase):
     def test_bounding_box(self):

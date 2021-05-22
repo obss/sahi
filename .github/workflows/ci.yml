@@ -13,7 +13,6 @@ jobs:
       matrix:
         operating-system: [ubuntu-latest, windows-latest, macos-latest]
         python-version: [3.6, 3.7, 3.8]
-        mmdet-version: [2.12.0]
       fail-fast: false
 
     steps:
@@ -68,9 +67,9 @@ jobs:
         if: matrix.operating-system == 'macos-latest'
         run: pip install torch==1.8.1 torchvision==0.9.1
 
-      - name: Install MMDetection
+      - name: Install MMDetection(2.12.0) and YOLOv5(5.0.5)
         run: >
-          pip install mmcv-full==1.3.3 mmdet==${{ matrix.mmdet-version }}
+          pip install mmcv-full==1.3.4 mmdet==2.12.0 yolov5==5.0.5
 
       - name: Lint with flake8
         run: |
@@ -89,12 +88,15 @@ jobs:
         run: >
           pip install -e .
 
-      - name: Test SAHI scripts for mmdet 2.12.0
-        if: matrix.mmdet-version == '2.12.0'
+      - name: Test SAHI scripts for MMDetection(2.12.0) and YOLOv5(5.0.5)
         run: |
-          # predict
+          # predict mmdet
           python scripts/predict.py --source tests/data/ --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
           python scripts/predict.py --source tests/data/coco_utils/terrain1.jpg --novisual --pickle --crop --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
           python scripts/predict.py --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
+          # predict yolov5
+          python scripts/predict.py --model_type yolov5 --source tests/data/ --model_path tests/data/models/yolov5/yolov5s6.pt
+          python scripts/predict.py --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --novisual --pickle --crop --model_path tests/data/models/yolov5/yolov5s6.pt
+          python scripts/predict.py --model_type yolov5 --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --model_path tests/data/models/yolov5/yolov5s6.pt
           # coco2yolov5
           python scripts/coco2yolov5.py --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --train_split 0.9

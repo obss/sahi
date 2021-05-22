@@ -6,9 +6,8 @@ import unittest
 import numpy as np
 from PIL import Image
 from sahi.slicing import slice_coco, slice_image
-from sahi.utils.coco import Coco, get_imageid2annotationlist_mapping
+from sahi.utils.coco import Coco
 from sahi.utils.cv import read_image
-from sahi.utils.file import load_json
 
 
 class TestSlicing(unittest.TestCase):

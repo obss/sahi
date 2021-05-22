@@ -5,10 +5,11 @@ import os
 import time
 
 from tqdm import tqdm
+from typing import Dict
 
 from sahi.postprocess.match import PredictionMatcher
 from sahi.postprocess.merge import PredictionMerger, ScoreMergingPolicy
-from sahi.postprocess.ops import box_intersection, box_ios, box_union
+from sahi.postprocess.ops import box_ios, box_union
 from sahi.prediction import ObjectPrediction, PredictionInput
 from sahi.slicing import slice_image
 from sahi.utils.coco import Coco
@@ -25,7 +26,6 @@ from sahi.utils.file import (
     save_json,
     save_pickle,
 )
-from sahi.utils.torch import to_float_tensor
 
 
 def get_prediction(
@@ -275,21 +275,21 @@ def get_sliced_prediction(
 
 
 def predict(
-    model_name="MmdetDetectionModel",
-    model_parameters=None,
-    source=None,
+    model_name: str = "MmdetDetectionModel",
+    model_parameters: Dict = None,
+    source: str = None,
     apply_sliced_prediction: bool = True,
     slice_height: int = 256,
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     match_iou_threshold: float = 0.5,
-    export_visual=True,
-    export_pickle=False,
-    export_crop=False,
-    coco_file_path=None,
-    project="runs/predict",
-    name="exp",
+    export_visual: bool = True,
+    export_pickle: bool = False,
+    export_crop: bool = False,
+    coco_file_path: bool = None,
+    project: str = "runs/predict",
+    name: str = "exp",
     visual_bbox_thickness: int = 1,
     visual_text_size: float = 0.3,
     visual_text_thickness: int = 1,
@@ -388,11 +388,11 @@ def predict(
     DetectionModel = import_class(model_name)
     detection_model = DetectionModel(
         model_path=model_parameters["model_path"],
-        config_path=model_parameters["config_path"],
+        config_path=model_parameters.get("config_path", None),
         prediction_score_threshold=model_parameters["prediction_score_threshold"],
-        device=model_parameters["device"],
-        category_mapping=model_parameters["category_mapping"],
-        category_remapping=model_parameters["category_remapping"],
+        device=model_parameters.get("device", None),
+        category_mapping=model_parameters.get("category_mapping", None),
+        category_remapping=model_parameters.get("category_remapping", None),
         load_at_init=False,
     )
     detection_model.load_model()
