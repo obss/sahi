@@ -373,8 +373,6 @@ class Yolov5DetectionModel(DetectionModel):
                 "to install YOLOv5 first for YOLOv5 inference."
             )
 
-        from mmdet.apis import init_detector
-
         # set model
         try:
             model = yolov5.load(self.model_path, device=self.device)
