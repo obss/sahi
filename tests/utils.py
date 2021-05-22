@@ -27,6 +27,13 @@ class MmdetTestConstants:
         )
 
 
+class Yolov5TestConstants:
+    YOLOV5S6_MODEL_URL = (
+        "https://github.com/ultralytics/yolov5/releases/download/v5.0/yolov5s6.pt"
+    )
+    YOLOV5S6_MODEL_PATH = "tests/data/models/yolov5/yolov5s6.pt"
+
+
 def download_mmdet_cascade_mask_rcnn_model():
 
     create_dir("tests/data/models/mmdet_cascade_mask_rcnn/")
@@ -46,4 +53,15 @@ def download_mmdet_retinanet_model():
         urllib.request.urlretrieve(
             MmdetTestConstants.MMDET_RETINANET_MODEL_URL,
             MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
+        )
+
+
+def download_yolov5s6_model():
+
+    create_dir("tests/data/models/yolov5/")
+
+    if not path.exists(Yolov5TestConstants.YOLOV5S6_MODEL_PATH):
+        urllib.request.urlretrieve(
+            Yolov5TestConstants.YOLOV5S6_MODEL_URL,
+            Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
         )
