@@ -29,12 +29,6 @@ Check the [official SAHI blog post](https://medium.com/codable/sahi-a-vision-lib
 
 ### Installation
 
-- Install sahi using conda:
-
-```console
-conda install -c obss sahi
-```
-
 - Install sahi using pip:
 
 ```console
@@ -47,10 +41,14 @@ pip install sahi
 pip install torch torchvision
 ```
 
-- Install your desired detection framework (such as mmdet):
+- Install your desired detection framework (such as mmdet or yolov5):
 
 ```console
-pip install mmdet
+pip install mmdet mmcv
+```
+
+```console
+pip install yolov5
 ```
 
 ## Usage
@@ -69,7 +67,7 @@ result = get_sliced_prediction(
 
 ```
 
-Refer to [inference notebook](demo/inference.ipynb) for detailed usage.
+Refer to [YOLOv5 Inference Notebook](demo/inference_for_yolov5.ipynb) or [MMDetection Inference Notebook](demo/inference_for_mmdetecion.ipynb) for detailed usage.
 
 - Slice an image:
 
@@ -114,9 +112,9 @@ Find detailed info on COCO utilities (yolov5 conversion, slicing, subsampling, f
 
 ## Adding new detection framework support
 
-`sahi` library currently supports all [MMDetection models](https://github.com/open-mmlab/mmdetection/blob/master/docs/model_zoo.md). Moreover, it is easy to add new frameworks.
+`sahi` library currently supports all [YOLOv5 models](https://github.com/ultralytics/yolov5/releases) and [MMDetection models](https://github.com/open-mmlab/mmdetection/blob/master/docs/model_zoo.md). Moreover, it is easy to add new frameworks.
 
-All you need to do is, creating a new class in [model.py](sahi/model.py) that implements [DetectionModel class](https://github.com/obss/sahi/blob/651f8e6cdb20467815748764bb198dd50241ab2b/sahi/model.py#L10). You can take the [MMDetection wrapper](https://github.com/obss/sahi/blob/651f8e6cdb20467815748764bb198dd50241ab2b/sahi/model.py#L164) as a reference.
+All you need to do is, creating a new class in [model.py](sahi/model.py) that implements [DetectionModel class](https://github.com/obss/sahi/blob/651f8e6cdb20467815748764bb198dd50241ab2b/sahi/model.py#L10). You can take the [MMDetection wrapper](https://github.com/obss/sahi/blob/651f8e6cdb20467815748764bb198dd50241ab2b/sahi/model.py#L164) or [YOLOv5 wrapper](https://github.com/obss/sahi/blob/ffa168fc38b75a002a0117f1fdde9470e1a9ce8c/sahi/model.py#L363) as a reference.
 
 ## Contributers
 
