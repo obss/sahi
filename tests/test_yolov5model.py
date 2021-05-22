@@ -6,11 +6,8 @@ import unittest
 import numpy as np
 from sahi.utils.cv import read_image
 
-from tests.utils import (
-    MmdetTestConstants,
+from sahi.utils.test import (
     Yolov5TestConstants,
-    download_mmdet_cascade_mask_rcnn_model,
-    download_mmdet_retinanet_model,
     download_yolov5s6_model,
 )
 

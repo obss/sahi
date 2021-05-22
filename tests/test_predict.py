@@ -7,7 +7,6 @@ import unittest
 
 import numpy as np
 from sahi.utils.cv import read_image
-from sahi.utils.file import list_files
 
 
 class TestPredict(unittest.TestCase):
@@ -26,7 +25,7 @@ class TestPredict(unittest.TestCase):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import get_prediction
 
-        from tests.utils import (
+        from sahi.utils.test import (
             MmdetTestConstants,
             download_mmdet_cascade_mask_rcnn_model,
         )
@@ -80,7 +79,7 @@ class TestPredict(unittest.TestCase):
         from sahi.model import Yolov5DetectionModel
         from sahi.predict import get_prediction
 
-        from tests.utils import (
+        from sahi.utils.test import (
             Yolov5TestConstants,
             download_yolov5s6_model,
         )
@@ -134,7 +133,7 @@ class TestPredict(unittest.TestCase):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import get_sliced_prediction
 
-        from tests.utils import (
+        from sahi.utils.test import (
             MmdetTestConstants,
             download_mmdet_cascade_mask_rcnn_model,
         )
@@ -195,7 +194,7 @@ class TestPredict(unittest.TestCase):
         from sahi.model import Yolov5DetectionModel
         from sahi.predict import get_sliced_prediction
 
-        from tests.utils import (
+        from sahi.utils.test import (
             Yolov5TestConstants,
             download_yolov5s6_model,
         )
@@ -254,7 +253,7 @@ class TestPredict(unittest.TestCase):
     def test_coco_json_prediction(self):
         from sahi.predict import predict
 
-        from tests.utils import (
+        from sahi.utils.test import (
             MmdetTestConstants,
             Yolov5TestConstants,
             download_mmdet_cascade_mask_rcnn_model,
