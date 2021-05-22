@@ -376,8 +376,11 @@ class Yolov5DetectionModel(DetectionModel):
         from mmdet.apis import init_detector
 
         # set model
-        model = yolov5.load(self.model_path, device=self.device)
-        self.model = model
+        try:
+            model = yolov5.load(self.model_path, device=self.device)
+            self.model = model
+        except Exception as e:
+            TypeError("model_path is not a valid yolov5 model path: ", e)
 
         # set category_mapping
         if not self.category_mapping:
