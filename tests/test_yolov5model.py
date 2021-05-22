@@ -62,7 +62,11 @@ class TestYolov5DetectionModel(unittest.TestCase):
                     break
 
         # compare
-        self.assertEqual(list(map(int, box[:4].tolist())), [321, 322, 383, 362])
+        self.assertAlmostEqual(
+            list(map(int, box[:4].tolist())),
+            [321, 322, 383, 362],
+            places=-1,
+        )
         self.assertEqual(len(original_predictions.names), 80)
 
     def test_convert_original_predictions(self):
@@ -94,9 +98,10 @@ class TestYolov5DetectionModel(unittest.TestCase):
         self.assertEqual(len(object_prediction_list), 14)
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(
+        self.assertAlmostEqual(
             object_prediction_list[0].bbox.to_coco_bbox(),
             [321, 322, 62, 40],
+            places=-1,
         )
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
