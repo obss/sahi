@@ -6,10 +6,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=str, default="", help="image file or folder")
     parser.add_argument(
-        "--model_name",
+        "--model_type",
         type=str,
-        default="MmdetDetectionModel",
-        help="name for the detection model",
+        default="mmdet",
+        help="mmdet for 'MmdetDetectionModel', 'yolov5' for 'Yolov5DetectionModel'",
     )
     parser.add_argument(
         "--model_path",
@@ -78,6 +78,11 @@ if __name__ == "__main__":
 
     opt = parser.parse_args()
 
+    model_type_to_model_name = {
+        "mmdet": "MmdetDetectionModel",
+        "yolov5": "Yolov5DetectionModel",
+    }
+
     model_parameters = {
         "model_path": opt.model_path,
         "config_path": opt.config_path,
@@ -87,7 +92,7 @@ if __name__ == "__main__":
         "category_remapping": opt.category_remapping,
     }
     predict(
-        model_name=opt.model_name,
+        model_name=model_type_to_model_name[opt.model_type],
         model_parameters=model_parameters,
         source=opt.source,
         project=opt.project,
