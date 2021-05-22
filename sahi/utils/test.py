@@ -1,11 +1,12 @@
 import urllib.request
 from os import path
 
-import mmdet
 from sahi.utils.file import create_dir
 
 
 def mmdet_version_as_integer():
+    import mmdet
+
     return int(mmdet.__version__.replace(".", ""))
 
 
