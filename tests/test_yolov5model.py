@@ -108,7 +108,8 @@ class TestYolov5DetectionModel(unittest.TestCase):
     def test_create_original_predictions_from_object_prediction_list(
         self,
     ):
-        TODO: "implement object_prediction_list to yolov5 format conversion"
+        pass
+        # TODO: implement object_prediction_list to yolov5 format conversion
 
 
 if __name__ == "__main__":
