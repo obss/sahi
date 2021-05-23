@@ -401,7 +401,9 @@ def predict(
     durations_in_seconds["slice"] = 0
     for ind, image_path in enumerate(tqdm(image_path_list)):
         # get filename
-        filename_without_extension = str(Path(image_path).stem)
+        relative_filepath = image_path.split(source)[-1]
+        relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
+        filename_without_extension = Path(relative_filepath).stem
         # load image
         image = read_image(image_path)
 
@@ -448,26 +450,28 @@ def predict(
         time_start = time.time()
         # export prediction boxes
         if export_crop:
+            output_dir = str(crop_dir / Path(relative_filepath).parent)
             crop_object_predictions(
                 image=image,
                 object_prediction_list=object_prediction_list,
-                output_dir=str(crop_dir),
+                output_dir=output_dir,
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
             )
         # export prediction list as pickle
         if export_pickle:
-            save_path = str(pickle_dir / (filename_without_extension + ".pickle"))
+            save_path = str(pickle_dir / Path(relative_filepath).parent / (filename_without_extension + ".pickle"))
             save_pickle(data=object_prediction_list, save_path=save_path)
         # export visualization
         if export_visual:
+            output_dir = str(visual_dir / Path(relative_filepath).parent)
             visualize_object_predictions(
                 image,
                 object_prediction_list=object_prediction_list,
                 rect_th=visual_bbox_thickness,
                 text_size=visual_text_size,
                 text_th=visual_text_thickness,
-                output_dir=str(visual_dir),
+                output_dir=output_dir,
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
             )
