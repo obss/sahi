@@ -401,8 +401,15 @@ def predict(
     durations_in_seconds["slice"] = 0
     for ind, image_path in enumerate(tqdm(image_path_list)):
         # get filename
-        relative_filepath = image_path.split(source)[-1]
-        relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
+        if os.path.isdir(source):  # preserve source folder structure in export
+            relative_filepath = image_path.split(source)[-1]
+            relative_filepath = (
+                relative_filepath[1:]
+                if relative_filepath[0] == os.sep
+                else relative_filepath
+            )
+        else:  # no process if source is single file
+            relative_filepath = image_path
         filename_without_extension = Path(relative_filepath).stem
         # load image
         image = read_image(image_path)
@@ -460,7 +467,11 @@ def predict(
             )
         # export prediction list as pickle
         if export_pickle:
-            save_path = str(pickle_dir / Path(relative_filepath).parent / (filename_without_extension + ".pickle"))
+            save_path = str(
+                pickle_dir
+                / Path(relative_filepath).parent
+                / (filename_without_extension + ".pickle")
+            )
             save_pickle(data=object_prediction_list, save_path=save_path)
         # export visualization
         if export_visual:
