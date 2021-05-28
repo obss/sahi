@@ -2,8 +2,6 @@
 # Code written by Cemil Cengiz, 2020.
 # Modified by Fatih C Akyon, 2020.
 
-import os
-import pickle
 from enum import Enum
 from typing import Callable, List
 
@@ -12,11 +10,9 @@ from sahi.annotation import Mask
 from sahi.postprocess.match import PredictionList, PredictionMatcher
 from sahi.postprocess.ops import (
     BoxArray,
-    box_ios,
     box_union,
+    box_intersection,
     calculate_area,
-    extract_box,
-    have_same_class,
 )
 from sahi.prediction import ObjectPrediction
 
@@ -47,16 +43,21 @@ class PredictionMerger:
             of BOX_MERGERS.
     """
 
-    BOX_MERGERS = {"box_union", "box_intersection"}
+    BOX_MERGERS = {"UNION", "INTERSECTION"}
 
     def __init__(
         self,
         score_merging: ScoreMergingPolicy = ScoreMergingPolicy.WEIGHTED_AVERAGE,
-        box_merger: Callable[[BoxArray, BoxArray], BoxArray] = box_union,
+        box_merger: str = box_union, # INTERSECTION or UNION
     ):
         self._score_merging_method = score_merging
-        self._validate_box_merger(box_merger)
         self._box_merger = box_merger
+        if box_merger == "UNION":
+            self._box_merger: Callable = box_union
+        elif box_merger == "INTERSECTION":
+            self._box_merger: Callable = box_intersection
+        else:
+            raise ValueError(str(box_merger) + " is not inside " + str(self.BOX_MERGERS))
 
     def merge_batch(
         self,
@@ -128,8 +129,8 @@ class PredictionMerger:
         pred1: ObjectPrediction,
         pred2: ObjectPrediction,
     ) -> ObjectPrediction:
-        box1 = extract_box(pred1)
-        box2 = extract_box(pred2)
+        box1 = pred1.bbox.to_voc_bbox()
+        box2 = pred2.bbox.to_voc_bbox()
         merged_box = list(self._merge_box(box1, box2))
         score = self._merge_score(pred1, pred2)
         shift_amount = pred1.bbox.shift_amount
@@ -158,11 +159,6 @@ class PredictionMerger:
         else:
             return pred2.category
 
-    @staticmethod
-    def _assert_equal_labels(pred1: ObjectPrediction, pred2: ObjectPrediction):
-        if not have_same_class(pred1, pred2):
-            raise ValueError("Prediction labels can not be different!")
-
     def _merge_box(self, box1: BoxArray, box2: BoxArray) -> BoxArray:
         return self._box_merger(box1, box2)
 
@@ -179,7 +175,7 @@ class PredictionMerger:
             return max(scores)
         elif policy == ScoreMergingPolicy.AVERAGE:
             return (scores[0] + scores[1]) / 2
-        areas = np.array([calculate_area(extract_box(pred)) for pred in (pred1, pred2)])
+        areas = np.array([calculate_area(pred.bbox.to_voc_bbox()) for pred in (pred1, pred2)])
         if policy == ScoreMergingPolicy.SMALLER_BOX:
             return scores[areas.argmin()]
         elif policy == ScoreMergingPolicy.LARGER_BOX:
@@ -197,9 +193,3 @@ class PredictionMerger:
             full_shape=mask1.full_shape,
             shift_amount=mask1.shift_amount,
         )
-
-    def _validate_box_merger(self, box_merger: Callable):
-        if box_merger.__name__ not in self.BOX_MERGERS:
-            raise ValueError(
-                str(box_merger) + " is not inside " + str(self.BOX_MERGERS)
-            )

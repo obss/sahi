@@ -11,7 +11,7 @@ import pytest
 from sahi.annotation import BoundingBox
 from sahi.postprocess.match import PredictionList, PredictionMatcher
 from sahi.postprocess.merge import PredictionMerger, ScoreMergingPolicy
-from sahi.postprocess.ops import box_ios, box_union, extract_box
+from sahi.postprocess.ops import box_ios, box_union
 from sahi.prediction import ObjectPrediction
 
 
@@ -95,7 +95,7 @@ def _merge_boxes_sequentially(
     preds1: PredictionList, preds2: PredictionList
 ) -> List[BoundingBox]:
     return [
-        BoundingBox(list(box_union(extract_box(pred1), extract_box(pred2))))
+        BoundingBox(list(box_union(pred1.bbox.to_voc_bbox(), pred2.bbox.to_voc_bbox())))
         for pred1, pred2 in zip(preds1, preds2)
     ]
 

@@ -9,8 +9,6 @@ from typing import Dict
 
 from sahi.postprocess.match import PredictionMatcher
 from sahi.postprocess.merge import PredictionMerger, ScoreMergingPolicy
-from sahi.postprocess.ops import box_ios, box_union
-from sahi.prediction import ObjectPrediction, PredictionInput
 from sahi.slicing import slice_image
 from sahi.utils.coco import Coco
 from sahi.utils.cv import (
@@ -95,9 +93,9 @@ def get_prediction(
     else:
         # init match merge instances
         merger = PredictionMerger(
-            score_merging=ScoreMergingPolicy.LARGER_SCORE, box_merger=box_union
+            score_merging=ScoreMergingPolicy.LARGER_SCORE, box_merger="UNION"
         )
-        matcher = PredictionMatcher(threshold=0.5, scorer=box_ios)
+        matcher = PredictionMatcher(threshold=0.5, scorer="IOS")
         # merge matching predictions
         filtered_object_prediction_list = merger.merge_batch(
             matcher,
@@ -184,9 +182,9 @@ def get_sliced_prediction(
 
     # init match merge instances
     merger = PredictionMerger(
-        score_merging=ScoreMergingPolicy.LARGER_SCORE, box_merger=box_union
+        score_merging=ScoreMergingPolicy.LARGER_SCORE, box_merger="UNION"
     )
-    matcher = PredictionMatcher(threshold=match_iou_threshold, scorer=box_ios)
+    matcher = PredictionMatcher(threshold=0.5, scorer="IOS")
 
     # create prediction input
     num_group = int(num_slices / num_batch)

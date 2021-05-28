@@ -2,11 +2,9 @@
 # Code written by Cemil Cengiz, 2020.
 # Modified by Fatih C Akyon, 2020.
 
-import os
-import pickle
 from typing import Callable, List
 
-from sahi.postprocess.ops import BoxArray, box_ios, extract_box, have_same_class
+from sahi.postprocess.ops import BoxArray, box_ios, box_iou, have_same_class
 from sahi.prediction import ObjectPrediction
 
 PredictionList = List[ObjectPrediction]
@@ -35,7 +33,7 @@ class UnionFind:
 
 
 class PredictionMatcher:
-    BOX_SCORERS = {"box_ios", "box_iou"}
+    BOX_SCORERS = {"IOU", "IOS"}
     """
     Determines if two segmentation prediction are matches by comparing
     the score of the box pair with a threshold.
@@ -50,24 +48,22 @@ class PredictionMatcher:
     def __init__(
         self,
         threshold: float = 0.5,
-        scorer: Callable[[BoxArray, BoxArray], float] = box_ios,
+        scorer: str = "IOU", # IOU or IOS
     ):
         self._threshold = threshold
-        self._scorer = scorer
-
-    def _validate_scorer(self, scorer: Callable):
-        if scorer.__name__ not in self.BOX_SCORERS:
+        if scorer == "IOU":
+            self._scorer: Callable = box_iou
+        elif scorer == "IOS":
+            self._scorer: Callable = box_ios
+        else:
             raise ValueError(str(scorer) + " is not inside " + str(self.BOX_SCORERS))
 
     def score(self, box1: BoxArray, box2: BoxArray) -> float:
         return self._scorer(box1, box2)
 
-    def exceeds_threshold(self, score: float):
-        return score > self._threshold
-
     def can_match(self, pred1: ObjectPrediction, pred2: ObjectPrediction) -> bool:
-        box1 = extract_box(pred1)
-        box2 = extract_box(pred2)
+        box1 = pred1.bbox.to_voc_bbox()
+        box2 = pred2.bbox.to_voc_bbox()
         score = self._scorer(box1, box2)
         return score > self._threshold
 
