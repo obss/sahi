@@ -1,3 +1,6 @@
+# OBSS SAHI Tool
+# Code written by Fatih C Akyon, 2021.
+
 from typing import List, Union
 from sahi.prediction import ObjectPrediction
 from sahi.annotation import Mask, BoundingBox, Category
