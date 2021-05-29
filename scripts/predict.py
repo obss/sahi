@@ -67,7 +67,7 @@ if __name__ == "__main__":
         "--postprocess_type", type=str, default="UNIONMERGE", help="postprocess type: 'UNIONMERGE' or 'NMS'"
     )
     parser.add_argument("--match_metric", type=str, default="IOS", help="match metric for postprocess: 'IOU' or 'IOS'")
-    parser.add_argument("--match_threshold", type=float, default=0.5, help="match threshold for postprocess")
+    parser.add_argument("--match_thresh", type=float, default=0.5, help="match threshold for postprocess")
     parser.add_argument(
         "--class_agnostic",
         action="store_true",
@@ -107,7 +107,7 @@ if __name__ == "__main__":
         overlap_width_ratio=opt.overlap_width_ratio,
         postprocess_type=opt.postprocess_type,
         postprocess_match_metric=opt.match_metric,
-        postprocess_match_threshold=opt.match_threshold,
+        postprocess_match_threshold=opt.match_thresh,
         postprocess_class_agnostic=opt.class_agnostic,
         visual_export_format=opt.visual_export_format,
     )
