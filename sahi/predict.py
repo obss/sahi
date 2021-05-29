@@ -5,12 +5,9 @@ import os
 import time
 
 from tqdm import tqdm
-from typing import Dict
+from typing import Dict, Optional
 
-from sahi.postprocess.match import PredictionMatcher
-from sahi.postprocess.merge import PredictionMerger, ScoreMergingPolicy
-from sahi.postprocess.ops import box_ios, box_union
-from sahi.prediction import ObjectPrediction, PredictionInput
+from sahi.postprocess.combine import UnionMergePostprocess, PostprocessPredictions, NMSPostprocess
 from sahi.slicing import slice_image
 from sahi.utils.coco import Coco
 from sahi.utils.cv import (
@@ -33,8 +30,7 @@ def get_prediction(
     detection_model,
     shift_amount: list = [0, 0],
     full_shape=None,
-    merger=None,
-    matcher=None,
+    postprocess: Optional[PostprocessPredictions] = None,
     verbose: int = 0,
 ):
     """
@@ -49,8 +45,7 @@ def get_prediction(
             sized image, should be in the form of [shift_x, shift_y]
         full_shape: List
             Size of the full image, should be in the form of [height, width]
-        merger: postprocess.PredictionMerger
-        matcher: postprocess.PredictionMatcher
+        postprocess: sahi.postprocess.combine.PostprocessPredictions
         verbose: int
             0: no print (default)
             1: print prediction duration
@@ -85,26 +80,14 @@ def get_prediction(
         for object_prediction in object_prediction_list
         if object_prediction.score.score > detection_model.prediction_score_threshold
     ]
-    # merge matching predictions
-    if merger is not None:
-        filtered_object_prediction_list = merger.merge_batch(
-            matcher,
-            filtered_object_prediction_list,
-            merge_type="merge",
-        )
+    # postprocess matching predictions
+    if postprocess is not None:
+        filtered_object_prediction_list = postprocess(filtered_object_prediction_list)
     else:
         # init match merge instances
-        merger = PredictionMerger(
-            score_merging=ScoreMergingPolicy.LARGER_SCORE, box_merger=box_union
-        )
-        matcher = PredictionMatcher(threshold=0.5, scorer=box_ios)
-        # merge matching predictions
-        filtered_object_prediction_list = merger.merge_batch(
-            matcher,
-            filtered_object_prediction_list,
-            merge_type="merge",
-            ignore_class_label=True,
-        )
+        postprocess = UnionMergePostprocess(match_threshold=0.9, match_metric="IOS", class_agnostic=True)
+        # postprocess matching predictions
+        filtered_object_prediction_list = postprocess(filtered_object_prediction_list)
 
     time_end = time.time() - time_start
     durations_in_seconds["postprocess"] = time_end
@@ -129,7 +112,10 @@ def get_sliced_prediction(
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
-    match_iou_threshold: float = 0.5,
+    postprocess_type: str = "UNIONMERGE",
+    postprocess_match_metric: str = "IOS",
+    postprocess_match_threshold: float = 0.5,
+    postprocess_class_agnostic: bool = False,
     verbose: int = 1,
 ):
     """
@@ -151,8 +137,17 @@ def get_sliced_prediction(
             Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
             of size 256 yields an overlap of 51 pixels).
             Default to ``0.2``.
-        match_iou_threshold: float
-            Sliced predictions having higher iou than match_iou_threshold will be merged.
+        postprocess_type: str
+            Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
+            Options are 'UNIONMERGE' or 'NMS'. Default is 'UNIONMERGE'.
+        postprocess_match_metric: str
+            Metric to be used during object prediction matching after sliced prediction.
+            'IOU' for intersection over union, 'IOS' for intersection over smaller area.
+        postprocess_match_threshold: float
+            Sliced predictions having higher iou than postprocess_match_threshold will be
+            postprocessed after sliced prediction.
+        postprocess_class_agnostic: bool
+            If True, postprocess will ignore category ids.
         verbose: int
             0: no print
             1: print number of slices (default)
@@ -182,11 +177,21 @@ def get_sliced_prediction(
     time_end = time.time() - time_start
     durations_in_seconds["slice"] = time_end
 
-    # init match merge instances
-    merger = PredictionMerger(
-        score_merging=ScoreMergingPolicy.LARGER_SCORE, box_merger=box_union
-    )
-    matcher = PredictionMatcher(threshold=match_iou_threshold, scorer=box_ios)
+    # init match postprocess instance
+    if postprocess_type == "UNIONMERGE":
+        postprocess = UnionMergePostprocess(
+            match_threshold=postprocess_match_threshold,
+            match_metric=postprocess_match_metric,
+            class_agnostic=postprocess_class_agnostic,
+        )
+    elif postprocess_type == "NMS":
+        postprocess = NMSPostprocess(
+            match_threshold=postprocess_match_threshold,
+            match_metric=postprocess_match_metric,
+            class_agnostic=postprocess_class_agnostic,
+        )
+    else:
+        raise ValueError(f"postprocess_type should be one of ['UNIOUNMERGE', 'NMS'] but given as {postprocess_type}")
 
     # create prediction input
     num_group = int(num_slices / num_batch)
@@ -202,14 +207,8 @@ def get_sliced_prediction(
             image_list = []
             shift_amount_list = []
             for image_ind in range(num_batch):
-                image_list.append(
-                    slice_image_result.images[group_ind * num_batch + image_ind]
-                )
-                shift_amount_list.append(
-                    slice_image_result.starting_pixels[
-                        group_ind * num_batch + image_ind
-                    ]
-                )
+                image_list.append(slice_image_result.images[group_ind * num_batch + image_ind])
+                shift_amount_list.append(slice_image_result.starting_pixels[group_ind * num_batch + image_ind])
             # perform batch prediction
             prediction_result = get_prediction(
                 image=image_list[0],
@@ -227,18 +226,13 @@ def get_sliced_prediction(
             detection_model=detection_model,
             shift_amount=[0, 0],
             full_shape=None,
-            merger=None,
-            matcher=None,
+            match_threshold=None,
             verbose=0,
         )
         object_prediction_list.extend(prediction_result["object_prediction_list"])
 
     # remove empty predictions
-    object_prediction_list = [
-        object_prediction
-        for object_prediction in object_prediction_list
-        if object_prediction
-    ]
+    object_prediction_list = [object_prediction for object_prediction in object_prediction_list if object_prediction]
     # convert sliced predictions to full predictions
     full_object_prediction_list = []
     for object_prediction in object_prediction_list:
@@ -261,12 +255,7 @@ def get_sliced_prediction(
         )
 
     # merge matching predictions
-    full_object_prediction_list = merger.merge_batch(
-        matcher,
-        full_object_prediction_list,
-        merge_type="merge",
-    )
-
+    full_object_prediction_list = postprocess(full_object_prediction_list)
     # return filtered elements of filtered full_object_prediction_list
     return {
         "object_prediction_list": full_object_prediction_list,
@@ -283,7 +272,10 @@ def predict(
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
-    match_iou_threshold: float = 0.5,
+    postprocess_type: str = "UNIONMERGE",
+    postprocess_match_metric: str = "IOS",
+    postprocess_match_threshold: float = 0.5,
+    postprocess_class_agnostic: bool = False,
     export_visual: bool = True,
     export_pickle: bool = False,
     export_crop: bool = False,
@@ -329,8 +321,17 @@ def predict(
             Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
             of size 256 yields an overlap of 51 pixels).
             Default to ``0.2``.
-        match_iou_threshold: float
-            Sliced predictions having higher iou than match_iou_threshold will be merged.
+        postprocess_type: str
+            Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
+            Options are 'UNIONMERGE' or 'NMS'. Default is 'UNIONMERGE'.
+        postprocess_match_metric: str
+            Metric to be used during object prediction matching after sliced prediction.
+            'IOU' for intersection over union, 'IOS' for intersection over smaller area.
+        postprocess_match_threshold: float
+            Sliced predictions having higher iou than postprocess_match_threshold will be
+            postprocessed after sliced prediction.
+        postprocess_class_agnostic: bool
+            If True, postprocess will ignore category ids.
         export_pickle: bool
             Export predictions as .pickle
         export_crop: bool
@@ -356,9 +357,7 @@ def predict(
     # list image files in directory
     if coco_file_path:
         coco = Coco.from_coco_dict_or_path(coco_file_path)
-        image_path_list = [
-            str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images
-        ]
+        image_path_list = [str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images]
         image_id_list = [coco_image.id for coco_image in coco.images]
         coco_json = []
     elif os.path.isdir(source):
@@ -375,9 +374,7 @@ def predict(
         durations_in_seconds["list_files"] = 0
 
     # init export directories
-    save_dir = Path(
-        increment_path(Path(project) / name, exist_ok=False)
-    )  # increment run
+    save_dir = Path(increment_path(Path(project) / name, exist_ok=False))  # increment run
     crop_dir = save_dir / "crops"
     visual_dir = save_dir / "visuals"
     pickle_dir = save_dir / "pickles"
@@ -418,13 +415,14 @@ def predict(
                 slice_width=slice_width,
                 overlap_height_ratio=overlap_height_ratio,
                 overlap_width_ratio=overlap_width_ratio,
-                match_iou_threshold=match_iou_threshold,
+                postprocess_type=postprocess_type,
+                postprocess_match_metric=postprocess_match_metric,
+                postprocess_match_threshold=postprocess_match_threshold,
+                postprocess_class_agnostic=postprocess_class_agnostic,
                 verbose=verbose,
             )
             object_prediction_list = prediction_result["object_prediction_list"]
-            durations_in_seconds["slice"] += prediction_result["durations_in_seconds"][
-                "slice"
-            ]
+            durations_in_seconds["slice"] += prediction_result["durations_in_seconds"]["slice"]
         else:
             # get full sized prediction
             prediction_result = get_prediction(
@@ -432,15 +430,12 @@ def predict(
                 detection_model=detection_model,
                 shift_amount=[0, 0],
                 full_shape=None,
-                merger=None,
-                matcher=None,
+                postprocess=None,
                 verbose=0,
             )
             object_prediction_list = prediction_result["object_prediction_list"]
 
-        durations_in_seconds["prediction"] += prediction_result["durations_in_seconds"][
-            "prediction"
-        ]
+        durations_in_seconds["prediction"] += prediction_result["durations_in_seconds"]["prediction"]
 
         if coco_file_path:
             image_id = image_id_list[ind]
