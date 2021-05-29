@@ -7,7 +7,7 @@ import time
 from tqdm import tqdm
 from typing import Dict, Optional
 
-from sahi.postprocess.combine import UnionMergePostprocess, PostprocessPredictions
+from sahi.postprocess.combine import UnionMergePostprocess, PostprocessPredictions, NMSPostprocess
 from sahi.slicing import slice_image
 from sahi.utils.coco import Coco
 from sahi.utils.cv import (
@@ -112,7 +112,9 @@ def get_sliced_prediction(
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
-    match_threshold: float = 0.5,
+    postprocess_type: str = "UNIONMERGE",
+    postprocess_match_metric: str = "IOS",
+    postprocess_match_threshold: float = 0.5,
     verbose: int = 1,
 ):
     """
@@ -134,8 +136,15 @@ def get_sliced_prediction(
             Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
             of size 256 yields an overlap of 51 pixels).
             Default to ``0.2``.
-        match_threshold: float
-            Sliced predictions having higher iou than match_iou_threshold will be merged.
+        postprocess_type: str
+            Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
+            Options are 'UNIONMERGE' or 'NMS'. Default is 'UNIONMERGE'.
+        postprocess_match_metric: str
+            Metric to be used during object prediction matching after sliced prediction.
+            'IOU' for intersection over union, 'IOS' for intersection over smaller area.
+        postprocess_match_threshold: float
+            Sliced predictions having higher iou than postprocess_match_threshold will be
+            postprocessed after sliced prediction.
         verbose: int
             0: no print
             1: print number of slices (default)
@@ -166,7 +175,14 @@ def get_sliced_prediction(
     durations_in_seconds["slice"] = time_end
 
     # init match postprocess instance
-    postprocess = UnionMergePostprocess(match_threshold=match_threshold, match_metric="IOS")
+    if postprocess_type == "UNIONMERGE":
+        postprocess = UnionMergePostprocess(
+            match_threshold=postprocess_match_threshold, match_metric=postprocess_match_metric
+        )
+    elif postprocess_type == "NMS":
+        postprocess = NMSPostprocess(match_threshold=postprocess_match_threshold, match_metric=postprocess_match_metric)
+    else:
+        raise ValueError(f"postprocess_type should be one of ['UNIOUNMERGE', 'NMS'] but given as {postprocess_type}")
 
     # create prediction input
     num_group = int(num_slices / num_batch)
@@ -247,7 +263,9 @@ def predict(
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
-    match_threshold: float = 0.5,
+    postprocess_type: str = "UNIONMERGE",
+    postprocess_match_metric: str = "IOS",
+    postprocess_match_threshold: float = 0.5,
     export_visual: bool = True,
     export_pickle: bool = False,
     export_crop: bool = False,
@@ -293,8 +311,15 @@ def predict(
             Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
             of size 256 yields an overlap of 51 pixels).
             Default to ``0.2``.
-        match_threshold: float
-            Sliced predictions having higher iou than match_threshold will be merged.
+        postprocess_type: str
+            Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
+            Options are 'UNIONMERGE' or 'NMS'. Default is 'UNIONMERGE'.
+        postprocess_match_metric: str
+            Metric to be used during object prediction matching after sliced prediction.
+            'IOU' for intersection over union, 'IOS' for intersection over smaller area.
+        postprocess_match_threshold: float
+            Sliced predictions having higher iou than postprocess_match_threshold will be
+            postprocessed after sliced prediction.
         export_pickle: bool
             Export predictions as .pickle
         export_crop: bool
@@ -378,7 +403,9 @@ def predict(
                 slice_width=slice_width,
                 overlap_height_ratio=overlap_height_ratio,
                 overlap_width_ratio=overlap_width_ratio,
-                match_threshold=match_threshold,
+                postprocess_type=postprocess_type,
+                postprocess_match_metric=postprocess_match_metric,
+                postprocess_match_threshold=postprocess_match_threshold,
                 verbose=verbose,
             )
             object_prediction_list = prediction_result["object_prediction_list"]
@@ -390,8 +417,7 @@ def predict(
                 detection_model=detection_model,
                 shift_amount=[0, 0],
                 full_shape=None,
-                merger=None,
-                matcher=None,
+                postprocess=None,
                 verbose=0,
             )
             object_prediction_list = prediction_result["object_prediction_list"]

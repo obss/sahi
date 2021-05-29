@@ -63,6 +63,10 @@ if __name__ == "__main__":
     parser.add_argument("--slice_width", type=int, default=512)
     parser.add_argument("--overlap_height_ratio", type=float, default=0.2)
     parser.add_argument("--overlap_width_ratio", type=float, default=0.2)
+    parser.add_argument(
+        "--postprocess_type", type=str, default="UNIONMERGE", help="postprocess type: 'UNIONMERGE' or 'NMS'"
+    )
+    parser.add_argument("--match_metric", type=str, default="IOS", help="match metric for postprocess: 'IOU' or 'IOS'")
     parser.add_argument("--match_threshold", type=float, default=0.5, help="match threshold for postprocess")
     parser.add_argument("--visual_export_format", type=str, default="png")
 
@@ -96,6 +100,8 @@ if __name__ == "__main__":
         slice_width=opt.slice_width,
         overlap_height_ratio=opt.overlap_height_ratio,
         overlap_width_ratio=opt.overlap_width_ratio,
-        match_threshold=opt.match_threshold,
+        postprocess_type=opt.posprocess_type,
+        postprocess_match_metric=opt.match_metric,
+        postprocess_match_threshold=opt.match_threshold,
         visual_export_format=opt.visual_export_format,
     )
