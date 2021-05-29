@@ -2,17 +2,14 @@
 # Code written by Cemil Cengiz, 2020.
 # Modified by Fatih C Akyon, 2020.
 
-import os
-import pickle
 from enum import Enum
 from typing import Callable, List
 
 import numpy as np
 from sahi.annotation import Mask
-from sahi.postprocess.match import PredictionList, PredictionMatcher
-from sahi.postprocess.ops import (
+from sahi.postprocess.legacy.match import PredictionList, PredictionMatcher
+from sahi.postprocess.legacy.ops import (
     BoxArray,
-    box_ios,
     box_union,
     calculate_area,
     extract_box,
@@ -87,9 +84,7 @@ class PredictionMerger:
         unions = matcher.find_matched_predictions(predictions, ignore_class_label)
         return self._merge_predictions(unions, predictions, merge_type)
 
-    def _merge_predictions(
-        self, unions: List[List[int]], preds: PredictionList, merge_type: str
-    ) -> PredictionList:
+    def _merge_predictions(self, unions: List[List[int]], preds: PredictionList, merge_type: str) -> PredictionList:
         results = []
         for inds in unions:
             count = len(inds)
@@ -97,9 +92,7 @@ class PredictionMerger:
             for i in inds[1:]:
                 current = self._merge_pair(current, preds[i])
             if merge_type == "ensemble":
-                current.model_names = self._combine_model_names(
-                    [preds[i] for i in inds]
-                )
+                current.model_names = self._combine_model_names([preds[i] for i in inds])
 
             self._store_merging_info(count, current, merge_type)
             results.append(current)
@@ -200,6 +193,4 @@ class PredictionMerger:
 
     def _validate_box_merger(self, box_merger: Callable):
         if box_merger.__name__ not in self.BOX_MERGERS:
-            raise ValueError(
-                str(box_merger) + " is not inside " + str(self.BOX_MERGERS)
-            )
+            raise ValueError(str(box_merger) + " is not inside " + str(self.BOX_MERGERS))

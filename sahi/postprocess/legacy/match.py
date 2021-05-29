@@ -2,11 +2,9 @@
 # Code written by Cemil Cengiz, 2020.
 # Modified by Fatih C Akyon, 2020.
 
-import os
-import pickle
 from typing import Callable, List
 
-from sahi.postprocess.ops import BoxArray, box_ios, extract_box, have_same_class
+from sahi.postprocess.legacy.ops import BoxArray, box_ios, extract_box, have_same_class
 from sahi.prediction import ObjectPrediction
 
 PredictionList = List[ObjectPrediction]
@@ -71,9 +69,7 @@ class PredictionMatcher:
         score = self._scorer(box1, box2)
         return score > self._threshold
 
-    def find_matched_predictions(
-        self, predictions: PredictionList, ignore_class_label: bool = True
-    ) -> List[List[int]]:
+    def find_matched_predictions(self, predictions: PredictionList, ignore_class_label: bool = True) -> List[List[int]]:
         """
         predictions :
         ignore_class_label : Set True, to allow matching the predictions
@@ -83,9 +79,7 @@ class PredictionMatcher:
         union_find = UnionFind(size)
         for i in range(size):
             for j in range(i + 1, size):
-                label_condition = ignore_class_label or have_same_class(
-                    predictions[i], predictions[j]
-                )
+                label_condition = ignore_class_label or have_same_class(predictions[i], predictions[j])
                 if label_condition and self.can_match(predictions[i], predictions[j]):
                     union_find.unify(i, j)
 

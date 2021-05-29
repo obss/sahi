@@ -9,9 +9,9 @@ from typing import List
 import cv2
 import pytest
 from sahi.annotation import BoundingBox
-from sahi.postprocess.match import PredictionList, PredictionMatcher
-from sahi.postprocess.merge import PredictionMerger, ScoreMergingPolicy
-from sahi.postprocess.ops import box_ios, box_union
+from sahi.postprocess.legacy.match import PredictionList, PredictionMatcher
+from sahi.postprocess.legacy.merge import PredictionMerger, ScoreMergingPolicy
+from sahi.postprocess.legacy.ops import box_ios, box_union
 from sahi.prediction import ObjectPrediction
 
 
@@ -22,9 +22,7 @@ def matcher():
 
 @pytest.fixture(scope="module")
 def merger():
-    return PredictionMerger(
-        score_merging=ScoreMergingPolicy.LARGER_SCORE, box_merger=box_union
-    )
+    return PredictionMerger(score_merging=ScoreMergingPolicy.LARGER_SCORE, box_merger=box_union)
 
 
 @pytest.fixture(scope="function")
@@ -91,9 +89,7 @@ def _contains_box(preds: PredictionList, box: BoundingBox):
     return False
 
 
-def _merge_boxes_sequentially(
-    preds1: PredictionList, preds2: PredictionList
-) -> List[BoundingBox]:
+def _merge_boxes_sequentially(preds1: PredictionList, preds2: PredictionList) -> List[BoundingBox]:
     return [
         BoundingBox(list(box_union(pred1.bbox.to_voc_bbox(), pred2.bbox.to_voc_bbox())))
         for pred1, pred2 in zip(preds1, preds2)
