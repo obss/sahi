@@ -48,27 +48,34 @@ class PostprocessPredictions:
         self,
         match_threshold: float = 0.5,
         match_metric: str = "IOU",
+        class_agnostic: bool = True,
     ):
         self.match_threshold = match_threshold
+        self.class_agnostic = class_agnostic
         if match_metric == "IOU":
-            self.match_func = self.calculate_bbox_iou
+            self.calculate_match = self.calculate_bbox_iou
         elif match_metric == "IOS":
-            self.match_func = self.calculate_bbox_ios
+            self.calculate_match = self.calculate_bbox_ios
         else:
             raise ValueError(f"'match_metric' should be one of ['IOU', 'IOS'] but given as {match_metric}")
 
+    def _has_match(self, pred1: ObjectPrediction, pred2: ObjectPrediction) -> bool:
+        threshold_condition = self.calculate_match(pred1, pred2) > self.match_threshold
+        category_condition = self.has_same_category_id(pred1, pred2) or self.class_agnostic
+        return threshold_condition and category_condition
+
     @staticmethod
     def get_score_func(object_prediction: ObjectPrediction):
+        """Used for sorting predictions"""
         return object_prediction.score.score
-        """ to be used in sorting """
+
+    @staticmethod
+    def has_same_category_id(pred1: ObjectPrediction, pred2: ObjectPrediction) -> bool:
+        return pred1.category.id == pred2.category.id
 
     @staticmethod
     def calculate_bbox_iou(pred1: ObjectPrediction, pred2: ObjectPrediction) -> float:
-        """Returns the ratio of intersection area to the union
-        Args:
-            box1 (List[int]): [x1, y1, x2, y2]
-            box2 (List[int]): [x1, y1, x2, y2]
-        """
+        """Returns the ratio of intersection area to the union"""
         box1 = np.array(pred1.bbox.to_voc_bbox())
         box2 = np.array(pred2.bbox.to_voc_bbox())
         area1 = calculate_area(box1)
@@ -78,11 +85,7 @@ class PostprocessPredictions:
 
     @staticmethod
     def calculate_bbox_ios(pred1: ObjectPrediction, pred2: ObjectPrediction) -> float:
-        """Returns the ratio of intersection area to the smaller box's area
-        Args:
-            box1 (List[int]): [x1, y1, x2, y2]
-            box2 (List[int]): [x1, y1, x2, y2]
-        """
+        """Returns the ratio of intersection area to the smaller box's area"""
         box1 = np.array(pred1.bbox.to_voc_bbox())
         box2 = np.array(pred2.bbox.to_voc_bbox())
         area1 = calculate_area(box1)
@@ -111,7 +114,7 @@ class NMSPostprocess(PostprocessPredictions):
             # if any element from remaining source prediction list matches, remove it
             new_source_object_predictions: List[ObjectPrediction] = []
             for candidate_object_prediction in source_object_predictions:
-                if self.match_func(selected_object_prediction, candidate_object_prediction) < self.match_threshold:
+                if not self._has_match(selected_object_prediction, candidate_object_prediction):
                     new_source_object_predictions.append(candidate_object_prediction)
             source_object_predictions = new_source_object_predictions
             # append selected prediction to selected list
@@ -135,12 +138,13 @@ class UnionMergePostprocess(PostprocessPredictions):
             # if any element from remaining source prediction list matches, remove it and merge with selected prediction
             new_source_object_predictions: List[ObjectPrediction] = []
             for candidate_object_prediction in source_object_predictions:
-                if self.match_func(selected_object_prediction, candidate_object_prediction) < self.match_threshold:
-                    new_source_object_predictions.append(candidate_object_prediction)
-                else:
+                if self._has_match(selected_object_prediction, candidate_object_prediction):
                     selected_object_prediction = self._merge_object_prediction_pair(
                         selected_object_prediction, candidate_object_prediction
                     )
+                else:
+                    new_source_object_predictions.append(candidate_object_prediction)
+
             source_object_predictions = new_source_object_predictions
             # append selected prediction to selected list
             selected_object_predictions.append(selected_object_prediction)

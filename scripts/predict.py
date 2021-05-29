@@ -68,6 +68,11 @@ if __name__ == "__main__":
     )
     parser.add_argument("--match_metric", type=str, default="IOS", help="match metric for postprocess: 'IOU' or 'IOS'")
     parser.add_argument("--match_threshold", type=float, default=0.5, help="match threshold for postprocess")
+    parser.add_argument(
+        "--class_agnostic",
+        action="store_true",
+        help="Postprocess will ignore category ids.",
+    )
     parser.add_argument("--visual_export_format", type=str, default="png")
 
     opt = parser.parse_args()
@@ -103,5 +108,6 @@ if __name__ == "__main__":
         postprocess_type=opt.postprocess_type,
         postprocess_match_metric=opt.match_metric,
         postprocess_match_threshold=opt.match_threshold,
+        postprocess_class_agnostic=opt.class_agnostic,
         visual_export_format=opt.visual_export_format,
     )

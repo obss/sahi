@@ -100,10 +100,7 @@ class TestPredict(unittest.TestCase):
 
         # get full sized prediction
         prediction_result = get_prediction(
-            image=image,
-            detection_model=yolov5_detection_model,
-            shift_amount=[0, 0],
-            full_shape=None,
+            image=image, detection_model=yolov5_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
         )
         object_prediction_list = prediction_result["object_prediction_list"]
 
@@ -154,7 +151,10 @@ class TestPredict(unittest.TestCase):
         slice_width = 512
         overlap_height_ratio = 0.1
         overlap_width_ratio = 0.2
+        postprocess_type = "UNIONMERGE"
+        match_metric = "IOS"
         match_threshold = 0.5
+        class_agnostic = True
 
         # get sliced prediction
         prediction_result = get_sliced_prediction(
@@ -164,7 +164,10 @@ class TestPredict(unittest.TestCase):
             slice_width=slice_width,
             overlap_height_ratio=overlap_height_ratio,
             overlap_width_ratio=overlap_width_ratio,
+            postprocess_type=postprocess_type,
+            postprocess_match_metric=match_metric,
             postprocess_match_threshold=match_threshold,
+            postprocess_class_agnostic=class_agnostic,
         )
         object_prediction_list = prediction_result["object_prediction_list"]
 
@@ -214,7 +217,10 @@ class TestPredict(unittest.TestCase):
         slice_width = 512
         overlap_height_ratio = 0.1
         overlap_width_ratio = 0.2
+        postprocess_type = "UNIONMERGE"
+        match_metric = "IOS"
         match_threshold = 0.5
+        class_agnostic = True
 
         # get sliced prediction
         prediction_result = get_sliced_prediction(
@@ -224,7 +230,10 @@ class TestPredict(unittest.TestCase):
             slice_width=slice_width,
             overlap_height_ratio=overlap_height_ratio,
             overlap_width_ratio=overlap_width_ratio,
+            postprocess_type=postprocess_type,
+            postprocess_match_metric=match_metric,
             postprocess_match_threshold=match_threshold,
+            postprocess_class_agnostic=class_agnostic,
         )
         object_prediction_list = prediction_result["object_prediction_list"]
 
@@ -267,6 +276,10 @@ class TestPredict(unittest.TestCase):
             "category_mapping": None,
             "category_remapping": None,  # {"0": 1, "1": 2, "2": 3}
         }
+        postprocess_type = "UNIONMERGE"
+        match_metric = "IOS"
+        match_threshold = 0.5
+        class_agnostic = True
 
         # prepare paths
         coco_file_path = "tests/data/coco_utils/terrain_all_coco.json"
@@ -285,7 +298,10 @@ class TestPredict(unittest.TestCase):
             slice_width=512,
             overlap_height_ratio=0.2,
             overlap_width_ratio=0.2,
-            postprocess_match_threshold=0.5,
+            postprocess_type=postprocess_type,
+            postprocess_match_metric=match_metric,
+            postprocess_match_threshold=match_threshold,
+            postprocess_class_agnostic=class_agnostic,
             export_visual=False,
             export_pickle=False,
             export_crop=False,
@@ -323,7 +339,10 @@ class TestPredict(unittest.TestCase):
             slice_width=512,
             overlap_height_ratio=0.2,
             overlap_width_ratio=0.2,
-            postprocess_match_threshold=0.5,
+            postprocess_type=postprocess_type,
+            postprocess_match_metric=match_metric,
+            postprocess_match_threshold=match_threshold,
+            postprocess_class_agnostic=class_agnostic,
             export_visual=False,
             export_pickle=False,
             export_crop=False,

@@ -85,7 +85,7 @@ def get_prediction(
         filtered_object_prediction_list = postprocess(filtered_object_prediction_list)
     else:
         # init match merge instances
-        postprocess = UnionMergePostprocess(match_threshold=0.8, match_metric="IOS")
+        postprocess = UnionMergePostprocess(match_threshold=0.9, match_metric="IOS", class_agnostic=True)
         # postprocess matching predictions
         filtered_object_prediction_list = postprocess(filtered_object_prediction_list)
 
@@ -115,6 +115,7 @@ def get_sliced_prediction(
     postprocess_type: str = "UNIONMERGE",
     postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
+    postprocess_class_agnostic: bool = False,
     verbose: int = 1,
 ):
     """
@@ -145,6 +146,8 @@ def get_sliced_prediction(
         postprocess_match_threshold: float
             Sliced predictions having higher iou than postprocess_match_threshold will be
             postprocessed after sliced prediction.
+        postprocess_class_agnostic: bool
+            If True, postprocess will ignore category ids.
         verbose: int
             0: no print
             1: print number of slices (default)
@@ -177,10 +180,16 @@ def get_sliced_prediction(
     # init match postprocess instance
     if postprocess_type == "UNIONMERGE":
         postprocess = UnionMergePostprocess(
-            match_threshold=postprocess_match_threshold, match_metric=postprocess_match_metric
+            match_threshold=postprocess_match_threshold,
+            match_metric=postprocess_match_metric,
+            class_agnostic=postprocess_class_agnostic,
         )
     elif postprocess_type == "NMS":
-        postprocess = NMSPostprocess(match_threshold=postprocess_match_threshold, match_metric=postprocess_match_metric)
+        postprocess = NMSPostprocess(
+            match_threshold=postprocess_match_threshold,
+            match_metric=postprocess_match_metric,
+            class_agnostic=postprocess_class_agnostic,
+        )
     else:
         raise ValueError(f"postprocess_type should be one of ['UNIOUNMERGE', 'NMS'] but given as {postprocess_type}")
 
@@ -266,6 +275,7 @@ def predict(
     postprocess_type: str = "UNIONMERGE",
     postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
+    postprocess_class_agnostic: bool = False,
     export_visual: bool = True,
     export_pickle: bool = False,
     export_crop: bool = False,
@@ -320,6 +330,8 @@ def predict(
         postprocess_match_threshold: float
             Sliced predictions having higher iou than postprocess_match_threshold will be
             postprocessed after sliced prediction.
+        postprocess_class_agnostic: bool
+            If True, postprocess will ignore category ids.
         export_pickle: bool
             Export predictions as .pickle
         export_crop: bool
@@ -406,6 +418,7 @@ def predict(
                 postprocess_type=postprocess_type,
                 postprocess_match_metric=postprocess_match_metric,
                 postprocess_match_threshold=postprocess_match_threshold,
+                postprocess_class_agnostic=postprocess_class_agnostic,
                 verbose=verbose,
             )
             object_prediction_list = prediction_result["object_prediction_list"]
