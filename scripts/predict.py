@@ -100,7 +100,7 @@ if __name__ == "__main__":
         slice_width=opt.slice_width,
         overlap_height_ratio=opt.overlap_height_ratio,
         overlap_width_ratio=opt.overlap_width_ratio,
-        postprocess_type=opt.posprocess_type,
+        postprocess_type=opt.postprocess_type,
         postprocess_match_metric=opt.match_metric,
         postprocess_match_threshold=opt.match_threshold,
         visual_export_format=opt.visual_export_format,
