@@ -47,33 +47,23 @@ if __name__ == "__main__":
         default=None,
         help='remap category ids based on category names, after performing inference e.g. {"car": 3}',
     )
-    parser.add_argument(
-        "--project", default="runs/predict", help="save results to project/name"
-    )
+    parser.add_argument("--project", default="runs/predict", help="save results to project/name")
     parser.add_argument("--name", default="exp", help="save results to project/name")
-    parser.add_argument(
-        "--novisual", action="store_true", help="export prediction visualizations"
-    )
-    parser.add_argument(
-        "--pickle", action="store_true", help="export predictions as .pickle"
-    )
-    parser.add_argument(
-        "--crop", action="store_true", help="export predictions as cropped images"
-    )
+    parser.add_argument("--novisual", action="store_true", help="export prediction visualizations")
+    parser.add_argument("--pickle", action="store_true", help="export predictions as .pickle")
+    parser.add_argument("--crop", action="store_true", help="export predictions as cropped images")
     parser.add_argument(
         "--coco_file",
         type=str,
         default=None,
         help="perform detection from coco file and export results in coco json format",
     )
-    parser.add_argument(
-        "--standard_pred", action="store_true", help="dont apply sliced prediction"
-    )
+    parser.add_argument("--standard_pred", action="store_true", help="dont apply sliced prediction")
     parser.add_argument("--slice_height", type=int, default=512)
     parser.add_argument("--slice_width", type=int, default=512)
     parser.add_argument("--overlap_height_ratio", type=float, default=0.2)
     parser.add_argument("--overlap_width_ratio", type=float, default=0.2)
-    parser.add_argument("--iou_thresh", type=float, default=0.5)
+    parser.add_argument("--match_threshold", type=float, default=0.5, help="match threshold for postprocess")
     parser.add_argument("--visual_export_format", type=str, default="png")
 
     opt = parser.parse_args()
@@ -106,6 +96,6 @@ if __name__ == "__main__":
         slice_width=opt.slice_width,
         overlap_height_ratio=opt.overlap_height_ratio,
         overlap_width_ratio=opt.overlap_width_ratio,
-        match_iou_threshold=opt.iou_thresh,
+        match_threshold=opt.match_threshold,
         visual_export_format=opt.visual_export_format,
     )

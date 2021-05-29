@@ -52,8 +52,6 @@ class TestPredict(unittest.TestCase):
             detection_model=mmdet_detection_model,
             shift_amount=[0, 0],
             full_shape=None,
-            merger=None,
-            matcher=None,
         )
         object_prediction_list = prediction_result["object_prediction_list"]
 
@@ -106,8 +104,6 @@ class TestPredict(unittest.TestCase):
             detection_model=yolov5_detection_model,
             shift_amount=[0, 0],
             full_shape=None,
-            merger=None,
-            matcher=None,
         )
         object_prediction_list = prediction_result["object_prediction_list"]
 
@@ -158,7 +154,7 @@ class TestPredict(unittest.TestCase):
         slice_width = 512
         overlap_height_ratio = 0.1
         overlap_width_ratio = 0.2
-        match_iou_threshold = 0.5
+        match_threshold = 0.5
 
         # get sliced prediction
         prediction_result = get_sliced_prediction(
@@ -168,7 +164,7 @@ class TestPredict(unittest.TestCase):
             slice_width=slice_width,
             overlap_height_ratio=overlap_height_ratio,
             overlap_width_ratio=overlap_width_ratio,
-            match_iou_threshold=match_iou_threshold,
+            match_threshold=match_threshold,
         )
         object_prediction_list = prediction_result["object_prediction_list"]
 
@@ -218,7 +214,7 @@ class TestPredict(unittest.TestCase):
         slice_width = 512
         overlap_height_ratio = 0.1
         overlap_width_ratio = 0.2
-        match_iou_threshold = 0.5
+        match_threshold = 0.5
 
         # get sliced prediction
         prediction_result = get_sliced_prediction(
@@ -228,7 +224,7 @@ class TestPredict(unittest.TestCase):
             slice_width=slice_width,
             overlap_height_ratio=overlap_height_ratio,
             overlap_width_ratio=overlap_width_ratio,
-            match_iou_threshold=match_iou_threshold,
+            match_threshold=match_threshold,
         )
         object_prediction_list = prediction_result["object_prediction_list"]
 
@@ -289,7 +285,7 @@ class TestPredict(unittest.TestCase):
             slice_width=512,
             overlap_height_ratio=0.2,
             overlap_width_ratio=0.2,
-            match_iou_threshold=0.5,
+            match_threshold=0.5,
             export_visual=False,
             export_pickle=False,
             export_crop=False,
@@ -327,7 +323,7 @@ class TestPredict(unittest.TestCase):
             slice_width=512,
             overlap_height_ratio=0.2,
             overlap_width_ratio=0.2,
-            match_iou_threshold=0.5,
+            match_threshold=0.5,
             export_visual=False,
             export_pickle=False,
             export_crop=False,
