@@ -20,12 +20,12 @@ class BoundingBox:
     Bounding box of the annotation.
     """
 
-    def __init__(self, box: list, shift_amount: list = [0, 0]):
+    def __init__(self, box: List[int], shift_amount: List[int] = [0, 0]):
         """
         Args:
-            box: List
+            box: List[int]
                 [minx, miny, maxx, maxy]
-            shift_amount: List
+            shift_amount: List[int]
                 To shift the box and mask predictions from sliced image
                 to full sized image, should be in the form of [shift_x, shift_y]
         """
@@ -162,9 +162,7 @@ class Mask:
         # confirm full_shape is given
         assert full_shape is not None, "full_shape must be provided"
 
-        bool_mask = get_bool_mask_from_coco_segmentation(
-            segmentation, height=full_shape[0], width=full_shape[1]
-        )
+        bool_mask = get_bool_mask_from_coco_segmentation(segmentation, height=full_shape[0], width=full_shape[1])
         return cls(
             bool_mask=bool_mask,
             shift_amount=shift_amount,
@@ -234,9 +232,7 @@ class Mask:
 
     def get_shifted_mask(self):
         # Confirm full_shape is specified
-        assert (self.full_shape_height is not None) and (
-            self.full_shape_width is not None
-        ), "full_shape is None"
+        assert (self.full_shape_height is not None) and (self.full_shape_width is not None), "full_shape is None"
         # init full mask
         mask_fullsized = np.full(
             (
@@ -255,9 +251,7 @@ class Mask:
         ]
 
         # convert sliced mask to full mask
-        mask_fullsized[
-            starting_pixel[1] : ending_pixel[1], starting_pixel[0] : ending_pixel[0]
-        ] = self.bool_mask[
+        mask_fullsized[starting_pixel[1] : ending_pixel[1], starting_pixel[0] : ending_pixel[0]] = self.bool_mask[
             : ending_pixel[1] - starting_pixel[1], : ending_pixel[0] - starting_pixel[0]
         ]
 
@@ -423,9 +417,7 @@ class ObjectAnnotation:
                 To shift the box and mask predictions from sliced image to full
                 sized image, should be in the form of [shift_x, shift_y]
         """
-        bool_mask = get_bool_mask_from_coco_segmentation(
-            annotation.to_coco_segmentation()
-        )
+        bool_mask = get_bool_mask_from_coco_segmentation(annotation.to_coco_segmentation())
         return cls(
             category_id=category_id,
             bool_mask=bool_mask,
@@ -487,9 +479,7 @@ class ObjectAnnotation:
                 the form of [height, width]
         """
         assert isinstance(category_id, int), "category_id must be an integer"
-        assert (bbox is not None) or (
-            bool_mask is not None
-        ), "you must provide a bbox or bool_mask"
+        assert (bbox is not None) or (bool_mask is not None), "you must provide a bbox or bool_mask"
 
         if bool_mask is None:
             self.mask = None
@@ -570,13 +560,10 @@ class ObjectAnnotation:
             import imantics
         except ImportError:
             raise ImportError(
-                'Please run "pip install -U imantics" '
-                "to install imantics first for imantics conversion."
+                'Please run "pip install -U imantics" ' "to install imantics first for imantics conversion."
             )
 
-        imantics_category = imantics.Category(
-            id=self.category.id, name=self.category.name
-        )
+        imantics_category = imantics.Category(id=self.category.id, name=self.category.name)
         if self.mask is not None:
             imantics_mask = imantics.Mask.create(self.mask.bool_mask)
             imantics_annotation = imantics.annotation.Annotation.from_mask(

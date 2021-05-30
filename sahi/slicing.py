@@ -59,9 +59,7 @@ def get_slice_bboxes(
             if y_max > image_height or x_max > image_width:
                 ymax = min(image_height, y_max)
                 xmax = min(image_width, x_max)
-                slice_bboxes.append(
-                    [xmax - slice_width, ymax - slice_height, xmax, ymax]
-                )
+                slice_bboxes.append([xmax - slice_width, ymax - slice_height, xmax, ymax])
             else:
                 slice_bboxes.append([x_min, y_min, x_max, y_max])
             x_min = x_max - x_overlap
@@ -97,9 +95,7 @@ def annotation_inside_slice(annotation: Dict, slice_bbox: List[int]) -> bool:
     return True
 
 
-def process_coco_annotations(
-    coco_annotation_list: List[CocoAnnotation], slice_bbox: List[int], min_area_ratio
-) -> bool:
+def process_coco_annotations(coco_annotation_list: List[CocoAnnotation], slice_bbox: List[int], min_area_ratio) -> bool:
     """Slices and filters given list of CocoAnnotation objects with given
     'slice_bbox' and 'min_area_ratio'.
 
@@ -118,9 +114,7 @@ def process_coco_annotations(
     sliced_coco_annotation_list: List[CocoAnnotation] = []
     for coco_annotation in coco_annotation_list:
         if annotation_inside_slice(coco_annotation.json, slice_bbox):
-            sliced_coco_annotation = coco_annotation.get_sliced_coco_annotation(
-                slice_bbox
-            )
+            sliced_coco_annotation = coco_annotation.get_sliced_coco_annotation(slice_bbox)
             if sliced_coco_annotation.area / coco_annotation.area >= min_area_ratio:
                 sliced_coco_annotation_list.append(sliced_coco_annotation)
     return sliced_coco_annotation_list
@@ -156,9 +150,7 @@ class SliceImageResult:
         self.image_dir = image_dir
 
     def add_sliced_image(self, sliced_image: SlicedImage):
-        assert (
-            type(sliced_image) == SlicedImage
-        ), "sliced_image must be a SlicedImage instance"
+        assert type(sliced_image) == SlicedImage, "sliced_image must be a SlicedImage instance"
         self._sliced_image_list.append(sliced_image)
 
     @property
@@ -215,7 +207,6 @@ def slice_image(
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     min_area_ratio: float = 0.1,
-    slice_sep: str = "_",
     out_ext: Optional[str] = None,
     verbose: bool = False,
 ) -> SliceImageResult:
@@ -239,8 +230,6 @@ def slice_image(
             overlap of 20 pixels). Default 0.2.
         min_area_ratio (float): If the cropped annotation area to original annotation
             ratio is smaller than this value, the annotation is filtered out. Default 0.1.
-        slice_sep (str, optional): Character used to separate outname from
-            coordinates in the saved windows. Default '_'.
         out_ext (str, optional): Extension of saved images. Default is the
             original suffix.
         verbose (bool, optional): Switch to print relevant values to screen.
@@ -282,9 +271,7 @@ def slice_image(
     n_ims = 0
 
     # init images and annotations lists
-    sliced_image_result = SliceImageResult(
-        original_image_size=[image_height, image_width], image_dir=output_dir
-    )
+    sliced_image_result = SliceImageResult(original_image_size=[image_height, image_width], image_dir=output_dir)
 
     # iterate over slices
     for slice_bbox in slice_bboxes:
@@ -295,9 +282,7 @@ def slice_image(
 
         # process annotations if coco_annotations is given
         if coco_annotation_list is not None:
-            sliced_coco_annotation_list = process_coco_annotations(
-                coco_annotation_list, slice_bbox, min_area_ratio
-            )
+            sliced_coco_annotation_list = process_coco_annotations(coco_annotation_list, slice_bbox, min_area_ratio)
 
         # set image file suffixes
         slice_suffixes = "_".join(map(str, slice_bbox))
@@ -319,9 +304,7 @@ def slice_image(
             verboseprint("sliced image path:", slice_file_path)
 
         # create coco image
-        coco_image = CocoImage(
-            file_name=slice_file_name, height=slice_height, width=slice_width
-        )
+        coco_image = CocoImage(file_name=slice_file_name, height=slice_height, width=slice_width)
 
         # append coco annotations (if present) to coco image
         if coco_annotation_list:
@@ -438,9 +421,7 @@ def slice_coco(
     )
     save_path = ""
     if output_coco_annotation_file_name and output_dir:
-        save_path = os.path.join(
-            output_dir, output_coco_annotation_file_name + "_coco.json"
-        )
+        save_path = os.path.join(output_dir, output_coco_annotation_file_name + "_coco.json")
         save_json(coco_dict, save_path)
 
     return coco_dict, save_path
