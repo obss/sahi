@@ -2,7 +2,7 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import numpy as np
 
@@ -316,10 +316,10 @@ class ObjectAnnotation:
     def from_coco_segmentation(
         cls,
         segmentation,
+        full_shape: List[int],
         category_id: Optional[int] = None,
         category_name: Optional[str] = None,
         shift_amount: Optional[List[int]] = [0, 0],
-        full_shape: Optional[List[int]] = None,
     ):
         """
         Creates ObjectAnnotation from coco segmentation:
@@ -346,7 +346,7 @@ class ObjectAnnotation:
                 To shift the box and mask predictions from sliced image to full
                 sized image, should be in the form of [shift_x, shift_y]
         """
-        bool_mask = get_bool_mask_from_coco_segmentation(segmentation)
+        bool_mask = get_bool_mask_from_coco_segmentation(segmentation, width=full_shape[1], height=full_shape[0])
         return cls(
             category_id=category_id,
             bool_mask=bool_mask,
@@ -394,13 +394,53 @@ class ObjectAnnotation:
         )
 
     @classmethod
+    def from_coco_annotation_dict(
+        cls,
+        annotation_dict: Dict,
+        full_shape: List[int],
+        category_name: str = None,
+        shift_amount: Optional[List[int]] = [0, 0],
+    ):
+        """
+        Creates ObjectAnnotation object from category name and COCO formatted
+        annotation dict (with fields "bbox", "segmentation", "category_id").
+
+        Args:
+            annotation_dict: dict
+                COCO formatted annotation dict (with fields "bbox", "segmentation", "category_id")
+            category_name: str
+                Category name of the annotation
+            full_shape: List
+                Size of the full image, should be in the form of [height, width]
+            shift_amount: List
+                To shift the box and mask predictions from sliced image to full
+                sized image, should be in the form of [shift_x, shift_y]
+        """
+        if annotation_dict["segmentation"]:
+            return cls.from_coco_segmentation(
+                segmentation=annotation_dict["segmentation"],
+                category_id=annotation_dict["category_id"],
+                category_name=category_name,
+                shift_amount=shift_amount,
+                full_shape=full_shape,
+            )
+        else:
+            return cls.from_coco_bbox(
+                segmentation=annotation_dict["bbox"],
+                category_id=annotation_dict["category_id"],
+                category_name=category_name,
+                shift_amount=shift_amount,
+                full_shape=full_shape,
+            )
+
+    @classmethod
     def from_shapely_annotation(
         cls,
         annotation,
+        full_shape: List[int],
         category_id: Optional[int] = None,
         category_name: Optional[str] = None,
         shift_amount: Optional[List[int]] = [0, 0],
-        full_shape: Optional[List[int]] = None,
     ):
         """
         Creates ObjectAnnotation from shapely_utils.ShapelyAnnotation
@@ -417,7 +457,9 @@ class ObjectAnnotation:
                 To shift the box and mask predictions from sliced image to full
                 sized image, should be in the form of [shift_x, shift_y]
         """
-        bool_mask = get_bool_mask_from_coco_segmentation(annotation.to_coco_segmentation())
+        bool_mask = get_bool_mask_from_coco_segmentation(
+            annotation.to_coco_segmentation(), width=full_shape[1], height=full_shape[0]
+        )
         return cls(
             category_id=category_id,
             bool_mask=bool_mask,
@@ -527,14 +569,14 @@ class ObjectAnnotation:
                 segmentation=self.mask.to_coco_segmentation(),
                 category_id=self.category.id,
                 category_name=self.category.name,
-                score=self.score.value,
+                score=1,
             )
         else:
             coco_prediction = CocoPrediction.from_coco_bbox(
                 bbox=self.bbox.to_coco_bbox(),
                 category_id=self.category.id,
                 category_name=self.category.name,
-                score=self.score.value,
+                score=1,
             )
         return coco_prediction
 
