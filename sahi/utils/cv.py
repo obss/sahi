@@ -46,13 +46,7 @@ def crop_object_predictions(
         )
         save_path = os.path.join(
             output_dir,
-            file_name
-            + "_box"
-            + str(ind)
-            + "_class"
-            + str(category_id)
-            + "."
-            + export_format,
+            file_name + "_box" + str(ind) + "_class" + str(category_id) + "." + export_format,
         )
         cv2.imwrite(save_path, cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR))
 
@@ -82,8 +76,7 @@ def read_large_image(image_path: str):
             import skimage.io
         except ImportError:
             raise ImportError(
-                'Please run "pip install -U scikit-image" '
-                "to install scikit-image first for large image handling."
+                'Please run "pip install -U scikit-image" ' "to install scikit-image first for large image handling."
             )
         image0 = skimage.io.imread(image_path, as_grey=False).astype(np.uint8)  # [::-1]
         use_cv2 = False
@@ -260,7 +253,7 @@ def visualize_object_predictions(
 
         bbox = object_prediction.bbox.to_voc_bbox()
         category_name = object_prediction.category.name
-        score = object_prediction.score.score
+        score = object_prediction.score.value
 
         # visualize masks if present
         if object_prediction.mask is not None:
@@ -316,9 +309,7 @@ def get_coco_segmentation_from_bool_mask(bool_mask):
     mask = np.squeeze(bool_mask)
     mask = mask.astype(np.uint8)
     mask = cv2.copyMakeBorder(mask, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=0)
-    polygons = cv2.findContours(
-        mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE, offset=(-1, -1)
-    )
+    polygons = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE, offset=(-1, -1))
     polygons = polygons[0] if len(polygons) == 2 else polygons[1]
     # Convert polygon to coco segmentation
     coco_segmentation = [polygon.flatten().tolist() for polygon in polygons]
@@ -330,10 +321,7 @@ def get_bool_mask_from_coco_segmentation(coco_segmentation, width, height):
     Convert coco segmentation to 2D boolean mask of given height and width
     """
     size = [height, width]
-    points = [
-        np.array(point).reshape(-1, 2).round().astype(int)
-        for point in coco_segmentation
-    ]
+    points = [np.array(point).reshape(-1, 2).round().astype(int) for point in coco_segmentation]
     bool_mask = np.zeros(size)
     bool_mask = cv2.fillPoly(bool_mask, points, 1)
     bool_mask.astype(bool)

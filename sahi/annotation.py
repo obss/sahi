@@ -527,14 +527,14 @@ class ObjectAnnotation:
                 segmentation=self.mask.to_coco_segmentation(),
                 category_id=self.category.id,
                 category_name=self.category.name,
-                score=self.score.score,
+                score=self.score.value,
             )
         else:
             coco_prediction = CocoPrediction.from_coco_bbox(
                 bbox=self.bbox.to_coco_bbox(),
                 category_id=self.category.id,
                 category_name=self.category.name,
-                score=self.score.score,
+                score=self.score.value,
             )
         return coco_prediction
 
