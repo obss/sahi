@@ -2,7 +2,7 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
-from typing import Dict, List
+from typing import List, Optional
 
 import numpy as np
 
@@ -283,10 +283,10 @@ class ObjectAnnotation:
     def from_bool_mask(
         cls,
         bool_mask,
-        category_id=None,
-        category_name=None,
-        shift_amount: list = [0, 0],
-        full_shape=None,
+        category_id: Optional[int] = None,
+        category_name: Optional[str] = None,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         Creates ObjectAnnotation from bool_mask (2D np.ndarray)
@@ -308,7 +308,7 @@ class ObjectAnnotation:
             category_id=category_id,
             bool_mask=bool_mask,
             category_name=category_name,
-            shift_amount=[0, 0],
+            shift_amount=shift_amount,
             full_shape=full_shape,
         )
 
@@ -316,10 +316,10 @@ class ObjectAnnotation:
     def from_coco_segmentation(
         cls,
         segmentation,
-        category_id=None,
-        category_name=None,
-        shift_amount: list = [0, 0],
-        full_shape=None,
+        category_id: Optional[int] = None,
+        category_name: Optional[str] = None,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         Creates ObjectAnnotation from coco segmentation:
@@ -351,18 +351,18 @@ class ObjectAnnotation:
             category_id=category_id,
             bool_mask=bool_mask,
             category_name=category_name,
-            shift_amount=[0, 0],
+            shift_amount=shift_amount,
             full_shape=full_shape,
         )
 
     @classmethod
     def from_coco_bbox(
         cls,
-        bbox,
-        category_id=None,
-        category_name=None,
-        shift_amount: list = [0, 0],
-        full_shape=None,
+        bbox: List[int],
+        category_id: Optional[int] = None,
+        category_name: Optional[str] = None,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         Creates ObjectAnnotation from coco bbox [minx, miny, width, height]
@@ -389,7 +389,7 @@ class ObjectAnnotation:
             category_id=category_id,
             bbox=bbox,
             category_name=category_name,
-            shift_amount=[0, 0],
+            shift_amount=shift_amount,
             full_shape=full_shape,
         )
 
@@ -397,10 +397,10 @@ class ObjectAnnotation:
     def from_shapely_annotation(
         cls,
         annotation,
-        category_id=None,
-        category_name=None,
-        shift_amount: list = [0, 0],
-        full_shape=None,
+        category_id: Optional[int] = None,
+        category_name: Optional[str] = None,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         Creates ObjectAnnotation from shapely_utils.ShapelyAnnotation
@@ -422,7 +422,7 @@ class ObjectAnnotation:
             category_id=category_id,
             bool_mask=bool_mask,
             category_name=category_name,
-            shift_amount=[0, 0],
+            shift_amount=shift_amount,
             full_shape=full_shape,
         )
 
@@ -430,8 +430,8 @@ class ObjectAnnotation:
     def from_imantics_annotation(
         cls,
         annotation,
-        shift_amount: list = [0, 0],
-        full_shape=None,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         Creates ObjectAnnotation from imantics.annotation.Annotation
@@ -448,18 +448,18 @@ class ObjectAnnotation:
             category_id=annotation.category.id,
             bool_mask=annotation.mask.array,
             category_name=annotation.category.name,
-            shift_amount=[0, 0],
+            shift_amount=shift_amount,
             full_shape=full_shape,
         )
 
     def __init__(
         self,
-        bbox=None,
-        bool_mask=None,
-        category_id=None,
-        category_name=None,
-        shift_amount: list = [0, 0],
-        full_shape=None,
+        bbox: Optional[List[int]] = None,
+        bool_mask: Optional[np.ndarray] = None,
+        category_id: Optional[int] = None,
+        category_name: Optional[str] = None,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         Args:
