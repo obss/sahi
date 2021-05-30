@@ -146,7 +146,7 @@ class PredictionMerger:
 
     @staticmethod
     def _merge_label(pred1: ObjectPrediction, pred2: ObjectPrediction):
-        if pred1.score.score > pred2.score.score:
+        if pred1.score.value > pred2.score.value:
             return pred1.category
         else:
             return pred2.category
@@ -164,7 +164,7 @@ class PredictionMerger:
         pred1: ObjectPrediction,
         pred2: ObjectPrediction,
     ) -> float:
-        scores = [pred.score.score for pred in (pred1, pred2)]
+        scores = [pred.score.value for pred in (pred1, pred2)]
         policy = self._score_merging_method
         if policy == ScoreMergingPolicy.SMALLER_SCORE:
             return min(scores)

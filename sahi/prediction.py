@@ -10,25 +10,25 @@ from sahi.utils.torch import to_float_tensor, torch_stack
 
 
 class PredictionScore:
-    def __init__(self, score: float):
+    def __init__(self, value: float):
         """
         Arguments:
             score: prediction score between 0 and 1
         """
         # if score is a numpy object, convert it to python variable
-        if type(score).__module__ == "numpy":
-            score = copy.deepcopy(score).tolist()
+        if type(value).__module__ == "numpy":
+            value = copy.deepcopy(value).tolist()
         # set score
-        self.score = score
+        self.value = value
 
     def is_greater_than_threshold(self, threshold):
         """
         Check if score is greater than threshold
         """
-        return self.score > threshold
+        return self.value > threshold
 
     def __repr__(self):
-        return f"PredictionScore: <score: {self.score}>"
+        return f"PredictionScore: <value: {self.value}>"
 
 
 class ObjectPrediction(ObjectAnnotation):
@@ -87,7 +87,7 @@ class ObjectPrediction(ObjectAnnotation):
             return ObjectPrediction(
                 bbox=self.bbox.get_shifted_box().to_voc_bbox(),
                 category_id=self.category.id,
-                score=self.score.score,
+                score=self.score.value,
                 bool_mask=self.mask.get_shifted_mask().bool_mask,
                 category_name=self.category.name,
                 shift_amount=[0, 0],
@@ -97,7 +97,7 @@ class ObjectPrediction(ObjectAnnotation):
             return ObjectPrediction(
                 bbox=self.bbox.get_shifted_box().to_voc_bbox(),
                 category_id=self.category.id,
-                score=self.score.score,
+                score=self.score.value,
                 bool_mask=None,
                 category_name=self.category.name,
                 shift_amount=[0, 0],
