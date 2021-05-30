@@ -110,36 +110,3 @@ class ObjectPrediction(ObjectAnnotation):
     mask: {self.mask},
     score: {self.score},
     category: {self.category}>"""
-
-
-class PredictionInput:
-    def __init__(
-        self,
-        image_list,
-        shift_amount_list=None,
-        full_shape=None,
-    ):
-        """
-        Arguments:
-            image_list: list of images to be predicted
-            shift_amount_list: To shift the box and mask predictions from sliced image to full sized image, should be in the form of [shift_x, shift_y]
-            full_shape: Size of the full image after shifting, should be in the form of [height, width]
-
-        image_list and shift_amount_list should have same length
-        """
-        self.image_list = image_list
-        image_tensor_list = []
-        for image in image_list:
-            # normalize image
-            image = image / np.max(image)
-            # convert numpy image to tensor
-            image_tensor_list.append(to_float_tensor(image))
-        # create batch tensor
-        batch_image_tensor = torch_stack(tuple(image_tensor_list), dim=0)
-        self.batch_image_tensor = batch_image_tensor
-        # set other properties
-        if shift_amount_list:
-            self.shift_amount_list = shift_amount_list
-        else:
-            self.shift_amount_list = [[0, 0] for ind in range(len(image_list))]
-        self.full_shape = full_shape
