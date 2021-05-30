@@ -14,17 +14,25 @@ You can specify sliced inference parameters as:
 python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --iou_thresh 0.25 --source image/file/or/folder --model_path path/to/model --config_path path/to/config
 ```
 
-If you want to export prediction pickles and cropped predictions add `--pickle` and `--crop` arguments. If you want to change crop extension type, set it as `--visual_export_format JPG`.
+- Specify postprocess type as `--postprocess_type UNIONMERGE` or `--postprocess_type NMS` to be applied over sliced predictions
 
-If you want to perform standard prediction instead of sliced prediction, add `--standard_pred` argument.
+- Specify postprocess match metric as `--match_metric IOS` for intersection over smaller area or `--match_metric IOU` for intersection over union
+
+- Specify postprocess match threshold as `--match_thresh 0.5`
+
+- Add `--class_agnostic` argument to ignore category ids of the predictions during postprocess (merging/nms)
+
+- If you want to export prediction pickles and cropped predictions add `--pickle` and `--crop` arguments. If you want to change crop extension type, set it as `--visual_export_format JPG`.
+
+- If you don't want to export prediction visuals, add `--novisual` argument.
+
+- If you want to perform standard prediction instead of sliced prediction, add `--standard_pred` argument.
 
 ```bash
 python scripts/predict.py --coco_file path/to/coco/file --source coco/images/directory --model_path path/to/model --config_path path/to/config
 ```
 
 will perform inference using provided coco file, then export results as a coco json file to runs/predict/exp/results.json
-
-If you don't want to export prediction visuals, add `--novisual` argument.
 
 ## `coco2yolov5.py` script usage:
 
