@@ -109,9 +109,7 @@ class DetectionModel:
         Applies category remapping based on mapping given in self.category_remapping
         """
         # confirm self.category_remapping is not None
-        assert (
-            self.category_remapping is not None
-        ), "self.category_remapping cannot be None"
+        assert self.category_remapping is not None, "self.category_remapping cannot be None"
         # remap categories
         for object_prediction in self._object_prediction_list:
             old_category_id_str = str(object_prediction.category.id)
@@ -173,8 +171,7 @@ class MmdetDetectionModel(DetectionModel):
             import mmdet
         except ImportError:
             raise ImportError(
-                'Please run "pip install -U mmcv mmdet" '
-                "to install MMDetection first for MMDetection inference."
+                'Please run "pip install -U mmcv mmdet" ' "to install MMDetection first for MMDetection inference."
             )
 
         from mmdet.apis import init_detector
@@ -189,10 +186,7 @@ class MmdetDetectionModel(DetectionModel):
 
         # set category_mapping
         if not self.category_mapping:
-            category_mapping = {
-                str(ind): category_name
-                for ind, category_name in enumerate(self.category_names)
-            }
+            category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
     def perform_inference(self, image: np.ndarray):
@@ -207,14 +201,11 @@ class MmdetDetectionModel(DetectionModel):
             import mmdet
         except ImportError:
             raise ImportError(
-                'Please run "pip install -U mmcv mmdet" '
-                "to install MMDetection first for MMDetection inference."
+                'Please run "pip install -U mmcv mmdet" ' "to install MMDetection first for MMDetection inference."
             )
 
         # Confirm model is loaded
-        assert (
-            self.model is not None
-        ), "Model is not loaded, load it by calling .load_model()"
+        assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
 
         # Supports only batch of 1
         from mmdet.apis import inference_detector
@@ -333,7 +324,7 @@ class MmdetDetectionModel(DetectionModel):
             category_id = object_prediction.category.id
             # form bbox as 1x5 list [xmin, ymin, xmax, ymax, score]
             bbox = object_prediction.bbox.to_voc_bbox()
-            bbox.extend([object_prediction.score.score])
+            bbox.extend([object_prediction.score.value])
             category_id_to_bbox[category_id].append(np.array(bbox, dtype=np.float32))
             # form 2d bool mask
             if self.has_mask:
@@ -368,10 +359,7 @@ class Yolov5DetectionModel(DetectionModel):
         try:
             import yolov5
         except ImportError:
-            raise ImportError(
-                'Please run "pip install -U yolov5" '
-                "to install YOLOv5 first for YOLOv5 inference."
-            )
+            raise ImportError('Please run "pip install -U yolov5" ' "to install YOLOv5 first for YOLOv5 inference.")
 
         # set model
         try:
@@ -382,10 +370,7 @@ class Yolov5DetectionModel(DetectionModel):
 
         # set category_mapping
         if not self.category_mapping:
-            category_mapping = {
-                str(ind): category_name
-                for ind, category_name in enumerate(self.category_names)
-            }
+            category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
     def perform_inference(self, image: np.ndarray):
@@ -399,15 +384,10 @@ class Yolov5DetectionModel(DetectionModel):
         try:
             import yolov5
         except ImportError:
-            raise ImportError(
-                'Please run "pip install -U yolov5" '
-                "to install YOLOv5 first for YOLOv5 inference."
-            )
+            raise ImportError('Please run "pip install -U yolov5" ' "to install YOLOv5 first for YOLOv5 inference.")
 
         # Confirm model is loaded
-        assert (
-            self.model is not None
-        ), "Model is not loaded, load it by calling .load_model()"
+        assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
 
         prediction_result = self.model(image)
 
@@ -493,8 +473,7 @@ class Yolov5DetectionModel(DetectionModel):
             original_predictions: a list of converted predictions in models original output format
         """
         assert self.original_predictions is not None, (
-            "self.original_predictions"
-            " cannot be empty, call .perform_inference() first"
+            "self.original_predictions" " cannot be empty, call .perform_inference() first"
         )
         # TODO: implement object_prediction_list to yolov5 format conversion
         NotImplementedError()

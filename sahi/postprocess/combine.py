@@ -67,7 +67,7 @@ class PostprocessPredictions:
     @staticmethod
     def get_score_func(object_prediction: ObjectPrediction):
         """Used for sorting predictions"""
-        return object_prediction.score.score
+        return object_prediction.score.value
 
     @staticmethod
     def has_same_category_id(pred1: ObjectPrediction, pred2: ObjectPrediction) -> bool:
@@ -178,7 +178,7 @@ class UnionMergePostprocess(PostprocessPredictions):
 
     @staticmethod
     def _get_merged_category(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Category:
-        if pred1.score.score > pred2.score.score:
+        if pred1.score.value > pred2.score.value:
             return pred1.category
         else:
             return pred2.category
@@ -195,7 +195,7 @@ class UnionMergePostprocess(PostprocessPredictions):
         pred1: ObjectPrediction,
         pred2: ObjectPrediction,
     ) -> float:
-        scores: List[float] = [pred.score.score for pred in (pred1, pred2)]
+        scores: List[float] = [pred.score.value for pred in (pred1, pred2)]
         return max(scores)
 
     @staticmethod

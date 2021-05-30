@@ -5,11 +5,12 @@ import os
 import time
 
 from tqdm import tqdm
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
+from sahi.prediction import ObjectPrediction
 from sahi.postprocess.combine import UnionMergePostprocess, PostprocessPredictions, NMSPostprocess
 from sahi.slicing import slice_image
-from sahi.utils.coco import Coco
+from sahi.utils.coco import Coco, CocoImage
 from sahi.utils.cv import (
     crop_object_predictions,
     read_image,
@@ -73,12 +74,12 @@ def get_prediction(
         shift_amount=shift_amount,
         full_shape=full_shape,
     )
-    object_prediction_list = detection_model.object_prediction_list
+    object_prediction_list: List[ObjectPrediction] = detection_model.object_prediction_list
     # filter out predictions with lower score
     filtered_object_prediction_list = [
         object_prediction
         for object_prediction in object_prediction_list
-        if object_prediction.score.score > detection_model.prediction_score_threshold
+        if object_prediction.score.value > detection_model.prediction_score_threshold
     ]
     # postprocess matching predictions
     if postprocess is not None:
@@ -356,9 +357,8 @@ def predict(
 
     # list image files in directory
     if coco_file_path:
-        coco = Coco.from_coco_dict_or_path(coco_file_path)
+        coco: Coco = Coco.from_coco_dict_or_path(coco_file_path)
         image_path_list = [str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images]
-        image_id_list = [coco_image.id for coco_image in coco.images]
         coco_json = []
     elif os.path.isdir(source):
         time_start = time.time()
@@ -377,6 +377,7 @@ def predict(
     save_dir = Path(increment_path(Path(project) / name, exist_ok=False))  # increment run
     crop_dir = save_dir / "crops"
     visual_dir = save_dir / "visuals"
+    visual_with_gt_dir = save_dir / "visuals_with_gt"
     pickle_dir = save_dir / "pickles"
     save_dir.mkdir(parents=True, exist_ok=True)  # make dir
 
@@ -386,7 +387,7 @@ def predict(
     detection_model = DetectionModel(
         model_path=model_parameters["model_path"],
         config_path=model_parameters.get("config_path", None),
-        prediction_score_threshold=model_parameters["prediction_score_threshold"],
+        prediction_score_threshold=model_parameters.get("prediction_score_threshold", 0.25),
         device=model_parameters.get("device", None),
         category_mapping=model_parameters.get("category_mapping", None),
         category_remapping=model_parameters.get("category_remapping", None),
@@ -401,7 +402,12 @@ def predict(
     durations_in_seconds["slice"] = 0
     for ind, image_path in enumerate(tqdm(image_path_list)):
         # get filename
-        filename_without_extension = str(Path(image_path).stem)
+        if os.path.isdir(source):  # preserve source folder structure in export
+            relative_filepath = image_path.split(source)[-1]
+            relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
+        else:  # no process if source is single file
+            relative_filepath = image_path
+        filename_without_extension = Path(relative_filepath).stem
         # load image
         image = read_image(image_path)
 
@@ -438,36 +444,76 @@ def predict(
         durations_in_seconds["prediction"] += prediction_result["durations_in_seconds"]["prediction"]
 
         if coco_file_path:
-            image_id = image_id_list[ind]
+            image_id = ind + 1
+            # append predictions in coco format
             for object_prediction in object_prediction_list:
                 coco_prediction = object_prediction.to_coco_prediction()
                 coco_prediction.image_id = image_id
                 coco_prediction_json = coco_prediction.json
                 coco_json.append(coco_prediction_json)
+            # convert ground truth annotations to object_prediction_list
+            coco_image: CocoImage = coco.images[ind]
+            object_prediction_gt_list: List[ObjectPrediction] = []
+            for coco_annotation in coco_image.annotations:
+                coco_annotation_dict = coco_annotation.json
+                category_name = coco_annotation.category_name
+                full_shape = [coco_image.height, coco_image.width]
+                object_prediction_gt = ObjectPrediction.from_coco_annotation_dict(
+                    annotation_dict=coco_annotation_dict, category_name=category_name, full_shape=full_shape
+                )
+                object_prediction_gt_list.append(object_prediction_gt)
+            # export visualizations with ground truths
+            output_dir = str(visual_with_gt_dir / Path(relative_filepath).parent)
+            color = (0, 255, 0)  # original annotations in green
+            result = visualize_object_predictions(
+                image,
+                object_prediction_list=object_prediction_gt_list,
+                rect_th=visual_bbox_thickness,
+                text_size=visual_text_size,
+                text_th=visual_text_thickness,
+                color=color,
+                output_dir=None,
+                file_name=None,
+                export_format=None,
+            )
+            color = (255, 0, 0)  # model predictions in red
+            _ = visualize_object_predictions(
+                result["image"],
+                object_prediction_list=object_prediction_list,
+                rect_th=visual_bbox_thickness,
+                text_size=visual_text_size,
+                text_th=visual_text_thickness,
+                color=color,
+                output_dir=output_dir,
+                file_name=filename_without_extension,
+                export_format=visual_export_format,
+            )
 
         time_start = time.time()
         # export prediction boxes
         if export_crop:
+            output_dir = str(crop_dir / Path(relative_filepath).parent)
             crop_object_predictions(
                 image=image,
                 object_prediction_list=object_prediction_list,
-                output_dir=str(crop_dir),
+                output_dir=output_dir,
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
             )
         # export prediction list as pickle
         if export_pickle:
-            save_path = str(pickle_dir / (filename_without_extension + ".pickle"))
+            save_path = str(pickle_dir / Path(relative_filepath).parent / (filename_without_extension + ".pickle"))
             save_pickle(data=object_prediction_list, save_path=save_path)
         # export visualization
         if export_visual:
+            output_dir = str(visual_dir / Path(relative_filepath).parent)
             visualize_object_predictions(
                 image,
                 object_prediction_list=object_prediction_list,
                 rect_th=visual_bbox_thickness,
                 text_size=visual_text_size,
                 text_th=visual_text_thickness,
-                output_dir=str(visual_dir),
+                output_dir=output_dir,
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
             )
