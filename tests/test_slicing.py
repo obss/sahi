@@ -29,7 +29,6 @@ class TestSlicing(unittest.TestCase):
             overlap_height_ratio=0.1,
             overlap_width_ratio=0.4,
             min_area_ratio=0.1,
-            slice_sep="_",
             out_ext=".png",
             verbose=False,
         )
@@ -54,7 +53,6 @@ class TestSlicing(unittest.TestCase):
             overlap_height_ratio=0.1,
             overlap_width_ratio=0.4,
             min_area_ratio=0.1,
-            slice_sep="_",
             out_ext=".png",
             verbose=False,
         )
@@ -79,7 +77,6 @@ class TestSlicing(unittest.TestCase):
             overlap_height_ratio=0.1,
             overlap_width_ratio=0.4,
             min_area_ratio=0.1,
-            slice_sep="_",
             out_ext=".png",
             verbose=False,
         )
@@ -112,7 +109,6 @@ class TestSlicing(unittest.TestCase):
             overlap_height_ratio=0.1,
             overlap_width_ratio=0.4,
             min_area_ratio=0.1,
-            slice_sep="_",
             out_ext=".png",
             verbose=False,
         )
@@ -148,7 +144,6 @@ class TestSlicing(unittest.TestCase):
             overlap_height_ratio=0.1,
             overlap_width_ratio=0.4,
             min_area_ratio=0.1,
-            slice_sep="|",
             out_ext=".png",
             verbose=False,
         )

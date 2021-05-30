@@ -21,9 +21,7 @@ if __name__ == "__main__":
 
     # slice train-val coco dataset images
     print("Slicing step is starting...")
-    sliced_output_dir = coco_annotation_file_path.replace(
-        "coco.json", "sliced_input_" + str(slice_size) + "/"
-    )
+    sliced_output_dir = coco_annotation_file_path.replace("coco.json", "sliced_input_" + str(slice_size) + "/")
     for split_type in coco_dict_paths.keys():
         coco_annotation_file_path = coco_dict_paths[split_type]
         sliced_coco_name = get_base_filename(coco_annotation_file_path)[0].replace(
@@ -40,7 +38,6 @@ if __name__ == "__main__":
             max_allowed_zeros_ratio=0.2,
             overlap_height_ratio=0.2,
             overlap_width_ratio=0.2,
-            slice_sep="_",
             out_ext=".png",
             verbose=True,
         )

@@ -343,7 +343,6 @@ def slice_coco(
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     min_area_ratio: float = 0.1,
-    slice_sep: str = "_",
     out_ext: Optional[str] = None,
     verbose: bool = False,
 ) -> List[Union[Dict, str]]:
@@ -369,8 +368,6 @@ def slice_coco(
             overlap of 20 pixels). Default 0.2.
         min_area_ratio (float): If the cropped annotation area to original annotation
             ratio is smaller than this value, the annotation is filtered out. Default 0.1.
-        slice_sep (str, optional): Character used to separate outname from
-            coordinates in the saved windows. Default '_'.
         out_ext (str, optional): Extension of saved images. Default is the
             original suffix.
         verbose (bool, optional): Switch to print relevant values to screen.
@@ -406,7 +403,6 @@ def slice_coco(
             overlap_height_ratio=overlap_height_ratio,
             overlap_width_ratio=overlap_width_ratio,
             min_area_ratio=min_area_ratio,
-            slice_sep=slice_sep,
             out_ext=out_ext,
             verbose=False,
         )
