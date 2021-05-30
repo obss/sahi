@@ -2,11 +2,10 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
-
+from typing import List, Optional
 import numpy as np
 
 from sahi.annotation import ObjectAnnotation
-from sahi.utils.torch import to_float_tensor, torch_stack
 
 
 class PredictionScore:
@@ -38,13 +37,13 @@ class ObjectPrediction(ObjectAnnotation):
 
     def __init__(
         self,
-        bbox: list,
-        score: float,
-        category_id: int,
-        category_name=None,
-        bool_mask=None,
-        shift_amount: list = [0, 0],
-        full_shape: list = [1024, 1024],
+        bbox: Optional[List[int]] = None,
+        category_id: Optional[int] = None,
+        category_name: Optional[str] = None,
+        bool_mask: Optional[np.ndarray] = None,
+        score: Optional[float] = 0,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         Creates ObjectPrediction from bbox, score, category_id, category_name, bool_mask.
