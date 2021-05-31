@@ -11,23 +11,26 @@ def mmdet_version_as_integer():
 
 
 class MmdetTestConstants:
-    MMDET_CASCADEMASKRCNN_MODEL_URL = "http://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
-    MMDET_CASCADEMASKRCNN_MODEL_PATH = (
-        "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
-    )
-    MMDET_RETINANET_MODEL_URL = "http://download.openmmlab.com/mmdetection/v2.0/retinanet/retinanet_r50_fpn_2x_coco/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
-    MMDET_RETINANET_MODEL_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
+    try:
+        MMDET_CASCADEMASKRCNN_MODEL_URL = "http://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
+        MMDET_CASCADEMASKRCNN_MODEL_PATH = (
+            "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
+        )
+        MMDET_RETINANET_MODEL_URL = "http://download.openmmlab.com/mmdetection/v2.0/retinanet/retinanet_r50_fpn_2x_coco/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
+        MMDET_RETINANET_MODEL_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
 
-    if mmdet_version_as_integer() < 290:
-        MMDET_CASCADEMASKRCNN_CONFIG_PATH = (
-            "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco_v280.py"
-        )
-        MMDET_RETINANET_CONFIG_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v280.py"
-    else:
-        MMDET_CASCADEMASKRCNN_CONFIG_PATH = (
-            "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco.py"
-        )
-        MMDET_RETINANET_CONFIG_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py"
+        if mmdet_version_as_integer() < 290:
+            MMDET_CASCADEMASKRCNN_CONFIG_PATH = (
+                "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco_v280.py"
+            )
+            MMDET_RETINANET_CONFIG_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v280.py"
+        else:
+            MMDET_CASCADEMASKRCNN_CONFIG_PATH = (
+                "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco.py"
+            )
+            MMDET_RETINANET_CONFIG_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py"
+    except ImportError:
+        print("warning: mmdet installation not found, omitting MmdetTestConstants")
 
 
 class Yolov5TestConstants:
@@ -77,4 +80,15 @@ def download_yolov5s6_model(destination_path: Optional[str] = None):
         urllib.request.urlretrieve(
             Yolov5TestConstants.YOLOV5S6_MODEL_URL,
             destination_path,
+        )
+
+
+def download_image(file_url: str, download_path: str):
+
+    Path(download_path).parent.mkdir(parents=True, exist_ok=True)
+
+    if not path.exists(download_path):
+        urllib.request.urlretrieve(
+            file_url,
+            download_path,
         )
