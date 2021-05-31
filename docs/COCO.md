@@ -188,17 +188,6 @@ coco.export_as_yolov5(
   train_split_rate=0.85
 )
 
-# multiprocess support
-if __name__ == __main__:
-  coco = Coco.from_coco_dict_or_path(
-    "coco.json",
-    image_dir="coco_images/"
-  )
-  coco.export_as_yolov5(
-    output_dir="output/folder/dir",
-    train_split_rate=0.85,
-    mp=True
-  )
 ```
 
 ## Subsample COCO dataset file:
