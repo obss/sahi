@@ -426,7 +426,7 @@ class ObjectAnnotation:
             )
         else:
             return cls.from_coco_bbox(
-                segmentation=annotation_dict["bbox"],
+                bbox=annotation_dict["bbox"],
                 category_id=annotation_dict["category_id"],
                 category_name=category_name,
                 shift_amount=shift_amount,
