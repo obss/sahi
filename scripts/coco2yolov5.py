@@ -42,5 +42,4 @@ if __name__ == "__main__":
         output_dir=str(save_dir),
         train_split_rate=opt.train_split,
         numpy_seed=opt.seed,
-        mp=True,
     )
