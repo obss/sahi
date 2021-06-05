@@ -29,10 +29,16 @@ Check the [official SAHI blog post](https://medium.com/codable/sahi-a-vision-lib
 
 ### Installation
 
-- Install sahi using pip:
+- Install `sahi` using pip:
 
 ```console
 pip install sahi
+```
+
+- On Windows, `Shapely` needs to be installed via Conda:
+
+```console
+conda install -c conda-forge shapely
 ```
 
 - Install your desired version of pytorch and torchvision:
