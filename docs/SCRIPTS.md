@@ -36,6 +36,8 @@ will perform inference using provided coco file, then export results as a coco j
 
 ## `coco2yolov5.py` script usage:
 
+(In Windows be sure to open anaconda cmd prompt/windows cmd `as admin` to be able to create symlinks properly.)
+
 ```bash
 python scripts/coco2yolov5.py --coco_file path/to/coco/file --source coco/images/directory --train_split 0.9
 ```
