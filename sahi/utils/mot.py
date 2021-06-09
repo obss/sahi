@@ -138,9 +138,6 @@ class MotVideo:
         self.export_dir: str = str(increment_path(Path(export_dir), exist_ok=False))
         self.track_points: str = track_points
 
-        self.seq_length: Optional[int] = None
-        self.info_path: Optional[str] = None
-        self.info_file: Optional[InformationFile] = None
         self.groundtruth_text_file: Optional[GroundTruthTextFile] = None
         self.tracker: Optional[Tracker] = None
 
@@ -166,7 +163,6 @@ class MotVideo:
         # create seqinfo.ini file with seqLength
         with open(str(filepath), "w") as file:
             file.write(f"seqLength={seq_length}")
-            self.info_path = str(filepath)
 
     def _create_gt_file(self):
         self.groundtruth_text_file = GroundTruthTextFile(save_path=self.export_dir)
@@ -200,7 +196,7 @@ class MotVideo:
 
     def add_frame(self, frame: MotFrame):
         assert type(frame) == MotFrame, "'frame' should be a MotFrame object."
-        norfair_detections = frame.to_norfair_detections(track_points=self.track_points)
+        norfair_detections: List[Detection] = frame.to_norfair_detections(track_points=self.track_points)
         tracked_objects = self.tracker.update(detections=norfair_detections)
         self.groundtruth_text_file.update(predictions=tracked_objects)
         self._create_info_file(seq_length=self.groundtruth_text_file.frame_number)
