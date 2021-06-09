@@ -38,4 +38,21 @@ mot_frame.add_annotation(
 mot_video.add_frame(mot_frame)
 ```
 
-- after adding all frames, your MOT formatted files are ready at 'mot_video/' folder.
+- after adding all frames, your MOT formatted files are ready at `mot_video/` folder.
+
+## Advanced MOT dataset creation:
+
+- you can customize tracker while initializing mot video object:
+
+```python
+tracker_params = {
+  'max_distance_between_points': 30,
+  'min_detection_threshold': 0,
+  'hit_inertia_min': 10,
+  'hit_inertia_max': 12,
+  'point_transience': 4,
+}
+# for details: https://github.com/tryolabs/norfair/tree/master/docs#arguments
+
+mot_video = MotVideo(export_dir="mot_video", tracker_kwargs=tracker_params)
+```
