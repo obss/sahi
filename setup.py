@@ -36,7 +36,7 @@ setuptools.setup(
     python_requires=">=3.7",
     install_requires=get_requirements(),
     extras_require={
-        "tests": ["pytest", "mmdet"],
+        "tests": ["pytest", "mmdet", "norfair"],
         "dev": ["black==21.5b1", "flake==3.9.2", "isort==5.8.0", "jupyterlab==3.0.14"],
     },
     classifiers=[
