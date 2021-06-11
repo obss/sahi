@@ -1358,6 +1358,14 @@ def export_single_yolov5_image_and_corresponding_txt(
             If True ignores images without annotations in all operations.
     """
     if not ignore_negative_samples or len(coco_image.annotations) > 0:
+        # skip images without suffix
+        # https://github.com/obss/sahi/issues/114
+        if Path(coco_image.file_name).suffix == "":
+            print(f"image file has no suffix, skipping it: '{coco_image.file_name}'")
+            return
+        elif Path(coco_image.file_name).suffix in [".txt"]:  # TODO: extend this list
+            print(f"image file has incorrect suffix, skipping it: '{coco_image.file_name}'")
+            return
         # set coco and yolo image paths
         if Path(coco_image.file_name).is_file():
             coco_image_path = os.path.abspath(coco_image.file_name)
