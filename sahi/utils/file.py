@@ -9,6 +9,8 @@ import pickle
 import re
 import zipfile
 from pathlib import Path
+from os import path
+import urllib.request
 
 import numpy as np
 
@@ -110,16 +112,12 @@ def list_files(
     number_of_files = len(filepath_list)
     folder_name = directory.split(os.sep)[-1]
 
-    verboseprint(
-        "There are {} listed files in folder {}.".format(number_of_files, folder_name)
-    )
+    verboseprint("There are {} listed files in folder {}.".format(number_of_files, folder_name))
 
     return filepath_list
 
 
-def list_files_recursively(
-    directory: str, contains: list = [".json"], verbose: str = True
-) -> (list, list):
+def list_files_recursively(directory: str, contains: list = [".json"], verbose: str = True) -> (list, list):
     """
     Walk given directory recursively and return a list of file path with desired extension
 
@@ -159,9 +157,7 @@ def list_files_recursively(
     number_of_files = len(relative_filepath_list)
     folder_name = directory.split(os.sep)[-1]
 
-    verboseprint(
-        "There are {} listed files in folder {}.".format(number_of_files, folder_name)
-    )
+    verboseprint("There are {} listed files in folder {}.".format(number_of_files, folder_name))
 
     return relative_filepath_list, abs_filepath_list
 
@@ -234,3 +230,14 @@ def increment_path(path, exist_ok=True, sep=""):
         i = [int(m.groups()[0]) for m in matches if m]  # indices
         n = max(i) + 1 if i else 2  # increment number
         return f"{path}{sep}{n}"  # update path
+
+
+def download_from_url(from_url: str, to_path: str):
+
+    Path(to_path).parent.mkdir(parents=True, exist_ok=True)
+
+    if not path.exists(to_path):
+        urllib.request.urlretrieve(
+            from_url,
+            to_path,
+        )
