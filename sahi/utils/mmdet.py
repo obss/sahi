@@ -36,14 +36,6 @@ class MmdetTestConstants:
         print("warning: mmdet installation not found, omitting MmdetTestConstants")
 
 
-class Yolov5TestConstants:
-    YOLOV5S6_MODEL_URL = "https://github.com/ultralytics/yolov5/releases/download/v5.0/yolov5s6.pt"
-    YOLOV5S6_MODEL_PATH = "tests/data/models/yolov5/yolov5s6.pt"
-
-    YOLOV5M6_MODEL_URL = "https://github.com/ultralytics/yolov5/releases/download/v5.0/yolov5m6.pt"
-    YOLOV5M6_MODEL_PATH = "tests/data/models/yolov5/yolov5m6.pt"
-
-
 def download_mmdet_cascade_mask_rcnn_model(destination_path: Optional[str] = None):
 
     if destination_path is None:
@@ -68,20 +60,6 @@ def download_mmdet_retinanet_model(destination_path: Optional[str] = None):
     if not path.exists(destination_path):
         urllib.request.urlretrieve(
             MmdetTestConstants.MMDET_RETINANET_MODEL_URL,
-            destination_path,
-        )
-
-
-def download_yolov5s6_model(destination_path: Optional[str] = None):
-
-    if destination_path is None:
-        destination_path = Yolov5TestConstants.YOLOV5S6_MODEL_PATH
-
-    Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
-
-    if not path.exists(destination_path):
-        urllib.request.urlretrieve(
-            Yolov5TestConstants.YOLOV5S6_MODEL_URL,
             destination_path,
         )
 

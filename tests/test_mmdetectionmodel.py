@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 from sahi.utils.cv import read_image
 
-from sahi.utils.test import (
+from sahi.utils.mmdet import (
     MmdetTestConstants,
     download_mmdet_cascade_mask_rcnn_model,
     download_mmdet_retinanet_model,
@@ -227,33 +227,15 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
         # compare
         self.assertEqual(len(original_predictions_1), len(original_predictions_2))  # 2
-        self.assertEqual(
-            len(original_predictions_1[0]), len(original_predictions_2[0])
-        )  # 80
-        self.assertEqual(
-            len(original_predictions_1[0][2]), len(original_predictions_2[0][2])
-        )  # 25
-        self.assertEqual(
-            type(original_predictions_1[0]), type(original_predictions_2[0])
-        )  # list
-        self.assertEqual(
-            original_predictions_1[0][2].dtype, original_predictions_2[0][2].dtype
-        )  # float32
-        self.assertEqual(
-            original_predictions_1[0][0][0].dtype, original_predictions_2[0][0][0].dtype
-        )  # float32
-        self.assertEqual(
-            original_predictions_1[1][0][0].dtype, original_predictions_2[1][0][0].dtype
-        )  # bool
-        self.assertEqual(
-            len(original_predictions_1[0][0][0]), len(original_predictions_2[0][0][0])
-        )  # 5
-        self.assertEqual(
-            len(original_predictions_1[0][1]), len(original_predictions_1[0][1])
-        )  # 0
-        self.assertEqual(
-            original_predictions_1[0][1].shape, original_predictions_1[0][1].shape
-        )  # (0, 5)
+        self.assertEqual(len(original_predictions_1[0]), len(original_predictions_2[0]))  # 80
+        self.assertEqual(len(original_predictions_1[0][2]), len(original_predictions_2[0][2]))  # 25
+        self.assertEqual(type(original_predictions_1[0]), type(original_predictions_2[0]))  # list
+        self.assertEqual(original_predictions_1[0][2].dtype, original_predictions_2[0][2].dtype)  # float32
+        self.assertEqual(original_predictions_1[0][0][0].dtype, original_predictions_2[0][0][0].dtype)  # float32
+        self.assertEqual(original_predictions_1[1][0][0].dtype, original_predictions_2[1][0][0].dtype)  # bool
+        self.assertEqual(len(original_predictions_1[0][0][0]), len(original_predictions_2[0][0][0]))  # 5
+        self.assertEqual(len(original_predictions_1[0][1]), len(original_predictions_1[0][1]))  # 0
+        self.assertEqual(original_predictions_1[0][1].shape, original_predictions_1[0][1].shape)  # (0, 5)
 
     def test_create_original_predictions_from_object_prediction_list_without_mask_output(
         self,
@@ -290,27 +272,13 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
         # compare
         self.assertEqual(len(original_predictions_1), len(original_predictions_2))  # 80
-        self.assertEqual(
-            len(original_predictions_1[2]), len(original_predictions_2[2])
-        )  # 97
-        self.assertEqual(
-            type(original_predictions_1), type(original_predictions_2)
-        )  # list
-        self.assertEqual(
-            original_predictions_1[2].dtype, original_predictions_2[2].dtype
-        )  # float32
-        self.assertEqual(
-            original_predictions_1[2][0].dtype, original_predictions_2[2][0].dtype
-        )  # float32
-        self.assertEqual(
-            len(original_predictions_1[2][0]), len(original_predictions_2[2][0])
-        )  # 5
-        self.assertEqual(
-            len(original_predictions_1[1]), len(original_predictions_1[1])
-        )  # 0
-        self.assertEqual(
-            original_predictions_1[1].shape, original_predictions_1[1].shape
-        )  # (0, 5)
+        self.assertEqual(len(original_predictions_1[2]), len(original_predictions_2[2]))  # 97
+        self.assertEqual(type(original_predictions_1), type(original_predictions_2))  # list
+        self.assertEqual(original_predictions_1[2].dtype, original_predictions_2[2].dtype)  # float32
+        self.assertEqual(original_predictions_1[2][0].dtype, original_predictions_2[2][0].dtype)  # float32
+        self.assertEqual(len(original_predictions_1[2][0]), len(original_predictions_2[2][0]))  # 5
+        self.assertEqual(len(original_predictions_1[1]), len(original_predictions_1[1]))  # 0
+        self.assertEqual(original_predictions_1[1].shape, original_predictions_1[1].shape)  # (0, 5)
 
 
 if __name__ == "__main__":
