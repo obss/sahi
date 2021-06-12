@@ -1,6 +1,6 @@
 # MOT Utilities
 
-## MOT dataset creation steps:
+## MOT Challenge formatted dataset creation steps:
 
 - import required classes:
 
@@ -40,7 +40,7 @@ mot_video.add_frame(mot_frame)
 
 - after adding all frames, your MOT formatted files are ready at `mot_video/` folder.
 
-## Advanced MOT dataset creation:
+## Advanced MOT Challenge formatted dataset creation:
 
 - you can customize tracker while initializing mot video object:
 
