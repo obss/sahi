@@ -1,6 +1,9 @@
 # COCO Utilities
 
-## COCO dataset creation steps:
+<details closed>
+<summary>
+<big><b>COCO dataset creation:</b></big>
+</summary>
 
 - import required classes:
 
@@ -65,8 +68,12 @@ from sahi.utils.file import save_json
 
 save_json(coco_json, "coco_dataset.json")
 ```
+</details>
 
-## Slice COCO dataset images and annotations into grids:
+<details closed>
+<summary>
+<big><b>Slice COCO dataset images and annotations into grids:</b></big>
+</summary>
 
 ```python
 from sahi.slicing import slice_coco
@@ -80,8 +87,12 @@ coco_dict, coco_path = slice_coco(
     overlap_width_ratio=0.2,
 )
 ```
+</details>
 
-## Split COCO dataset into train/val:
+<details closed>
+<summary>
+<big><b>Split COCO dataset into train/val:</b></big>
+</summary>
 
 ```python
 from sahi.utils.coco import Coco
@@ -101,8 +112,12 @@ result = coco.split_coco_as_train_val(
 save_json(result["train_coco"].json, "train_split.json")
 save_json(result["val_coco"].json, "val_split.json")
 ```
+</details>
 
-## Filter/Update COCO dataset by categories:
+<details closed>
+<summary>
+<big><b>Filter/Update COCO dataset by categories:</b></big>
+</summary>
 
 ```python
 from sahi.utils.coco import Coco
@@ -122,8 +137,12 @@ coco.update_categories(desired_name2id)
 # export updated/filtered COCO dataset
 save_json(coco.json, "updated_coco.json")
 ```
+</details>
 
-## Filter COCO dataset by annotation area:
+<details closed>
+<summary>
+<big><b>Filter COCO dataset by annotation area:</b></big>
+</summary>
 
 ```python
 from sahi.utils.coco import Coco
@@ -146,8 +165,12 @@ area_filtered_coco = coco.get_area_filtered_coco(intervals_per_category=interval
 # export filtered COCO dataset
 save_json(area_filtered_coco.json, "area_filtered_coco.json")
 ```
+</details>
 
-## Filter out images that does not contain any annotation
+<details closed>
+<summary>
+<big><b>Filter out images that does not contain any annotation:</b></big>
+</summary>
 
 ```python
 from sahi.utils.coco import Coco
@@ -156,8 +179,12 @@ from sahi.utils.coco import Coco
 coco = Coco.from_coco_dict_or_path("coco.json", ignore_negative_samples=True)
 
 ```
+</details>
 
-## Merge COCO dataset files:
+<details closed>
+<summary>
+<big><b>Merge COCO dataset files:</b></big>
+</summary>
 
 ```python
 from sahi.utils.coco import Coco
@@ -173,8 +200,12 @@ coco_1.merge(coco_2)
 # export merged COCO dataset
 save_json(coco_1.json, "merged_coco.json")
 ```
+</details>
 
-## Convert COCO dataset to ultralytics/yolov5 format:
+<details closed>
+<summary>
+<big><b>Convert COCO dataset to ultralytics/yolov5 format:</b></big>
+</summary>
 
 ```python
 from sahi.utils.coco import Coco
@@ -189,8 +220,12 @@ coco.export_as_yolov5(
 )
 
 ```
+</details>
 
-## Subsample COCO dataset file:
+<details closed>
+<summary>
+<big><b>Subsample COCO dataset file:</b></big>
+</summary>
 
 ```python
 from sahi.utils.coco import Coco
@@ -207,8 +242,12 @@ subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10)
 # export subsampled COCO dataset
 save_json(subsampled_coco.json, "subsampled_coco.json")
 ```
+</details>
 
-## Get dataset stats:
+<details closed>
+<summary>
+<big><b>Get dataset stats:</b></big>
+</summary>
 
 ```python
 from sahi.utils.coco import Coco
@@ -236,3 +275,4 @@ coco.stats
 }
 
 ```
+</details>
