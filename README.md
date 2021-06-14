@@ -116,6 +116,10 @@ Find detailed info on script usage (predict, coco2yolov5, coco_error_analysis) a
 
 Find detailed info on COCO utilities (yolov5 conversion, slicing, subsampling, filtering, merging, splitting) at [COCO.md](docs/COCO.md).
 
+## MOT Challenge Utilities
+
+Find detailed info on MOT utilities (ground truth dataset creation, exporting tracker metrics in mot challenge format) at [MOT.md](docs/MOT.md).
+
 ## Adding new detection framework support
 
 `sahi` library currently supports all [YOLOv5 models](https://github.com/ultralytics/yolov5/releases) and [MMDetection models](https://github.com/open-mmlab/mmdetection/blob/master/docs/model_zoo.md). Moreover, it is easy to add new frameworks.

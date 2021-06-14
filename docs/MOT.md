@@ -1,6 +1,9 @@
 # MOT Utilities
 
-## MOT dataset creation steps:
+<details closed>
+<summary>
+<big><b>MOT Challenge formatted ground truth dataset creation:</b></big>
+</summary>
 
 - import required classes:
 
@@ -11,7 +14,7 @@ from sahi.utils.mot import MotAnnotation, MotFrame, MotVideo
 - init video:
 
 ```python
-mot_video = MotVideo(export_dir="mot_video")
+mot_video = MotVideo(name="sequence_name")
 ```
 
 - init first frame:
@@ -38,9 +41,19 @@ mot_frame.add_annotation(
 mot_video.add_frame(mot_frame)
 ```
 
-- after adding all frames, your MOT formatted files are ready at `mot_video/` folder.
+- export in MOT challenge format:
 
-## Advanced MOT dataset creation:
+```python
+mot_video.export(export_dir="mot_gt", type="gt")
+```
+
+- your MOT challenge formatted ground truth files are ready under `mot_gt/sequence_name/` folder.
+</details>
+
+<details closed>
+<summary>
+<big><b>Advanced MOT Challenge formatted ground truth dataset creation:</b></big>
+</summary>
 
 - you can customize tracker while initializing mot video object:
 
@@ -54,5 +67,128 @@ tracker_params = {
 }
 # for details: https://github.com/tryolabs/norfair/tree/master/docs#arguments
 
-mot_video = MotVideo(export_dir="mot_video", tracker_kwargs=tracker_params)
+mot_video = MotVideo(tracker_kwargs=tracker_params)
 ```
+
+- you can omit automatic track id generation and directly provide track ids of annotations:
+
+
+```python
+# create annotations with track ids:
+mot_frame.add_annotation(
+  MotAnnotation(bbox=[x_min, y_min, width, height], track_id=1)
+)
+
+mot_frame.add_annotation(
+  MotAnnotation(bbox=[x_min, y_min, width, height], track_id=2)
+)
+
+# add frame to video:
+mot_video.add_frame(mot_frame)
+
+# export in MOT challenge format without automatic track id generation:
+mot_video.export(export_dir="mot_gt", type="gt", use_tracker=False)
+```
+
+- you can overwrite the results into already present directory by adding `exist_ok=True`:
+
+```python
+mot_video.export(export_dir="mot_gt", type="gt", exist_ok=True)
+```
+</details>
+
+<details closed>
+<summary>
+<big><b>MOT Challenge formatted tracker output creation:</b></big>
+</summary>
+
+- import required classes:
+
+```python
+from sahi.utils.mot import MotAnnotation, MotFrame, MotVideo
+```
+
+- init video by providing video name:
+
+```python
+mot_video = MotVideo(name="sequence_name")
+```
+
+- init first frame:
+
+```python
+mot_frame = MotFrame()
+```
+
+- add tracker outputs to frame:
+
+```python
+mot_frame.add_annotation(
+  MotAnnotation(bbox=[x_min, y_min, width, height], track_id=1)
+)
+
+mot_frame.add_annotation(
+  MotAnnotation(bbox=[x_min, y_min, width, height], track_id=2)
+)
+```
+
+- add frame to video:
+
+```python
+mot_video.add_frame(mot_frame)
+```
+
+- export in MOT challenge format:
+
+```python
+mot_video.export(export_dir="mot_test", type="test")
+```
+
+- your MOT challenge formatted ground truth files are ready as `mot_test/sequence_name.txt`.
+</details>
+
+<details closed>
+<summary>
+<big><b>Advanced MOT Challenge formatted tracker output creation:</b></big>
+</summary>
+
+- you can enable tracker and directly provide object detector output:
+
+```python
+# add object detector outputs:
+mot_frame.add_annotation(
+  MotAnnotation(bbox=[x_min, y_min, width, height])
+)
+
+mot_frame.add_annotation(
+  MotAnnotation(bbox=[x_min, y_min, width, height])
+)
+
+# add frame to video:
+mot_video.add_frame(mot_frame)
+
+# export in MOT challenge format by applying a kalman based tracker:
+mot_video.export(export_dir="mot_gt", type="gt", use_tracker=True)
+```
+
+- you can customize tracker while initializing mot video object:
+
+```python
+tracker_params = {
+  'max_distance_between_points': 30,
+  'min_detection_threshold': 0,
+  'hit_inertia_min': 10,
+  'hit_inertia_max': 12,
+  'point_transience': 4,
+}
+# for details: https://github.com/tryolabs/norfair/tree/master/docs#arguments
+
+mot_video = MotVideo(tracker_kwargs=tracker_params)
+```
+
+- you can overwrite the results into already present directory by adding `exist_ok=True`:
+
+```python
+mot_video.export(export_dir="mot_gt", type="gt", exist_ok=True)
+```
+</details>
