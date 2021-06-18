@@ -144,7 +144,7 @@ mot_video.add_frame(mot_frame)
 mot_video.export(export_dir="mot_test", type="test")
 ```
 
-- your MOT challenge formatted ground truth files are ready as `mot_test/sequence_name.txt`.
+- your MOT challenge formatted tracker output files are ready as `mot_test/sequence_name.txt`.
 </details>
 
 <details closed>
@@ -168,7 +168,7 @@ mot_frame.add_annotation(
 mot_video.add_frame(mot_frame)
 
 # export in MOT challenge format by applying a kalman based tracker:
-mot_video.export(export_dir="mot_gt", type="gt", use_tracker=True)
+mot_video.export(export_dir="mot_gt", type="test", use_tracker=True)
 ```
 
 - you can customize tracker while initializing mot video object:
@@ -189,6 +189,6 @@ mot_video = MotVideo(tracker_kwargs=tracker_params)
 - you can overwrite the results into already present directory by adding `exist_ok=True`:
 
 ```python
-mot_video.export(export_dir="mot_gt", type="gt", exist_ok=True)
+mot_video.export(export_dir="mot_gt", type="test", exist_ok=True)
 ```
 </details>
