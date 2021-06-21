@@ -179,12 +179,17 @@ class MotFrame:
 
 class MotVideo:
     def __init__(
-        self, name: str = "sequence_name", frame_rate: Optional[int] = 30, tracker_kwargs: Optional[Dict] = dict()
+        self,
+        name: str = "sequence_name",
+        frame_rate: Optional[int] = 30,
+        image_width: int = 1280,
+        tracker_kwargs: Optional[Dict] = dict(),
     ):
         """
         Args
             name (str): Name of the video file.
             frame_rate (int): FPS of the video.
+            image_width (int): Image width of the video.
             tracker_kwargs (dict): a dict contains the tracker keys as below:
                 - max_distance_between_points (int)
                 - min_detection_threshold (float)
@@ -196,6 +201,7 @@ class MotVideo:
 
         self.name = name
         self.frame_rate = frame_rate
+        self.image_width = image_width
         self.tracker_kwargs = tracker_kwargs
 
         self.frame_list: List[MotFrame] = []
@@ -215,6 +221,7 @@ class MotVideo:
         with open(str(filepath), "w") as file:
             file.write(f"seqLength={seq_length}\n")
             file.write(f"frameRate={self.frame_rate}")
+            file.write(f"imWidth={self.image_width}")
 
     def _init_tracker(
         self,
