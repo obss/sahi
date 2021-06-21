@@ -44,10 +44,10 @@ mot_video.add_frame(mot_frame)
 - export in MOT challenge format:
 
 ```python
-mot_video.export(export_dir="mot_gt", type="gt")
+mot_video.export(export_dir="mot_data", type="gt")
 ```
 
-- your MOT challenge formatted ground truth files are ready under `mot_gt/sequence_name/` folder.
+- your MOT challenge formatted ground truth files are ready under `mot_data/sequence_name/` folder.
 </details>
 
 <details closed>
@@ -87,14 +87,16 @@ mot_frame.add_annotation(
 mot_video.add_frame(mot_frame)
 
 # export in MOT challenge format without automatic track id generation:
-mot_video.export(export_dir="mot_gt", type="gt", use_tracker=False)
+mot_video.export(export_dir="mot_data", type="gt", use_tracker=False)
 ```
 
 - you can overwrite the results into already present directory by adding `exist_ok=True`:
 
 ```python
-mot_video.export(export_dir="mot_gt", type="gt", exist_ok=True)
+mot_video.export(export_dir="mot_data", type="gt", exist_ok=True)
 ```
+
+- your MOT challenge formatted ground truth files are ready at `mot_data/sequence_name/gt/gt.txt`.
 </details>
 
 <details closed>
@@ -141,54 +143,20 @@ mot_video.add_frame(mot_frame)
 - export in MOT challenge format:
 
 ```python
-mot_video.export(export_dir="mot_test", type="test")
+mot_video.export(export_dir="mot_data", type="det")
 ```
 
-- your MOT challenge formatted tracker output files are ready as `mot_test/sequence_name.txt`.
+- your MOT challenge formatted detection output file is ready at `mot_data/sequence_name/det/det.txt`.
 </details>
 
 <details closed>
 <summary>
-<big><b>Advanced MOT Challenge formatted tracker output creation:</b></big>
+<big><b>Advanced MOT Challenge formatted detection output creation:</b></big>
 </summary>
-
-- you can enable tracker and directly provide object detector output:
-
-```python
-# add object detector outputs:
-mot_frame.add_annotation(
-  MotAnnotation(bbox=[x_min, y_min, width, height])
-)
-
-mot_frame.add_annotation(
-  MotAnnotation(bbox=[x_min, y_min, width, height])
-)
-
-# add frame to video:
-mot_video.add_frame(mot_frame)
-
-# export in MOT challenge format by applying a kalman based tracker:
-mot_video.export(export_dir="mot_test", type="test", use_tracker=True)
-```
-
-- you can customize tracker while initializing mot video object:
-
-```python
-tracker_params = {
-  'max_distance_between_points': 30,
-  'min_detection_threshold': 0,
-  'hit_inertia_min': 10,
-  'hit_inertia_max': 12,
-  'point_transience': 4,
-}
-# for details: https://github.com/tryolabs/norfair/tree/master/docs#arguments
-
-mot_video = MotVideo(tracker_kwargs=tracker_params)
-```
 
 - you can overwrite the results into already present directory by adding `exist_ok=True`:
 
 ```python
-mot_video.export(export_dir="mot_test", type="test", exist_ok=True)
+mot_video.export(export_dir="mot_data", type="det", exist_ok=True)
 ```
 </details>
