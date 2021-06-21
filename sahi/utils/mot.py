@@ -220,7 +220,7 @@ class MotVideo:
         # create seqinfo.ini file with seqLength
         with open(str(filepath), "w") as file:
             file.write(f"seqLength={seq_length}\n")
-            file.write(f"frameRate={self.frame_rate}")
+            file.write(f"frameRate={self.frame_rate}\n")
             file.write(f"imWidth={self.image_width}")
 
     def _init_tracker(
