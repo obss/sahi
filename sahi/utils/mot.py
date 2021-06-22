@@ -68,7 +68,7 @@ def euclidean_distance(detection, tracked_object):
 
 
 class MotAnnotation:
-    def __init__(self, bbox: List[int], track_id: Optional[int] = None, score: Optional[float] = 1):
+    def __init__(self, bbox: List[int], track_id: Optional[int] = -1, score: Optional[float] = 1):
         """
         Args:
             bbox (List[int]): [x_min, y_min, width, height]
@@ -178,10 +178,20 @@ class MotFrame:
 
 
 class MotVideo:
-    def __init__(self, name: Optional[str] = None, tracker_kwargs: Optional[Dict] = dict()):
+    def __init__(
+        self,
+        name: str = "sequence_name",
+        frame_rate: Optional[int] = 30,
+        image_height: int = 720,
+        image_width: int = 1280,
+        tracker_kwargs: Optional[Dict] = dict(),
+    ):
         """
         Args
             name (str): Name of the video file.
+            frame_rate (int): FPS of the video.
+            image_height (int): Frame height of the video.
+            image_width (int): Frame width of the video.
             tracker_kwargs (dict): a dict contains the tracker keys as below:
                 - max_distance_between_points (int)
                 - min_detection_threshold (float)
@@ -192,6 +202,9 @@ class MotVideo:
         """
 
         self.name = name
+        self.frame_rate = frame_rate
+        self.image_height = image_height
+        self.image_width = image_width
         self.tracker_kwargs = tracker_kwargs
 
         self.frame_list: List[MotFrame] = []
@@ -209,7 +222,10 @@ class MotVideo:
         filepath.parent.mkdir(exist_ok=True)
         # create seqinfo.ini file with seqLength
         with open(str(filepath), "w") as file:
-            file.write(f"seqLength={seq_length}")
+            file.write(f"seqLength={seq_length}\n")
+            file.write(f"frameRate={self.frame_rate}\n")
+            file.write(f"imWidth={self.image_width}\n")
+            file.write(f"imHeight={self.image_width}")
 
     def _init_tracker(
         self,
@@ -249,25 +265,25 @@ class MotVideo:
         """
         Args
             export_dir (str): Folder directory that will contain exported mot challenge formatted data.
-            type (str): Type of the MOT challenge export. 'gt' for groundturth data export, 'test' for tracker predictions export.
+            type (str): Type of the MOT challenge export. 'gt' for groundturth data export, 'det' for detection data export.
             use_tracker (bool): Determines whether to apply kalman based tracker over frame detections or not.
-                Default is True for type='gt', False for type='test'.
+                Default is True for type='gt'.
+                It is always False for type='det'.
             exist_ok (bool): If True overwrites given directory.
         """
-        assert type in ["gt", "test"], TypeError(f"'type' can be one of ['gt', 'test'], you provided: {type}")
+        assert type in ["gt", "det"], TypeError(f"'type' can be one of ['gt', 'det'], you provided: {type}")
 
         export_dir: str = str(increment_path(Path(export_dir), exist_ok=exist_ok))
 
         if type == "gt":
             gt_dir = os.path.join(export_dir, self.name if self.name else "", "gt")
             mot_text_file: MotTextFile = MotTextFile(save_dir=gt_dir, save_name="gt")
-            if use_tracker is None:
+            if not use_tracker:
                 use_tracker = True
-        elif type == "test":
-            assert self.name is not None, TypeError("You have to set 'name' property of 'MotVideo'.")
-            mot_text_file: MotTextFile = MotTextFile(save_dir=export_dir, save_name=self.name)
-            if use_tracker is None:
-                use_tracker = False
+        elif type == "det":
+            det_dir = os.path.join(export_dir, self.name if self.name else "", "det")
+            mot_text_file: MotTextFile = MotTextFile(save_dir=det_dir, save_name="det")
+            use_tracker = False
 
         tracker: Tracker = self._init_tracker(
             self.tracker_kwargs.get("max_distance_between_points", 30),
@@ -284,6 +300,5 @@ class MotVideo:
                 tracked_objects = mot_frame.to_norfair_trackedobjects(track_points="bbox")
             mot_text_file.update(predictions=tracked_objects)
 
-        if type == "gt":
-            info_dir = os.path.join(export_dir, self.name if self.name else "")
-            self._create_info_file(seq_length=mot_text_file.frame_number, export_dir=info_dir)
+        info_dir = os.path.join(export_dir, self.name if self.name else "")
+        self._create_info_file(seq_length=mot_text_file.frame_number, export_dir=info_dir)
