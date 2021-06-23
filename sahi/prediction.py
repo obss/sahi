@@ -103,6 +103,20 @@ class ObjectPrediction(ObjectAnnotation):
                 full_shape=None,
             )
 
+    def to_fiftyone_detection(self, image_height: int, image_width: int):
+        """
+        Returns fiftyone.Detection representation of ObjectPrediction.
+        """
+        try:
+            import fiftyone as fo
+        except ImportError:
+            raise ImportError('Please run "pip install -U fiftyone" to install fiftyone first for fiftyone conversion.')
+
+        x1, y1, x2, y2 = self.bbox.to_voc_bbox()
+        rel_box = [x1 / image_width, y1 / image_height, (x2 - x1) / image_width, (y2 - y1) / image_height]
+        fiftyone_detection = fo.Detection(label=self.category.name, bounding_box=rel_box, confidence=self.score.value)
+        return fiftyone_detection
+
     def __repr__(self):
         return f"""ObjectPrediction<
     bbox: {self.bbox},

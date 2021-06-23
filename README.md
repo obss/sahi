@@ -175,6 +175,50 @@ will perform inference using provided coco file, then export results as a coco j
 
 </details>
 
+## <div align="center">FiftyOne Utilities</div>
+
+<details open>
+<summary>
+<big><b>Explore COCO dataset via FiftyOne app:</b></big>
+</summary>
+
+```python
+from sahi.utils.fiftyone import launch_fiftyone_app
+
+# launch fiftyone app:
+session = launch_fiftyone_app(coco_image_dir, coco_json_path)
+
+# close fiftyone app:
+session.close()
+```
+
+</details>
+
+<details closed>
+<summary>
+<big><b>Convert predictions to FiftyOne detection:</b></big>
+</summary>
+
+```python
+from sahi import get_sliced_prediction
+
+# perform sliced prediction
+result = get_sliced_prediction(
+    image,
+    detection_model,
+    slice_height = 256,
+    slice_width = 256,
+    overlap_height_ratio = 0.2,
+    overlap_width_ratio = 0.2
+)
+
+# convert first object into fiftyone detection format
+object_prediction = result["object_prediction_list"][0]
+fiftyone_detection = object_prediction.to_fiftyone_detection(image_height=720, image_width=1280)
+```
+
+</details>
+
 ## <div align="center">COCO Utilities</div>
 
 <details closed>
