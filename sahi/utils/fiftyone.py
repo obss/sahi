@@ -1,8 +1,11 @@
 import os
 
-import fiftyone as fo
-from fiftyone.utils.coco import COCODetectionDatasetImporter as BaseCOCODetectionDatasetImporter
-from fiftyone.utils.coco import load_coco_detection_annotations
+try:
+    import fiftyone as fo
+    from fiftyone.utils.coco import COCODetectionDatasetImporter as BaseCOCODetectionDatasetImporter
+    from fiftyone.utils.coco import load_coco_detection_annotations
+except ImportError:
+    raise ImportError('Please run "pip install -U fiftyone" to install fiftyone first for fiftyone utilities.')
 
 
 class COCODetectionDatasetImporter(BaseCOCODetectionDatasetImporter):
@@ -74,9 +77,14 @@ class COCODetectionDatasetImporter(BaseCOCODetectionDatasetImporter):
         self._filenames = self._preprocess_list(filenames)
 
 
-def launch_fiftyone_app(coco_image_dir: str, coco_json_path: str):
+def create_fiftyone_dataset_from_coco_file(coco_image_dir: str, coco_json_path: str):
     coco_importer = COCODetectionDatasetImporter(image_dir=coco_image_dir, json_path=coco_json_path)
     dataset = fo.Dataset.from_importer(coco_importer)
+    return dataset
+
+
+def launch_fiftyone_app(coco_image_dir: str, coco_json_path: str):
+    dataset = create_fiftyone_dataset_from_coco_file(coco_image_dir, coco_json_path)
     session = fo.launch_app()
     session.dataset = dataset
     return session
