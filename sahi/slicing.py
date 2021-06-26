@@ -258,6 +258,7 @@ def slice_image(
     verboseprint("image.shape:", image_pil.size)
 
     image_width, image_height = image_pil.size
+    assert image_width != 0 and image_height != 0, f"invalid image size: {image_pil.size} for 'slice_image'."
     slice_bboxes = get_slice_bboxes(
         image_height=image_height,
         image_width=image_width,
