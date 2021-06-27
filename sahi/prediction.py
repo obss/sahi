@@ -2,10 +2,15 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
-from typing import List, Optional
+from sahi.utils.coco import CocoPrediction, CocoAnnotation
+from typing import List, Optional, Union, Dict
+
 import numpy as np
+from PIL import Image
 
 from sahi.annotation import ObjectAnnotation
+from sahi.utils.file import create_dir
+from sahi.utils.cv import visualize_object_predictions, read_image_as_pil
 
 
 class PredictionScore:
@@ -103,6 +108,28 @@ class ObjectPrediction(ObjectAnnotation):
                 full_shape=None,
             )
 
+    def to_coco_prediction(self, image_id=None):
+        """
+        Returns sahi.utils.coco.CocoPrediction representation of ObjectAnnotation.
+        """
+        if self.mask:
+            coco_prediction = CocoPrediction.from_coco_segmentation(
+                segmentation=self.mask.to_coco_segmentation(),
+                category_id=self.category.id,
+                category_name=self.category.name,
+                score=self.score.value,
+                image_id=image_id,
+            )
+        else:
+            coco_prediction = CocoPrediction.from_coco_bbox(
+                bbox=self.bbox.to_coco_bbox(),
+                category_id=self.category.id,
+                category_name=self.category.name,
+                score=self.score.value,
+                image_id=image_id,
+            )
+        return coco_prediction
+
     def to_fiftyone_detection(self, image_height: int, image_width: int):
         """
         Returns fiftyone.Detection representation of ObjectPrediction.
@@ -123,3 +150,61 @@ class ObjectPrediction(ObjectAnnotation):
     mask: {self.mask},
     score: {self.score},
     category: {self.category}>"""
+
+
+class PredictionResult:
+    def __init__(
+        self,
+        object_prediction_list: List[ObjectPrediction],
+        image: Union[Image.Image, str, np.ndarray],
+        durations_in_seconds: Optional[Dict] = None,
+    ):
+        self.image: Image.Image = read_image_as_pil(image)
+        self.image_width, self.image_height = self.image.size
+        self.object_prediction_list: List[ObjectPrediction] = object_prediction_list
+        self.durations_in_seconds = durations_in_seconds
+
+    def export_visuals(self, export_dir: str):
+        create_dir(export_dir)
+        visualize_object_predictions(
+            image=np.ascontiguousarray(self.image),
+            object_prediction_list=self.object_prediction_list,
+            rect_th=1,
+            text_size=0.3,
+            text_th=1,
+            color=(0, 0, 0),
+            output_dir=export_dir,
+            file_name="prediction_visual",
+            export_format="png",
+        )
+
+    def to_coco_annotations(self):
+        coco_annotation_list = []
+        for object_prediction in self.object_prediction_list:
+            coco_annotation_list.append(object_prediction.to_coco_prediction().json)
+        return coco_annotation_list
+
+    def to_coco_predictions(self, image_id: Optional[int] = None):
+        coco_prediction_list = []
+        for object_prediction in self.object_prediction_list:
+            coco_prediction_list.append(object_prediction.to_coco_prediction(image_id=image_id).json)
+        return coco_prediction_list
+
+    def to_imantics_annotations(self):
+        imantics_annotation_list = []
+        for object_prediction in self.object_prediction_list:
+            imantics_annotation_list.append(object_prediction.to_imantics_annotation())
+        return imantics_annotation_list
+
+    def to_fiftyone_detections(self):
+        try:
+            import fiftyone as fo
+        except ImportError:
+            raise ImportError('Please run "pip install -U fiftyone" to install fiftyone first for fiftyone conversion.')
+
+        fiftyone_detection_list: List[fo.Detection] = []
+        for object_prediction in self.object_prediction_list:
+            fiftyone_detection_list.append(
+                object_prediction.to_fiftyone_detection(image_height=self.image_height, image_width=self.image_width)
+            )
+        return fiftyone_detection_list
