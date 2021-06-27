@@ -308,14 +308,7 @@ class CocoPrediction(CocoAnnotation):
     """
 
     @classmethod
-    def from_coco_segmentation(
-        cls,
-        segmentation,
-        category_id,
-        category_name,
-        score,
-        iscrowd=0,
-    ):
+    def from_coco_segmentation(cls, segmentation, category_id, category_name, score, iscrowd=0, image_id=None):
         """
         Creates CocoAnnotation object using coco segmentation.
 
@@ -337,10 +330,11 @@ class CocoPrediction(CocoAnnotation):
             category_name=category_name,
             score=score,
             iscrowd=iscrowd,
+            image_id=image_id,
         )
 
     @classmethod
-    def from_coco_bbox(cls, bbox, category_id, category_name, score, iscrowd=0):
+    def from_coco_bbox(cls, bbox, category_id, category_name, score, iscrowd=0, image_id=None):
         """
         Creates CocoAnnotation object using coco bbox
 
@@ -362,10 +356,11 @@ class CocoPrediction(CocoAnnotation):
             category_name=category_name,
             score=score,
             iscrowd=iscrowd,
+            image_id=image_id,
         )
 
     @classmethod
-    def from_coco_annotation_dict(cls, category_name, annotation_dict, score):
+    def from_coco_annotation_dict(cls, category_name, annotation_dict, score, image_id=None):
         """
         Creates CocoAnnotation object from category name and COCO formatted
         annotation dict (with fields "bbox", "segmentation", "category_id").
@@ -384,12 +379,14 @@ class CocoPrediction(CocoAnnotation):
                 category_id=annotation_dict["category_id"],
                 category_name=category_name,
                 score=score,
+                image_id=image_id,
             )
         else:
             return cls(
                 bbox=annotation_dict["bbox"],
                 category_id=annotation_dict["category_id"],
                 category_name=category_name,
+                image_id=image_id,
             )
 
     def __init__(
