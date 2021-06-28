@@ -405,7 +405,7 @@ def slice_coco(
             overlap_width_ratio=overlap_width_ratio,
             min_area_ratio=min_area_ratio,
             out_ext=out_ext,
-            verbose=False,
+            verbose=verbose,
         )
         # append slice outputs
         sliced_coco_images.extend(slice_image_result.coco_images)

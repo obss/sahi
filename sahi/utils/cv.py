@@ -104,7 +104,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray]):
     # read image if str image path is provided
     if isinstance(image, str):
         # read in image, cv2 fails on large files
-        image_pil = Image.open(image)
+        image_pil = Image.open(image).convert("RGB")
     elif isinstance(image, np.ndarray):
         if image.shape[0] < 5:  # image in CHW
             image = image[:, :, ::-1]

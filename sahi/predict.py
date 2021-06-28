@@ -3,17 +3,18 @@
 
 import os
 import time
-
-from tqdm import tqdm
 from typing import Dict, Optional, List
 
-from sahi.prediction import ObjectPrediction
+import numpy as np
+from tqdm import tqdm
+
+from sahi.prediction import ObjectPrediction, PredictionResult
 from sahi.postprocess.combine import UnionMergePostprocess, PostprocessPredictions, NMSPostprocess
 from sahi.slicing import slice_image
 from sahi.utils.coco import Coco, CocoImage
 from sahi.utils.cv import (
     crop_object_predictions,
-    read_image,
+    read_image_as_pil,
     visualize_object_predictions,
 )
 from sahi.utils.file import (
@@ -33,7 +34,7 @@ def get_prediction(
     full_shape=None,
     postprocess: Optional[PostprocessPredictions] = None,
     verbose: int = 0,
-):
+) -> PredictionResult:
     """
     Function for performing prediction for given image using given detection_model.
 
@@ -58,12 +59,11 @@ def get_prediction(
     """
     durations_in_seconds = dict()
 
-    # read image if image is str
-    if isinstance(image, str):
-        image = read_image(image)
+    # read image as pil
+    image_as_pil = read_image_as_pil(image)
     # get prediction
     time_start = time.time()
-    detection_model.perform_inference(image)
+    detection_model.perform_inference(np.ascontiguousarray(image_as_pil))
     time_end = time.time() - time_start
     durations_in_seconds["prediction"] = time_end
 
@@ -100,10 +100,9 @@ def get_prediction(
             "seconds.",
         )
 
-    return {
-        "object_prediction_list": filtered_object_prediction_list,
-        "durations_in_seconds": durations_in_seconds,
-    }
+    return PredictionResult(
+        image=image, object_prediction_list=filtered_object_prediction_list, durations_in_seconds=durations_in_seconds
+    )
 
 
 def get_sliced_prediction(
@@ -118,7 +117,7 @@ def get_sliced_prediction(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
-):
+) -> PredictionResult:
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
 
@@ -202,35 +201,24 @@ def get_sliced_prediction(
         else:
             print("Number of slices:", 1)
     object_prediction_list = []
-    if num_slices > 0:  # if zero_frac < max_allowed_zeros_ratio from slice_image
-        for group_ind in range(num_group):
-            # prepare batch (currently supports only 1 batch)
-            image_list = []
-            shift_amount_list = []
-            for image_ind in range(num_batch):
-                image_list.append(slice_image_result.images[group_ind * num_batch + image_ind])
-                shift_amount_list.append(slice_image_result.starting_pixels[group_ind * num_batch + image_ind])
-            # perform batch prediction
-            prediction_result = get_prediction(
-                image=image_list[0],
-                detection_model=detection_model,
-                shift_amount=shift_amount_list[0],
-                full_shape=[
-                    slice_image_result.original_image_height,
-                    slice_image_result.original_image_width,
-                ],
-            )
-            object_prediction_list.extend(prediction_result["object_prediction_list"])
-    else:  # if zero_frac >= max_allowed_zeros_ratio from slice_image
+    for group_ind in range(num_group):
+        # prepare batch (currently supports only 1 batch)
+        image_list = []
+        shift_amount_list = []
+        for image_ind in range(num_batch):
+            image_list.append(slice_image_result.images[group_ind * num_batch + image_ind])
+            shift_amount_list.append(slice_image_result.starting_pixels[group_ind * num_batch + image_ind])
+        # perform batch prediction
         prediction_result = get_prediction(
-            image=image,
+            image=image_list[0],
             detection_model=detection_model,
-            shift_amount=[0, 0],
-            full_shape=None,
-            match_threshold=None,
-            verbose=0,
+            shift_amount=shift_amount_list[0],
+            full_shape=[
+                slice_image_result.original_image_height,
+                slice_image_result.original_image_width,
+            ],
         )
-        object_prediction_list.extend(prediction_result["object_prediction_list"])
+        object_prediction_list.extend(prediction_result.object_prediction_list)
 
     # remove empty predictions
     object_prediction_list = [object_prediction for object_prediction in object_prediction_list if object_prediction]
@@ -257,11 +245,10 @@ def get_sliced_prediction(
 
     # merge matching predictions
     full_object_prediction_list = postprocess(full_object_prediction_list)
-    # return filtered elements of filtered full_object_prediction_list
-    return {
-        "object_prediction_list": full_object_prediction_list,
-        "durations_in_seconds": durations_in_seconds,
-    }
+
+    return PredictionResult(
+        image=image, object_prediction_list=full_object_prediction_list, durations_in_seconds=durations_in_seconds
+    )
 
 
 def predict(
@@ -409,13 +396,13 @@ def predict(
             relative_filepath = image_path
         filename_without_extension = Path(relative_filepath).stem
         # load image
-        image = read_image(image_path)
+        image_as_pil = read_image_as_pil(image_path)
 
         # perform prediction
         if apply_sliced_prediction:
             # get sliced prediction
             prediction_result = get_sliced_prediction(
-                image=image,
+                image=image_path,
                 detection_model=detection_model,
                 slice_height=slice_height,
                 slice_width=slice_width,
@@ -427,21 +414,21 @@ def predict(
                 postprocess_class_agnostic=postprocess_class_agnostic,
                 verbose=verbose,
             )
-            object_prediction_list = prediction_result["object_prediction_list"]
-            durations_in_seconds["slice"] += prediction_result["durations_in_seconds"]["slice"]
+            object_prediction_list = prediction_result.object_prediction_list
+            durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
         else:
             # get full sized prediction
             prediction_result = get_prediction(
-                image=image,
+                image=image_path,
                 detection_model=detection_model,
                 shift_amount=[0, 0],
                 full_shape=None,
                 postprocess=None,
                 verbose=0,
             )
-            object_prediction_list = prediction_result["object_prediction_list"]
+            object_prediction_list = prediction_result.object_prediction_list
 
-        durations_in_seconds["prediction"] += prediction_result["durations_in_seconds"]["prediction"]
+        durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
 
         if coco_file_path:
             image_id = ind + 1
@@ -466,7 +453,7 @@ def predict(
             output_dir = str(visual_with_gt_dir / Path(relative_filepath).parent)
             color = (0, 255, 0)  # original annotations in green
             result = visualize_object_predictions(
-                image,
+                np.ascontiguousarray(image_as_pil),
                 object_prediction_list=object_prediction_gt_list,
                 rect_th=visual_bbox_thickness,
                 text_size=visual_text_size,
@@ -494,7 +481,7 @@ def predict(
         if export_crop:
             output_dir = str(crop_dir / Path(relative_filepath).parent)
             crop_object_predictions(
-                image=image,
+                image=np.ascontiguousarray(image_as_pil),
                 object_prediction_list=object_prediction_list,
                 output_dir=output_dir,
                 file_name=filename_without_extension,
@@ -508,7 +495,7 @@ def predict(
         if export_visual:
             output_dir = str(visual_dir / Path(relative_filepath).parent)
             visualize_object_predictions(
-                image,
+                np.ascontiguousarray(image_as_pil),
                 object_prediction_list=object_prediction_list,
                 rect_th=visual_bbox_thickness,
                 text_size=visual_text_size,
