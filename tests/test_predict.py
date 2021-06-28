@@ -52,7 +52,7 @@ class TestPredict(unittest.TestCase):
             shift_amount=[0, 0],
             full_shape=None,
         )
-        object_prediction_list = prediction_result["object_prediction_list"]
+        object_prediction_list = prediction_result.object_prediction_list
 
         # compare
         self.assertEqual(len(object_prediction_list), 19)
@@ -100,7 +100,7 @@ class TestPredict(unittest.TestCase):
         prediction_result = get_prediction(
             image=image, detection_model=yolov5_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
         )
-        object_prediction_list = prediction_result["object_prediction_list"]
+        object_prediction_list = prediction_result.object_prediction_list
 
         # compare
         self.assertEqual(len(object_prediction_list), 12)
@@ -166,7 +166,7 @@ class TestPredict(unittest.TestCase):
             postprocess_match_threshold=match_threshold,
             postprocess_class_agnostic=class_agnostic,
         )
-        object_prediction_list = prediction_result["object_prediction_list"]
+        object_prediction_list = prediction_result.object_prediction_list
 
         # compare
         self.assertEqual(len(object_prediction_list), 24)
@@ -232,7 +232,7 @@ class TestPredict(unittest.TestCase):
             postprocess_match_threshold=match_threshold,
             postprocess_class_agnostic=class_agnostic,
         )
-        object_prediction_list = prediction_result["object_prediction_list"]
+        object_prediction_list = prediction_result.object_prediction_list
 
         # compare
         self.assertEqual(len(object_prediction_list), 21)
