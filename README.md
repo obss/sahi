@@ -104,7 +104,7 @@ Check `MMDetection` + `SAHI` demo: <a href="https://colab.research.google.com/gi
 ```python
 from sahi.slicing import slice_image
 
-slice_image_result, num_total_invalid_segmentation = slice_image(
+slice_image_result = slice_image(
     image=image_path,
     output_file_name=output_file_name,
     output_dir=output_dir,
