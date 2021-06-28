@@ -705,4 +705,4 @@ def predict_fiftyone(
     # Show samples with most false positives
     session.view = eval_view.sort_by("eval_fp", reverse=True)
     while 1:
-        time.sleep(0.5)
+        time.sleep(3)
