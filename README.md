@@ -212,9 +212,8 @@ result = get_sliced_prediction(
     overlap_width_ratio = 0.2
 )
 
-# convert first object into fiftyone detection format
-object_prediction = result["object_prediction_list"][0]
-fiftyone_detection = object_prediction.to_fiftyone_detection(image_height=720, image_width=1280)
+# convert detections into fiftyone detection format
+fiftyone_detections = result.to_fiftyone_detections()
 ```
 
 </details>
