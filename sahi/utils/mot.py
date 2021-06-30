@@ -23,7 +23,7 @@ class MotTextFile(PredictionsTextFile):
 
         self.out_file_name = os.path.join(save_dir, save_name + ".txt")
 
-        self.frame_number = 1
+        self.frame_number = 0
 
     def update(self, predictions: List[TrackedObject], frame_number: int = None):
         if frame_number is None:
@@ -225,7 +225,7 @@ class MotVideo:
             file.write(f"seqLength={seq_length}\n")
             file.write(f"frameRate={self.frame_rate}\n")
             file.write(f"imWidth={self.image_width}\n")
-            file.write(f"imHeight={self.image_width}")
+            file.write(f"imHeight={self.image_height}")
 
     def _init_tracker(
         self,
