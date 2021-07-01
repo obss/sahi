@@ -182,6 +182,8 @@ will perform inference using provided coco file, then export results as a coco j
 <big><b>Explore COCO dataset via FiftyOne app:</b></big>
 </summary>
 
+For supported version: `pip install fiftyone<=0.9.4`
+
 ```python
 from sahi.utils.fiftyone import launch_fiftyone_app
 
