@@ -308,6 +308,7 @@ class MotVideo:
                         tracked_object = copy.deepcopy(tracked_object)
                         tracked_object.id = 1
                         new_tracked_objects.append(tracked_object)
+                    tracked_objects = new_tracked_objects
             else:
                 tracked_objects = mot_frame.to_norfair_trackedobjects(track_points="bbox")
             mot_text_file.update(predictions=tracked_objects)
