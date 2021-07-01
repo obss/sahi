@@ -127,7 +127,7 @@ class MotFrame:
             distance_function=euclidean_distance,
             distance_threshold=30,
             detection_threshold=0,
-            hit_inertia_min=10,
+            hit_inertia_min=0,
             hit_inertia_max=12,
             point_transience=4,
         )
@@ -172,6 +172,7 @@ class MotFrame:
                 filter_setup=tracker.filter_setup,
             )
             tracked_object.id = track_id
+            tracked_object.point_hit_counter = 10
             # append to tracked_object_list
             tracked_object_list.append(tracked_object)
         return tracked_object_list
