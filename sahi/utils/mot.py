@@ -10,7 +10,7 @@ from sahi.utils.file import increment_path
 try:
     import norfair
     from norfair import Tracker, Detection
-    from norfair.tracker import TrackedObject
+    from norfair.tracker import TrackedObject, FilterSetup
     from norfair.metrics import PredictionsTextFile, InformationFile
 except ImportError:
     raise ImportError('Please run "pip install -U norfair" to install norfair first for MOT format handling.')
@@ -229,36 +229,6 @@ class MotVideo:
             file.write(f"imWidth={self.image_width}\n")
             file.write(f"imHeight={self.image_height}")
 
-    def _init_tracker(
-        self,
-        max_distance_between_points: int = 30,
-        min_detection_threshold: float = 0,
-        hit_inertia_min: int = 10,
-        hit_inertia_max: int = 12,
-        point_transience: int = 4,
-    ) -> Tracker:
-        """
-        Args
-            max_distance_between_points (int)
-            min_detection_threshold (float)
-            hit_inertia_min (int)
-            hit_inertia_max (int)
-            point_transience (int)
-        Returns:
-            tracker: norfair.tracking.Tracker
-        For details: https://github.com/tryolabs/norfair/tree/master/docs#arguments
-        """
-        tracker = Tracker(
-            distance_function=euclidean_distance,
-            initialization_delay=0,
-            distance_threshold=max_distance_between_points,
-            detection_threshold=min_detection_threshold,
-            hit_inertia_min=hit_inertia_min,
-            hit_inertia_max=hit_inertia_max,
-            point_transience=point_transience,
-        )
-        return tracker
-
     def add_frame(self, frame: MotFrame):
         assert type(frame) == MotFrame, "'frame' should be a MotFrame object."
         self.frame_list.append(frame)
@@ -287,28 +257,21 @@ class MotVideo:
             mot_text_file: MotTextFile = MotTextFile(save_dir=det_dir, save_name="det")
             use_tracker = False
 
-        tracker: Tracker = self._init_tracker(
-            self.tracker_kwargs.get("max_distance_between_points", 30),
-            self.tracker_kwargs.get("min_detection_threshold", 0),
-            self.tracker_kwargs.get("hit_inertia_min", 10),
-            self.tracker_kwargs.get("hit_inertia_max", 12),
-            self.tracker_kwargs.get("point_transience", 4),
+        tracker = Tracker(
+            distance_function=self.tracker_kwargs.get("distance_function", euclidean_distance),
+            distance_threshold=self.tracker_kwargs.get("distance_threshold", 50),
+            hit_inertia_min=self.tracker_kwargs.get("hit_inertia_min", 1),
+            hit_inertia_max=self.tracker_kwargs.get("hit_inertia_max", 1),
+            initialization_delay=self.tracker_kwargs.get("initialization_delay", 0),
+            detection_threshold=self.tracker_kwargs.get("detection_threshold", 0),
+            point_transience=self.tracker_kwargs.get("point_transience", 4),
+            filter_setup=self.tracker_kwargs.get("filter_setup", FilterSetup(R=0.2)),
         )
-        video_has_single_object = True
+
         for mot_frame in self.frame_list:
             if use_tracker:
                 norfair_detections: List[Detection] = mot_frame.to_norfair_detections(track_points="bbox")
                 tracked_objects = tracker.update(detections=norfair_detections)
-                if len(norfair_detections) > 1:
-                    video_has_single_object = False
-                if video_has_single_object:
-                    tracked_objects = mot_frame.to_norfair_trackedobjects(track_points="bbox")
-                    new_tracked_objects = []
-                    for tracked_object in tracked_objects:
-                        tracked_object = copy.deepcopy(tracked_object)
-                        tracked_object.id = 1
-                        new_tracked_objects.append(tracked_object)
-                    tracked_objects = new_tracked_objects
             else:
                 tracked_objects = mot_frame.to_norfair_trackedobjects(track_points="bbox")
             mot_text_file.update(predictions=tracked_objects)
