@@ -292,10 +292,15 @@ class MotVideo:
             self.tracker_kwargs.get("hit_inertia_max", 12),
             self.tracker_kwargs.get("point_transience", 4),
         )
+        video_has_single_object = True
         for mot_frame in self.frame_list:
             if use_tracker:
                 norfair_detections: List[Detection] = mot_frame.to_norfair_detections(track_points="bbox")
                 tracked_objects = tracker.update(detections=norfair_detections)
+                if len(norfair_detections) > 1:
+                    video_has_single_object: False
+                if video_has_single_object:
+                    tracked_objects = mot_frame.to_norfair_trackedobjects(track_points="bbox")
             else:
                 tracked_objects = mot_frame.to_norfair_trackedobjects(track_points="bbox")
             mot_text_file.update(predictions=tracked_objects)
