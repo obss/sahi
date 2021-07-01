@@ -298,7 +298,7 @@ class MotVideo:
                 norfair_detections: List[Detection] = mot_frame.to_norfair_detections(track_points="bbox")
                 tracked_objects = tracker.update(detections=norfair_detections)
                 if len(norfair_detections) > 1:
-                    video_has_single_object: False
+                    video_has_single_object = False
                 if video_has_single_object:
                     tracked_objects = mot_frame.to_norfair_trackedobjects(track_points="bbox")
             else:
