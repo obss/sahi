@@ -172,7 +172,7 @@ class MotFrame:
                 filter_setup=tracker.filter_setup,
             )
             tracked_object.id = track_id
-            tracked_object.point_hit_counter = np.ones(tracker.num_points) * 1
+            tracked_object.point_hit_counter = np.ones(tracked_object.num_points) * 1
             # append to tracked_object_list
             tracked_object_list.append(tracked_object)
         return tracked_object_list
