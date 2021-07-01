@@ -1,4 +1,5 @@
 import os
+import copy
 from pathlib import Path
 from typing import Optional, List, Dict
 
@@ -302,6 +303,11 @@ class MotVideo:
                     video_has_single_object = False
                 if video_has_single_object:
                     tracked_objects = mot_frame.to_norfair_trackedobjects(track_points="bbox")
+                    new_tracked_objects = []
+                    for tracked_object in tracked_objects:
+                        tracked_object = copy.deepcopy(tracked_object)
+                        tracked_object.id = 1
+                        new_tracked_objects.append(tracked_object)
             else:
                 tracked_objects = mot_frame.to_norfair_trackedobjects(track_points="bbox")
             mot_text_file.update(predictions=tracked_objects)
