@@ -535,3 +535,174 @@ def predict(
                 durations_in_seconds["export_files"],
                 "seconds.",
             )
+
+
+def predict_fiftyone(
+    model_name: str = "MmdetDetectionModel",
+    model_parameters: Dict = None,
+    coco_json_path: str = None,
+    coco_image_dir: str = None,
+    apply_sliced_prediction: bool = True,
+    slice_height: int = 256,
+    slice_width: int = 256,
+    overlap_height_ratio: float = 0.2,
+    overlap_width_ratio: float = 0.2,
+    postprocess_type: str = "UNIONMERGE",
+    postprocess_match_metric: str = "IOS",
+    postprocess_match_threshold: float = 0.5,
+    postprocess_class_agnostic: bool = False,
+    verbose: int = 1,
+):
+    """
+    Performs prediction for all present images in given folder.
+
+    Args:
+        model_name: str
+            Name of the implemented DetectionModel in model.py file.
+        model_parameter: a dict with fields:
+            model_path: str
+                Path for the instance segmentation model weight
+            config_path: str
+                Path for the mmdetection instance segmentation model config file
+            prediction_score_threshold: float
+                All predictions with score < prediction_score_threshold will be discarded.
+            device: str
+                Torch device, "cpu" or "cuda"
+            category_remapping: dict: str to int
+                Remap category ids after performing inference
+        coco_json_path: str
+            If coco file path is provided, detection results will be exported in coco json format.
+        coco_image_dir: str
+            Folder directory that contains images or path of the image to be predicted.
+        apply_sliced_prediction: bool
+            Set to True if you want sliced prediction, set to False for full prediction.
+        slice_height: int
+            Height of each slice.  Defaults to ``256``.
+        slice_width: int
+            Width of each slice.  Defaults to ``256``.
+        overlap_height_ratio: float
+            Fractional overlap in height of each window (e.g. an overlap of 0.2 for a window
+            of size 256 yields an overlap of 51 pixels).
+            Default to ``0.2``.
+        overlap_width_ratio: float
+            Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
+            of size 256 yields an overlap of 51 pixels).
+            Default to ``0.2``.
+        postprocess_type: str
+            Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
+            Options are 'UNIONMERGE' or 'NMS'. Default is 'UNIONMERGE'.
+        postprocess_match_metric: str
+            Metric to be used during object prediction matching after sliced prediction.
+            'IOU' for intersection over union, 'IOS' for intersection over smaller area.
+        postprocess_match_threshold: float
+            Sliced predictions having higher iou than postprocess_match_threshold will be
+            postprocessed after sliced prediction.
+        postprocess_class_agnostic: bool
+            If True, postprocess will ignore category ids.
+        verbose: int
+            0: no print
+            1: print slice/prediction durations, number of slices, model loading/file exporting durations
+    """
+    from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file
+    import fiftyone as fo
+
+    # for profiling
+    durations_in_seconds = dict()
+
+    dataset = create_fiftyone_dataset_from_coco_file(coco_image_dir, coco_json_path)
+
+    # init model instance
+    time_start = time.time()
+    DetectionModel = import_class(model_name)
+    detection_model = DetectionModel(
+        model_path=model_parameters["model_path"],
+        config_path=model_parameters.get("config_path", None),
+        prediction_score_threshold=model_parameters.get("prediction_score_threshold", 0.25),
+        device=model_parameters.get("device", None),
+        category_mapping=model_parameters.get("category_mapping", None),
+        category_remapping=model_parameters.get("category_remapping", None),
+        load_at_init=False,
+    )
+    detection_model.load_model()
+    time_end = time.time() - time_start
+    durations_in_seconds["model_load"] = time_end
+
+    # iterate over source images
+    durations_in_seconds["prediction"] = 0
+    durations_in_seconds["slice"] = 0
+    # Add predictions to samples
+    with fo.ProgressBar() as pb:
+        for sample in pb(dataset):
+            # perform prediction
+            if apply_sliced_prediction:
+                # get sliced prediction
+                prediction_result = get_sliced_prediction(
+                    image=sample.filepath,
+                    detection_model=detection_model,
+                    slice_height=slice_height,
+                    slice_width=slice_width,
+                    overlap_height_ratio=overlap_height_ratio,
+                    overlap_width_ratio=overlap_width_ratio,
+                    postprocess_type=postprocess_type,
+                    postprocess_match_metric=postprocess_match_metric,
+                    postprocess_match_threshold=postprocess_match_threshold,
+                    postprocess_class_agnostic=postprocess_class_agnostic,
+                    verbose=verbose,
+                )
+                durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
+            else:
+                # get full sized prediction
+                prediction_result = get_prediction(
+                    image=sample.filepath,
+                    detection_model=detection_model,
+                    shift_amount=[0, 0],
+                    full_shape=None,
+                    postprocess=None,
+                    verbose=0,
+                )
+                durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
+
+            # Save predictions to dataset
+            sample[model_name] = fo.Detections(detections=prediction_result.to_fiftyone_detections())
+            sample.save()
+
+    # print prediction duration
+    if verbose == 1:
+        print(
+            "Model loaded in",
+            durations_in_seconds["model_load"],
+            "seconds.",
+        )
+        print(
+            "Slicing performed in",
+            durations_in_seconds["slice"],
+            "seconds.",
+        )
+        print(
+            "Prediction performed in",
+            durations_in_seconds["prediction"],
+            "seconds.",
+        )
+
+    # visualize results
+    session = fo.launch_app()
+    session.dataset = dataset
+    # Evaluate the predictions
+    results = dataset.evaluate_detections(
+        model_name,
+        gt_field="ground_truth",
+        eval_key="eval",
+        iou=postprocess_match_threshold,
+        compute_mAP=True,
+    )
+    # Get the 10 most common classes in the dataset
+    counts = dataset.count_values("ground_truth.detections.label")
+    classes_top10 = sorted(counts, key=counts.get, reverse=True)[:10]
+    # Print a classification report for the top-10 classes
+    results.print_report(classes=classes_top10)
+    # Load the view on which we ran the `eval` evaluation
+    eval_view = dataset.load_evaluation_view("eval")
+    # Show samples with most false positives
+    session.view = eval_view.sort_by("eval_fp", reverse=True)
+    while 1:
+        time.sleep(3)
