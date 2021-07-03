@@ -59,8 +59,8 @@ mot_video.export(export_dir="mot_data", type="gt")
 
 ```python
 tracker_params = {
-  'max_distance_between_points': 30,
-  'min_detection_threshold': 0,
+  'distance_threshold': 30,
+  'detection_threshold': 0,
   'hit_inertia_min': 10,
   'hit_inertia_max': 12,
   'point_transience': 4,
