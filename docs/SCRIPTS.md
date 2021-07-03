@@ -11,7 +11,7 @@ will perform sliced inference on default parameters and export the prediction vi
 You can specify additional prediction parameters as:
 
 ```bash
-python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --iou_thresh 0.25 --source image/file/or/folder --model_path path/to/model --config_path path/to/config
+python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --source image/file/or/folder --model_path path/to/model --config_path path/to/config
 ```
 
 - Specify detection framework as `--model_type mmdet` for MMDetection or `--model_type yolov5` for YOLOv5, to match with your model weight
