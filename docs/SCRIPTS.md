@@ -8,11 +8,13 @@ python scripts/predict.py --source image/file/or/folder --model_path path/to/mod
 
 will perform sliced inference on default parameters and export the prediction visuals to runs/predict/exp folder.
 
-You can specify sliced inference parameters as:
+You can specify additional prediction parameters as:
 
 ```bash
 python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --iou_thresh 0.25 --source image/file/or/folder --model_path path/to/model --config_path path/to/config
 ```
+
+- Specify detection framework as `--model_type mmdet` for MMDetection or `--model_type yolov5` for YOLOv5, to match with your model weight
 
 - Specify postprocess type as `--postprocess_type UNIONMERGE` or `--postprocess_type NMS` to be applied over sliced predictions
 
@@ -28,11 +30,8 @@ python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_
 
 - If you want to perform standard prediction instead of sliced prediction, add `--standard_pred` argument.
 
-```bash
-python scripts/predict.py --coco_file path/to/coco/file --source coco/images/directory --model_path path/to/model --config_path path/to/config
-```
+- If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--coco_file path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_error_analysis.py script to calculate COCO evaluation results.
 
-will perform inference using provided coco file, then export results as a coco json file to runs/predict/exp/results.json
 
 ## `coco2yolov5.py` script usage:
 
