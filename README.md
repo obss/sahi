@@ -4,7 +4,7 @@
 </h1>
 
 <h4>
-  A vision library for performing sliced inference on large images/small objects.
+  A lightweight vision library for performing large scale object detection & instance segmentation
 </h4>
 
 <h4>
