@@ -51,15 +51,17 @@ def get_slice_bboxes(
     y_max = y_min = 0
     y_overlap = int(overlap_height_ratio * slice_height)
     x_overlap = int(overlap_width_ratio * slice_width)
-    while y_max - y_overlap < image_height:
+    while y_max < image_height:
         x_min = x_max = 0
         y_max = y_min + slice_height
-        while x_max - x_overlap < image_width:
+        while x_max < image_width:
             x_max = x_min + slice_width
             if y_max > image_height or x_max > image_width:
-                ymax = min(image_height, y_max)
                 xmax = min(image_width, x_max)
-                slice_bboxes.append([xmax - slice_width, ymax - slice_height, xmax, ymax])
+                ymax = min(image_height, y_max)
+                xmin = max(0, xmax - slice_width)
+                ymin = max(0, ymax - slice_height)
+                slice_bboxes.append([xmin, ymin, xmax, ymax])
             else:
                 slice_bboxes.append([x_min, y_min, x_max, y_max])
             x_min = x_max - x_overlap
@@ -305,6 +307,8 @@ def slice_image(
             verboseprint("sliced image path:", slice_file_path)
 
         # create coco image
+        slice_width = slice_bbox[2] - slice_bbox[0]
+        slice_height = slice_bbox[3] - slice_bbox[1]
         coco_image = CocoImage(file_name=slice_file_name, height=slice_height, width=slice_width)
 
         # append coco annotations (if present) to coco image
