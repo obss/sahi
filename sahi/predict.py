@@ -112,6 +112,7 @@ def get_sliced_prediction(
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
+    perform_standard_pred: bool = True,
     postprocess_type: str = "UNIONMERGE",
     postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
@@ -137,6 +138,9 @@ def get_sliced_prediction(
             Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
             of size 256 yields an overlap of 51 pixels).
             Default to ``0.2``.
+        perform_standard_pred: bool
+            Perform a standard prediction on top of sliced predictions to increase large object
+            detection accuracy. Default: True.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
             Options are 'UNIONMERGE' or 'NMS'. Default is 'UNIONMERGE'.
@@ -196,11 +200,9 @@ def get_sliced_prediction(
     # create prediction input
     num_group = int(num_slices / num_batch)
     if verbose == 1 or verbose == 2:
-        if num_slices > 0:
-            print("Number of slices:", num_slices)
-        else:
-            print("Number of slices:", 1)
+        print("Number of slices:", num_slices)
     object_prediction_list = []
+    # perform sliced prediction
     for group_ind in range(num_group):
         # prepare batch (currently supports only 1 batch)
         image_list = []
@@ -217,6 +219,16 @@ def get_sliced_prediction(
                 slice_image_result.original_image_height,
                 slice_image_result.original_image_width,
             ],
+        )
+        object_prediction_list.extend(prediction_result.object_prediction_list)
+    if num_slices > 1 and perform_standard_pred:
+        # perform standard prediction
+        prediction_result = get_prediction(
+            image=image,
+            detection_model=detection_model,
+            shift_amount=[0, 0],
+            full_shape=None,
+            postprocess=None,
         )
         object_prediction_list.extend(prediction_result.object_prediction_list)
 
@@ -255,7 +267,8 @@ def predict(
     model_name: str = "MmdetDetectionModel",
     model_parameters: Dict = None,
     source: str = None,
-    apply_sliced_prediction: bool = True,
+    no_standard_prediction: bool = False,
+    no_sliced_prediction: bool = False,
     slice_height: int = 256,
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
@@ -295,8 +308,10 @@ def predict(
                 Remap category ids after performing inference
         source: str
             Folder directory that contains images or path of the image to be predicted.
-        apply_sliced_prediction: bool
-            Set to True if you want sliced prediction, set to False for full prediction.
+        no_standard_prediction: bool
+            Dont perform standard prediction. Default: False.
+        no_sliced_prediction: bool
+            Dont perform sliced prediction. Default: False.
         slice_height: int
             Height of each slice.  Defaults to ``256``.
         slice_width: int
@@ -339,6 +354,11 @@ def predict(
             0: no print
             1: print slice/prediction durations, number of slices, model loading/file exporting durations
     """
+    # assert prediction type
+    assert (
+        no_standard_prediction and no_sliced_prediction
+    ) is not True, "'no_standard_prediction' and 'no_sliced_prediction' cannot be True at the same time."
+
     # for profiling
     durations_in_seconds = dict()
 
@@ -399,7 +419,7 @@ def predict(
         image_as_pil = read_image_as_pil(image_path)
 
         # perform prediction
-        if apply_sliced_prediction:
+        if not no_sliced_prediction:
             # get sliced prediction
             prediction_result = get_sliced_prediction(
                 image=image_path,
@@ -408,6 +428,7 @@ def predict(
                 slice_width=slice_width,
                 overlap_height_ratio=overlap_height_ratio,
                 overlap_width_ratio=overlap_width_ratio,
+                perform_standard_pred=not no_standard_prediction,
                 postprocess_type=postprocess_type,
                 postprocess_match_metric=postprocess_match_metric,
                 postprocess_match_threshold=postprocess_match_threshold,
@@ -417,7 +438,7 @@ def predict(
             object_prediction_list = prediction_result.object_prediction_list
             durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
         else:
-            # get full sized prediction
+            # get standard prediction
             prediction_result = get_prediction(
                 image=image_path,
                 detection_model=detection_model,
@@ -542,7 +563,8 @@ def predict_fiftyone(
     model_parameters: Dict = None,
     coco_json_path: str = None,
     coco_image_dir: str = None,
-    apply_sliced_prediction: bool = True,
+    no_standard_prediction: bool = False,
+    no_sliced_prediction: bool = False,
     slice_height: int = 256,
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
@@ -574,8 +596,10 @@ def predict_fiftyone(
             If coco file path is provided, detection results will be exported in coco json format.
         coco_image_dir: str
             Folder directory that contains images or path of the image to be predicted.
-        apply_sliced_prediction: bool
-            Set to True if you want sliced prediction, set to False for full prediction.
+        no_standard_prediction: bool
+            Dont perform standard prediction. Default: False.
+        no_sliced_prediction: bool
+            Dont perform sliced prediction. Default: False.
         slice_height: int
             Height of each slice.  Defaults to ``256``.
         slice_width: int
@@ -606,6 +630,11 @@ def predict_fiftyone(
     from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file
     import fiftyone as fo
 
+    # assert prediction type
+    assert (
+        no_standard_prediction and no_sliced_prediction
+    ) is not True, "'no_standard_pred' and 'no_sliced_prediction' cannot be True at the same time."
+
     # for profiling
     durations_in_seconds = dict()
 
@@ -634,7 +663,7 @@ def predict_fiftyone(
     with fo.ProgressBar() as pb:
         for sample in pb(dataset):
             # perform prediction
-            if apply_sliced_prediction:
+            if not no_sliced_prediction:
                 # get sliced prediction
                 prediction_result = get_sliced_prediction(
                     image=sample.filepath,
@@ -643,6 +672,7 @@ def predict_fiftyone(
                     slice_width=slice_width,
                     overlap_height_ratio=overlap_height_ratio,
                     overlap_width_ratio=overlap_width_ratio,
+                    perform_standard_pred=not no_standard_prediction,
                     postprocess_type=postprocess_type,
                     postprocess_match_metric=postprocess_match_metric,
                     postprocess_match_threshold=postprocess_match_threshold,
@@ -651,7 +681,7 @@ def predict_fiftyone(
                 )
                 durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
             else:
-                # get full sized prediction
+                # get standard prediction
                 prediction_result = get_prediction(
                     image=sample.filepath,
                     detection_model=detection_model,

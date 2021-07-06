@@ -53,7 +53,8 @@ if __name__ == "__main__":
         default=None,
         help='remap category ids based on category names, after performing inference e.g. {"car": 3}',
     )
-    parser.add_argument("--standard_pred", action="store_true", help="dont apply sliced prediction")
+    parser.add_argument("--no_sliced_pred", action="store_true", help="dont apply sliced prediction")
+    parser.add_argument("--no_standard_pred", action="store_true", help="dont apply standard prediction")
     parser.add_argument("--slice_height", type=int, default=512)
     parser.add_argument("--slice_width", type=int, default=512)
     parser.add_argument("--overlap_height_ratio", type=float, default=0.2)
@@ -88,7 +89,8 @@ if __name__ == "__main__":
         model_parameters=model_parameters,
         coco_json_path=opt.coco_json_path,
         coco_image_dir=opt.coco_image_dir,
-        apply_sliced_prediction=not (opt.standard_pred),
+        no_standard_prediction=opt.no_standard_pred,
+        no_sliced_prediction=opt.no_sliced_pred,
         slice_height=opt.slice_height,
         slice_width=opt.slice_width,
         overlap_height_ratio=opt.overlap_height_ratio,
