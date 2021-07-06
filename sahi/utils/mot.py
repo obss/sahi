@@ -276,5 +276,6 @@ class MotVideo:
                 tracked_objects = mot_frame.to_norfair_trackedobjects(track_points="bbox")
             mot_text_file.update(predictions=tracked_objects)
 
-        info_dir = os.path.join(export_dir, self.name if self.name else "")
-        self._create_info_file(seq_length=mot_text_file.frame_number, export_dir=info_dir)
+        if type == "gt":
+            info_dir = os.path.join(export_dir, self.name if self.name else "")
+            self._create_info_file(seq_length=mot_text_file.frame_number, export_dir=info_dir)
