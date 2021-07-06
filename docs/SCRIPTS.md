@@ -30,7 +30,7 @@ python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_
 
 - By default, scripts apply both standard and sliced prediction (multi-stage inference). If you don't want to perform sliced prediction add `--no_sliced_pred` argument. If you don't want to perform standard prediction add `--no_standard_pred` argument.
 
-- If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--coco_file path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_error_analysis.py script to calculate COCO evaluation results.
+- If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--coco_file path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_evaluation.py script to calculate COCO evaluation results or coco_error_analysis.py script to calculate detailed COCO error plots.
 
 
 ## `coco2yolov5.py` script usage:
@@ -43,10 +43,28 @@ python scripts/coco2yolov5.py --coco_file path/to/coco/file --source coco/images
 
 will convert given coco dataset to yolov5 format and export to runs/coco2yolov5/exp folder.
 
+## `coco_evaluation.py` script usage:
+
+```bash
+python scripts/coco_evaluation.py dataset.json results.json
+```
+
+will calculate coco evaluation and export them to given output folder directory.
+
+If you want to specify mAP metric type, set it as `--metric bbox mask`.
+
+If you want to also calculate classwise scores add `--classwise` argument.
+
+If you want to specify max detections, set it as `--proposal_nums 10 100 500`.
+
+If you want to specify a psecific IOU threshold, set it as `--iou_thrs 0.5`. Default includes `0.50:0.95` and `0.5` scores.
+
+If you want to specify export directory, set it as `--out_dir output/folder/directory `.
+
 ## `coco_error_analysis.py` script usage:
 
 ```bash
-python scripts/coco_error_analysis.py results.json output/folder/directory --ann coco/annotation/path
+python scripts/coco_error_analysis.py dataset.json results.json
 ```
 
 will calculate coco error plots and export them to given output folder directory.
@@ -56,3 +74,5 @@ If you want to specify mAP result type, set it as `--types bbox mask`.
 If you want to export extra mAP bar plots and annotation area stats add `--extraplots` argument.
 
 If you want to specify area regions, set it as `--areas 1024 9216 10000000000`.
+
+If you want to specify export directory, set it as `--out_dir output/folder/directory `.
