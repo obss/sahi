@@ -458,7 +458,8 @@ def predict(
                 coco_prediction = object_prediction.to_coco_prediction()
                 coco_prediction.image_id = image_id
                 coco_prediction_json = coco_prediction.json
-                coco_json.append(coco_prediction_json)
+                if coco_prediction_json["bbox"]:
+                    coco_json.append(coco_prediction_json)
             # convert ground truth annotations to object_prediction_list
             coco_image: CocoImage = coco.images[ind]
             object_prediction_gt_list: List[ObjectPrediction] = []
