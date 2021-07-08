@@ -176,7 +176,7 @@ save_json(area_filtered_coco.json, "area_filtered_coco.json")
 from sahi.utils.coco import Coco
 
 # set ignore_negative_samples as False if you want images without annotations present in json and yolov5 exports
-coco = Coco.from_coco_dict_or_path("coco.json", ignore_negative_samples=True)
+coco = Coco.from_coco_dict_or_path("coco.json", ignore_negative_samples=False)
 
 ```
 </details>

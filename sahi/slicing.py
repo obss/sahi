@@ -342,7 +342,7 @@ def slice_coco(
     image_dir: str,
     output_coco_annotation_file_name: str,
     output_dir: Optional[str] = None,
-    ignore_negative_samples: bool = True,
+    ignore_negative_samples: bool = False,
     slice_height: int = 512,
     slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
@@ -362,7 +362,7 @@ def slice_coco(
             datatset json.
         output_dir (str, optional): Output directory
         ignore_negative_samples (bool): If True, images without annotations
-            are ignored. Defaults to True.
+            are ignored. Defaults to False.
         slice_height (int): Height of each slice. Default 512.
         slice_width (int): Width of each slice. Default 512.
         overlap_height_ratio (float): Fractional overlap in height of each
