@@ -8,13 +8,13 @@ from sahi.utils.file import get_base_filename, save_json, Path, increment_path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("coco_image_dir", type=str, default="", help="folder containing coco images")
     parser.add_argument(
         "coco_json_path",
         type=str,
         default=None,
         help="path to coco annotation json file",
     )
+    parser.add_argument("coco_image_dir", type=str, default="", help="folder containing coco images")
     parser.add_argument("--slice_size", type=int, nargs="+", default=[512], help="slice size")
     parser.add_argument("--overlap_ratio", type=float, default=0.2, help="slice overlap ratio")
     parser.add_argument("--ignore_negative_samples", action="store_true", help="ignore images without annotation")

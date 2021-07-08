@@ -32,6 +32,19 @@ python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_
 
 - If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--coco_file path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_evaluation.py script to calculate COCO evaluation results or coco_error_analysis.py script to calculate detailed COCO error plots.
 
+## `slice_coco.py` script usage:
+
+```bash
+python scripts/slice_coco.py path/to/coco/json/file coco/images/directory
+```
+
+will slice the given images and COCO formatted annotations and export them to given output folder directory.
+
+Specify slice height/width size as `--slice_size 512`.
+
+Specify slice overlap ratio for height/width size as `--overlap_ratio 0.2`.
+
+If you want to ignore images with annotations set it add `--ignore_negative_samples` argument.
 
 ## `coco2yolov5.py` script usage:
 
