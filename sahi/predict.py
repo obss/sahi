@@ -26,6 +26,11 @@ from sahi.utils.file import (
     save_pickle,
 )
 
+MODEL_TYPE_TO_MODEL_CLASS_NAME = {
+    "mmdet": "MmdetDetectionModel",
+    "yolov5": "Yolov5DetectionModel",
+}
+
 
 def get_prediction(
     image,
@@ -79,7 +84,7 @@ def get_prediction(
     filtered_object_prediction_list = [
         object_prediction
         for object_prediction in object_prediction_list
-        if object_prediction.score.value > detection_model.prediction_score_threshold
+        if object_prediction.score.value > detection_model.confidence_threshold
     ]
     # postprocess matching predictions
     if postprocess is not None:
@@ -264,8 +269,13 @@ def get_sliced_prediction(
 
 
 def predict(
-    model_name: str = "MmdetDetectionModel",
-    model_parameters: Dict = None,
+    model_type: str = "mmdet",
+    model_path: str = None,
+    model_config_path: str = None,
+    model_confidence_threshold: float = 0.25,
+    model_device: str = None,
+    model_category_mapping: dict = None,
+    model_category_remapping: dict = None,
     source: str = None,
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
@@ -293,19 +303,20 @@ def predict(
     Performs prediction for all present images in given folder.
 
     Args:
-        model_name: str
-            Name of the implemented DetectionModel in model.py file.
-        model_parameter: a dict with fields:
-            model_path: str
-                Path for the instance segmentation model weight
-            config_path: str
-                Path for the mmdetection instance segmentation model config file
-            prediction_score_threshold: float
-                All predictions with score < prediction_score_threshold will be discarded.
-            device: str
-                Torch device, "cpu" or "cuda"
-            category_remapping: dict: str to int
-                Remap category ids after performing inference
+        model_type: str
+            mmdet for 'MmdetDetectionModel', 'yolov5' for 'Yolov5DetectionModel'.
+        model_path: str
+            Path for the model weight
+        model_config_path: str
+            Path for the detection model config file
+        model_confidence_threshold: float
+            All predictions with score < model_confidence_threshold will be discarded.
+        model_device: str
+            Torch device, "cpu" or "cuda"
+        model_category_mapping: dict
+            Mapping from category id (str) to category name (str) e.g. {"1": "pedestrian"}
+        model_category_remapping: dict: str to int
+            Remap category ids after performing inference
         source: str
             Folder directory that contains images or path of the image to be predicted.
         no_standard_prediction: bool
@@ -390,14 +401,15 @@ def predict(
 
     # init model instance
     time_start = time.time()
-    DetectionModel = import_class(model_name)
+    model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
+    DetectionModel = import_class(model_class_name)
     detection_model = DetectionModel(
-        model_path=model_parameters["model_path"],
-        config_path=model_parameters.get("config_path", None),
-        prediction_score_threshold=model_parameters.get("prediction_score_threshold", 0.25),
-        device=model_parameters.get("device", None),
-        category_mapping=model_parameters.get("category_mapping", None),
-        category_remapping=model_parameters.get("category_remapping", None),
+        model_path=model_path,
+        config_path=model_config_path,
+        confidence_threshold=model_confidence_threshold,
+        device=model_device,
+        category_mapping=model_category_mapping,
+        category_remapping=model_category_remapping,
         load_at_init=False,
     )
     detection_model.load_model()
@@ -560,8 +572,13 @@ def predict(
 
 
 def predict_fiftyone(
-    model_name: str = "MmdetDetectionModel",
-    model_parameters: Dict = None,
+    model_type: str = "mmdet",
+    model_path: str = None,
+    model_config_path: str = None,
+    model_confidence_threshold: float = 0.25,
+    model_device: str = None,
+    model_category_mapping: dict = None,
+    model_category_remapping: dict = None,
     coco_json_path: str = None,
     coco_image_dir: str = None,
     no_standard_prediction: bool = False,
@@ -580,19 +597,20 @@ def predict_fiftyone(
     Performs prediction for all present images in given folder.
 
     Args:
-        model_name: str
-            Name of the implemented DetectionModel in model.py file.
-        model_parameter: a dict with fields:
-            model_path: str
-                Path for the instance segmentation model weight
-            config_path: str
-                Path for the mmdetection instance segmentation model config file
-            prediction_score_threshold: float
-                All predictions with score < prediction_score_threshold will be discarded.
-            device: str
-                Torch device, "cpu" or "cuda"
-            category_remapping: dict: str to int
-                Remap category ids after performing inference
+        model_type: str
+            mmdet for 'MmdetDetectionModel', 'yolov5' for 'Yolov5DetectionModel'.
+        model_path: str
+            Path for the model weight
+        model_config_path: str
+            Path for the detection model config file
+        model_confidence_threshold: float
+            All predictions with score < model_confidence_threshold will be discarded.
+        model_device: str
+            Torch device, "cpu" or "cuda"
+        model_category_mapping: dict
+            Mapping from category id (str) to category name (str) e.g. {"1": "pedestrian"}
+        model_category_remapping: dict: str to int
+            Remap category ids after performing inference
         coco_json_path: str
             If coco file path is provided, detection results will be exported in coco json format.
         coco_image_dir: str
@@ -643,14 +661,15 @@ def predict_fiftyone(
 
     # init model instance
     time_start = time.time()
-    DetectionModel = import_class(model_name)
+    model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
+    DetectionModel = import_class(model_class_name)
     detection_model = DetectionModel(
-        model_path=model_parameters["model_path"],
-        config_path=model_parameters.get("config_path", None),
-        prediction_score_threshold=model_parameters.get("prediction_score_threshold", 0.25),
-        device=model_parameters.get("device", None),
-        category_mapping=model_parameters.get("category_mapping", None),
-        category_remapping=model_parameters.get("category_remapping", None),
+        model_path=model_path,
+        config_path=model_config_path,
+        confidence_threshold=model_confidence_threshold,
+        device=model_device,
+        category_mapping=model_category_mapping,
+        category_remapping=model_category_remapping,
         load_at_init=False,
     )
     detection_model.load_model()
@@ -694,7 +713,7 @@ def predict_fiftyone(
                 durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
 
             # Save predictions to dataset
-            sample[model_name] = fo.Detections(detections=prediction_result.to_fiftyone_detections())
+            sample[model_type] = fo.Detections(detections=prediction_result.to_fiftyone_detections())
             sample.save()
 
     # print prediction duration
@@ -720,7 +739,7 @@ def predict_fiftyone(
     session.dataset = dataset
     # Evaluate the predictions
     results = dataset.evaluate_detections(
-        model_name,
+        model_type,
         gt_field="ground_truth",
         eval_key="eval",
         iou=postprocess_match_threshold,

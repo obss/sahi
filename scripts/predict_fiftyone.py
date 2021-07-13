@@ -71,22 +71,14 @@ if __name__ == "__main__":
     )
     opt = parser.parse_args()
 
-    model_type_to_model_name = {
-        "mmdet": "MmdetDetectionModel",
-        "yolov5": "Yolov5DetectionModel",
-    }
-
-    model_parameters = {
-        "model_path": opt.model_path,
-        "config_path": opt.config_path,
-        "prediction_score_threshold": opt.conf_thresh,
-        "device": opt.device,
-        "category_mapping": opt.category_mapping,
-        "category_remapping": opt.category_remapping,
-    }
     predict_fiftyone(
-        model_name=model_type_to_model_name[opt.model_type],
-        model_parameters=model_parameters,
+        model_type=opt.model_type,
+        model_path=opt.model_path,
+        model_config_path=opt.config_path,
+        model_confidence_threshold=opt.conf_thresh,
+        model_device=opt.device,
+        model_category_mapping=opt.category_mapping,
+        model_category_remapping=opt.category_remapping,
         coco_json_path=opt.coco_json_path,
         coco_image_dir=opt.coco_image_dir,
         no_standard_prediction=opt.no_standard_pred,

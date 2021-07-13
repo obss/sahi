@@ -20,7 +20,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
 
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
-            prediction_score_threshold=0.3,
+            confidence_threshold=0.3,
             device=None,
             category_remapping=None,
             load_at_init=True,
@@ -36,7 +36,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
 
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
-            prediction_score_threshold=0.5,
+            confidence_threshold=0.5,
             device=None,
             category_remapping=None,
             load_at_init=True,
@@ -74,7 +74,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
 
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
-            prediction_score_threshold=0.5,
+            confidence_threshold=0.5,
             device=None,
             category_remapping=None,
             load_at_init=True,

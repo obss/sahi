@@ -22,7 +22,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model = MmdetDetectionModel(
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
-            prediction_score_threshold=0.3,
+            confidence_threshold=0.3,
             device=None,
             category_remapping=None,
             load_at_init=True,
@@ -39,7 +39,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model = MmdetDetectionModel(
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
-            prediction_score_threshold=0.5,
+            confidence_threshold=0.5,
             device=None,
             category_remapping=None,
             load_at_init=True,
@@ -77,7 +77,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model = MmdetDetectionModel(
             model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
-            prediction_score_threshold=0.5,
+            confidence_threshold=0.5,
             device=None,
             category_remapping=None,
             load_at_init=True,
@@ -113,7 +113,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model = MmdetDetectionModel(
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
-            prediction_score_threshold=0.5,
+            confidence_threshold=0.5,
             device=None,
             category_remapping=None,
             load_at_init=True,
@@ -160,7 +160,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model = MmdetDetectionModel(
             model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
-            prediction_score_threshold=0.5,
+            confidence_threshold=0.5,
             device=None,
             category_remapping=None,
             load_at_init=True,
@@ -203,7 +203,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model = MmdetDetectionModel(
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
-            prediction_score_threshold=0.5,
+            confidence_threshold=0.5,
             device=None,
             category_remapping=None,
             load_at_init=True,
@@ -248,7 +248,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model = MmdetDetectionModel(
             model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
-            prediction_score_threshold=0.5,
+            confidence_threshold=0.5,
             device=None,
             category_remapping=None,
             load_at_init=True,

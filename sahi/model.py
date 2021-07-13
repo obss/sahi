@@ -15,7 +15,7 @@ class DetectionModel:
         config_path: Optional[str] = None,
         device: Optional[str] = None,
         mask_threshold: float = 0.5,
-        prediction_score_threshold: float = 0.3,
+        confidence_threshold: float = 0.3,
         category_mapping: Optional[Dict] = None,
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
@@ -32,8 +32,8 @@ class DetectionModel:
                 Torch device, "cpu" or "cuda"
             mask_threshold: float
                 Value to threshold mask pixels, should be between 0 and 1
-            prediction_score_threshold: float
-                All predictions with score < prediction_score_threshold will be discarded
+            confidence_threshold: float
+                All predictions with score < confidence_threshold will be discarded
             category_mapping: dict: str to str
                 Mapping from category id (str) to category name (str) e.g. {"1": "pedestrian"}
             category_remapping: dict: str to int
@@ -46,7 +46,7 @@ class DetectionModel:
         self.model = None
         self.device = device
         self.mask_threshold = mask_threshold
-        self.prediction_score_threshold = prediction_score_threshold
+        self.confidence_threshold = confidence_threshold
         self.category_mapping = category_mapping
         self.category_remapping = category_remapping
         self._original_predictions = None
