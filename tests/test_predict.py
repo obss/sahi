@@ -35,7 +35,7 @@ class TestPredict(unittest.TestCase):
         mmdet_detection_model = MmdetDetectionModel(
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
-            prediction_score_threshold=0.3,
+            confidence_threshold=0.3,
             device=None,
             category_remapping=None,
         )
@@ -85,7 +85,7 @@ class TestPredict(unittest.TestCase):
 
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
-            prediction_score_threshold=0.3,
+            confidence_threshold=0.3,
             device=None,
             category_remapping=None,
             load_at_init=False,
@@ -134,7 +134,7 @@ class TestPredict(unittest.TestCase):
         mmdet_detection_model = MmdetDetectionModel(
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
-            prediction_score_threshold=0.3,
+            confidence_threshold=0.3,
             device=None,
             category_remapping=None,
             load_at_init=False,
@@ -201,7 +201,7 @@ class TestPredict(unittest.TestCase):
 
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
-            prediction_score_threshold=0.3,
+            confidence_threshold=0.3,
             device=None,
             category_remapping=None,
             load_at_init=False,
@@ -268,14 +268,6 @@ class TestPredict(unittest.TestCase):
         # init model
         download_mmdet_cascade_mask_rcnn_model()
 
-        model_parameters = {
-            "model_path": MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
-            "config_path": MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
-            "prediction_score_threshold": 0.4,
-            "device": None,  # cpu or cuda
-            "category_mapping": None,
-            "category_remapping": None,  # {"0": 1, "1": 2, "2": 3}
-        }
         postprocess_type = "UNIONMERGE"
         match_metric = "IOS"
         match_threshold = 0.5
@@ -290,8 +282,13 @@ class TestPredict(unittest.TestCase):
         if os.path.isdir(project_dir):
             shutil.rmtree(project_dir)
         predict(
-            model_name="MmdetDetectionModel",
-            model_parameters=model_parameters,
+            model_type="mmdet",
+            model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
+            model_config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
+            model_confidence_threshold=0.4,
+            model_device=None,
+            model_category_mapping=None,
+            model_category_remapping=None,
             source=source,
             no_sliced_prediction=False,
             no_standard_prediction=True,
@@ -315,14 +312,6 @@ class TestPredict(unittest.TestCase):
         # init model
         download_yolov5s6_model()
 
-        model_parameters = {
-            "model_path": Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
-            "prediction_score_threshold": 0.4,
-            "device": None,  # cpu or cuda
-            "category_mapping": None,
-            "category_remapping": None,  # {"0": 1, "1": 2, "2": 3}
-        }
-
         # prepare paths
         coco_file_path = "tests/data/coco_utils/terrain_all_coco.json"
         source = "tests/data/coco_utils/"
@@ -332,8 +321,13 @@ class TestPredict(unittest.TestCase):
         if os.path.isdir(project_dir):
             shutil.rmtree(project_dir)
         predict(
-            model_name="Yolov5DetectionModel",
-            model_parameters=model_parameters,
+            model_type="yolov5",
+            model_path=Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
+            model_config_path=None,
+            model_confidence_threshold=0.4,
+            model_device=None,
+            model_category_mapping=None,
+            model_category_remapping=None,
             source=source,
             no_sliced_prediction=False,
             no_standard_prediction=True,
