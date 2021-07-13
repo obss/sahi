@@ -30,6 +30,7 @@ from sahi.utils.file import (
 def get_prediction(
     image,
     detection_model,
+    image_size: int = None,
     shift_amount: list = [0, 0],
     full_shape=None,
     postprocess: Optional[PostprocessPredictions] = None,
@@ -42,6 +43,8 @@ def get_prediction(
         image: str or np.ndarray
             Location of image or numpy image matrix to slice
         detection_model: model.DetectionMode
+        image_size: int
+            Inference input size.
         shift_amount: List
             To shift the box and mask predictions from sliced image to full
             sized image, should be in the form of [shift_x, shift_y]
@@ -63,7 +66,7 @@ def get_prediction(
     image_as_pil = read_image_as_pil(image)
     # get prediction
     time_start = time.time()
-    detection_model.perform_inference(np.ascontiguousarray(image_as_pil))
+    detection_model.perform_inference(np.ascontiguousarray(image_as_pil), image_size=image_size)
     time_end = time.time() - time_start
     durations_in_seconds["prediction"] = time_end
 
@@ -108,6 +111,7 @@ def get_prediction(
 def get_sliced_prediction(
     image,
     detection_model=None,
+    image_size: int = None,
     slice_height: int = 256,
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
@@ -126,6 +130,8 @@ def get_sliced_prediction(
         image: str or np.ndarray
             Location of image or numpy image matrix to slice
         detection_model: model.DetectionModel
+        image_size: int
+            Input image size for each inference (image is scaled by preserving asp. rat.).
         slice_height: int
             Height of each slice.  Defaults to ``256``.
         slice_width: int
@@ -214,6 +220,7 @@ def get_sliced_prediction(
         prediction_result = get_prediction(
             image=image_list[0],
             detection_model=detection_model,
+            image_size=image_size,
             shift_amount=shift_amount_list[0],
             full_shape=[
                 slice_image_result.original_image_height,
@@ -226,6 +233,7 @@ def get_sliced_prediction(
         prediction_result = get_prediction(
             image=image,
             detection_model=detection_model,
+            image_size=image_size,
             shift_amount=[0, 0],
             full_shape=None,
             postprocess=None,
