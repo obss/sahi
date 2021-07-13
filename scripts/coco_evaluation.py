@@ -318,7 +318,8 @@ def evaluate_coco(
             eval_results[f"{metric}_mAP_copypaste"] = (
                 f"{ap[0]:.3f} {ap[1]:.3f} {ap[2]:.3f} {ap[3]:.3f} " f"{ap[4]:.3f} {ap[5]:.3f}"
             )
-            eval_results["results_per_category"] = {key: value for key, value in results_per_category}
+            if classwise:
+                eval_results["results_per_category"] = {key: value for key, value in results_per_category}
     # set save path
     if not out_dir:
         out_dir = Path(result_path).parent
@@ -353,7 +354,7 @@ def main():
         args.classwise,
         args.proposal_nums,
         args.iou_thrs,
-        args.out_dir,
+        out_dir=args.out_dir,
     )
 
 
