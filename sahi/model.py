@@ -75,7 +75,7 @@ class DetectionModel:
         self.model = None
         empty_cuda_cache()
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, image: np.ndarray, image_size: int = None):
         """
         This function should be implemented in a way that prediction should be
         performed using self.model and the prediction result should be set to self._original_predictions.
@@ -83,6 +83,8 @@ class DetectionModel:
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted.
+            image_size: int
+                Inference input size.
         """
         NotImplementedError()
 
@@ -189,13 +191,15 @@ class MmdetDetectionModel(DetectionModel):
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, image: np.ndarray, image_size: int = None):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
 
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted.
+            image_size: int
+                Inference input size.
         """
         try:
             import mmdet
@@ -210,6 +214,10 @@ class MmdetDetectionModel(DetectionModel):
         # Supports only batch of 1
         from mmdet.apis import inference_detector
 
+        # update model image size
+        if image_size is not None:
+            self.model.cfg.data.test.pipeline[1]["img_scale"] = (image_size,)
+        # perform inference
         prediction_result = inference_detector(self.model, image)
 
         self._original_predictions = prediction_result
@@ -373,13 +381,15 @@ class Yolov5DetectionModel(DetectionModel):
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, image: np.ndarray, image_size: int = None):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
 
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted.
+            image_size: int
+                Inference input size.
         """
         try:
             import yolov5
@@ -389,7 +399,7 @@ class Yolov5DetectionModel(DetectionModel):
         # Confirm model is loaded
         assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
 
-        prediction_result = self.model(image)
+        prediction_result = self.model(image, size=image_size)
 
         self._original_predictions = prediction_result
 
