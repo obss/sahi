@@ -153,6 +153,7 @@ class CocoAnnotation:
             category_name=category_name,
             iscrowd=iscrowd,
         )
+        coco_annotation._segmentation = shapely_annotation.to_coco_segmentation()
         coco_annotation._shapely_annotation = shapely_annotation
         return coco_annotation
 
