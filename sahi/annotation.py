@@ -111,11 +111,7 @@ class Category:
 class Mask:
     @classmethod
     def from_float_mask(
-        cls,
-        mask,
-        full_shape=None,
-        mask_threshold: float = 0.5,
-        shift_amount: list = [0, 0],
+        cls, mask, full_shape=None, mask_threshold: float = 0.5, shift_amount: list = [0, 0],
     ):
         """
         Args:
@@ -130,18 +126,11 @@ class Mask:
                 Size of the full image after shifting, should be in the form of [height, width]
         """
         bool_mask = mask > mask_threshold
-        return cls(
-            bool_mask=bool_mask,
-            shift_amount=shift_amount,
-            full_shape=full_shape,
-        )
+        return cls(bool_mask=bool_mask, shift_amount=shift_amount, full_shape=full_shape,)
 
     @classmethod
     def from_coco_segmentation(
-        cls,
-        segmentation,
-        full_shape=None,
-        shift_amount: list = [0, 0],
+        cls, segmentation, full_shape=None, shift_amount: list = [0, 0],
     ):
         """
         Init Mask from coco segmentation representation.
@@ -163,17 +152,10 @@ class Mask:
         assert full_shape is not None, "full_shape must be provided"
 
         bool_mask = get_bool_mask_from_coco_segmentation(segmentation, height=full_shape[0], width=full_shape[1])
-        return cls(
-            bool_mask=bool_mask,
-            shift_amount=shift_amount,
-            full_shape=full_shape,
-        )
+        return cls(bool_mask=bool_mask, shift_amount=shift_amount, full_shape=full_shape,)
 
     def __init__(
-        self,
-        bool_mask=None,
-        full_shape=None,
-        shift_amount: list = [0, 0],
+        self, bool_mask=None, full_shape=None, shift_amount: list = [0, 0],
     ):
         """
         Args:
@@ -234,14 +216,7 @@ class Mask:
         # Confirm full_shape is specified
         assert (self.full_shape_height is not None) and (self.full_shape_width is not None), "full_shape is None"
         # init full mask
-        mask_fullsized = np.full(
-            (
-                self.full_shape_height,
-                self.full_shape_width,
-            ),
-            0,
-            dtype="float32",
-        )
+        mask_fullsized = np.full((self.full_shape_height, self.full_shape_width,), 0, dtype="float32",)
 
         # arrange starting ending indexes
         starting_pixel = [self.shift_x, self.shift_y]
@@ -255,11 +230,7 @@ class Mask:
             : ending_pixel[1] - starting_pixel[1], : ending_pixel[0] - starting_pixel[0]
         ]
 
-        return Mask(
-            mask_fullsized,
-            shift_amount=[0, 0],
-            full_shape=self.full_shape,
-        )
+        return Mask(mask_fullsized, shift_amount=[0, 0], full_shape=self.full_shape,)
 
     def to_coco_segmentation(self):
         """
@@ -470,10 +441,7 @@ class ObjectAnnotation:
 
     @classmethod
     def from_imantics_annotation(
-        cls,
-        annotation,
-        shift_amount: Optional[List[int]] = [0, 0],
-        full_shape: Optional[List[int]] = None,
+        cls, annotation, shift_amount: Optional[List[int]] = [0, 0], full_shape: Optional[List[int]] = None,
     ):
         """
         Creates ObjectAnnotation from imantics.annotation.Annotation
@@ -527,18 +495,11 @@ class ObjectAnnotation:
             self.mask = None
             self.bbox = BoundingBox(bbox, shift_amount)
         else:
-            self.mask = Mask(
-                bool_mask=bool_mask,
-                shift_amount=shift_amount,
-                full_shape=full_shape,
-            )
+            self.mask = Mask(bool_mask=bool_mask, shift_amount=shift_amount, full_shape=full_shape,)
             bbox = get_bbox_from_bool_mask(bool_mask)
             self.bbox = BoundingBox(bbox, shift_amount)
         category_name = category_name if category_name else str(category_id)
-        self.category = Category(
-            id=category_id,
-            name=category_name,
-        )
+        self.category = Category(id=category_id, name=category_name,)
 
         self.merged = None
 
@@ -554,9 +515,7 @@ class ObjectAnnotation:
             )
         else:
             coco_annotation = CocoAnnotation.from_coco_bbox(
-                bbox=self.bbox.to_coco_bbox(),
-                category_id=self.category.id,
-                category_name=self.category.name,
+                bbox=self.bbox.to_coco_bbox(), category_id=self.category.id, category_name=self.category.name,
             )
         return coco_annotation
 
@@ -573,10 +532,7 @@ class ObjectAnnotation:
             )
         else:
             coco_prediction = CocoPrediction.from_coco_bbox(
-                bbox=self.bbox.to_coco_bbox(),
-                category_id=self.category.id,
-                category_name=self.category.name,
-                score=1,
+                bbox=self.bbox.to_coco_bbox(), category_id=self.category.id, category_name=self.category.name, score=1,
             )
         return coco_prediction
 
@@ -589,9 +545,7 @@ class ObjectAnnotation:
                 segmentation=self.mask.to_coco_segmentation(),
             )
         else:
-            shapely_annotation = ShapelyAnnotation.from_coco_bbox(
-                bbox=self.bbox.to_coco_bbox(),
-            )
+            shapely_annotation = ShapelyAnnotation.from_coco_bbox(bbox=self.bbox.to_coco_bbox(),)
         return shapely_annotation
 
     def to_imantics_annotation(self):

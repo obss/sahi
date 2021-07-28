@@ -65,9 +65,7 @@ def _perturb(box: BoundingBox):
     return BoundingBox(box=[minx, miny, maxx, maxy], shift_amount=box.shift_amount)
 
 
-def perturb_boxes(
-    preds: List[ObjectPrediction],
-) -> List[ObjectPrediction]:
+def perturb_boxes(preds: List[ObjectPrediction],) -> List[ObjectPrediction]:
     preds = deepcopy(preds)
     for i in range(len(preds)):
         if i % 2 == 0:

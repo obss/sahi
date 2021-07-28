@@ -37,16 +37,9 @@ def crop_object_predictions(
         category_id = object_prediction.category.id
         # crop detections
         # deepcopy crops so that original is not altered
-        cropped_img = copy.deepcopy(
-            image[
-                int(bbox[1]) : int(bbox[3]),
-                int(bbox[0]) : int(bbox[2]),
-                :,
-            ]
-        )
+        cropped_img = copy.deepcopy(image[int(bbox[1]) : int(bbox[3]), int(bbox[0]) : int(bbox[2]), :,])
         save_path = os.path.join(
-            output_dir,
-            file_name + "_box" + str(ind) + "_class" + str(category_id) + "." + export_format,
+            output_dir, file_name + "_box" + str(ind) + "_class" + str(category_id) + "." + export_format,
         )
         cv2.imwrite(save_path, cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR))
 
@@ -185,11 +178,7 @@ def visualize_prediction(
             image = cv2.addWeighted(image, 1, rgb_mask, 0.7, 0)
         # visualize boxes
         cv2.rectangle(
-            image,
-            tuple(box[0:2]),
-            tuple(box[2:4]),
-            color=color,
-            thickness=rect_th,
+            image, tuple(box[0:2]), tuple(box[2:4]), color=color, thickness=rect_th,
         )
         # arange bounding box text location
         if box[1] - 10 > 10:
@@ -198,13 +187,7 @@ def visualize_prediction(
             box[1] += 10
         # add bounding box text
         cv2.putText(
-            image,
-            class_,
-            tuple(box[0:2]),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            text_size,
-            color,
-            thickness=text_th,
+            image, class_, tuple(box[0:2]), cv2.FONT_HERSHEY_SIMPLEX, text_size, color, thickness=text_th,
         )
     if output_dir:
         # create output folder if not present
@@ -264,11 +247,7 @@ def visualize_object_predictions(
             image = cv2.addWeighted(image, 1, rgb_mask, 0.4, 0)
         # visualize boxes
         cv2.rectangle(
-            image,
-            tuple(bbox[0:2]),
-            tuple(bbox[2:4]),
-            color=color,
-            thickness=rect_th,
+            image, tuple(bbox[0:2]), tuple(bbox[2:4]), color=color, thickness=rect_th,
         )
         # arange bounding box text location
         if bbox[1] - 5 > 5:
@@ -278,13 +257,7 @@ def visualize_object_predictions(
         # add bounding box text
         label = "%s %.2f" % (category_name, score)
         cv2.putText(
-            image,
-            label,
-            tuple(bbox[0:2]),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            text_size,
-            color,
-            thickness=text_th,
+            image, label, tuple(bbox[0:2]), cv2.FONT_HERSHEY_SIMPLEX, text_size, color, thickness=text_th,
         )
     if output_dir:
         # create output folder if not present
