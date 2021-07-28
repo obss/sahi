@@ -3,28 +3,17 @@
 
 import os
 import time
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
 
 import numpy as np
 from tqdm import tqdm
 
+from sahi.postprocess.combine import NMSPostprocess, PostprocessPredictions, UnionMergePostprocess
 from sahi.prediction import ObjectPrediction, PredictionResult
-from sahi.postprocess.combine import UnionMergePostprocess, PostprocessPredictions, NMSPostprocess
 from sahi.slicing import slice_image
 from sahi.utils.coco import Coco, CocoImage
-from sahi.utils.cv import (
-    crop_object_predictions,
-    read_image_as_pil,
-    visualize_object_predictions,
-)
-from sahi.utils.file import (
-    Path,
-    import_class,
-    increment_path,
-    list_files,
-    save_json,
-    save_pickle,
-)
+from sahi.utils.cv import crop_object_predictions, read_image_as_pil, visualize_object_predictions
+from sahi.utils.file import Path, import_class, increment_path, list_files, save_json, save_pickle
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "mmdet": "MmdetDetectionModel",
@@ -79,7 +68,8 @@ def get_prediction(
     time_start = time.time()
     # works only with 1 batch
     detection_model.convert_original_predictions(
-        shift_amount=shift_amount, full_shape=full_shape,
+        shift_amount=shift_amount,
+        full_shape=full_shape,
     )
     object_prediction_list: List[ObjectPrediction] = detection_model.object_prediction_list
     # filter out predictions with lower score
@@ -102,7 +92,9 @@ def get_prediction(
 
     if verbose == 1:
         print(
-            "Prediction performed in", durations_in_seconds["prediction"], "seconds.",
+            "Prediction performed in",
+            durations_in_seconds["prediction"],
+            "seconds.",
         )
 
     return PredictionResult(
@@ -224,7 +216,10 @@ def get_sliced_prediction(
             detection_model=detection_model,
             image_size=image_size,
             shift_amount=shift_amount_list[0],
-            full_shape=[slice_image_result.original_image_height, slice_image_result.original_image_width,],
+            full_shape=[
+                slice_image_result.original_image_height,
+                slice_image_result.original_image_width,
+            ],
         )
         object_prediction_list.extend(prediction_result.object_prediction_list)
     if num_slices > 1 and perform_standard_pred:
@@ -252,10 +247,14 @@ def get_sliced_prediction(
 
     if verbose == 2:
         print(
-            "Slicing performed in", durations_in_seconds["slice"], "seconds.",
+            "Slicing performed in",
+            durations_in_seconds["slice"],
+            "seconds.",
         )
         print(
-            "Prediction performed in", durations_in_seconds["prediction"], "seconds.",
+            "Prediction performed in",
+            durations_in_seconds["prediction"],
+            "seconds.",
         )
 
     # merge matching predictions
@@ -378,7 +377,11 @@ def predict(
         coco_json = []
     elif os.path.isdir(source):
         time_start = time.time()
-        image_path_list = list_files(directory=source, contains=[".jpg", ".jpeg", ".png"], verbose=verbose,)
+        image_path_list = list_files(
+            directory=source,
+            contains=[".jpg", ".jpeg", ".png"],
+            verbose=verbose,
+        )
         time_end = time.time() - time_start
         durations_in_seconds["list_files"] = time_end
     else:
@@ -543,17 +546,25 @@ def predict(
     # print prediction duration
     if verbose == 1:
         print(
-            "Model loaded in", durations_in_seconds["model_load"], "seconds.",
+            "Model loaded in",
+            durations_in_seconds["model_load"],
+            "seconds.",
         )
         print(
-            "Slicing performed in", durations_in_seconds["slice"], "seconds.",
+            "Slicing performed in",
+            durations_in_seconds["slice"],
+            "seconds.",
         )
         print(
-            "Prediction performed in", durations_in_seconds["prediction"], "seconds.",
+            "Prediction performed in",
+            durations_in_seconds["prediction"],
+            "seconds.",
         )
         if export_visual:
             print(
-                "Exporting performed in", durations_in_seconds["export_files"], "seconds.",
+                "Exporting performed in",
+                durations_in_seconds["export_files"],
+                "seconds.",
             )
 
 
@@ -632,8 +643,9 @@ def predict_fiftyone(
             0: no print
             1: print slice/prediction durations, number of slices, model loading/file exporting durations
     """
-    from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file
     import fiftyone as fo
+
+    from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file
 
     # assert prediction type
     assert (
@@ -705,13 +717,19 @@ def predict_fiftyone(
     # print prediction duration
     if verbose == 1:
         print(
-            "Model loaded in", durations_in_seconds["model_load"], "seconds.",
+            "Model loaded in",
+            durations_in_seconds["model_load"],
+            "seconds.",
         )
         print(
-            "Slicing performed in", durations_in_seconds["slice"], "seconds.",
+            "Slicing performed in",
+            durations_in_seconds["slice"],
+            "seconds.",
         )
         print(
-            "Prediction performed in", durations_in_seconds["prediction"], "seconds.",
+            "Prediction performed in",
+            durations_in_seconds["prediction"],
+            "seconds.",
         )
 
     # visualize results
@@ -719,7 +737,11 @@ def predict_fiftyone(
     session.dataset = dataset
     # Evaluate the predictions
     results = dataset.evaluate_detections(
-        model_type, gt_field="ground_truth", eval_key="eval", iou=postprocess_match_threshold, compute_mAP=True,
+        model_type,
+        gt_field="ground_truth",
+        eval_key="eval",
+        iou=postprocess_match_threshold,
+        compute_mAP=True,
     )
     # Get the 10 most common classes in the dataset
     counts = dataset.count_values("ground_truth.detections.label")

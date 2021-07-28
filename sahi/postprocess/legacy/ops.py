@@ -3,6 +3,7 @@
 # Modified by Fatih C Akyon, 2020.
 
 import numpy as np
+
 from sahi.prediction import ObjectPrediction
 
 BoxArray = np.ndarray
@@ -28,7 +29,7 @@ def have_same_class(pred1: ObjectPrediction, pred2: ObjectPrediction) -> bool:
 
 
 def box_iou(box1: BoxArray, box2: BoxArray) -> float:
-    """ Returns the ratio of intersection area to the union """
+    """Returns the ratio of intersection area to the union"""
     area1 = calculate_area(box1)
     area2 = calculate_area(box2)
     intersect = intersection_area(box1, box2)
@@ -36,7 +37,7 @@ def box_iou(box1: BoxArray, box2: BoxArray) -> float:
 
 
 def box_ios(box1: BoxArray, box2: BoxArray) -> float:
-    """ Returns the ratio of intersection area to the smaller box's area """
+    """Returns the ratio of intersection area to the smaller box's area"""
     area1 = calculate_area(box1)
     area2 = calculate_area(box2)
     intersect = intersection_area(box1, box2)

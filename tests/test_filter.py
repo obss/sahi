@@ -8,6 +8,7 @@ from typing import List
 
 import cv2
 import pytest
+
 from sahi.annotation import BoundingBox
 from sahi.postprocess.legacy.match import PredictionList, PredictionMatcher
 from sahi.postprocess.legacy.merge import PredictionMerger, ScoreMergingPolicy
@@ -65,7 +66,9 @@ def _perturb(box: BoundingBox):
     return BoundingBox(box=[minx, miny, maxx, maxy], shift_amount=box.shift_amount)
 
 
-def perturb_boxes(preds: List[ObjectPrediction],) -> List[ObjectPrediction]:
+def perturb_boxes(
+    preds: List[ObjectPrediction],
+) -> List[ObjectPrediction]:
     preds = deepcopy(preds)
     for i in range(len(preds)):
         if i % 2 == 0:

@@ -7,10 +7,10 @@ import ntpath
 import os
 import pickle
 import re
-import zipfile
-from pathlib import Path
-from os import path
 import urllib.request
+import zipfile
+from os import path
+from pathlib import Path
 
 import numpy as np
 
@@ -77,7 +77,11 @@ def load_json(load_path):
     return data
 
 
-def list_files(directory: str, contains: list = [".json"], verbose: int = 1,) -> list:
+def list_files(
+    directory: str,
+    contains: list = [".json"],
+    verbose: int = 1,
+) -> list:
     """
     Walk given directory and return a list of file path with desired extension
 
@@ -234,5 +238,6 @@ def download_from_url(from_url: str, to_path: str):
 
     if not path.exists(to_path):
         urllib.request.urlretrieve(
-            from_url, to_path,
+            from_url,
+            to_path,
         )

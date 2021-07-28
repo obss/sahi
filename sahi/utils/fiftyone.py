@@ -3,7 +3,7 @@ import os
 try:
     import fiftyone as fo
     from fiftyone.utils.coco import COCODetectionDatasetImporter as BaseCOCODetectionDatasetImporter
-    from fiftyone.utils.coco import load_coco_detection_annotations, _parse_label_types, _get_matching_image_ids
+    from fiftyone.utils.coco import _get_matching_image_ids, _parse_label_types, load_coco_detection_annotations
 except ImportError:
     raise ImportError('Please run "pip install -U fiftyone" to install fiftyone first for fiftyone utilities.')
 
@@ -26,9 +26,17 @@ class COCODetectionDatasetImporter(BaseCOCODetectionDatasetImporter):
         seed=None,
         max_samples=None,
     ):
-        data_path = self._parse_data_path(dataset_dir=dataset_dir, data_path=data_path, default="data/",)
+        data_path = self._parse_data_path(
+            dataset_dir=dataset_dir,
+            data_path=data_path,
+            default="data/",
+        )
 
-        labels_path = self._parse_labels_path(dataset_dir=dataset_dir, labels_path=labels_path, default="labels.json",)
+        labels_path = self._parse_labels_path(
+            dataset_dir=dataset_dir,
+            labels_path=labels_path,
+            default="labels.json",
+        )
 
         label_types = _parse_label_types(label_types)
 
@@ -36,7 +44,10 @@ class COCODetectionDatasetImporter(BaseCOCODetectionDatasetImporter):
             label_types.append("coco_id")
 
         super().__init__(
-            dataset_dir=dataset_dir, shuffle=shuffle, seed=seed, max_samples=max_samples,
+            dataset_dir=dataset_dir,
+            shuffle=shuffle,
+            seed=seed,
+            max_samples=max_samples,
         )
 
         self.data_path = data_path
@@ -60,9 +71,13 @@ class COCODetectionDatasetImporter(BaseCOCODetectionDatasetImporter):
 
     def setup(self):
         if self.labels_path is not None and os.path.isfile(self.labels_path):
-            (info, classes, supercategory_map, images, annotations,) = load_coco_detection_annotations(
-                self.labels_path, extra_attrs=self.extra_attrs
-            )
+            (
+                info,
+                classes,
+                supercategory_map,
+                images,
+                annotations,
+            ) = load_coco_detection_annotations(self.labels_path, extra_attrs=self.extra_attrs)
 
             if classes is not None:
                 info["classes"] = classes

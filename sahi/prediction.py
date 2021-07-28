@@ -2,15 +2,15 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
-from sahi.utils.coco import CocoPrediction, CocoAnnotation
-from typing import List, Optional, Union, Dict
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 from PIL import Image
 
 from sahi.annotation import ObjectAnnotation
+from sahi.utils.coco import CocoAnnotation, CocoPrediction
+from sahi.utils.cv import read_image_as_pil, visualize_object_predictions
 from sahi.utils.file import create_dir
-from sahi.utils.cv import visualize_object_predictions, read_image_as_pil
 
 
 class PredictionScore:

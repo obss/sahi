@@ -5,6 +5,7 @@ import unittest
 
 import numpy as np
 from PIL import Image
+
 from sahi.slicing import slice_coco, slice_image
 from sahi.utils.coco import Coco
 from sahi.utils.cv import read_image
@@ -38,7 +39,8 @@ class TestSlicing(unittest.TestCase):
         self.assertEqual(slice_image_result.coco_images[0].annotations, [])
         self.assertEqual(slice_image_result.coco_images[15].annotations[1].area, 7296)
         self.assertEqual(
-            slice_image_result.coco_images[15].annotations[1].bbox, [17, 186, 48, 152],
+            slice_image_result.coco_images[15].annotations[1].bbox,
+            [17, 186, 48, 152],
         )
 
         image_cv = read_image(image_path)
@@ -61,7 +63,8 @@ class TestSlicing(unittest.TestCase):
         self.assertEqual(slice_image_result.coco_images[0].annotations, [])
         self.assertEqual(slice_image_result.coco_images[15].annotations[1].area, 7296)
         self.assertEqual(
-            slice_image_result.coco_images[15].annotations[1].bbox, [17, 186, 48, 152],
+            slice_image_result.coco_images[15].annotations[1].bbox,
+            [17, 186, 48, 152],
         )
 
         image_pil = Image.open(image_path)
@@ -84,7 +87,8 @@ class TestSlicing(unittest.TestCase):
         self.assertEqual(slice_image_result.coco_images[0].annotations, [])
         self.assertEqual(slice_image_result.coco_images[15].annotations[1].area, 7296)
         self.assertEqual(
-            slice_image_result.coco_images[15].annotations[1].bbox, [17, 186, 48, 152],
+            slice_image_result.coco_images[15].annotations[1].bbox,
+            [17, 186, 48, 152],
         )
 
     def test_slice_coco(self):
@@ -119,7 +123,8 @@ class TestSlicing(unittest.TestCase):
         self.assertEqual(coco_dict["annotations"][2]["category_id"], 1)
         self.assertEqual(coco_dict["annotations"][2]["area"], 12483)
         self.assertEqual(
-            coco_dict["annotations"][2]["bbox"], [340, 204, 73, 171],
+            coco_dict["annotations"][2]["bbox"],
+            [340, 204, 73, 171],
         )
 
         shutil.rmtree(output_dir)
@@ -153,7 +158,8 @@ class TestSlicing(unittest.TestCase):
         self.assertEqual(coco_dict["annotations"][2]["category_id"], 1)
         self.assertEqual(coco_dict["annotations"][2]["area"], 12483)
         self.assertEqual(
-            coco_dict["annotations"][2]["bbox"], [340, 204, 73, 171],
+            coco_dict["annotations"][2]["bbox"],
+            [340, 204, 73, 171],
         )
 
         shutil.rmtree(output_dir)

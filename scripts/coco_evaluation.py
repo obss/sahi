@@ -1,12 +1,12 @@
-from argparse import ArgumentParser
-from pathlib import Path
-import json
 import itertools
+import json
 import warnings
+from argparse import ArgumentParser
 from collections import OrderedDict
-from terminaltables import AsciiTable
+from pathlib import Path
 
 import numpy as np
+from terminaltables import AsciiTable
 
 try:
     from pycocotools.coco import COCO

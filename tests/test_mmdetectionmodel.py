@@ -4,13 +4,9 @@
 import unittest
 
 import numpy as np
-from sahi.utils.cv import read_image
 
-from sahi.utils.mmdet import (
-    MmdetTestConstants,
-    download_mmdet_cascade_mask_rcnn_model,
-    download_mmdet_retinanet_model,
-)
+from sahi.utils.cv import read_image
+from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_retinanet_model
 
 
 class TestMmdetDetectionModel(unittest.TestCase):
@@ -135,17 +131,20 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.id, 0)
         self.assertEqual(object_prediction_list[0].category.name, "person")
         self.assertEqual(
-            object_prediction_list[0].bbox.to_coco_bbox(), [337, 124, 8, 14],
+            object_prediction_list[0].bbox.to_coco_bbox(),
+            [337, 124, 8, 14],
         )
         self.assertEqual(object_prediction_list[1].category.id, 2)
         self.assertEqual(object_prediction_list[1].category.name, "car")
         self.assertEqual(
-            object_prediction_list[1].bbox.to_coco_bbox(), [657, 204, 13, 10],
+            object_prediction_list[1].bbox.to_coco_bbox(),
+            [657, 204, 13, 10],
         )
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
         self.assertEqual(
-            object_prediction_list[2].bbox.to_coco_bbox(), [760, 232, 20, 15],
+            object_prediction_list[2].bbox.to_coco_bbox(),
+            [760, 232, 20, 15],
         )
 
     def test_convert_original_predictions_without_mask_output(self):
@@ -179,15 +178,19 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         self.assertEqual(
-            object_prediction_list[0].bbox.to_coco_bbox(), [448, 309, 47, 32],
+            object_prediction_list[0].bbox.to_coco_bbox(),
+            [448, 309, 47, 32],
         )
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
         self.assertEqual(
-            object_prediction_list[5].bbox.to_coco_bbox(), [523, 225, 22, 17],
+            object_prediction_list[5].bbox.to_coco_bbox(),
+            [523, 225, 22, 17],
         )
 
-    def test_create_original_predictions_from_object_prediction_list_with_mask_output(self,):
+    def test_create_original_predictions_from_object_prediction_list_with_mask_output(
+        self,
+    ):
         from sahi.model import MmdetDetectionModel
 
         # init model
@@ -230,7 +233,9 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self.assertEqual(len(original_predictions_1[0][1]), len(original_predictions_1[0][1]))  # 0
         self.assertEqual(original_predictions_1[0][1].shape, original_predictions_1[0][1].shape)  # (0, 5)
 
-    def test_create_original_predictions_from_object_prediction_list_without_mask_output(self,):
+    def test_create_original_predictions_from_object_prediction_list_without_mask_output(
+        self,
+    ):
         from sahi.model import MmdetDetectionModel
 
         # init model

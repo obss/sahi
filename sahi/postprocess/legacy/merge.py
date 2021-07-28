@@ -6,15 +6,10 @@ from enum import Enum
 from typing import Callable, List
 
 import numpy as np
+
 from sahi.annotation import Mask
 from sahi.postprocess.legacy.match import PredictionList, PredictionMatcher
-from sahi.postprocess.legacy.ops import (
-    BoxArray,
-    box_union,
-    calculate_area,
-    extract_box,
-    have_same_class,
-)
+from sahi.postprocess.legacy.ops import BoxArray, box_union, calculate_area, extract_box, have_same_class
 from sahi.prediction import ObjectPrediction
 
 
@@ -77,7 +72,8 @@ class PredictionMerger:
         """
         if merge_type not in ["merge", "ensemble"]:
             raise ValueError(
-                'Unknown merge type. Supported types are ["merge", "ensemble"], got type: ', merge_type,
+                'Unknown merge type. Supported types are ["merge", "ensemble"], got type: ',
+                merge_type,
             )
 
         unions = matcher.find_matched_predictions(predictions, ignore_class_label)
@@ -115,7 +111,11 @@ class PredictionMerger:
         else:
             prediction.merged = False
 
-    def _merge_pair(self, pred1: ObjectPrediction, pred2: ObjectPrediction,) -> ObjectPrediction:
+    def _merge_pair(
+        self,
+        pred1: ObjectPrediction,
+        pred2: ObjectPrediction,
+    ) -> ObjectPrediction:
         box1 = extract_box(pred1)
         box2 = extract_box(pred2)
         merged_box = list(self._merge_box(box1, box2))
@@ -154,7 +154,11 @@ class PredictionMerger:
     def _merge_box(self, box1: BoxArray, box2: BoxArray) -> BoxArray:
         return self._box_merger(box1, box2)
 
-    def _merge_score(self, pred1: ObjectPrediction, pred2: ObjectPrediction,) -> float:
+    def _merge_score(
+        self,
+        pred1: ObjectPrediction,
+        pred2: ObjectPrediction,
+    ) -> float:
         scores = [pred.score.value for pred in (pred1, pred2)]
         policy = self._score_merging_method
         if policy == ScoreMergingPolicy.SMALLER_SCORE:
@@ -176,7 +180,11 @@ class PredictionMerger:
         mask1 = pred1.mask
         mask2 = pred2.mask
         union_mask = np.logical_or(mask1.bool_mask, mask2.bool_mask)
-        return Mask(bool_mask=union_mask, full_shape=mask1.full_shape, shift_amount=mask1.shift_amount,)
+        return Mask(
+            bool_mask=union_mask,
+            full_shape=mask1.full_shape,
+            shift_amount=mask1.shift_amount,
+        )
 
     def _validate_box_merger(self, box_merger: Callable):
         if box_merger.__name__ not in self.BOX_MERGERS:
