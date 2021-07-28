@@ -45,8 +45,7 @@ def download_mmdet_cascade_mask_rcnn_model(destination_path: Optional[str] = Non
 
     if not path.exists(destination_path):
         urllib.request.urlretrieve(
-            MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_URL,
-            destination_path,
+            MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_URL, destination_path,
         )
 
 
@@ -59,8 +58,7 @@ def download_mmdet_retinanet_model(destination_path: Optional[str] = None):
 
     if not path.exists(destination_path):
         urllib.request.urlretrieve(
-            MmdetTestConstants.MMDET_RETINANET_MODEL_URL,
-            destination_path,
+            MmdetTestConstants.MMDET_RETINANET_MODEL_URL, destination_path,
         )
 
 
@@ -108,8 +106,7 @@ def download_mmdet_config(
 
     # download main config file
     urllib.request.urlretrieve(
-        main_config_url,
-        main_config_path,
+        main_config_url, main_config_path,
     )
 
     # read main config file
@@ -130,8 +127,7 @@ def download_mmdet_config(
 
         # download secondary config files
         urllib.request.urlretrieve(
-            config_url,
-            str(config_path),
+            config_url, str(config_path),
         )
 
     # set final config dirs
@@ -165,7 +161,5 @@ def download_mmdet_config(
 
 if __name__ == "__main__":
     download_mmdet_config(
-        model_name="cascade_rcnn",
-        config_file_name="cascade_mask_rcnn_r50_fpn_1x_coco.py",
-        verbose=False,
+        model_name="cascade_rcnn", config_file_name="cascade_mask_rcnn_r50_fpn_1x_coco.py", verbose=False,
     )

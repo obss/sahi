@@ -38,9 +38,7 @@ class TestAnnotation(unittest.TestCase):
         full_shape_height, full_shape_width = 500, 600
         full_shape = [full_shape_height, full_shape_width]
 
-        mask = Mask.from_coco_segmentation(
-            segmentation=coco_segmentation, full_shape=full_shape
-        )
+        mask = Mask.from_coco_segmentation(segmentation=coco_segmentation, full_shape=full_shape)
 
         self.assertEqual(mask.full_shape_height, full_shape_height)
         self.assertEqual(mask.full_shape_width, full_shape_width)

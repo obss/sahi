@@ -21,6 +21,5 @@ def download_yolov5s6_model(destination_path: Optional[str] = None):
 
     if not path.exists(destination_path):
         urllib.request.urlretrieve(
-            Yolov5TestConstants.YOLOV5S6_MODEL_URL,
-            destination_path,
+            Yolov5TestConstants.YOLOV5S6_MODEL_URL, destination_path,
         )

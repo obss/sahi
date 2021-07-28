@@ -46,9 +46,7 @@ class PredictionMatcher:
     """
 
     def __init__(
-        self,
-        threshold: float = 0.5,
-        scorer: Callable[[BoxArray, BoxArray], float] = box_ios,
+        self, threshold: float = 0.5, scorer: Callable[[BoxArray, BoxArray], float] = box_ios,
     ):
         self._threshold = threshold
         self._scorer = scorer

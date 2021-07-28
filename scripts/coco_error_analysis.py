@@ -41,11 +41,7 @@ def makeplot(rs, ps, outDir, class_name, iou_type):
         for k in range(len(types)):
             ax.plot(rs, ps_curve[k + 1], color=[0, 0, 0], linewidth=0.5)
             ax.fill_between(
-                rs,
-                ps_curve[k],
-                ps_curve[k + 1],
-                color=cs[k],
-                label=str(f"[{aps[k]:.3f}]" + types[k]),
+                rs, ps_curve[k], ps_curve[k + 1], color=cs[k], label=str(f"[{aps[k]:.3f}]" + types[k]),
             )
         plt.xlabel("recall")
         plt.ylabel("precision")
@@ -89,12 +85,7 @@ def makebarplot(rs, ps, outDir, class_name, iou_type):
         type_ps = ps[i, ..., 0]
         aps = [ps_.mean() for ps_ in type_ps.T]
         rects_list.append(
-            ax.bar(
-                x - width / 2 + (i + 1) * width / len(types),
-                aps,
-                width / len(types),
-                label=types[i],
-            )
+            ax.bar(x - width / 2 + (i + 1) * width / len(types), aps, width / len(types), label=types[i],)
         )
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
@@ -324,11 +315,7 @@ def main():
     parser.add_argument("--types", type=str, nargs="+", default=["bbox"], help="result types")
     parser.add_argument("--extraplots", action="store_true", help="export extra bar/stat plots")
     parser.add_argument(
-        "--areas",
-        type=int,
-        nargs="+",
-        default=[1024, 9216, 10000000000],
-        help="area regions",
+        "--areas", type=int, nargs="+", default=[1024, 9216, 10000000000], help="area regions",
     )
     args = parser.parse_args()
 

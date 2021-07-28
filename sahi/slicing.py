@@ -318,19 +318,12 @@ def slice_image(
 
         # create sliced image and append to sliced_image_result
         sliced_image = SlicedImage(
-            image=np.asarray(image_pil_slice),
-            coco_image=coco_image,
-            starting_pixel=[slice_bbox[0], slice_bbox[1]],
+            image=np.asarray(image_pil_slice), coco_image=coco_image, starting_pixel=[slice_bbox[0], slice_bbox[1]],
         )
         sliced_image_result.add_sliced_image(sliced_image)
 
     verboseprint(
-        "Num slices:",
-        n_ims,
-        "slice_height",
-        slice_height,
-        "slice_width",
-        slice_width,
+        "Num slices:", n_ims, "slice_height", slice_height, "slice_width", slice_width,
     )
     verboseprint("Time to slice", image, time.time() - t0, "seconds")
 
@@ -416,9 +409,7 @@ def slice_coco(
 
     # create and save coco dict
     coco_dict = create_coco_dict(
-        sliced_coco_images,
-        coco_dict["categories"],
-        ignore_negative_samples=ignore_negative_samples,
+        sliced_coco_images, coco_dict["categories"], ignore_negative_samples=ignore_negative_samples,
     )
     save_path = ""
     if output_coco_annotation_file_name and output_dir:

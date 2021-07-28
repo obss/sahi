@@ -103,13 +103,10 @@ class TestYolov5DetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
         self.assertEqual(
-            object_prediction_list[5].bbox.to_coco_bbox(),
-            [617, 195, 24, 23],
+            object_prediction_list[5].bbox.to_coco_bbox(), [617, 195, 24, 23],
         )
 
-    def test_create_original_predictions_from_object_prediction_list(
-        self,
-    ):
+    def test_create_original_predictions_from_object_prediction_list(self,):
         pass
         # TODO: implement object_prediction_list to yolov5 format conversion
 
