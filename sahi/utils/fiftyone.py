@@ -3,7 +3,7 @@ import os
 try:
     import fiftyone as fo
     from fiftyone.utils.coco import COCODetectionDatasetImporter as BaseCOCODetectionDatasetImporter
-    from fiftyone.utils.coco import load_coco_detection_annotations, _parse_label_types, _get_matching_image_ids
+    from fiftyone.utils.coco import _get_matching_image_ids, _parse_label_types, load_coco_detection_annotations
 except ImportError:
     raise ImportError('Please run "pip install -U fiftyone" to install fiftyone first for fiftyone utilities.')
 

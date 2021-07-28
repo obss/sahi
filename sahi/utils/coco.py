@@ -11,9 +11,10 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 
 import numpy as np
+from tqdm import tqdm
+
 from sahi.utils.file import load_json, save_json
 from sahi.utils.shapely import ShapelyAnnotation, box, get_shapely_multipolygon
-from tqdm import tqdm
 
 
 class CocoCategory:

@@ -6,15 +6,10 @@ from enum import Enum
 from typing import Callable, List
 
 import numpy as np
+
 from sahi.annotation import Mask
 from sahi.postprocess.legacy.match import PredictionList, PredictionMatcher
-from sahi.postprocess.legacy.ops import (
-    BoxArray,
-    box_union,
-    calculate_area,
-    extract_box,
-    have_same_class,
-)
+from sahi.postprocess.legacy.ops import BoxArray, box_union, calculate_area, extract_box, have_same_class
 from sahi.prediction import ObjectPrediction
 
 

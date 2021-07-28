@@ -1,10 +1,10 @@
+import shutil
+import sys
 import urllib.request
+from importlib import import_module
 from os import path
 from pathlib import Path
 from typing import Optional
-from importlib import import_module
-import shutil
-import sys
 
 
 def mmdet_version_as_integer():

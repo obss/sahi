@@ -8,6 +8,7 @@ from typing import List
 
 import cv2
 import pytest
+
 from sahi.annotation import BoundingBox
 from sahi.postprocess.legacy.match import PredictionList, PredictionMatcher
 from sahi.postprocess.legacy.merge import PredictionMerger, ScoreMergingPolicy

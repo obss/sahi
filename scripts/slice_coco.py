@@ -1,10 +1,9 @@
-import os
 import argparse
+import os
 
 from sahi.slicing import slice_coco
-from sahi.utils.coco import split_coco_as_train_val, Coco
-from sahi.utils.file import get_base_filename, save_json, Path, increment_path
-
+from sahi.utils.coco import Coco, split_coco_as_train_val
+from sahi.utils.file import Path, get_base_filename, increment_path, save_json
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -5,10 +5,12 @@ import copy
 import os
 import random
 import time
-from typing import Union, Optional, List
+from typing import List, Optional, Union
+
 import cv2
 import numpy as np
 from PIL import Image
+
 from sahi.utils.file import create_dir
 
 

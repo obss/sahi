@@ -3,6 +3,7 @@
 # Modified by Fatih C Akyon, 2020.
 
 import numpy as np
+
 from sahi.prediction import ObjectPrediction
 
 BoxArray = np.ndarray

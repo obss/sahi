@@ -1,11 +1,12 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
+from typing import Dict, List, Optional, Union
+
 import numpy as np
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.torch import cuda_is_available, empty_cuda_cache
-from typing import List, Dict, Optional, Union
 
 
 class DetectionModel:

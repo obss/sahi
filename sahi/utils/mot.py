@@ -1,17 +1,17 @@
-import os
 import copy
+import os
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 
 import numpy as np
-from sahi.utils.file import increment_path
 
+from sahi.utils.file import increment_path
 
 try:
     import norfair
-    from norfair import Tracker, Detection
-    from norfair.tracker import TrackedObject, FilterSetup
-    from norfair.metrics import PredictionsTextFile, InformationFile
+    from norfair import Detection, Tracker
+    from norfair.metrics import InformationFile, PredictionsTextFile
+    from norfair.tracker import FilterSetup, TrackedObject
 except ImportError:
     raise ImportError('Please run "pip install -U norfair" to install norfair first for MOT format handling.')
 

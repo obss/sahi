@@ -2,7 +2,7 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 import numpy as np
 

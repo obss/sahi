@@ -7,10 +7,10 @@ import ntpath
 import os
 import pickle
 import re
-import zipfile
-from pathlib import Path
-from os import path
 import urllib.request
+import zipfile
+from os import path
+from pathlib import Path
 
 import numpy as np
 

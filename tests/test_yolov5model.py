@@ -4,12 +4,9 @@
 import unittest
 
 import numpy as np
-from sahi.utils.cv import read_image
 
-from sahi.utils.yolov5 import (
-    Yolov5TestConstants,
-    download_yolov5s6_model,
-)
+from sahi.utils.cv import read_image
+from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5s6_model
 
 
 class TestYolov5DetectionModel(unittest.TestCase):

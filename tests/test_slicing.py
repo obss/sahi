@@ -5,6 +5,7 @@ import unittest
 
 import numpy as np
 from PIL import Image
+
 from sahi.slicing import slice_coco, slice_image
 from sahi.utils.coco import Coco
 from sahi.utils.cv import read_image

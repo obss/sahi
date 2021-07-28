@@ -1,11 +1,13 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2021.
 
-from typing import List, Union
-from sahi.prediction import ObjectPrediction
-from sahi.annotation import Mask, BoundingBox, Category
-import numpy as np
 import copy
+from typing import List, Union
+
+import numpy as np
+
+from sahi.annotation import BoundingBox, Category, Mask
+from sahi.prediction import ObjectPrediction
 
 
 def calculate_area(box: Union[List[int], np.ndarray]) -> float:
