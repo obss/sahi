@@ -405,6 +405,22 @@ mot_video.export(export_dir="mot_gt", type="gt")
 
 All you need to do is, creating a new class in [model.py](sahi/model.py) that implements [DetectionModel class](https://github.com/obss/sahi/blob/651f8e6cdb20467815748764bb198dd50241ab2b/sahi/model.py#L10). You can take the [MMDetection wrapper](https://github.com/obss/sahi/blob/651f8e6cdb20467815748764bb198dd50241ab2b/sahi/model.py#L164) or [YOLOv5 wrapper](https://github.com/obss/sahi/blob/ffa168fc38b75a002a0117f1fdde9470e1a9ce8c/sahi/model.py#L363) as a reference.
 
+Before opening a PR:
+
+- Install required development packages:
+
+```bash
+pip install -U -e .[dev]
+```
+
+- Reformat with black and isort:
+
+```bash
+black . --config pyproject.toml
+isort .
+```
+
+
 ## <div align="center">Contributers</div>
 
 <div align="center">
