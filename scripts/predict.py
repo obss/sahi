@@ -12,16 +12,28 @@ if __name__ == "__main__":
         help="mmdet for 'MmdetDetectionModel', 'yolov5' for 'Yolov5DetectionModel'",
     )
     parser.add_argument(
-        "--model_path", type=str, default="", help="path for the model",
+        "--model_path",
+        type=str,
+        default="",
+        help="path for the model",
     )
     parser.add_argument(
-        "--config_path", type=str, default="", help="path for the model config",
+        "--config_path",
+        type=str,
+        default="",
+        help="path for the model config",
     )
     parser.add_argument(
-        "--conf_thresh", type=float, default=0.25, help="all predictions with score < conf_thresh will be discarded",
+        "--conf_thresh",
+        type=float,
+        default=0.25,
+        help="all predictions with score < conf_thresh will be discarded",
     )
     parser.add_argument(
-        "--device", type=str, default=None, help="cpu or cuda",
+        "--device",
+        type=str,
+        default=None,
+        help="cpu or cuda",
     )
     parser.add_argument(
         "--category_mapping",
@@ -58,7 +70,9 @@ if __name__ == "__main__":
     parser.add_argument("--match_metric", type=str, default="IOS", help="match metric for postprocess: 'IOU' or 'IOS'")
     parser.add_argument("--match_thresh", type=float, default=0.5, help="match threshold for postprocess")
     parser.add_argument(
-        "--class_agnostic", action="store_true", help="Postprocess will ignore category ids.",
+        "--class_agnostic",
+        action="store_true",
+        help="Postprocess will ignore category ids.",
     )
     parser.add_argument("--visual_export_format", type=str, default="png")
 

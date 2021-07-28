@@ -90,7 +90,9 @@ class DetectionModel:
         NotImplementedError()
 
     def _create_object_prediction_list_from_original_predictions(
-        self, shift_amount: Optional[List[int]] = [0, 0], full_shape: Optional[List[int]] = None,
+        self,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         This function should be implemented in a way that self._original_predictions should
@@ -118,7 +120,9 @@ class DetectionModel:
             object_prediction.category.id = new_category_id_int
 
     def convert_original_predictions(
-        self, shift_amount: Optional[List[int]] = [0, 0], full_shape: Optional[List[int]] = None,
+        self,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         Converts original predictions of the detection model to a list of
@@ -131,7 +135,8 @@ class DetectionModel:
                 Size of the full image after shifting, should be in the form of [height, width]
         """
         self._create_object_prediction_list_from_original_predictions(
-            shift_amount=shift_amount, full_shape=full_shape,
+            shift_amount=shift_amount,
+            full_shape=full_shape,
         )
         if self.category_remapping:
             self._apply_category_remapping()
@@ -144,7 +149,9 @@ class DetectionModel:
     def original_predictions(self):
         return self._original_predictions
 
-    def _create_predictions_from_object_prediction_list(object_prediction_list: List[ObjectPrediction],):
+    def _create_predictions_from_object_prediction_list(
+        object_prediction_list: List[ObjectPrediction],
+    ):
         """
         This function should be implemented in a way that it converts a list of
         prediction.ObjectPrediction instance to detection model's original prediction format.
@@ -173,7 +180,11 @@ class MmdetDetectionModel(DetectionModel):
         from mmdet.apis import init_detector
 
         # set model
-        model = init_detector(config=self.config_path, checkpoint=self.model_path, device=self.device,)
+        model = init_detector(
+            config=self.config_path,
+            checkpoint=self.model_path,
+            device=self.device,
+        )
         self.model = model
 
         # set category_mapping
@@ -240,7 +251,9 @@ class MmdetDetectionModel(DetectionModel):
             return self.model.CLASSES
 
     def _create_object_prediction_list_from_original_predictions(
-        self, shift_amount: Optional[List[int]] = [0, 0], full_shape: Optional[List[int]] = None,
+        self,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -295,7 +308,8 @@ class MmdetDetectionModel(DetectionModel):
         self._object_prediction_list = object_prediction_list
 
     def _create_original_predictions_from_object_prediction_list(
-        self, object_prediction_list: List[ObjectPrediction],
+        self,
+        object_prediction_list: List[ObjectPrediction],
     ):
         """
         Converts a list of prediction.ObjectPrediction instance to detection model's original prediction format.
@@ -413,7 +427,9 @@ class Yolov5DetectionModel(DetectionModel):
         return self.model.names
 
     def _create_object_prediction_list_from_original_predictions(
-        self, shift_amount: Optional[List[int]] = [0, 0], full_shape: Optional[List[int]] = None,
+        self,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -457,7 +473,8 @@ class Yolov5DetectionModel(DetectionModel):
         self._object_prediction_list = object_prediction_list
 
     def _create_original_predictions_from_object_prediction_list(
-        self, object_prediction_list: List[ObjectPrediction],
+        self,
+        object_prediction_list: List[ObjectPrediction],
     ):
         """
         Converts a list of prediction.ObjectPrediction instance to detection model's original

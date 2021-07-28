@@ -47,7 +47,10 @@ class PostprocessPredictions:
     """Combines predictions using NMS elimination utilizing provided match metric ('IOU' or 'IOS')"""
 
     def __init__(
-        self, match_threshold: float = 0.5, match_metric: str = "IOU", class_agnostic: bool = True,
+        self,
+        match_threshold: float = 0.5,
+        match_metric: str = "IOU",
+        class_agnostic: bool = True,
     ):
         self.match_threshold = match_threshold
         self.class_agnostic = class_agnostic
@@ -99,7 +102,8 @@ class PostprocessPredictions:
 
 class NMSPostprocess(PostprocessPredictions):
     def __call__(
-        self, object_predictions: List[ObjectPrediction],
+        self,
+        object_predictions: List[ObjectPrediction],
     ):
         source_object_predictions: List[ObjectPrediction] = copy.deepcopy(object_predictions)
         selected_object_predictions: List[ObjectPrediction] = []
@@ -122,7 +126,8 @@ class NMSPostprocess(PostprocessPredictions):
 
 class UnionMergePostprocess(PostprocessPredictions):
     def __call__(
-        self, object_predictions: List[ObjectPrediction],
+        self,
+        object_predictions: List[ObjectPrediction],
     ):
         source_object_predictions: List[ObjectPrediction] = copy.deepcopy(object_predictions)
         selected_object_predictions: List[ObjectPrediction] = []
@@ -147,7 +152,11 @@ class UnionMergePostprocess(PostprocessPredictions):
             selected_object_predictions.append(selected_object_prediction)
         return selected_object_predictions
 
-    def _merge_object_prediction_pair(self, pred1: ObjectPrediction, pred2: ObjectPrediction,) -> ObjectPrediction:
+    def _merge_object_prediction_pair(
+        self,
+        pred1: ObjectPrediction,
+        pred2: ObjectPrediction,
+    ) -> ObjectPrediction:
         shift_amount = pred1.bbox.shift_amount
         merged_bbox: BoundingBox = self._get_merged_bbox(pred1, pred2)
         merged_score: float = self._get_merged_score(pred1, pred2)
@@ -184,7 +193,10 @@ class UnionMergePostprocess(PostprocessPredictions):
         return bbox
 
     @staticmethod
-    def _get_merged_score(pred1: ObjectPrediction, pred2: ObjectPrediction,) -> float:
+    def _get_merged_score(
+        pred1: ObjectPrediction,
+        pred2: ObjectPrediction,
+    ) -> float:
         scores: List[float] = [pred.score.value for pred in (pred1, pred2)]
         return max(scores)
 
@@ -193,4 +205,8 @@ class UnionMergePostprocess(PostprocessPredictions):
         mask1 = pred1.mask
         mask2 = pred2.mask
         union_mask = np.logical_or(mask1.bool_mask, mask2.bool_mask)
-        return Mask(bool_mask=union_mask, full_shape=mask1.full_shape, shift_amount=mask1.shift_amount,)
+        return Mask(
+            bool_mask=union_mask,
+            full_shape=mask1.full_shape,
+            shift_amount=mask1.shift_amount,
+        )

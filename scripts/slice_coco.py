@@ -8,7 +8,10 @@ from sahi.utils.file import Path, get_base_filename, increment_path, save_json
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "coco_json_path", type=str, default=None, help="path to coco annotation json file",
+        "coco_json_path",
+        type=str,
+        default=None,
+        help="path to coco annotation json file",
     )
     parser.add_argument("coco_image_dir", type=str, default="", help="folder containing coco images")
     parser.add_argument("--slice_size", type=int, nargs="+", default=[512], help="slice size")
@@ -53,5 +56,6 @@ if __name__ == "__main__":
         output_coco_annotation_file_path = os.path.join(output_dir, sliced_coco_name + ".json")
         save_json(coco_dict, output_coco_annotation_file_path)
         print(
-            f"Sliced 'slice_size: {slice_size}' coco file is saved to", output_coco_annotation_file_path,
+            f"Sliced 'slice_size: {slice_size}' coco file is saved to",
+            output_coco_annotation_file_path,
         )
