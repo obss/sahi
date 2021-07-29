@@ -97,7 +97,7 @@ result = get_sliced_prediction(
 
 Check `YOLOv5` + `SAHI` demo: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov5.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
 
-Check `MMDetection` + `SAHI` demo: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_mmdetecion.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
+Check `MMDetection` + `SAHI` demo: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_mmdetection.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
 
 - Slice an image:
 
