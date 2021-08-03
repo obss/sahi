@@ -103,10 +103,27 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray]):
     Args:
         image : Can be image path (str), opencv image (np.ndarray) or PIL.Image
     """
+    # https://stackoverflow.com/questions/56174099/how-to-load-images-larger-than-max-image-pixels-with-pil
+    Image.MAX_IMAGE_PIXELS = None
     # read image if str image path is provided
     if isinstance(image, str):
-        # read in image, cv2 fails on large files
-        image_pil = Image.open(image).convert("RGB")
+        # read image as pil
+        try:
+            image_pil = Image.open(image).convert("RGB")
+        except:  # handle large/tiff image reading
+            try:
+                import skimage.io
+            except ImportError:
+                raise ImportError("Please run 'pip install -U scikit-image imagecodecs' for large image handling.")
+            image_sk = skimage.io.imread(image).astype(np.uint8)
+            if len(image_sk.shape) == 2:  # b&w
+                image_pil = Image.fromarray(image_sk, mode="1")
+            if image_sk.shape[2] == 4:  # rgba
+                image_pil = Image.fromarray(image_sk, mode="RGBA")
+            elif image_sk.shape[2] == 3:  # rgb
+                image_pil = Image.fromarray(image_sk, mode="RGB")
+            else:
+                raise TypeError(f"image with shape: {image_sk.shape[3]} is not supported.")
     elif isinstance(image, np.ndarray):
         if image.shape[0] < 5:  # image in CHW
             image = image[:, :, ::-1]
