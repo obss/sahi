@@ -1,6 +1,7 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
+import concurrent.futures
 import os
 import time
 from pathlib import Path
@@ -13,6 +14,8 @@ from tqdm import tqdm
 from sahi.utils.coco import Coco, CocoAnnotation, CocoImage, create_coco_dict
 from sahi.utils.cv import read_image_as_pil
 from sahi.utils.file import create_dir, load_json, save_json
+
+MAX_WORKERS = 20
 
 
 def get_slice_bboxes(
@@ -138,7 +141,7 @@ class SlicedImage:
 
 
 class SliceImageResult:
-    def __init__(self, original_image_size=None, image_dir=None):
+    def __init__(self, original_image_size=None, image_dir: str = None):
         """
         sliced_image_list: list of SlicedImage
         image_dir: str
@@ -146,7 +149,7 @@ class SliceImageResult:
         original_image_size: list of int
             Size of the unsliced original image in [height, width]
         """
-        self._sliced_image_list = []
+        self._sliced_image_list: List[SlicedImage] = []
         self.original_image_height = original_image_size[0]
         self.original_image_width = original_image_size[1]
         self.image_dir = image_dir
@@ -194,6 +197,18 @@ class SliceImageResult:
         for sliced_image in self._sliced_image_list:
             starting_pixels.append(sliced_image.starting_pixel)
         return starting_pixels
+
+    @property
+    def filenames(self) -> List[int]:
+        """Returns a list of filenames for each slice.
+
+        Returns:
+            filenames: a list of filenames as str
+        """
+        filenames = []
+        for sliced_image in self._sliced_image_list:
+            filenames.append(sliced_image.coco_image.file_name)
+        return filenames
 
     def __len__(self):
         return len(self._sliced_image_list)
@@ -251,6 +266,13 @@ def slice_image(
     # define verboseprint
     verboseprint = print if verbose else lambda *a, **k: None
 
+    def _export_single_slice(image: np.ndarray, output_dir: str, slice_file_name: str):
+        image_pil = read_image_as_pil(image)
+        slice_file_path = str(Path(output_dir) / slice_file_name)
+        # export sliced image
+        image_pil.save(slice_file_path)
+        verboseprint("sliced image path:", slice_file_path)
+
     # create outdir if not present
     if output_dir:
         create_dir(output_dir)
@@ -299,12 +321,6 @@ def slice_image(
 
         # set image file name and path
         slice_file_name = f"{output_file_name}_{slice_suffixes}{suffix}"
-        # export image if output directory is provided
-        if output_file_name and output_dir:
-            slice_file_path = str(Path(output_dir) / slice_file_name)
-            # export sliced image
-            image_pil_slice.save(slice_file_path)
-            verboseprint("sliced image path:", slice_file_path)
 
         # create coco image
         slice_width = slice_bbox[2] - slice_bbox[0]
@@ -323,6 +339,16 @@ def slice_image(
             starting_pixel=[slice_bbox[0], slice_bbox[1]],
         )
         sliced_image_result.add_sliced_image(sliced_image)
+
+    # export slices if output directory is provided
+    if output_file_name and output_dir:
+        conc_exec = concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS)
+        conc_exec.map(
+            _export_single_slice,
+            sliced_image_result.images,
+            [output_dir] * len(sliced_image_result),
+            sliced_image_result.filenames,
+        )
 
     verboseprint(
         "Num slices:",

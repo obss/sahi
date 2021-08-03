@@ -2,7 +2,6 @@ import argparse
 import os
 
 from sahi.slicing import slice_coco
-from sahi.utils.coco import Coco, split_coco_as_train_val
 from sahi.utils.file import Path, get_base_filename, increment_path, save_json
 
 if __name__ == "__main__":
