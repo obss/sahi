@@ -276,6 +276,7 @@ def predict(
     source: str = None,
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
+    image_size: int = None,
     slice_height: int = 256,
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
@@ -320,6 +321,8 @@ def predict(
             Dont perform standard prediction. Default: False.
         no_sliced_prediction: bool
             Dont perform sliced prediction. Default: False.
+        image_size: int
+            Input image size for each inference (image is scaled by preserving asp. rat.).
         slice_height: int
             Height of each slice.  Defaults to ``256``.
         slice_width: int
@@ -433,6 +436,7 @@ def predict(
             prediction_result = get_sliced_prediction(
                 image=image_path,
                 detection_model=detection_model,
+                image_size=image_size,
                 slice_height=slice_height,
                 slice_width=slice_width,
                 overlap_height_ratio=overlap_height_ratio,
@@ -451,6 +455,7 @@ def predict(
             prediction_result = get_prediction(
                 image=image_path,
                 detection_model=detection_model,
+                image_size=image_size,
                 shift_amount=[0, 0],
                 full_shape=None,
                 postprocess=None,
@@ -580,6 +585,7 @@ def predict_fiftyone(
     coco_image_dir: str = None,
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
+    image_size: int = None,
     slice_height: int = 256,
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
@@ -616,6 +622,8 @@ def predict_fiftyone(
             Dont perform standard prediction. Default: False.
         no_sliced_prediction: bool
             Dont perform sliced prediction. Default: False.
+        image_size: int
+            Input image size for each inference (image is scaled by preserving asp. rat.).
         slice_height: int
             Height of each slice.  Defaults to ``256``.
         slice_width: int
@@ -686,6 +694,7 @@ def predict_fiftyone(
                 prediction_result = get_sliced_prediction(
                     image=sample.filepath,
                     detection_model=detection_model,
+                    image_size=image_size,
                     slice_height=slice_height,
                     slice_width=slice_width,
                     overlap_height_ratio=overlap_height_ratio,
@@ -703,6 +712,7 @@ def predict_fiftyone(
                 prediction_result = get_prediction(
                     image=sample.filepath,
                     detection_model=detection_model,
+                    image_size=image_size,
                     shift_amount=[0, 0],
                     full_shape=None,
                     postprocess=None,
