@@ -520,11 +520,24 @@ class ObjectAnnotation:
                 Size of the full image after shifting, should be in
                 the form of [height, width]
         """
-        assert isinstance(category_id, int), "category_id must be an integer"
-        assert (bbox is not None) or (bool_mask is not None), "you must provide a bbox or bool_mask"
+        if not isinstance(category_id, int):
+            raise ValueError("category_id must be an integer")
+        if (bbox is None) and (bool_mask is None):
+            raise ValueError("you must provide a bbox or bool_mask")
 
         if bool_mask is None:
             self.mask = None
+            # make sure bbox coords lie inside [0, image_size]
+            xmin = max(bbox[0], 0)
+            ymin = max(bbox[1], 0)
+            if full_shape:
+                xmax = min(bbox[2], full_shape[0])
+                ymax = min(bbox[3], full_shape[1])
+            else:
+                xmax = bbox[2]
+                ymax = bbox[3]
+            bbox = [xmin, ymin, xmax, ymax]
+            # set bbox
             self.bbox = BoundingBox(bbox, shift_amount)
         else:
             self.mask = Mask(

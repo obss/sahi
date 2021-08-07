@@ -60,6 +60,12 @@ if __name__ == "__main__":
     )
     parser.add_argument("--no_sliced_pred", action="store_true", help="dont apply sliced prediction")
     parser.add_argument("--no_standard_pred", action="store_true", help="dont apply standard prediction")
+    parser.add_argument(
+        "--image_size",
+        type=int,
+        default=None,
+        help="Input image size for each inference (image is scaled by preserving asp. rat.",
+    )
     parser.add_argument("--slice_height", type=int, default=512)
     parser.add_argument("--slice_width", type=int, default=512)
     parser.add_argument("--overlap_height_ratio", type=float, default=0.2)
@@ -95,6 +101,7 @@ if __name__ == "__main__":
         coco_file_path=opt.coco_file,
         no_standard_prediction=opt.no_standard_pred,
         no_sliced_prediction=opt.no_sliced_pred,
+        image_size=opt.image_size,
         slice_height=opt.slice_height,
         slice_width=opt.slice_width,
         overlap_height_ratio=opt.overlap_height_ratio,
