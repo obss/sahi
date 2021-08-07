@@ -1270,6 +1270,29 @@ class Coco:
 
         return subsampled_coco
 
+    def get_upsampled_coco(self, upsample_ratio=2):
+        """
+        Upsamples images with upsample_ratio and returns as sahi.utils.coco.Coco object.
+
+        Args:
+            upsample_ratio: int
+                10 means copy each sample 10 times
+        Returns:
+            upsampled_coco: sahi.utils.coco.Coco
+        """
+        upsampled_coco = Coco(
+            name=self.name,
+            image_dir=self.image_dir,
+            remapping_dict=self.remapping_dict,
+            ignore_negative_samples=self.ignore_negative_samples,
+        )
+        upsampled_coco.add_categories_from_coco_category_list(self.json_categories)
+        for ind in range(upsample_ratio):
+            for image_ind in range(len(self.images)):
+                upsampled_coco.add_image(self.images[image_ind])
+
+        return upsampled_coco
+
     def get_area_filtered_coco(self, min=0, max=float("inf"), intervals_per_category=None):
         """
         Filters annotation areas with given min and max values and returns remaining

@@ -246,6 +246,28 @@ save_json(subsampled_coco.json, "subsampled_coco.json")
 
 <details closed>
 <summary>
+<big><b>Upsample COCO dataset file:</b></big>
+</summary>
+
+```python
+from sahi.utils.coco import Coco
+
+# specify coco dataset path
+coco_path = "coco.json"
+
+# init Coco object
+coco = Coco.from_coco_dict_or_path(coco_path)
+
+# create a Coco object with each sample is repeated 10 imes
+upsampled_coco = coco.get_upsampled_coco(upsample_ratio=10)
+
+# export upsampled COCO dataset
+save_json(upsampled_coco.json, "upsampled_coco.json")
+```
+</details>
+
+<details closed>
+<summary>
 <big><b>Get dataset stats:</b></big>
 </summary>
 
