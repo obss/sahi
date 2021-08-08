@@ -552,8 +552,9 @@ class TestCocoUtils(unittest.TestCase):
 
         coco_path = "tests/data/coco_utils/visdrone2019-det-train-first50image.json"
         image_dir = "tests/data/coco_utils/"
+        SUBSAMPLE_RATIO = 5
         coco = Coco.from_coco_dict_or_path(coco_path, image_dir=image_dir)
-        subsampled_coco = coco.get_subsampled_coco(subsample_ratio=5)
+        subsampled_coco = coco.get_subsampled_coco(subsample_ratio=SUBSAMPLE_RATIO)
         self.assertEqual(
             len(coco.json["images"]),
             50,
@@ -584,6 +585,81 @@ class TestCocoUtils(unittest.TestCase):
             len(subsampled_coco.json["annotations"]),
         )
 
+        vehicle_subsampled_coco = coco.get_subsampled_coco(subsample_ratio=SUBSAMPLE_RATIO, category_id=1)
+        self.assertEqual(
+            vehicle_subsampled_coco.stats["num_images_per_category"]["vehicle"],
+            int(coco.stats["num_images_per_category"]["vehicle"] / SUBSAMPLE_RATIO) + 1,
+        )
+
+        negative_subsampled_coco = coco.get_subsampled_coco(subsample_ratio=SUBSAMPLE_RATIO, category_id=-1)
+        self.assertEqual(
+            negative_subsampled_coco.stats["num_images_per_category"]["vehicle"],
+            coco.stats["num_images_per_category"]["vehicle"],
+        )
+        self.assertEqual(
+            negative_subsampled_coco.stats["num_negative_images"],
+            int(coco.stats["num_negative_images"] / SUBSAMPLE_RATIO) + 1,
+        )
+
+    def test_get_upsampled_coco(self):
+        from sahi.utils.coco import Coco
+        from sahi.utils.file import load_json
+
+        coco_path = "tests/data/coco_utils/visdrone2019-det-train-first50image.json"
+        image_dir = "tests/data/coco_utils/"
+        coco = Coco.from_coco_dict_or_path(coco_path, image_dir=image_dir)
+        UPSAMPLE_RATIO = 5
+        upsampled_coco = coco.get_upsampled_coco(upsample_ratio=UPSAMPLE_RATIO)
+        self.assertEqual(
+            len(coco.json["images"]),
+            50,
+        )
+        self.assertEqual(
+            len(upsampled_coco.json["images"]),
+            250,
+        )
+        self.assertEqual(
+            len(coco.images[5].annotations),
+            len(upsampled_coco.images[5 + len(coco.images)].annotations),
+        )
+        self.assertEqual(
+            coco.image_dir,
+            image_dir,
+        )
+        self.assertEqual(
+            upsampled_coco.image_dir,
+            image_dir,
+        )
+        self.assertEqual(
+            upsampled_coco.stats["num_images_per_category"]["vehicle"],
+            coco.stats["num_images_per_category"]["vehicle"] * UPSAMPLE_RATIO,
+        )
+        self.assertEqual(upsampled_coco.stats["num_images"], len(upsampled_coco.images))
+        self.assertEqual(
+            upsampled_coco.stats["num_annotations"],
+            len(upsampled_coco.json["annotations"]),
+        )
+
+        vehicle_upsampled_coco = coco.get_upsampled_coco(upsample_ratio=UPSAMPLE_RATIO, category_id=1)
+        self.assertEqual(
+            vehicle_upsampled_coco.stats["num_images_per_category"]["vehicle"],
+            coco.stats["num_images_per_category"]["vehicle"] * UPSAMPLE_RATIO,
+        )
+        self.assertNotEqual(
+            vehicle_upsampled_coco.stats["num_images_per_category"]["human"],
+            coco.stats["num_images_per_category"]["human"] * UPSAMPLE_RATIO,
+        )
+
+        negative_upsampled_coco = coco.get_upsampled_coco(upsample_ratio=UPSAMPLE_RATIO, category_id=-1)
+        self.assertEqual(
+            negative_upsampled_coco.stats["num_images_per_category"]["vehicle"],
+            coco.stats["num_images_per_category"]["vehicle"],
+        )
+        self.assertEqual(
+            negative_upsampled_coco.stats["num_negative_images"],
+            coco.stats["num_negative_images"] * UPSAMPLE_RATIO,
+        )
+
     def test_get_area_filtered_coco(self):
         from sahi.utils.coco import Coco
 
@@ -599,7 +675,7 @@ class TestCocoUtils(unittest.TestCase):
         )
         self.assertEqual(
             len(area_filtered_coco.json["images"]),
-            15,
+            17,
         )
         self.assertGreater(
             area_filtered_coco.stats["min_annotation_area"],
@@ -631,7 +707,7 @@ class TestCocoUtils(unittest.TestCase):
         )
         self.assertEqual(
             len(area_filtered_coco.json["images"]),
-            22,
+            24,
         )
         self.assertGreater(
             area_filtered_coco.stats["min_annotation_area"],
@@ -669,7 +745,7 @@ class TestCocoUtils(unittest.TestCase):
         )
         self.assertEqual(
             len(area_filtered_coco.json["images"]),
-            22,
+            24,
         )
         self.assertGreater(
             area_filtered_coco.stats["min_annotation_area"],

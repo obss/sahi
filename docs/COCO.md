@@ -241,6 +241,12 @@ subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10)
 
 # export subsampled COCO dataset
 save_json(subsampled_coco.json, "subsampled_coco.json")
+
+# bonus: create a Coco object with 1/10 of total images that contain first category
+subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10, category_id=0)
+
+# bonus2: create a Coco object with negative samples reduced to 1/10
+subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10, category_id=-1)
 ```
 </details>
 
@@ -258,11 +264,17 @@ coco_path = "coco.json"
 # init Coco object
 coco = Coco.from_coco_dict_or_path(coco_path)
 
-# create a Coco object with each sample is repeated 10 imes
+# create a Coco object with each sample is repeated 10 times
 upsampled_coco = coco.get_upsampled_coco(upsample_ratio=10)
 
 # export upsampled COCO dataset
 save_json(upsampled_coco.json, "upsampled_coco.json")
+
+# bonus: create a Coco object with images that contain first category repeated 10 times
+subsampled_coco = coco.get_subsampled_coco(upsample_ratio=10, category_id=0)
+
+# bonus2: create a Coco object with negative samples upsampled by 10 times
+upsampled_coco = coco.get_upsampled_coco(upsample_ratio=10, category_id=-1)
 ```
 </details>
 
