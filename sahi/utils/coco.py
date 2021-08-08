@@ -1341,7 +1341,6 @@ class Coco:
         )
         upsampled_coco.add_categories_from_coco_category_list(self.json_categories)
         for ind in range(upsample_ratio):
-            print(ind)
             for image_ind in range(len(self.images)):
                 # calculate add_this_image
                 if category_id:
