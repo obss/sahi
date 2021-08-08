@@ -928,7 +928,7 @@ class Coco:
 
         # combine images and categories
         coco1.images.extend(coco2.images)
-        self.images = coco1.images
+        self.images: List[CocoImage] = coco1.images
         self.categories = coco1.categories
 
         # print categories
@@ -1096,8 +1096,12 @@ class Coco:
                 max_num_annotations_in_image = num_annotations_in_image
             if num_annotations_in_image < min_num_annotations_in_image:
                 min_num_annotations_in_image = num_annotations_in_image
-        avg_num_annotations_in_image = num_annotations / (num_images - num_negative_images)
-        avg_annotation_area = total_annotation_area / num_annotations
+        if (num_images - num_negative_images) > 0:
+            avg_num_annotations_in_image = num_annotations / (num_images - num_negative_images)
+            avg_annotation_area = total_annotation_area / num_annotations
+        else:
+            avg_num_annotations_in_image = 0
+            avg_annotation_area = 0
 
         self._stats = {
             "num_images": num_images,
@@ -1248,13 +1252,15 @@ class Coco:
         with open(yaml_path, "w") as outfile:
             yaml.dump(data, outfile, default_flow_style=None)
 
-    def get_subsampled_coco(self, subsample_ratio=2):
+    def get_subsampled_coco(self, subsample_ratio: int = 2, category_id: int = None):
         """
         Subsamples images with subsample_ratio and returns as sahi.utils.coco.Coco object.
 
         Args:
             subsample_ratio: int
                 10 means take every 10th image with its annotations
+            category_id: int
+                subsample only images containing given category_id, if -1 then subsamples negative samples
         Returns:
             subsampled_coco: sahi.utils.coco.Coco
         """
@@ -1265,18 +1271,65 @@ class Coco:
             ignore_negative_samples=self.ignore_negative_samples,
         )
         subsampled_coco.add_categories_from_coco_category_list(self.json_categories)
-        for image_ind in range(0, len(self.images), subsample_ratio):
-            subsampled_coco.add_image(self.images[image_ind])
+
+        if category_id:
+            # get images that contain given category id
+            images_that_contain_category: List[CocoImage] = []
+            for image in self.images:
+                category_id_to_contains = defaultdict(lambda: 0)
+                annotation: CocoAnnotation
+                for annotation in image.annotations:
+                    category_id_to_contains[annotation.category_id] = 1
+                if category_id_to_contains[category_id]:
+                    add_this_image = True
+                elif category_id == -1 and len(image.annotations) == 0:
+                    # if category_id is given as -1, select negative samples
+                    add_this_image = True
+                else:
+                    add_this_image = False
+
+                if add_this_image:
+                    images_that_contain_category.append(image)
+
+            # get images that does not contain given category id
+            images_that_doesnt_contain_category: List[CocoImage] = []
+            for image in self.images:
+                category_id_to_contains = defaultdict(lambda: 0)
+                annotation: CocoAnnotation
+                for annotation in image.annotations:
+                    category_id_to_contains[annotation.category_id] = 1
+                if category_id_to_contains[category_id]:
+                    add_this_image = False
+                elif category_id == -1 and len(image.annotations) == 0:
+                    # if category_id is given as -1, dont select negative samples
+                    add_this_image = False
+                else:
+                    add_this_image = True
+
+                if add_this_image:
+                    images_that_doesnt_contain_category.append(image)
+
+        if category_id:
+            selected_images = images_that_contain_category
+            # add images that does not contain given category without subsampling
+            for image_ind in range(len(images_that_doesnt_contain_category)):
+                subsampled_coco.add_image(images_that_doesnt_contain_category[image_ind])
+        else:
+            selected_images = self.images
+        for image_ind in range(0, len(selected_images), subsample_ratio):
+            subsampled_coco.add_image(selected_images[image_ind])
 
         return subsampled_coco
 
-    def get_upsampled_coco(self, upsample_ratio=2):
+    def get_upsampled_coco(self, upsample_ratio: int = 2, category_id: int = None):
         """
         Upsamples images with upsample_ratio and returns as sahi.utils.coco.Coco object.
 
         Args:
             upsample_ratio: int
                 10 means copy each sample 10 times
+            category_id: int
+                upsample only images containing given category_id, if -1 then upsamples negative samples
         Returns:
             upsampled_coco: sahi.utils.coco.Coco
         """
@@ -1288,8 +1341,29 @@ class Coco:
         )
         upsampled_coco.add_categories_from_coco_category_list(self.json_categories)
         for ind in range(upsample_ratio):
+            print(ind)
             for image_ind in range(len(self.images)):
-                upsampled_coco.add_image(self.images[image_ind])
+                # calculate add_this_image
+                if category_id:
+                    category_id_to_contains = defaultdict(lambda: 0)
+                    annotation: CocoAnnotation
+                    for annotation in self.images[image_ind].annotations:
+                        category_id_to_contains[annotation.category_id] = 1
+                    if category_id_to_contains[category_id]:
+                        add_this_image = True
+                    elif category_id == -1 and len(self.images[image_ind].annotations) == 0:
+                        # if category_id is given as -1, select negative samples
+                        add_this_image = True
+                    elif ind == 0:
+                        # in first iteration add all images
+                        add_this_image = True
+                    else:
+                        add_this_image = False
+                else:
+                    add_this_image = True
+
+                if add_this_image:
+                    upsampled_coco.add_image(self.images[image_ind])
 
         return upsampled_coco
 
