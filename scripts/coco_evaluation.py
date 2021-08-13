@@ -323,7 +323,8 @@ def evaluate_coco(
     # set save path
     if not out_dir:
         out_dir = Path(result_path).parent
-    save_path = str(out_dir / "eval.json")
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    save_path = str(Path(out_dir) / "eval.json")
     # export as json
     with open(save_path, "w", encoding="utf-8") as outfile:
         json.dump(eval_results, outfile, indent=4, separators=(",", ":"))
