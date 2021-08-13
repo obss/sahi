@@ -224,8 +224,11 @@ class MotVideo:
         filepath.parent.mkdir(exist_ok=True)
         # create seqinfo.ini file with seqLength
         with open(str(filepath), "w") as file:
-            file.write(f"seqLength={seq_length}\n")
+            file.write("[Sequence]\n")
+            file.write(f"name={self.name}\n")
+            file.write(f"imDir=img1\n")
             file.write(f"frameRate={self.frame_rate}\n")
+            file.write(f"seqLength={seq_length}\n")
             file.write(f"imWidth={self.image_width}\n")
             file.write(f"imHeight={self.image_height}")
 
