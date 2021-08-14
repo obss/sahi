@@ -82,7 +82,7 @@ def evaluate_coco(
         proposal_nums (Sequence[int]): Proposal number used for evaluating
             recalls, such as recall@100, recall@500.
             Default: (10, 100, 500).
-        iou_thrs (Sequence[float], optional): IoU threshold used for
+        iou_thrs (List[float], optional): IoU threshold used for
             evaluating recalls/mAPs. If set to a list, the average of all
             IoUs will also be computed. If not specified, [0.50, 0.55,
             0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95] will be used.
@@ -145,7 +145,7 @@ def evaluate_coco(
         cocoEval = COCOeval(cocoGt, cocoDt, iou_type)
         cocoEval.params.catIds = cat_ids
         cocoEval.params.maxDets = list(proposal_nums)
-        cocoEval.params.iouThrs = [iou_thrs] if len(iou_thrs) == 1 else iou_thrs
+        cocoEval.params.iouThrs = [iou_thrs] if not isinstance(iou_thrs, list) else iou_thrs
         # mapping of cocoEval.stats
         coco_metric_names = {
             "mAP": 0,
