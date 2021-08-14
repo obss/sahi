@@ -531,8 +531,8 @@ class ObjectAnnotation:
             xmin = max(bbox[0], 0)
             ymin = max(bbox[1], 0)
             if full_shape:
-                xmax = min(bbox[2], full_shape[0])
-                ymax = min(bbox[3], full_shape[1])
+                xmax = min(bbox[2], full_shape[1])
+                ymax = min(bbox[3], full_shape[0])
             else:
                 xmax = bbox[2]
                 ymax = bbox[3]

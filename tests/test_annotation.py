@@ -47,6 +47,59 @@ class TestAnnotation(unittest.TestCase):
     def test_object_annotation(self):
         from sahi.annotation import ObjectAnnotation
 
+        bbox = [100, 200, 150, 230]
+        coco_bbox = [bbox[0], bbox[1], bbox[2] - bbox[0], bbox[3] - bbox[1]]
+        category_id = 2
+        category_name = "car"
+        shift_amount = [0, 0]
+        image_height = 1080
+        image_width = 1920
+        full_shape = [image_height, image_width]
+
+        object_annotation1 = ObjectAnnotation(
+            bbox=bbox,
+            category_id=category_id,
+            category_name=category_name,
+            shift_amount=shift_amount,
+            full_shape=full_shape,
+        )
+
+        object_annotation2 = ObjectAnnotation.from_coco_annotation_dict(
+            annotation_dict={"bbox": coco_bbox, "category_id": category_id, "segmentation": []},
+            category_name=category_name,
+            full_shape=full_shape,
+            shift_amount=shift_amount,
+        )
+
+        object_annotation3 = ObjectAnnotation.from_coco_bbox(
+            bbox=coco_bbox,
+            category_id=category_id,
+            category_name=category_name,
+            full_shape=full_shape,
+            shift_amount=shift_amount,
+        )
+
+        self.assertEqual(object_annotation1.bbox.minx, bbox[0])
+        self.assertEqual(object_annotation1.bbox.miny, bbox[1])
+        self.assertEqual(object_annotation1.bbox.maxx, bbox[2])
+        self.assertEqual(object_annotation1.bbox.maxy, bbox[3])
+        self.assertEqual(object_annotation1.category.id, category_id)
+        self.assertEqual(object_annotation1.category.name, category_name)
+
+        self.assertEqual(object_annotation2.bbox.minx, bbox[0])
+        self.assertEqual(object_annotation2.bbox.miny, bbox[1])
+        self.assertEqual(object_annotation2.bbox.maxx, bbox[2])
+        self.assertEqual(object_annotation2.bbox.maxy, bbox[3])
+        self.assertEqual(object_annotation2.category.id, category_id)
+        self.assertEqual(object_annotation2.category.name, category_name)
+
+        self.assertEqual(object_annotation3.bbox.minx, bbox[0])
+        self.assertEqual(object_annotation3.bbox.miny, bbox[1])
+        self.assertEqual(object_annotation3.bbox.maxx, bbox[2])
+        self.assertEqual(object_annotation3.bbox.maxy, bbox[3])
+        self.assertEqual(object_annotation3.category.id, category_id)
+        self.assertEqual(object_annotation3.category.name, category_name)
+
 
 if __name__ == "__main__":
     unittest.main()
