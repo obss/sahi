@@ -265,7 +265,7 @@ class MotVideo:
                 coco_image_path = os.path.abspath(str(Path(coco_images_dir) / mot_frame.file_name))
             
             #generate symlink names sortable by name properly
-            frame_link_name="0"*(int(link_name_digit_count)-len(str(i)))+str(i)
+            frame_link_name="0"*(int(link_name_digit_count)-len(str(i)))+str(i)+".jpg"
 
             mot_image_path= str(Path(export_dir)/Path("img1")/Path(frame_link_name))
             os.symlink(coco_image_path, mot_image_path)
