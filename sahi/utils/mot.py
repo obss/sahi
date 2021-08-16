@@ -82,9 +82,9 @@ class MotAnnotation:
 
 
 class MotFrame:
-    def __init__(self, file_name):
+    def __init__(self, file_name: Optional[str] = None):
         self.annotation_list: List[MotAnnotation] = []
-        self.file_name: Optional[str] = file_name
+        self.file_name = file_name
 
     def add_annotation(self, detection: MotAnnotation):
         assert type(detection) == MotAnnotation, "'detection' should be a MotAnnotation object."
