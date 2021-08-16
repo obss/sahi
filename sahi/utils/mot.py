@@ -82,7 +82,7 @@ class MotAnnotation:
 
 
 class MotFrame:
-    def __init__(self, file_name: Optional[str] = None):
+    def __init__(self, file_name: Optional[str] = ""):
         self.annotation_list: List[MotAnnotation] = []
         self.file_name = file_name
 
