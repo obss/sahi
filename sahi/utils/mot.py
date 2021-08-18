@@ -82,7 +82,7 @@ class MotAnnotation:
 
 
 class MotFrame:
-    def __init__(self, file_name: Optional[str] = ""):
+    def __init__(self, file_name: Optional[str] = None):
         self.annotation_list: List[MotAnnotation] = []
         self.file_name = file_name
 
@@ -233,12 +233,12 @@ class MotVideo:
             file.write(f"imWidth={self.image_width}\n")
             file.write(f"imHeight={self.image_height}")
 
-    def _create_frame_symlinks(self, coco_images_dir: str, export_dir: str):
+    def _create_frame_symlinks(self, images_dir: str, export_dir: str):
         """
         Args:
-            coco_images_dir (str): Image directory of coco data to be converted.
+            images_dir (str): Image directory of source data to be converted.
             export_dir (str): Symlink directory that will contain symbolic links
-                              pointing to coco image files.
+                              pointing to source image files.
         """
 
         i = 1
@@ -250,26 +250,31 @@ class MotVideo:
             if Path(mot_frame.file_name).suffix == "":
                 print(f"image file has no suffix, skipping it: '{mot_frame.file_name}'")
                 return
-            elif Path(mot_frame.file_name).suffix not in [".jpg", ".jpeg"]:  # TODO: extend this list
+            elif Path(mot_frame.file_name).suffix not in [".jpg", ".jpeg", ".bmp", ".gif", ".png", ".tiff"]:
                 print(f"image file has incorrect suffix, skipping it: '{mot_frame.file_name}'")
                 return
-            # set coco and mot image paths
-            coco_img_path_tmp = os.path.join(coco_images_dir, mot_frame.file_name)
+            # set source and mot image paths
             suffix = Path(mot_frame.file_name).suffix
 
-            if Path(coco_img_path_tmp).is_file():
-                coco_image_path = os.path.abspath(coco_img_path_tmp)
+            if not mot_frame.file_name:
+                raise TypeError(f"mot_frame.file_name expected to be string but got: {type(mot_frame.file_name)}")
+            elif os.path.isabs(mot_frame.file_name):
+                if not Path(mot_frame.file_name).is_file():
+                    raise ValueError(f"there is not image file in path: {str(Path(mot_frame.file_name))}")
+                source_image_path = str(Path(mot_frame.file_name))
             else:
-                assert coco_images_dir is not None, (
-                    "You have to specify image_dir " "of Coco object for mot conversion."
-                )
-                coco_image_path = os.path.abspath(str(Path(coco_images_dir) / mot_frame.file_name))
+                if not images_dir:
+                    raise ValueError("you have to specify `images_dir` for mot conversion.")
+                source_image_path_tmp = os.path.abspath(str(Path(images_dir) / mot_frame.file_name))
+                if not Path(source_image_path_tmp).is_file():
+                    raise ValueError(f"there is not image file in path: {source_image_path}")
+                source_image_path = str(Path(source_image_path_tmp))
 
-            # generate symlink names sortable by name properly
+            # generate symlink names as indicated at https://arxiv.org/pdf/1603.00831.pdf
             frame_link_name = "0" * (6 - len(str(i))) + str(i) + suffix
 
             mot_image_path = str(Path(export_dir) / Path("img1") / Path(frame_link_name))
-            os.symlink(coco_image_path, mot_image_path)
+            os.symlink(source_image_path, mot_image_path)
             i += 1
 
     def add_frame(self, frame: MotFrame):
@@ -278,7 +283,7 @@ class MotVideo:
 
     def export(
         self,
-        coco_images_dir: str = None,
+        images_dir: str = None,
         export_dir: str = "runs/mot",
         type: str = "gt",
         use_tracker: bool = None,
@@ -329,4 +334,4 @@ class MotVideo:
         if type == "gt":
             info_dir = os.path.join(export_dir, self.name if self.name else "")
             self._create_info_file(seq_length=mot_text_file.frame_number, export_dir=info_dir)
-            self._create_frame_symlinks(coco_images_dir=coco_images_dir, export_dir=info_dir)
+            self._create_frame_symlinks(images_dir=images_dir, export_dir=info_dir)
