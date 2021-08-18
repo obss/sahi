@@ -247,6 +247,9 @@ class MotVideo:
         img1.mkdir(parents=True, exist_ok=True)
 
         for mot_frame in self.frame_list:
+            if not isinstance(mot_frame.file_name, str):
+                raise TypeError(f"mot_frame.file_name expected to be string but got: {type(mot_frame.file_name)}")
+
             if not Path(mot_frame.file_name).suffix:
                 print(f"image file has no suffix, skipping it: '{mot_frame.file_name}'")
                 return
@@ -256,11 +259,9 @@ class MotVideo:
             # set source and mot image paths
             suffix = Path(mot_frame.file_name).suffix
 
-            if not isinstance(mot_frame.file_name, str):
-                raise TypeError(f"mot_frame.file_name expected to be string but got: {type(mot_frame.file_name)}")
-            elif os.path.isabs(mot_frame.file_name):
+            if os.path.isabs(mot_frame.file_name):
                 if not Path(mot_frame.file_name).is_file():
-                    raise ValueError(f"there is no such image file in path: {str(Path(mot_frame.file_name))}")
+                    raise ValueError(f"there is not any image file in path: {str(Path(mot_frame.file_name))}")
                 source_image_path = str(Path(mot_frame.file_name))
             else:
                 if not images_dir:
