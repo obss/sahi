@@ -340,5 +340,3 @@ class MotVideo:
                 self._create_frame_symlinks(images_dir=images_dir, export_dir=info_dir)
             else:
                 print("skipping frame symlink creation since file_name is not set for mot frames")
-
-            
