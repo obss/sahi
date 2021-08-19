@@ -82,8 +82,9 @@ class MotAnnotation:
 
 
 class MotFrame:
-    def __init__(self):
+    def __init__(self, file_name: Optional[str] = None):
         self.annotation_list: List[MotAnnotation] = []
+        self.file_name = file_name
 
     def add_annotation(self, detection: MotAnnotation):
         assert type(detection) == MotAnnotation, "'detection' should be a MotAnnotation object."
@@ -232,11 +233,63 @@ class MotVideo:
             file.write(f"imWidth={self.image_width}\n")
             file.write(f"imHeight={self.image_height}")
 
+    def _create_frame_symlinks(self, images_dir: str, export_dir: str):
+        """
+        Args:
+            images_dir (str): Image directory of source data to be converted.
+            export_dir (str): Symlink directory that will contain symbolic links
+                              pointing to source image files.
+        """
+
+        i = 1
+
+        img1 = Path(os.path.abspath(export_dir)) / "img1/"
+        img1.mkdir(parents=True, exist_ok=True)
+
+        for mot_frame in self.frame_list:
+            if not isinstance(mot_frame.file_name, str):
+                raise TypeError(f"mot_frame.file_name expected to be string but got: {type(mot_frame.file_name)}")
+
+            if not Path(mot_frame.file_name).suffix:
+                print(f"image file has no suffix, skipping it: '{mot_frame.file_name}'")
+                return
+            elif Path(mot_frame.file_name).suffix not in [".jpg", ".jpeg", ".bmp", ".gif", ".png", ".tiff"]:
+                print(f"image file has incorrect suffix, skipping it: '{mot_frame.file_name}'")
+                return
+            # set source and mot image paths
+            suffix = Path(mot_frame.file_name).suffix
+
+            if os.path.isabs(mot_frame.file_name):
+                if not Path(mot_frame.file_name).is_file():
+                    raise ValueError(f"there is not any image file in path: {str(Path(mot_frame.file_name))}")
+                source_image_path = str(Path(mot_frame.file_name))
+            else:
+                if not images_dir:
+                    raise ValueError("you have to specify `images_dir` for mot conversion.")
+                source_image_path_tmp = os.path.abspath(str(Path(images_dir) / mot_frame.file_name))
+                if not Path(source_image_path_tmp).is_file():
+                    raise ValueError(f"there is not any image file in path: {source_image_path_tmp}")
+                source_image_path = str(Path(source_image_path_tmp))
+
+            # generate symlink names as indicated at https://arxiv.org/pdf/1603.00831.pdf
+            frame_link_name = "0" * (6 - len(str(i))) + str(i) + suffix
+
+            mot_image_path = str(Path(export_dir) / Path("img1") / Path(frame_link_name))
+            os.symlink(source_image_path, mot_image_path)
+            i += 1
+
     def add_frame(self, frame: MotFrame):
         assert type(frame) == MotFrame, "'frame' should be a MotFrame object."
         self.frame_list.append(frame)
 
-    def export(self, export_dir: str = "runs/mot", type: str = "gt", use_tracker: bool = None, exist_ok=False):
+    def export(
+        self,
+        images_dir: str = None,
+        export_dir: str = "runs/mot",
+        type: str = "gt",
+        use_tracker: bool = None,
+        exist_ok=False,
+    ):
         """
         Args
             export_dir (str): Folder directory that will contain exported mot challenge formatted data.
@@ -282,3 +335,8 @@ class MotVideo:
         if type == "gt":
             info_dir = os.path.join(export_dir, self.name if self.name else "")
             self._create_info_file(seq_length=mot_text_file.frame_number, export_dir=info_dir)
+            # create symlinks if mot frames contain file_name
+            if self.frame_list[0].file_name:
+                self._create_frame_symlinks(images_dir=images_dir, export_dir=info_dir)
+            else:
+                print("skipping frame symlink creation since file_name is not set for mot frames")
