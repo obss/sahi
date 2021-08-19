@@ -335,4 +335,10 @@ class MotVideo:
         if type == "gt":
             info_dir = os.path.join(export_dir, self.name if self.name else "")
             self._create_info_file(seq_length=mot_text_file.frame_number, export_dir=info_dir)
-            self._create_frame_symlinks(images_dir=images_dir, export_dir=info_dir)
+            # create symlinks if mot frames contain file_name
+            if self.frame_list[0].file_name:
+                self._create_frame_symlinks(images_dir=images_dir, export_dir=info_dir)
+            else:
+                print("skipping frame symlink creation since file_name is not set for mot frames")
+
+            
