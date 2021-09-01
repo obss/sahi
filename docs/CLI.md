@@ -45,7 +45,7 @@ Specify IOU threshold for FP/TP by `--iou_threshold 0.5` argument
 ## `slice_coco` command usage:
 
 ```bash
-sahi slice_coco path/to/coco/json/file coco/images/directory
+sahi slice_coco --dataset_json_path path/to/coco/json/file --image_dir coco/images/directory
 ```
 
 will slice the given images and COCO formatted annotations and export them to given output folder directory.
