@@ -2,7 +2,8 @@ import argparse
 
 from sahi.predict import predict
 
-if __name__ == "__main__":
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=str, default="", help="image file or folder")
     parser.add_argument(
@@ -112,3 +113,7 @@ if __name__ == "__main__":
         postprocess_class_agnostic=opt.class_agnostic,
         visual_export_format=opt.visual_export_format,
     )
+
+
+if __name__ == "__main__":
+    main()

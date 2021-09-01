@@ -9,7 +9,8 @@ from sahi.utils.cv import read_image_as_pil
 from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file
 from sahi.utils.file import load_json
 
-if __name__ == "__main__":
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--coco_image_dir", type=str, default=None, help="folder containing coco images")
     parser.add_argument(
@@ -111,3 +112,7 @@ if __name__ == "__main__":
     session.view = eval_view.sort_by(f"{first_coco_result_name}_eval_fp", reverse=True)
     while 1:
         time.sleep(3)
+
+
+if __name__ == "__main__":
+    main()

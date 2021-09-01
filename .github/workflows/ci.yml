@@ -93,13 +93,27 @@ jobs:
       - name: Test SAHI scripts for MMDetection(2.13.0), YOLOv5(5.0.6) and Norfair(0.3.0)
         run: |
           # predict mmdet
-          python scripts/predict.py --source tests/data/ --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
-          python scripts/predict.py --source tests/data/coco_utils/terrain1.jpg --novisual --pickle --crop --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
-          python scripts/predict.py --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
+          python sahi/scripts/predict.py --source tests/data/ --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
+          python sahi/scripts/predict.py --source tests/data/coco_utils/terrain1.jpg --novisual --pickle --crop --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
+          python sahi/scripts/predict.py --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
           # predict yolov5
-          python scripts/predict.py --no_sliced_pred --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --model_path tests/data/models/yolov5/yolov5s6.pt
-          python scripts/predict.py --model_type yolov5 --source tests/data/ --model_path tests/data/models/yolov5/yolov5s6.pt
-          python scripts/predict.py --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --novisual --pickle --crop --model_path tests/data/models/yolov5/yolov5s6.pt
-          python scripts/predict.py --model_type yolov5 --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --model_path tests/data/models/yolov5/yolov5s6.pt
+          python sahi/scripts/predict.py --no_sliced_pred --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --model_path tests/data/models/yolov5/yolov5s6.pt
+          python sahi/scripts/predict.py --model_type yolov5 --source tests/data/ --model_path tests/data/models/yolov5/yolov5s6.pt
+          python sahi/scripts/predict.py --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --novisual --pickle --crop --model_path tests/data/models/yolov5/yolov5s6.pt
+          python sahi/scripts/predict.py --model_type yolov5 --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --model_path tests/data/models/yolov5/yolov5s6.pt
           # coco2yolov5
-          python scripts/coco2yolov5.py --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --train_split 0.9
+          python sahi/scripts/coco2yolov5.py --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --train_split 0.9
+
+      - name: Test SAHI CLI for MMDetection(2.13.0), YOLOv5(5.0.6) and Norfair(0.3.0)
+        run: |
+          # predict mmdet
+          sahi predict --source tests/data/ --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
+          sahi predict --source tests/data/coco_utils/terrain1.jpg --novisual --pickle --crop --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
+          sahi predict --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth --config_path tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py
+          # predict yolov5
+          sahi predict --no_sliced_pred --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --model_path tests/data/models/yolov5/yolov5s6.pt
+          sahi predict --model_type yolov5 --source tests/data/ --model_path tests/data/models/yolov5/yolov5s6.pt
+          sahi predict --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --novisual --pickle --crop --model_path tests/data/models/yolov5/yolov5s6.pt
+          sahi predict --model_type yolov5 --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --model_path tests/data/models/yolov5/yolov5s6.pt
+          # coco2yolov5
+          sahi coco2yolov5 --source tests/data/coco_utils/ --coco_file tests/data/coco_utils/combined_coco.json --train_split 0.9

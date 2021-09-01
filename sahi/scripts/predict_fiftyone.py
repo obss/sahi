@@ -2,7 +2,8 @@ import argparse
 
 from sahi.predict import predict_fiftyone
 
-if __name__ == "__main__":
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--coco_image_dir", type=str, default="", help="folder containing images")
     parser.add_argument(
@@ -92,3 +93,7 @@ if __name__ == "__main__":
         postprocess_match_threshold=opt.match_thresh,
         postprocess_class_agnostic=opt.class_agnostic,
     )
+
+
+if __name__ == "__main__":
+    main()

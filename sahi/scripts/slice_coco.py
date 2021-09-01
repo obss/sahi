@@ -4,7 +4,8 @@ import os
 from sahi.slicing import slice_coco
 from sahi.utils.file import Path, get_base_filename, increment_path, save_json
 
-if __name__ == "__main__":
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "coco_json_path",
@@ -58,3 +59,7 @@ if __name__ == "__main__":
             f"Sliced 'slice_size: {slice_size}' coco file is saved to",
             output_coco_annotation_file_path,
         )
+
+
+if __name__ == "__main__":
+    main()

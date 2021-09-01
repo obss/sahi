@@ -4,3 +4,4 @@ tqdm>=4.48.2
 dataclasses; python_version<"3.7"
 pillow>=8.2.0
 pyyaml
+fire

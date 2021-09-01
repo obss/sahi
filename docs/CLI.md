@@ -1,9 +1,9 @@
-# SCRIPTS
+# CLI Commands
 
-## `predict.py` script usage:
+## `predict` command usage:
 
 ```bash
-python scripts/predict.py --source image/file/or/folder --model_path path/to/model --config_path path/to/config
+sahi predict --source image/file/or/folder --model_path path/to/model --config_path path/to/config
 ```
 
 will perform sliced inference on default parameters and export the prediction visuals to runs/predict/exp folder.
@@ -11,7 +11,7 @@ will perform sliced inference on default parameters and export the prediction vi
 You can specify additional sliced prediction parameters as:
 
 ```bash
-python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --conf_thresh 0.25 --source image/file/or/folder --model_path path/to/model --config_path path/to/config
+sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --conf_thresh 0.25 --source image/file/or/folder --model_path path/to/model --config_path path/to/config
 ```
 
 - Specify detection framework as `--model_type mmdet` for MMDetection or `--model_type yolov5` for YOLOv5, to match with your model weight
@@ -32,10 +32,10 @@ python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_
 
 - If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--coco_file path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_evaluation.py script to calculate COCO evaluation results or coco_error_analysis.py script to calculate detailed COCO error plots.
 
-## `cocoresult2fiftyone.py` script usage:
+## `cocoresult2fiftyone` command usage:
 
 ```bash
-python scripts/cocoresult2fiftyone.py --coco_image_dir dir/to/images --coco_json_path path/to/json --coco_result_path path/to/cocoresult
+sahi cocoresult2fiftyone --coco_image_dir dir/to/images --coco_json_path path/to/json --coco_result_path path/to/cocoresult
 ```
 
 will open a FiftyOne app that visualizes the given dataset and detections.
@@ -44,10 +44,10 @@ Specify IOU threshold for FP/TP by `--iou_threshold 0.5` argument
 
 Specify FiftyOne result name by `--coco_result_name yolov5-detections` argument
 
-## `slice_coco.py` script usage:
+## `slice_coco` command usage:
 
 ```bash
-python scripts/slice_coco.py path/to/coco/json/file coco/images/directory
+sahi slice_coco path/to/coco/json/file coco/images/directory
 ```
 
 will slice the given images and COCO formatted annotations and export them to given output folder directory.
@@ -58,20 +58,20 @@ Specify slice overlap ratio for height/width size as `--overlap_ratio 0.2`.
 
 If you want to ignore images with annotations set it add `--ignore_negative_samples` argument.
 
-## `coco2yolov5.py` script usage:
+## `coco2yolov5` command usage:
 
 (In Windows be sure to open anaconda cmd prompt/windows cmd `as admin` to be able to create symlinks properly.)
 
 ```bash
-python scripts/coco2yolov5.py --coco_file path/to/coco/file --source coco/images/directory --train_split 0.9
+sahi coco2yolov5 --coco_file path/to/coco/file --source coco/images/directory --train_split 0.9
 ```
 
 will convert given coco dataset to yolov5 format and export to runs/coco2yolov5/exp folder.
 
-## `coco_evaluation.py` script usage:
+## `coco_evaluation` command usage:
 
 ```bash
-python scripts/coco_evaluation.py dataset.json results.json
+sahi coco_evaluation dataset.json results.json
 ```
 
 will calculate coco evaluation and export them to given output folder directory.
@@ -86,10 +86,10 @@ If you want to specify a psecific IOU threshold, set it as `--iou_thrs 0.5`. Def
 
 If you want to specify export directory, set it as `--out_dir output/folder/directory `.
 
-## `coco_error_analysis.py` script usage:
+## `coco_error_analysis` command usage:
 
 ```bash
-python scripts/coco_error_analysis.py dataset.json results.json
+sahi coco_error_analysis dataset.json results.json
 ```
 
 will calculate coco error plots and export them to given output folder directory.
@@ -101,3 +101,11 @@ If you want to export extra mAP bar plots and annotation area stats add `--extra
 If you want to specify area regions, set it as `--areas 1024 9216 10000000000`.
 
 If you want to specify export directory, set it as `--out_dir output/folder/directory `.
+
+## Custom scripts
+
+All scripts can be downloaded from [scripts directory](sahi/scripts) and modified by your needs. After installing `sahi` by pip, all scripts can be call from any directory as:
+
+```bash
+python script_name.py
+```

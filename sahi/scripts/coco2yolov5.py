@@ -3,7 +3,8 @@ import argparse
 from sahi.utils.coco import Coco
 from sahi.utils.file import Path, increment_path
 
-if __name__ == "__main__":
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=str, default="", help="directory for coco images")
     parser.add_argument(
@@ -37,3 +38,7 @@ if __name__ == "__main__":
         train_split_rate=opt.train_split,
         numpy_seed=opt.seed,
     )
+
+
+if __name__ == "__main__":
+    main()

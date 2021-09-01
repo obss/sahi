@@ -140,7 +140,7 @@ Refer to [slicing notebook](demo/slicing.ipynb) for detailed usage.
 </summary>
 
 ```bash
-python scripts/predict.py --source image/file/or/folder --model_path path/to/model --config_path path/to/config
+sahi predict --source image/file/or/folder --model_path path/to/model --config_path path/to/config
 ```
 
 will perform sliced inference on default parameters and export the prediction visuals to runs/predict/exp folder.
@@ -148,7 +148,7 @@ will perform sliced inference on default parameters and export the prediction vi
 You can specify sliced inference parameters as:
 
 ```bash
-python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --conf_thresh 0.25 --source image/file/or/folder --model_path path/to/model --config_path path/to/config
+sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --conf_thresh 0.25 --source image/file/or/folder --model_path path/to/model --config_path path/to/config
 ```
 
 - Specify postprocess type as `--postprocess_type UNIONMERGE` or `--postprocess_type NMS` to be applied over sliced predictions
@@ -167,7 +167,7 @@ python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_
 
 - If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--coco_file path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_error_analysis.py script to calculate COCO evaluation results.
 
-<b>Find detailed info on script usage (predict, coco2yolov5, coco_error_analysis) at [SCRIPTS.md](docs/SCRIPTS.md).</b>
+<b>Find detailed info on script usage (predict, coco2yolov5, coco_error_analysis) at [CLI.md](docs/CLI.md).</b>
 
 </details>
 
