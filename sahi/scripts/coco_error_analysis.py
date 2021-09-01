@@ -1,9 +1,10 @@
 import copy
 import os
-from argparse import ArgumentParser
 from multiprocessing import Pool
 from pathlib import Path
+from typing import List
 
+import fire
 import numpy as np
 
 try:
@@ -316,31 +317,33 @@ def analyze_results(res_file, ann_file, res_types, out_dir=None, extraplots=None
             make_gt_area_histogram_plot(cocoEval=cocoEval, outDir=res_out_dir)
 
 
-def main():
-    parser = ArgumentParser(description="COCO Error Analysis Tool")
-    parser.add_argument("dataset_path", type=str, help="COCO dataset (json file) path")
-    parser.add_argument("results_path", type=str, help="COCO results (json file) path")
-    parser.add_argument("--out_dir", help="dir to save analyze result images")
-    parser.add_argument("--types", type=str, nargs="+", default=["bbox"], help="result types")
-    parser.add_argument("--extraplots", action="store_true", help="export extra bar/stat plots")
-    parser.add_argument(
-        "--areas",
-        type=int,
-        nargs="+",
-        default=[1024, 9216, 10000000000],
-        help="area regions",
-    )
-    args = parser.parse_args()
+def main(
+    dataset_json_path: str,
+    result_json_path: str,
+    out_dir: str,
+    type: str = "bbox",
+    extraplots: bool = False,
+    areas: List[int] = [1024, 9216, 10000000000],
+):
+    """
+    Args:
+        dataset_json_path (str): file path for the coco dataset json file
+        result_json_paths (str): file path for the coco result json file
+        out_dir (str): dir to save analyze result images
+        extraplots (bool): export extra bar/stat plots
+        type (str): 'bbox' or 'mask'
+        areas (List[int]): area regions for coco evaluation calculations
+    """
 
     analyze_results(
-        args.results_path,
-        args.dataset_path,
-        args.types,
-        out_dir=args.out_dir,
-        extraplots=args.extraplots,
-        areas=args.areas,
+        result_json_path,
+        dataset_json_path,
+        res_type=[type],
+        out_dir=out_dir,
+        extraplots=extraplots,
+        areas=areas,
     )
 
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(main)

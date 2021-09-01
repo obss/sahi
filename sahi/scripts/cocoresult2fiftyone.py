@@ -1,54 +1,34 @@
-import argparse
 import time
 from collections import defaultdict
 from typing import List
+
+import fire
 
 from sahi.utils.cv import read_image_as_pil
 from sahi.utils.file import load_json
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--coco_image_dir", type=str, default=None, help="folder containing coco images")
-    parser.add_argument(
-        "--coco_json_path",
-        type=str,
-        default=None,
-        help="path for the coco annotation json file",
-    )
-    parser.add_argument(
-        "--coco_result_path",
-        type=str,
-        nargs="+",
-        default=[],
-        help="one or more paths for the coco result json file",
-    )
-    parser.add_argument(
-        "--coco_result_name",
-        type=str,
-        nargs="+",
-        default=[],
-        help="will be used in the fiftyone visualization",
-    )
-    parser.add_argument(
-        "--iou_thresh",
-        type=float,
-        default=0.5,
-        help="iou threshold for coco evaluation",
-    )
+def main(
+    image_dir: str,
+    dataset_json_path: str,
+    *result_json_paths,
+    iou_thresh: float = 0.5,
+):
+    """
+    Args:
+        image_dir (str): directory for coco images
+        dataset_json_path (str): file path for the coco dataset json file
+        result_json_paths (str): one or more paths for the coco result json file
+        iou_thresh (str): iou threshold for coco evaluation
+    """
 
     from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file, fo
 
-    opt = parser.parse_args()
-
-    if opt.coco_result_name and not (len(opt.coco_result_path) == len(opt.coco_result_name)):
-        raise ValueError("'coco_result_path' and 'coco_result_name' should be in same length")
-
     coco_result_list = []
     image_id_to_coco_result_list = []
-    coco_result_name_list = opt.coco_result_name if opt.coco_result_name else []
-    for ind, coco_result_path in enumerate(opt.coco_result_path):
-        coco_result = load_json(coco_result_path)
+    result_name_list = []
+    for ind, result_json_path in enumerate(result_json_paths):
+        coco_result = load_json(result_json_path)
         coco_result_list.append(coco_result)
 
         image_id_to_coco_result = defaultdict(list)
@@ -56,10 +36,9 @@ def main():
             image_id_to_coco_result[result["image_id"]].append(result)
         image_id_to_coco_result_list.append(image_id_to_coco_result)
 
-        if not opt.coco_result_name:
-            coco_result_name_list.append(f"coco_result_{ind+1}")
+        result_name_list.append(f"coco_result_{ind+1}")
 
-    dataset = create_fiftyone_dataset_from_coco_file(opt.coco_image_dir, opt.coco_json_path)
+    dataset = create_fiftyone_dataset_from_coco_file(image_dir, dataset_json_path)
 
     image_id = 1
     with fo.ProgressBar() as pb:
@@ -84,7 +63,7 @@ def main():
                         fo.Detection(label=fo_label, bounding_box=fo_bbox, confidence=fo_confidence)
                     )
 
-                sample[coco_result_name_list[ind]] = fo.Detections(detections=fo_detection_list)
+                sample[result_name_list[ind]] = fo.Detections(detections=fo_detection_list)
                 sample.save()
             image_id += 1
 
@@ -92,12 +71,12 @@ def main():
     session = fo.launch_app()
     session.dataset = dataset
     # Evaluate the predictions
-    first_coco_result_name = coco_result_name_list[0]
+    first_coco_result_name = result_name_list[0]
     results = dataset.evaluate_detections(
         first_coco_result_name,
         gt_field="ground_truth",
         eval_key=f"{first_coco_result_name}_eval",
-        iou=opt.iou_thresh,
+        iou=iou_thresh,
         compute_mAP=True,
     )
     # Get the 10 most common classes in the dataset
@@ -114,4 +93,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(main)

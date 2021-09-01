@@ -35,14 +35,12 @@ sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --o
 ## `cocoresult2fiftyone` command usage:
 
 ```bash
-sahi cocoresult2fiftyone --coco_image_dir dir/to/images --coco_json_path path/to/json --coco_result_path path/to/cocoresult
+sahi cocoresult2fiftyone --coco_image_dir dir/to/images --coco_json_path path/to/json path/to/cocoresult1 path/to/cocoresult2
 ```
 
 will open a FiftyOne app that visualizes the given dataset and detections.
 
 Specify IOU threshold for FP/TP by `--iou_threshold 0.5` argument
-
-Specify FiftyOne result name by `--coco_result_name yolov5-detections` argument
 
 ## `slice_coco` command usage:
 
@@ -63,7 +61,7 @@ If you want to ignore images with annotations set it add `--ignore_negative_samp
 (In Windows be sure to open anaconda cmd prompt/windows cmd `as admin` to be able to create symlinks properly.)
 
 ```bash
-sahi coco2yolov5 --coco_file path/to/coco/file --source coco/images/directory --train_split 0.9
+sahi coco2yolov5 --json_path path/to/coco/file --image_dir coco/images/directory --train_split 0.9
 ```
 
 will convert given coco dataset to yolov5 format and export to runs/coco2yolov5/exp folder.
@@ -89,18 +87,18 @@ If you want to specify export directory, set it as `--out_dir output/folder/dire
 ## `coco_error_analysis` command usage:
 
 ```bash
-sahi coco_error_analysis dataset.json results.json
+sahi coco_error_analysis --dataset_json_path dataset.json --result_json_path results.json
 ```
 
 will calculate coco error plots and export them to given output folder directory.
 
-If you want to specify mAP result type, set it as `--types bbox mask`.
+If you want to specify mAP result type, set it as `--type bbox` or `--type mask`.
 
 If you want to export extra mAP bar plots and annotation area stats add `--extraplots` argument.
 
 If you want to specify area regions, set it as `--areas 1024 9216 10000000000`.
 
-If you want to specify export directory, set it as `--out_dir output/folder/directory `.
+If you want to specify export directory, set it as `--out_dir output/folder/directory`.
 
 ## Custom scripts
 

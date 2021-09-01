@@ -1,44 +1,43 @@
 import argparse
 
+import fire
+
 from sahi.utils.coco import Coco
 from sahi.utils.file import Path, increment_path
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--source", type=str, default="", help="directory for coco images")
-    parser.add_argument(
-        "--coco_file",
-        type=str,
-        default=None,
-        help="file path for the coco file to be converted",
-    )
-    parser.add_argument(
-        "--train_split",
-        type=float,
-        default=0.9,
-        help="set the training split ratio",
-    )
-    parser.add_argument("--project", default="runs/coco2yolov5", help="save results to project/name")
-    parser.add_argument("--name", default="exp", help="save results to project/name")
-    parser.add_argument("--seed", type=int, default=1, help="fix the seed for reproducibility")
-
-    opt = parser.parse_args()
+def main(
+    image_dir: str,
+    json_path: str,
+    train_split: str = 0.9,
+    project: str = "runs/coco2yolov5",
+    name: str = "exp",
+    seed: str = 1,
+):
+    """
+    Args:
+        images_dir (str): directory for coco images
+        json_path (str): file path for the coco json file to be converted
+        train_split (str): set the training split ratio
+        project (str): save results to project/name
+        name (str): save results to project/name"
+        seed (int): fix the seed for reproducibility
+    """
 
     # increment run
-    save_dir = Path(increment_path(Path(opt.project) / opt.name, exist_ok=False))
+    save_dir = Path(increment_path(Path(project) / name, exist_ok=False))
     # load coco dict
     coco = Coco.from_coco_dict_or_path(
-        coco_dict_or_path=opt.coco_file,
-        image_dir=opt.source,
+        coco_dict_or_path=json_path,
+        image_dir=image_dir,
     )
     # export as yolov5
     coco.export_as_yolov5(
         output_dir=str(save_dir),
-        train_split_rate=opt.train_split,
-        numpy_seed=opt.seed,
+        train_split_rate=train_split,
+        numpy_seed=seed,
     )
 
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(main)
