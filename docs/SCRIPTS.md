@@ -32,6 +32,18 @@ python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_
 
 - If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--coco_file path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_evaluation.py script to calculate COCO evaluation results or coco_error_analysis.py script to calculate detailed COCO error plots.
 
+## `cocoresult2fiftyone.py` script usage:
+
+```bash
+python scripts/cocoresult2fiftyone.py --coco_image_dir dir/to/images --coco_json_path path/to/json --coco_result_path path/to/cocoresult
+```
+
+will open a FiftyOne app that visualizes the given dataset and detections.
+
+Specify IOU threshold for FP/TP by `--iou_threshold 0.5` argument
+
+Specify FiftyOne result name by `--coco_result_name yolov5-detections` argument
+
 ## `slice_coco.py` script usage:
 
 ```bash
