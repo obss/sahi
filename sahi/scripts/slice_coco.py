@@ -1,55 +1,56 @@
-import argparse
 import os
+
+import fire
 
 from sahi.slicing import slice_coco
 from sahi.utils.file import Path, get_base_filename, increment_path, save_json
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "coco_json_path",
-        type=str,
-        default=None,
-        help="path to coco annotation json file",
-    )
-    parser.add_argument("coco_image_dir", type=str, default="", help="folder containing coco images")
-    parser.add_argument("--slice_size", type=int, nargs="+", default=[512], help="slice size")
-    parser.add_argument("--overlap_ratio", type=float, default=0.2, help="slice overlap ratio")
-    parser.add_argument("--ignore_negative_samples", action="store_true", help="ignore images without annotation")
-    parser.add_argument("--project", default="runs/slice_coco", help="save results to project/name")
-    parser.add_argument("--name", default="exp", help="save results to project/name")
-    parser.add_argument("--seed", type=int, default=1, help="fix the seed for reproducibility")
-
-    args = parser.parse_args()
+def main(
+    image_dir: str,
+    dataset_json_path: str,
+    slice_size: int = 512,
+    overlap_ratio: float = 0.2,
+    ignore_negative_samples: bool = False,
+    project: str = "runs/slice_coco",
+    name: str = "exp",
+):
+    """
+    Args:
+        image_dir (str): directory for coco images
+        dataset_json_path (str): file path for the coco dataset json file
+        slice_size (int)
+        overlap_ratio (float): slice overlap ratio
+        ignore_negative_samples (bool): ignore images without annotation
+        project (str): save results to project/name
+        name (str): save results to project/name
+    """
 
     # assure slice_size is list
-    slice_size_list = args.slice_size
+    slice_size_list = slice_size
     if isinstance(slice_size_list, int):
         slice_size_list = [slice_size_list]
 
     # set output dir
-    output_dir = Path(increment_path(Path(args.project) / args.name, exist_ok=False))  # increment run
+    output_dir = Path(increment_path(Path(project) / name, exist_ok=False))  # increment run
 
     # slice coco dataset images and annotations
     print("Slicing step is starting...")
     for slice_size in slice_size_list:
-        output_images_folder_name = (
-            get_base_filename(args.coco_json_path)[1] + "_sliced_images_" + str(slice_size) + "/"
-        )
+        output_images_folder_name = get_base_filename(dataset_json_path)[1] + "_sliced_images_" + str(slice_size) + "/"
         output_images_dir = os.path.join(output_dir, output_images_folder_name)
-        sliced_coco_name = get_base_filename(args.coco_json_path)[0].replace(".json", "_sliced_" + str(slice_size))
+        sliced_coco_name = get_base_filename(dataset_json_path)[0].replace(".json", "_sliced_" + str(slice_size))
         coco_dict, coco_path = slice_coco(
-            coco_annotation_file_path=args.coco_json_path,
-            image_dir=args.coco_image_dir,
+            coco_annotation_file_path=dataset_json_path,
+            image_dir=image_dir,
             output_coco_annotation_file_name="",
             output_dir=output_images_dir,
-            ignore_negative_samples=args.ignore_negative_samples,
+            ignore_negative_samples=ignore_negative_samples,
             slice_height=slice_size,
             slice_width=slice_size,
             min_area_ratio=0.1,
-            overlap_height_ratio=args.overlap_ratio,
-            overlap_width_ratio=args.overlap_ratio,
+            overlap_height_ratio=overlap_ratio,
+            overlap_width_ratio=overlap_ratio,
             out_ext=".jpg",
             verbose=False,
         )
@@ -62,4 +63,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(main)

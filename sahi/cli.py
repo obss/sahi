@@ -1,12 +1,11 @@
 import fire
 
 from sahi import __version__ as sahi_version
+from sahi.predict import predict, predict_fiftyone
 from sahi.scripts.coco2yolov5 import main as coco2yolov5
 from sahi.scripts.coco_error_analysis import main as coco_error_analysis
 from sahi.scripts.coco_evaluation import main as coco_evaluation
 from sahi.scripts.cocoresult2fiftyone import main as cocoresult2fiftyone
-from sahi.scripts.predict import main as predict
-from sahi.scripts.predict_fiftyone import main as predict_fiftyone
 from sahi.scripts.slice_coco import main as slice_coco
 
 
