@@ -3,10 +3,7 @@ import time
 from collections import defaultdict
 from typing import List
 
-import fiftyone as fo
-
 from sahi.utils.cv import read_image_as_pil
-from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file
 from sahi.utils.file import load_json
 
 
@@ -39,6 +36,8 @@ def main():
         default=0.5,
         help="iou threshold for coco evaluation",
     )
+
+    from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file, fo
 
     opt = parser.parse_args()
 

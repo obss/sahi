@@ -651,9 +651,7 @@ def predict_fiftyone(
             0: no print
             1: print slice/prediction durations, number of slices, model loading/file exporting durations
     """
-    import fiftyone as fo
-
-    from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file
+    from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file, fo
 
     # assert prediction type
     assert (
