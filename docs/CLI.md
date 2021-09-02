@@ -35,17 +35,17 @@ sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --o
 ## `cocoresult2fiftyone` command usage:
 
 ```bash
-sahi cocoresult2fiftyone --coco_image_dir dir/to/images --coco_json_path path/to/json path/to/cocoresult1 path/to/cocoresult2
+sahi cocoresult2fiftyone --image_dir dir/to/images --dataset_json_path path/to/coco/json/file path/to/cocoresult1 path/to/cocoresult2
 ```
 
-will open a FiftyOne app that visualizes the given dataset and 2 detections.
+will open a FiftyOne app that visualizes the given dataset and 2 detection results.
 
 Specify IOU threshold for FP/TP by `--iou_threshold 0.5` argument
 
 ## `slice_coco` command usage:
 
 ```bash
-sahi slice_coco --dataset_json_path path/to/coco/json/file --image_dir coco/images/directory
+sahi slice_coco --image_dir dir/to/images --dataset_json_path path/to/coco/json/file 
 ```
 
 will slice the given images and COCO formatted annotations and export them to given output folder directory.
@@ -61,7 +61,7 @@ If you want to ignore images with annotations set it add `--ignore_negative_samp
 (In Windows be sure to open anaconda cmd prompt/windows cmd `as admin` to be able to create symlinks properly.)
 
 ```bash
-sahi coco2yolov5 --dataset_json_path path/to/coco/file --image_dir coco/images/directory --train_split 0.9
+sahi coco2yolov5 --image_dir dir/to/images --dataset_json_path path/to/coco/json/file  --train_split 0.9
 ```
 
 will convert given coco dataset to yolov5 format and export to runs/coco2yolov5/exp folder.
