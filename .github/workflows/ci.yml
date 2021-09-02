@@ -102,4 +102,4 @@ jobs:
           sahi predict --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --export_visual --export_pickle --export_crop --model_path tests/data/models/yolov5/yolov5s6.pt
           sahi predict --model_type yolov5 --source tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/yolov5/yolov5s6.pt
           # coco2yolov5
-          sahi coco2yolov5 --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json --train_split 0.9
+          sahi coco yolov5 --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json --train_split 0.9
