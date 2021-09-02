@@ -1,5 +1,6 @@
 import time
 from collections import defaultdict
+from pathlib import Path
 from typing import List
 
 import fire
@@ -37,7 +38,14 @@ def main(
                 image_id_to_coco_result[result["image_id"]].append(result)
             image_id_to_coco_result_list.append(image_id_to_coco_result)
 
-            result_name_list.append(f"coco_result_{ind+1}")
+            # use file names as fiftyone name, create unique names if duplicate
+            result_name_temp = Path(result_json_path).name
+            result_name = result_name_temp
+            name_increment = 2
+            while result_name in result_name_list:
+                result_name = result_name_temp + "_" + str(name_increment)
+                name_increment += 1
+            result_name_list.append(result_name)
 
     dataset = create_fiftyone_dataset_from_coco_file(image_dir, dataset_json_path)
 
