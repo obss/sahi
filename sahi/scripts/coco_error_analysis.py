@@ -338,7 +338,7 @@ def main(
     analyze_results(
         result_json_path,
         dataset_json_path,
-        res_type=[type],
+        res_types=[type],
         out_dir=out_dir,
         extraplots=extraplots,
         areas=areas,

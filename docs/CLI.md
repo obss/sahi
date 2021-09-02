@@ -74,11 +74,11 @@ sahi coco_evaluation dataset.json results.json
 
 will calculate coco evaluation and export them to given output folder directory.
 
-If you want to specify mAP metric type, set it as `--metric bbox mask`.
+If you want to specify mAP metric type, set it as `--type bbox` or `--type mask`.
 
 If you want to also calculate classwise scores add `--classwise` argument.
 
-If you want to specify max detections, set it as `--proposal_nums 10 100 500`.
+If you want to specify max detections, set it as `--proposal_nums "[10 100 500]"`.
 
 If you want to specify a psecific IOU threshold, set it as `--iou_thrs 0.5`. Default includes `0.50:0.95` and `0.5` scores.
 
@@ -96,7 +96,7 @@ If you want to specify mAP result type, set it as `--type bbox` or `--type mask`
 
 If you want to export extra mAP bar plots and annotation area stats add `--extraplots` argument.
 
-If you want to specify area regions, set it as `--areas 1024 9216 10000000000`.
+If you want to specify area regions, set it as `--areas "[1024 9216 10000000000]"`.
 
 If you want to specify export directory, set it as `--out_dir output/folder/directory`.
 
