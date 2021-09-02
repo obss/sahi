@@ -40,11 +40,11 @@ sahi predict-fiftyone --image_dir image/file/or/folder --dataset_json_path datas
 
 will perform sliced inference on default parameters and show the inference result on FiftyOne App.
 
-You can specify additional all extra parameters of the `sahi predict` command.
+You can specify additional all extra parameters of the [sahi predict](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-command-usage) command.
 
 ## `coco fiftyone` command usage:
 
-You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/cli/docs/CLI.md#predict-command-usage) command can be used to create that.
+You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-command-usage) command can be used to create that.
 
 ```bash
 sahi coco fiftyone --image_dir dir/to/images --dataset_json_path dataset.json cocoresult1.json cocoresult2.json
@@ -80,7 +80,7 @@ will convert given coco dataset to yolov5 format and export to runs/coco2yolov5/
 
 ## `coco evaluate` command usage:
 
-You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/cli/docs/CLI.md#predict-command-usage) command can be used to create that.
+You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-command-usage) command can be used to create that.
 
 ```bash
 sahi coco evaluate --dataset_json_path dataset.json --result_json_path result.json
@@ -100,7 +100,7 @@ If you want to specify export directory, set it as `--out_dir output/folder/dire
 
 ## `coco analyse` command usage:
 
-You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/cli/docs/CLI.md#predict-command-usage) command can be used to create that.
+You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-command-usage) command can be used to create that.
 
 ```bash
 sahi coco analyse --dataset_json_path dataset.json --result_json_path result.json
