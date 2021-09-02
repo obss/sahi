@@ -29,7 +29,7 @@ Object detection and instance segmentation are by far the most important fields 
 | Component  | Description  |
 |---|---|
 | [predict](https://github.com/obss/sahi/blob/cli/docs/CLI.md#predict-command-usage)  | perform sliced/standard prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection) model |
-| [predict-fiftyone](https://github.com/obss/sahi/blob/cli/docs/CLI.md#predict-fiftyone-command-usage) | perform sliced/standard prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection) model and explore results in [fiftyone app](https://github.com/voxel51/fiftyone) |
+| [predict-fiftyone](https://github.com/obss/sahi/blob/cli/docs/CLI.md#predict-fiftyone-command-usage)  | perform sliced/standard prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection) model and explore results in [fiftyone app](https://github.com/voxel51/fiftyone) |
 | [coco slice](https://github.com/obss/sahi/blob/cli/docs/CLI.md#coco-slice-command-usage)  | automatically slice COCO annotation and image files |
 | [coco fiftyone](https://github.com/obss/sahi/blob/cli/docs/CLI.md#coco-fiftyone-command-usage)  | explore multiple prediction results on your COCO dataset ordered by false positives |
 | [coco evaluate](https://github.com/obss/sahi/blob/cli/docs/CLI.md#coco-evaluate-command-usage)  | evaluate classwise COCO AP and AR for given predictions and ground truth |
