@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from sahi.utils.coco import Coco, CocoAnnotation, CocoImage, create_coco_dict
 from sahi.utils.cv import read_image_as_pil
-from sahi.utils.file import create_dir, load_json, save_json
+from sahi.utils.file import load_json, save_json
 
 MAX_WORKERS = 20
 
@@ -275,7 +275,7 @@ def slice_image(
 
     # create outdir if not present
     if output_dir:
-        create_dir(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     # read image
     image_pil = read_image_as_pil(image)

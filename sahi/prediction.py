@@ -10,7 +10,7 @@ from PIL import Image
 from sahi.annotation import ObjectAnnotation
 from sahi.utils.coco import CocoAnnotation, CocoPrediction
 from sahi.utils.cv import read_image_as_pil, visualize_object_predictions
-from sahi.utils.file import create_dir
+from sahi.utils.file import Path
 
 
 class PredictionScore:
@@ -165,7 +165,7 @@ class PredictionResult:
         self.durations_in_seconds = durations_in_seconds
 
     def export_visuals(self, export_dir: str):
-        create_dir(export_dir)
+        Path(export_dir).mkdir(parents=True, exist_ok=True)
         visualize_object_predictions(
             image=np.ascontiguousarray(self.image),
             object_prediction_list=self.object_prediction_list,
