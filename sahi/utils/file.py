@@ -15,14 +15,6 @@ from pathlib import Path
 import numpy as np
 
 
-def create_dir(_dir):
-    """
-    Creates given directory if it is not present.
-    """
-    if not os.path.exists(_dir):
-        os.makedirs(_dir)
-
-
 def unzip(file_path: str, dest_dir: str):
     """
     Unzips compressed .zip file.
@@ -44,8 +36,7 @@ def save_json(data, save_path):
         save_path: "dirname/coco.json"
     """
     # create dir if not present
-    save_dir = os.path.dirname(save_path)
-    create_dir(save_dir)
+    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
 
     # export as json
     with open(save_path, "w", encoding="utf-8") as outfile:
@@ -196,8 +187,7 @@ def save_pickle(data, save_path):
         save_path: "dirname/coco.pickle"
     """
     # create dir if not present
-    save_dir = os.path.dirname(save_path)
-    create_dir(save_dir)
+    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
 
     # export as json
     with open(save_path, "wb") as outfile:

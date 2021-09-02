@@ -11,7 +11,7 @@ import cv2
 import numpy as np
 from PIL import Image
 
-from sahi.utils.file import create_dir
+from sahi.utils.file import Path
 
 
 def crop_object_predictions(
@@ -30,7 +30,7 @@ def crop_object_predictions(
         export_format: can be specified as 'jpg' or 'png'
     """
     # create output folder if not present
-    create_dir(output_dir)
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
     # add bbox and mask to image if present
     for ind, object_prediction in enumerate(object_prediction_list):
         # deepcopy object_prediction_list so that original is not altered
@@ -227,7 +227,7 @@ def visualize_prediction(
         )
     if output_dir:
         # create output folder if not present
-        create_dir(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
         save_path = os.path.join(output_dir, file_name + ".png")
         cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
@@ -307,7 +307,7 @@ def visualize_object_predictions(
         )
     if output_dir:
         # create output folder if not present
-        create_dir(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
         save_path = os.path.join(output_dir, file_name + "." + export_format)
         cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))

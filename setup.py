@@ -51,4 +51,9 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
+    entry_points={
+        "console_scripts": [
+            "sahi=sahi.cli:app",
+        ],
+    },
 )

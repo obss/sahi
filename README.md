@@ -24,9 +24,17 @@
 
 ## <div align="center">Overview</div>
 
-<div align="center">
-Object detection and instance segmentation are by far the most important fields of applications in Computer Vision. However, detection of small objects and inference on large images are still major issues in practical usage. Here comes the SAHI to help developers overcome these real-world problems.
-</div>
+Object detection and instance segmentation are by far the most important fields of applications in Computer Vision. However, detection of small objects and inference on large images are still major issues in practical usage. Here comes the SAHI to help developers overcome these real-world problems with many vision utilities.
+
+| Command  | Description  |
+|---|---|
+| [predict](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-command-usage)  | perform sliced/standard prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection) model |
+| [predict-fiftyone](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-fiftyone-command-usage)  | perform sliced/standard prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection) model and explore results in [fiftyone app](https://github.com/voxel51/fiftyone) |
+| [coco slice](https://github.com/obss/sahi/blob/main/docs/CLI.md#coco-slice-command-usage)  | automatically slice COCO annotation and image files |
+| [coco fiftyone](https://github.com/obss/sahi/blob/main/docs/CLI.md#coco-fiftyone-command-usage)  | explore multiple prediction results on your COCO dataset ordered by false positives |
+| [coco evaluate](https://github.com/obss/sahi/blob/main/docs/CLI.md#coco-evaluate-command-usage)  | evaluate classwise COCO AP and AR for given predictions and ground truth |
+| [coco analyse](https://github.com/obss/sahi/blob/main/docs/CLI.md#coco-analyse-command-usage)  | calcualate and export many detection and segmentation error margin plots |
+| [coco yolov5](https://github.com/obss/sahi/blob/main/docs/CLI.md#coco-yolov5-command-usage)  | automatically convert any COCO dataset to [yolov5](https://github.com/ultralytics/yolov5) format |
 
 ## <div align="center">Getting Started</div>
 
@@ -140,7 +148,7 @@ Refer to [slicing notebook](demo/slicing.ipynb) for detailed usage.
 </summary>
 
 ```bash
-python scripts/predict.py --source image/file/or/folder --model_path path/to/model --config_path path/to/config
+sahi predict --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
 ```
 
 will perform sliced inference on default parameters and export the prediction visuals to runs/predict/exp folder.
@@ -148,26 +156,26 @@ will perform sliced inference on default parameters and export the prediction vi
 You can specify sliced inference parameters as:
 
 ```bash
-python scripts/predict.py --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --conf_thresh 0.25 --source image/file/or/folder --model_path path/to/model --config_path path/to/config
+sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --model_confidence_threshold 0.25 --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
 ```
 
 - Specify postprocess type as `--postprocess_type UNIONMERGE` or `--postprocess_type NMS` to be applied over sliced predictions
 
-- Specify postprocess match metric as `--match_metric IOS` for intersection over smaller area or `--match_metric IOU` for intersection over union
+- Specify postprocess match metric as `--postprocess_match_metric IOS` for intersection over smaller area or `--match_metric IOU` for intersection over union
 
-- Specify postprocess match threshold as `--match_thresh 0.5`
+- Specify postprocess match threshold as `--postprocess_match_threshold 0.5`
 
 - Add `--class_agnostic` argument to ignore category ids of the predictions during postprocess (merging/nms)
 
-- If you want to export prediction pickles and cropped predictions add `--pickle` and `--crop` arguments. If you want to change crop extension type, set it as `--visual_export_format JPG`.
+- If you want to export prediction pickles and cropped predictions add `--export_pickle` and `--export_crop` arguments. If you want to change crop extension type, set it as `--visual_export_format JPG`.
 
-- If you don't want to export prediction visuals, add `--novisual` argument.
+- If you want to export prediction visuals, add `--export_visual` argument.
 
-- By default, scripts apply both standard and sliced prediction (multi-stage inference). If you don't want to perform sliced prediction add `--no_sliced_pred` argument. If you don't want to perform standard prediction add `--no_standard_pred` argument.
+- By default, scripts apply both standard and sliced prediction (multi-stage inference). If you don't want to perform sliced prediction add `--no_sliced_prediction` argument. If you don't want to perform standard prediction add `--no_standard_prediction` argument.
 
-- If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--coco_file path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_error_analysis.py script to calculate COCO evaluation results.
+- If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--dataset_json_path dataset.json` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use `coco_evaluation` command to calculate COCO evaluation results or `coco_error_analysis` command to calculate detailed COCO error plots.
 
-<b>Find detailed info on script usage (predict, coco2yolov5, coco_error_analysis) at [SCRIPTS.md](docs/SCRIPTS.md).</b>
+<b>Find detailed info on cli command usage (`coco fiftyone`, `coco yolov5`, `coco evaluate`, `coco analyse`) at [CLI.md](docs/CLI.md).</b>
 
 </details>
 
@@ -213,6 +221,21 @@ result = get_sliced_prediction(
 # convert detections into fiftyone detection format
 fiftyone_detections = result.to_fiftyone_detections()
 ```
+
+</details>
+
+<details closed>
+<summary>
+<big><b>Explore detection results in Fiftyone UI:</b></big>
+</summary>
+
+```bash
+sahi coco fifityone --image_dir dir/to/images --dataset_json_path dataset.json cocoresult1.json cocoresult2.json
+```
+
+will open a FiftyOne app that visualizes the given dataset and 2 detection results.
+
+Specify IOU threshold for FP/TP by `--iou_threshold 0.5` argument
 
 </details>
 
@@ -424,10 +447,13 @@ isort .
 ## <div align="center">Contributers</div>
 
 <div align="center">
+
 <a align="left" href="https://github.com/fcakyon" target="_blank">Fatih Cagatay Akyon</a>
 
 <a align="left" href="https://github.com/cemilcengiz" target="_blank">Cemil Cengiz</a>
 
 <a align="left" href="https://github.com/sinanonur" target="_blank">Sinan Onur Altinuc</a>
+
+<a align="left" href="https://github.com/ssahinnkadir" target="_blank">Kadir Sahin</a>
 
 </div>
