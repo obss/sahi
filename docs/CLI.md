@@ -118,7 +118,7 @@ If you want to specify export directory, set it as `--out_dir output/folder/dire
 
 ## Custom scripts
 
-All scripts can be downloaded from [scripts directory](sahi/scripts) and modified by your needs. After installing `sahi` by pip, all scripts can be called from any directory as:
+All scripts can be downloaded from [scripts directory](https://github.com/obss/sahi/main/cli/sahi/scripts) and modified by your needs. After installing `sahi` by pip, all scripts can be called from any directory as:
 
 ```bash
 python script_name.py

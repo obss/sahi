@@ -26,7 +26,7 @@
 
 Object detection and instance segmentation are by far the most important fields of applications in Computer Vision. However, detection of small objects and inference on large images are still major issues in practical usage. Here comes the SAHI to help developers overcome these real-world problems with many vision utilities.
 
-| Component  | Description  |
+| Command  | Description  |
 |---|---|
 | [predict](https://github.com/obss/sahi/blob/cli/docs/CLI.md#predict-command-usage)  | perform sliced/standard prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection) model |
 | [predict-fiftyone](https://github.com/obss/sahi/blob/cli/docs/CLI.md#predict-fiftyone-command-usage)  | perform sliced/standard prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection) model and explore results in [fiftyone app](https://github.com/voxel51/fiftyone) |
