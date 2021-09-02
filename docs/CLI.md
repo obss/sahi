@@ -3,7 +3,7 @@
 ## `predict` command usage:
 
 ```bash
-sahi predict --source image/file/or/folder --model_path path/to/model --config_path path/to/config
+sahi predict --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
 ```
 
 will perform sliced inference on default parameters and export the prediction visuals to runs/predict/exp folder.
@@ -11,26 +11,26 @@ will perform sliced inference on default parameters and export the prediction vi
 You can specify additional sliced prediction parameters as:
 
 ```bash
-sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --conf_thresh 0.25 --source image/file/or/folder --model_path path/to/model --config_path path/to/config
+sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --model_confidence_threshold 0.25 --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
 ```
 
 - Specify detection framework as `--model_type mmdet` for MMDetection or `--model_type yolov5` for YOLOv5, to match with your model weight
 
 - Specify postprocess type as `--postprocess_type UNIONMERGE` or `--postprocess_type NMS` to be applied over sliced predictions
 
-- Specify postprocess match metric as `--match_metric IOS` for intersection over smaller area or `--match_metric IOU` for intersection over union
+- Specify postprocess match metric as `--postprocess_match_metric IOS` for intersection over smaller area or `--postprocess_match_metric IOU` for intersection over union
 
-- Specify postprocess match threshold as `--match_thresh 0.5`
+- Specify postprocess match threshold as `--postprocess_match_threshold 0.5`
 
-- Add `--class_agnostic` argument to ignore category ids of the predictions during postprocess (merging/nms)
+- Add `--postprocess_class_agnostic` argument to ignore category ids of the predictions during postprocess (merging/nms)
 
-- If you want to export prediction pickles and cropped predictions add `--pickle` and `--crop` arguments. If you want to change crop extension type, set it as `--visual_export_format JPG`.
+- If you want to export prediction pickles and cropped predictions add `--export_pickle` and `--export_crop` arguments. If you want to change crop extension type, set it as `--visual_export_format JPG`.
 
-- If you don't want to export prediction visuals, add `--novisual` argument.
+- If you want to export prediction visuals, add `--export_visual` argument.
 
-- By default, scripts apply both standard and sliced prediction (multi-stage inference). If you don't want to perform sliced prediction add `--no_sliced_pred` argument. If you don't want to perform standard prediction add `--no_standard_pred` argument.
+- By default, scripts apply both standard and sliced prediction (multi-stage inference). If you don't want to perform sliced prediction add `--no_sliced_prediction` argument. If you don't want to perform standard prediction add `--no_standard_prediction` argument.
 
-- If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--coco_file path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_evaluation.py script to calculate COCO evaluation results or coco_error_analysis.py script to calculate detailed COCO error plots.
+- If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--coco_file_path path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_evaluation command to calculate COCO evaluation results or coco_error_analysis command to calculate detailed COCO error plots.
 
 ## `cocoresult2fiftyone` command usage:
 
@@ -38,7 +38,7 @@ sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --o
 sahi cocoresult2fiftyone --coco_image_dir dir/to/images --coco_json_path path/to/json path/to/cocoresult1 path/to/cocoresult2
 ```
 
-will open a FiftyOne app that visualizes the given dataset and detections.
+will open a FiftyOne app that visualizes the given dataset and 2 detections.
 
 Specify IOU threshold for FP/TP by `--iou_threshold 0.5` argument
 
