@@ -30,7 +30,7 @@ sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --o
 
 - By default, scripts apply both standard and sliced prediction (multi-stage inference). If you don't want to perform sliced prediction add `--no_sliced_prediction` argument. If you don't want to perform standard prediction add `--no_standard_prediction` argument.
 
-- If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--coco_file_path path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_evaluation command to calculate COCO evaluation results or coco_error_analysis command to calculate detailed COCO error plots.
+- If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--dataset_json_path path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_evaluation command to calculate COCO evaluation results or coco_error_analysis command to calculate detailed COCO error plots.
 
 ## `cocoresult2fiftyone` command usage:
 
@@ -61,7 +61,7 @@ If you want to ignore images with annotations set it add `--ignore_negative_samp
 (In Windows be sure to open anaconda cmd prompt/windows cmd `as admin` to be able to create symlinks properly.)
 
 ```bash
-sahi coco2yolov5 --json_path path/to/coco/file --image_dir coco/images/directory --train_split 0.9
+sahi coco2yolov5 --dataset_json_path path/to/coco/file --image_dir coco/images/directory --train_split 0.9
 ```
 
 will convert given coco dataset to yolov5 format and export to runs/coco2yolov5/exp folder.

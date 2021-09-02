@@ -165,7 +165,7 @@ sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --o
 
 - By default, scripts apply both standard and sliced prediction (multi-stage inference). If you don't want to perform sliced prediction add `--no_sliced_prediction` argument. If you don't want to perform standard prediction add `--no_standard_prediction` argument.
 
-- If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--coco_file_path path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use `coco_evaluation` command to calculate COCO evaluation results or `coco_error_analysis` command to calculate detailed COCO error plots.
+- If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--dataset_json_path path/to/coco/file` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use `coco_evaluation` command to calculate COCO evaluation results or `coco_error_analysis` command to calculate detailed COCO error plots.
 
 <b>Find detailed info on cli command usage (cocoresult2fiftyone, coco2yolov5, coco_evaluation, coco_error_analysis) at [CLI.md](docs/CLI.md).</b>
 

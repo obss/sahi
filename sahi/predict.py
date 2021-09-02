@@ -288,7 +288,7 @@ def predict(
     export_visual: bool = True,
     export_pickle: bool = False,
     export_crop: bool = False,
-    coco_file_path: bool = None,
+    dataset_json_path: bool = None,
     project: str = "runs/predict",
     name: str = "exp",
     visual_bbox_thickness: int = 1,
@@ -350,7 +350,7 @@ def predict(
             Export predictions as .pickle
         export_crop: bool
             Export predictions as cropped images.
-        coco_file_path: str
+        dataset_json_path: str
             If coco file path is provided, detection results will be exported in coco json format.
         project: str
             Save results to project/name.
@@ -374,8 +374,8 @@ def predict(
     durations_in_seconds = dict()
 
     # list image files in directory
-    if coco_file_path:
-        coco: Coco = Coco.from_coco_dict_or_path(coco_file_path)
+    if dataset_json_path:
+        coco: Coco = Coco.from_coco_dict_or_path(dataset_json_path)
         image_path_list = [str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images]
         coco_json = []
     elif os.path.isdir(source):
@@ -465,7 +465,7 @@ def predict(
 
         durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
 
-        if coco_file_path:
+        if dataset_json_path:
             image_id = ind + 1
             # append predictions in coco format
             for object_prediction in object_prediction_list:
@@ -544,7 +544,7 @@ def predict(
         durations_in_seconds["export_files"] = time_end
 
     # export coco results
-    if coco_file_path:
+    if dataset_json_path:
         save_path = str(save_dir / "result.json")
         save_json(coco_json, save_path)
 
@@ -581,8 +581,8 @@ def predict_fiftyone(
     model_device: str = None,
     model_category_mapping: dict = None,
     model_category_remapping: dict = None,
-    coco_json_path: str = None,
-    coco_image_dir: str = None,
+    dataset_json_path: str = None,
+    image_dir: str = None,
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
     image_size: int = None,
@@ -614,9 +614,9 @@ def predict_fiftyone(
             Mapping from category id (str) to category name (str) e.g. {"1": "pedestrian"}
         model_category_remapping: dict: str to int
             Remap category ids after performing inference
-        coco_json_path: str
+        dataset_json_path: str
             If coco file path is provided, detection results will be exported in coco json format.
-        coco_image_dir: str
+        image_dir: str
             Folder directory that contains images or path of the image to be predicted.
         no_standard_prediction: bool
             Dont perform standard prediction. Default: False.
@@ -661,7 +661,7 @@ def predict_fiftyone(
     # for profiling
     durations_in_seconds = dict()
 
-    dataset = create_fiftyone_dataset_from_coco_file(coco_image_dir, coco_json_path)
+    dataset = create_fiftyone_dataset_from_coco_file(image_dir, dataset_json_path)
 
     # init model instance
     time_start = time.time()
