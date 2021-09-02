@@ -256,7 +256,7 @@ class TestPredict(unittest.TestCase):
         class_agnostic = True
 
         # prepare paths
-        coco_file_path = "tests/data/coco_utils/terrain_all_coco.json"
+        dataset_json_path = "tests/data/coco_utils/terrain_all_coco.json"
         source = "tests/data/coco_utils/"
         project_dir = "tests/data/predict_result"
 
@@ -285,7 +285,7 @@ class TestPredict(unittest.TestCase):
             export_visual=False,
             export_pickle=False,
             export_crop=False,
-            coco_file_path=coco_file_path,
+            dataset_json_path=dataset_json_path,
             project=project_dir,
             name="exp",
             verbose=1,
@@ -295,7 +295,7 @@ class TestPredict(unittest.TestCase):
         download_yolov5s6_model()
 
         # prepare paths
-        coco_file_path = "tests/data/coco_utils/terrain_all_coco.json"
+        dataset_json_path = "tests/data/coco_utils/terrain_all_coco.json"
         source = "tests/data/coco_utils/"
         project_dir = "tests/data/predict_result"
 
@@ -324,7 +324,7 @@ class TestPredict(unittest.TestCase):
             export_visual=False,
             export_pickle=False,
             export_crop=False,
-            coco_file_path=coco_file_path,
+            dataset_json_path=dataset_json_path,
             project=project_dir,
             name="exp",
             verbose=1,
