@@ -444,7 +444,7 @@ isort .
 ```
 
 
-## <div align="center">Contributers</div>
+## <div align="center">Contributors</div>
 
 <div align="center">
 
