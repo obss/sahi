@@ -12,7 +12,7 @@ def get_long_description():
 
 
 def get_requirements():
-    with open("requirements.txt") as f:
+    with open("requirements.txt", encoding="utf8") as f:
         return f.read().splitlines()
 
 
