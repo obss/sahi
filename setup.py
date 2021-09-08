@@ -32,7 +32,7 @@ setuptools.setup(
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
     url="https://github.com/obss/sahi",
-    packages=setuptools.find_packages(exclude=["conda", "demo", "tests"]),
+    packages=setuptools.find_packages(exclude=["demo", "tests"]),
     python_requires=">=3.7",
     install_requires=get_requirements(),
     extras_require={
