@@ -1,7 +1,6 @@
 opencv-python>=4.2.0.32
 shapely>=1.7.0
 tqdm>=4.48.2
-dataclasses; python_version<"3.7"
 pillow>=8.2.0
 pyyaml
 fire
