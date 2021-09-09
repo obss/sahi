@@ -457,5 +457,7 @@ isort .
 <a align="left" href="https://github.com/ssahinnkadir" target="_blank">Kadir Sahin</a>
   
 <a align="left" href="https://github.com/devrimcavusoglu" target="_blank">Devrim Cavusoglu</a>
+  
+<a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
 
 </div>
