@@ -1,19 +1,13 @@
 import itertools
 import json
 import warnings
-from argparse import ArgumentParser
 from collections import OrderedDict
 from pathlib import Path
 from typing import List, Union
 
+import fire
 import numpy as np
 from terminaltables import AsciiTable
-
-try:
-    from pycocotools.coco import COCO
-    from pycocotools.cocoeval import COCOeval
-except ImportError:
-    raise ImportError('Please run "pip install -U pycocotools" ' "to install pycocotools first for coco evaluation.")
 
 
 def _cocoeval_summarize(
@@ -72,6 +66,8 @@ def evaluate_coco(
     iou_thrs=None,
     metric_items=None,
     out_dir=None,
+    COCO=None,
+    COCOeval=None,
 ):
     """Evaluation in COCO protocol.
     Args:
@@ -351,6 +347,13 @@ def main(
         proposal_nums (List[int]): Proposal number used for evaluating recalls, such as recall@100, recall@500
         iou_thrs (float): IoU threshold used for evaluating recalls/mAPs
     """
+    try:
+        from pycocotools.coco import COCO
+        from pycocotools.cocoeval import COCOeval
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError(
+            'Please run "pip install -U pycocotools" ' "to install pycocotools first for coco evaluation."
+        )
 
     # perform coco eval
     eval_results = evaluate_coco(
@@ -361,8 +364,10 @@ def main(
         proposal_nums,
         iou_thrs,
         out_dir=out_dir,
+        COCO=COCO,
+        COCOeval=COCOeval,
     )
 
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(main)
