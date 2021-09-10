@@ -39,7 +39,7 @@ def main(
             image_id_to_coco_result_list.append(image_id_to_coco_result)
 
             # use file names as fiftyone name, create unique names if duplicate
-            result_name_temp = Path(result_json_path).name
+            result_name_temp = Path(result_json_path).stem
             result_name = result_name_temp
             name_increment = 2
             while result_name in result_name_list:
