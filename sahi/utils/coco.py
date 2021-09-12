@@ -2140,7 +2140,6 @@ def remove_invalid_coco_results(result_list_or_path: Union[List, str], dataset_d
     Removes invalid predictions from coco result such as:
         - negative bbox value
         - extreme bbox value
-        - when x2/y2 is smaller than x1/y1 in bbox
 
     Args:
         result_list_or_path: path or list for coco result json
@@ -2177,7 +2176,7 @@ def remove_invalid_coco_results(result_list_or_path: Union[List, str], dataset_d
         if not bbox:
             print("ignoring invalid prediction with empty bbox")
             continue
-        if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
+        if bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
             print(f"ignoring invalid prediction with bbox: {bbox}")
             continue
         if dataset_dict_or_path is not None:
