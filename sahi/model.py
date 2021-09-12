@@ -294,6 +294,19 @@ class MmdetDetectionModel(DetectionModel):
                     bool_mask = None
                 category_name = category_mapping[str(category_id)]
 
+                # ignore invalid predictions
+                if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
+                    print(f"ignoring invalid prediction with bbox: {bbox}")
+                    continue
+                if full_shape is not None and (
+                    bbox[1] > full_shape[0]
+                    or bbox[3] > full_shape[0]
+                    or bbox[0] > full_shape[1]
+                    or bbox[2] > full_shape[1]
+                ):
+                    print(f"ignoring invalid prediction with bbox: {bbox}")
+                    continue
+
                 object_prediction = ObjectPrediction(
                     bbox=bbox,
                     category_id=category_id,
@@ -458,6 +471,16 @@ class Yolov5DetectionModel(DetectionModel):
             score = prediction[4].item()
             category_id = int(prediction[5].item())
             category_name = original_predictions.names[category_id]
+
+            # ignore invalid predictions
+            if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
+                print(f"ignoring invalid prediction with bbox: {bbox}")
+                continue
+            if full_shape is not None and (
+                bbox[1] > full_shape[0] or bbox[3] > full_shape[0] or bbox[0] > full_shape[1] or bbox[2] > full_shape[1]
+            ):
+                print(f"ignoring invalid prediction with bbox: {bbox}")
+                continue
 
             object_prediction = ObjectPrediction(
                 bbox=bbox,
