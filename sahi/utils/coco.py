@@ -2133,3 +2133,61 @@ class CocoVid:
             global_instance_id += len(instance_id_set)
 
         return coco_dict
+
+
+def remove_invalid_coco_results(result_list_or_path: Union[List, str], dataset_dict_or_path: Union[Dict, str] = None):
+    """
+    Removes invalid predictions from coco result such as:
+        - negative bbox value
+        - extreme bbox value
+        - when x2/y2 is smaller than x1/y1 in bbox
+
+    Args:
+        result_list_or_path: path or list for coco result json
+        dataset_dict_or_path (optional): path or dict for coco dataset json
+    """
+
+    # prepare coco results
+    if isinstance(result_list_or_path, str):
+        result_list = load_json(result_list_or_path)
+    elif isinstance(result_list_or_path, list):
+        result_list = result_list_or_path
+    else:
+        raise TypeError('incorrect type for "result_list_or_path"')
+
+    # prepare image info from coco dataset
+    if dataset_dict_or_path is not None:
+        if isinstance(dataset_dict_or_path, str):
+            dataset_dict = load_json(dataset_dict_or_path)
+        elif isinstance(dataset_dict_or_path, dict):
+            dataset_dict = dataset_dict_or_path
+        else:
+            raise TypeError('incorrect type for "dataset_dict"')
+        image_id_to_height = {}
+        image_id_to_width = {}
+        for coco_image in dataset_dict["images"]:
+            image_id_to_height[coco_image["id"]] = coco_image["height"]
+            image_id_to_width[coco_image["id"]] = coco_image["width"]
+
+    # remove invalid predictions
+    fixed_result_list = []
+    for coco_result in result_list:
+        bbox = coco_result["bbox"]
+        # ignore invalid predictions
+        if not bbox:
+            print("ignoring invalid prediction with empty bbox")
+            continue
+        if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
+            print(f"ignoring invalid prediction with bbox: {bbox}")
+            continue
+        if dataset_dict_or_path is not None:
+            if (
+                bbox[1] > image_id_to_height[coco_result["image_id"]]
+                or bbox[3] > image_id_to_height[coco_result["image_id"]]
+                or bbox[0] > image_id_to_width[coco_result["image_id"]]
+                or bbox[2] > image_id_to_width[coco_result["image_id"]]
+            ):
+                print(f"ignoring invalid prediction with bbox: {bbox}")
+                continue
+        fixed_result_list.append(coco_result)
+    return fixed_result_list
