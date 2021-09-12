@@ -310,3 +310,24 @@ coco.stats
 
 ```
 </details>
+
+<details closed>
+<summary>
+<big><b>Remove invalid coco results:</b></big>
+</summary>
+
+```python
+from sahi.utils.file import save_json
+from sahi.utils.coco import remove_invalid_coco_results
+
+# remove invalid predictions from COCO results JSON
+coco_results = remove_invalid_coco_results("coco_result.json")
+
+# export processed COCO results
+save_json(coco_results, "fixed_coco_result.json")
+
+# bonus: remove invalid predictions from COCO results JSON by giving COCO
+# dataset path to also filter out bbox results exceeding image height&width
+subsampled_coco = remove_invalid_coco_results("coco_result.json", "coco_dataset.json")
+```
+</details>
