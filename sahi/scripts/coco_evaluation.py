@@ -142,7 +142,9 @@ def evaluate_coco(
         cocoEval = COCOeval(cocoGt, cocoDt, iou_type)
         cocoEval.params.catIds = cat_ids
         cocoEval.params.maxDets = list(proposal_nums)
-        cocoEval.params.iouThrs = [iou_thrs] if not isinstance(iou_thrs, list) else iou_thrs
+        cocoEval.params.iouThrs = (
+            [iou_thrs] if not isinstance(iou_thrs, list) and not isinstance(iou_thrs, np.ndarray) else iou_thrs
+        )
         # mapping of cocoEval.stats
         coco_metric_names = {
             "mAP": 0,
@@ -331,17 +333,17 @@ def evaluate_coco(
 def main(
     dataset_json_path: str,
     result_json_path: str,
-    out_dir: str,
+    out_dir: str = None,
     type: str = "bbox",
     classwise: bool = False,
-    proposal_nums: List[int] = [1024, 9216, 10000000000],
+    proposal_nums: List[int] = [10, 100, 500],
     iou_thrs: Union[List[float], float] = None,
 ):
     """
     Args:
         dataset_json_path (str): file path for the coco dataset json file
         result_json_path (str): file path for the coco result json file
-        out_dir (str): dir to save analyze result images
+        out_dir (str): dir to save eval result
         type (bool): 'bbox' or 'mask'
         classwise (bool): whether to evaluate the AP for each class
         proposal_nums (List[int]): Proposal number used for evaluating recalls, such as recall@100, recall@500
