@@ -1472,10 +1472,11 @@ def export_single_yolov5_image_and_corresponding_txt(
         yolo_image_path = copy.deepcopy(yolo_image_path_temp)
         name_increment = 2
         while Path(yolo_image_path).is_file():
-            yolo_image_path = yolo_image_path_temp.replace(
-                Path(coco_image.file_name).stem,
-                Path(coco_image.file_name).stem + "_" + str(name_increment),
-            )
+            parent_dir = Path(yolo_image_path_temp).parent
+            filename = Path(yolo_image_path_temp).stem
+            filesuffix = Path(yolo_image_path_temp).suffix
+            filename = filename + "_" + str(name_increment)
+            yolo_image_path = str(parent_dir / (filename + filesuffix))
             name_increment += 1
         # create a symbolic link pointing to coco_image_path named yolo_image_path
         os.symlink(coco_image_path, yolo_image_path)
