@@ -25,6 +25,12 @@ class TestCocoUtils(unittest.TestCase):
                 "supercategory": supercategory,
             }
         )
+        coco_category4 = CocoCategory.from_coco_category(
+            {
+                "id": category_id,
+                "name": category_name,
+            }
+        )
 
         self.assertEqual(coco_category1.id, category_id)
         self.assertEqual(coco_category1.id, coco_category2.id)
@@ -41,6 +47,10 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(coco_category1.json["id"], category_id)
         self.assertEqual(coco_category1.json["name"], category_name)
         self.assertEqual(coco_category1.json["supercategory"], supercategory)
+
+        self.assertEqual(coco_category4.id, category_id)
+        self.assertEqual(coco_category4.name, category_name)
+        self.assertEqual(coco_category4.supercategory, category_name)
 
     def test_coco_annotation(self):
         from sahi.utils.coco import CocoAnnotation
