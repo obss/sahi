@@ -89,7 +89,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
         object_prediction_list = yolov5_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 14)
+        self.assertEqual(len(object_prediction_list), 9)
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         desired_bbox = [321, 322, 62, 40]
