@@ -217,7 +217,7 @@ class MmdetDetectionModel(DetectionModel):
 
         # update model image size
         if image_size is not None:
-            self.model.cfg.data.test.pipeline[1]["img_scale"] = (image_size,)
+            self.model.cfg.data.test.pipeline[1]["img_scale"] = (image_size, image_size)
         # perform inference
         prediction_result = inference_detector(self.model, image)
 
