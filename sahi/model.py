@@ -386,6 +386,7 @@ class Yolov5DetectionModel(DetectionModel):
         # set model
         try:
             model = yolov5.load(self.model_path, device=self.device)
+            model.conf = self.confidence_threshold
             self.model = model
         except Exception as e:
             TypeError("model_path is not a valid yolov5 model path: ", e)
