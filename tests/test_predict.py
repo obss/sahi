@@ -45,15 +45,12 @@ class TestPredict(unittest.TestCase):
 
         # get full sized prediction
         prediction_result = get_prediction(
-            image=image,
-            detection_model=mmdet_detection_model,
-            shift_amount=[0, 0],
-            full_shape=None,
+            image=image, detection_model=mmdet_detection_model, shift_amount=[0, 0], full_shape=None, image_size=320
         )
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 23)
+        self.assertEqual(len(object_prediction_list), 4)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -63,23 +60,23 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "truck":
                 num_truck += 1
-        self.assertEqual(num_truck, 3)
+        self.assertEqual(num_truck, 0)
         num_car = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 20)
+        self.assertEqual(num_car, 3)
 
     def test_get_prediction_yolov5(self):
         from sahi.model import Yolov5DetectionModel
         from sahi.predict import get_prediction
-        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5s6_model
+        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
         # init model
-        download_yolov5s6_model()
+        download_yolov5n_model()
 
         yolov5_detection_model = Yolov5DetectionModel(
-            model_path=Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
+            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             confidence_threshold=0.3,
             device=None,
             category_remapping=None,
@@ -98,7 +95,7 @@ class TestPredict(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 12)
+        self.assertEqual(len(object_prediction_list), 15)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -113,7 +110,7 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 12)
+        self.assertEqual(num_car, 15)
 
     def test_get_sliced_prediction_mmdet(self):
         from sahi.model import MmdetDetectionModel
@@ -144,10 +141,12 @@ class TestPredict(unittest.TestCase):
         match_metric = "IOS"
         match_threshold = 0.5
         class_agnostic = True
+        image_size = 320
 
         # get sliced prediction
         prediction_result = get_sliced_prediction(
             image=image_path,
+            image_size=image_size,
             detection_model=mmdet_detection_model,
             slice_height=slice_height,
             slice_width=slice_width,
@@ -162,7 +161,7 @@ class TestPredict(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 24)
+        self.assertEqual(len(object_prediction_list), 13)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -172,23 +171,23 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "truck":
                 num_truck += 2
-        self.assertEqual(num_truck, 4)
+        self.assertEqual(num_truck, 0)
         num_car = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 22)
+        self.assertEqual(num_car, 13)
 
     def test_get_sliced_prediction_yolov5(self):
         from sahi.model import Yolov5DetectionModel
         from sahi.predict import get_sliced_prediction
-        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5s6_model
+        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
         # init model
-        download_yolov5s6_model()
+        download_yolov5n_model()
 
         yolov5_detection_model = Yolov5DetectionModel(
-            model_path=Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
+            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             confidence_threshold=0.3,
             device=None,
             category_remapping=None,
@@ -225,7 +224,7 @@ class TestPredict(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 21)
+        self.assertEqual(len(object_prediction_list), 19)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -240,12 +239,12 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 21)
+        self.assertEqual(num_car, 19)
 
     def test_coco_json_prediction(self):
         from sahi.predict import predict
         from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model
-        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5s6_model
+        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
         # init model
         download_mmdet_cascade_mask_rcnn_model()
@@ -292,7 +291,7 @@ class TestPredict(unittest.TestCase):
         )
 
         # init model
-        download_yolov5s6_model()
+        download_yolov5n_model()
 
         # prepare paths
         dataset_json_path = "tests/data/coco_utils/terrain_all_coco.json"
@@ -304,7 +303,7 @@ class TestPredict(unittest.TestCase):
             shutil.rmtree(project_dir)
         predict(
             model_type="yolov5",
-            model_path=Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
+            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             model_config_path=None,
             model_confidence_threshold=0.4,
             model_device=None,

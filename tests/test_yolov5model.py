@@ -6,17 +6,17 @@ import unittest
 import numpy as np
 
 from sahi.utils.cv import read_image
-from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5s6_model
+from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model, download_yolov5s6_model
 
 
 class TestYolov5DetectionModel(unittest.TestCase):
     def test_load_model(self):
         from sahi.model import Yolov5DetectionModel
 
-        download_yolov5s6_model()
+        download_yolov5n_model()
 
         yolov5_detection_model = Yolov5DetectionModel(
-            model_path=Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
+            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             confidence_threshold=0.3,
             device=None,
             category_remapping=None,
@@ -29,10 +29,10 @@ class TestYolov5DetectionModel(unittest.TestCase):
         from sahi.model import Yolov5DetectionModel
 
         # init model
-        download_yolov5s6_model()
+        download_yolov5n_model()
 
         yolov5_detection_model = Yolov5DetectionModel(
-            model_path=Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
+            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             confidence_threshold=0.5,
             device=None,
             category_remapping=None,
@@ -56,7 +56,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
                     break
 
         # compare
-        desired_bbox = [321, 322, 383, 362]
+        desired_bbox = [321, 325, 384, 365]
         predicted_bbox = list(map(int, box[:4].tolist()))
         margin = 2
         for ind, point in enumerate(predicted_bbox):
@@ -67,10 +67,10 @@ class TestYolov5DetectionModel(unittest.TestCase):
         from sahi.model import Yolov5DetectionModel
 
         # init model
-        download_yolov5s6_model()
+        download_yolov5n_model()
 
         yolov5_detection_model = Yolov5DetectionModel(
-            model_path=Yolov5TestConstants.YOLOV5S6_MODEL_PATH,
+            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             confidence_threshold=0.5,
             device=None,
             category_remapping=None,
@@ -89,10 +89,10 @@ class TestYolov5DetectionModel(unittest.TestCase):
         object_prediction_list = yolov5_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 9)
+        self.assertEqual(len(object_prediction_list), 8)
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        desired_bbox = [321, 322, 62, 40]
+        desired_bbox = [321, 325, 63, 40]
         predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
         margin = 2
         for ind, point in enumerate(predicted_bbox):
@@ -101,7 +101,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[5].category.name, "car")
         self.assertEqual(
             object_prediction_list[5].bbox.to_coco_bbox(),
-            [617, 195, 24, 23],
+            [701, 234, 20, 17],
         )
 
     def test_create_original_predictions_from_object_prediction_list(
