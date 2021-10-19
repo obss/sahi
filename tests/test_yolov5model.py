@@ -99,10 +99,10 @@ class TestYolov5DetectionModel(unittest.TestCase):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
-        self.assertEqual(
-            object_prediction_list[5].bbox.to_coco_bbox(),
-            [701, 234, 20, 17],
-        )
+        desired_bbox = [701, 234, 20, 17]
+        predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
+        for ind, point in enumerate(predicted_bbox):
+            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
 
     def test_create_original_predictions_from_object_prediction_list(
         self,
