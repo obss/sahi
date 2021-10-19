@@ -7,7 +7,7 @@ from typing import Optional
 class Yolov5TestConstants:
     YOLOV5N_MODEL_URL = "https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5n.pt"
     YOLOV5N_MODEL_PATH = "tests/data/models/yolov5/yolov5n.pt"
-    
+
     YOLOV5S6_MODEL_URL = "https://github.com/ultralytics/yolov5/releases/download/v5.0/yolov5s6.pt"
     YOLOV5S6_MODEL_PATH = "tests/data/models/yolov5/yolov5s6.pt"
 
@@ -27,6 +27,7 @@ def download_yolov5n_model(destination_path: Optional[str] = None):
             Yolov5TestConstants.YOLOV5N_MODEL_URL,
             destination_path,
         )
+
 
 def download_yolov5s6_model(destination_path: Optional[str] = None):
 
