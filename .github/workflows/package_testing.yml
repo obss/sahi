@@ -59,12 +59,12 @@ jobs:
           matrix.operating-system == 'ubuntu-latest' ||
           matrix.operating-system == 'windows-latest'
         run: >
-          pip install torch==1.8.1+cpu torchvision==0.9.1+cpu
+          pip install torch==1.9.1+cpu torchvision==0.10.1+cpu
           -f https://download.pytorch.org/whl/torch_stable.html
 
       - name: Install PyTorch on MacOS
         if: matrix.operating-system == 'macos-latest'
-        run: pip install torch==1.8.1 torchvision==0.9.1
+        run: pip install torch==1.9.1 torchvision==0.10.1
 
       - name: Install MMDetection(2.16.0), YOLOv5(6.0.1) and Norfair(0.3.1)
         run: >
