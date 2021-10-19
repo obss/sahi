@@ -81,11 +81,6 @@ def get_prediction(
     # postprocess matching predictions
     if postprocess is not None:
         filtered_object_prediction_list = postprocess(filtered_object_prediction_list)
-    else:
-        # init match merge instances
-        postprocess = UnionMergePostprocess(match_threshold=0.9, match_metric="IOS", class_agnostic=True)
-        # postprocess matching predictions
-        filtered_object_prediction_list = postprocess(filtered_object_prediction_list)
 
     time_end = time.time() - time_start
     durations_in_seconds["postprocess"] = time_end
