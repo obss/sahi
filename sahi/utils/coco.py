@@ -1272,7 +1272,7 @@ class Coco:
         )
         subsampled_coco.add_categories_from_coco_category_list(self.json_categories)
 
-        if category_id:
+        if category_id is not None:
             # get images that contain given category id
             images_that_contain_category: List[CocoImage] = []
             for image in self.images:
@@ -1343,7 +1343,7 @@ class Coco:
         for ind in range(upsample_ratio):
             for image_ind in range(len(self.images)):
                 # calculate add_this_image
-                if category_id:
+                if category_id is not None:
                     category_id_to_contains = defaultdict(lambda: 0)
                     annotation: CocoAnnotation
                     for annotation in self.images[image_ind].annotations:
