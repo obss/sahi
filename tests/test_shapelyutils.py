@@ -127,7 +127,7 @@ class TestShapelyUtils(unittest.TestCase):
         intersection_shapely_annotation = shapely_annotation.get_intersection(shapely_box)
 
         test_list = intersection_shapely_annotation.to_list()[0]
-        true_list = [(256, 97), (0, 0), (4, 199), (249, 199), (256, 192), (256, 97)]
+        true_list = [(0, 0), (4, 199), (249, 199), (256, 192), (256, 97), (0, 0)]
         for i in range(len(test_list)):
             for j in range(2):
                 self.assertEqual(int(test_list[i][j]), int(true_list[i][j]))
@@ -136,8 +136,6 @@ class TestShapelyUtils(unittest.TestCase):
             intersection_shapely_annotation.to_coco_segmentation(),
             [
                 [
-                    256,
-                    97,
                     0,
                     0,
                     4,
@@ -146,6 +144,8 @@ class TestShapelyUtils(unittest.TestCase):
                     199,
                     256,
                     192,
+                    256,
+                    97,
                 ]
             ],
         )
