@@ -1,5 +1,5 @@
 opencv-python>=4.2.0.32
-shapely>=1.7.0
+shapely>=1.8.0
 tqdm>=4.48.2
 pillow>=8.2.0
 pyyaml
