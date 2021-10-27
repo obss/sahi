@@ -186,7 +186,7 @@ sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --o
 <big><b>Explore COCO dataset via FiftyOne app:</b></big>
 </summary>
 
-For supported version: `pip install fiftyone>=0.11.1`
+For supported version: `pip install fiftyone>=0.11.1<0.15.0`
 
 ```python
 from sahi.utils.fiftyone import launch_fiftyone_app
