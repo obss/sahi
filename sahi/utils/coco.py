@@ -2191,3 +2191,147 @@ def remove_invalid_coco_results(result_list_or_path: Union[List, str], dataset_d
                 continue
         fixed_result_list.append(coco_result)
     return fixed_result_list
+
+
+def export_coco_as_yolov5(
+    output_dir: str, train_coco: Coco = None, val_coco: Coco = None, train_split_rate: float = 0.9, numpy_seed=0
+):
+    """
+    Exports current COCO dataset in ultralytics/yolov5 format.
+    Creates train val folders with image symlinks and txt files and a data yaml file.
+
+    Args:
+        output_dir: str
+            Export directory.
+        train_coco: Coco
+            coco object for training
+        val_coco: Coco
+            coco object for val
+        train_split_rate: float
+            train split rate between 0 and 1. will be used when val_coco is None.
+        numpy_seed: int
+            To fix the numpy seed.
+
+    Returns:
+        yaml_path: str
+            Path for the exported yolov5 data.yml
+    """
+    try:
+        import yaml
+    except ImportError:
+        raise ImportError('Please run "pip install -U pyyaml" ' "to install yaml first for yolov5 formatted exporting.")
+
+    # set split_mode
+    if train_coco and not val_coco:
+        split_mode = True
+    elif train_coco and val_coco:
+        split_mode = False
+    else:
+        ValueError("'train_coco' have to be provided")
+
+    # check train_split_rate
+    if 0 < train_split_rate and train_split_rate < 1:
+        split_mode = "SPLIT"
+    else:
+        ValueError("train_split_rate cannot be <0 or >1")
+
+    # split dataset
+    if split_mode:
+        result = train_coco.split_coco_as_train_val(
+            train_split_rate=train_split_rate,
+            numpy_seed=numpy_seed,
+        )
+        train_coco = result["train_coco"]
+        val_coco = result["val_coco"]
+
+    # create train val image dirs
+    train_dir = Path(os.path.abspath(output_dir)) / "train/"
+    train_dir.mkdir(parents=True, exist_ok=True)  # create dir
+    val_dir = Path(os.path.abspath(output_dir)) / "val/"
+    val_dir.mkdir(parents=True, exist_ok=True)  # create dir
+
+    # create image symlinks and annotation txts
+    export_yolov5_images_and_txts_from_coco_object(
+        output_dir=train_dir,
+        coco=train_coco,
+        ignore_negative_samples=train_coco.ignore_negative_samples,
+        mp=False,
+    )
+    export_yolov5_images_and_txts_from_coco_object(
+        output_dir=val_dir,
+        coco=val_coco,
+        ignore_negative_samples=val_coco.ignore_negative_samples,
+        mp=False,
+    )
+
+    # create yolov5 data yaml
+    data = {
+        "train": str(train_dir),
+        "val": str(val_dir),
+        "nc": len(train_coco.category_mapping),
+        "names": list(train_coco.category_mapping.values()),
+    }
+    yaml_path = str(Path(output_dir) / "data.yml")
+    with open(yaml_path, "w") as outfile:
+        yaml.dump(data, outfile, default_flow_style=None)
+
+    return yaml_path
+
+
+def export_coco_as_yolov5_via_yml(yml_path: str, output_dir: str, train_split_rate: float = 0.9, numpy_seed=0):
+    """
+    Exports current COCO dataset in ultralytics/yolov5 format.
+    Creates train val folders with image symlinks and txt files and a data yaml file.
+    Uses a yml file as input.
+
+    Args:
+        yml_path: str
+            file should contain these fields:
+                train_json_path: str
+                train_image_dir: str
+                val_json_path: str
+                val_image_dir: str
+        output_dir: str
+            Export directory.
+        train_split_rate: float
+            train split rate between 0 and 1. will be used when val_json_path is None.
+        numpy_seed: int
+            To fix the numpy seed.
+
+    Returns:
+        yaml_path: str
+            Path for the exported yolov5 data.yml
+    """
+    try:
+        import yaml
+    except ImportError:
+        raise ImportError('Please run "pip install -U pyyaml" ' "to install yaml first for yolov5 formatted exporting.")
+
+    with open(yml_path, "r") as stream:
+        config_dict = yaml.safe_load(stream)
+
+    if config_dict["train_json_path"]:
+        if not config_dict["train_image_dir"]:
+            raise ValueError(f"{yml_path} is missing `train_image_dir`")
+        train_coco = Coco.from_coco_dict_or_path(
+            config_dict["train_json_path"], image_dir=config_dict["train_image_dir"]
+        )
+    else:
+        train_coco = None
+
+    if config_dict["val_json_path"]:
+        if not config_dict["val_image_dir"]:
+            raise ValueError(f"{yml_path} is missing `val_image_dir`")
+        val_coco = Coco.from_coco_dict_or_path(config_dict["val_json_path"], image_dir=config_dict["val_image_dir"])
+    else:
+        val_coco = None
+
+    yaml_path = export_coco_as_yolov5(
+        output_dir=output_dir,
+        train_coco=train_coco,
+        val_coco=val_coco,
+        train_split_rate=train_split_rate,
+        numpy_seed=numpy_seed,
+    )
+
+    return yaml_path

@@ -781,6 +781,17 @@ class TestCocoUtils(unittest.TestCase):
             len(area_filtered_coco.json["annotations"]),
         )
 
+    def test_export_coco_as_yolov5(self):
+        from sahi.utils.coco import Coco, export_coco_as_yolov5
+
+        coco_dict_path = "tests/data/coco_utils/combined_coco.json"
+        image_dir = "tests/data/coco_utils/"
+        output_dir = "tests/data/export_coco_as_yolov5/"
+        if os.path.isdir(output_dir):
+            shutil.rmtree(output_dir)
+        coco = Coco.from_coco_dict_or_path(coco_dict_path, image_dir=image_dir)
+        export_coco_as_yolov5(output_dir=output_dir, train_coco=coco, val_coco=coco, numpy_seed=0)
+
     def test_cocovid(self):
         from sahi.utils.coco import CocoVid
 
