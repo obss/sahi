@@ -224,6 +224,28 @@ coco.export_as_yolov5(
 
 <details closed>
 <summary>
+<big><b>Convert train/val COCO dataset to ultralytics/yolov5 format:</b></big>
+</summary>
+
+```python
+from sahi.utils.coco import Coco, export_coco_as_yolov5
+
+# init Coco object
+train_coco = Coco.from_coco_dict_or_path("train_coco.json", image_dir="coco_images/")
+val_coco = Coco.from_coco_dict_or_path("val_coco.json", image_dir="coco_images/")
+
+# export converted YoloV5 formatted dataset into given output_dir with given train/val split
+data_yml_path = export_coco_as_yolov5(
+  output_dir="output/folder/dir",
+  train_coco=train_coco,
+  val_coco=val_coco
+)
+
+```
+</details>
+
+<details closed>
+<summary>
 <big><b>Subsample COCO dataset file:</b></big>
 </summary>
 
