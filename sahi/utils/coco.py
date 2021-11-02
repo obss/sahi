@@ -2230,9 +2230,7 @@ def export_coco_as_yolov5(
         ValueError("'train_coco' have to be provided")
 
     # check train_split_rate
-    if 0 < train_split_rate and train_split_rate < 1:
-        split_mode = "SPLIT"
-    else:
+    if split_mode and not (0 < train_split_rate < 1):
         ValueError("train_split_rate cannot be <0 or >1")
 
     # split dataset
