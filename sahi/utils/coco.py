@@ -765,6 +765,7 @@ class Coco:
         image_dir=None,
         remapping_dict=None,
         ignore_negative_samples=False,
+        limit_bboxes_to_img_dims=False,
     ):
         """
         Creates Coco object.
@@ -786,6 +787,7 @@ class Coco:
         self.categories = []
         self.images = []
         self._stats = None
+        self.limit_bboxes_to_img_dims = limit_bboxes_to_img_dims
 
     def add_categories_from_coco_category_list(self, coco_category_list):
         """
@@ -945,6 +947,7 @@ class Coco:
         image_dir: Optional[str] = None,
         remapping_dict: Optional[Dict] = None,
         ignore_negative_samples: bool = False,
+        limit_bboxes_to_img_dims: bool = False,
     ):
         """
         Creates coco object from COCO formatted dict or COCO dataset file path.
@@ -959,6 +962,8 @@ class Coco:
                 {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
             ignore_negative_samples: bool
                 If True ignores images without annotations in all operations.
+            limit_bboxes_to_img_dims: bool = False
+                Limits bounding boxes to image dimensions.
 
         Properties:
             images: list of CocoImage
@@ -969,6 +974,7 @@ class Coco:
             image_dir=image_dir,
             remapping_dict=remapping_dict,
             ignore_negative_samples=ignore_negative_samples,
+            limit_bboxes_to_img_dims=limit_bboxes_to_img_dims,
         )
 
         assert (
@@ -1017,6 +1023,8 @@ class Coco:
                 coco_image.add_annotation(coco_annotation)
             coco.add_image(coco_image)
 
+        if limit_bboxes_to_img_dims:
+            coco = coco.get_coco_with_proper_bboxes()
         return coco
 
     @property
@@ -1405,6 +1413,47 @@ class Coco:
                 area_filtered_coco.add_image(image)
 
         return area_filtered_coco
+
+    def get_coco_with_proper_bboxes(self):
+        """
+        Limits overflowing bounding boxes to image dimensions.
+        """
+
+        coco = Coco(
+            name=self.name,
+            image_dir=self.image_dir,
+            remapping_dict=self.remapping_dict,
+            ignore_negative_samples=self.ignore_negative_samples,
+        )
+        coco.add_categories_from_coco_category_list(self.json_categories)
+
+        if self.images is not None:
+            image_id_to_height = {}
+            image_id_to_width = {}
+            for coco_img in self.images:
+                if coco_img.annotations is not None:
+                    coco_image = CocoImage(
+                        file_name=coco_img.file_name, height=coco_img.height, width=coco_img.width, id=coco_img.id
+                    )
+
+                    for coco_ann in coco_img.annotations:
+                        x, y, w, h = coco_ann.bbox
+                        flag = 0
+                        if x + w > coco_image.width and y + h > coco_image.height:
+                            x, y, w, h = x, y, coco_image.width - x - 1, coco_image.height - y - 1
+                        elif x + w > coco_image.width:
+                            x, y, w, h = x, y, coco_image.width - x - 1, h
+                        elif y + h > coco_image.height:
+                            x, y, w, h = x, y, w, coco_image.height - y - 1
+                        coco_annotation = CocoAnnotation(
+                            bbox=[x, y, w, h],
+                            category_id=coco_ann.category_id,
+                            category_name=coco_ann.category_name,
+                            image_id=coco_img.id,
+                        )
+                        coco_image.add_annotation(coco_annotation)
+                    coco.add_image(coco_image)
+        return coco
 
 
 def export_yolov5_images_and_txts_from_coco_object(output_dir, coco, ignore_negative_samples=False, mp=False):
