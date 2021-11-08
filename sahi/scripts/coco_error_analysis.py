@@ -1,23 +1,16 @@
 import copy
 import os
-from argparse import ArgumentParser
 from multiprocessing import Pool
 from pathlib import Path
+from typing import List
 
+import fire
 import numpy as np
 
-try:
-    from pycocotools.coco import COCO
-    from pycocotools.cocoeval import COCOeval
-except ImportError:
-    raise ImportError('Please run "pip install -U pycocotools" ' "to install pycocotools first for coco evaluation.")
-try:
+
+def _makeplot(rs, ps, outDir, class_name, iou_type):
     import matplotlib.pyplot as plt
-except ImportError:
-    raise ImportError('Please run "pip install -U matplotlib" ' "to install matplotlib first for visualization.")
 
-
-def makeplot(rs, ps, outDir, class_name, iou_type):
     cs = np.vstack(
         [
             np.ones((2, 3)),
@@ -58,7 +51,7 @@ def makeplot(rs, ps, outDir, class_name, iou_type):
         plt.close(fig)
 
 
-def autolabel(ax, rects):
+def _autolabel(ax, rects):
     """Attach a text label above each bar in *rects*, displaying its height."""
     for rect in rects:
         height = rect.get_height()
@@ -77,7 +70,9 @@ def autolabel(ax, rects):
         )
 
 
-def makebarplot(rs, ps, outDir, class_name, iou_type):
+def _makebarplot(rs, ps, outDir, class_name, iou_type):
+    import matplotlib.pyplot as plt
+
     areaNames = ["allarea", "small", "medium", "large"]
     types = ["C75", "C50", "Loc", "Sim", "Oth", "BG", "FN"]
     fig, ax = plt.subplots()
@@ -106,14 +101,14 @@ def makebarplot(rs, ps, outDir, class_name, iou_type):
 
     # Add score texts over bars
     for rects in rects_list:
-        autolabel(ax, rects)
+        _autolabel(ax, rects)
 
     # Save plot
     fig.savefig(outDir + f"/{figure_title}.png")
     plt.close(fig)
 
 
-def get_gt_area_group_numbers(cocoEval):
+def _get_gt_area_group_numbers(cocoEval):
     areaRng = cocoEval.params.areaRng
     areaRngStr = [str(aRng) for aRng in areaRng]
     areaRngLbl = cocoEval.params.areaRngLbl
@@ -128,8 +123,10 @@ def get_gt_area_group_numbers(cocoEval):
     return areaRngLbl2Number
 
 
-def make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
-    areaRngLbl2Number = get_gt_area_group_numbers(cocoEval)
+def _make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
+    import matplotlib.pyplot as plt
+
+    areaRngLbl2Number = _get_gt_area_group_numbers(cocoEval)
     areaRngLbl = areaRngLbl2Number.keys()
     if verbose:
         print("number of annotations per area group:", areaRngLbl2Number)
@@ -149,7 +146,7 @@ def make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
     ax.set_xticklabels(areaRngLbl)
 
     # Add score texts over bars
-    autolabel(ax, rects)
+    _autolabel(ax, rects)
 
     # Save plot
     fig.tight_layout()
@@ -157,7 +154,9 @@ def make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
     plt.close(fig)
 
 
-def make_gt_area_histogram_plot(cocoEval, outDir):
+def _make_gt_area_histogram_plot(cocoEval, outDir):
+    import matplotlib.pyplot as plt
+
     n_bins = 100
     areas = [ann["area"] for ann in cocoEval.cocoGt.anns.values()]
 
@@ -179,7 +178,7 @@ def make_gt_area_histogram_plot(cocoEval, outDir):
     plt.close(fig)
 
 
-def analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None):
+def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None, COCOeval=None):
     nm = cocoGt.loadCats(catId)[0]
     print(f'--------------analyzing {k + 1}-{nm["name"]}---------------')
     ps_ = {}
@@ -243,7 +242,9 @@ def analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None):
     return k, ps_
 
 
-def analyze_results(res_file, ann_file, res_types, out_dir=None, extraplots=None, areas=None):
+def _analyze_results(
+    res_file, ann_file, res_types, out_dir=None, extraplots=None, areas=None, COCO=None, COCOeval=None
+):
     for res_type in res_types:
         assert res_type in ["bbox", "segm"]
     if areas:
@@ -290,7 +291,7 @@ def analyze_results(res_file, ann_file, res_types, out_dir=None, extraplots=None
         recThrs = cocoEval.params.recThrs
         with Pool(processes=48) as pool:
             args = [(k, cocoDt, cocoGt, catId, iou_type, areas) for k, catId in enumerate(catIds)]
-            analyze_results = pool.starmap(analyze_individual_category, args)
+            analyze_results = pool.starmap(_analyze_individual_category, args)
         for k, catId in enumerate(catIds):
             nm = cocoGt.loadCats(catId)[0]
             print(f'--------------saving {k + 1}-{nm["name"]}---------------')
@@ -306,41 +307,58 @@ def analyze_results(res_file, ann_file, res_types, out_dir=None, extraplots=None
             ps[ps == -1] = 0
             ps[5, :, k, :, :] = ps[4, :, k, :, :] > 0
             ps[6, :, k, :, :] = 1.0
-            makeplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
+            _makeplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
             if extraplots:
-                makebarplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
-        makeplot(recThrs, ps, res_out_dir, "allclass", iou_type)
+                _makebarplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
+        _makeplot(recThrs, ps, res_out_dir, "allclass", iou_type)
         if extraplots:
-            makebarplot(recThrs, ps, res_out_dir, "allclass", iou_type)
-            make_gt_area_group_numbers_plot(cocoEval=cocoEval, outDir=res_out_dir, verbose=True)
-            make_gt_area_histogram_plot(cocoEval=cocoEval, outDir=res_out_dir)
+            _makebarplot(recThrs, ps, res_out_dir, "allclass", iou_type)
+            _make_gt_area_group_numbers_plot(cocoEval=cocoEval, outDir=res_out_dir, verbose=True)
+            _make_gt_area_histogram_plot(cocoEval=cocoEval, outDir=res_out_dir)
 
 
-def main():
-    parser = ArgumentParser(description="COCO Error Analysis Tool")
-    parser.add_argument("dataset_path", type=str, help="COCO dataset (json file) path")
-    parser.add_argument("results_path", type=str, help="COCO results (json file) path")
-    parser.add_argument("--out_dir", help="dir to save analyze result images")
-    parser.add_argument("--types", type=str, nargs="+", default=["bbox"], help="result types")
-    parser.add_argument("--extraplots", action="store_true", help="export extra bar/stat plots")
-    parser.add_argument(
-        "--areas",
-        type=int,
-        nargs="+",
-        default=[1024, 9216, 10000000000],
-        help="area regions",
-    )
-    args = parser.parse_args()
+def main(
+    dataset_json_path: str,
+    result_json_path: str,
+    out_dir: str,
+    type: str = "bbox",
+    extraplots: bool = False,
+    areas: List[int] = [1024, 9216, 10000000000],
+):
+    """
+    Args:
+        dataset_json_path (str): file path for the coco dataset json file
+        result_json_paths (str): file path for the coco result json file
+        out_dir (str): dir to save analyze result images
+        extraplots (bool): export extra bar/stat plots
+        type (str): 'bbox' or 'mask'
+        areas (List[int]): area regions for coco evaluation calculations
+    """
+    try:
+        from pycocotools.coco import COCO
+        from pycocotools.cocoeval import COCOeval
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError(
+            'Please run "pip install -U pycocotools" ' "to install pycocotools first for coco evaluation."
+        )
+    try:
+        import matplotlib.pyplot as plt
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError(
+            'Please run "pip install -U matplotlib" ' "to install matplotlib first for visualization."
+        )
 
-    analyze_results(
-        args.results_path,
-        args.dataset_path,
-        args.types,
-        out_dir=args.out_dir,
-        extraplots=args.extraplots,
-        areas=args.areas,
+    _analyze_results(
+        result_json_path,
+        dataset_json_path,
+        res_types=[type],
+        out_dir=out_dir,
+        extraplots=extraplots,
+        areas=areas,
+        COCO=COCO,
+        COCOEval=COCOeval,
     )
 
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(main)

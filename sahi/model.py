@@ -217,7 +217,7 @@ class MmdetDetectionModel(DetectionModel):
 
         # update model image size
         if image_size is not None:
-            self.model.cfg.data.test.pipeline[1]["img_scale"] = (image_size,)
+            self.model.cfg.data.test.pipeline[1]["img_scale"] = (image_size, image_size)
         # perform inference
         prediction_result = inference_detector(self.model, image)
 
@@ -293,6 +293,19 @@ class MmdetDetectionModel(DetectionModel):
                 else:
                     bool_mask = None
                 category_name = category_mapping[str(category_id)]
+
+                # ignore invalid predictions
+                if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
+                    print(f"ignoring invalid prediction with bbox: {bbox}")
+                    continue
+                if full_shape is not None and (
+                    bbox[1] > full_shape[0]
+                    or bbox[3] > full_shape[0]
+                    or bbox[0] > full_shape[1]
+                    or bbox[2] > full_shape[1]
+                ):
+                    print(f"ignoring invalid prediction with bbox: {bbox}")
+                    continue
 
                 object_prediction = ObjectPrediction(
                     bbox=bbox,
@@ -373,6 +386,7 @@ class Yolov5DetectionModel(DetectionModel):
         # set model
         try:
             model = yolov5.load(self.model_path, device=self.device)
+            model.conf = self.confidence_threshold
             self.model = model
         except Exception as e:
             TypeError("model_path is not a valid yolov5 model path: ", e)
@@ -458,6 +472,16 @@ class Yolov5DetectionModel(DetectionModel):
             score = prediction[4].item()
             category_id = int(prediction[5].item())
             category_name = original_predictions.names[category_id]
+
+            # ignore invalid predictions
+            if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
+                print(f"ignoring invalid prediction with bbox: {bbox}")
+                continue
+            if full_shape is not None and (
+                bbox[1] > full_shape[0] or bbox[3] > full_shape[0] or bbox[0] > full_shape[1] or bbox[2] > full_shape[1]
+            ):
+                print(f"ignoring invalid prediction with bbox: {bbox}")
+                continue
 
             object_prediction = ObjectPrediction(
                 bbox=bbox,

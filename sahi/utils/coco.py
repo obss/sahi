@@ -39,7 +39,7 @@ class CocoCategory:
         return cls(
             id=category["id"],
             name=category["name"],
-            supercategory=category["supercategory"],
+            supercategory=category["supercategory"] if "supercategory" in category else category["name"],
         )
 
     @property
@@ -1272,7 +1272,7 @@ class Coco:
         )
         subsampled_coco.add_categories_from_coco_category_list(self.json_categories)
 
-        if category_id:
+        if category_id is not None:
             # get images that contain given category id
             images_that_contain_category: List[CocoImage] = []
             for image in self.images:
@@ -1343,7 +1343,7 @@ class Coco:
         for ind in range(upsample_ratio):
             for image_ind in range(len(self.images)):
                 # calculate add_this_image
-                if category_id:
+                if category_id is not None:
                     category_id_to_contains = defaultdict(lambda: 0)
                     annotation: CocoAnnotation
                     for annotation in self.images[image_ind].annotations:
@@ -1472,10 +1472,11 @@ def export_single_yolov5_image_and_corresponding_txt(
         yolo_image_path = copy.deepcopy(yolo_image_path_temp)
         name_increment = 2
         while Path(yolo_image_path).is_file():
-            yolo_image_path = yolo_image_path_temp.replace(
-                Path(coco_image.file_name).stem,
-                Path(coco_image.file_name).stem + "_" + str(name_increment),
-            )
+            parent_dir = Path(yolo_image_path_temp).parent
+            filename = Path(yolo_image_path_temp).stem
+            filesuffix = Path(yolo_image_path_temp).suffix
+            filename = filename + "_" + str(name_increment)
+            yolo_image_path = str(parent_dir / (filename + filesuffix))
             name_increment += 1
         # create a symbolic link pointing to coco_image_path named yolo_image_path
         os.symlink(coco_image_path, yolo_image_path)
@@ -2133,3 +2134,202 @@ class CocoVid:
             global_instance_id += len(instance_id_set)
 
         return coco_dict
+
+
+def remove_invalid_coco_results(result_list_or_path: Union[List, str], dataset_dict_or_path: Union[Dict, str] = None):
+    """
+    Removes invalid predictions from coco result such as:
+        - negative bbox value
+        - extreme bbox value
+
+    Args:
+        result_list_or_path: path or list for coco result json
+        dataset_dict_or_path (optional): path or dict for coco dataset json
+    """
+
+    # prepare coco results
+    if isinstance(result_list_or_path, str):
+        result_list = load_json(result_list_or_path)
+    elif isinstance(result_list_or_path, list):
+        result_list = result_list_or_path
+    else:
+        raise TypeError('incorrect type for "result_list_or_path"')
+
+    # prepare image info from coco dataset
+    if dataset_dict_or_path is not None:
+        if isinstance(dataset_dict_or_path, str):
+            dataset_dict = load_json(dataset_dict_or_path)
+        elif isinstance(dataset_dict_or_path, dict):
+            dataset_dict = dataset_dict_or_path
+        else:
+            raise TypeError('incorrect type for "dataset_dict"')
+        image_id_to_height = {}
+        image_id_to_width = {}
+        for coco_image in dataset_dict["images"]:
+            image_id_to_height[coco_image["id"]] = coco_image["height"]
+            image_id_to_width[coco_image["id"]] = coco_image["width"]
+
+    # remove invalid predictions
+    fixed_result_list = []
+    for coco_result in result_list:
+        bbox = coco_result["bbox"]
+        # ignore invalid predictions
+        if not bbox:
+            print("ignoring invalid prediction with empty bbox")
+            continue
+        if bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
+            print(f"ignoring invalid prediction with bbox: {bbox}")
+            continue
+        if dataset_dict_or_path is not None:
+            if (
+                bbox[1] > image_id_to_height[coco_result["image_id"]]
+                or bbox[3] > image_id_to_height[coco_result["image_id"]]
+                or bbox[0] > image_id_to_width[coco_result["image_id"]]
+                or bbox[2] > image_id_to_width[coco_result["image_id"]]
+            ):
+                print(f"ignoring invalid prediction with bbox: {bbox}")
+                continue
+        fixed_result_list.append(coco_result)
+    return fixed_result_list
+
+
+def export_coco_as_yolov5(
+    output_dir: str, train_coco: Coco = None, val_coco: Coco = None, train_split_rate: float = 0.9, numpy_seed=0
+):
+    """
+    Exports current COCO dataset in ultralytics/yolov5 format.
+    Creates train val folders with image symlinks and txt files and a data yaml file.
+
+    Args:
+        output_dir: str
+            Export directory.
+        train_coco: Coco
+            coco object for training
+        val_coco: Coco
+            coco object for val
+        train_split_rate: float
+            train split rate between 0 and 1. will be used when val_coco is None.
+        numpy_seed: int
+            To fix the numpy seed.
+
+    Returns:
+        yaml_path: str
+            Path for the exported yolov5 data.yml
+    """
+    try:
+        import yaml
+    except ImportError:
+        raise ImportError('Please run "pip install -U pyyaml" ' "to install yaml first for yolov5 formatted exporting.")
+
+    # set split_mode
+    if train_coco and not val_coco:
+        split_mode = True
+    elif train_coco and val_coco:
+        split_mode = False
+    else:
+        ValueError("'train_coco' have to be provided")
+
+    # check train_split_rate
+    if split_mode and not (0 < train_split_rate < 1):
+        ValueError("train_split_rate cannot be <0 or >1")
+
+    # split dataset
+    if split_mode:
+        result = train_coco.split_coco_as_train_val(
+            train_split_rate=train_split_rate,
+            numpy_seed=numpy_seed,
+        )
+        train_coco = result["train_coco"]
+        val_coco = result["val_coco"]
+
+    # create train val image dirs
+    train_dir = Path(os.path.abspath(output_dir)) / "train/"
+    train_dir.mkdir(parents=True, exist_ok=True)  # create dir
+    val_dir = Path(os.path.abspath(output_dir)) / "val/"
+    val_dir.mkdir(parents=True, exist_ok=True)  # create dir
+
+    # create image symlinks and annotation txts
+    export_yolov5_images_and_txts_from_coco_object(
+        output_dir=train_dir,
+        coco=train_coco,
+        ignore_negative_samples=train_coco.ignore_negative_samples,
+        mp=False,
+    )
+    export_yolov5_images_and_txts_from_coco_object(
+        output_dir=val_dir,
+        coco=val_coco,
+        ignore_negative_samples=val_coco.ignore_negative_samples,
+        mp=False,
+    )
+
+    # create yolov5 data yaml
+    data = {
+        "train": str(train_dir),
+        "val": str(val_dir),
+        "nc": len(train_coco.category_mapping),
+        "names": list(train_coco.category_mapping.values()),
+    }
+    yaml_path = str(Path(output_dir) / "data.yml")
+    with open(yaml_path, "w") as outfile:
+        yaml.dump(data, outfile, default_flow_style=None)
+
+    return yaml_path
+
+
+def export_coco_as_yolov5_via_yml(yml_path: str, output_dir: str, train_split_rate: float = 0.9, numpy_seed=0):
+    """
+    Exports current COCO dataset in ultralytics/yolov5 format.
+    Creates train val folders with image symlinks and txt files and a data yaml file.
+    Uses a yml file as input.
+
+    Args:
+        yml_path: str
+            file should contain these fields:
+                train_json_path: str
+                train_image_dir: str
+                val_json_path: str
+                val_image_dir: str
+        output_dir: str
+            Export directory.
+        train_split_rate: float
+            train split rate between 0 and 1. will be used when val_json_path is None.
+        numpy_seed: int
+            To fix the numpy seed.
+
+    Returns:
+        yaml_path: str
+            Path for the exported yolov5 data.yml
+    """
+    try:
+        import yaml
+    except ImportError:
+        raise ImportError('Please run "pip install -U pyyaml" ' "to install yaml first for yolov5 formatted exporting.")
+
+    with open(yml_path, "r") as stream:
+        config_dict = yaml.safe_load(stream)
+
+    if config_dict["train_json_path"]:
+        if not config_dict["train_image_dir"]:
+            raise ValueError(f"{yml_path} is missing `train_image_dir`")
+        train_coco = Coco.from_coco_dict_or_path(
+            config_dict["train_json_path"], image_dir=config_dict["train_image_dir"]
+        )
+    else:
+        train_coco = None
+
+    if config_dict["val_json_path"]:
+        if not config_dict["val_image_dir"]:
+            raise ValueError(f"{yml_path} is missing `val_image_dir`")
+        val_coco = Coco.from_coco_dict_or_path(config_dict["val_json_path"], image_dir=config_dict["val_image_dir"])
+    else:
+        val_coco = None
+
+    yaml_path = export_coco_as_yolov5(
+        output_dir=output_dir,
+        train_coco=train_coco,
+        val_coco=val_coco,
+        train_split_rate=train_split_rate,
+        numpy_seed=numpy_seed,
+    )
+
+    return yaml_path

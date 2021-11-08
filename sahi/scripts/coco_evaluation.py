@@ -1,18 +1,13 @@
 import itertools
 import json
 import warnings
-from argparse import ArgumentParser
 from collections import OrderedDict
 from pathlib import Path
+from typing import List, Union
 
+import fire
 import numpy as np
 from terminaltables import AsciiTable
-
-try:
-    from pycocotools.coco import COCO
-    from pycocotools.cocoeval import COCOeval
-except ImportError:
-    raise ImportError('Please run "pip install -U pycocotools" ' "to install pycocotools first for coco evaluation.")
 
 
 def _cocoeval_summarize(
@@ -71,6 +66,8 @@ def evaluate_coco(
     iou_thrs=None,
     metric_items=None,
     out_dir=None,
+    COCO=None,
+    COCOeval=None,
 ):
     """Evaluation in COCO protocol.
     Args:
@@ -145,7 +142,9 @@ def evaluate_coco(
         cocoEval = COCOeval(cocoGt, cocoDt, iou_type)
         cocoEval.params.catIds = cat_ids
         cocoEval.params.maxDets = list(proposal_nums)
-        cocoEval.params.iouThrs = [iou_thrs] if not isinstance(iou_thrs, list) else iou_thrs
+        cocoEval.params.iouThrs = (
+            [iou_thrs] if not isinstance(iou_thrs, list) and not isinstance(iou_thrs, np.ndarray) else iou_thrs
+        )
         # mapping of cocoEval.stats
         coco_metric_names = {
             "mAP": 0,
@@ -331,33 +330,46 @@ def evaluate_coco(
     return eval_results
 
 
-def main():
-    parser = ArgumentParser(description="COCO Evaluation Tool")
-    parser.add_argument("dataset_path", type=str, help="COCO dataset (json file) path")
-    parser.add_argument("result_path", type=str, help="COCO result (json file) path")
-    parser.add_argument("--out_dir", type=str, default=None, help="dir to save evaluation result json")
-    parser.add_argument("--metric", type=str, nargs="+", default=["bbox"], help="metric types")
-    parser.add_argument("--classwise", action="store_true", help="whether to evaluate the AP for each class")
-    parser.add_argument(
-        "--proposal_nums",
-        type=int,
-        nargs="+",
-        default=[10, 100, 500],
-        help="Proposal number used for evaluating recalls, such as recall@100, recall@500",
-    )
-    parser.add_argument("--iou_thrs", type=float, default=None, help="IoU threshold used for evaluating recalls/mAPs")
-    args = parser.parse_args()
+def main(
+    dataset_json_path: str,
+    result_json_path: str,
+    out_dir: str = None,
+    type: str = "bbox",
+    classwise: bool = False,
+    proposal_nums: List[int] = [10, 100, 500],
+    iou_thrs: Union[List[float], float] = None,
+):
+    """
+    Args:
+        dataset_json_path (str): file path for the coco dataset json file
+        result_json_path (str): file path for the coco result json file
+        out_dir (str): dir to save eval result
+        type (bool): 'bbox' or 'mask'
+        classwise (bool): whether to evaluate the AP for each class
+        proposal_nums (List[int]): Proposal number used for evaluating recalls, such as recall@100, recall@500
+        iou_thrs (float): IoU threshold used for evaluating recalls/mAPs
+    """
+    try:
+        from pycocotools.coco import COCO
+        from pycocotools.cocoeval import COCOeval
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError(
+            'Please run "pip install -U pycocotools" ' "to install pycocotools first for coco evaluation."
+        )
+
     # perform coco eval
     eval_results = evaluate_coco(
-        args.dataset_path,
-        args.result_path,
-        args.metric,
-        args.classwise,
-        args.proposal_nums,
-        args.iou_thrs,
-        out_dir=args.out_dir,
+        dataset_json_path,
+        result_json_path,
+        type,
+        classwise,
+        proposal_nums,
+        iou_thrs,
+        out_dir=out_dir,
+        COCO=COCO,
+        COCOeval=COCOeval,
     )
 
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(main)

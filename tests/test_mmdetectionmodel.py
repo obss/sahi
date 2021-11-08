@@ -167,7 +167,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         image = read_image(image_path)
 
         # perform inference
-        mmdet_detection_model.perform_inference(image)
+        mmdet_detection_model.perform_inference(image, image_size=256)
 
         # convert predictions to ObjectPrediction list
         mmdet_detection_model.convert_original_predictions()
@@ -175,17 +175,17 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
         # compare
         self.assertEqual(len(object_prediction_list), 100)
-        self.assertEqual(object_prediction_list[0].category.id, 2)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
+        self.assertEqual(object_prediction_list[0].category.id, 0)
+        self.assertEqual(object_prediction_list[0].category.name, "person")
         self.assertEqual(
             object_prediction_list[0].bbox.to_coco_bbox(),
-            [448, 309, 47, 32],
+            [805, 162, 32, 40],
         )
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
         self.assertEqual(
             object_prediction_list[5].bbox.to_coco_bbox(),
-            [523, 225, 22, 17],
+            [369, 293, 54, 40],
         )
 
     def test_create_original_predictions_from_object_prediction_list_with_mask_output(
@@ -210,7 +210,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         image = read_image(image_path)
 
         # perform inference
-        mmdet_detection_model.perform_inference(image)
+        mmdet_detection_model.perform_inference(image, image_size=256)
         original_predictions_1 = mmdet_detection_model.original_predictions
 
         # convert predictions to ObjectPrediction list
@@ -224,12 +224,12 @@ class TestMmdetDetectionModel(unittest.TestCase):
         # compare
         self.assertEqual(len(original_predictions_1), len(original_predictions_2))  # 2
         self.assertEqual(len(original_predictions_1[0]), len(original_predictions_2[0]))  # 80
-        self.assertEqual(len(original_predictions_1[0][2]), len(original_predictions_2[0][2]))  # 25
+        self.assertEqual(len(original_predictions_1[0][2]), len(original_predictions_2[0][2]))  # 4
         self.assertEqual(type(original_predictions_1[0]), type(original_predictions_2[0]))  # list
         self.assertEqual(original_predictions_1[0][2].dtype, original_predictions_2[0][2].dtype)  # float32
-        self.assertEqual(original_predictions_1[0][0][0].dtype, original_predictions_2[0][0][0].dtype)  # float32
-        self.assertEqual(original_predictions_1[1][0][0].dtype, original_predictions_2[1][0][0].dtype)  # bool
-        self.assertEqual(len(original_predictions_1[0][0][0]), len(original_predictions_2[0][0][0]))  # 5
+        self.assertEqual(original_predictions_1[0][2][0].dtype, original_predictions_2[0][2][0].dtype)  # float32
+        self.assertEqual(original_predictions_1[1][2][0].dtype, original_predictions_2[1][2][0].dtype)  # bool
+        self.assertEqual(len(original_predictions_1[0][2][0]), len(original_predictions_2[0][2][0]))  # 5
         self.assertEqual(len(original_predictions_1[0][1]), len(original_predictions_1[0][1]))  # 0
         self.assertEqual(original_predictions_1[0][1].shape, original_predictions_1[0][1].shape)  # (0, 5)
 
@@ -255,7 +255,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         image = read_image(image_path)
 
         # perform inference
-        mmdet_detection_model.perform_inference(image)
+        mmdet_detection_model.perform_inference(image, image_size=256)
         original_predictions_1 = mmdet_detection_model.original_predictions
 
         # convert predictions to ObjectPrediction list
@@ -268,7 +268,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
         # compare
         self.assertEqual(len(original_predictions_1), len(original_predictions_2))  # 80
-        self.assertEqual(len(original_predictions_1[2]), len(original_predictions_2[2]))  # 97
+        self.assertEqual(len(original_predictions_1[2]), len(original_predictions_2[2]))  # 57
         self.assertEqual(type(original_predictions_1), type(original_predictions_2))  # list
         self.assertEqual(original_predictions_1[2].dtype, original_predictions_2[2].dtype)  # float32
         self.assertEqual(original_predictions_1[2][0].dtype, original_predictions_2[2][0].dtype)  # float32

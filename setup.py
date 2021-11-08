@@ -12,7 +12,7 @@ def get_long_description():
 
 
 def get_requirements():
-    with open("requirements.txt") as f:
+    with open("requirements.txt", encoding="utf8") as f:
         return f.read().splitlines()
 
 
@@ -32,7 +32,7 @@ setuptools.setup(
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
     url="https://github.com/obss/sahi",
-    packages=setuptools.find_packages(exclude=["conda", "demo", "tests"]),
+    packages=setuptools.find_packages(exclude=["demo", "docs", "resources", "tests"]),
     python_requires=">=3.7",
     install_requires=get_requirements(),
     extras_require={
@@ -51,4 +51,9 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
+    entry_points={
+        "console_scripts": [
+            "sahi=sahi.cli:app",
+        ],
+    },
 )

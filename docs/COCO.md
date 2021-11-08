@@ -224,6 +224,28 @@ coco.export_as_yolov5(
 
 <details closed>
 <summary>
+<big><b>Convert train/val COCO dataset to ultralytics/yolov5 format:</b></big>
+</summary>
+
+```python
+from sahi.utils.coco import Coco, export_coco_as_yolov5
+
+# init Coco object
+train_coco = Coco.from_coco_dict_or_path("train_coco.json", image_dir="coco_images/")
+val_coco = Coco.from_coco_dict_or_path("val_coco.json", image_dir="coco_images/")
+
+# export converted YoloV5 formatted dataset into given output_dir with given train/val split
+data_yml_path = export_coco_as_yolov5(
+  output_dir="output/folder/dir",
+  train_coco=train_coco,
+  val_coco=val_coco
+)
+
+```
+</details>
+
+<details closed>
+<summary>
 <big><b>Subsample COCO dataset file:</b></big>
 </summary>
 
@@ -308,5 +330,26 @@ coco.stats
   'max_annotation_area_per_category': {'human': 72670, 'vehicle': 328640},
 }
 
+```
+</details>
+
+<details closed>
+<summary>
+<big><b>Remove invalid coco results:</b></big>
+</summary>
+
+```python
+from sahi.utils.file import save_json
+from sahi.utils.coco import remove_invalid_coco_results
+
+# remove invalid predictions from COCO results JSON
+coco_results = remove_invalid_coco_results("coco_result.json")
+
+# export processed COCO results
+save_json(coco_results, "fixed_coco_result.json")
+
+# bonus: remove invalid predictions from COCO results JSON by giving COCO
+# dataset path to also filter out bbox results exceeding image height&width
+coco_results = remove_invalid_coco_results("coco_result.json", "coco_dataset.json")
 ```
 </details>

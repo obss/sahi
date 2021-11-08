@@ -98,7 +98,7 @@ class ShapelyAnnotation:
         self.__multipolygon = multipolygon
         # calculate areas of all polygons
         area = 0
-        for shapely_polygon in list(multipolygon):
+        for shapely_polygon in multipolygon.geoms:
             area += shapely_polygon.area
         # set instance area
         self.__area = area
@@ -112,7 +112,7 @@ class ShapelyAnnotation:
         ]
         """
         list_of_list_of_points: List = []
-        for shapely_polygon in self.multipolygon:
+        for shapely_polygon in self.multipolygon.geoms:
             # create list_of_points for selected shapely_polygon
             if shapely_polygon.area != 0:
                 x_coords = shapely_polygon.exterior.coords.xy[0]

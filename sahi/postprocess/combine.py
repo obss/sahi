@@ -44,7 +44,7 @@ def calculate_box_union(box1: Union[List[int], np.ndarray], box2: Union[List[int
 
 
 class PostprocessPredictions:
-    """Combines predictions using NMS elimination utilizing provided match metric ('IOU' or 'IOS')"""
+    """Utilities for calculating IOU/IOS based match for given ObjectPredictions"""
 
     def __init__(
         self,
