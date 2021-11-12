@@ -380,5 +380,5 @@ coco = coco.get_coco_with_clipped_bboxes()
 - Export your clipped_bboxed_coco:
 ```python
 save_json(coco.json, "coco.json")
-
+```
 </details>
