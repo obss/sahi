@@ -11,10 +11,11 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 
 import numpy as np
+from shapely.geometry.geo import shape
 from tqdm import tqdm
 
 from sahi.utils.file import load_json, save_json
-from sahi.utils.shapely import ShapelyAnnotation, box, get_shapely_multipolygon
+from sahi.utils.shapely import ShapelyAnnotation, box, get_bbox_from_shapely, get_shapely_multipolygon
 
 
 class CocoCategory:
@@ -765,7 +766,7 @@ class Coco:
         image_dir=None,
         remapping_dict=None,
         ignore_negative_samples=False,
-        limit_bboxes_to_img_dims=False,
+        clip_bboxes_to_img_dims=False,
     ):
         """
         Creates Coco object.
@@ -787,7 +788,7 @@ class Coco:
         self.categories = []
         self.images = []
         self._stats = None
-        self.limit_bboxes_to_img_dims = limit_bboxes_to_img_dims
+        self.clip_bboxes_to_img_dims = clip_bboxes_to_img_dims
 
     def add_categories_from_coco_category_list(self, coco_category_list):
         """
@@ -947,7 +948,7 @@ class Coco:
         image_dir: Optional[str] = None,
         remapping_dict: Optional[Dict] = None,
         ignore_negative_samples: bool = False,
-        limit_bboxes_to_img_dims: bool = False,
+        clip_bboxes_to_img_dims: bool = False,
     ):
         """
         Creates coco object from COCO formatted dict or COCO dataset file path.
@@ -962,7 +963,7 @@ class Coco:
                 {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
             ignore_negative_samples: bool
                 If True ignores images without annotations in all operations.
-            limit_bboxes_to_img_dims: bool = False
+            clip_bboxes_to_img_dims: bool = False
                 Limits bounding boxes to image dimensions.
 
         Properties:
@@ -974,7 +975,7 @@ class Coco:
             image_dir=image_dir,
             remapping_dict=remapping_dict,
             ignore_negative_samples=ignore_negative_samples,
-            limit_bboxes_to_img_dims=limit_bboxes_to_img_dims,
+            clip_bboxes_to_img_dims=clip_bboxes_to_img_dims,
         )
 
         assert (
@@ -1023,8 +1024,8 @@ class Coco:
                 coco_image.add_annotation(coco_annotation)
             coco.add_image(coco_image)
 
-        if limit_bboxes_to_img_dims:
-            coco = coco.get_coco_with_proper_bboxes()
+        if clip_bboxes_to_img_dims:
+            coco = coco.get_coco_with_clipped_bboxes()
         return coco
 
     @property
@@ -1414,10 +1415,11 @@ class Coco:
 
         return area_filtered_coco
 
-    def get_coco_with_proper_bboxes(self):
+    def get_coco_with_clipped_bboxes(self):
         """
         Limits overflowing bounding boxes to image dimensions.
         """
+        from sahi.slicing import annotation_inside_slice
 
         coco = Coco(
             name=self.name,
@@ -1428,31 +1430,27 @@ class Coco:
         coco.add_categories_from_coco_category_list(self.json_categories)
 
         if self.images is not None:
-            image_id_to_height = {}
-            image_id_to_width = {}
             for coco_img in self.images:
+                img_dims = [0, 0, coco_img.width, coco_img.height]
+                coco_image = CocoImage(
+                    file_name=coco_img.file_name, height=coco_img.height, width=coco_img.width, id=coco_img.id
+                )
                 if coco_img.annotations is not None:
-                    coco_image = CocoImage(
-                        file_name=coco_img.file_name, height=coco_img.height, width=coco_img.width, id=coco_img.id
-                    )
-
                     for coco_ann in coco_img.annotations:
-                        x, y, w, h = coco_ann.bbox
-                        flag = 0
-                        if x + w > coco_image.width and y + h > coco_image.height:
-                            x, y, w, h = x, y, coco_image.width - x - 1, coco_image.height - y - 1
-                        elif x + w > coco_image.width:
-                            x, y, w, h = x, y, coco_image.width - x - 1, h
-                        elif y + h > coco_image.height:
-                            x, y, w, h = x, y, w, coco_image.height - y - 1
-                        coco_annotation = CocoAnnotation(
-                            bbox=[x, y, w, h],
-                            category_id=coco_ann.category_id,
-                            category_name=coco_ann.category_name,
-                            image_id=coco_img.id,
-                        )
-                        coco_image.add_annotation(coco_annotation)
-                    coco.add_image(coco_image)
+                        ann_dict: Dict = coco_ann.json
+                        if annotation_inside_slice(annotation=ann_dict, slice_bbox=img_dims):
+                            shapely_ann = coco_ann.get_sliced_coco_annotation(img_dims)
+                            bbox = ShapelyAnnotation.to_coco_bbox(shapely_ann._shapely_annotation)
+                            coco_ann_from_shapely = CocoAnnotation(
+                                bbox=bbox,
+                                category_id=coco_ann.category_id,
+                                category_name=coco_ann.category_name,
+                                image_id=coco_ann.image_id,
+                            )
+                            coco_image.add_annotation(coco_ann_from_shapely)
+                        else:
+                            continue
+                coco.add_image(coco_image)
         return coco
 
 
