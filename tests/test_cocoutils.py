@@ -805,23 +805,23 @@ class TestCocoUtils(unittest.TestCase):
         cocoimg = CocoImage(file_name="bboxes.jpg", height=100, width=100)
         cocoimg2 = CocoImage(file_name="sample_photo.png", height=1080, width=1920)  # negative img
         cocoann = CocoAnnotation(
-            bbox=[60, 20, 10, 70], category_id=0, category_name="dog", image_id=1
+            bbox=[60, 20, 10, 70], category_id=0, category_name="box", image_id=1
         )  # bbox totally inside img
         cocoann2 = CocoAnnotation(
-            bbox=[120, 110, 60, 30], category_id=0, category_name="dog", image_id=1
+            bbox=[120, 110, 60, 30], category_id=0, category_name="box", image_id=1
         )  # bbox totally outside img
-        cocoann3 = CocoAnnotation(bbox=[-50, -20, 80, 80], category_id=0, category_name="dog", image_id=1)  # x<0   y<0
+        cocoann3 = CocoAnnotation(bbox=[-50, -20, 80, 80], category_id=0, category_name="box", image_id=1)  # x<0   y<0
         cocoann4 = CocoAnnotation(
-            bbox=[50, -50, 60, 60], category_id=0, category_name="dog", image_id=1
+            bbox=[50, -50, 60, 60], category_id=0, category_name="box", image_id=1
         )  #  y<0   x+w > imwidth
         cocoann5 = CocoAnnotation(
-            bbox=[-50, 50, 70, 70], category_id=0, category_name="dog", image_id=1
+            bbox=[-50, 50, 70, 70], category_id=0, category_name="box", image_id=1
         )  #  x<0   y+h > imheight
         cocoann6 = CocoAnnotation(
-            bbox=[80, 80, 50, 50], category_id=0, category_name="dog", image_id=1
+            bbox=[80, 80, 50, 50], category_id=0, category_name="box", image_id=1
         )  # x+w > imwidth y+h > imheight
         cocoann7 = CocoAnnotation(
-            bbox=[-70, -70, 200, 200], category_id=0, category_name="dog", image_id=1
+            bbox=[-70, -70, 200, 200], category_id=0, category_name="box", image_id=1
         )  # bbox totally enclosing img
 
         cocoimg.add_annotation(cocoann)
@@ -843,7 +843,7 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(coco_with_clipped_bboxes.images[0].annotations[4].bbox, [80, 80, 20, 20])
         self.assertEqual(coco_with_clipped_bboxes.images[0].annotations[5].bbox, [0, 0, 100, 100])
         self.assertIsNotNone(coco_with_clipped_bboxes.images[1])
-        self.assertIsNone(coco_with_clipped_bboxes.images[1].annotations)
+        self.assertEqual(len(coco_with_clipped_bboxes.images[1].annotations), 0)
 
 
 if __name__ == "__main__":
