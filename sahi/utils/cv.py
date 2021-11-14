@@ -355,7 +355,7 @@ def get_bbox_from_bool_mask(bool_mask):
     cols = np.any(bool_mask, axis=0)
 
     if not np.any(rows) or not np.any(cols):
-        return []
+        return None
 
     ymin, ymax = np.where(rows)[0][[0, -1]]
     xmin, xmax = np.where(cols)[0][[0, -1]]
