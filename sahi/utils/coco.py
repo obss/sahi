@@ -1429,28 +1429,26 @@ class Coco:
         )
         coco.add_categories_from_coco_category_list(self.json_categories)
 
-        if self.images is not None:
-            for coco_img in self.images:
-                img_dims = [0, 0, coco_img.width, coco_img.height]
-                coco_image = CocoImage(
-                    file_name=coco_img.file_name, height=coco_img.height, width=coco_img.width, id=coco_img.id
-                )
-                if coco_img.annotations is not None:
-                    for coco_ann in coco_img.annotations:
-                        ann_dict: Dict = coco_ann.json
-                        if annotation_inside_slice(annotation=ann_dict, slice_bbox=img_dims):
-                            shapely_ann = coco_ann.get_sliced_coco_annotation(img_dims)
-                            bbox = ShapelyAnnotation.to_coco_bbox(shapely_ann._shapely_annotation)
-                            coco_ann_from_shapely = CocoAnnotation(
-                                bbox=bbox,
-                                category_id=coco_ann.category_id,
-                                category_name=coco_ann.category_name,
-                                image_id=coco_ann.image_id,
-                            )
-                            coco_image.add_annotation(coco_ann_from_shapely)
-                        else:
-                            continue
-                coco.add_image(coco_image)
+        for coco_img in self.images:
+            img_dims = [0, 0, coco_img.width, coco_img.height]
+            coco_image = CocoImage(
+                file_name=coco_img.file_name, height=coco_img.height, width=coco_img.width, id=coco_img.id
+            )
+            for coco_ann in coco_img.annotations:
+                ann_dict: Dict = coco_ann.json
+                if annotation_inside_slice(annotation=ann_dict, slice_bbox=img_dims):
+                    shapely_ann = coco_ann.get_sliced_coco_annotation(img_dims)
+                    bbox = ShapelyAnnotation.to_coco_bbox(shapely_ann._shapely_annotation)
+                    coco_ann_from_shapely = CocoAnnotation(
+                        bbox=bbox,
+                        category_id=coco_ann.category_id,
+                        category_name=coco_ann.category_name,
+                        image_id=coco_ann.image_id,
+                    )
+                    coco_image.add_annotation(coco_ann_from_shapely)
+                else:
+                    continue
+            coco.add_image(coco_image)
         return coco
 
 

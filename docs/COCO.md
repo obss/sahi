@@ -362,7 +362,7 @@ coco_results = remove_invalid_coco_results("coco_result.json", "coco_dataset.jso
 - import required classes:
 
 ```python
-from sahi.utils.coco import Coco, CocoCategory, CocoImage, CocoAnnotation
+from sahi.utils.coco import Coco
 from sahi.utils.file import save_json
 ```
 Usage:
