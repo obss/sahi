@@ -286,9 +286,9 @@ def predict(
     dataset_json_path: bool = None,
     project: str = "runs/predict",
     name: str = "exp",
-    visual_bbox_thickness: int = 1,
-    visual_text_size: float = 0.3,
-    visual_text_thickness: int = 1,
+    visual_bbox_thickness: int = None,
+    visual_text_size: float = None,
+    visual_text_thickness: int = None,
     visual_export_format: str = "png",
     verbose: int = 1,
 ):
