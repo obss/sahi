@@ -353,3 +353,32 @@ save_json(coco_results, "fixed_coco_result.json")
 coco_results = remove_invalid_coco_results("coco_result.json", "coco_dataset.json")
 ```
 </details>
+
+<details closed>
+<summary>
+<big><b>Get COCO with clipped bounding boxes:</b></big>
+</summary>
+
+- import required classes:
+
+```python
+from sahi.utils.coco import Coco
+from sahi.utils.file import save_json
+```
+Usage:
+
+```python
+# Clip overflowing bounding boxes to image width & height
+coco = Coco.from_coco_dict_or_path(coco_path, clip_bboxes_to_img_dims=True)
+```
+or,
+
+```python
+# apply to your already created coco object
+coco = coco.get_coco_with_clipped_bboxes()
+```
+- Export your clipped_bboxed_coco:
+```python
+save_json(coco.json, "coco.json")
+```
+</details>
