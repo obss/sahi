@@ -50,7 +50,7 @@ class TestPredict(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 4)
+        self.assertEqual(len(object_prediction_list), 3)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -161,7 +161,7 @@ class TestPredict(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 13)
+        self.assertEqual(len(object_prediction_list), 15)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -170,13 +170,13 @@ class TestPredict(unittest.TestCase):
         num_truck = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "truck":
-                num_truck += 2
-        self.assertEqual(num_truck, 0)
+                num_truck += 1
+        self.assertEqual(num_truck, 1)
         num_car = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 13)
+        self.assertEqual(num_car, 14)
 
     def test_get_sliced_prediction_yolov5(self):
         from sahi.model import Yolov5DetectionModel
