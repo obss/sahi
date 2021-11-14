@@ -362,7 +362,7 @@ def slice_image(
     verboselog(
         "Num slices: " + str(n_ims) + " slice_height: " + str(slice_height) + " slice_width: " + str(slice_width),
     )
-    verboselog("Time to slice " + image, time.time() - t0 + " seconds")
+    verboselog("Time to slice " + str(image, time.time() - t0) + " seconds")
 
     return sliced_image_result
 
