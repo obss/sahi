@@ -198,7 +198,7 @@ class MmdetDetectionModel(DetectionModel):
 
         Args:
             image: np.ndarray
-                A numpy array that contains the image to be predicted.
+                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
             image_size: int
                 Inference input size.
         """
@@ -219,6 +219,9 @@ class MmdetDetectionModel(DetectionModel):
         if image_size is not None:
             self.model.cfg.data.test.pipeline[1]["img_scale"] = (image_size, image_size)
         # perform inference
+        if isinstance(image, np.ndarray):
+            # https://github.com/obss/sahi/issues/265
+            image = image[:, :, ::-1]
         prediction_result = inference_detector(self.model, image)
 
         self._original_predictions = prediction_result
@@ -402,7 +405,7 @@ class Yolov5DetectionModel(DetectionModel):
 
         Args:
             image: np.ndarray
-                A numpy array that contains the image to be predicted.
+                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
             image_size: int
                 Inference input size.
         """
