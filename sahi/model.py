@@ -1,12 +1,21 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
+import logging
+import os
 from typing import Dict, List, Optional, Union
 
 import numpy as np
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.torch import cuda_is_available, empty_cuda_cache
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
+    datefmt="%m/%d/%Y %H:%M:%S",
+    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+)
 
 
 class DetectionModel:
@@ -299,7 +308,7 @@ class MmdetDetectionModel(DetectionModel):
 
                 # ignore invalid predictions
                 if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
-                    print(f"ignoring invalid prediction with bbox: {bbox}")
+                    logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                     continue
                 if full_shape is not None and (
                     bbox[1] > full_shape[0]
@@ -307,7 +316,7 @@ class MmdetDetectionModel(DetectionModel):
                     or bbox[0] > full_shape[1]
                     or bbox[2] > full_shape[1]
                 ):
-                    print(f"ignoring invalid prediction with bbox: {bbox}")
+                    logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                     continue
 
                 object_prediction = ObjectPrediction(
@@ -461,29 +470,29 @@ class Yolov5DetectionModel(DetectionModel):
         original_predictions = self._original_predictions
 
         # handle only first image (batch=1)
-        predictions_in_xyxy_format = original_predictions.xyxy[0]
+        predictions_in_xyxy_format = original_predictions.xyxy[0].cpu().detach().numpy()
 
         object_prediction_list = []
 
         # process predictions
         for prediction in predictions_in_xyxy_format:
-            x1 = int(prediction[0].item())
-            y1 = int(prediction[1].item())
-            x2 = int(prediction[2].item())
-            y2 = int(prediction[3].item())
+            x1 = int(prediction[0])
+            y1 = int(prediction[1])
+            x2 = int(prediction[2])
+            y2 = int(prediction[3])
             bbox = [x1, y1, x2, y2]
-            score = prediction[4].item()
-            category_id = int(prediction[5].item())
+            score = prediction[4]
+            category_id = int(prediction[5])
             category_name = original_predictions.names[category_id]
 
             # ignore invalid predictions
             if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
-                print(f"ignoring invalid prediction with bbox: {bbox}")
+                logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                 continue
             if full_shape is not None and (
                 bbox[1] > full_shape[0] or bbox[3] > full_shape[0] or bbox[0] > full_shape[1] or bbox[2] > full_shape[1]
             ):
-                print(f"ignoring invalid prediction with bbox: {bbox}")
+                logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                 continue
 
             object_prediction = ObjectPrediction(
