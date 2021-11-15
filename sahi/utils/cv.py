@@ -14,6 +14,43 @@ from PIL import Image
 from sahi.utils.file import Path
 
 
+class Colors:
+    # color palette
+    def __init__(self):
+        hex = (
+            "FF3838",
+            "2C99A8",
+            "FF701F",
+            "6473FF",
+            "CFD231",
+            "48F90A",
+            "92CC17",
+            "3DDB86",
+            "1A9334",
+            "00D4BB",
+            "FF9D97",
+            "00C2FF",
+            "344593",
+            "FFB21D",
+            "0018EC",
+            "8438FF",
+            "520085",
+            "CB38FF",
+            "FF95C8",
+            "FF37C7",
+        )
+        self.palette = [self.hex2rgb("#" + c) for c in hex]
+        self.n = len(self.palette)
+
+    def __call__(self, i, bgr=False):
+        c = self.palette[int(i) % self.n]
+        return (c[2], c[1], c[0]) if bgr else c
+
+    @staticmethod
+    def hex2rgb(h):  # rgb order
+        return tuple(int(h[1 + i : 1 + i + 2], 16) for i in (0, 2, 4))
+
+
 def crop_object_predictions(
     image: np.ndarray,
     object_prediction_list,
@@ -173,10 +210,10 @@ def visualize_prediction(
     boxes: List[List],
     classes: List[str],
     masks: Optional[List[np.ndarray]] = None,
-    rect_th: float = 3,
-    text_size: float = 3,
-    text_th: float = 3,
-    color: tuple = (0, 0, 0),
+    rect_th: float = None,
+    text_size: float = None,
+    text_th: float = None,
+    color: tuple = None,
     output_dir: Optional[str] = None,
     file_name: Optional[str] = "prediction_visual",
 ):
@@ -187,14 +224,26 @@ def visualize_prediction(
     elapsed_time = time.time()
     # deepcopy image so that original is not altered
     image = copy.deepcopy(image)
-    # select random color if not specified
-    if color == (0, 0, 0):
-        color = select_random_color()
+    # select predefined classwise color palette if not specified
+    if color is None:
+        colors = Colors()
+    else:
+        colors = None
+    # set rect_th for boxes
+    rect_th = rect_th or max(round(sum(image.shape) / 2 * 0.003), 2)
+    # set text_th for category names
+    text_th = text_th or max(rect_th - 1, 1)
+    # set text_size for category names
+    text_size = text_size or rect_th / 3
     # add bbox and mask to image if present
     for i in range(len(boxes)):
         # deepcopy boxso that original is not altered
         box = copy.deepcopy(boxes[i])
         class_ = classes[i]
+
+        # set color
+        if colors is not None:
+            color = colors(class_)
         # visualize masks if present
         if masks is not None:
             # deepcopy mask so that original is not altered
@@ -202,27 +251,30 @@ def visualize_prediction(
             # draw mask
             rgb_mask = apply_color_mask(np.squeeze(mask), color)
             image = cv2.addWeighted(image, 1, rgb_mask, 0.7, 0)
+        # set bbox points
+        p1, p2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))
         # visualize boxes
         cv2.rectangle(
             image,
-            tuple(box[0:2]),
-            tuple(box[2:4]),
+            p1,
+            p2,
             color=color,
             thickness=rect_th,
         )
         # arange bounding box text location
-        if box[1] - 10 > 10:
-            box[1] -= 10
-        else:
-            box[1] += 10
+        label = f"{class_}"
+        w, h = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]  # label width, height
+        outside = p1[1] - h - 3 >= 0  # label fits outside box
+        p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
         # add bounding box text
+        cv2.rectangle(image, p1, p2, color, -1, cv2.LINE_AA)  # filled
         cv2.putText(
             image,
-            class_,
-            tuple(box[0:2]),
-            cv2.FONT_HERSHEY_SIMPLEX,
+            label,
+            (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
+            0,
             text_size,
-            color,
+            (255, 255, 255),
             thickness=text_th,
         )
     if output_dir:
@@ -238,10 +290,10 @@ def visualize_prediction(
 def visualize_object_predictions(
     image: np.array,
     object_prediction_list,
-    rect_th: float = 1,
-    text_size: float = 0.3,
-    text_th: float = 1,
-    color: tuple = (0, 0, 0),
+    rect_th: int = None,
+    text_size: float = None,
+    text_th: float = None,
+    color: tuple = None,
     output_dir: Optional[str] = None,
     file_name: str = "prediction_visual",
     export_format: str = "png",
@@ -262,9 +314,17 @@ def visualize_object_predictions(
     elapsed_time = time.time()
     # deepcopy image so that original is not altered
     image = copy.deepcopy(image)
-    # select random color if not specified
-    if color == (0, 0, 0):
-        color = select_random_color()
+    # select predefined classwise color palette if not specified
+    if color is None:
+        colors = Colors()
+    else:
+        colors = None
+    # set rect_th for boxes
+    rect_th = rect_th or max(round(sum(image.shape) / 2 * 0.001), 1)
+    # set text_th for category names
+    text_th = text_th or max(rect_th - 1, 1)
+    # set text_size for category names
+    text_size = text_size or rect_th / 3
     # add bbox and mask to image if present
     for object_prediction in object_prediction_list:
         # deepcopy object_prediction_list so that original is not altered
@@ -274,6 +334,9 @@ def visualize_object_predictions(
         category_name = object_prediction.category.name
         score = object_prediction.score.value
 
+        # set color
+        if colors is not None:
+            color = colors(object_prediction.category.id)
         # visualize masks if present
         if object_prediction.mask is not None:
             # deepcopy mask so that original is not altered
@@ -281,28 +344,30 @@ def visualize_object_predictions(
             # draw mask
             rgb_mask = apply_color_mask(mask, color)
             image = cv2.addWeighted(image, 1, rgb_mask, 0.4, 0)
+        # set bbox points
+        p1, p2 = (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]))
         # visualize boxes
         cv2.rectangle(
             image,
-            tuple(bbox[0:2]),
-            tuple(bbox[2:4]),
+            p1,
+            p2,
             color=color,
             thickness=rect_th,
         )
         # arange bounding box text location
-        if bbox[1] - 5 > 5:
-            bbox[1] -= 5
-        else:
-            bbox[1] += 5
+        label = f"{category_name} {score:.2f}"
+        w, h = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]  # label width, height
+        outside = p1[1] - h - 3 >= 0  # label fits outside box
+        p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
         # add bounding box text
-        label = "%s %.2f" % (category_name, score)
+        cv2.rectangle(image, p1, p2, color, -1, cv2.LINE_AA)  # filled
         cv2.putText(
             image,
             label,
-            tuple(bbox[0:2]),
-            cv2.FONT_HERSHEY_SIMPLEX,
+            (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
+            0,
             text_size,
-            color,
+            (255, 255, 255),
             thickness=text_th,
         )
     if output_dir:

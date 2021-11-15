@@ -280,15 +280,15 @@ def predict(
     postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
-    export_visual: bool = True,
+    export_visual: bool = False,
     export_pickle: bool = False,
     export_crop: bool = False,
     dataset_json_path: bool = None,
     project: str = "runs/predict",
     name: str = "exp",
-    visual_bbox_thickness: int = 1,
-    visual_text_size: float = 0.3,
-    visual_text_thickness: int = 1,
+    visual_bbox_thickness: int = None,
+    visual_text_size: float = None,
+    visual_text_thickness: int = None,
     visual_export_format: str = "png",
     verbose: int = 1,
 ):
@@ -469,43 +469,44 @@ def predict(
                 coco_prediction_json = coco_prediction.json
                 if coco_prediction_json["bbox"]:
                     coco_json.append(coco_prediction_json)
-            # convert ground truth annotations to object_prediction_list
-            coco_image: CocoImage = coco.images[ind]
-            object_prediction_gt_list: List[ObjectPrediction] = []
-            for coco_annotation in coco_image.annotations:
-                coco_annotation_dict = coco_annotation.json
-                category_name = coco_annotation.category_name
-                full_shape = [coco_image.height, coco_image.width]
-                object_prediction_gt = ObjectPrediction.from_coco_annotation_dict(
-                    annotation_dict=coco_annotation_dict, category_name=category_name, full_shape=full_shape
+            if export_visual:
+                # convert ground truth annotations to object_prediction_list
+                coco_image: CocoImage = coco.images[ind]
+                object_prediction_gt_list: List[ObjectPrediction] = []
+                for coco_annotation in coco_image.annotations:
+                    coco_annotation_dict = coco_annotation.json
+                    category_name = coco_annotation.category_name
+                    full_shape = [coco_image.height, coco_image.width]
+                    object_prediction_gt = ObjectPrediction.from_coco_annotation_dict(
+                        annotation_dict=coco_annotation_dict, category_name=category_name, full_shape=full_shape
+                    )
+                    object_prediction_gt_list.append(object_prediction_gt)
+                # export visualizations with ground truths
+                output_dir = str(visual_with_gt_dir / Path(relative_filepath).parent)
+                color = (0, 255, 0)  # original annotations in green
+                result = visualize_object_predictions(
+                    np.ascontiguousarray(image_as_pil),
+                    object_prediction_list=object_prediction_gt_list,
+                    rect_th=visual_bbox_thickness,
+                    text_size=visual_text_size,
+                    text_th=visual_text_thickness,
+                    color=color,
+                    output_dir=None,
+                    file_name=None,
+                    export_format=None,
                 )
-                object_prediction_gt_list.append(object_prediction_gt)
-            # export visualizations with ground truths
-            output_dir = str(visual_with_gt_dir / Path(relative_filepath).parent)
-            color = (0, 255, 0)  # original annotations in green
-            result = visualize_object_predictions(
-                np.ascontiguousarray(image_as_pil),
-                object_prediction_list=object_prediction_gt_list,
-                rect_th=visual_bbox_thickness,
-                text_size=visual_text_size,
-                text_th=visual_text_thickness,
-                color=color,
-                output_dir=None,
-                file_name=None,
-                export_format=None,
-            )
-            color = (255, 0, 0)  # model predictions in red
-            _ = visualize_object_predictions(
-                result["image"],
-                object_prediction_list=object_prediction_list,
-                rect_th=visual_bbox_thickness,
-                text_size=visual_text_size,
-                text_th=visual_text_thickness,
-                color=color,
-                output_dir=output_dir,
-                file_name=filename_without_extension,
-                export_format=visual_export_format,
-            )
+                color = (255, 0, 0)  # model predictions in red
+                _ = visualize_object_predictions(
+                    result["image"],
+                    object_prediction_list=object_prediction_list,
+                    rect_th=visual_bbox_thickness,
+                    text_size=visual_text_size,
+                    text_th=visual_text_thickness,
+                    color=color,
+                    output_dir=output_dir,
+                    file_name=filename_without_extension,
+                    export_format=visual_export_format,
+                )
 
         time_start = time.time()
         # export prediction boxes
