@@ -157,8 +157,6 @@ def download_mmdet_config(
 
             # create secondary config dir
             config_path.parent.mkdir(parents=True, exist_ok=True)
-            print("sec: ", secondary_config_file_path)
-            print("base: ", config_url)
             # download secondary config files
             urllib.request.urlretrieve(
                 config_url,
