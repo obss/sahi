@@ -118,6 +118,10 @@ def download_mmdet_config(
     mod = import_module(temp_module_name)
     sys.path.pop(0)
     config_dict = {name: value for name, value in mod.__dict__.items() if not name.startswith("__")}
+    
+    # handle when config_dict["_base_"] is string
+    if not isinstance(config_dict["_base_"], list):
+        config_dict["_base_"] = [config_dict["_base_"]]
 
     # iterate over secondary config files
     for secondary_config_file_path in config_dict["_base_"]:
