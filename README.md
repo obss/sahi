@@ -73,7 +73,7 @@ pip install torch torchvision
 - Install your desired detection framework (such as mmdet or yolov5):
 
 ```console
-pip install mmdet mmcv
+pip install mmdet mmcv-full
 ```
 
 ```console
