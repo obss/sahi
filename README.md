@@ -442,7 +442,6 @@ If you use this package in your work, please cite it as:
   month        = nov,
   year         = 2021,
   publisher    = {Zenodo},
-  version      = {0.8.9},
   doi          = {10.5281/zenodo.5718950},
   url          = {https://doi.org/10.5281/zenodo.5718950}
 }
