@@ -146,10 +146,11 @@ def download_mmdet_config(
         sys.path.pop(0)
         secondary_config_dict = {name: value for name, value in mod.__dict__.items() if not name.startswith("__")}
 
-        if (secondary_config_dict.get("_base_") is not None) and (
-            not isinstance(secondary_config_dict["_base_"], list)
-        ):
-            secondary_config_dict["_base_"] = [secondary_config_dict["_base_"]]
+        # go deeper if there are more steps
+        if secondary_config_dict.get("_base_") is not None:
+            # handle when config_dict["_base_"] is string
+            if not isinstance(secondary_config_dict["_base_"], list):
+                secondary_config_dict["_base_"] = [secondary_config_dict["_base_"]]
 
             # iterate over third config files
             for third_config_file_path in secondary_config_dict["_base_"]:
