@@ -119,6 +119,10 @@ def download_mmdet_config(
     sys.path.pop(0)
     config_dict = {name: value for name, value in mod.__dict__.items() if not name.startswith("__")}
 
+    # handle when config_dict["_base_"] is string
+    if not isinstance(config_dict["_base_"], list):
+        config_dict["_base_"] = [config_dict["_base_"]]
+
     # iterate over secondary config files
     for secondary_config_file_path in config_dict["_base_"]:
         # set config url
@@ -133,6 +137,34 @@ def download_mmdet_config(
             config_url,
             str(config_path),
         )
+
+        # read secondary config file
+        secondary_config_dir = config_path.parent
+        sys.path.insert(0, str(secondary_config_dir))
+        temp_module_name = path.splitext(Path(config_path).name)[0]
+        mod = import_module(temp_module_name)
+        sys.path.pop(0)
+        secondary_config_dict = {name: value for name, value in mod.__dict__.items() if not name.startswith("__")}
+
+        # go deeper if there are more steps
+        if secondary_config_dict.get("_base_") is not None:
+            # handle when config_dict["_base_"] is string
+            if not isinstance(secondary_config_dict["_base_"], list):
+                secondary_config_dict["_base_"] = [secondary_config_dict["_base_"]]
+
+            # iterate over third config files
+            for third_config_file_path in secondary_config_dict["_base_"]:
+                # set config url
+                config_url = base_config_url + third_config_file_path
+                config_path = main_config_dir / third_config_file_path
+
+                # create secondary config dir
+                config_path.parent.mkdir(parents=True, exist_ok=True)
+                # download secondary config files
+                urllib.request.urlretrieve(
+                    config_url,
+                    str(config_path),
+                )
 
     # set final config dirs
     configs_dir = Path("mmdet_configs") / mmdet_ver
