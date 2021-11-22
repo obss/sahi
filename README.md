@@ -19,6 +19,8 @@
     <a href="https://badge.fury.io/py/sahi"><img src="https://badge.fury.io/py/sahi.svg" alt="pypi version"></a>
     <a href="https://anaconda.org/conda-forge/sahi"><img src="https://anaconda.org/conda-forge/sahi/badges/version.svg" alt="conda version"></a>
     <a href="https://github.com/obss/sahi/actions?query=event%3Apush+branch%3Amain+is%3Acompleted+workflow%3ACI"><img src="https://github.com/obss/sahi/workflows/CI/badge.svg" alt="ci"></a>
+    <br>
+    <a href="https://doi.org/10.5281/zenodo.5718950"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.5718950.svg" alt="ci"></a>
 </div>
 </div>
 
@@ -421,6 +423,30 @@ mot_video.export(export_dir="mot_gt", type="gt")
 </details>
 
 <b>Find detailed info on MOT utilities (ground truth dataset creation, exporting tracker metrics in mot challenge format) at [MOT.md](docs/MOT.md).</b>
+
+## <div align="center">Citation</div>
+
+If you use this package in your work, please cite it as:
+
+```
+@software{akyon2021sahi,
+  author       = {Akyon, Fatih Cagatay and
+                  Cengiz, Cemil and
+                  Altinuc, Sinan Onur and
+                  Cavusoglu, Devrim and
+                  Sahin, Kadir and
+                  Eryuksel, Ogulcan},
+  title        = {{SAHI: A lightweight vision library for performing 
+                   large scale object detection/ instance
+                   segmentation}},
+  month        = nov,
+  year         = 2021,
+  publisher    = {Zenodo},
+  version      = {0.8.9},
+  doi          = {10.5281/zenodo.5718950},
+  url          = {https://doi.org/10.5281/zenodo.5718950}
+}
+```
 
 ## <div align="center">Contributing</div>
 
