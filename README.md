@@ -437,7 +437,7 @@ If you use this package in your work, please cite it as:
                   Sahin, Kadir and
                   Eryuksel, Ogulcan},
   title        = {{SAHI: A lightweight vision library for performing 
-                   large scale object detection/ instance
+                   large scale object detection and instance
                    segmentation}},
   month        = nov,
   year         = 2021,
