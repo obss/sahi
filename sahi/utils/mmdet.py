@@ -137,7 +137,7 @@ def download_mmdet_config(
             config_url,
             str(config_path),
         )
-        
+
         # read secondary config file
         secondary_config_dir = config_path.parent
         sys.path.insert(0, str(secondary_config_dir))
