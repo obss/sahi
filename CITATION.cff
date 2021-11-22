@@ -13,7 +13,7 @@ authors:
   given-names: "Kadir"
 - family-names: "Eryuksel"
   given-names: "Ogulcan"
-title: "SAHI: A lightweight vision library for performing large scale object detection/ instance segmentation"
+title: "SAHI: A lightweight vision library for performing large scale object detection and instance segmentation"
 doi: 10.5281/zenodo.5718950
 month: nov
 year: 2021
