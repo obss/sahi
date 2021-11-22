@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this package, please cite it as below."
+authors:
+- family-names: "Akyon"
+  given-names: "Fatih Cagatay"
+- family-names: "Cengiz"
+  given-names: "Cemil"
+- family-names: "Altinuc"
+  given-names: "Sinan Onur"
+- family-names: "Cavusoglu"
+  given-names: "Devrim"
+- family-names: "Sahin"
+  given-names: "Kadir"
+- family-names: "Eryuksel"
+  given-names: "Ogulcan"
+title: "SAHI: A lightweight vision library for performing large scale object detection and instance segmentation"
+doi: 10.5281/zenodo.5718950
+month: nov
+year: 2021
+publisher: Zenodo
+url: "https://doi.org/10.5281/zenodo.5718950"
