@@ -133,12 +133,12 @@ def read_image(image_path: str):
     return image
 
 
-def read_image_as_pil(image: Union[Image.Image, str, np.ndarray]):
+def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool = False):
     """
     Loads an image as PIL.Image.Image.
 
     Args:
-        image : Can be image path (str), opencv image (np.ndarray) or PIL.Image
+        image : Can be image path or url (str), numpy image (np.ndarray) or PIL.Image
     """
     # https://stackoverflow.com/questions/56174099/how-to-load-images-larger-than-max-image-pixels-with-pil
     Image.MAX_IMAGE_PIXELS = None
@@ -146,7 +146,13 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray]):
     if isinstance(image, str):
         # read image as pil
         try:
-            image_pil = Image.open(image).convert("RGB")
+            image_pil = Image.open(
+                requests.get(image, stream=True).raw
+                if str(image).startswith("http")
+                else image
+            ).convert("RGB")
+            if exif_fix:
+                image_pil = exif_transpose(image_pil)
         except:  # handle large/tiff image reading
             try:
                 import skimage.io
@@ -450,3 +456,28 @@ def ipython_display(image: np.ndarray):
     _, ret = cv2.imencode(".png", image)
     i = IPython.display.Image(data=ret)
     IPython.display.display(i)
+    
+ def exif_transpose(image: Image.Image):
+    """
+    Transpose a PIL image accordingly if it has an EXIF Orientation tag.
+    Inplace version of https://github.com/python-pillow/Pillow/blob/master/src/PIL/ImageOps.py exif_transpose()
+    :param image: The image to transpose.
+    :return: An image.
+    """
+    exif = image.getexif()
+    orientation = exif.get(0x0112, 1)  # default 1
+    if orientation > 1:
+        method = {
+            2: Image.FLIP_LEFT_RIGHT,
+            3: Image.ROTATE_180,
+            4: Image.FLIP_TOP_BOTTOM,
+            5: Image.TRANSPOSE,
+            6: Image.ROTATE_270,
+            7: Image.TRANSVERSE,
+            8: Image.ROTATE_90,
+        }.get(orientation)
+        if method is not None:
+            image = image.transpose(method)
+            del exif[0x0112]
+            image.info["exif"] = exif.tobytes()
+    return image
