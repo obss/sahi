@@ -9,6 +9,7 @@ from typing import List, Optional, Union
 
 import cv2
 import numpy as np
+import requests
 from PIL import Image
 
 from sahi.utils.file import Path
@@ -147,9 +148,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
         # read image as pil
         try:
             image_pil = Image.open(
-                requests.get(image, stream=True).raw
-                if str(image).startswith("http")
-                else image
+                requests.get(image, stream=True).raw if str(image).startswith("http") else image
             ).convert("RGB")
             if exif_fix:
                 image_pil = exif_transpose(image_pil)
@@ -456,8 +455,9 @@ def ipython_display(image: np.ndarray):
     _, ret = cv2.imencode(".png", image)
     i = IPython.display.Image(data=ret)
     IPython.display.display(i)
-    
- def exif_transpose(image: Image.Image):
+
+
+def exif_transpose(image: Image.Image):
     """
     Transpose a PIL image accordingly if it has an EXIF Orientation tag.
     Inplace version of https://github.com/python-pillow/Pillow/blob/master/src/PIL/ImageOps.py exif_transpose()
