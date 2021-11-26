@@ -116,7 +116,7 @@ class NMSPostprocess(PostprocessPredictions):
             # if any element from remaining source prediction list matches, remove it
             new_source_object_predictions: List[ObjectPrediction] = []
             for candidate_object_prediction in source_object_predictions:
-                if not self._has_match(selected_object_prediction, candidate_object_prediction):
+                if self._has_match(selected_object_prediction, candidate_object_prediction):
                     new_source_object_predictions.append(candidate_object_prediction)
             source_object_predictions = new_source_object_predictions
             # append selected prediction to selected list
