@@ -20,7 +20,7 @@ class TestShapelyUtils(unittest.TestCase):
         shapely_multipolygon = get_shapely_multipolygon(coco_segmentation)
 
         self.assertListEqual(
-            shapely_multipolygon[0].exterior.coords.xy[0].tolist(),
+            shapely_multipolygon.geoms[0].exterior.coords.xy[0].tolist(),
             [1.0, 325, 250, 5, 1],
         )
         self.assertEqual(shapely_multipolygon.area, 41177.5)
