@@ -5,3 +5,4 @@ pillow>=8.2.0
 pyyaml
 fire
 terminaltables
+requests
