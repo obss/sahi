@@ -60,7 +60,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
                     break
 
         # compare
-        self.assertEqual(box[:4].astype("int").tolist(), [336, 123, 346, 139])
+        self.assertEqual(box[:4].astype("int").tolist(), [1019, 417, 1027, 437])
         self.assertEqual(len(boxes), 80)
         self.assertEqual(len(masks), 80)
 
@@ -127,24 +127,24 @@ class TestMmdetDetectionModel(unittest.TestCase):
         object_prediction_list = mmdet_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 53)
+        self.assertEqual(len(object_prediction_list), 44)
         self.assertEqual(object_prediction_list[0].category.id, 0)
         self.assertEqual(object_prediction_list[0].category.name, "person")
         self.assertEqual(
             object_prediction_list[0].bbox.to_coco_bbox(),
-            [337, 124, 8, 14],
+            [1020, 419, 6, 17],
         )
         self.assertEqual(object_prediction_list[1].category.id, 2)
         self.assertEqual(object_prediction_list[1].category.name, "car")
         self.assertEqual(
             object_prediction_list[1].bbox.to_coco_bbox(),
-            [657, 204, 13, 10],
+            [449, 311, 45, 29],
         )
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
         self.assertEqual(
             object_prediction_list[2].bbox.to_coco_bbox(),
-            [760, 232, 20, 15],
+            [657, 204, 13, 10],
         )
 
     def test_convert_original_predictions_without_mask_output(self):
@@ -175,17 +175,17 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
         # compare
         self.assertEqual(len(object_prediction_list), 100)
-        self.assertEqual(object_prediction_list[0].category.id, 0)
-        self.assertEqual(object_prediction_list[0].category.name, "person")
+        self.assertEqual(object_prediction_list[0].category.id, 2)
+        self.assertEqual(object_prediction_list[0].category.name, "car")
         self.assertEqual(
             object_prediction_list[0].bbox.to_coco_bbox(),
-            [805, 162, 32, 40],
+            [317, 313, 67, 50],
         )
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
         self.assertEqual(
             object_prediction_list[5].bbox.to_coco_bbox(),
-            [369, 293, 54, 40],
+            [22, 275, 93, 55],
         )
 
     def test_create_original_predictions_from_object_prediction_list_with_mask_output(

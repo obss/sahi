@@ -525,28 +525,32 @@ class ObjectAnnotation:
         if (bbox is None) and (bool_mask is None):
             raise ValueError("you must provide a bbox or bool_mask")
 
-        if bool_mask is None:
-            self.mask = None
-            # make sure bbox coords lie inside [0, image_size]
-            xmin = max(bbox[0], 0)
-            ymin = max(bbox[1], 0)
-            if full_shape:
-                xmax = min(bbox[2], full_shape[1])
-                ymax = min(bbox[3], full_shape[0])
-            else:
-                xmax = bbox[2]
-                ymax = bbox[3]
-            bbox = [xmin, ymin, xmax, ymax]
-            # set bbox
-            self.bbox = BoundingBox(bbox, shift_amount)
-        else:
+        if bool_mask is not None:
             self.mask = Mask(
                 bool_mask=bool_mask,
                 shift_amount=shift_amount,
                 full_shape=full_shape,
             )
-            bbox = get_bbox_from_bool_mask(bool_mask)
-            self.bbox = BoundingBox(bbox, shift_amount)
+            bbox_from_bool_mask = get_bbox_from_bool_mask(bool_mask)
+            # https://github.com/obss/sahi/issues/235
+            if bbox_from_bool_mask is not None:
+                bbox = bbox_from_bool_mask
+        else:
+            self.mask = None
+
+        # make sure bbox coords lie inside [0, image_size]
+        xmin = max(bbox[0], 0)
+        ymin = max(bbox[1], 0)
+        if full_shape:
+            xmax = min(bbox[2], full_shape[1])
+            ymax = min(bbox[3], full_shape[0])
+        else:
+            xmax = bbox[2]
+            ymax = bbox[3]
+        bbox = [xmin, ymin, xmax, ymax]
+        # set bbox
+        self.bbox = BoundingBox(bbox, shift_amount)
+
         category_name = category_name if category_name else str(category_id)
         self.category = Category(
             id=category_id,

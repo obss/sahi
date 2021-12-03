@@ -92,48 +92,6 @@ def download_mmdet_config(
     )
     main_config_url = base_config_url + config_file_name
 
-    # set config dirs
-    temp_configs_dir = Path("temp_mmdet_configs")
-    main_config_dir = temp_configs_dir / model_name
-
-    # create config dirs
-    temp_configs_dir.mkdir(parents=True, exist_ok=True)
-    main_config_dir.mkdir(parents=True, exist_ok=True)
-
-    # get main config file name
-    filename = Path(main_config_url).name
-
-    # set main config file path
-    main_config_path = str(main_config_dir / filename)
-
-    # download main config file
-    urllib.request.urlretrieve(
-        main_config_url,
-        main_config_path,
-    )
-
-    # read main config file
-    sys.path.insert(0, str(main_config_dir))
-    temp_module_name = path.splitext(filename)[0]
-    mod = import_module(temp_module_name)
-    sys.path.pop(0)
-    config_dict = {name: value for name, value in mod.__dict__.items() if not name.startswith("__")}
-
-    # iterate over secondary config files
-    for secondary_config_file_path in config_dict["_base_"]:
-        # set config url
-        config_url = base_config_url + secondary_config_file_path
-        config_path = main_config_dir / secondary_config_file_path
-
-        # create secondary config dir
-        config_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # download secondary config files
-        urllib.request.urlretrieve(
-            config_url,
-            str(config_path),
-        )
-
     # set final config dirs
     configs_dir = Path("mmdet_configs") / mmdet_ver
     model_config_dir = configs_dir / model_name
@@ -148,17 +106,92 @@ def download_mmdet_config(
     # set final config file path
     final_config_path = str(model_config_dir / filename)
 
-    # dump final config as single file
-    from mmcv import Config
+    if not Path(final_config_path).exists():
+        # set config dirs
+        temp_configs_dir = Path("temp_mmdet_configs")
+        main_config_dir = temp_configs_dir / model_name
 
-    config = Config.fromfile(main_config_path)
-    config.dump(final_config_path)
+        # create config dirs
+        temp_configs_dir.mkdir(parents=True, exist_ok=True)
+        main_config_dir.mkdir(parents=True, exist_ok=True)
 
-    if verbose:
-        print(f"mmdet config file has been downloaded to {path.abspath(final_config_path)}")
+        # get main config file name
+        filename = Path(main_config_url).name
 
-    # remove temp config dir
-    shutil.rmtree(temp_configs_dir)
+        # set main config file path
+        main_config_path = str(main_config_dir / filename)
+
+        # download main config file
+        urllib.request.urlretrieve(
+            main_config_url,
+            main_config_path,
+        )
+
+        # read main config file
+        sys.path.insert(0, str(main_config_dir))
+        temp_module_name = path.splitext(filename)[0]
+        mod = import_module(temp_module_name)
+        sys.path.pop(0)
+        config_dict = {name: value for name, value in mod.__dict__.items() if not name.startswith("__")}
+
+        # handle when config_dict["_base_"] is string
+        if not isinstance(config_dict["_base_"], list):
+            config_dict["_base_"] = [config_dict["_base_"]]
+
+        # iterate over secondary config files
+        for secondary_config_file_path in config_dict["_base_"]:
+            # set config url
+            config_url = base_config_url + secondary_config_file_path
+            config_path = main_config_dir / secondary_config_file_path
+
+            # create secondary config dir
+            config_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # download secondary config files
+            urllib.request.urlretrieve(
+                config_url,
+                str(config_path),
+            )
+
+            # read secondary config file
+            secondary_config_dir = config_path.parent
+            sys.path.insert(0, str(secondary_config_dir))
+            temp_module_name = path.splitext(Path(config_path).name)[0]
+            mod = import_module(temp_module_name)
+            sys.path.pop(0)
+            secondary_config_dict = {name: value for name, value in mod.__dict__.items() if not name.startswith("__")}
+
+            # go deeper if there are more steps
+            if secondary_config_dict.get("_base_") is not None:
+                # handle when config_dict["_base_"] is string
+                if not isinstance(secondary_config_dict["_base_"], list):
+                    secondary_config_dict["_base_"] = [secondary_config_dict["_base_"]]
+
+                # iterate over third config files
+                for third_config_file_path in secondary_config_dict["_base_"]:
+                    # set config url
+                    config_url = base_config_url + third_config_file_path
+                    config_path = main_config_dir / third_config_file_path
+
+                    # create secondary config dir
+                    config_path.parent.mkdir(parents=True, exist_ok=True)
+                    # download secondary config files
+                    urllib.request.urlretrieve(
+                        config_url,
+                        str(config_path),
+                    )
+
+        # dump final config as single file
+        from mmcv import Config
+
+        config = Config.fromfile(main_config_path)
+        config.dump(final_config_path)
+
+        if verbose:
+            print(f"mmdet config file has been downloaded to {path.abspath(final_config_path)}")
+
+        # remove temp config dir
+        shutil.rmtree(temp_configs_dir)
 
     return path.abspath(final_config_path)
 

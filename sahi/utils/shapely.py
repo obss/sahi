@@ -140,7 +140,7 @@ class ShapelyAnnotation:
         ]
         """
         coco_segmentation: List = []
-        for shapely_polygon in self.multipolygon:
+        for shapely_polygon in self.multipolygon.geoms:
             # create list_of_points for selected shapely_polygon
             if shapely_polygon.area != 0:
                 x_coords = shapely_polygon.exterior.coords.xy[0]
@@ -173,7 +173,7 @@ class ShapelyAnnotation:
         ]
         """
         opencv_contours: List = []
-        for shapely_polygon in self.multipolygon:
+        for shapely_polygon in self.multipolygon.geoms:
             # create opencv_contour for selected shapely_polygon
             if shapely_polygon.area != 0:
                 x_coords = shapely_polygon.exterior.coords.xy[0]

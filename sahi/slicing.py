@@ -2,6 +2,7 @@
 # Code written by Fatih C Akyon, 2020.
 
 import concurrent.futures
+import logging
 import os
 import time
 from pathlib import Path
@@ -9,11 +10,19 @@ from typing import Dict, List, Optional, Union
 
 import numpy as np
 from PIL import Image
+from shapely.errors import TopologicalError
 from tqdm import tqdm
 
 from sahi.utils.coco import Coco, CocoAnnotation, CocoImage, create_coco_dict
 from sahi.utils.cv import read_image_as_pil
 from sahi.utils.file import load_json, save_json
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
+    datefmt="%m/%d/%Y %H:%M:%S",
+    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+)
 
 MAX_WORKERS = 20
 
@@ -264,14 +273,14 @@ def slice_image(
     """
 
     # define verboseprint
-    verboseprint = print if verbose else lambda *a, **k: None
+    verboselog = logger.info if verbose else lambda *a, **k: None
 
     def _export_single_slice(image: np.ndarray, output_dir: str, slice_file_name: str):
         image_pil = read_image_as_pil(image)
         slice_file_path = str(Path(output_dir) / slice_file_name)
         # export sliced image
         image_pil.save(slice_file_path)
-        verboseprint("sliced image path:", slice_file_path)
+        verboselog("sliced image path: " + slice_file_path)
 
     # create outdir if not present
     if output_dir:
@@ -279,7 +288,7 @@ def slice_image(
 
     # read image
     image_pil = read_image_as_pil(image)
-    verboseprint("image.shape:", image_pil.size)
+    verboselog("image.shape: " + str(image_pil.size))
 
     image_width, image_height = image_pil.size
     assert image_width != 0 and image_height != 0, f"invalid image size: {image_pil.size} for 'slice_image'."
@@ -350,15 +359,9 @@ def slice_image(
             sliced_image_result.filenames,
         )
 
-    verboseprint(
-        "Num slices:",
-        n_ims,
-        "slice_height",
-        slice_height,
-        "slice_width",
-        slice_width,
+    verboselog(
+        "Num slices: " + str(n_ims) + " slice_height: " + str(slice_height) + " slice_width: " + str(slice_width),
     )
-    verboseprint("Time to slice", image, time.time() - t0, "seconds")
 
     return sliced_image_result
 
@@ -424,21 +427,24 @@ def slice_coco(
         image_path: str = os.path.join(image_dir, coco_image.file_name)
         # get annotation json list corresponding to selected coco image
         # slice image
-        slice_image_result = slice_image(
-            image=image_path,
-            coco_annotation_list=coco_image.annotations,
-            output_file_name=Path(coco_image.file_name).stem,
-            output_dir=output_dir,
-            slice_height=slice_height,
-            slice_width=slice_width,
-            overlap_height_ratio=overlap_height_ratio,
-            overlap_width_ratio=overlap_width_ratio,
-            min_area_ratio=min_area_ratio,
-            out_ext=out_ext,
-            verbose=verbose,
-        )
-        # append slice outputs
-        sliced_coco_images.extend(slice_image_result.coco_images)
+        try:
+            slice_image_result = slice_image(
+                image=image_path,
+                coco_annotation_list=coco_image.annotations,
+                output_file_name=Path(coco_image.file_name).stem,
+                output_dir=output_dir,
+                slice_height=slice_height,
+                slice_width=slice_width,
+                overlap_height_ratio=overlap_height_ratio,
+                overlap_width_ratio=overlap_width_ratio,
+                min_area_ratio=min_area_ratio,
+                out_ext=out_ext,
+                verbose=verbose,
+            )
+            # append slice outputs
+            sliced_coco_images.extend(slice_image_result.coco_images)
+        except TopologicalError:
+            logger.warning(f"Invalid annotation found, skipping this image: {image_path}")
 
     # create and save coco dict
     coco_dict = create_coco_dict(
