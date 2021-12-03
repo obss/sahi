@@ -356,7 +356,7 @@ def main(
         extraplots=extraplots,
         areas=areas,
         COCO=COCO,
-        COCOEval=COCOeval,
+        COCOeval=COCOeval,
     )
 
 
