@@ -290,7 +290,7 @@ def _analyze_results(
         catIds = cocoGt.getCatIds()
         recThrs = cocoEval.params.recThrs
         with Pool(processes=48) as pool:
-            args = [(k, cocoDt, cocoGt, catId, iou_type, areas) for k, catId in enumerate(catIds)]
+            args = [(k, cocoDt, cocoGt, catId, iou_type, areas, COCOeval) for k, catId in enumerate(catIds)]
             analyze_results = pool.starmap(_analyze_individual_category, args)
         for k, catId in enumerate(catIds):
             nm = cocoGt.loadCats(catId)[0]
@@ -356,7 +356,7 @@ def main(
         extraplots=extraplots,
         areas=areas,
         COCO=COCO,
-        COCOEval=COCOeval,
+        COCOeval=COCOeval,
     )
 
 
