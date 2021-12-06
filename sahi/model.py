@@ -483,7 +483,7 @@ class Yolov5DetectionModel(DetectionModel):
             bbox = [x1, y1, x2, y2]
             score = prediction[4]
             category_id = int(prediction[5])
-            category_name = original_predictions.names[category_id]
+            category_name = self.category_mapping[str(category_id)]
 
             # ignore invalid predictions
             if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
