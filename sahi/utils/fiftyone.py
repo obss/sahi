@@ -3,72 +3,12 @@ import os
 try:
     import fiftyone as fo
     from fiftyone.utils.coco import COCODetectionDatasetImporter as BaseCOCODetectionDatasetImporter
-    from fiftyone.utils.coco import _get_matching_image_ids, _parse_label_types, load_coco_detection_annotations
+    from fiftyone.utils.coco import _get_matching_image_ids, load_coco_detection_annotations
 except ModuleNotFoundError:
     raise ModuleNotFoundError('Please run "pip install -U fiftyone" to install fiftyone first for fiftyone utilities.')
 
 
 class COCODetectionDatasetImporter(BaseCOCODetectionDatasetImporter):
-    def __init__(
-        self,
-        dataset_dir=None,
-        data_path=None,
-        labels_path=None,
-        label_types=None,
-        classes=None,
-        image_ids=None,
-        include_id=False,
-        extra_attrs=None,
-        only_matching=False,
-        use_polylines=False,
-        tolerance=None,
-        shuffle=False,
-        seed=None,
-        max_samples=None,
-    ):
-        data_path = self._parse_data_path(
-            dataset_dir=dataset_dir,
-            data_path=data_path,
-            default="data/",
-        )
-
-        labels_path = self._parse_labels_path(
-            dataset_dir=dataset_dir,
-            labels_path=labels_path,
-            default="labels.json",
-        )
-
-        label_types = _parse_label_types(label_types)
-
-        if include_id:
-            label_types.append("coco_id")
-
-        super().__init__(
-            dataset_dir=dataset_dir,
-            shuffle=shuffle,
-            seed=seed,
-            max_samples=max_samples,
-        )
-
-        self.data_path = data_path
-        self.labels_path = labels_path
-        self.label_types = label_types
-        self.classes = classes
-        self.image_ids = image_ids
-        self.extra_attrs = extra_attrs
-        self.only_matching = only_matching
-        self.use_polylines = use_polylines
-        self.tolerance = tolerance
-
-        self._info = None
-        self._classes = None
-        self._supercategory_map = None
-        self._image_paths_map = None
-        self._image_dicts_map = None
-        self._annotations = None
-        self._filenames = None
-        self._iter_filenames = None
-
     def setup(self):
         if self.labels_path is not None and os.path.isfile(self.labels_path):
             (
