@@ -211,7 +211,7 @@ class UnionMergePostprocess(PostprocessPredictions):
             shift_amount=mask1.shift_amount,
         )
 
-    
+
 class LSNMSPostprocess(PostprocessPredictions):
     # https://github.com/remydubois/lsnms/blob/10b8165893db5bfea4a7cb23e268a502b35883cf/lsnms/nms.py#L62
     def __call__(
@@ -222,16 +222,17 @@ class LSNMSPostprocess(PostprocessPredictions):
             from lsnms import nms
         except ModuleNotFoundError:
             raise ModuleNotFoundError('Please run "pip install -U lsnms" to install lsnms first for lsnms utilities.')
-           
+
         boxes = np.array([object_prediction.bbox.to_voc_bbox() for object_prediction in object_predictions])
         scores = np.array([object_prediction.score.value for object_prediction in object_predictions])
         keep = nms(boxes, scores, iou_threshold=self.match_threshold)
-        
+
         # https://www.kite.com/python/answers/how-to-access-multiple-indices-of-a-list-in-python
         accessed_mapping = map(object_predictions.__getitem__, keep.tolist())
         selected_object_predictions = list(accessed_mapping)
-        
+
         return selected_object_predictions
+
 
 class WBCPostprocess(PostprocessPredictions):
     # https://github.com/remydubois/lsnms/blob/10b8165893db5bfea4a7cb23e268a502b35883cf/lsnms/wbc.py#L98
@@ -243,13 +244,13 @@ class WBCPostprocess(PostprocessPredictions):
             from lsnms import wbc
         except ModuleNotFoundError:
             raise ModuleNotFoundError('Please run "pip install -U lsnms" to install lsnms first for wbc utilities.')
-           
+
         boxes = np.array([object_prediction.bbox.to_voc_bbox() for object_prediction in object_predictions])
         scores = np.array([object_prediction.score.value for object_prediction in object_predictions])
         keep = wbc(boxes, scores, iou_threshold=self.match_threshold)
-        
+
         # https://www.kite.com/python/answers/how-to-access-multiple-indices-of-a-list-in-python
         accessed_mapping = map(object_predictions.__getitem__, keep.tolist())
         selected_object_predictions = list(accessed_mapping)
-        
+
         return selected_object_predictions
