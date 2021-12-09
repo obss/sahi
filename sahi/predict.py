@@ -461,11 +461,10 @@ def predict(
         durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
 
         if dataset_json_path:
-            image_id = ind + 1
             # append predictions in coco format
             for object_prediction in object_prediction_list:
                 coco_prediction = object_prediction.to_coco_prediction()
-                coco_prediction.image_id = image_id
+                coco_prediction.image_id = coco.images[ind].id
                 coco_prediction_json = coco_prediction.json
                 if coco_prediction_json["bbox"]:
                     coco_json.append(coco_prediction_json)
