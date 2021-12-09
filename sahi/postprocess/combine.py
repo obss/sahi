@@ -242,7 +242,7 @@ class WBCPostprocess(PostprocessPredictions):
         try:
             from lsnms import wbc
         except ModuleNotFoundError:
-            raise ModuleNotFoundError('Please run "pip install -U lsnms" to install lsnms first for lsnms utilities.')
+            raise ModuleNotFoundError('Please run "pip install -U lsnms" to install lsnms first for wbc utilities.')
            
         boxes = np.array([object_prediction.bbox.to_voc_bbox() for object_prediction in object_predictions])
         scores = np.array([object_prediction.score.value for object_prediction in object_predictions])
