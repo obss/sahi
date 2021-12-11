@@ -34,7 +34,7 @@ class TestPredict(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             confidence_threshold=0.3,
-            device=None,
+            device='cpu',
             category_remapping=None,
         )
         mmdet_detection_model.load_model()
@@ -78,7 +78,7 @@ class TestPredict(unittest.TestCase):
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             confidence_threshold=0.3,
-            device=None,
+            device='cpu',
             category_remapping=None,
             load_at_init=False,
         )
@@ -124,7 +124,7 @@ class TestPredict(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             confidence_threshold=0.3,
-            device=None,
+            device='cpu',
             category_remapping=None,
             load_at_init=False,
         )
@@ -189,7 +189,7 @@ class TestPredict(unittest.TestCase):
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             confidence_threshold=0.3,
-            device=None,
+            device='cpu',
             category_remapping=None,
             load_at_init=False,
         )
