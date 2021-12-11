@@ -19,7 +19,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             confidence_threshold=0.3,
-            device=None,
+            device="cpu",
             category_remapping=None,
             load_at_init=True,
         )
@@ -36,7 +36,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             confidence_threshold=0.5,
-            device=None,
+            device="cpu",
             category_remapping=None,
             load_at_init=True,
         )
@@ -74,7 +74,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
             confidence_threshold=0.5,
-            device=None,
+            device="cpu",
             category_remapping=None,
             load_at_init=True,
         )
@@ -110,7 +110,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             confidence_threshold=0.5,
-            device=None,
+            device="cpu",
             category_remapping=None,
             load_at_init=True,
         )
@@ -157,7 +157,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
             confidence_threshold=0.5,
-            device=None,
+            device="cpu",
             category_remapping=None,
             load_at_init=True,
         )
@@ -200,7 +200,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             confidence_threshold=0.5,
-            device=None,
+            device="cpu",
             category_remapping=None,
             load_at_init=True,
         )
@@ -245,7 +245,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
             confidence_threshold=0.5,
-            device=None,
+            device="cpu",
             category_remapping=None,
             load_at_init=True,
         )
