@@ -221,7 +221,9 @@ class LSNMSPostprocess(PostprocessPredictions):
         try:
             from lsnms import nms
         except ModuleNotFoundError:
-            raise ModuleNotFoundError('Please run "pip install -U lsnms" to install lsnms first for lsnms utilities.')
+            raise ModuleNotFoundError(
+                'Please run "pip install lsnms>0.3.1" to install lsnms first for lsnms utilities.'
+            )
 
         class_ids = np.array([object_prediction.category.id for object_prediction in object_predictions])
         boxes = np.array([object_prediction.bbox.to_voc_bbox() for object_prediction in object_predictions])
