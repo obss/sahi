@@ -223,9 +223,12 @@ class LSNMSPostprocess(PostprocessPredictions):
         except ModuleNotFoundError:
             raise ModuleNotFoundError('Please run "pip install -U lsnms" to install lsnms first for lsnms utilities.')
 
+        class_ids = np.array([object_prediction.category.id for object_prediction in object_predictions])
         boxes = np.array([object_prediction.bbox.to_voc_bbox() for object_prediction in object_predictions])
         scores = np.array([object_prediction.score.value for object_prediction in object_predictions])
-        keep = nms(boxes, scores, iou_threshold=self.match_threshold)
+        keep = nms(
+            boxes, scores, iou_threshold=self.match_threshold, class_ids=None if self.class_agnostic else class_ids
+        )
 
         # https://www.kite.com/python/answers/how-to-access-multiple-indices-of-a-list-in-python
         accessed_mapping = map(object_predictions.__getitem__, keep.tolist())
