@@ -63,9 +63,11 @@ def evaluate_coco(
     metric="bbox",
     classwise=False,
     proposal_nums=(10, 100, 500),
+    max_detections=500,
     iou_thrs=None,
     metric_items=None,
     out_dir=None,
+    areas=None,
     COCO=None,
     COCOeval=None,
 ):
@@ -79,6 +81,9 @@ def evaluate_coco(
         proposal_nums (Sequence[int]): Proposal number used for evaluating
             recalls, such as recall@100, recall@500.
             Default: (10, 100, 500).
+        max_detections (int): Maximum number of detections to consider for AP
+            calculation.
+            Default: 500
         iou_thrs (List[float], optional): IoU threshold used for
             evaluating recalls/mAPs. If set to a list, the average of all
             IoUs will also be computed. If not specified, [0.50, 0.55,
@@ -91,6 +96,7 @@ def evaluate_coco(
             'mAP_s', 'mAP_m', 'mAP_l', 'mAP50_s', 'mAP50_m', 'mAP50_l']``
             will be used when ``metric=='bbox' or metric=='segm'``.
         out_dir (str): Directory to save evaluation result json.
+        areas (List[int]): area regions for coco evaluation calculations
     Returns:
         dict[str, float]: COCO style evaluation metric.
     """
@@ -105,6 +111,11 @@ def evaluate_coco(
     if metric_items is not None:
         if not isinstance(metric_items, list):
             metric_items = [metric_items]
+    if areas is not None:
+        assert (
+            len(areas) == 3
+        ), "3 integers should be specified as areas, \
+            representing 3 area regions"
 
     eval_results = OrderedDict()
     cocoGt = COCO(dataset_path)
@@ -140,6 +151,13 @@ def evaluate_coco(
             break
 
         cocoEval = COCOeval(cocoGt, cocoDt, iou_type)
+        if areas is not None:
+            cocoEval.params.areaRng = [
+                [0 ** 2, areas[2]],
+                [0 ** 2, areas[0]],
+                [areas[0], areas[1]],
+                [areas[1], areas[2]],
+            ]
         cocoEval.params.catIds = cat_ids
         cocoEval.params.maxDets = list(proposal_nums)
         cocoEval.params.iouThrs = (
@@ -183,15 +201,9 @@ def evaluate_coco(
             cocoEval.accumulate()
             cocoEval.summarize()
             # calculate mAP50_s/m/l
-            mAP50_s = _cocoeval_summarize(
-                cocoEval, ap=1, iouThr=0.5, areaRng="small", maxDets=cocoEval.params.maxDets[-1]
-            )
-            mAP50_m = _cocoeval_summarize(
-                cocoEval, ap=1, iouThr=0.5, areaRng="medium", maxDets=cocoEval.params.maxDets[-1]
-            )
-            mAP50_l = _cocoeval_summarize(
-                cocoEval, ap=1, iouThr=0.5, areaRng="large", maxDets=cocoEval.params.maxDets[-1]
-            )
+            mAP50_s = _cocoeval_summarize(cocoEval, ap=1, iouThr=0.5, areaRng="small", maxDets=max_detections)
+            mAP50_m = _cocoeval_summarize(cocoEval, ap=1, iouThr=0.5, areaRng="medium", maxDets=max_detections)
+            mAP50_l = _cocoeval_summarize(cocoEval, ap=1, iouThr=0.5, areaRng="large", maxDets=max_detections)
             cocoEval.stats = np.append(cocoEval.stats, [mAP50_s, mAP50_m, mAP50_l], 0)
 
             if classwise:  # Compute per-category AP
@@ -217,7 +229,7 @@ def evaluate_coco(
                         ap=1,
                         catIdx=idx,
                         areaRng="all",
-                        maxDets=cocoEval.params.maxDets[-1],
+                        maxDets=max_detections,
                         catName=nm["name"],
                         nameStrLen=max_cat_name_len,
                     )
@@ -226,7 +238,7 @@ def evaluate_coco(
                         ap=1,
                         catIdx=idx,
                         areaRng="small",
-                        maxDets=cocoEval.params.maxDets[-1],
+                        maxDets=max_detections,
                         catName=nm["name"],
                         nameStrLen=max_cat_name_len,
                     )
@@ -235,7 +247,7 @@ def evaluate_coco(
                         ap=1,
                         catIdx=idx,
                         areaRng="medium",
-                        maxDets=cocoEval.params.maxDets[-1],
+                        maxDets=max_detections,
                         catName=nm["name"],
                         nameStrLen=max_cat_name_len,
                     )
@@ -244,7 +256,7 @@ def evaluate_coco(
                         ap=1,
                         catIdx=idx,
                         areaRng="large",
-                        maxDets=cocoEval.params.maxDets[-1],
+                        maxDets=max_detections,
                         catName=nm["name"],
                         nameStrLen=max_cat_name_len,
                     )
@@ -254,7 +266,7 @@ def evaluate_coco(
                         iouThr=0.5,
                         catIdx=idx,
                         areaRng="all",
-                        maxDets=cocoEval.params.maxDets[-1],
+                        maxDets=max_detections,
                         catName=nm["name"],
                         nameStrLen=max_cat_name_len,
                     )
@@ -264,7 +276,7 @@ def evaluate_coco(
                         iouThr=0.5,
                         catIdx=idx,
                         areaRng="small",
-                        maxDets=cocoEval.params.maxDets[-1],
+                        maxDets=max_detections,
                         catName=nm["name"],
                         nameStrLen=max_cat_name_len,
                     )
@@ -274,7 +286,7 @@ def evaluate_coco(
                         iouThr=0.5,
                         catIdx=idx,
                         areaRng="medium",
-                        maxDets=cocoEval.params.maxDets[-1],
+                        maxDets=max_detections,
                         catName=nm["name"],
                         nameStrLen=max_cat_name_len,
                     )
@@ -284,7 +296,7 @@ def evaluate_coco(
                         iouThr=0.5,
                         catIdx=idx,
                         areaRng="large",
-                        maxDets=cocoEval.params.maxDets[-1],
+                        maxDets=max_detections,
                         catName=nm["name"],
                         nameStrLen=max_cat_name_len,
                     )
@@ -337,7 +349,9 @@ def main(
     type: str = "bbox",
     classwise: bool = False,
     proposal_nums: List[int] = [10, 100, 500],
+    max_detections: int = 500,
     iou_thrs: Union[List[float], float] = None,
+    areas: List[int] = [1024, 9216, 10000000000],
 ):
     """
     Args:
@@ -347,7 +361,9 @@ def main(
         type (bool): 'bbox' or 'mask'
         classwise (bool): whether to evaluate the AP for each class
         proposal_nums (List[int]): Proposal number used for evaluating recalls, such as recall@100, recall@500
+        max_detections (int): Maximum number of detections to consider for AP alculation. Default: 500
         iou_thrs (float): IoU threshold used for evaluating recalls/mAPs
+        areas (List[int]): area regions for coco evaluation calculations
     """
     try:
         from pycocotools.coco import COCO
@@ -364,8 +380,10 @@ def main(
         type,
         classwise,
         proposal_nums,
+        max_detections,
         iou_thrs,
         out_dir=out_dir,
+        areas=areas,
         COCO=COCO,
         COCOeval=COCOeval,
     )
