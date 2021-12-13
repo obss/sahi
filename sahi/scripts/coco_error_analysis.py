@@ -243,11 +243,19 @@ def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None,
 
 
 def _analyze_results(
-    res_file, ann_file, res_types, out_dir=None, extraplots=None, areas=None, COCO=None, COCOeval=None
+    res_file,
+    ann_file,
+    res_types,
+    out_dir=None,
+    extraplots=None,
+    areas=None,
+    max_detections=500,
+    COCO=None,
+    COCOeval=None,
 ):
     for res_type in res_types:
         assert res_type in ["bbox", "segm"]
-    if areas:
+    if areas is not None:
         assert (
             len(areas) == 3
         ), "3 integers should be specified as areas, \
@@ -275,8 +283,8 @@ def _analyze_results(
         cocoEval = COCOeval(copy.deepcopy(cocoGt), copy.deepcopy(cocoDt), iou_type)
         cocoEval.params.imgIds = imgIds
         cocoEval.params.iouThrs = [0.75, 0.5, 0.1]
-        cocoEval.params.maxDets = [100]
-        if areas:
+        cocoEval.params.maxDets = [max_detections]
+        if areas is not None:
             cocoEval.params.areaRng = [
                 [0 ** 2, areas[2]],
                 [0 ** 2, areas[0]],
@@ -324,6 +332,7 @@ def main(
     type: str = "bbox",
     extraplots: bool = False,
     areas: List[int] = [1024, 9216, 10000000000],
+    max_detections: int = 500,
 ):
     """
     Args:
@@ -333,6 +342,7 @@ def main(
         extraplots (bool): export extra bar/stat plots
         type (str): 'bbox' or 'mask'
         areas (List[int]): area regions for coco evaluation calculations
+        max_detections (int): Maximum number of detections to consider for AP alculation. Default: 500
     """
     try:
         from pycocotools.coco import COCO
@@ -355,6 +365,7 @@ def main(
         out_dir=out_dir,
         extraplots=extraplots,
         areas=areas,
+        max_detections=max_detections,
         COCO=COCO,
         COCOeval=COCOeval,
     )
