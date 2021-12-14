@@ -178,7 +178,7 @@ def _make_gt_area_histogram_plot(cocoEval, outDir):
     plt.close(fig)
 
 
-def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None, COCOeval=None):
+def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None, max_detections=None, COCOeval=None):
     nm = cocoGt.loadCats(catId)[0]
     print(f'--------------analyzing {k + 1}-{nm["name"]}---------------')
     ps_ = {}
@@ -202,7 +202,7 @@ def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None,
             gt.dataset["annotations"][idx]["category_id"] = catId
     cocoEval = COCOeval(gt, copy.deepcopy(dt), iou_type)
     cocoEval.params.imgIds = imgIds
-    cocoEval.params.maxDets = [100]
+    cocoEval.params.maxDets = [max_detections]
     cocoEval.params.iouThrs = [0.1]
     cocoEval.params.useCats = 1
     if areas:
@@ -225,7 +225,7 @@ def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None,
             gt.dataset["annotations"][idx]["category_id"] = catId
     cocoEval = COCOeval(gt, copy.deepcopy(dt), iou_type)
     cocoEval.params.imgIds = imgIds
-    cocoEval.params.maxDets = [100]
+    cocoEval.params.maxDets = [max_detections]
     cocoEval.params.iouThrs = [0.1]
     cocoEval.params.useCats = 1
     if areas:
@@ -298,7 +298,7 @@ def _analyze_results(
         catIds = cocoGt.getCatIds()
         recThrs = cocoEval.params.recThrs
         with Pool(processes=48) as pool:
-            args = [(k, cocoDt, cocoGt, catId, iou_type, areas, COCOeval) for k, catId in enumerate(catIds)]
+            args = [(k, cocoDt, cocoGt, catId, iou_type, areas, max_detections, COCOeval) for k, catId in enumerate(catIds)]
             analyze_results = pool.starmap(_analyze_individual_category, args)
         for k, catId in enumerate(catIds):
             nm = cocoGt.loadCats(catId)[0]
