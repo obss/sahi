@@ -60,7 +60,7 @@ class DetectionModel:
         self.category_mapping = category_mapping
         self.category_remapping = category_remapping
         self._original_predictions = None
-        self._object_prediction_list = None
+        self._object_prediction_list_per_image = None
 
         # automatically set device if its None
         if not (self.device):
@@ -123,10 +123,11 @@ class DetectionModel:
         # confirm self.category_remapping is not None
         assert self.category_remapping is not None, "self.category_remapping cannot be None"
         # remap categories
-        for object_prediction in self._object_prediction_list:
-            old_category_id_str = str(object_prediction.category.id)
-            new_category_id_int = self.category_remapping[old_category_id_str]
-            object_prediction.category.id = new_category_id_int
+        for object_prediction_list in self._object_prediction_list_per_image:
+            for object_prediction in object_prediction_list:
+                old_category_id_str = str(object_prediction.category.id)
+                new_category_id_int = self.category_remapping[old_category_id_str]
+                object_prediction.category.id = new_category_id_int
 
     def convert_original_predictions(
         self,
@@ -144,34 +145,23 @@ class DetectionModel:
                 Size of the full image after shifting, should be in the form of [height, width]
         """
         self._create_object_prediction_list_from_original_predictions(
-            shift_amount=shift_amount,
-            full_shape=full_shape,
+            shift_amount_list=shift_amount,
+            full_shape_list=full_shape,
         )
         if self.category_remapping:
             self._apply_category_remapping()
 
     @property
     def object_prediction_list(self):
-        return self._object_prediction_list
+        return self._object_prediction_list_per_image[0]
+
+    @property
+    def object_prediction_list_per_image(self):
+        return self._object_prediction_list_per_image
 
     @property
     def original_predictions(self):
         return self._original_predictions
-
-    def _create_predictions_from_object_prediction_list(
-        object_prediction_list: List[ObjectPrediction],
-    ):
-        """
-        This function should be implemented in a way that it converts a list of
-        prediction.ObjectPrediction instance to detection model's original prediction format.
-        Then returns the converted predictions.
-        Can be considered as inverse of _create_object_prediction_list_from_predictions().
-        Args:
-            object_prediction_list: a list of prediction.ObjectPrediction
-        Returns:
-            original_predictions: a list of converted predictions in models original output format
-        """
-        NotImplementedError()
 
 
 class MmdetDetectionModel(DetectionModel):
@@ -231,6 +221,9 @@ class MmdetDetectionModel(DetectionModel):
         if isinstance(image, np.ndarray):
             # https://github.com/obss/sahi/issues/265
             image = image[:, :, ::-1]
+        # compatibility with sahi v0.8.15
+        if not isinstance(image, list):
+            image = [image]
         prediction_result = inference_detector(self.model, image)
 
         self._original_predictions = prediction_result
@@ -264,125 +257,93 @@ class MmdetDetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount: Optional[List[int]] = [0, 0],
-        full_shape: Optional[List[int]] = None,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list.
+        self._object_prediction_list_per_image.
 
         Args:
-            shift_amount: list
-                To shift the box and mask predictions from sliced image to full sized image, should be in the form of [shift_x, shift_y]
-            full_shape: list
-                Size of the full image after shifting, should be in the form of [height, width]
+            shift_amount_list: list of list
+                To shift the box and mask predictions from sliced image to full sized image, should
+                be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
+            full_shape_list: list of list
+                Size of the full image after shifting, should be in the form of
+                List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
         category_mapping = self.category_mapping
 
+        # compatilibty for sahi v0.8.15
+        if isinstance(shift_amount_list[0], int):
+            shift_amount_list = [shift_amount_list]
+        if full_shape_list is not None and isinstance(full_shape_list[0], int):
+            full_shape_list = [full_shape_list]
+
         # parse boxes and masks from predictions
         num_categories = self.num_categories
-        if self.has_mask:
-            boxes = original_predictions[0]
-            masks = original_predictions[1]
-        else:
-            boxes = original_predictions
+        object_prediction_list_per_image = []
+        for image_ind, original_prediction in enumerate(original_predictions):
+            shift_amount = shift_amount_list[image_ind]
+            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
 
-        object_prediction_list = []
-
-        # process predictions
-        for category_id in range(num_categories):
-            category_boxes = boxes[category_id]
             if self.has_mask:
-                category_masks = masks[category_id]
-            num_category_predictions = len(category_boxes)
-
-            for category_predictions_ind in range(num_category_predictions):
-                bbox = category_boxes[category_predictions_ind][:4]
-                score = category_boxes[category_predictions_ind][4]
-                if self.has_mask:
-                    bool_mask = category_masks[category_predictions_ind]
-                else:
-                    bool_mask = None
-                category_name = category_mapping[str(category_id)]
-
-                # ignore invalid predictions
-                if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
-                    logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
-                    continue
-                if full_shape is not None and (
-                    bbox[1] > full_shape[0]
-                    or bbox[3] > full_shape[0]
-                    or bbox[0] > full_shape[1]
-                    or bbox[2] > full_shape[1]
-                ):
-                    logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
-                    continue
-
-                object_prediction = ObjectPrediction(
-                    bbox=bbox,
-                    category_id=category_id,
-                    score=score,
-                    bool_mask=bool_mask,
-                    category_name=category_name,
-                    shift_amount=shift_amount,
-                    full_shape=full_shape,
-                )
-                object_prediction_list.append(object_prediction)
-
-        self._object_prediction_list = object_prediction_list
-
-    def _create_original_predictions_from_object_prediction_list(
-        self,
-        object_prediction_list: List[ObjectPrediction],
-    ):
-        """
-        Converts a list of prediction.ObjectPrediction instance to detection model's original prediction format.
-        Then returns the converted predictions.
-        Can be considered as inverse of _create_object_prediction_list_from_predictions().
-
-        Args:
-            object_prediction_list: a list of prediction.ObjectPrediction
-        Returns:
-            original_predictions: a list of converted predictions in models original output format
-        """
-        # init variables
-        boxes = []
-        masks = []
-        num_categories = self.num_categories
-        category_id_list = np.arange(num_categories)
-        category_id_to_bbox = {category_id: [] for category_id in category_id_list}
-        category_id_to_mask = {category_id: [] for category_id in category_id_list}
-        # form category_to_bbox and category_to_mask dicts from object_prediction_list
-        for object_prediction in object_prediction_list:
-            category_id = object_prediction.category.id
-            # form bbox as 1x5 list [xmin, ymin, xmax, ymax, score]
-            bbox = object_prediction.bbox.to_voc_bbox()
-            bbox.extend([object_prediction.score.value])
-            category_id_to_bbox[category_id].append(np.array(bbox, dtype=np.float32))
-            # form 2d bool mask
-            if self.has_mask:
-                mask = object_prediction.mask.bool_mask
-                category_id_to_mask[category_id].append(mask)
-
-        for category_id in category_id_to_bbox.keys():
-            if not category_id_to_bbox[category_id]:
-                # add 0x5 array to boxes for empty categories
-                boxes.append(np.zeros((0, 5), dtype=np.float32))
-                if self.has_mask:
-                    masks.append([])
+                boxes = original_prediction[0]
+                masks = original_prediction[1]
             else:
-                # form boxes and masks
-                boxes.append(np.array(category_id_to_bbox[category_id]))
-                if self.has_mask:
-                    masks.append(np.array(category_id_to_mask[category_id]))
-        # form final output
-        if self.has_mask:
-            original_predictions = (boxes, masks)
-        else:
-            original_predictions = boxes
+                boxes = original_prediction
 
-        return original_predictions
+            object_prediction_list = []
+
+            # process predictions
+            for category_id in range(num_categories):
+                category_boxes = boxes[category_id]
+                if self.has_mask:
+                    category_masks = masks[category_id]
+                num_category_predictions = len(category_boxes)
+
+                for category_predictions_ind in range(num_category_predictions):
+                    bbox = category_boxes[category_predictions_ind][:4]
+                    score = category_boxes[category_predictions_ind][4]
+                    if self.has_mask:
+                        bool_mask = category_masks[category_predictions_ind]
+                    else:
+                        bool_mask = None
+                    category_name = category_mapping[str(category_id)]
+
+                    # ignore invalid predictions
+                    if (
+                        bbox[0] > bbox[2]
+                        or bbox[1] > bbox[3]
+                        or bbox[0] < 0
+                        or bbox[1] < 0
+                        or bbox[2] < 0
+                        or bbox[3] < 0
+                    ):
+                        logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
+                        continue
+                    if full_shape is not None and (
+                        bbox[1] > full_shape[0]
+                        or bbox[3] > full_shape[0]
+                        or bbox[0] > full_shape[1]
+                        or bbox[2] > full_shape[1]
+                    ):
+                        logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
+                        continue
+
+                    object_prediction = ObjectPrediction(
+                        bbox=bbox,
+                        category_id=category_id,
+                        score=score,
+                        bool_mask=bool_mask,
+                        category_name=category_name,
+                        shift_amount=shift_amount,
+                        full_shape=full_shape,
+                    )
+                    object_prediction_list.append(object_prediction)
+            object_prediction_list_per_image.append(object_prediction_list)
+        self._object_prediction_list_per_image = object_prediction_list_per_image
 
 
 class Yolov5DetectionModel(DetectionModel):
@@ -454,76 +415,70 @@ class Yolov5DetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount: Optional[List[int]] = [0, 0],
-        full_shape: Optional[List[int]] = None,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list.
+        self._object_prediction_list_per_image.
 
         Args:
-            shift_amount: list
-                To shift the box and mask predictions from sliced image to full sized image, should be in the form of [shift_x, shift_y]
-            full_shape: list
-                Size of the full image after shifting, should be in the form of [height, width]
+            shift_amount_list: list of list
+                To shift the box and mask predictions from sliced image to full sized image, should
+                be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
+            full_shape_list: list of list
+                Size of the full image after shifting, should be in the form of
+                List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
 
-        # handle only first image (batch=1)
-        predictions_in_xyxy_format = original_predictions.xyxy[0].cpu().detach().numpy()
+        # compatilibty for sahi v0.8.15
+        if isinstance(shift_amount_list[0], int):
+            shift_amount_list = [shift_amount_list]
+        if full_shape_list is not None and isinstance(full_shape_list[0], int):
+            full_shape_list = [full_shape_list]
 
-        object_prediction_list = []
+        # handle all predictions
+        object_prediction_list_per_image = []
+        for image_ind, image_predictions_in_xyxy_format in enumerate(original_predictions.xyxy):
+            shift_amount = shift_amount_list[image_ind]
+            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+            object_prediction_list = []
 
-        # process predictions
-        for prediction in predictions_in_xyxy_format:
-            x1 = int(prediction[0])
-            y1 = int(prediction[1])
-            x2 = int(prediction[2])
-            y2 = int(prediction[3])
-            bbox = [x1, y1, x2, y2]
-            score = prediction[4]
-            category_id = int(prediction[5])
-            category_name = self.category_mapping[str(category_id)]
+            # process predictions
+            for prediction in image_predictions_in_xyxy_format.cpu().detach().numpy():
+                x1 = int(prediction[0])
+                y1 = int(prediction[1])
+                x2 = int(prediction[2])
+                y2 = int(prediction[3])
+                bbox = [x1, y1, x2, y2]
+                score = prediction[4]
+                category_id = int(prediction[5])
+                category_name = self.category_mapping[str(category_id)]
 
-            # ignore invalid predictions
-            if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
-                logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
-                continue
-            if full_shape is not None and (
-                bbox[1] > full_shape[0] or bbox[3] > full_shape[0] or bbox[0] > full_shape[1] or bbox[2] > full_shape[1]
-            ):
-                logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
-                continue
+                # ignore invalid predictions
+                if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
+                    logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
+                    continue
+                if full_shape is not None and (
+                    bbox[1] > full_shape[0]
+                    or bbox[3] > full_shape[0]
+                    or bbox[0] > full_shape[1]
+                    or bbox[2] > full_shape[1]
+                ):
+                    logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
+                    continue
 
-            object_prediction = ObjectPrediction(
-                bbox=bbox,
-                category_id=category_id,
-                score=score,
-                bool_mask=None,
-                category_name=category_name,
-                shift_amount=shift_amount,
-                full_shape=full_shape,
-            )
-            object_prediction_list.append(object_prediction)
+                object_prediction = ObjectPrediction(
+                    bbox=bbox,
+                    category_id=category_id,
+                    score=score,
+                    bool_mask=None,
+                    category_name=category_name,
+                    shift_amount=shift_amount,
+                    full_shape=full_shape,
+                )
+                object_prediction_list.append(object_prediction)
+            object_prediction_list_per_image.append(object_prediction_list)
 
-        self._object_prediction_list = object_prediction_list
-
-    def _create_original_predictions_from_object_prediction_list(
-        self,
-        object_prediction_list: List[ObjectPrediction],
-    ):
-        """
-        Converts a list of prediction.ObjectPrediction instance to detection model's original
-        prediction format. Then returns the converted predictions.
-        Can be considered as inverse of _create_object_prediction_list_from_predictions().
-
-        Args:
-            object_prediction_list: a list of prediction.ObjectPrediction
-        Returns:
-            original_predictions: a list of converted predictions in models original output format
-        """
-        assert self.original_predictions is not None, (
-            "self.original_predictions" " cannot be empty, call .perform_inference() first"
-        )
-        # TODO: implement object_prediction_list to yolov5 format conversion
-        NotImplementedError()
+        self._object_prediction_list_per_image = object_prediction_list_per_image

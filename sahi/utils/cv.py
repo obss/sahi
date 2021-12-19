@@ -401,7 +401,12 @@ def get_coco_segmentation_from_bool_mask(bool_mask):
     polygons = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE, offset=(-1, -1))
     polygons = polygons[0] if len(polygons) == 2 else polygons[1]
     # Convert polygon to coco segmentation
-    coco_segmentation = [polygon.flatten().tolist() for polygon in polygons]
+    coco_segmentation = []
+    for polygon in polygons:
+        segmentation = polygon.flatten().tolist()
+        # at least 3 points needed for a polygon
+        if len(segmentation) >= 6:
+            coco_segmentation.append(segmentation)
     return coco_segmentation
 
 

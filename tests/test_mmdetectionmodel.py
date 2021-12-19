@@ -8,6 +8,8 @@ import numpy as np
 from sahi.utils.cv import read_image
 from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_retinanet_model
 
+MODEL_DEVICE = "cpu"
+
 
 class TestMmdetDetectionModel(unittest.TestCase):
     def test_load_model(self):
@@ -19,7 +21,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             confidence_threshold=0.3,
-            device="cpu",
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
         )
@@ -36,7 +38,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             confidence_threshold=0.5,
-            device="cpu",
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
         )
@@ -49,8 +51,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model.perform_inference(image)
         original_predictions = mmdet_detection_model.original_predictions
 
-        boxes = original_predictions[0]
-        masks = original_predictions[1]
+        boxes = original_predictions[0][0]
+        masks = original_predictions[0][1]
 
         # find box of first person detection with conf greater than 0.5
         for box in boxes[0]:
@@ -74,7 +76,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
             confidence_threshold=0.5,
-            device="cpu",
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
         )
@@ -87,7 +89,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model.perform_inference(image)
         original_predictions = mmdet_detection_model.original_predictions
 
-        boxes = original_predictions
+        boxes = original_predictions[0]
 
         # find box of first car detection with conf greater than 0.5
         for box in boxes[2]:
@@ -110,7 +112,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             confidence_threshold=0.5,
-            device="cpu",
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
         )
@@ -157,7 +159,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
             confidence_threshold=0.5,
-            device="cpu",
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
         )
@@ -187,94 +189,6 @@ class TestMmdetDetectionModel(unittest.TestCase):
             object_prediction_list[5].bbox.to_coco_bbox(),
             [22, 275, 93, 55],
         )
-
-    def test_create_original_predictions_from_object_prediction_list_with_mask_output(
-        self,
-    ):
-        from sahi.model import MmdetDetectionModel
-
-        # init model
-        download_mmdet_cascade_mask_rcnn_model()
-
-        mmdet_detection_model = MmdetDetectionModel(
-            model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
-            config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
-            confidence_threshold=0.5,
-            device="cpu",
-            category_remapping=None,
-            load_at_init=True,
-        )
-
-        # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
-        image = read_image(image_path)
-
-        # perform inference
-        mmdet_detection_model.perform_inference(image, image_size=256)
-        original_predictions_1 = mmdet_detection_model.original_predictions
-
-        # convert predictions to ObjectPrediction list
-        mmdet_detection_model.convert_original_predictions()
-        object_prediction_list = mmdet_detection_model.object_prediction_list
-
-        original_predictions_2 = mmdet_detection_model._create_original_predictions_from_object_prediction_list(
-            object_prediction_list
-        )
-
-        # compare
-        self.assertEqual(len(original_predictions_1), len(original_predictions_2))  # 2
-        self.assertEqual(len(original_predictions_1[0]), len(original_predictions_2[0]))  # 80
-        self.assertEqual(len(original_predictions_1[0][2]), len(original_predictions_2[0][2]))  # 4
-        self.assertEqual(type(original_predictions_1[0]), type(original_predictions_2[0]))  # list
-        self.assertEqual(original_predictions_1[0][2].dtype, original_predictions_2[0][2].dtype)  # float32
-        self.assertEqual(original_predictions_1[0][2][0].dtype, original_predictions_2[0][2][0].dtype)  # float32
-        self.assertEqual(original_predictions_1[1][2][0].dtype, original_predictions_2[1][2][0].dtype)  # bool
-        self.assertEqual(len(original_predictions_1[0][2][0]), len(original_predictions_2[0][2][0]))  # 5
-        self.assertEqual(len(original_predictions_1[0][1]), len(original_predictions_1[0][1]))  # 0
-        self.assertEqual(original_predictions_1[0][1].shape, original_predictions_1[0][1].shape)  # (0, 5)
-
-    def test_create_original_predictions_from_object_prediction_list_without_mask_output(
-        self,
-    ):
-        from sahi.model import MmdetDetectionModel
-
-        # init model
-        download_mmdet_retinanet_model()
-
-        mmdet_detection_model = MmdetDetectionModel(
-            model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
-            config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
-            confidence_threshold=0.5,
-            device="cpu",
-            category_remapping=None,
-            load_at_init=True,
-        )
-
-        # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
-        image = read_image(image_path)
-
-        # perform inference
-        mmdet_detection_model.perform_inference(image, image_size=256)
-        original_predictions_1 = mmdet_detection_model.original_predictions
-
-        # convert predictions to ObjectPrediction list
-        mmdet_detection_model.convert_original_predictions()
-        object_prediction_list = mmdet_detection_model.object_prediction_list
-
-        original_predictions_2 = mmdet_detection_model._create_original_predictions_from_object_prediction_list(
-            object_prediction_list
-        )
-
-        # compare
-        self.assertEqual(len(original_predictions_1), len(original_predictions_2))  # 80
-        self.assertEqual(len(original_predictions_1[2]), len(original_predictions_2[2]))  # 57
-        self.assertEqual(type(original_predictions_1), type(original_predictions_2))  # list
-        self.assertEqual(original_predictions_1[2].dtype, original_predictions_2[2].dtype)  # float32
-        self.assertEqual(original_predictions_1[2][0].dtype, original_predictions_2[2][0].dtype)  # float32
-        self.assertEqual(len(original_predictions_1[2][0]), len(original_predictions_2[2][0]))  # 5
-        self.assertEqual(len(original_predictions_1[1]), len(original_predictions_1[1]))  # 0
-        self.assertEqual(original_predictions_1[1].shape, original_predictions_1[1].shape)  # (0, 5)
 
 
 if __name__ == "__main__":

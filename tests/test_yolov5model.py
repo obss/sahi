@@ -8,6 +8,8 @@ import numpy as np
 from sahi.utils.cv import read_image
 from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model, download_yolov5s6_model
 
+MODEL_DEVICE = "cpu"
+
 
 class TestYolov5DetectionModel(unittest.TestCase):
     def test_load_model(self):
@@ -18,7 +20,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             confidence_threshold=0.3,
-            device="cpu",
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
         )
@@ -34,7 +36,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             confidence_threshold=0.5,
-            device="cpu",
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
         )
@@ -72,7 +74,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             confidence_threshold=0.5,
-            device="cpu",
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
         )
@@ -103,12 +105,6 @@ class TestYolov5DetectionModel(unittest.TestCase):
         predicted_bbox = object_prediction_list[5].bbox.to_coco_bbox()
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
-
-    def test_create_original_predictions_from_object_prediction_list(
-        self,
-    ):
-        pass
-        # TODO: implement object_prediction_list to yolov5 format conversion
 
 
 if __name__ == "__main__":
