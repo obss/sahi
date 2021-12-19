@@ -9,6 +9,8 @@ import numpy as np
 
 from sahi.utils.cv import read_image
 
+MODEL_DEVICE = "cpu"
+
 
 class TestPredict(unittest.TestCase):
     def test_prediction_score(self):
@@ -34,7 +36,7 @@ class TestPredict(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             confidence_threshold=0.3,
-            device="cpu",
+            device=MODEL_DEVICE,
             category_remapping=None,
         )
         mmdet_detection_model.load_model()
@@ -78,7 +80,7 @@ class TestPredict(unittest.TestCase):
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             confidence_threshold=0.3,
-            device="cpu",
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=False,
         )
@@ -124,7 +126,7 @@ class TestPredict(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             confidence_threshold=0.3,
-            device="cpu",
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=False,
         )
@@ -189,7 +191,7 @@ class TestPredict(unittest.TestCase):
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             confidence_threshold=0.3,
-            device="cpu",
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=False,
         )
@@ -267,7 +269,7 @@ class TestPredict(unittest.TestCase):
             model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
             model_config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             model_confidence_threshold=0.4,
-            model_device="cpu",
+            model_device=MODEL_DEVICE,
             model_category_mapping=None,
             model_category_remapping=None,
             source=source,
@@ -306,7 +308,7 @@ class TestPredict(unittest.TestCase):
             model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             model_config_path=None,
             model_confidence_threshold=0.4,
-            model_device="cpu",
+            model_device=MODEL_DEVICE,
             model_category_mapping=None,
             model_category_remapping=None,
             source=source,
