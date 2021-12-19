@@ -283,7 +283,7 @@ def slice_image(
         verboselog("sliced image path: " + slice_file_path)
 
     # create outdir if not present
-    if output_dir:
+    if output_dir is not None:
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     # read image
@@ -291,7 +291,8 @@ def slice_image(
     verboselog("image.shape: " + str(image_pil.size))
 
     image_width, image_height = image_pil.size
-    assert image_width != 0 and image_height != 0, f"invalid image size: {image_pil.size} for 'slice_image'."
+    if not (image_width != 0 and image_height != 0):
+        raise RuntimeError(f"invalid image size: {image_pil.size} for 'slice_image'.")
     slice_bboxes = get_slice_bboxes(
         image_height=image_height,
         image_width=image_width,
