@@ -96,6 +96,6 @@ jobs:
           # coco evaluate
           sahi coco evaluate --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json
           # coco analyse
-          sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json
+          sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
           # coco fiftyone
           sahi coco analyse --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json
