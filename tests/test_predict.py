@@ -27,14 +27,14 @@ class TestPredict(unittest.TestCase):
     def test_get_prediction_mmdet(self):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import get_prediction
-        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model
+        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
 
         # init model
-        download_mmdet_cascade_mask_rcnn_model()
+        download_mmdet_yolox_tiny_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
-            config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
             confidence_threshold=0.3,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -52,7 +52,7 @@ class TestPredict(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 3)
+        self.assertEqual(len(object_prediction_list), 5)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -67,7 +67,7 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 3)
+        self.assertEqual(num_car, 5)
 
     def test_get_prediction_yolov5(self):
         from sahi.model import Yolov5DetectionModel
@@ -117,14 +117,14 @@ class TestPredict(unittest.TestCase):
     def test_get_sliced_prediction_mmdet(self):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import get_sliced_prediction
-        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model
+        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
 
         # init model
-        download_mmdet_cascade_mask_rcnn_model()
+        download_mmdet_yolox_tiny_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
-            config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
             confidence_threshold=0.3,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -163,7 +163,7 @@ class TestPredict(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 15)
+        self.assertEqual(len(object_prediction_list), 17)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -173,12 +173,12 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "truck":
                 num_truck += 1
-        self.assertEqual(num_truck, 1)
+        self.assertEqual(num_truck, 0)
         num_car = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 14)
+        self.assertEqual(num_car, 16)
 
     def test_get_sliced_prediction_yolov5(self):
         from sahi.model import Yolov5DetectionModel
@@ -245,11 +245,11 @@ class TestPredict(unittest.TestCase):
 
     def test_coco_json_prediction(self):
         from sahi.predict import predict
-        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model
+        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
         from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
         # init model
-        download_mmdet_cascade_mask_rcnn_model()
+        download_mmdet_yolox_tiny_model()
 
         postprocess_type = "UNIONMERGE"
         match_metric = "IOS"
@@ -266,8 +266,8 @@ class TestPredict(unittest.TestCase):
             shutil.rmtree(project_dir)
         predict(
             model_type="mmdet",
-            model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
-            model_config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
+            model_config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
             model_confidence_threshold=0.4,
             model_device=MODEL_DEVICE,
             model_category_mapping=None,
