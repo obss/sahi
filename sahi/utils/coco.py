@@ -1012,7 +1012,7 @@ class Coco:
         # https://github.com/obss/sahi/issues/98
         image_id_set: Set = set()
 
-        for coco_image_dict in tqdm(coco_dict["images"], 'Loading coco annotations'):
+        for coco_image_dict in tqdm(coco_dict["images"], "Loading coco annotations"):
             coco_image = CocoImage.from_coco_image_dict(coco_image_dict)
             image_id = coco_image_dict["id"]
             # https://github.com/obss/sahi/issues/98
