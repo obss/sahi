@@ -3,6 +3,7 @@
 # Modified by Sinan O Altinuc, 2020.
 
 import copy
+import logging
 import os
 from collections import Counter, defaultdict
 from dataclasses import dataclass
@@ -16,6 +17,13 @@ from tqdm import tqdm
 
 from sahi.utils.file import load_json, save_json
 from sahi.utils.shapely import ShapelyAnnotation, box, get_bbox_from_shapely, get_shapely_multipolygon
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
+    datefmt="%m/%d/%Y %H:%M:%S",
+    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+)
 
 
 class CocoCategory:
@@ -119,7 +127,15 @@ class CocoAnnotation:
             annotation_dict: dict
                 COCO formatted annotation dict (with fields "bbox", "segmentation", "category_id")
         """
-        if annotation_dict["segmentation"]:
+        if annotation_dict["segmentation"] and not isinstance(annotation_dict["segmentation"], list):
+            has_rle_segmentation = True
+            logger.warning(
+                f"Segmentation annotation for id {annotation_dict['id']} is skipped since RLE segmentation format is not supported."
+            )
+        else:
+            has_rle_segmentation = False
+
+        if annotation_dict["segmentation"] and not has_rle_segmentation:
             return cls(
                 segmentation=annotation_dict["segmentation"],
                 category_id=annotation_dict["category_id"],
@@ -996,7 +1012,7 @@ class Coco:
         # https://github.com/obss/sahi/issues/98
         image_id_set: Set = set()
 
-        for coco_image_dict in coco_dict["images"]:
+        for coco_image_dict in tqdm(coco_dict["images"], 'Loading coco annotations'):
             coco_image = CocoImage.from_coco_image_dict(coco_image_dict)
             image_id = coco_image_dict["id"]
             # https://github.com/obss/sahi/issues/98
@@ -1791,7 +1807,7 @@ def get_imageid2annotationlist_mapping(
     """
     image_id_to_annotation_list: Dict = defaultdict(list)
     print("indexing coco dataset annotations...")
-    for annotation in tqdm(coco_dict["annotations"]):
+    for annotation in coco_dict["annotations"]:
         image_id = annotation["image_id"]
         image_id_to_annotation_list[image_id].append(annotation)
 
