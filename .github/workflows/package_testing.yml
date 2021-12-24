@@ -67,9 +67,9 @@ jobs:
           pip install mmcv-full==1.4.1 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.10.0/index.html
           pip install mmdet==2.19.1 yolov5==6.0.6 norfair==0.3.1
 
-      - name: Install pycocotools(2.0.3), fiftyone(0.14.2)
+      - name: Install pycocotools(2.0.3)
         run: >
-          pip install pycocotools==2.0.3 fiftyone==0.14.2
+          pip install pycocotools==2.0.3
 
       - name: Install latest SAHI package
         run: >
@@ -97,5 +97,3 @@ jobs:
           sahi coco evaluate --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json
           # coco analyse
           sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
-          # coco fiftyone
-          sahi coco fiftyone --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json

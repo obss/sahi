@@ -87,9 +87,9 @@ jobs:
           pip install pytest
           python -m unittest
 
-      - name: Install pycocotools(2.0.3), fiftyone(0.14.2)
+      - name: Install pycocotools(2.0.3)
         run: >
-          pip install pycocotools==2.0.3 fiftyone==0.14.2
+          pip install pycocotools==2.0.3
 
       - name: Install SAHI package from local setup.py
         run: >
@@ -114,5 +114,3 @@ jobs:
           sahi coco evaluate --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json
           # coco analyse
           sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
-          # coco fiftyone
-          sahi coco fiftyone --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json
