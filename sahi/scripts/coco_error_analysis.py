@@ -303,6 +303,10 @@ def _analyze_results(
             ]
             analyze_results = pool.starmap(_analyze_individual_category, args)
         for k, catId in enumerate(catIds):
+            # skip if no image with this category
+            image_ids = cocoGt.getImgIds(catIds=[catId])
+            if len(image_ids) == 0:
+                continue
             nm = cocoGt.loadCats(catId)[0]
             print(f'--------------saving {k + 1}-{nm["name"]}---------------')
             analyze_result = analyze_results[k]

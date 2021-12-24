@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 
 from sahi.utils.cv import read_image
-from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_retinanet_model
+from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_yolox_tiny_model
 
 MODEL_DEVICE = "cpu"
 
@@ -70,11 +70,11 @@ class TestMmdetDetectionModel(unittest.TestCase):
         from sahi.model import MmdetDetectionModel
 
         # init model
-        download_mmdet_retinanet_model()
+        download_mmdet_yolox_tiny_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
-            config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -99,7 +99,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
                     break
 
         # compare
-        self.assertEqual(box[:4].astype("int").tolist(), [448, 309, 495, 341])
+        self.assertEqual(box[:4].astype("int").tolist(), [320, 323, 384, 366])
         self.assertEqual(len(boxes), 80)
 
     def test_convert_original_predictions_with_mask_output(self):
@@ -153,11 +153,11 @@ class TestMmdetDetectionModel(unittest.TestCase):
         from sahi.model import MmdetDetectionModel
 
         # init model
-        download_mmdet_retinanet_model()
+        download_mmdet_yolox_tiny_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MmdetTestConstants.MMDET_RETINANET_MODEL_PATH,
-            config_path=MmdetTestConstants.MMDET_RETINANET_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -176,18 +176,18 @@ class TestMmdetDetectionModel(unittest.TestCase):
         object_prediction_list = mmdet_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 100)
-        self.assertEqual(object_prediction_list[0].category.id, 2)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
+        self.assertEqual(len(object_prediction_list), 36)
+        self.assertEqual(object_prediction_list[0].category.id, 0)
+        self.assertEqual(object_prediction_list[0].category.name, "person")
         self.assertEqual(
             object_prediction_list[0].bbox.to_coco_bbox(),
-            [317, 313, 67, 50],
+            [836, 303, 36, 40],
         )
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
         self.assertEqual(
             object_prediction_list[5].bbox.to_coco_bbox(),
-            [22, 275, 93, 55],
+            [334, 285, 60, 48],
         )
 
 

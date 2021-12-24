@@ -3,7 +3,6 @@
 *.pkl
 *.pth
 *.pt
-result*
 weights*
 .vscode
 .idea

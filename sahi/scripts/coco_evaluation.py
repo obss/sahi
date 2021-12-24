@@ -221,6 +221,10 @@ def evaluate_coco(
 
                 results_per_category = []
                 for idx, catId in enumerate(cat_ids):
+                    # skip if no image with this category
+                    image_ids = cocoGt.getImgIds(catIds=[catId])
+                    if len(image_ids) == 0:
+                        continue
                     # area range index 0: all area ranges
                     # max dets index -1: typically 100 per image
                     nm = cocoGt.loadCats(catId)[0]
