@@ -117,6 +117,8 @@ class NMSPostprocess(PostprocessPredictions):
             new_source_object_predictions: List[ObjectPrediction] = []
             for candidate_object_prediction in source_object_predictions:
                 if self._has_match(selected_object_prediction, candidate_object_prediction):
+                    pass
+                else:
                     new_source_object_predictions.append(candidate_object_prediction)
             source_object_predictions = new_source_object_predictions
             # append selected prediction to selected list
