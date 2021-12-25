@@ -43,18 +43,28 @@ Object detection and instance segmentation are by far the most important fields 
 
 ## <div align="center">Getting Started</div>
 
-<details open>
-<summary>
-<big><b>Blogpost</b></big>
-</summary>
+### Tutorials
 
 Check the [official SAHI blog post](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80).
 
+Check `YOLOv5` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov5.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
+
+Check `MMDetection` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_mmdetection.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
+
+Check `YOLOX` + `SAHI` demo: <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img src="https://raw.githubusercontent.com/obss/sahi/main/resources/hf_spaces_badge.svg" alt="HuggingFace Spaces"></a>
+  
+<a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img width="600" src="https://user-images.githubusercontent.com/34196005/144092739-c1d9bade-a128-4346-947f-424ce00e5c4f.gif" alt="downloads"></a>
+
 </details>
 
-<details open>
+### Installation
+
+<img width="700" alt="teaser" src="https://user-images.githubusercontent.com/34196005/147393580-3892d629-ee36-43f8-8dc1-85c74275ebf9.gif">
+
+
+<details closed>
 <summary>
-<big><b>Installation</b></big>
+<big><b>Installation details:</b></big>
 </summary>
 
 - Install `sahi` using pip:
@@ -72,17 +82,23 @@ conda install -c conda-forge shapely
 - Install your desired version of pytorch and torchvision:
 
 ```console
-pip install torch torchvision
+conda install torch torchvision cudatoolkit=11.3 -c pytorch
 ```
-
-- Install your desired detection framework (such as mmdet or yolov5):
-
-```console
-pip install mmdet mmcv-full
-```
+  
+- Install your desired detection framework (yolov5):
 
 ```console
 pip install yolov5
+```
+
+- Install your desired detection framework (mmdet):
+
+```console
+pip install mmcv-full==1.4.1 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html
+```
+
+```console
+pip install git+https://github.com/open-mmlab/mmdetection.git
 ```
 
 </details>
@@ -108,13 +124,7 @@ result = get_sliced_prediction(
 
 ```
   
-Check `YOLOX` + `SAHI` demo: <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img src="https://raw.githubusercontent.com/obss/sahi/main/resources/hf_spaces_badge.svg" alt="HuggingFace Spaces"></a>
-  
-   <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img width="600" src="https://user-images.githubusercontent.com/34196005/144092739-c1d9bade-a128-4346-947f-424ce00e5c4f.gif" alt="downloads"></a>
 
-Check `YOLOv5` + `SAHI` demo: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov5.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
-
-Check `MMDetection` + `SAHI` demo: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_mmdetection.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
 
 - Slice an image:
 
