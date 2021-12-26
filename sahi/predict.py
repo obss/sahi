@@ -544,6 +544,9 @@ def predict(
         save_path = str(save_dir / "result.json")
         save_json(coco_json, save_path)
 
+    if export_visual or export_pickle or export_crop or dataset_json_path is not None:
+        print(f"Prediction results are sucessfully exported to {save_dir}")
+
     # print prediction duration
     if verbose == 2:
         print(

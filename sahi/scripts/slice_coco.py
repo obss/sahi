@@ -14,6 +14,7 @@ def main(
     ignore_negative_samples: bool = False,
     project: str = "runs/slice_coco",
     name: str = "exp",
+    min_area_ratio: float = 0.1,
 ):
     """
     Args:
@@ -24,6 +25,9 @@ def main(
         ignore_negative_samples (bool): ignore images without annotation
         project (str): save results to project/name
         name (str): save results to project/name
+        min_area_ratio (float): If the cropped annotation area to original
+            annotation ratio is smaller than this value, the annotation
+            is filtered out. Default 0.1.
     """
 
     # assure slice_size is list
@@ -56,10 +60,7 @@ def main(
         )
         output_coco_annotation_file_path = os.path.join(output_dir, sliced_coco_name + ".json")
         save_json(coco_dict, output_coco_annotation_file_path)
-        print(
-            f"Sliced 'slice_size: {slice_size}' coco file is saved to",
-            output_coco_annotation_file_path,
-        )
+        print(f"Sliced dataset for 'slice_size: {slice_size}' is exported to {output_dir}")
 
 
 if __name__ == "__main__":

@@ -11,11 +11,6 @@ from sahi.prediction import ObjectPrediction
 from sahi.utils.torch import cuda_is_available, empty_cuda_cache
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
-    datefmt="%m/%d/%Y %H:%M:%S",
-    level=os.environ.get("LOGLEVEL", "INFO").upper(),
-)
 
 
 class DetectionModel:
