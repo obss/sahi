@@ -329,7 +329,7 @@ def _analyze_results(
             _makebarplot(recThrs, ps, res_out_dir, "allclass", iou_type)
             _make_gt_area_group_numbers_plot(cocoEval=cocoEval, outDir=res_out_dir, verbose=True)
             _make_gt_area_histogram_plot(cocoEval=cocoEval, outDir=res_out_dir)
-    print(f"Results are successfully exported to {out_dir}")
+    print(f"COCO error analysis results are successfully exported to {out_dir}")
 
 
 def main(

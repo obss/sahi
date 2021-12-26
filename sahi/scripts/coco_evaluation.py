@@ -343,7 +343,7 @@ def evaluate_coco(
     # export as json
     with open(save_path, "w", encoding="utf-8") as outfile:
         json.dump(eval_results, outfile, indent=4, separators=(",", ":"))
-    print(f"Results are successfully exported to {save_path}")
+    print(f"COCO evaluation results are successfully exported to {save_path}")
     return eval_results
 
 

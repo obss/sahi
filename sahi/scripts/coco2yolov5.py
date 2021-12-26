@@ -38,6 +38,8 @@ def main(
         numpy_seed=seed,
     )
 
+    print(f"COCO to YOLOv5 conversion results are sucessfully exported to {save_dir}")
+
 
 if __name__ == "__main__":
     fire.Fire(main)
