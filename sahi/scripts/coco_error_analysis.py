@@ -261,7 +261,7 @@ def _analyze_results(
         ), "3 integers should be specified as areas, \
             representing 3 area regions"
 
-    if not out_dir:
+    if out_dir is None:
         out_dir = Path(res_file).parent
         out_dir = str(out_dir / "coco_error_analysis")
 
@@ -329,12 +329,13 @@ def _analyze_results(
             _makebarplot(recThrs, ps, res_out_dir, "allclass", iou_type)
             _make_gt_area_group_numbers_plot(cocoEval=cocoEval, outDir=res_out_dir, verbose=True)
             _make_gt_area_histogram_plot(cocoEval=cocoEval, outDir=res_out_dir)
+    print(f"Results are successfully exported to {out_dir}")
 
 
 def main(
     dataset_json_path: str,
     result_json_path: str,
-    out_dir: str,
+    out_dir: str = None,
     type: str = "bbox",
     extraplots: bool = False,
     areas: List[int] = [1024, 9216, 10000000000],
