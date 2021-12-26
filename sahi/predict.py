@@ -358,7 +358,8 @@ def predict(
             Can be specified as 'jpg' or 'png'
         verbose: int
             0: no print
-            1: print slice/prediction durations, number of slices, model loading/file exporting durations
+            1: print slice/prediction durations, number of slices
+            2: print model loading/file exporting durations
     """
     # assert prediction type
     assert (
@@ -441,7 +442,7 @@ def predict(
                 postprocess_match_metric=postprocess_match_metric,
                 postprocess_match_threshold=postprocess_match_threshold,
                 postprocess_class_agnostic=postprocess_class_agnostic,
-                verbose=verbose,
+                verbose=1 if verbose else 0,
             )
             object_prediction_list = prediction_result.object_prediction_list
             durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
@@ -544,7 +545,7 @@ def predict(
         save_json(coco_json, save_path)
 
     # print prediction duration
-    if verbose == 1:
+    if verbose == 2:
         print(
             "Model loaded in",
             durations_in_seconds["model_load"],
