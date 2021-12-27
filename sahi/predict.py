@@ -592,7 +592,7 @@ def predict_fiftyone(
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     postprocess_type: str = "UNIONMERGE",
-    postprocess_match_metric: str = "IOS",
+    postprocess_match_metric: str = None,
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
@@ -654,6 +654,10 @@ def predict_fiftyone(
     """
     from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file, fo
 
+    # deprecated warning
+    if postprocess_match_metric is not None:
+        logger.warning("'postprocess_match_metric' is deprecated and will removed in upcoming releases.")
+
     # assert prediction type
     assert (
         no_standard_prediction and no_sliced_prediction
@@ -700,7 +704,6 @@ def predict_fiftyone(
                     overlap_width_ratio=overlap_width_ratio,
                     perform_standard_pred=not no_standard_prediction,
                     postprocess_type=postprocess_type,
-                    postprocess_match_metric=postprocess_match_metric,
                     postprocess_match_threshold=postprocess_match_threshold,
                     postprocess_class_agnostic=postprocess_class_agnostic,
                     verbose=verbose,
