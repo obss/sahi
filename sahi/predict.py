@@ -126,16 +126,16 @@ def get_sliced_prediction(
         image_size: int
             Input image size for each inference (image is scaled by preserving asp. rat.).
         slice_height: int
-            Height of each slice.  Defaults to ``256``.
+            Height of each slice.  Defaults to ``512``.
         slice_width: int
-            Width of each slice.  Defaults to ``256``.
+            Width of each slice.  Defaults to ``512``.
         overlap_height_ratio: float
             Fractional overlap in height of each window (e.g. an overlap of 0.2 for a window
-            of size 256 yields an overlap of 51 pixels).
+            of size 512 yields an overlap of 102 pixels).
             Default to ``0.2``.
         overlap_width_ratio: float
             Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
-            of size 256 yields an overlap of 51 pixels).
+            of size 512 yields an overlap of 102 pixels).
             Default to ``0.2``.
         perform_standard_pred: bool
             Perform a standard prediction on top of sliced predictions to increase large object
@@ -316,16 +316,16 @@ def predict(
         image_size: int
             Input image size for each inference (image is scaled by preserving asp. rat.).
         slice_height: int
-            Height of each slice.  Defaults to ``256``.
+            Height of each slice.  Defaults to ``512``.
         slice_width: int
-            Width of each slice.  Defaults to ``256``.
+            Width of each slice.  Defaults to ``512``.
         overlap_height_ratio: float
             Fractional overlap in height of each window (e.g. an overlap of 0.2 for a window
-            of size 256 yields an overlap of 51 pixels).
+            of size 512 yields an overlap of 102 pixels).
             Default to ``0.2``.
         overlap_width_ratio: float
             Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
-            of size 256 yields an overlap of 51 pixels).
+            of size 512 yields an overlap of 102 pixels).
             Default to ``0.2``.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
