@@ -94,7 +94,7 @@ pip install yolov5
 - Install your desired detection framework (mmdet):
 
 ```console
-pip install mmcv-full==1.4.1 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html
+pip install mmcv-full==1.4.2 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html
 ```
 
 ```console
