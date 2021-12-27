@@ -82,7 +82,7 @@ conda install -c conda-forge shapely
 - Install your desired version of pytorch and torchvision:
 
 ```console
-conda install torch torchvision cudatoolkit=11.3 -c pytorch
+conda install pytorch=1.10.0 torchvision=0.11.1 cudatoolkit=11.3 -c pytorch
 ```
   
 - Install your desired detection framework (yolov5):
