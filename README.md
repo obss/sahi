@@ -170,8 +170,6 @@ sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --o
 
 - Specify postprocess type as `--postprocess_type UNIONMERGE` or `--postprocess_type NMS` to be applied over sliced predictions
 
-- Specify postprocess match metric as `--postprocess_match_metric IOS` for intersection over smaller area or `--match_metric IOU` for intersection over union
-
 - Specify postprocess match threshold as `--postprocess_match_threshold 0.5`
 
 - Add `--class_agnostic` argument to ignore category ids of the predictions during postprocess (merging/nms)
