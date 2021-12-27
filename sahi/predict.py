@@ -105,8 +105,8 @@ def get_sliced_prediction(
     image,
     detection_model=None,
     image_size: int = None,
-    slice_height: int = 256,
-    slice_width: int = 256,
+    slice_height: int = 512,
+    slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     perform_standard_pred: bool = True,
@@ -197,7 +197,7 @@ def get_sliced_prediction(
     # create prediction input
     num_group = int(num_slices / num_batch)
     if verbose == 1 or verbose == 2:
-        print("Number of slices:", num_slices)
+        tqdm.write(f"Performing prediction on {num_slices} number of slices.")
     object_prediction_list = []
     # perform sliced prediction
     for group_ind in range(num_group):
@@ -218,9 +218,12 @@ def get_sliced_prediction(
                 slice_image_result.original_image_width,
             ],
         )
-        object_prediction_list.extend(prediction_result.object_prediction_list)
+        # convert sliced predictions to full predictions
+        for object_prediction in prediction_result.object_prediction_list:
+            if object_prediction:  # if not empty
+                object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+    # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
-        # perform standard prediction
         prediction_result = get_prediction(
             image=image,
             detection_model=detection_model,
@@ -230,14 +233,6 @@ def get_sliced_prediction(
             postprocess=None,
         )
         object_prediction_list.extend(prediction_result.object_prediction_list)
-
-    # remove empty predictions
-    object_prediction_list = [object_prediction for object_prediction in object_prediction_list if object_prediction]
-    # convert sliced predictions to full predictions
-    full_object_prediction_list = []
-    for object_prediction in object_prediction_list:
-        full_object_prediction = object_prediction.get_shifted_object_prediction()
-        full_object_prediction_list.append(full_object_prediction)
 
     time_end = time.time() - time_start
     durations_in_seconds["prediction"] = time_end
@@ -255,10 +250,10 @@ def get_sliced_prediction(
         )
 
     # merge matching predictions
-    full_object_prediction_list = postprocess(full_object_prediction_list)
+    object_prediction_list = postprocess(object_prediction_list)
 
     return PredictionResult(
-        image=image, object_prediction_list=full_object_prediction_list, durations_in_seconds=durations_in_seconds
+        image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
     )
 
 
@@ -274,8 +269,8 @@ def predict(
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
     image_size: int = None,
-    slice_height: int = 256,
-    slice_width: int = 256,
+    slice_height: int = 512,
+    slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     postprocess_type: str = "UNIONMERGE",
@@ -418,7 +413,7 @@ def predict(
     # iterate over source images
     durations_in_seconds["prediction"] = 0
     durations_in_seconds["slice"] = 0
-    for ind, image_path in enumerate(tqdm(image_path_list)):
+    for ind, image_path in enumerate(tqdm(image_path_list, "Performing inference on images")):
         # get filename
         if os.path.isdir(source):  # preserve source folder structure in export
             relative_filepath = image_path.split(source)[-1]

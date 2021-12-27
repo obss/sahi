@@ -52,7 +52,7 @@ def main(
             ignore_negative_samples=ignore_negative_samples,
             slice_height=slice_size,
             slice_width=slice_size,
-            min_area_ratio=0.1,
+            min_area_ratio=min_area_ratio,
             overlap_height_ratio=overlap_ratio,
             overlap_width_ratio=overlap_ratio,
             out_ext=".jpg",
