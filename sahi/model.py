@@ -498,3 +498,157 @@ class Yolov5DetectionModel(DetectionModel):
             object_prediction_list_per_image.append(object_prediction_list)
 
         self._object_prediction_list_per_image = object_prediction_list_per_image
+
+
+class Detectron2Model(DetectionModel):
+    def load_model(self):
+        """
+        Detection model is initialized and set to self.model.
+        """
+        try:
+            import detectron2
+        except ImportError:
+            raise ImportError(
+                "detectron2 is not installed. Please install detectron2 by running `pip install detectron2`."
+            )
+        # set model
+        from detectron2.engine import init_detector
+
+        detector = init_detector(self.config, self.model_name, self.device)
+        self.model = detector
+
+        # set category_mapping
+        if not self.category_mapping:
+            category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
+            self.category_mapping = category_mapping
+
+    def perform_inference(self, image: np.ndarray, image_size: int):
+        try:
+            import detectron2
+        except ImportError:
+            raise ImportError(
+                "detectron2 is not installed. Please install detectron2 by running `pip install detectron2`."
+            )
+        # config model is loaded
+        assert self.model is not None, "self.model is not loaded. Please call load_model() first."
+
+        from detectron2.engine import init_detector
+
+        # update model image size
+        if image_size is not None:
+            self.model.cfg.data.test.pipeline[1]["img_scale"] = (image_size, image_size)
+        # perform inference
+        if isinstance(image, np.ndarray):
+            # https://github.com/obss/sahi/issues/265
+            image = image[:, :, ::-1]
+        # compatibility with sahi v0.8.15
+        if not isinstance(image, list):
+            image = [image]
+        prediction_result = init_detector(self.model, image)
+
+        self._original_predictions = prediction_result
+
+        @property
+        def num_categories(self):
+            """
+            Returns number of categories
+            """
+            if isinstance(self.model.CLASSES, str):
+                num_categories = 1
+            else:
+                num_categories = len(self.model.CLASSES)
+            return num_categories
+
+        @property
+        def has_mask(self):
+            """
+            Returns if model output contains segmentation mask
+            """
+            has_mask = self.model.with_mask
+            return has_mask
+
+        @property
+        def category_names(self):
+            if type(self.model.CLASSES) == str:
+                # https://github.com/open-mmlab/mmdetection/pull/4973
+                return (self.model.CLASSES,)
+            else:
+                return self.model.CLASSES
+
+        def _create_object_prediction_list_from_original_predictions(
+            self,
+            shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+            full_shape_list: Optional[List[List[int]]] = None,
+        ):
+            original_predictions = self._original_predictions
+            category_mapping = self.category_mapping
+
+            # compatilibty for sahi v0.8.15
+            if isinstance(shift_amount_list[0], int):
+                shift_amount_list = [shift_amount_list]
+            if full_shape_list is not None and isinstance(full_shape_list[0], int):
+                full_shape_list = [full_shape_list]
+
+            # parse boxes and masks from predictions
+            num_categories = self.num_categories
+            object_prediction_list_per_image = []
+            for image_ind, original_prediction in enumerate(original_predictions):
+                shift_amount = shift_amount_list[image_ind]
+                full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+
+                if self.has_mask:
+                    boxes = original_prediction[0]
+                    masks = original_prediction[1]
+                else:
+                    boxes = original_prediction
+
+                object_prediction_list = []
+
+                # process predictions
+                for category_id in range(num_categories):
+                    category_boxes = boxes[category_id]
+                    if self.has_mask:
+                        category_masks = masks[category_id]
+                    num_category_predictions = len(category_boxes)
+
+                    for category_predictions_ind in range(num_category_predictions):
+                        bbox = category_boxes[category_predictions_ind][:4]
+                        score = category_boxes[category_predictions_ind][4]
+                        if self.has_mask:
+                            bool_mask = category_masks[category_predictions_ind]
+                        else:
+                            bool_mask = None
+                        category_name = category_mapping[str(category_id)]
+
+                        # ignore invalid predictions
+                        if (
+                            bbox[0] > bbox[2]
+                            or bbox[1] > bbox[3]
+                            or bbox[0] < 0
+                            or bbox[1] < 0
+                            or bbox[2] < 0
+                            or bbox[3] < 0
+                        ):
+                            logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
+                            continue
+                        if full_shape is not None and (
+                            bbox[1] > full_shape[0]
+                            or bbox[3] > full_shape[0]
+                            or bbox[0] > full_shape[1]
+                            or bbox[2] > full_shape[1]
+                        ):
+                            logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
+                            continue
+
+                        object_prediction = ObjectPrediction(
+                            bbox=bbox,
+                            category_id=category_id,
+                            score=score,
+                            bool_mask=bool_mask,
+                            category_name=category_name,
+                            shift_amount=shift_amount,
+                            full_shape=full_shape,
+                        )
+                        object_prediction_list.append(object_prediction)
+                object_prediction_list_per_image.append(object_prediction_list)
+            self._object_prediction_list_per_image = object_prediction_list_per_image
