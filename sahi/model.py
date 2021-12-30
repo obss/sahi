@@ -2,7 +2,6 @@
 # Code written by Fatih C Akyon, 2020.
 
 import logging
-import os
 import warnings
 from typing import Dict, List, Optional, Union
 
