@@ -13,8 +13,9 @@ MODEL_DEVICE = "cpu"
 class TestDetectron2DetectionModel(unittest.TestCase):
     def test_load_model(self):
 
+        download_detectron2_model()
         detector2_detection_model = Detectron2Model(
-            model_path="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml",
+            model_path=Detectron2TestConstants.mask_rcnn_R_50_C4_1x_path,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -45,10 +46,12 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         self.assertEqual(len(masks), 80)
 
     def test_perform_inference_without_mask_output(self):
- 
+
+        # initialize model
+        download_detectron2_model()
 
         detectron2_detection_model = Detectron2Model(
-            model_path="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml",
+            model_path=Detectron2TestConstants.mask_rcnn_R_50_C4_1x_path,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -78,8 +81,11 @@ class TestDetectron2DetectionModel(unittest.TestCase):
     def test_convert_original_predictions_with_mask_output(self):
         from sahi.model import Detectron2Model
 
+        # initialize model
+        download_detectron2_model()
+
         detectron2_detection_model = Detectron2Model(
-            model_path="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml",
+            model_path=Detectron2TestConstants.mask_rcnn_R_50_C4_1x_path,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -121,8 +127,11 @@ class TestDetectron2DetectionModel(unittest.TestCase):
     def test_convert_original_predictions_without_mask_output(self):
         from sahi.model import Detectron2Model
 
+        # initialize model
+        download_detectron2_model()
+
         detectron2_detection_model = Detectron2Model(
-            model_path="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml",
+            model_path=Detectron2TestConstants.mask_rcnn_R_50_C4_1x_path,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
