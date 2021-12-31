@@ -3,7 +3,6 @@
 
 import unittest
 
-from sahi.model import Detectron2Model
 from sahi.utils.cv import read_image
 
 MODEL_DEVICE = "cpu"
@@ -11,6 +10,8 @@ MODEL_DEVICE = "cpu"
 
 class TestDetectron2DetectionModel(unittest.TestCase):
     def test_load_model(self):
+        from sahi.model import Detectron2Model
+        from detectron2.model_zoo import model_zoo
 
         detector2_detection_model = Detectron2Model(
             model_path="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml",
@@ -44,6 +45,8 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         self.assertEqual(len(masks), 80)
 
     def test_perform_inference_without_mask_output(self):
+        from sahi.model import Detectron2Model
+        from detectron2.model_zoo import model_zoo
 
         detectron2_detection_model = Detectron2Model(
             model_path="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml",
@@ -75,6 +78,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
 
     def test_convert_original_predictions_with_mask_output(self):
         from sahi.model import Detectron2Model
+        from detectron2.model_zoo import model_zoo
 
         detectron2_detection_model = Detectron2Model(
             model_path="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml",
@@ -118,6 +122,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
 
     def test_convert_original_predictions_without_mask_output(self):
         from sahi.model import Detectron2Model
+        from detectron2.model_zoo import model_zoo
 
         detectron2_detection_model = Detectron2Model(
             model_path="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml",
