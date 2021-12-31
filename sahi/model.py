@@ -87,7 +87,6 @@ class DetectionModel:
         """
         This function should be implemented in a way that prediction should be
         performed using self.model and the prediction result should be set to self._original_predictions.
-
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted.
@@ -105,7 +104,6 @@ class DetectionModel:
         This function should be implemented in a way that self._original_predictions should
         be converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list. self.mask_threshold can also be utilized.
-
         Args:
             shift_amount: list
                 To shift the box and mask predictions from sliced image to full sized image, should be in the form of [shift_x, shift_y]
@@ -135,7 +133,6 @@ class DetectionModel:
         """
         Converts original predictions of the detection model to a list of
         prediction.ObjectPrediction object. Should be called after perform_inference().
-
         Args:
             shift_amount: list
                 To shift the box and mask predictions from sliced image to full sized image, should be in the form of [shift_x, shift_y]
@@ -198,7 +195,6 @@ class MmdetDetectionModel(DetectionModel):
     def perform_inference(self, image: np.ndarray, image_size: int = None):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
-
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
@@ -269,7 +265,6 @@ class MmdetDetectionModel(DetectionModel):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
-
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
@@ -289,6 +284,7 @@ class MmdetDetectionModel(DetectionModel):
 
         # parse boxes and masks from predictions
         num_categories = self.num_categories
+        print("num_categories:", num_categories)
         object_prediction_list_per_image = []
         for image_ind, original_prediction in enumerate(original_predictions):
             shift_amount = shift_amount_list[image_ind]
@@ -384,7 +380,6 @@ class Yolov5DetectionModel(DetectionModel):
     def perform_inference(self, image: np.ndarray, image_size: int = None):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
-
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
@@ -436,7 +431,6 @@ class Yolov5DetectionModel(DetectionModel):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
-
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
@@ -513,9 +507,9 @@ class Detectron2Model(DetectionModel):
 
         cfg = get_cfg()
         cfg.MODEL.DEVICE = "cpu"
-        cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
+        cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml"))
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
-        cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
+        cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml")
         model = DefaultPredictor(cfg)
         self.model = model
 
@@ -528,7 +522,6 @@ class Detectron2Model(DetectionModel):
     def perform_inference(self, image: np.ndarray, image_size: int = None):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
-
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
@@ -546,9 +539,9 @@ class Detectron2Model(DetectionModel):
 
         cfg = get_cfg()
         cfg.MODEL.DEVICE = "cpu"
-        cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
+        cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml"))
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
-        cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
+        cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml")
         predictor = DefaultPredictor(cfg)
         prediction_result = predictor(image)
         # Confirm model is loaded
@@ -577,8 +570,9 @@ class Detectron2Model(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        has_mask = self.model.with_mask
-        return has_mask
+        #has_mask = self.model.with_mask
+        #return has_mask
+        return False
 
     @property
     def category_names(self):
@@ -596,7 +590,6 @@ class Detectron2Model(DetectionModel):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
-
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
@@ -617,13 +610,20 @@ class Detectron2Model(DetectionModel):
         # parse boxes and masks from predictions
         num_categories = self.num_categories
         object_prediction_list_per_image = []
+        # original_predictions box and mask are in the form of
+        boxes =original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
+        # boxes = out.pred_boxes.tensor.cpu().numpy()
+        # scores = out.scores.cpu().numpy()
+        # labels = out.pred_classes.cpu().numpy()
+        # masks = out.pred_masks.tensor.cpu().numpy()
+        # ctrl+/ to uncomment
         for image_ind, original_prediction in enumerate(original_predictions):
             shift_amount = shift_amount_list[image_ind]
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
 
             if self.has_mask:
-                boxes = original_prediction[0]
-                masks = original_prediction[1]
+                boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
+                masks = out.pred_masks.tensor.cpu().numpy()
             else:
                 return self.model.CLASSES
 
