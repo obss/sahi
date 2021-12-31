@@ -13,7 +13,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
     def test_load_model(self):
 
         detector2_detection_model = Detectron2Model(
-            model_path="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml",
+            model_path="COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml",
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -27,13 +27,11 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         # perform inference
         detector2_detection_model.perform_inference(image)
         original_predictions = detector2_detection_model.original_predictions
-
+        #print(original_predictions)
         boxes = original_predictions[0][0]
         masks = original_predictions[0][1]
-
         # find box of first person detection with conf greater than 0.5
         for box in boxes[0]:
-            print(len(box))
             if len(box) == 5:
                 if box[4] > 0.5:
                     break
@@ -46,7 +44,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
     def test_perform_inference_without_mask_output(self):
 
         detectron2_detection_model = Detectron2Model(
-            model_path="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml",
+            model_path="COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml",
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -64,7 +62,6 @@ class TestDetectron2DetectionModel(unittest.TestCase):
 
         # find box of first car detection with conf greater than 0.5
         for box in boxes[2]:
-            print(len(box))
             if len(box) == 5:
                 if box[4] > 0.5:
                     break
@@ -78,7 +75,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
 
         detectron2_detection_model = Detectron2Model(
 
-            model_path="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml",
+            model_path="COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml",
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -121,7 +118,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         from sahi.model import Detectron2Model
 
         detectron2_detection_model = Detectron2Model(
-            model_path="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml",
+            model_path="COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml",
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
