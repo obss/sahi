@@ -6,7 +6,6 @@ import warnings
 from typing import Dict, List, Optional, Union
 
 import numpy as np
-from detectron2.model_zoo import model_zoo
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.torch import cuda_is_available, empty_cuda_cache
@@ -509,7 +508,8 @@ class Detectron2Model(DetectionModel):
 
         from detectron2.config import get_cfg
         from detectron2.engine import DefaultPredictor
-        # set model path and device
+        from detectron2.model_zoo import model_zoo
+
         model = self.model_path
         cfg = get_cfg()
         cfg.MODEL.DEVICE = "cpu"
@@ -517,6 +517,7 @@ class Detectron2Model(DetectionModel):
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
         cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
         model = DefaultPredictor(cfg)
+
         self.model = model
 
         # set category_mapping
