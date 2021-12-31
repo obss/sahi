@@ -84,7 +84,7 @@ jobs:
           
       - name: Install Detectron2(2.19.1)
         run: >
-          python -m pip install detectron2 -f \ https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch1.10/index.html
+          python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch1.10/index.html
           
       - name: Test with unittest
         run: |
