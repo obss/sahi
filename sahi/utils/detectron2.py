@@ -49,14 +49,3 @@ def download_detectron2_model(destination_path: Optional[str] = None):
             Detectron2TestConstants.mask_rcnn_R_101_C4_3x_url,
             destination_path,
         )
-
-class detectron2_model_test:
-    def __init__(self, **kwargs):
-        self.config_path = Detectron2TestConstants.mask_rcnn_R_50_C4_1x_path
-
-    def detectron2_cfg(self)
-        cfg = get_cfg()
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
-        cfg.MODEL.WEIGHTS = self.config_path
-        cfg.MODEL.DEVICE = "cpu"
-        return cfg

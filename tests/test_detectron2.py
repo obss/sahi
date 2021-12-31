@@ -6,31 +6,30 @@ import unittest
 import numpy as np
 
 from sahi.utils.cv import read_image
-from sahi.utils.detectron2 import download_detectron2_model
-
+from sahi.utils.detectron2 import download_detectron2_model, Detectron2TestConstants
+from sahi.model import Detectron2Model
 MODEL_DEVICE = "cpu"
 
 
 class TestDetectron2DetectionModel(unittest.TestCase):
     def test_load_model(self):
-        from sahi.models.detectron2 import Detectron2DetectionModel
 
         download_detectron2_model()
-        detectron2_detection_model = Detectron2DetectionModel(
+        detector2_detection_model = Detectron2Model(
             model_path=Detectron2TestConstants.mask_rcnn_R_50_C4_1x_path,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
         )
-        self.assertNotEqual(detectron2_detection_model.model, None)
+        self.assertNotEqual(detector2_detection_model.model, None)
         # prepare image
         image_path = "tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
-        detectron2_detection_model.perform_inference(image)
-        original_predictions = detectron2_detection_model.original_predictions
+        detector2_detection_model.perform_inference(image)
+        original_predictions = detector2_detection_model.original_predictions
 
         boxes = original_predictions[0][0]
         masks = original_predictions[0][1]
@@ -48,12 +47,11 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         self.assertEqual(len(masks), 80)
 
     def test_perform_inference_without_mask_output(self):
-        from sahi.models.detectron2 import Detectron2DetectionModel
 
         # initialize model
         download_detectron2_model()
 
-        detectron2_detection_model = Detectron2DetectionModel(
+        detectron2_detection_model = Detectron2Model(
             model_path=Detectron2TestConstants.mask_rcnn_R_50_C4_1x_path,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
@@ -82,12 +80,12 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         self.assertEqual(len(boxes), 80)
 
     def test_convert_original_predictions_with_mask_output(self):
-        from sahi.model import Detectron2DetectionModel
+        from sahi.model import Detectron2Model
 
         # initialize model
         download_detectron2_model()
 
-        detectron2_detection_model = Detectron2DetectionModel(
+        detectron2_detection_model = Detectron2Model(
             model_path=Detectron2TestConstants.mask_rcnn_R_50_C4_1x_path,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
@@ -128,12 +126,12 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         )
 
     def test_convert_original_predictions_without_mask_output(self):
-        from sahi.model import Detectron2DetectionModel
+        from sahi.model import Detectron2Model
 
         # initialize model
         download_detectron2_model()
 
-        detectron2_detection_model = Detectron2DetectionModel(
+        detectron2_detection_model = Detectron2Model(
             model_path=Detectron2TestConstants.mask_rcnn_R_50_C4_1x_path,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
