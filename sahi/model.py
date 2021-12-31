@@ -284,7 +284,6 @@ class MmdetDetectionModel(DetectionModel):
 
         # parse boxes and masks from predictions
         num_categories = self.num_categories
-        print("num_categories:", num_categories)
         object_prediction_list_per_image = []
         for image_ind, original_prediction in enumerate(original_predictions):
             shift_amount = shift_amount_list[image_ind]
@@ -516,6 +515,7 @@ class Detectron2Model(DetectionModel):
         # detectron2 categories mapping
         metadata = MetadataCatalog.get(cfg.DATASETS.TRAIN[0])
         class_name = metadata.thing_classes
+        self.class_name = class_name
         category_mapping = {class_name[i]: i for i in range(len(class_name))}
         self.category_mapping = category_mapping
 
@@ -570,8 +570,8 @@ class Detectron2Model(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        #has_mask = self.model.with_mask
-        #return has_mask
+        # has_mask = self.model.with_mask
+        # return has_mask
         return False
 
     @property
@@ -611,13 +611,15 @@ class Detectron2Model(DetectionModel):
         num_categories = self.num_categories
         object_prediction_list_per_image = []
         # original_predictions box and mask are in the form of
-        boxes =original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
-        # boxes = out.pred_boxes.tensor.cpu().numpy()
-        # scores = out.scores.cpu().numpy()
+        boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
+        # scores = original_predictions["instances"].scores.cpu().numpy()
         # labels = out.pred_classes.cpu().numpy()
         # masks = out.pred_masks.tensor.cpu().numpy()
         # ctrl+/ to uncomment
+
         for image_ind, original_prediction in enumerate(original_predictions):
+            # print("image_ind:", image_ind)
+            # print("original_prediction:", original_prediction)
             shift_amount = shift_amount_list[image_ind]
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
 
@@ -649,17 +651,23 @@ class Detectron2Model(DetectionModel):
                 full_shape = None if full_shape_list is None else full_shape_list[image_ind]
 
             object_prediction_list = []
-
             # process predictions
             for category_id in range(num_categories):
+                boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
                 category_boxes = boxes[category_id]
+                print("category_boxes:", category_boxes)
                 if self.has_mask:
                     category_masks = masks[category_id]
-                num_category_predictions = len(category_boxes)
 
+                num_category_predictions = len(category_boxes)
+                print("num_category_predictions:", num_category_predictions)
                 for category_predictions_ind in range(num_category_predictions):
-                    bbox = category_boxes[category_predictions_ind][:4]
-                    score = category_boxes[category_predictions_ind][4]
+                    bbox = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
+                    bbox = boxes[category_id]
+                    score = original_predictions["instances"].scores.cpu().numpy()
+                    score = score[category_id]
+                    print("bbo2x:", bbox)
+                    print("sco2re:", score)
                     if self.has_mask:
                         category_masks = masks[category_id]
                     num_category_predictions = len(category_boxes)
