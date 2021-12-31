@@ -3,8 +3,6 @@
 
 import unittest
 
-import numpy as np
-
 from sahi.model import Detectron2Model
 from sahi.utils.cv import read_image
 from sahi.utils.detectron2 import Detectron2TestConstants, download_detectron2_model
