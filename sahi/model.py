@@ -506,15 +506,24 @@ class Detectron2Model(DetectionModel):
         except ImportError:
             raise ImportError("Please install detectron2 via `pip install detectron2`")
 
-        # set model path and device
-        model = self.model_path
-        model.device = self.device
+        from detectron2.config import get_cfg
+        from detectron2.data import MetadataCatalog
+        from detectron2.engine import DefaultPredictor
+        from detectron2.model_zoo import model_zoo
+
+        cfg = get_cfg()
+        cfg.MODEL.DEVICE = "cpu"
+        cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
+        cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
+        model = DefaultPredictor(cfg)
         self.model = model
 
-        # set category_mapping
-        if not self.category_mapping:
-            category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
-            self.category_mapping = category_mapping
+        # detectron2 categories mapping
+        metadata = MetadataCatalog.get(cfg.DATASETS.TRAIN[0])
+        class_name = metadata.thing_classes
+        category_mapping = {class_name[i]: i for i in range(len(class_name))}
+        self.category_mapping = category_mapping
 
     def perform_inference(self, image: np.ndarray, image_size: int = None):
         """
@@ -531,30 +540,25 @@ class Detectron2Model(DetectionModel):
         except ImportError:
             raise ImportError("Please install detectron2 via `pip install detectron2`")
 
-        # Confirm model is loaded
-
-        assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
-
-        # update model image size
-        if image_size is not None:
-            self.model.cfg.data.test.pipeline[1]["img_scale"] = (image_size, image_size)
-        # perform inference
-        if isinstance(image, np.ndarray):
-            # https://github.com/obss/sahi/issues/265
-            image = image[:, :, ::-1]
-        # compatibility with sahi v0.8.15
-        if not isinstance(image, list):
-            image = [image]
-
         from detectron2.config import get_cfg
         from detectron2.engine import DefaultPredictor
+        from detectron2.model_zoo import model_zoo
 
         cfg = get_cfg()
-        cfg.MODEL.WEIGHTS = self.model_path
+        cfg.MODEL.DEVICE = "cpu"
+        cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
-        cfg.MODEL.DEVICE = self.device
+        cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
         predictor = DefaultPredictor(cfg)
         prediction_result = predictor(image)
+        # Confirm model is loaded
+        assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
+
+        if image_size:
+            prediction_result = self.model(image)
+        else:
+            prediction_result = self.model(image)
+
         self._original_predictions = prediction_result
 
     @property
@@ -562,10 +566,10 @@ class Detectron2Model(DetectionModel):
         """
         Returns number of categories
         """
-        if isinstance(self.model.CLASSES, str):
+        if isinstance(self.category_mapping, str):
             num_categories = 1
         else:
-            num_categories = len(self.model.CLASSES)
+            num_categories = len(self.category_mapping)
         return num_categories
 
     @property
@@ -578,11 +582,11 @@ class Detectron2Model(DetectionModel):
 
     @property
     def category_names(self):
-        if type(self.model.CLASSES) == str:
+        if type(self.model.category_mapping) == str:
             # https://github.com/open-mmlab/mmdetection/pull/4973
-            return (self.model.CLASSES,)
+            return (self.category_mapping,)
         else:
-            return self.model.CLASSES
+            return self.category_mapping
 
     def _create_object_prediction_list_from_original_predictions(
         self,
