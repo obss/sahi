@@ -28,16 +28,17 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         detector2_detection_model.perform_inference(image)
         original_predictions = detector2_detection_model.original_predictions
         #print(original_predictions)
-        boxes = original_predictions[0][0]
-        masks = original_predictions[0][1]
+        #boxes = original_predictions[0][0]
+        boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
+        #masks = original_predictions[0][1]
         # find box of first person detection with conf greater than 0.5
         for box in boxes[0]:
-            if len(box) == 5:
+            if len(boxes) == 5:
                 if box[4] > 0.5:
                     break
 
         # compare
-        self.assertEqual(box[:4].astype("int").tolist(), [1019, 417, 1027, 437])
+        self.assertEqual(boxes[:4].astype("int").tolist(), [1019, 417, 1027, 437])
         self.assertEqual(len(boxes), 80)
         self.assertEqual(len(masks), 80)
 
@@ -58,16 +59,17 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         detectron2_detection_model.perform_inference(image)
         original_predictions = detectron2_detection_model.original_predictions
 
-        boxes = original_predictions[0]
+        boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
 
         # find box of first car detection with conf greater than 0.5
         for box in boxes[2]:
-            if len(box) == 5:
+            print(box)
+            if len(boxes) == 5:
                 if box[4] > 0.5:
                     break
 
         # compare
-        self.assertEqual(box[:4].astype("int").tolist(), [320, 323, 384, 366])
+        self.assertEqual(boxes[:4].astype("int").tolist(), [320, 323, 384, 366])
         self.assertEqual(len(boxes), 80)
 
     def test_convert_original_predictions_with_mask_output(self):
