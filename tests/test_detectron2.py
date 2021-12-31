@@ -22,7 +22,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         )
         self.assertNotEqual(detector2_detection_model.model, None)
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_path = "/home/kadir/Desktop/visiosoft/sahi/tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -56,7 +56,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
             load_at_init=True,
         )
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_path = "/home/kadir/Desktop/visiosoft/sahi/tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -89,7 +89,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_path = "/home/kadir/Desktop/visiosoft/sahi/tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -133,7 +133,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_path = "/home/kadir/Desktop/visiosoft/sahi/tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
