@@ -506,18 +506,9 @@ class Detectron2Model(DetectionModel):
         except ImportError:
             raise ImportError("Please install detectron2 via `pip install detectron2`")
 
-        from detectron2.config import get_cfg
-        from detectron2.engine import DefaultPredictor
-        from detectron2.model_zoo import model_zoo
-
+        # set model path and device
         model = self.model_path
-        cfg = get_cfg()
-        cfg.MODEL.DEVICE = "cpu"
-        cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
-        cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
-        model = DefaultPredictor(cfg)
-
+        model.device = self.device
         self.model = model
 
         # set category_mapping
@@ -565,7 +556,6 @@ class Detectron2Model(DetectionModel):
         predictor = DefaultPredictor(cfg)
         prediction_result = predictor(image)
         self._original_predictions = prediction_result
-
 
     @property
     def num_categories(self):
