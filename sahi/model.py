@@ -546,6 +546,9 @@ class Detectron2Model(DetectionModel):
         if not isinstance(image, list):
             image = [image]
 
+        from detectron2.config import get_cfg
+        from detectron2.engine import DefaultPredictor
+
         cfg = get_cfg()
         cfg.MODEL.WEIGHTS = self.model_path
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5

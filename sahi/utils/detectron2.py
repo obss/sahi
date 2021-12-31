@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Optional
 
 import detectron2
-from detectron2.config import get_cfg
 
 
 def detectron2_version_as_integer():
