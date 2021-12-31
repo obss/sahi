@@ -139,7 +139,7 @@ class TestPredict(unittest.TestCase):
         slice_width = 512
         overlap_height_ratio = 0.1
         overlap_width_ratio = 0.2
-        postprocess_type = "UNIONMERGE"
+        postprocess_type = "GREEDYNMM"
         match_metric = "IOS"
         match_threshold = 0.5
         class_agnostic = True
@@ -157,6 +157,7 @@ class TestPredict(unittest.TestCase):
             perform_standard_pred=False,
             postprocess_type=postprocess_type,
             postprocess_match_threshold=match_threshold,
+            postprocess_match_metric=match_metric,
             postprocess_class_agnostic=class_agnostic,
         )
         object_prediction_list = prediction_result.object_prediction_list
@@ -177,7 +178,7 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 16)
+        self.assertEqual(num_car, 17)
 
     def test_get_sliced_prediction_yolov5(self):
         from sahi.model import Yolov5DetectionModel
@@ -219,12 +220,13 @@ class TestPredict(unittest.TestCase):
             perform_standard_pred=False,
             postprocess_type=postprocess_type,
             postprocess_match_threshold=match_threshold,
+            postprocess_match_metric=match_metric,
             postprocess_class_agnostic=class_agnostic,
         )
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 21)
+        self.assertEqual(len(object_prediction_list), 19)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -239,7 +241,7 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 21)
+        self.assertEqual(num_car, 19)
 
     def test_coco_json_prediction(self):
         from sahi.predict import predict
@@ -249,7 +251,7 @@ class TestPredict(unittest.TestCase):
         # init model
         download_mmdet_yolox_tiny_model()
 
-        postprocess_type = "UNIONMERGE"
+        postprocess_type = "GREEDYNMM"
         match_metric = "IOS"
         match_threshold = 0.5
         class_agnostic = True
@@ -278,6 +280,7 @@ class TestPredict(unittest.TestCase):
             overlap_height_ratio=0.2,
             overlap_width_ratio=0.2,
             postprocess_type=postprocess_type,
+            postprocess_match_metric=match_metric,
             postprocess_match_threshold=match_threshold,
             postprocess_class_agnostic=class_agnostic,
             export_visual=False,
@@ -316,6 +319,7 @@ class TestPredict(unittest.TestCase):
             overlap_height_ratio=0.2,
             overlap_width_ratio=0.2,
             postprocess_type=postprocess_type,
+            postprocess_match_metric=match_metric,
             postprocess_match_threshold=match_threshold,
             postprocess_class_agnostic=class_agnostic,
             export_visual=False,

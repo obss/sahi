@@ -9,7 +9,14 @@ from typing import Dict, List, Optional
 import numpy as np
 from tqdm import tqdm
 
-from sahi.postprocess.combine import NMSPostprocess, PostprocessPredictions, UnionMergePostprocess
+from sahi.postprocess.combine import (
+    GreedyNMMPostprocess,
+    LSNMSPostprocess,
+    NMMPostprocess,
+    NMSPostprocess,
+    PostprocessPredictions,
+)
+from sahi.postprocess.legacy.combine import UnionMergePostprocess
 from sahi.prediction import ObjectPrediction, PredictionResult
 from sahi.slicing import slice_image
 from sahi.utils.coco import Coco, CocoImage
@@ -110,8 +117,8 @@ def get_sliced_prediction(
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     perform_standard_pred: bool = True,
-    postprocess_type: str = "UNIONMERGE",
-    postprocess_match_metric: str = None,
+    postprocess_type: str = "GREEDYNMM",
+    postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
@@ -142,7 +149,10 @@ def get_sliced_prediction(
             detection accuracy. Default: True.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
-            Options are 'UNIONMERGE' or 'NMS'. Default is 'UNIONMERGE'.
+            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'GRREDYNMM'.
+        postprocess_match_metric: str
+            Metric to be used during object prediction matching after sliced prediction.
+            'IOU' for intersection over union, 'IOS' for intersection over smaller area.
         postprocess_match_threshold: float
             Sliced predictions having higher iou than postprocess_match_threshold will be
             postprocessed after sliced prediction.
@@ -158,9 +168,6 @@ def get_sliced_prediction(
             object_prediction_list: a list of sahi.prediction.ObjectPrediction
             durations_in_seconds: a dict containing elapsed times for profiling
     """
-    if postprocess_match_metric is not None:
-        logger.warning("'postprocess_match_metric' is deprecated and will removed in upcoming releases.")
-
     # for profiling
     durations_in_seconds = dict()
 
@@ -181,18 +188,42 @@ def get_sliced_prediction(
     durations_in_seconds["slice"] = time_end
 
     # init match postprocess instance
-    if postprocess_type == "UNIONMERGE":
-        postprocess = UnionMergePostprocess(
+    if postprocess_type in ["NMM"]:
+        postprocess = NMMPostprocess(
             match_threshold=postprocess_match_threshold,
+            match_metric=postprocess_match_metric,
+            class_agnostic=postprocess_class_agnostic,
+        )
+    elif postprocess_type == "GREEDYNMM":
+        postprocess = GreedyNMMPostprocess(
+            match_threshold=postprocess_match_threshold,
+            match_metric=postprocess_match_metric,
             class_agnostic=postprocess_class_agnostic,
         )
     elif postprocess_type == "NMS":
         postprocess = NMSPostprocess(
             match_threshold=postprocess_match_threshold,
+            match_metric=postprocess_match_metric,
+            class_agnostic=postprocess_class_agnostic,
+        )
+    elif postprocess_type == "LSNMS":
+        postprocess = LSNMSPostprocess(
+            match_threshold=postprocess_match_threshold,
+            match_metric=postprocess_match_metric,
+            class_agnostic=postprocess_class_agnostic,
+        )
+    elif postprocess_type == "UNIONMERGE":
+        # sahi v0.8.16 compatibility
+        logger.warning("'UNIONMERGE' is deprecated, use 'GREEDYNMM' instead.")
+        postprocess = UnionMergePostprocess(
+            match_threshold=postprocess_match_threshold,
+            match_metric=postprocess_match_metric,
             class_agnostic=postprocess_class_agnostic,
         )
     else:
-        raise ValueError(f"postprocess_type should be one of ['UNIOUNMERGE', 'NMS'] but given as {postprocess_type}")
+        raise ValueError(
+            f"postprocess_type should be one of ['NMS', 'NMM', 'GREEDYNMM'] but given as {postprocess_type}"
+        )
 
     # create prediction input
     num_group = int(num_slices / num_batch)
@@ -273,8 +304,8 @@ def predict(
     slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
-    postprocess_type: str = "UNIONMERGE",
-    postprocess_match_metric: str = None,
+    postprocess_type: str = "GREEDYNMM",
+    postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     export_visual: bool = False,
@@ -329,7 +360,10 @@ def predict(
             Default to ``0.2``.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
-            Options are 'UNIONMERGE' or 'NMS'. Default is 'UNIONMERGE'.
+            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'GRREDYNMM'.
+        postprocess_match_metric: str
+            Metric to be used during object prediction matching after sliced prediction.
+            'IOU' for intersection over union, 'IOS' for intersection over smaller area.
         postprocess_match_threshold: float
             Sliced predictions having higher iou than postprocess_match_threshold will be
             postprocessed after sliced prediction.
@@ -355,10 +389,6 @@ def predict(
             1: print slice/prediction durations, number of slices
             2: print model loading/file exporting durations
     """
-    # deprecated warning
-    if postprocess_match_metric is not None:
-        logger.warning("'postprocess_match_metric' is deprecated and will removed in upcoming releases.")
-
     # assert prediction type
     assert (
         no_standard_prediction and no_sliced_prediction
@@ -437,6 +467,7 @@ def predict(
                 overlap_width_ratio=overlap_width_ratio,
                 perform_standard_pred=not no_standard_prediction,
                 postprocess_type=postprocess_type,
+                postprocess_match_metric=postprocess_match_metric,
                 postprocess_match_threshold=postprocess_match_threshold,
                 postprocess_class_agnostic=postprocess_class_agnostic,
                 verbose=1 if verbose else 0,
@@ -586,8 +617,8 @@ def predict_fiftyone(
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
-    postprocess_type: str = "UNIONMERGE",
-    postprocess_match_metric: str = None,
+    postprocess_type: str = "GREEDYNMM",
+    postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
@@ -634,7 +665,10 @@ def predict_fiftyone(
             Default to ``0.2``.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
-            Options are 'UNIONMERGE' or 'NMS'. Default is 'UNIONMERGE'.
+            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'GRREDYNMM'.
+        postprocess_match_metric: str
+            Metric to be used during object prediction matching after sliced prediction.
+            'IOU' for intersection over union, 'IOS' for intersection over smaller area.
         postprocess_match_metric: str
             Metric to be used during object prediction matching after sliced prediction.
             'IOU' for intersection over union, 'IOS' for intersection over smaller area.
@@ -648,10 +682,6 @@ def predict_fiftyone(
             1: print slice/prediction durations, number of slices, model loading/file exporting durations
     """
     from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file, fo
-
-    # deprecated warning
-    if postprocess_match_metric is not None:
-        logger.warning("'postprocess_match_metric' is deprecated and will removed in upcoming releases.")
 
     # assert prediction type
     assert (
@@ -700,6 +730,7 @@ def predict_fiftyone(
                     perform_standard_pred=not no_standard_prediction,
                     postprocess_type=postprocess_type,
                     postprocess_match_threshold=postprocess_match_threshold,
+                    postprocess_match_metric=postprocess_match_metric,
                     postprocess_class_agnostic=postprocess_class_agnostic,
                     verbose=verbose,
                 )

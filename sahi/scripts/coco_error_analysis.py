@@ -82,7 +82,7 @@ def _makebarplot(rs, ps, outDir, class_name, iou_type):
     figure_title = iou_type + "-" + class_name + "-" + "ap bar plot"
     for i in range(len(types) - 1):
         type_ps = ps[i, ..., 0]
-        aps = [ps_.mean() for ps_ in type_ps.T]
+        aps = [ps_[ps_ > -1].mean() for ps_ in type_ps.T]
         rects_list.append(
             ax.bar(
                 x - width / 2 + (i + 1) * width / len(types),
@@ -214,7 +214,7 @@ def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None,
         ]
     cocoEval.evaluate()
     cocoEval.accumulate()
-    ps_supercategory = cocoEval.eval["precision"][0, :, k, :, :]
+    ps_supercategory = cocoEval.eval["precision"][0, :, catId, :, :]
     ps_["ps_supercategory"] = ps_supercategory
     # compute precision but ignore any class confusion
     gt = copy.deepcopy(cocoGt)
@@ -237,7 +237,7 @@ def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None,
         ]
     cocoEval.evaluate()
     cocoEval.accumulate()
-    ps_allcategory = cocoEval.eval["precision"][0, :, k, :, :]
+    ps_allcategory = cocoEval.eval["precision"][0, :, catId, :, :]
     ps_["ps_allcategory"] = ps_allcategory
     return k, ps_
 
@@ -293,20 +293,30 @@ def _analyze_results(
             ]
         cocoEval.evaluate()
         cocoEval.accumulate()
-        ps = cocoEval.eval["precision"]
-        ps = np.vstack([ps, np.zeros((4, *ps.shape[1:]))])
+
+        present_cat_ids = []
         catIds = cocoGt.getCatIds()
+        for k, catId in enumerate(catIds):
+            image_ids = cocoGt.getImgIds(catIds=[catId])
+            if len(image_ids) != 0:
+                present_cat_ids.append(catId)
+        matrix_shape = list(cocoEval.eval["precision"].shape)
+        matrix_shape[2] = len(present_cat_ids)
+        ps = np.zeros(matrix_shape)
+
+        for k, catId in enumerate(present_cat_ids):
+            ps[:, :, k, :, :] = cocoEval.eval["precision"][:, :, catId, :, :]
+        ps = np.vstack([ps, np.zeros((4, *ps.shape[1:]))])
+
         recThrs = cocoEval.params.recThrs
         with Pool(processes=48) as pool:
             args = [
-                (k, cocoDt, cocoGt, catId, iou_type, areas, max_detections, COCOeval) for k, catId in enumerate(catIds)
+                (k, cocoDt, cocoGt, catId, iou_type, areas, max_detections, COCOeval)
+                for k, catId in enumerate(present_cat_ids)
             ]
             analyze_results = pool.starmap(_analyze_individual_category, args)
-        for k, catId in enumerate(catIds):
-            # skip if no image with this category
-            image_ids = cocoGt.getImgIds(catIds=[catId])
-            if len(image_ids) == 0:
-                continue
+        for k, catId in enumerate(present_cat_ids):
+
             nm = cocoGt.loadCats(catId)[0]
             print(f'--------------saving {k + 1}-{nm["name"]}---------------')
             analyze_result = analyze_results[k]
@@ -318,9 +328,10 @@ def _analyze_results(
             # compute precision but ignore any class confusion
             ps[4, :, k, :, :] = ps_allcategory
             # fill in background and false negative errors and plot
-            ps[ps == -1] = 0
-            ps[5, :, k, :, :] = ps[4, :, k, :, :] > 0
+            ps[5, :, k, :, :][ps[4, :, k, :, :] == -1] = -1
+            ps[5, :, k, :, :][ps[4, :, k, :, :] > 0] = 1
             ps[6, :, k, :, :] = 1.0
+
             _makeplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
             if extraplots:
                 _makebarplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
