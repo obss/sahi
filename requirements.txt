@@ -3,6 +3,10 @@ shapely>=1.8.0
 tqdm>=4.48.2
 pillow>=8.2.0
 pyyaml
-fire
-terminaltables
-requests
+fire~=0.4.0
+terminaltables~=3.1.10
+requests~=2.26.0
+numpy~=1.21.5
+sahi~=0.8.16
+detectron2~=0.6+cpu
+setuptools~=57.0.0

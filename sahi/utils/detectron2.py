@@ -1,13 +1,14 @@
-from detectron2.config import get_cfg
-from typing import Optional
 import urllib.request
 from os import path
 from pathlib import Path
+from typing import Optional
+
 import detectron2
+from detectron2.config import get_cfg
 
 
 def detectron2_version_as_integer():
-    return int(detectron2.__version__.split('.')[0])
+    return int(detectron2.__version__.split(".")[0])
 
 
 class Detectron2TestConstants:
@@ -32,7 +33,6 @@ class Detectron2TestConstants:
 
         mask_rcnn_R_101_DC5_3x_url = "https://dl.fbaipublicfiles.com/detectron2/COCO-InstanceSegmentation/mask_rcnn_R_101_C4_3x/138363239/model_final_a2914c.pkl"
         mask_rcnn_R_101_DC5_3x_path = "model/mask_rcnn_R_101_DC5_3x.pkl"
-
 
     except ImportError:
         print("Import Error")
