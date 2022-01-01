@@ -492,12 +492,16 @@ class Yolov5DetectionModel(DetectionModel):
         self._object_prediction_list_per_image = object_prediction_list_per_image
 
 
-class Detectron2Model(DetectionModel):
+class Detectron2DetectionModel(DetectionModel):
     def load_model(self):
         try:
             import detectron2
         except ImportError:
-            raise ImportError("Please install detectron2 via `pip install detectron2`")
+            raise ImportError(
+                "Please install detectron2. Check "
+                "`https://detectron2.readthedocs.io/en/latest/tutorials/install.html` "
+                "for instalattion details."
+            )
 
         from detectron2.config import get_cfg
         from detectron2.data import MetadataCatalog
@@ -505,11 +509,25 @@ class Detectron2Model(DetectionModel):
         from detectron2.model_zoo import model_zoo
 
         cfg = get_cfg()
-        cfg.MODEL.DEVICE = "cpu"
-        cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml"))
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
-        cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml")
-        model = DefaultPredictor(cfg)
+        cfg.MODEL.DEVICE = self.device
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = self.confidence_threshold
+        if self.config_path is None:
+            self.config_path = "COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml"
+            logger.info(
+                "config_path is not set for Detectron2DetectionModel, using default config: "
+                "'COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml'"
+            )
+        try:  # try to load from model zoo
+            config_file = model_zoo.get_config_file(self.config_path)
+            cfg.merge_from_file(config_file)
+            cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml")
+            model = DefaultPredictor(cfg)
+        except Exception as e:  # try to load from local
+            print(e)
+            cfg.merge_from_file(self.config_path)
+            cfg.MODEL.WEIGHTS = self.model_path
+            model = DefaultPredictor(cfg)
+
         self.model = model
 
         # detectron2 categories mapping
@@ -533,24 +551,11 @@ class Detectron2Model(DetectionModel):
         except ImportError:
             raise ImportError("Please install detectron2 via `pip install detectron2`")
 
-        from detectron2.config import get_cfg
-        from detectron2.engine import DefaultPredictor
-        from detectron2.model_zoo import model_zoo
-
-        cfg = get_cfg()
-        cfg.MODEL.DEVICE = "cpu"
-        cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml"))
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
-        cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml")
-        predictor = DefaultPredictor(cfg)
-        prediction_result = predictor(image)
         # Confirm model is loaded
         assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
 
-        if image_size:
-            prediction_result = self.model(image)
-        else:
-            prediction_result = self.model(image)
+        prediction_result = self.model(image)
+        # TODO: utilize image_size
 
         self._original_predictions = prediction_result
 

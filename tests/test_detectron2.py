@@ -3,8 +3,9 @@
 
 import unittest
 
-from sahi.model import Detectron2Model
+from sahi.model import Detectron2DetectionModel
 from sahi.utils.cv import read_image
+from sahi.utils.detectron2 import Detectron2TestConstants
 
 MODEL_DEVICE = "cpu"
 
@@ -12,47 +13,28 @@ MODEL_DEVICE = "cpu"
 class TestDetectron2DetectionModel(unittest.TestCase):
     def test_load_model(self):
 
-        detector2_detection_model = Detectron2Model(
-            model_path="COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml",
+        detector2_detection_model = Detectron2DetectionModel(
+            model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
         )
         self.assertNotEqual(detector2_detection_model.model, None)
-        # prepare image
-        image_path = "/home/kadir/Desktop/visiosoft/sahi/tests/data/small-vehicles1.jpeg"
-        image = read_image(image_path)
-
-        # perform inference
-        detector2_detection_model.perform_inference(image)
-        original_predictions = detector2_detection_model.original_predictions
-        #print(original_predictions)
-        #boxes = original_predictions[0][0]
-        boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
-        #masks = original_predictions[0][1]
-        # find box of first person detection with conf greater than 0.5
-        for box in boxes[0]:
-            if len(boxes) == 5:
-                if box[4] > 0.5:
-                    break
-
-        # compare
-        self.assertEqual(boxes[:4].astype("int").tolist(), [1019, 417, 1027, 437])
-        self.assertEqual(len(boxes), 80)
-        self.assertEqual(len(masks), 80)
 
     def test_perform_inference_without_mask_output(self):
 
-        detectron2_detection_model = Detectron2Model(
-            model_path="COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml",
+        detectron2_detection_model = Detectron2DetectionModel(
+            model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
         )
         # prepare image
-        image_path = "/home/kadir/Desktop/visiosoft/sahi/tests/data/small-vehicles1.jpeg"
+        image_path = "tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -60,24 +42,23 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         original_predictions = detectron2_detection_model.original_predictions
 
         boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
+        scores = original_predictions["instances"].scores.cpu().numpy()
+        category_ids = original_predictions["instances"].pred_classes.cpu().numpy()
 
         # find box of first car detection with conf greater than 0.5
-        for box in boxes[2]:
-            print(box)
-            if len(boxes) == 5:
-                if box[4] > 0.5:
-                    break
+        for ind, box in enumerate(boxes):
+            if category_ids[ind] == 2 and scores[ind] > 0.5:
+                break
 
         # compare
-        self.assertEqual(boxes[:4].astype("int").tolist(), [320, 323, 384, 366])
-        self.assertEqual(len(boxes), 80)
+        self.assertEqual(boxes[ind].astype("int").tolist(), [784, 206, 798, 219])
+        self.assertEqual(len(boxes), 29)
 
     def test_convert_original_predictions_with_mask_output(self):
-        from sahi.model import Detectron2Model
 
-        detectron2_detection_model = Detectron2Model(
-
-            model_path="COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml",
+        detectron2_detection_model = Detectron2DetectionModel(
+            model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -85,7 +66,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "/home/kadir/Desktop/visiosoft/sahi/tests/data/small-vehicles1.jpeg"
+        image_path = "tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -117,10 +98,10 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         )
 
     def test_convert_original_predictions_without_mask_output(self):
-        from sahi.model import Detectron2Model
 
-        detectron2_detection_model = Detectron2Model(
-            model_path="COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml",
+        detectron2_detection_model = Detectron2DetectionModel(
+            model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -128,7 +109,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "/home/kadir/Desktop/visiosoft/sahi/tests/data/small-vehicles1.jpeg"
+        image_path = "tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
