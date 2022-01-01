@@ -208,7 +208,7 @@ class TestPredict(unittest.TestCase):
         slice_width = 512
         overlap_height_ratio = 0.1
         overlap_width_ratio = 0.2
-        postprocess_type = "UNIONMERGE"
+        postprocess_type = "GREEDYNMM"
         match_metric = "IOS"
         match_threshold = 0.5
         class_agnostic = True
