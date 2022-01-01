@@ -1,13 +1,14 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
+import platform
 import sys
 import unittest
 
 from sahi.utils.cv import read_image
 
 # note that detectron2 binaries are available only for linux
-if sys.platform.startswith("linux"):
+if platform.system() == "Linux":
     from sahi.model import Detectron2DetectionModel
     from sahi.utils.detectron2 import Detectron2TestConstants
 
@@ -16,7 +17,7 @@ MODEL_DEVICE = "cpu"
 
 class TestDetectron2DetectionModel(unittest.TestCase):
     def test_load_model(self):
-        if sys.platform.startswith("linux"):
+        if platform.system() == "Linux":
             detector2_detection_model = Detectron2DetectionModel(
                 model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
                 config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
@@ -28,7 +29,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
             self.assertNotEqual(detector2_detection_model.model, None)
 
     def test_perform_inference_without_mask_output(self):
-        if sys.platform.startswith("linux"):
+        if platform.system() == "Linux":
             detectron2_detection_model = Detectron2DetectionModel(
                 model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
                 config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
@@ -60,7 +61,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
             self.assertEqual(len(boxes), 10)
 
     def test_convert_original_predictions_without_mask_output(self):
-        if sys.platform.startswith("linux"):
+        if platform.system() == "Linux":
             detectron2_detection_model = Detectron2DetectionModel(
                 model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
                 config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
@@ -103,7 +104,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
                     raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
     def test_convert_original_predictions_with_mask_output(self):
-        if sys.platform.startswith("linux"):
+        if platform.system() == "Linux":
             detectron2_detection_model = Detectron2DetectionModel(
                 model_path=Detectron2TestConstants.MASKRCNN_MODEL_ZOO_NAME,
                 config_path=Detectron2TestConstants.MASKRCNN_MODEL_ZOO_NAME,
