@@ -162,7 +162,7 @@ class TestSlicing(unittest.TestCase):
             [340, 204, 73, 171],
         )
 
-        shutil.rmtree(output_dir)
+        shutil.rmtree(output_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":
