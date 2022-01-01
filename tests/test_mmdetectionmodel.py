@@ -185,7 +185,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             [320, 323, 60, 42],
         )
         self.assertEqual(object_prediction_list[1].category.id, 2)
-        self.assertEqual(object_prediction_list[1].category.name, "person")
+        self.assertEqual(object_prediction_list[1].category.name, "car")
         self.assertEqual(
             object_prediction_list[1].bbox.to_coco_bbox(),
             [448, 310, 44, 31],
