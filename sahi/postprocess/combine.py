@@ -1,6 +1,7 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2021.
 
+import logging
 from typing import List
 
 import torch
@@ -728,8 +729,8 @@ class LSNMSPostprocess(PostprocessPredictions):
 
         if self.match_metric == "IOS":
             NotImplementedError(f"match_metric={self.match_metric} is not supported for LSNMSPostprocess")
-            
-        logger.warning('LSNMSPostprocess is experimental and not recommended to use.')
+
+        logger.warning("LSNMSPostprocess is experimental and not recommended to use.")
 
         object_prediction_list = ObjectPredictionList(object_predictions)
         object_predictions_as_numpy = object_prediction_list.tonumpy()
