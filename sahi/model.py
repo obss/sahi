@@ -630,7 +630,7 @@ class Detectron2DetectionModel(DetectionModel):
 
             if self.has_mask:
                 boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
-                masks = out.pred_masks.tensor.cpu().numpy()
+                masks = original_predictions["instances"].pred_masks.tensor.cpu().numpy()
             else:
                 return self.model.CLASSES
 
@@ -655,14 +655,9 @@ class Detectron2DetectionModel(DetectionModel):
                 shift_amount = shift_amount_list[image_ind]
                 full_shape = None if full_shape_list is None else full_shape_list[image_ind]
 
+            object_prediction_list_per_image = []
             object_prediction_list = []
-            # process predictions
-            for category_id in range(num_categories):
-                boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
-                category_boxes = boxes[category_id]
-                print("category_boxes:", category_boxes)
-                if self.has_mask:
-                    category_masks = masks[category_id]
+            # TODO: create a list of ObjectPrediction list per image
 
                 num_category_predictions = len(category_boxes)
                 print("num_category_predictions:", num_category_predictions)
