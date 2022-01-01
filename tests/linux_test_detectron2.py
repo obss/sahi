@@ -8,6 +8,7 @@ from sahi.utils.cv import read_image
 from sahi.utils.detectron2 import Detectron2TestConstants
 
 MODEL_DEVICE = "cpu"
+IMAGE_SIZE = 320
 
 # note that detectron2 binaries are available only for linux
 
@@ -21,6 +22,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
+            image_size=IMAGE_SIZE,
         )
         self.assertNotEqual(detector2_detection_model.model, None)
 
@@ -32,7 +34,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
-            image_size=320,
+            image_size=IMAGE_SIZE,
         )
         # prepare image
         image_path = "tests/data/small-vehicles1.jpeg"
@@ -63,7 +65,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
-            image_size=320,
+            image_size=IMAGE_SIZE,
         )
 
         # prepare image
@@ -105,7 +107,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
-            image_size=320,
+            image_size=IMAGE_SIZE,
         )
 
         # prepare image
@@ -152,6 +154,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=False,
+            image_size=IMAGE_SIZE,
         )
         detector2_detection_model.load_model()
 
@@ -166,12 +169,10 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         match_metric = "IOS"
         match_threshold = 0.5
         class_agnostic = True
-        image_size = 320
 
         # get sliced prediction
         prediction_result = get_sliced_prediction(
             image=image_path,
-            image_size=image_size,
             detection_model=detector2_detection_model,
             slice_height=slice_height,
             slice_width=slice_width,
