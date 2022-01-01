@@ -86,7 +86,9 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         desired_bbox = [320, 324, 61, 40]
         margin = 5
         for ind, point in enumerate(predicted_bbox):
-            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
+            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin, print(
+                predicted_bbox, desired_bbox
+            )
 
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
@@ -94,7 +96,9 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         desired_bbox = [383, 275, 35, 33]
         margin = 5
         for ind, point in enumerate(predicted_bbox):
-            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
+            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin, print(
+                predicted_bbox, desired_bbox
+            )
 
     def test_convert_original_predictions_with_mask_output(self):
 
@@ -125,9 +129,11 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.name, "car")
         predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
         desired_bbox = [322, 325, 57, 38]
-        margin = 6
+        margin = 5
         for ind, point in enumerate(predicted_bbox):
-            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
+            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin, print(
+                predicted_bbox, desired_bbox
+            )
 
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
@@ -135,7 +141,9 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         desired_bbox = [697, 226, 29, 29]
         margin = 5
         for ind, point in enumerate(predicted_bbox):
-            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
+            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin, print(
+                predicted_bbox, desired_bbox
+            )
 
 
 if __name__ == "__main__":
