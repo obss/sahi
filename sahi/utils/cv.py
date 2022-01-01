@@ -434,8 +434,11 @@ def get_bbox_from_bool_mask(bool_mask):
 
     ymin, ymax = np.where(rows)[0][[0, -1]]
     xmin, xmax = np.where(cols)[0][[0, -1]]
-    # width = xmax - xmin
-    # height = ymax - ymin
+    width = xmax - xmin
+    height = ymax - ymin
+
+    if width == 0 or height == 0:
+        return None
 
     return [xmin, ymin, xmax, ymax]
 
