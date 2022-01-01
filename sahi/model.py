@@ -631,83 +631,26 @@ class Detectron2DetectionModel(DetectionModel):
                 bbox = boxes[ind]
                 mask = None
             else:
-                return self.model.CLASSES
+                mask = np.array(masks[ind])
 
-        def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-            full_shape_list: Optional[List[List[int]]] = None,
-        ):
-            original_predictions = self._original_predictions
-            category_mapping = self.category_mapping
+                # check if mask is valid
+                if get_bbox_from_bool_mask(mask) is not None:
+                    bbox = None
+                else:
+                    continue
 
-            # compatilibty for sahi v0.8.15
-            if isinstance(shift_amount_list[0], int):
-                shift_amount_list = [shift_amount_list]
-            if full_shape_list is not None and isinstance(full_shape_list[0], int):
-                full_shape_list = [full_shape_list]
-
-            # parse boxes and masks from predictions
-            num_categories = self.num_categories
-            object_prediction_list_per_image = []
-            for image_ind, original_prediction in enumerate(original_predictions):
-                shift_amount = shift_amount_list[image_ind]
-                full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+            object_prediction = ObjectPrediction(
+                bbox=bbox,
+                bool_mask=mask,
+                category_id=category_id,
+                category_name=self.category_mapping[str(category_id)],
+                shift_amount=shift_amount,
+                score=score,
+                full_shape=full_shape,
+            )
+            object_prediction_list.append(object_prediction)
 
         # detectron2 DefaultPredictor supports single image
         object_prediction_list_per_image = [object_prediction_list]
 
-                num_category_predictions = len(category_boxes)
-                print("num_category_predictions:", num_category_predictions)
-                for category_predictions_ind in range(num_category_predictions):
-                    bbox = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
-                    bbox = boxes[category_id]
-                    score = original_predictions["instances"].scores.cpu().numpy()
-                    score = score[category_id]
-                    print("bbo2x:", bbox)
-                    print("sco2re:", score)
-                    if self.has_mask:
-                        category_masks = masks[category_id]
-                    num_category_predictions = len(category_boxes)
-
-                    for category_predictions_ind in range(num_category_predictions):
-                        bbox = category_boxes[category_predictions_ind][:4]
-                        score = category_boxes[category_predictions_ind][4]
-                        if self.has_mask:
-                            bool_mask = category_masks[category_predictions_ind]
-                        else:
-                            bool_mask = None
-                        category_name = category_mapping[str(category_id)]
-
-                        # ignore invalid predictions
-                        if (
-                            bbox[0] > bbox[2]
-                            or bbox[1] > bbox[3]
-                            or bbox[0] < 0
-                            or bbox[1] < 0
-                            or bbox[2] < 0
-                            or bbox[3] < 0
-                        ):
-                            logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
-                            continue
-                        if full_shape is not None and (
-                            bbox[1] > full_shape[0]
-                            or bbox[3] > full_shape[0]
-                            or bbox[0] > full_shape[1]
-                            or bbox[2] > full_shape[1]
-                        ):
-                            logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
-                            continue
-
-                        object_prediction = ObjectPrediction(
-                            bbox=bbox,
-                            category_id=category_id,
-                            score=score,
-                            bool_mask=bool_mask,
-                            category_name=category_name,
-                            shift_amount=shift_amount,
-                            full_shape=full_shape,
-                        )
-                        object_prediction_list.append(object_prediction)
-                object_prediction_list_per_image.append(object_prediction_list)
-            self._object_prediction_list_per_image = object_prediction_list_per_image
+        self._object_prediction_list_per_image = object_prediction_list_per_image
