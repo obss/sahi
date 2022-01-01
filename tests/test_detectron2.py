@@ -84,7 +84,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.name, "car")
         predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
         desired_bbox = [320, 324, 61, 40]
-        margin = 4
+        margin = 5
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
 
@@ -92,7 +92,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[5].category.name, "car")
         predicted_bbox = object_prediction_list[2].bbox.to_coco_bbox()
         desired_bbox = [383, 275, 35, 33]
-        margin = 4
+        margin = 5
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
 
@@ -125,7 +125,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.name, "car")
         predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
         desired_bbox = [322, 325, 57, 38]
-        margin = 4
+        margin = 6
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
 
@@ -133,7 +133,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[5].category.name, "car")
         predicted_bbox = object_prediction_list[5].bbox.to_coco_bbox()
         desired_bbox = [697, 226, 29, 29]
-        margin = 4
+        margin = 5
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
 
