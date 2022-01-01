@@ -263,7 +263,7 @@ class TestPredict(unittest.TestCase):
 
         # get full sized prediction
         if os.path.isdir(project_dir):
-            shutil.rmtree(project_dir)
+            shutil.rmtree(project_dir, ignore_errors=True)
         predict(
             model_type="mmdet",
             model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
@@ -302,7 +302,7 @@ class TestPredict(unittest.TestCase):
 
         # get full sized prediction
         if os.path.isdir(project_dir):
-            shutil.rmtree(project_dir)
+            shutil.rmtree(project_dir, ignore_errors=True)
         predict(
             model_type="yolov5",
             model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
