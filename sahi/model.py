@@ -3,6 +3,7 @@
 
 import logging
 import os
+import warnings
 from typing import Dict, List, Optional, Union
 
 import numpy as np
@@ -24,10 +25,10 @@ class DetectionModel:
         category_mapping: Optional[Dict] = None,
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
+        image_size: int = None,
     ):
         """
         Init object detection/instance segmentation model.
-
         Args:
             model_path: str
                 Path for the instance segmentation model weight
@@ -45,6 +46,8 @@ class DetectionModel:
                 Remap category ids based on category names, after performing inference e.g. {"car": 3}
             load_at_init: bool
                 If True, automatically loads the model at initalization
+            image_size: int
+                Inference input size.
         """
         self.model_path = model_path
         self.config_path = config_path
@@ -54,6 +57,7 @@ class DetectionModel:
         self.confidence_threshold = confidence_threshold
         self.category_mapping = category_mapping
         self.category_remapping = category_remapping
+        self.image_size = image_size
         self._original_predictions = None
         self._object_prediction_list_per_image = None
 
@@ -173,12 +177,18 @@ class MmdetDetectionModel(DetectionModel):
 
         from mmdet.apis import init_detector
 
-        # set model
+        # create model
         model = init_detector(
             config=self.config_path,
             checkpoint=self.model_path,
             device=self.device,
         )
+
+        # update model image size
+        if self.image_size is not None:
+            model.cfg.data.test.pipeline[1]["img_scale"] = (self.image_size, self.image_size)
+
+        # set self.model
         self.model = model
 
         # set category_mapping
@@ -211,7 +221,9 @@ class MmdetDetectionModel(DetectionModel):
 
         # update model image size
         if image_size is not None:
+            warnings.warn("Set 'image_size' at DetectionModel init.", DeprecationWarning)
             self.model.cfg.data.test.pipeline[1]["img_scale"] = (image_size, image_size)
+
         # perform inference
         if isinstance(image, np.ndarray):
             # https://github.com/obss/sahi/issues/265
@@ -301,11 +313,17 @@ class MmdetDetectionModel(DetectionModel):
                 for category_predictions_ind in range(num_category_predictions):
                     bbox = category_boxes[category_predictions_ind][:4]
                     score = category_boxes[category_predictions_ind][4]
+                    category_name = category_mapping[str(category_id)]
+
+                    # ignore low scored predictions
+                    if score < self.confidence_threshold:
+                        continue
+
+                    # parse prediction mask
                     if self.has_mask:
                         bool_mask = category_masks[category_predictions_ind]
                     else:
                         bool_mask = None
-                    category_name = category_mapping[str(category_id)]
 
                     # ignore invalid predictions
                     if (
@@ -382,8 +400,11 @@ class Yolov5DetectionModel(DetectionModel):
         # Confirm model is loaded
         assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
 
-        if image_size:
+        if image_size is not None:
+            warnings.warn("Set 'image_size' at DetectionModel init.", DeprecationWarning)
             prediction_result = self.model(image, size=image_size)
+        elif self.image_size is not None:
+            prediction_result = self.model(image, size=self.image_size)
         else:
             prediction_result = self.model(image)
 

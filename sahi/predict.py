@@ -4,6 +4,7 @@
 import logging
 import os
 import time
+import warnings
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -65,6 +66,9 @@ def get_prediction(
             object_prediction_list: a list of ObjectPrediction
             durations_in_seconds: a dict containing elapsed times for profiling
     """
+    if image_size is not None:
+        warnings.warn("Set 'image_size' at DetectionModel init.", DeprecationWarning)
+
     durations_in_seconds = dict()
 
     # read image as pil
@@ -83,15 +87,10 @@ def get_prediction(
         full_shape=full_shape,
     )
     object_prediction_list: List[ObjectPrediction] = detection_model.object_prediction_list
-    # filter out predictions with lower score
-    filtered_object_prediction_list = [
-        object_prediction
-        for object_prediction in object_prediction_list
-        if object_prediction.score.value > detection_model.confidence_threshold
-    ]
+
     # postprocess matching predictions
     if postprocess is not None:
-        filtered_object_prediction_list = postprocess(filtered_object_prediction_list)
+        object_prediction_list = postprocess(object_prediction_list)
 
     time_end = time.time() - time_start
     durations_in_seconds["postprocess"] = time_end
@@ -104,7 +103,7 @@ def get_prediction(
         )
 
     return PredictionResult(
-        image=image, object_prediction_list=filtered_object_prediction_list, durations_in_seconds=durations_in_seconds
+        image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
     )
 
 
@@ -168,6 +167,9 @@ def get_sliced_prediction(
             object_prediction_list: a list of sahi.prediction.ObjectPrediction
             durations_in_seconds: a dict containing elapsed times for profiling
     """
+    if image_size is not None:
+        warnings.warn("Set 'image_size' at DetectionModel init.", DeprecationWarning)
+
     # for profiling
     durations_in_seconds = dict()
 
@@ -435,6 +437,7 @@ def predict(
         category_mapping=model_category_mapping,
         category_remapping=model_category_remapping,
         load_at_init=False,
+        image_size=image_size,
     )
     detection_model.load_model()
     time_end = time.time() - time_start
@@ -460,7 +463,6 @@ def predict(
             prediction_result = get_sliced_prediction(
                 image=image_path,
                 detection_model=detection_model,
-                image_size=image_size,
                 slice_height=slice_height,
                 slice_width=slice_width,
                 overlap_height_ratio=overlap_height_ratio,
@@ -479,7 +481,6 @@ def predict(
             prediction_result = get_prediction(
                 image=image_path,
                 detection_model=detection_model,
-                image_size=image_size,
                 shift_amount=[0, 0],
                 full_shape=None,
                 postprocess=None,
@@ -705,6 +706,7 @@ def predict_fiftyone(
         category_mapping=model_category_mapping,
         category_remapping=model_category_remapping,
         load_at_init=False,
+        image_size=image_size,
     )
     detection_model.load_model()
     time_end = time.time() - time_start
@@ -722,7 +724,6 @@ def predict_fiftyone(
                 prediction_result = get_sliced_prediction(
                     image=sample.filepath,
                     detection_model=detection_model,
-                    image_size=image_size,
                     slice_height=slice_height,
                     slice_width=slice_width,
                     overlap_height_ratio=overlap_height_ratio,
@@ -740,7 +741,6 @@ def predict_fiftyone(
                 prediction_result = get_prediction(
                     image=sample.filepath,
                     detection_model=detection_model,
-                    image_size=image_size,
                     shift_amount=[0, 0],
                     full_shape=None,
                     postprocess=None,
