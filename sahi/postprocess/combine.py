@@ -737,7 +737,7 @@ class LSNMSPostprocess(PostprocessPredictions):
 
         boxes = object_predictions_as_numpy[:, :4]
         scores = object_predictions_as_numpy[:, 4]
-        class_ids = object_predictions_as_numpy[:, 5]
+        class_ids = object_predictions_as_numpy[:, 5].astype('uint8')
 
         keep = nms(
             boxes, scores, iou_threshold=self.match_threshold, class_ids=None if self.class_agnostic else class_ids
