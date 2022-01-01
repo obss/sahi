@@ -4,13 +4,14 @@
 import sys
 import unittest
 
-from sahi.model import Detectron2DetectionModel
 from sahi.utils.cv import read_image
-from sahi.utils.detectron2 import Detectron2TestConstants
+
+# note that detectron2 binaries are available only for linux
+if sys.platform.startswith("linux"):
+    from sahi.model import Detectron2DetectionModel
+    from sahi.utils.detectron2 import Detectron2TestConstants
 
 MODEL_DEVICE = "cpu"
-
-#  note that detectron2 binaries are available only for linux
 
 
 class TestDetectron2DetectionModel(unittest.TestCase):
