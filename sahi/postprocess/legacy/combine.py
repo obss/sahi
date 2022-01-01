@@ -7,40 +7,8 @@ from typing import List, Union
 import numpy as np
 
 from sahi.annotation import BoundingBox, Category, Mask
+from sahi.postprocess.utils import calculate_area, calculate_box_union, calculate_intersection_area
 from sahi.prediction import ObjectPrediction
-
-
-def calculate_area(box: Union[List[int], np.ndarray]) -> float:
-    """
-    Args:
-        box (List[int]): [x1, y1, x2, y2]
-    """
-    return (box[2] - box[0]) * (box[3] - box[1])
-
-
-def calculate_intersection_area(box1: np.ndarray, box2: np.ndarray) -> float:
-    """
-    Args:
-        box1 (np.ndarray): np.array([x1, y1, x2, y2])
-        box2 (np.ndarray): np.array([x1, y1, x2, y2])
-    """
-    left_top = np.maximum(box1[:2], box2[:2])
-    right_bottom = np.minimum(box1[2:], box2[2:])
-    width_height = (right_bottom - left_top).clip(min=0)
-    return width_height[0] * width_height[1]
-
-
-def calculate_box_union(box1: Union[List[int], np.ndarray], box2: Union[List[int], np.ndarray]) -> List[int]:
-    """
-    Args:
-        box1 (List[int]): [x1, y1, x2, y2]
-        box2 (List[int]): [x1, y1, x2, y2]
-    """
-    box1 = np.array(box1)
-    box2 = np.array(box2)
-    left_top = np.minimum(box1[:2], box2[:2])
-    right_bottom = np.maximum(box1[2:], box2[2:])
-    return list(np.concatenate((left_top, right_bottom)))
 
 
 class PostprocessPredictions:
