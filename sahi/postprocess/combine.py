@@ -5,7 +5,7 @@ from typing import List
 
 import torch
 
-from sahi.postprocess.utils import ObjectPredictionList, _has_match, _merge_object_prediction_pair
+from sahi.postprocess.utils import ObjectPredictionList, has_match, merge_object_prediction_pair
 from sahi.prediction import ObjectPrediction
 
 
@@ -259,7 +259,7 @@ def nmm_torch0(
 
         # merge matching predictions
         for matched_box_ind in matched_box_indices:
-            object_prediction_list[idx] = _merge_object_prediction_pair(
+            object_prediction_list[idx] = merge_object_prediction_pair(
                 object_prediction_list[idx].tolist(), object_prediction_list[matched_box_ind].tolist()
             )
 
@@ -660,13 +660,13 @@ class NMMPostprocess(PostprocessPredictions):
         selected_object_predictions = []
         for keep_ind, merge_ind_list in keep_to_merge_list.items():
             for merge_ind in merge_ind_list:
-                if _has_match(
+                if has_match(
                     object_prediction_list[keep_ind].tolist(),
                     object_prediction_list[merge_ind].tolist(),
                     self.match_metric,
                     self.match_threshold,
                 ):
-                    object_prediction_list[keep_ind] = _merge_object_prediction_pair(
+                    object_prediction_list[keep_ind] = merge_object_prediction_pair(
                         object_prediction_list[keep_ind].tolist(), object_prediction_list[merge_ind].tolist()
                     )
             selected_object_predictions.append(object_prediction_list[keep_ind].tolist())
@@ -697,13 +697,13 @@ class GreedyNMMPostprocess(PostprocessPredictions):
         selected_object_predictions = []
         for keep_ind, merge_ind_list in keep_to_merge_list.items():
             for merge_ind in merge_ind_list:
-                if _has_match(
+                if has_match(
                     object_prediction_list[keep_ind].tolist(),
                     object_prediction_list[merge_ind].tolist(),
                     self.match_metric,
                     self.match_threshold,
                 ):
-                    object_prediction_list[keep_ind] = _merge_object_prediction_pair(
+                    object_prediction_list[keep_ind] = merge_object_prediction_pair(
                         object_prediction_list[keep_ind].tolist(), object_prediction_list[merge_ind].tolist()
                     )
             selected_object_predictions.append(object_prediction_list[keep_ind].tolist())
