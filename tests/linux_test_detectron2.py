@@ -8,6 +8,7 @@ from sahi.utils.cv import read_image
 from sahi.utils.detectron2 import Detectron2TestConstants
 
 MODEL_DEVICE = "cpu"
+CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
 
 # note that detectron2 binaries are available only for linux
@@ -18,7 +19,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         detector2_detection_model = Detectron2DetectionModel(
             model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
             config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
-            confidence_threshold=0.5,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
@@ -30,7 +31,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         detectron2_detection_model = Detectron2DetectionModel(
             model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
             config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
-            confidence_threshold=0.5,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
@@ -61,7 +62,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         detectron2_detection_model = Detectron2DetectionModel(
             model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
             config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
-            confidence_threshold=0.5,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
@@ -103,7 +104,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         detectron2_detection_model = Detectron2DetectionModel(
             model_path=Detectron2TestConstants.MASKRCNN_MODEL_ZOO_NAME,
             config_path=Detectron2TestConstants.MASKRCNN_MODEL_ZOO_NAME,
-            confidence_threshold=0.5,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
@@ -141,6 +142,55 @@ class TestDetectron2DetectionModel(unittest.TestCase):
             if not (point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin):
                 raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
+    def test_get_prediction_detectron2(self):
+        from sahi.model import Detectron2DetectionModel
+        from sahi.predict import get_prediction
+        from sahi.utils.detectron2 import Detectron2TestConstants
+
+        # init model
+        detector2_detection_model = Detectron2DetectionModel(
+            model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            device=MODEL_DEVICE,
+            category_remapping=None,
+            load_at_init=False,
+            image_size=IMAGE_SIZE,
+        )
+        detector2_detection_model.load_model()
+
+        # prepare image
+        image_path = "tests/data/small-vehicles1.jpeg"
+        image = read_image(image_path)
+
+        # get full sized prediction
+        prediction_result = get_prediction(
+            image=image,
+            detection_model=detector2_detection_model,
+            shift_amount=[0, 0],
+            full_shape=None,
+            postprocess=None,
+        )
+        object_prediction_list = prediction_result.object_prediction_list
+
+        # compare
+        self.assertEqual(len(object_prediction_list), 10)
+        num_person = 0
+        for object_prediction in object_prediction_list:
+            if object_prediction.category.name == "person":
+                num_person += 1
+        self.assertEqual(num_person, 0)
+        num_truck = 0
+        for object_prediction in object_prediction_list:
+            if object_prediction.category.name == "truck":
+                num_truck += 1
+        self.assertEqual(num_truck, 0)
+        num_car = 0
+        for object_prediction in object_prediction_list:
+            if object_prediction.category.name == "car":
+                num_car += 1
+        self.assertEqual(num_car, 10)
+
     def test_get_sliced_prediction_detectron2(self):
         from sahi.model import Detectron2DetectionModel
         from sahi.predict import get_sliced_prediction
@@ -150,7 +200,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         detector2_detection_model = Detectron2DetectionModel(
             model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
             config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
-            confidence_threshold=0.5,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=False,
@@ -187,7 +237,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 17)
+        self.assertEqual(len(object_prediction_list), 18)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -202,7 +252,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 17)
+        self.assertEqual(num_car, 18)
 
 
 if __name__ == "__main__":
