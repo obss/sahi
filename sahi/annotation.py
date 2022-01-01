@@ -536,7 +536,7 @@ class ObjectAnnotation:
             if bbox_from_bool_mask is not None:
                 bbox = bbox_from_bool_mask
             else:
-                bbox = [0, 0, 0, 0]
+                raise ValueError("Invalid boolean mask.")
         else:
             self.mask = None
 
