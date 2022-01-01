@@ -1,6 +1,7 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
+import logging
 import os
 import time
 from typing import Dict, List, Optional
@@ -8,7 +9,14 @@ from typing import Dict, List, Optional
 import numpy as np
 from tqdm import tqdm
 
-from sahi.postprocess.combine import NMSPostprocess, PostprocessPredictions, UnionMergePostprocess
+from sahi.postprocess.combine import (
+    GreedyNMMPostprocess,
+    LSNMSPostprocess,
+    NMMPostprocess,
+    NMSPostprocess,
+    PostprocessPredictions,
+)
+from sahi.postprocess.legacy.combine import UnionMergePostprocess
 from sahi.prediction import ObjectPrediction, PredictionResult
 from sahi.slicing import slice_image
 from sahi.utils.coco import Coco, CocoImage
@@ -19,6 +27,9 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "mmdet": "MmdetDetectionModel",
     "yolov5": "Yolov5DetectionModel",
 }
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_prediction(
@@ -106,7 +117,7 @@ def get_sliced_prediction(
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     perform_standard_pred: bool = True,
-    postprocess_type: str = "UNIONMERGE",
+    postprocess_type: str = "GREEDYNMM",
     postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
@@ -122,23 +133,23 @@ def get_sliced_prediction(
         image_size: int
             Input image size for each inference (image is scaled by preserving asp. rat.).
         slice_height: int
-            Height of each slice.  Defaults to ``256``.
+            Height of each slice.  Defaults to ``512``.
         slice_width: int
-            Width of each slice.  Defaults to ``256``.
+            Width of each slice.  Defaults to ``512``.
         overlap_height_ratio: float
             Fractional overlap in height of each window (e.g. an overlap of 0.2 for a window
-            of size 256 yields an overlap of 51 pixels).
+            of size 512 yields an overlap of 102 pixels).
             Default to ``0.2``.
         overlap_width_ratio: float
             Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
-            of size 256 yields an overlap of 51 pixels).
+            of size 512 yields an overlap of 102 pixels).
             Default to ``0.2``.
         perform_standard_pred: bool
             Perform a standard prediction on top of sliced predictions to increase large object
             detection accuracy. Default: True.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
-            Options are 'UNIONMERGE' or 'NMS'. Default is 'UNIONMERGE'.
+            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'GRREDYNMM'.
         postprocess_match_metric: str
             Metric to be used during object prediction matching after sliced prediction.
             'IOU' for intersection over union, 'IOS' for intersection over smaller area.
@@ -177,8 +188,14 @@ def get_sliced_prediction(
     durations_in_seconds["slice"] = time_end
 
     # init match postprocess instance
-    if postprocess_type == "UNIONMERGE":
-        postprocess = UnionMergePostprocess(
+    if postprocess_type in ["NMM"]:
+        postprocess = NMMPostprocess(
+            match_threshold=postprocess_match_threshold,
+            match_metric=postprocess_match_metric,
+            class_agnostic=postprocess_class_agnostic,
+        )
+    elif postprocess_type == "GREEDYNMM":
+        postprocess = GreedyNMMPostprocess(
             match_threshold=postprocess_match_threshold,
             match_metric=postprocess_match_metric,
             class_agnostic=postprocess_class_agnostic,
@@ -189,8 +206,24 @@ def get_sliced_prediction(
             match_metric=postprocess_match_metric,
             class_agnostic=postprocess_class_agnostic,
         )
+    elif postprocess_type == "LSNMS":
+        postprocess = LSNMSPostprocess(
+            match_threshold=postprocess_match_threshold,
+            match_metric=postprocess_match_metric,
+            class_agnostic=postprocess_class_agnostic,
+        )
+    elif postprocess_type == "UNIONMERGE":
+        # sahi v0.8.16 compatibility
+        logger.warning("'UNIONMERGE' is deprecated, use 'GREEDYNMM' instead.")
+        postprocess = UnionMergePostprocess(
+            match_threshold=postprocess_match_threshold,
+            match_metric=postprocess_match_metric,
+            class_agnostic=postprocess_class_agnostic,
+        )
     else:
-        raise ValueError(f"postprocess_type should be one of ['UNIOUNMERGE', 'NMS'] but given as {postprocess_type}")
+        raise ValueError(
+            f"postprocess_type should be one of ['NMS', 'NMM', 'GREEDYNMM'] but given as {postprocess_type}"
+        )
 
     # create prediction input
     num_group = int(num_slices / num_batch)
@@ -271,7 +304,7 @@ def predict(
     slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
-    postprocess_type: str = "UNIONMERGE",
+    postprocess_type: str = "GREEDYNMM",
     postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
@@ -314,20 +347,20 @@ def predict(
         image_size: int
             Input image size for each inference (image is scaled by preserving asp. rat.).
         slice_height: int
-            Height of each slice.  Defaults to ``256``.
+            Height of each slice.  Defaults to ``512``.
         slice_width: int
-            Width of each slice.  Defaults to ``256``.
+            Width of each slice.  Defaults to ``512``.
         overlap_height_ratio: float
             Fractional overlap in height of each window (e.g. an overlap of 0.2 for a window
-            of size 256 yields an overlap of 51 pixels).
+            of size 512 yields an overlap of 102 pixels).
             Default to ``0.2``.
         overlap_width_ratio: float
             Fractional overlap in width of each window (e.g. an overlap of 0.2 for a window
-            of size 256 yields an overlap of 51 pixels).
+            of size 512 yields an overlap of 102 pixels).
             Default to ``0.2``.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
-            Options are 'UNIONMERGE' or 'NMS'. Default is 'UNIONMERGE'.
+            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'GRREDYNMM'.
         postprocess_match_metric: str
             Metric to be used during object prediction matching after sliced prediction.
             'IOU' for intersection over union, 'IOS' for intersection over smaller area.
@@ -584,7 +617,7 @@ def predict_fiftyone(
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
-    postprocess_type: str = "UNIONMERGE",
+    postprocess_type: str = "GREEDYNMM",
     postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
@@ -632,7 +665,10 @@ def predict_fiftyone(
             Default to ``0.2``.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
-            Options are 'UNIONMERGE' or 'NMS'. Default is 'UNIONMERGE'.
+            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'GRREDYNMM'.
+        postprocess_match_metric: str
+            Metric to be used during object prediction matching after sliced prediction.
+            'IOU' for intersection over union, 'IOS' for intersection over smaller area.
         postprocess_match_metric: str
             Metric to be used during object prediction matching after sliced prediction.
             'IOU' for intersection over union, 'IOS' for intersection over smaller area.
@@ -693,8 +729,8 @@ def predict_fiftyone(
                     overlap_width_ratio=overlap_width_ratio,
                     perform_standard_pred=not no_standard_prediction,
                     postprocess_type=postprocess_type,
-                    postprocess_match_metric=postprocess_match_metric,
                     postprocess_match_threshold=postprocess_match_threshold,
+                    postprocess_match_metric=postprocess_match_metric,
                     postprocess_class_agnostic=postprocess_class_agnostic,
                     verbose=verbose,
                 )
