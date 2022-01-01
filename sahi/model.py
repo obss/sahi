@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 
 from sahi.prediction import ObjectPrediction
+from sahi.utils.cv import get_bbox_from_bool_mask
 from sahi.utils.torch import cuda_is_available, empty_cuda_cache
 
 logger = logging.getLogger(__name__)
