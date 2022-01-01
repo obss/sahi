@@ -494,52 +494,6 @@ class Yolov5DetectionModel(DetectionModel):
 
 
 class Detectron2DetectionModel(DetectionModel):
-    def __init__(
-        self,
-        model_path: str,
-        config_path: Optional[str] = None,
-        device: Optional[str] = None,
-        mask_threshold: float = 0.5,
-        confidence_threshold: float = 0.3,
-        category_mapping: Optional[Dict] = None,
-        category_remapping: Optional[Dict] = None,
-        load_at_init: bool = True,
-        image_size: int = None,
-    ):
-        """
-        Init object detection/instance segmentation model.
-        Args:
-            model_path: str
-                Path for the instance segmentation model weight
-            config_path: str
-                Path for the mmdetection instance segmentation model config file
-            device: str
-                Torch device, "cpu" or "cuda"
-            mask_threshold: float
-                Value to threshold mask pixels, should be between 0 and 1
-            confidence_threshold: float
-                All predictions with score < confidence_threshold will be discarded
-            category_mapping: dict: str to str
-                Mapping from category id (str) to category name (str) e.g. {"1": "pedestrian"}
-            category_remapping: dict: str to int
-                Remap category ids based on category names, after performing inference e.g. {"car": 3}
-            load_at_init: bool
-                If True, automatically loads the model at initalization
-            image_size: int
-                Inference input size.
-        """
-        self.image_size = image_size
-        super().__init__(
-            model_path=model_path,
-            config_path=config_path,
-            device=device,
-            mask_threshold=mask_threshold,
-            confidence_threshold=confidence_threshold,
-            category_mapping=category_mapping,
-            category_remapping=category_remapping,
-            load_at_init=load_at_init,
-        )
-
     def load_model(self):
         try:
             import detectron2
@@ -604,7 +558,7 @@ class Detectron2DetectionModel(DetectionModel):
 
         # confirm image_size is not provided
         if image_size is not None:
-            raise ValueError("image_size should be set at Detectron2DetectionModelinit.")
+            warnings.warn("Set 'image_size' at DetectionModel init.")
 
         # Confirm model is loaded
         if self.model is None:
@@ -623,10 +577,7 @@ class Detectron2DetectionModel(DetectionModel):
         """
         Returns number of categories
         """
-        if isinstance(self.category_mapping, str):
-            num_categories = 1
-        else:
-            num_categories = len(self.category_mapping)
+        num_categories = len(self.category_mapping)
         return num_categories
 
     def _create_object_prediction_list_from_original_predictions(
