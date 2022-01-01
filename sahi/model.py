@@ -493,6 +493,52 @@ class Yolov5DetectionModel(DetectionModel):
 
 
 class Detectron2DetectionModel(DetectionModel):
+    def __init__(
+        self,
+        model_path: str,
+        config_path: Optional[str] = None,
+        device: Optional[str] = None,
+        mask_threshold: float = 0.5,
+        confidence_threshold: float = 0.3,
+        category_mapping: Optional[Dict] = None,
+        category_remapping: Optional[Dict] = None,
+        load_at_init: bool = True,
+        image_size: int = None,
+    ):
+        """
+        Init object detection/instance segmentation model.
+        Args:
+            model_path: str
+                Path for the instance segmentation model weight
+            config_path: str
+                Path for the mmdetection instance segmentation model config file
+            device: str
+                Torch device, "cpu" or "cuda"
+            mask_threshold: float
+                Value to threshold mask pixels, should be between 0 and 1
+            confidence_threshold: float
+                All predictions with score < confidence_threshold will be discarded
+            category_mapping: dict: str to str
+                Mapping from category id (str) to category name (str) e.g. {"1": "pedestrian"}
+            category_remapping: dict: str to int
+                Remap category ids based on category names, after performing inference e.g. {"car": 3}
+            load_at_init: bool
+                If True, automatically loads the model at initalization
+            image_size: int
+                Inference input size.
+        """
+        self.image_size = image_size
+        super().__init__(
+            model_path=model_path,
+            config_path=config_path,
+            device=device,
+            mask_threshold=mask_threshold,
+            confidence_threshold=confidence_threshold,
+            category_mapping=category_mapping,
+            category_remapping=category_remapping,
+            load_at_init=load_at_init,
+        )
+
     def load_model(self):
         try:
             import detectron2
@@ -521,21 +567,27 @@ class Detectron2DetectionModel(DetectionModel):
             config_file = model_zoo.get_config_file(self.config_path)
             cfg.merge_from_file(config_file)
             cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml")
-            model = DefaultPredictor(cfg)
         except Exception as e:  # try to load from local
             print(e)
             cfg.merge_from_file(self.config_path)
             cfg.MODEL.WEIGHTS = self.model_path
-            model = DefaultPredictor(cfg)
+        # set input image size
+        if self.image_size is not None:
+            cfg.INPUT.MIN_SIZE_TEST = self.image_size
+            cfg.INPUT.MAX_SIZE_TEST = self.image_size
+        # init predictor
+        model = DefaultPredictor(cfg)
 
         self.model = model
 
         # detectron2 categories mapping
-        metadata = MetadataCatalog.get(cfg.DATASETS.TRAIN[0])
-        class_name = metadata.thing_classes
-        self.class_name = class_name
-        category_mapping = {class_name[i]: i for i in range(len(class_name))}
-        self.category_mapping = category_mapping
+        if self.category_mapping is None:
+            metadata = MetadataCatalog.get(cfg.DATASETS.TRAIN[0])
+            category_names = metadata.thing_classes
+            self.category_names = category_names
+            self.category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
+        else:
+            self.category_names = list(self.category_mapping.values())
 
     def perform_inference(self, image: np.ndarray, image_size: int = None):
         """
@@ -543,19 +595,25 @@ class Detectron2DetectionModel(DetectionModel):
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
-            image_size: int
-                Inference input size.
         """
         try:
             import detectron2
         except ImportError:
             raise ImportError("Please install detectron2 via `pip install detectron2`")
 
+        # confirm image_size is not provided
+        if image_size is not None:
+            raise ValueError("image_size should be set at Detectron2DetectionModelinit.")
+
         # Confirm model is loaded
-        assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
+        if self.model is None:
+            raise RuntimeError("Model is not loaded, load it by calling .load_model()")
+
+        if isinstance(image, np.ndarray) and self.model.input_format == "BGR":
+            # convert RGB image to BGR format
+            image = image[:, :, ::-1]
 
         prediction_result = self.model(image)
-        # TODO: utilize image_size
 
         self._original_predictions = prediction_result
 
@@ -569,23 +627,6 @@ class Detectron2DetectionModel(DetectionModel):
         else:
             num_categories = len(self.category_mapping)
         return num_categories
-
-    @property
-    def has_mask(self):
-        """
-        Returns if model output contains segmentation mask
-        """
-        # has_mask = self.model.with_mask
-        # return has_mask
-        return False
-
-    @property
-    def category_names(self):
-        if type(self.model.category_mapping) == str:
-            # https://github.com/open-mmlab/mmdetection/pull/4973
-            return (self.category_mapping,)
-        else:
-            return self.category_mapping
 
     def _create_object_prediction_list_from_original_predictions(
         self,
@@ -612,25 +653,31 @@ class Detectron2DetectionModel(DetectionModel):
         if full_shape_list is not None and isinstance(full_shape_list[0], int):
             full_shape_list = [full_shape_list]
 
-        # parse boxes and masks from predictions
+        # parse boxes, masks, scores, category_ids from predictions
+        boxes = original_predictions["instances"].pred_boxes.tensor.tolist()
+        scores = original_predictions["instances"].scores.tolist()
+        category_ids = original_predictions["instances"].pred_classes.tolist()
+        try:
+            masks = original_predictions["instances"].pred_masks.tolist()
+        except AttributeError:
+            masks = None
+
+        # create object_prediction_list
         num_categories = self.num_categories
         object_prediction_list_per_image = []
-        # original_predictions box and mask are in the form of
-        boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
-        # scores = original_predictions["instances"].scores.cpu().numpy()
-        # labels = out.pred_classes.cpu().numpy()
-        # masks = out.pred_masks.tensor.cpu().numpy()
-        # ctrl+/ to uncomment
+        object_prediction_list = []
 
-        for image_ind, original_prediction in enumerate(original_predictions):
-            # print("image_ind:", image_ind)
-            # print("original_prediction:", original_prediction)
-            shift_amount = shift_amount_list[image_ind]
-            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+        # detectron2 DefaultPredictor supports single image
+        shift_amount = shift_amount_list[0]
+        full_shape = None if full_shape_list is None else full_shape_list[0]
 
-            if self.has_mask:
-                boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
-                masks = original_predictions["instances"].pred_masks.tensor.cpu().numpy()
+        for ind in range(len(boxes)):
+            score = scores[ind]
+            category_id = category_ids[ind]
+
+            if masks is None:
+                bbox = boxes[ind]
+                mask = None
             else:
                 return self.model.CLASSES
 
@@ -655,9 +702,8 @@ class Detectron2DetectionModel(DetectionModel):
                 shift_amount = shift_amount_list[image_ind]
                 full_shape = None if full_shape_list is None else full_shape_list[image_ind]
 
-            object_prediction_list_per_image = []
-            object_prediction_list = []
-            # TODO: create a list of ObjectPrediction list per image
+        # detectron2 DefaultPredictor supports single image
+        object_prediction_list_per_image = [object_prediction_list]
 
                 num_category_predictions = len(category_boxes)
                 print("num_category_predictions:", num_category_predictions)

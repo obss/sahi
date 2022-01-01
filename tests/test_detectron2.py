@@ -32,6 +32,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
+            image_size=320,
         )
         # prepare image
         image_path = "tests/data/small-vehicles1.jpeg"
@@ -51,10 +52,10 @@ class TestDetectron2DetectionModel(unittest.TestCase):
                 break
 
         # compare
-        self.assertEqual(boxes[ind].astype("int").tolist(), [784, 206, 798, 219])
-        self.assertEqual(len(boxes), 29)
+        self.assertEqual(boxes[ind].astype("int").tolist(), [320, 324, 381, 364])
+        self.assertEqual(len(boxes), 10)
 
-    def test_convert_original_predictions_with_mask_output(self):
+    def test_convert_original_predictions_without_mask_output(self):
 
         detectron2_detection_model = Detectron2DetectionModel(
             model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
@@ -63,6 +64,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
+            image_size=320,
         )
 
         # prepare image
@@ -77,35 +79,30 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         object_prediction_list = detectron2_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 44)
-        self.assertEqual(object_prediction_list[0].category.id, 0)
-        self.assertEqual(object_prediction_list[0].category.name, "person")
+        self.assertEqual(len(object_prediction_list), 10)
+        self.assertEqual(object_prediction_list[0].category.id, 2)
+        self.assertEqual(object_prediction_list[0].category.name, "car")
         self.assertEqual(
             object_prediction_list[0].bbox.to_coco_bbox(),
-            [1020, 419, 6, 17],
-        )
-        self.assertEqual(object_prediction_list[1].category.id, 2)
-        self.assertEqual(object_prediction_list[1].category.name, "car")
-        self.assertEqual(
-            object_prediction_list[1].bbox.to_coco_bbox(),
-            [449, 311, 45, 29],
+            [320, 324, 61, 40],
         )
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
         self.assertEqual(
             object_prediction_list[2].bbox.to_coco_bbox(),
-            [657, 204, 13, 10],
+            [383, 275, 35, 33],
         )
 
-    def test_convert_original_predictions_without_mask_output(self):
+    def test_convert_original_predictions_with_mask_output(self):
 
         detectron2_detection_model = Detectron2DetectionModel(
-            model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
-            config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            model_path=Detectron2TestConstants.MASKRCNN_MODEL_ZOO_NAME,
+            config_path=Detectron2TestConstants.MASKRCNN_MODEL_ZOO_NAME,
             confidence_threshold=0.5,
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
+            image_size=320,
         )
 
         # prepare image
@@ -113,25 +110,25 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         image = read_image(image_path)
 
         # perform inference
-        detectron2_detection_model.perform_inference(image, image_size=256)
+        detectron2_detection_model.perform_inference(image)
 
         # convert predictions to ObjectPrediction list
         detectron2_detection_model.convert_original_predictions()
         object_prediction_list = detectron2_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 36)
-        self.assertEqual(object_prediction_list[0].category.id, 0)
-        self.assertEqual(object_prediction_list[0].category.name, "person")
+        self.assertEqual(len(object_prediction_list), 10)
+        self.assertEqual(object_prediction_list[0].category.id, 2)
+        self.assertEqual(object_prediction_list[0].category.name, "car")
         self.assertEqual(
             object_prediction_list[0].bbox.to_coco_bbox(),
-            [836, 303, 36, 40],
+            [322, 325, 57, 38],
         )
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
         self.assertEqual(
             object_prediction_list[5].bbox.to_coco_bbox(),
-            [334, 285, 60, 48],
+            [697, 226, 29, 29],
         )
 
 
