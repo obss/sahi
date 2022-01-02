@@ -92,15 +92,9 @@ jobs:
         run: >
           python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch1.10/index.html
           
-      - name: Unittest for SAHI+YOLOV5/MMDET on all platforms
+      - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
         run: |
           python -m unittest
-
-      - name: Unittest for SAHI+Detectron2 on Linux
-        if: >
-          matrix.operating-system == 'ubuntu-latest'
-        run: |
-          python -m unittest discover -p "linux_test*.py"
 
       - name: Install pycocotools(2.0.3)
         run: >

@@ -85,15 +85,9 @@ jobs:
         run: >
           pip install --upgrade --force-reinstall sahi
 
-      - name: Unittest for SAHI+YOLOV5/MMDET on all platforms
+      - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
         run: |
           python -m unittest
-
-      - name: Unittest for SAHI+Detectron2 on Linux
-        if: >
-          matrix.operating-system == 'ubuntu-latest'
-        run: |
-          python -m unittest discover -p "linux_test*.py"
 
       - name: Test SAHI CLI
         run: |
