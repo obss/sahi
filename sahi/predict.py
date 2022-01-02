@@ -321,6 +321,7 @@ def predict(
     visual_text_thickness: int = None,
     visual_export_format: str = "png",
     verbose: int = 1,
+    return_dict: bool = False,
 ):
     """
     Performs prediction for all present images in given folder.
@@ -390,6 +391,8 @@ def predict(
             0: no print
             1: print slice/prediction durations, number of slices
             2: print model loading/file exporting durations
+        return_dict: bool
+            If True, returns a dict with 'export_dir' field.
     """
     # assert prediction type
     assert (
@@ -599,6 +602,9 @@ def predict(
                 durations_in_seconds["export_files"],
                 "seconds.",
             )
+
+    if return_dict:
+        return {"export_dir": save_dir}
 
 
 def predict_fiftyone(
