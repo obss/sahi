@@ -85,7 +85,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
-        desired_bbox = [320, 324, 61, 40]
+        desired_bbox = [831, 303, 42, 43]
         margin = 3
         for ind, point in enumerate(predicted_bbox):
             if not (point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin):
@@ -94,7 +94,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[5].category.id, 2)
         self.assertEqual(object_prediction_list[5].category.name, "car")
         predicted_bbox = object_prediction_list[2].bbox.to_coco_bbox()
-        desired_bbox = [383, 275, 35, 33]
+        desired_bbox = [383, 277, 36, 29]
         margin = 3
         for ind, point in enumerate(predicted_bbox):
             if not (point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin):
