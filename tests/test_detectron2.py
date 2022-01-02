@@ -55,8 +55,8 @@ class TestDetectron2DetectionModel(unittest.TestCase):
                 break
 
         # compare
-        self.assertEqual(boxes[ind].astype("int").tolist(), [320, 324, 381, 364])
-        self.assertEqual(len(boxes), 10)
+        self.assertEqual(boxes[ind].astype("int").tolist(), [831, 303, 873, 346])
+        self.assertEqual(len(boxes), 16)
 
     def test_convert_original_predictions_without_mask_output(self):
         detectron2_detection_model = Detectron2DetectionModel(
@@ -81,12 +81,12 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         object_prediction_list = detectron2_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 10)
+        self.assertEqual(len(object_prediction_list), 16)
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
         desired_bbox = [320, 324, 61, 40]
-        margin = 10
+        margin = 3
         for ind, point in enumerate(predicted_bbox):
             if not (point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin):
                 raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
@@ -95,7 +95,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[5].category.name, "car")
         predicted_bbox = object_prediction_list[2].bbox.to_coco_bbox()
         desired_bbox = [383, 275, 35, 33]
-        margin = 10
+        margin = 3
         for ind, point in enumerate(predicted_bbox):
             if not (point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin):
                 raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
@@ -174,7 +174,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 10)
+        self.assertEqual(len(object_prediction_list), 16)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -189,7 +189,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 10)
+        self.assertEqual(num_car, 16)
 
     def test_get_sliced_prediction_detectron2(self):
         from sahi.model import Detectron2DetectionModel
