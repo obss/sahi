@@ -521,7 +521,7 @@ class Detectron2DetectionModel(DetectionModel):
         try:  # try to load from model zoo
             config_file = model_zoo.get_config_file(self.config_path)
             cfg.merge_from_file(config_file)
-            cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml")
+            cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(self.config_path)
         except Exception as e:  # try to load from local
             print(e)
             cfg.merge_from_file(self.config_path)
