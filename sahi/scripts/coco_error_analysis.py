@@ -242,7 +242,7 @@ def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None,
     return k, ps_
 
 
-def _analyze_results(
+def _analyse_results(
     res_file,
     ann_file,
     res_types,
@@ -343,7 +343,7 @@ def _analyze_results(
     print(f"COCO error analysis results are successfully exported to {out_dir}")
 
 
-def main(
+def analyse(
     dataset_json_path: str,
     result_json_path: str,
     out_dir: str = None,
@@ -356,7 +356,7 @@ def main(
     Args:
         dataset_json_path (str): file path for the coco dataset json file
         result_json_paths (str): file path for the coco result json file
-        out_dir (str): dir to save analyze result images
+        out_dir (str): dir to save analyse result images
         extraplots (bool): export extra bar/stat plots
         type (str): 'bbox' or 'mask'
         areas (List[int]): area regions for coco evaluation calculations
@@ -376,7 +376,7 @@ def main(
             'Please run "pip install -U matplotlib" ' "to install matplotlib first for visualization."
         )
 
-    _analyze_results(
+    _analyse_results(
         result_json_path,
         dataset_json_path,
         res_types=[type],
@@ -390,4 +390,4 @@ def main(
 
 
 if __name__ == "__main__":
-    fire.Fire(main)
+    fire.Fire(analyse)
