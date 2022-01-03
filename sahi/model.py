@@ -511,7 +511,6 @@ class Detectron2DetectionModel(DetectionModel):
 
         cfg = get_cfg()
         cfg.MODEL.DEVICE = self.device
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = self.confidence_threshold
 
         try:  # try to load from model zoo
             config_file = model_zoo.get_config_file(self.config_path)
@@ -531,12 +530,26 @@ class Detectron2DetectionModel(DetectionModel):
 
         self.model = model
 
-        # detectron2 categories mapping
+        # detectron2 category mapping
         if self.category_mapping is None:
-            metadata = MetadataCatalog.get(cfg.DATASETS.TRAIN[0])
-            category_names = metadata.thing_classes
-            self.category_names = category_names
-            self.category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
+            try:  # try to parse category names from metadata
+                metadata = MetadataCatalog.get(cfg.DATASETS.TRAIN[0])
+                category_names = metadata.thing_classes
+                self.category_names = category_names
+                self.category_mapping = {
+                    str(ind): category_name for ind, category_name in enumerate(self.category_names)
+                }
+            except Exception as e:
+                logger.warning(e)
+                # https://detectron2.readthedocs.io/en/latest/tutorials/datasets.html#update-the-config-for-new-datasets
+                if cfg.MODEL.META_ARCHITECTURE == "RetinaNet":
+                    num_categories = cfg.MODEL.RETINANET.NUM_CLASSES
+                else:  # fasterrcnn/maskrcnn etc
+                    num_categories = cfg.MODEL.ROI_HEADS.NUM_CLASSES
+                self.category_names = [str(category_id) for category_id in range(num_categories)]
+                self.category_mapping = {
+                    str(ind): category_name for ind, category_name in enumerate(self.category_names)
+                }
         else:
             self.category_names = list(self.category_mapping.values())
 
@@ -621,6 +634,9 @@ class Detectron2DetectionModel(DetectionModel):
 
         for ind in range(len(boxes)):
             score = scores[ind]
+            if score < self.confidence_threshold:
+                continue
+
             category_id = category_ids[ind]
 
             if masks is None:

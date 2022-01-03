@@ -56,7 +56,7 @@ class TestDetectron2DetectionModel(unittest.TestCase):
 
         # compare
         self.assertEqual(boxes[ind].astype("int").tolist(), [831, 303, 873, 346])
-        self.assertEqual(len(boxes), 16)
+        self.assertEqual(len(boxes), 35)
 
     def test_convert_original_predictions_without_mask_output(self):
         detectron2_detection_model = Detectron2DetectionModel(
