@@ -524,7 +524,8 @@ class Detectron2DetectionModel(DetectionModel):
             cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(self.config_path)
         except Exception as e:  # try to load from local
             print(e)
-            cfg.merge_from_file(self.config_path)
+            if self.config_path is not None:
+                cfg.merge_from_file(self.config_path)
             cfg.MODEL.WEIGHTS = self.model_path
         # set input image size
         if self.image_size is not None:
