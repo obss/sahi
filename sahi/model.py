@@ -512,12 +512,7 @@ class Detectron2DetectionModel(DetectionModel):
         cfg = get_cfg()
         cfg.MODEL.DEVICE = self.device
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = self.confidence_threshold
-        if self.config_path is None:
-            self.config_path = "COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml"
-            logger.info(
-                "config_path is not set for Detectron2DetectionModel, using default config: "
-                "'COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml'"
-            )
+
         try:  # try to load from model zoo
             config_file = model_zoo.get_config_file(self.config_path)
             cfg.merge_from_file(config_file)
