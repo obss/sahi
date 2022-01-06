@@ -11,6 +11,8 @@ import numpy as np
 def _makeplot(rs, ps, outDir, class_name, iou_type):
     import matplotlib.pyplot as plt
 
+    export_path_list = []
+
     cs = np.vstack(
         [
             np.ones((2, 3)),
@@ -47,15 +49,19 @@ def _makeplot(rs, ps, outDir, class_name, iou_type):
         plt.title(figure_title)
         plt.legend()
         # plt.show()
-        fig.savefig(outDir + f"/{figure_title}.png")
+        export_path = str(Path(outDir) / f"{figure_title}.png")
+        fig.savefig(export_path)
         plt.close(fig)
 
+        export_path_list.append(export_path)
+    return export_path_list
 
-def _autolabel(ax, rects):
+
+def _autolabel(ax, rects, is_percent=True):
     """Attach a text label above each bar in *rects*, displaying its height."""
     for rect in rects:
         height = rect.get_height()
-        if height > 0 and height <= 1:  # for percent values
+        if is_percent and height > 0 and height <= 1:  # for percent values
             text_label = "{:2.0f}".format(height * 100)
         else:
             text_label = "{:2.0f}".format(height)
@@ -104,8 +110,11 @@ def _makebarplot(rs, ps, outDir, class_name, iou_type):
         _autolabel(ax, rects)
 
     # Save plot
-    fig.savefig(outDir + f"/{figure_title}.png")
+    export_path = str(Path(outDir) / f"{figure_title}.png")
+    fig.savefig(export_path)
     plt.close(fig)
+
+    return export_path
 
 
 def _get_gt_area_group_numbers(cocoEval):
@@ -146,12 +155,15 @@ def _make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
     ax.set_xticklabels(areaRngLbl)
 
     # Add score texts over bars
-    _autolabel(ax, rects)
+    _autolabel(ax, rects, is_percent=False)
 
     # Save plot
+    export_path = str(Path(outDir) / f"{figure_title}.png")
     fig.tight_layout()
-    fig.savefig(outDir + f"/{figure_title}.png")
+    fig.savefig(export_path)
     plt.close(fig)
+
+    return export_path
 
 
 def _make_gt_area_histogram_plot(cocoEval, outDir):
@@ -173,9 +185,12 @@ def _make_gt_area_histogram_plot(cocoEval, outDir):
     ax.set_title(figure_title)
 
     # Save plot
+    export_path = str(Path(outDir) / f"{figure_title}.png")
     fig.tight_layout()
-    fig.savefig(outDir + f"/{figure_title}.png")
+    fig.savefig(export_path)
     plt.close(fig)
+
+    return export_path
 
 
 def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None, max_detections=None, COCOeval=None):
@@ -270,6 +285,8 @@ def _analyse_results(
         print(f"-------------create {out_dir}-----------------")
         os.makedirs(directory)
 
+    result_type_to_export_paths = {}
+
     cocoGt = COCO(ann_file)
     cocoDt = cocoGt.loadRes(res_file)
     imgIds = cocoGt.getImgIds()
@@ -315,6 +332,8 @@ def _analyse_results(
                 for k, catId in enumerate(present_cat_ids)
             ]
             analyze_results = pool.starmap(_analyze_individual_category, args)
+
+        classname_to_export_path_list = {}
         for k, catId in enumerate(present_cat_ids):
 
             nm = cocoGt.loadCats(catId)[0]
@@ -332,15 +351,39 @@ def _analyse_results(
             ps[5, :, k, :, :][ps[4, :, k, :, :] > 0] = 1
             ps[6, :, k, :, :] = 1.0
 
-            _makeplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
+            roc_curve_export_path_list = _makeplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
+
             if extraplots:
-                _makebarplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
-        _makeplot(recThrs, ps, res_out_dir, "allclass", iou_type)
+                bar_plot_path = _makebarplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
+            else:
+                bar_plot_path = None
+            classname_to_export_path_list[nm["name"]] = {
+                "roc_curves": roc_curve_export_path_list,
+                "bar_plot": bar_plot_path,
+            }
+
+        roc_curve_export_path_list = _makeplot(recThrs, ps, res_out_dir, "allclass", iou_type)
         if extraplots:
-            _makebarplot(recThrs, ps, res_out_dir, "allclass", iou_type)
-            _make_gt_area_group_numbers_plot(cocoEval=cocoEval, outDir=res_out_dir, verbose=True)
-            _make_gt_area_histogram_plot(cocoEval=cocoEval, outDir=res_out_dir)
+            bar_plot_path = _makebarplot(recThrs, ps, res_out_dir, "allclass", iou_type)
+            gt_area_group_numbers_plot_path = _make_gt_area_group_numbers_plot(
+                cocoEval=cocoEval, outDir=res_out_dir, verbose=True
+            )
+            gt_area_histogram_plot_path = _make_gt_area_histogram_plot(cocoEval=cocoEval, outDir=res_out_dir)
+        else:
+            bar_plot_path, gt_area_group_numbers_plot_path, gt_area_histogram_plot_path = None, None, None
+
+        result_type_to_export_paths[res_type] = {
+            "classwise": classname_to_export_path_list,
+            "overall": {
+                "bar_plot": bar_plot_path,
+                "roc_curves": roc_curve_export_path_list,
+                "gt_area_group_numbers": gt_area_group_numbers_plot_path,
+                "gt_area_histogram": gt_area_histogram_plot_path,
+            },
+        }
     print(f"COCO error analysis results are successfully exported to {out_dir}")
+
+    return result_type_to_export_paths
 
 
 def analyse(
@@ -351,6 +394,7 @@ def analyse(
     extraplots: bool = False,
     areas: List[int] = [1024, 9216, 10000000000],
     max_detections: int = 500,
+    return_dict: bool = False,
 ):
     """
     Args:
@@ -361,6 +405,7 @@ def analyse(
         type (str): 'bbox' or 'mask'
         areas (List[int]): area regions for coco evaluation calculations
         max_detections (int): Maximum number of detections to consider for AP alculation. Default: 500
+        return_dict (bool): If True, returns a dict export paths.
     """
     try:
         from pycocotools.coco import COCO
@@ -376,7 +421,7 @@ def analyse(
             'Please run "pip install -U matplotlib" ' "to install matplotlib first for visualization."
         )
 
-    _analyse_results(
+    result = _analyse_results(
         result_json_path,
         dataset_json_path,
         res_types=[type],
@@ -387,6 +432,8 @@ def analyse(
         COCO=COCO,
         COCOeval=COCOeval,
     )
+    if return_dict:
+        return result
 
 
 if __name__ == "__main__":
