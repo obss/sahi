@@ -452,7 +452,7 @@ def predict(
             relative_filepath = image_path.split(source)[-1]
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
         else:  # no process if source is single file
-            relative_filepath = image_path
+            relative_filepath = Path(image_path).name
         filename_without_extension = Path(relative_filepath).stem
         # load image
         image_as_pil = read_image_as_pil(image_path)
