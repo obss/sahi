@@ -449,7 +449,7 @@ def predict(
     for ind, image_path in enumerate(tqdm(image_path_list, "Performing inference on images")):
         # get filename
         if os.path.isdir(source):  # preserve source folder structure in export
-            relative_filepath = image_path.split(source)[-1]
+            relative_filepath = str(Path(image_path)).split(str(Path(source)))[-1]
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
         else:  # no process if source is single file
             relative_filepath = Path(image_path).name
