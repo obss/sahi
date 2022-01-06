@@ -408,17 +408,13 @@ def predict(
         image_path_list = [str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images]
         coco_json = []
     elif os.path.isdir(source):
-        time_start = time.time()
         image_path_list = list_files(
             directory=source,
-            contains=[".jpg", ".jpeg", ".png"],
+            contains=[".jpg", ".jpeg", ".png", ".tiff", ".bmp"],
             verbose=verbose,
         )
-        time_end = time.time() - time_start
-        durations_in_seconds["list_files"] = time_end
     else:
         image_path_list = [source]
-        durations_in_seconds["list_files"] = 0
 
     # init export directories
     save_dir = Path(increment_path(Path(project) / name, exist_ok=False))  # increment run
