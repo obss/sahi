@@ -9,6 +9,7 @@ import numpy as np
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import get_bbox_from_bool_mask
+from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.torch import cuda_is_available, empty_cuda_cache
 
 logger = logging.getLogger(__name__)
@@ -278,10 +279,8 @@ class MmdetDetectionModel(DetectionModel):
         category_mapping = self.category_mapping
 
         # compatilibty for sahi v0.8.15
-        if isinstance(shift_amount_list[0], int):
-            shift_amount_list = [shift_amount_list]
-        if full_shape_list is not None and isinstance(full_shape_list[0], int):
-            full_shape_list = [full_shape_list]
+        shift_amount_list = fix_shift_amount_list(shift_amount_list)
+        full_shape_list = fix_full_shape_list(full_shape_list)
 
         # parse boxes and masks from predictions
         num_categories = self.num_categories
@@ -442,10 +441,8 @@ class Yolov5DetectionModel(DetectionModel):
         original_predictions = self._original_predictions
 
         # compatilibty for sahi v0.8.15
-        if isinstance(shift_amount_list[0], int):
-            shift_amount_list = [shift_amount_list]
-        if full_shape_list is not None and isinstance(full_shape_list[0], int):
-            full_shape_list = [full_shape_list]
+        shift_amount_list = fix_shift_amount_list(shift_amount_list)
+        full_shape_list = fix_full_shape_list(full_shape_list)
 
         # handle all predictions
         object_prediction_list_per_image = []

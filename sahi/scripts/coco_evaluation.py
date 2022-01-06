@@ -57,16 +57,16 @@ def _cocoeval_summarize(
     return mean_s
 
 
-def evaluate_coco(
+def evaluate_core(
     dataset_path,
     result_path,
-    metric="bbox",
-    classwise=False,
-    max_detections=500,
+    metric: str = "bbox",
+    classwise: bool = False,
+    max_detections: int = 500,
     iou_thrs=None,
     metric_items=None,
-    out_dir=None,
-    areas=None,
+    out_dir: str = None,
+    areas: List[int] = [1024, 9216, 10000000000],
     COCO=None,
     COCOeval=None,
 ):
@@ -94,7 +94,10 @@ def evaluate_coco(
         out_dir (str): Directory to save evaluation result json.
         areas (List[int]): area regions for coco evaluation calculations
     Returns:
-        dict[str, float]: COCO style evaluation metric.
+        dict:
+            eval_results (dict[str, float]): COCO style evaluation metric.
+            export_path (str): Path for the exported eval result json.
+
     """
 
     metrics = metric if isinstance(metric, list) else [metric]
@@ -333,15 +336,15 @@ def evaluate_coco(
     if not out_dir:
         out_dir = Path(result_path).parent
     Path(out_dir).mkdir(parents=True, exist_ok=True)
-    save_path = str(Path(out_dir) / "eval.json")
+    export_path = str(Path(out_dir) / "eval.json")
     # export as json
-    with open(save_path, "w", encoding="utf-8") as outfile:
+    with open(export_path, "w", encoding="utf-8") as outfile:
         json.dump(eval_results, outfile, indent=4, separators=(",", ":"))
-    print(f"COCO evaluation results are successfully exported to {save_path}")
-    return eval_results
+    print(f"COCO evaluation results are successfully exported to {export_path}")
+    return {"eval_results": eval_results, "export_path": export_path}
 
 
-def main(
+def evaluate(
     dataset_json_path: str,
     result_json_path: str,
     out_dir: str = None,
@@ -350,6 +353,7 @@ def main(
     max_detections: int = 500,
     iou_thrs: Union[List[float], float] = None,
     areas: List[int] = [1024, 9216, 10000000000],
+    return_dict: bool = False,
 ):
     """
     Args:
@@ -361,6 +365,7 @@ def main(
         max_detections (int): Maximum number of detections to consider for AP alculation. Default: 500
         iou_thrs (float): IoU threshold used for evaluating recalls/mAPs
         areas (List[int]): area regions for coco evaluation calculations
+        return_dict (bool): If True, returns a dict with 'eval_results' 'export_path' fields.
     """
     try:
         from pycocotools.coco import COCO
@@ -371,7 +376,7 @@ def main(
         )
 
     # perform coco eval
-    eval_results = evaluate_coco(
+    result = evaluate_core(
         dataset_json_path,
         result_json_path,
         type,
@@ -383,7 +388,9 @@ def main(
         COCO=COCO,
         COCOeval=COCOeval,
     )
+    if return_dict:
+        return result
 
 
 if __name__ == "__main__":
-    fire.Fire(main)
+    fire.Fire(evaluate)

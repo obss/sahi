@@ -20,7 +20,7 @@ def main(
         image_dir (str): directory for coco images
         dataset_json_path (str): file path for the coco dataset json file
         result_json_paths (str): one or more paths for the coco result json file
-        iou_thresh (str): iou threshold for coco evaluation
+        iou_thresh (float): iou threshold for coco evaluation
     """
 
     from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file, fo
@@ -91,7 +91,7 @@ def main(
             gt_field="ground_truth",
             eval_key=f"{first_coco_result_name}_eval",
             iou=iou_thresh,
-            compute_mAP=True,
+            compute_mAP=False,
         )
         # Get the 10 most common classes in the dataset
         counts = dataset.count_values("ground_truth.detections.label")

@@ -322,6 +322,7 @@ def predict(
     visual_text_thickness: int = None,
     visual_export_format: str = "png",
     verbose: int = 1,
+    return_dict: bool = False,
 ):
     """
     Performs prediction for all present images in given folder.
@@ -391,6 +392,8 @@ def predict(
             0: no print
             1: print slice/prediction durations, number of slices
             2: print model loading/file exporting durations
+        return_dict: bool
+            If True, returns a dict with 'export_dir' field.
     """
     # assert prediction type
     assert (
@@ -406,17 +409,13 @@ def predict(
         image_path_list = [str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images]
         coco_json = []
     elif os.path.isdir(source):
-        time_start = time.time()
         image_path_list = list_files(
             directory=source,
-            contains=[".jpg", ".jpeg", ".png"],
+            contains=[".jpg", ".jpeg", ".png", ".tiff", ".bmp"],
             verbose=verbose,
         )
-        time_end = time.time() - time_start
-        durations_in_seconds["list_files"] = time_end
     else:
         image_path_list = [source]
-        durations_in_seconds["list_files"] = 0
 
     # init export directories
     save_dir = Path(increment_path(Path(project) / name, exist_ok=False))  # increment run
@@ -450,10 +449,10 @@ def predict(
     for ind, image_path in enumerate(tqdm(image_path_list, "Performing inference on images")):
         # get filename
         if os.path.isdir(source):  # preserve source folder structure in export
-            relative_filepath = image_path.split(source)[-1]
+            relative_filepath = str(Path(image_path)).split(str(Path(source)))[-1]
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
         else:  # no process if source is single file
-            relative_filepath = image_path
+            relative_filepath = Path(image_path).name
         filename_without_extension = Path(relative_filepath).stem
         # load image
         image_as_pil = read_image_as_pil(image_path)
@@ -600,6 +599,9 @@ def predict(
                 durations_in_seconds["export_files"],
                 "seconds.",
             )
+
+    if return_dict:
+        return {"export_dir": save_dir}
 
 
 def predict_fiftyone(
