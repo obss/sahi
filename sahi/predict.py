@@ -29,6 +29,8 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "yolov5": "Yolov5DetectionModel",
 }
 
+LOW_MODEL_CONFIDENCE = 0.1
+
 
 logger = logging.getLogger(__name__)
 
@@ -322,6 +324,7 @@ def predict(
     visual_export_format: str = "png",
     verbose: int = 1,
     return_dict: bool = False,
+    force_postprocess_type: bool = False,
 ):
     """
     Performs prediction for all present images in given folder.
@@ -393,11 +396,21 @@ def predict(
             2: print model loading/file exporting durations
         return_dict: bool
             If True, returns a dict with 'export_dir' field.
+        force_postprocess_type: bool
+            If True, auto postprocess check will e disabled
     """
     # assert prediction type
     assert (
         no_standard_prediction and no_sliced_prediction
     ) is not True, "'no_standard_prediction' and 'no_sliced_prediction' cannot be True at the same time."
+
+    # auto postprocess type
+    if not force_postprocess_type and model_confidence_threshold < LOW_MODEL_CONFIDENCE and postprocess_type != "NMS":
+        logger.warning(
+            f"Switching postprocess type/metric to NMS/IOU since confidence threshold is low ({model_confidence_threshold})."
+        )
+        postprocess_type = "NMS"
+        postprocess_match_metric = "IOU"
 
     # for profiling
     durations_in_seconds = dict()
