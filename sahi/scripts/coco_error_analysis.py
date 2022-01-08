@@ -391,7 +391,7 @@ def analyse(
     result_json_path: str,
     out_dir: str = None,
     type: str = "bbox",
-    extraplots: bool = False,
+    no_extraplots: bool = False,
     areas: List[int] = [1024, 9216, 10000000000],
     max_detections: int = 500,
     return_dict: bool = False,
@@ -401,7 +401,7 @@ def analyse(
         dataset_json_path (str): file path for the coco dataset json file
         result_json_paths (str): file path for the coco result json file
         out_dir (str): dir to save analyse result images
-        extraplots (bool): export extra bar/stat plots
+        no_extraplots (bool): dont export export extra bar/stat plots
         type (str): 'bbox' or 'mask'
         areas (List[int]): area regions for coco evaluation calculations
         max_detections (int): Maximum number of detections to consider for AP alculation. Default: 500
@@ -426,7 +426,7 @@ def analyse(
         dataset_json_path,
         res_types=[type],
         out_dir=out_dir,
-        extraplots=extraplots,
+        extraplots=not no_extraplots,
         areas=areas,
         max_detections=max_detections,
         COCO=COCO,
