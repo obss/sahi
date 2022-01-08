@@ -7,29 +7,39 @@ from typing import List
 import fire
 import numpy as np
 
+COLOR_PALETTE = np.vstack(
+    [
+        np.array([0.8, 0.8, 0.8]),
+        np.array([0.6, 0.6, 0.6]),
+        np.array([0.31, 0.51, 0.74]),
+        np.array([0.75, 0.31, 0.30]),
+        np.array([0.36, 0.90, 0.38]),
+        np.array([0.50, 0.39, 0.64]),
+        np.array([1, 0.6, 0]),
+    ]
+)
+
 
 def _makeplot(rs, ps, outDir, class_name, iou_type):
     import matplotlib.pyplot as plt
 
     export_path_list = []
 
-    cs = np.vstack(
-        [
-            np.ones((2, 3)),
-            np.array([0.31, 0.51, 0.74]),
-            np.array([0.75, 0.31, 0.30]),
-            np.array([0.36, 0.90, 0.38]),
-            np.array([0.50, 0.39, 0.64]),
-            np.array([1, 0.6, 0]),
-        ]
-    )
     areaNames = ["allarea", "small", "medium", "large"]
     types = ["C75", "C50", "Loc", "Sim", "Oth", "BG", "FN"]
     for i in range(len(areaNames)):
         area_ps = ps[..., i, 0]
         figure_title = iou_type + "-" + class_name + "-" + areaNames[i]
-        aps = [ps_.mean() for ps_ in area_ps]
-        ps_curve = [ps_.mean(axis=1) if ps_.ndim > 1 else ps_ for ps_ in area_ps]
+        aps = [ps_[ps_ > -1].mean() for ps_ in area_ps]
+        ps_curve = []
+        for ps_ in area_ps:
+            if ps_.ndim > 1:
+                ps_mean = np.zeros((ps_.shape[0],))
+                for ind, ps_threshold in enumerate(ps_):
+                    ps_mean[ind] = ps_threshold[ps_threshold > -1].mean()
+                ps_curve.append(ps_mean)
+            else:
+                ps_curve.append(ps_)
         ps_curve.insert(0, np.zeros(ps_curve[0].shape))
         fig = plt.figure()
         ax = plt.subplot(111)
@@ -39,7 +49,7 @@ def _makeplot(rs, ps, outDir, class_name, iou_type):
                 rs,
                 ps_curve[k],
                 ps_curve[k + 1],
-                color=cs[k],
+                color=COLOR_PALETTE[k],
                 label=str(f"[{aps[k]:.3f}]" + types[k]),
             )
         plt.xlabel("recall")
@@ -86,15 +96,16 @@ def _makebarplot(rs, ps, outDir, class_name, iou_type):
     width = 0.60  # the width of the bars
     rects_list = []
     figure_title = iou_type + "-" + class_name + "-" + "ap bar plot"
-    for i in range(len(types) - 1):
-        type_ps = ps[i, ..., 0]
+    for k in range(len(types) - 1):
+        type_ps = ps[k, ..., 0]
         aps = [ps_[ps_ > -1].mean() for ps_ in type_ps.T]
         rects_list.append(
             ax.bar(
-                x - width / 2 + (i + 1) * width / len(types),
+                x - width / 2 + (k + 1) * width / len(types),
                 aps,
                 width / len(types),
-                label=types[i],
+                label=types[k],
+                color=COLOR_PALETTE[k],
             )
         )
 
@@ -391,7 +402,7 @@ def analyse(
     result_json_path: str,
     out_dir: str = None,
     type: str = "bbox",
-    extraplots: bool = False,
+    no_extraplots: bool = False,
     areas: List[int] = [1024, 9216, 10000000000],
     max_detections: int = 500,
     return_dict: bool = False,
@@ -401,7 +412,7 @@ def analyse(
         dataset_json_path (str): file path for the coco dataset json file
         result_json_paths (str): file path for the coco result json file
         out_dir (str): dir to save analyse result images
-        extraplots (bool): export extra bar/stat plots
+        no_extraplots (bool): dont export export extra bar/stat plots
         type (str): 'bbox' or 'mask'
         areas (List[int]): area regions for coco evaluation calculations
         max_detections (int): Maximum number of detections to consider for AP alculation. Default: 500
@@ -426,7 +437,7 @@ def analyse(
         dataset_json_path,
         res_types=[type],
         out_dir=out_dir,
-        extraplots=extraplots,
+        extraplots=not no_extraplots,
         areas=areas,
         max_detections=max_detections,
         COCO=COCO,
