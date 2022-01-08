@@ -30,9 +30,10 @@ def _makeplot(rs, ps, outDir, class_name, iou_type):
     for i in range(len(areaNames)):
         area_ps = ps[..., i, 0]
         figure_title = iou_type + "-" + class_name + "-" + areaNames[i]
-        aps = [ps_[ps_ > -1].mean() for ps_ in area_ps]
+        aps = []
         ps_curve = []
         for ps_ in area_ps:
+            # calculate roc curve
             if ps_.ndim > 1:
                 ps_mean = np.zeros((ps_.shape[0],))
                 for ind, ps_threshold in enumerate(ps_):
@@ -40,6 +41,12 @@ def _makeplot(rs, ps, outDir, class_name, iou_type):
                 ps_curve.append(ps_mean)
             else:
                 ps_curve.append(ps_)
+            # calculate ap
+            if len(ps_[ps_ > -1]):
+                ap = ps_[ps_ > -1].mean()
+            else:
+                ap = np.array(0)
+            aps.append(ap)
         ps_curve.insert(0, np.zeros(ps_curve[0].shape))
         fig = plt.figure()
         ax = plt.subplot(111)
@@ -98,7 +105,15 @@ def _makebarplot(rs, ps, outDir, class_name, iou_type):
     figure_title = iou_type + "-" + class_name + "-" + "ap bar plot"
     for k in range(len(types) - 1):
         type_ps = ps[k, ..., 0]
-        aps = [ps_[ps_ > -1].mean() for ps_ in type_ps.T]
+        # calculate ap
+        aps = []
+        for ps_ in type_ps.T:
+            if len(ps_[ps_ > -1]):
+                ap = ps_[ps_ > -1].mean()
+            else:
+                ap = np.array(0)
+            aps.append(ap)
+        # create bars
         rects_list.append(
             ax.bar(
                 x - width / 2 + (k + 1) * width / len(types),
