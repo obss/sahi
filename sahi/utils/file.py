@@ -101,9 +101,9 @@ def list_files(
             filepath_list.append(filepath)
 
     number_of_files = len(filepath_list)
-    folder_name = directory.split(os.sep)[-1]
+    folder_name = Path(directory).name
 
-    verboseprint("There are {} listed files in folder {}.".format(number_of_files, folder_name))
+    verboseprint(f"There are {str(number_of_files)} listed files in folder: {folder_name}/")
 
     return filepath_list
 
