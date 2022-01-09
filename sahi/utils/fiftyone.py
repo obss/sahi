@@ -1,9 +1,17 @@
 import os
+import subprocess
+import sys
 
 try:
+    # to fix https://github.com/voxel51/fiftyone/issues/845
+    if sys.platform == "win32":
+        _ = subprocess.run("tskill mongod", stderr=subprocess.DEVNULL)
+    else:
+        _ = subprocess.run(["pkill", "mongod"], stderr=subprocess.DEVNULL)
+    # import fo utilities
     import fiftyone as fo
     from fiftyone.utils.coco import COCODetectionDatasetImporter as BaseCOCODetectionDatasetImporter
-    from fiftyone.utils.coco import _get_matching_image_ids, load_coco_detection_annotations
+    from fiftyone.utils.coco import _get_matching_image_ids, add_coco_labels, load_coco_detection_annotations
 except ModuleNotFoundError:
     raise ModuleNotFoundError('Please run "pip install -U fiftyone" to install fiftyone first for fiftyone utilities.')
 
@@ -58,8 +66,8 @@ class COCODetectionDatasetImporter(BaseCOCODetectionDatasetImporter):
 
 
 def create_fiftyone_dataset_from_coco_file(coco_image_dir: str, coco_json_path: str):
-    coco_importer = COCODetectionDatasetImporter(data_path=coco_image_dir, labels_path=coco_json_path)
-    dataset = fo.Dataset.from_importer(coco_importer)
+    coco_importer = COCODetectionDatasetImporter(data_path=coco_image_dir, labels_path=coco_json_path, include_id=True)
+    dataset = fo.Dataset.from_importer(coco_importer, label_field="gt")
     return dataset
 
 
