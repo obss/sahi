@@ -22,7 +22,7 @@ class ObjectPredictionList(Sequence):
             accessed_mapping = map(self.list.__getitem__, i)
             return ObjectPredictionList(list(accessed_mapping))
         else:
-            raise NotImplementedError(f'{type(i)}')
+            raise NotImplementedError(f"{type(i)}")
 
     def __setitem__(self, i, elem):
         if torch.is_tensor(i) or isinstance(i, np.ndarray):
@@ -39,7 +39,7 @@ class ObjectPredictionList(Sequence):
                 for ind, el in enumerate(elem):
                     self.list[i[ind]] = el
         else:
-            raise NotImplementedError(f'{type(i)}')
+            raise NotImplementedError(f"{type(i)}")
 
     def __len__(self):
         return len(self.list)
