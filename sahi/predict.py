@@ -30,6 +30,8 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "detectron2": "Detectron2DetectionModel",
 }
 
+LOW_MODEL_CONFIDENCE = 0.1
+
 
 logger = logging.getLogger(__name__)
 
@@ -323,6 +325,7 @@ def predict(
     visual_export_format: str = "png",
     verbose: int = 1,
     return_dict: bool = False,
+    force_postprocess_type: bool = False,
 ):
     """
     Performs prediction for all present images in given folder.
@@ -394,11 +397,21 @@ def predict(
             2: print model loading/file exporting durations
         return_dict: bool
             If True, returns a dict with 'export_dir' field.
+        force_postprocess_type: bool
+            If True, auto postprocess check will e disabled
     """
     # assert prediction type
     assert (
         no_standard_prediction and no_sliced_prediction
     ) is not True, "'no_standard_prediction' and 'no_sliced_prediction' cannot be True at the same time."
+
+    # auto postprocess type
+    if not force_postprocess_type and model_confidence_threshold < LOW_MODEL_CONFIDENCE and postprocess_type != "NMS":
+        logger.warning(
+            f"Switching postprocess type/metric to NMS/IOU since confidence threshold is low ({model_confidence_threshold})."
+        )
+        postprocess_type = "NMS"
+        postprocess_match_metric = "IOU"
 
     # for profiling
     durations_in_seconds = dict()
@@ -574,7 +587,7 @@ def predict(
         save_json(coco_json, save_path)
 
     if export_visual or export_pickle or export_crop or dataset_json_path is not None:
-        print(f"Prediction results are sucessfully exported to {save_dir}")
+        print(f"Prediction results are successfully exported to {save_dir}")
 
     # print prediction duration
     if verbose == 2:

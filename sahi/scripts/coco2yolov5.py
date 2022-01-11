@@ -38,7 +38,7 @@ def main(
         numpy_seed=seed,
     )
 
-    print(f"COCO to YOLOv5 conversion results are sucessfully exported to {save_dir}")
+    print(f"COCO to YOLOv5 conversion results are successfully exported to {save_dir}")
 
 
 if __name__ == "__main__":
