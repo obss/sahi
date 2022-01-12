@@ -743,6 +743,6 @@ class LSNMSPostprocess(PostprocessPredictions):
             boxes, scores, iou_threshold=self.match_threshold, class_ids=None if self.class_agnostic else class_ids
         )
 
-        selected_object_predictions = object_prediction_list[keep]
+        selected_object_predictions = object_prediction_list[keep].tolist()
 
         return selected_object_predictions
