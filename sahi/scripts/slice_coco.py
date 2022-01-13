@@ -36,9 +36,9 @@ def slice(
     # slice coco dataset images and annotations
     print("Slicing step is starting...")
     for slice_size in slice_size_list:
-        output_images_folder_name = get_base_filename(dataset_json_path)[1] + "_sliced_images_" + str(slice_size) + "/"
-        output_images_dir = os.path.join(output_dir, output_images_folder_name)
-        sliced_coco_name = get_base_filename(dataset_json_path)[0].replace(".json", "_sliced_" + str(slice_size))
+        output_images_folder_name = Path(dataset_json_path).stem + "_sliced_images_" + str(slice_size)
+        output_images_dir = str(Path(output_dir) / output_images_folder_name)
+        sliced_coco_name = Path(dataset_json_path).name.replace(".json", "_sliced_" + str(slice_size))
         coco_dict, coco_path = slice_coco(
             coco_annotation_file_path=dataset_json_path,
             image_dir=image_dir,
