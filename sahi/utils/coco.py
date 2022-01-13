@@ -1690,12 +1690,12 @@ def merge(coco_dict1: dict, coco_dict2: dict, desired_name2id: dict = None) -> d
     merged_coco_dict = temp_coco_dict1
 
     for image in temp_coco_dict2["images"]:
-        image["id"] += max_image_id
+        image["id"] += max_image_id + 1
         merged_coco_dict["images"].append(image)
 
     for annotation in temp_coco_dict2["annotations"]:
         annotation["image_id"] += max_image_id
-        annotation["id"] += max_annotation_id
+        annotation["id"] += max_annotation_id + 1
         merged_coco_dict["annotations"].append(annotation)
 
     return merged_coco_dict
