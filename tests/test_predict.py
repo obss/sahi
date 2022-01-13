@@ -208,7 +208,7 @@ class TestPredict(unittest.TestCase):
         slice_width = 512
         overlap_height_ratio = 0.1
         overlap_width_ratio = 0.2
-        postprocess_type = "UNIONMERGE"
+        postprocess_type = "GREEDYNMM"
         match_metric = "IOS"
         match_threshold = 0.5
         class_agnostic = True
@@ -230,7 +230,7 @@ class TestPredict(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 11)
+        self.assertEqual(len(object_prediction_list), 10)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -245,7 +245,7 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 11)
+        self.assertEqual(num_car, 10)
 
     def test_coco_json_prediction(self):
         from sahi.predict import predict

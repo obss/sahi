@@ -535,6 +535,8 @@ class ObjectAnnotation:
             # https://github.com/obss/sahi/issues/235
             if bbox_from_bool_mask is not None:
                 bbox = bbox_from_bool_mask
+            else:
+                raise ValueError("Invalid boolean mask.")
         else:
             self.mask = None
 

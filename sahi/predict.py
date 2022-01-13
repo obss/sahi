@@ -27,6 +27,7 @@ from sahi.utils.file import Path, import_class, increment_path, list_files, save
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "mmdet": "MmdetDetectionModel",
     "yolov5": "Yolov5DetectionModel",
+    "detectron2": "Detectron2DetectionModel",
 }
 
 LOW_MODEL_CONFIDENCE = 0.1
