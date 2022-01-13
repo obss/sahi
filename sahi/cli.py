@@ -6,13 +6,13 @@ from sahi.scripts.coco2fiftyone import main as coco2fiftyone
 from sahi.scripts.coco2yolov5 import main as coco2yolov5
 from sahi.scripts.coco_error_analysis import analyse
 from sahi.scripts.coco_evaluation import evaluate
-from sahi.scripts.slice_coco import main as slice_coco
+from sahi.scripts.slice_coco import slice
 
 coco_app = {
     "evaluate": evaluate,
     "analyse": analyse,
     "fiftyone": coco2fiftyone,
-    "slice": slice_coco,
+    "slice": slice,
     "yolov5": coco2yolov5,
 }
 
