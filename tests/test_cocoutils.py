@@ -500,7 +500,7 @@ class TestCocoUtils(unittest.TestCase):
         )
         self.assertEqual(
             merged_coco_dict["annotations"][12]["image_id"],
-            3,
+            4,
         )
         self.assertEqual(
             merged_coco_dict["annotations"][9]["category_id"],
