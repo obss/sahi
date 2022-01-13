@@ -36,7 +36,10 @@ def slice(
     # slice coco dataset images and annotations
     print("Slicing step is starting...")
     for slice_size in slice_size_list:
-        output_images_folder_name = Path(dataset_json_path).stem + "_sliced_images_" + str(slice_size)
+        # in format: train_images_512_01
+        output_images_folder_name = (
+            Path(dataset_json_path).stem + f"_images_{str(slice_size)}_{str(overlap_ratio).replace('.','')}"
+        )
         output_images_dir = str(Path(output_dir) / output_images_folder_name)
         sliced_coco_name = Path(dataset_json_path).name.replace(".json", "_sliced_" + str(slice_size))
         coco_dict, coco_path = slice_coco(
