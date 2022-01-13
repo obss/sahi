@@ -1684,18 +1684,18 @@ def merge(coco_dict1: dict, coco_dict2: dict, desired_name2id: dict = None) -> d
         temp_coco_dict2 = update_categories(desired_name2id, temp_coco_dict2)
 
     # calculate first image and annotation index of the second coco file
-    last_image_id = coco_dict1["images"][-1]["id"]
-    last_annotation_id = coco_dict1["annotations"][-1]["id"]
+    max_image_id = np.array([image["id"] for image in coco_dict1["images"]]).max()
+    max_annotation_id = np.array([annotation["id"] for annotation in coco_dict1["annotations"]]).max()
 
     merged_coco_dict = temp_coco_dict1
 
     for image in temp_coco_dict2["images"]:
-        image["id"] += last_image_id
+        image["id"] += max_image_id + 1
         merged_coco_dict["images"].append(image)
 
     for annotation in temp_coco_dict2["annotations"]:
-        annotation["image_id"] += last_image_id
-        annotation["id"] += last_annotation_id
+        annotation["image_id"] += max_image_id
+        annotation["id"] += max_annotation_id + 1
         merged_coco_dict["annotations"].append(annotation)
 
     return merged_coco_dict

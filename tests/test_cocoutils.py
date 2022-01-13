@@ -461,7 +461,7 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(merged_coco_dict["annotations"][6]["id"], 7)
         self.assertEqual(merged_coco_dict["annotations"][7]["category_id"], 2)
         self.assertEqual(merged_coco_dict["annotations"][7]["image_id"], 2)
-        self.assertEqual(merged_coco_dict["annotations"][7]["id"], 8)
+        self.assertEqual(merged_coco_dict["annotations"][7]["id"], 9)
 
     def test_merge_from_list(self):
         from sahi.utils.coco import merge_from_list
@@ -496,11 +496,11 @@ class TestCocoUtils(unittest.TestCase):
         )
         self.assertEqual(
             merged_coco_dict["annotations"][12]["id"],
-            13,
+            15,
         )
         self.assertEqual(
             merged_coco_dict["annotations"][12]["image_id"],
-            3,
+            4,
         )
         self.assertEqual(
             merged_coco_dict["annotations"][9]["category_id"],
