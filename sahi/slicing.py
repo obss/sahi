@@ -455,7 +455,7 @@ def slice_coco(
     )
     save_path = ""
     if output_coco_annotation_file_name and output_dir:
-        save_path = os.path.join(output_dir, output_coco_annotation_file_name + "_coco.json")
+        save_path = Path(output_dir) / (output_coco_annotation_file_name + "_coco.json")
         save_json(coco_dict, save_path)
 
     return coco_dict, save_path
