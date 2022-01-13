@@ -6,14 +6,13 @@ from sahi.slicing import slice_coco
 from sahi.utils.file import Path, get_base_filename, increment_path, save_json
 
 
-def main(
+def slice(
     image_dir: str,
     dataset_json_path: str,
     slice_size: int = 512,
     overlap_ratio: float = 0.2,
     ignore_negative_samples: bool = False,
-    project: str = "runs/slice_coco",
-    name: str = "exp",
+    output_dir: str = "runs/slice_coco",
     min_area_ratio: float = 0.1,
 ):
     """
@@ -23,8 +22,7 @@ def main(
         slice_size (int)
         overlap_ratio (float): slice overlap ratio
         ignore_negative_samples (bool): ignore images without annotation
-        project (str): save results to project/name
-        name (str): save results to project/name
+        output_dir (str): output export dir
         min_area_ratio (float): If the cropped annotation area to original
             annotation ratio is smaller than this value, the annotation
             is filtered out. Default 0.1.
@@ -32,11 +30,8 @@ def main(
 
     # assure slice_size is list
     slice_size_list = slice_size
-    if isinstance(slice_size_list, int):
+    if isinstance(slice_size_list, (int, float)):
         slice_size_list = [slice_size_list]
-
-    # set output dir
-    output_dir = Path(increment_path(Path(project) / name, exist_ok=False))  # increment run
 
     # slice coco dataset images and annotations
     print("Slicing step is starting...")
@@ -64,4 +59,4 @@ def main(
 
 
 if __name__ == "__main__":
-    fire.Fire(main)
+    fire.Fire(slice)
