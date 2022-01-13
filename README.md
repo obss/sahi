@@ -126,27 +126,27 @@ pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113
 
 <img width="700" alt="sahi-predict" src="https://user-images.githubusercontent.com/34196005/149310540-e32f504c-6c9e-4691-8afd-59f3a1a457f0.gif">
 
-<b>Find detailed info on `sahi predict` command at [cli.md](docs/cli.md#predict-command-usage).</b>
+Find detailed info on `sahi predict` command at [cli.md](docs/cli.md#predict-command-usage).
 
-<b>Find detailed info on image/dataset slicing utilities at [slicing.md](docs/slicing.md).</b>
+Find detailed info on image/dataset slicing utilities at [slicing.md](docs/slicing.md).
 
 ### Error Analysis Plots & Evaluation
 
 <img width="700" alt="sahi-analyse" src="https://user-images.githubusercontent.com/34196005/149320775-a5c74722-d7c0-44ca-be80-5380a05fc2f8.gif">
 
-<b>Find detailed info at [Error Analysis Plots & Evaluation](https://github.com/obss/sahi/issues/356).</b>
+Find detailed info at [Error Analysis Plots & Evaluation](https://github.com/obss/sahi/issues/356).
 
 ### Interactive Visualization & Inspection
 
 <img width="700" alt="sahi-fiftyone" src="https://user-images.githubusercontent.com/34196005/149321540-e6ddd5f3-36dc-4267-8574-a985dd0c6578.gif">
 
-<b>Find detailed info at [Interactive Result Visualization and Inspection](https://github.com/obss/sahi/issues/357).</b>
+Find detailed info at [Interactive Result Visualization and Inspection](https://github.com/obss/sahi/issues/357).
 
 ### Other utilities
 
-<b>Find detailed info on COCO utilities (yolov5 conversion, slicing, subsampling, filtering, merging, splitting) at [coco.md](docs/coco.md).</b>
+Find detailed info on COCO utilities (yolov5 conversion, slicing, subsampling, filtering, merging, splitting) at [coco.md](docs/coco.md).
 
-<b>Find detailed info on MOT utilities (ground truth dataset creation, exporting tracker metrics in mot challenge format) at [mot.md](docs/mot.md).</b>
+Find detailed info on MOT utilities (ground truth dataset creation, exporting tracker metrics in mot challenge format) at [mot.md](docs/mot.md).
 
 ## <div align="center">Citation</div>
 
