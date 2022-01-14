@@ -132,7 +132,7 @@ Find detailed info on image/dataset slicing utilities at [slicing.md](docs/slici
 
 ### Error Analysis Plots & Evaluation
 
-<img width="700" alt="sahi-analyse" src="https://user-images.githubusercontent.com/34196005/149320775-a5c74722-d7c0-44ca-be80-5380a05fc2f8.gif">
+<img width="700" alt="sahi-analyse" src="https://user-images.githubusercontent.com/34196005/149537858-22b2e274-04e8-4e10-8139-6bdcea32feab.gif">
 
 Find detailed info at [Error Analysis Plots & Evaluation](https://github.com/obss/sahi/issues/356).
 
