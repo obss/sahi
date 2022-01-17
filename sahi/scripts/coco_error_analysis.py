@@ -33,7 +33,7 @@ def _makeplot(rs, ps, outDir, class_name, iou_type):
         aps = []
         ps_curve = []
         for ps_ in area_ps:
-            # calculate roc curve
+            # calculate precision recal curves
             if ps_.ndim > 1:
                 ps_mean = np.zeros((ps_.shape[0],))
                 for ind, ps_threshold in enumerate(ps_):
@@ -377,18 +377,18 @@ def _analyse_results(
             ps[5, :, k, :, :][ps[4, :, k, :, :] > 0] = 1
             ps[6, :, k, :, :] = 1.0
 
-            roc_curve_export_path_list = _makeplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
+            curve_export_path_list = _makeplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
 
             if extraplots:
                 bar_plot_path = _makebarplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
             else:
                 bar_plot_path = None
             classname_to_export_path_list[nm["name"]] = {
-                "roc_curves": roc_curve_export_path_list,
+                "curves": curve_export_path_list,
                 "bar_plot": bar_plot_path,
             }
 
-        roc_curve_export_path_list = _makeplot(recThrs, ps, res_out_dir, "allclass", iou_type)
+        curve_export_path_list = _makeplot(recThrs, ps, res_out_dir, "allclass", iou_type)
         if extraplots:
             bar_plot_path = _makebarplot(recThrs, ps, res_out_dir, "allclass", iou_type)
             gt_area_group_numbers_plot_path = _make_gt_area_group_numbers_plot(
@@ -402,7 +402,7 @@ def _analyse_results(
             "classwise": classname_to_export_path_list,
             "overall": {
                 "bar_plot": bar_plot_path,
-                "roc_curves": roc_curve_export_path_list,
+                "curves": curve_export_path_list,
                 "gt_area_group_numbers": gt_area_group_numbers_plot_path,
                 "gt_area_histogram": gt_area_histogram_plot_path,
             },
