@@ -28,6 +28,7 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "mmdet": "MmdetDetectionModel",
     "yolov5": "Yolov5DetectionModel",
     "detectron2": "Detectron2DetectionModel",
+    "torchvision": "TorchVisionDetectionModel",
 }
 
 LOW_MODEL_CONFIDENCE = 0.1

@@ -6,7 +6,7 @@ import unittest
 
 from sahi.model import TorchVisionDetectionModel
 from sahi.utils.cv import read_image
-from sahi.utils.torchvision import TorchVisionTestConstants, classes
+from sahi.utils.torchvision import TorchVisionTestConstants
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -15,19 +15,21 @@ IMAGE_SIZE = 320
 
 class TestTorchVisionDetectionModel(unittest.TestCase):
     def test_load_model(self):
-        TorchVision_detection_model = TorchVisionDetectionModel(
-            model_path=TorchVisionTestConstants.fasterrcnn_resnet50,
+        torchvision_detection_model = TorchVisionDetectionModel(
+            model_path=TorchVisionTestConstants.FASTERCNN_CONFIG_PATH,
+            config_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
             image_size=IMAGE_SIZE,
         )
-        self.assertNotEqual(TorchVision_detection_model.model, None)
+        self.assertNotEqual(torchvision_detection_model.model, None)
 
     def test_perform_inference_without_mask_output(self):
-        TorchVision_detection_model = TorchVisionDetectionModel(
-            model_path=TorchVisionTestConstants.fasterrcnn_resnet50,
+        torchvision_detection_model = TorchVisionDetectionModel(
+            model_path=TorchVisionTestConstants.FASTERCNN_CONFIG_PATH,
+            config_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -39,8 +41,8 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         image = read_image(image_path)
 
         # perform inference
-        TorchVision_detection_model.perform_inference(image)
-        original_predictions = TorchVision_detection_model.original_predictions
+        torchvision_detection_model.perform_inference(image)
+        original_predictions = torchvision_detection_model.original_predictions
 
         boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
         scores = original_predictions["instances"].scores.cpu().numpy()
@@ -56,8 +58,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(len(boxes), 35)
 
     def test_convert_original_predictions_without_mask_output(self):
-        TorchVision_detection_model = TorchVisionDetectionModel(
-            model_path=TorchVisionTestConstants.fasterrcnn_resnet50,
+        torchvision_detection_model = TorchVisionDetectionModel(
+            model_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            config_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -66,15 +69,15 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_path = "data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
-        TorchVision_detection_model.perform_inference(image)
+        torchvision_detection_model.perform_inference(image)
 
         # convert predictions to ObjectPrediction list
-        TorchVision_detection_model.convert_original_predictions()
-        object_prediction_list = TorchVision_detection_model.object_prediction_list
+        torchvision_detection_model.convert_original_predictions()
+        object_prediction_list = torchvision_detection_model.object_prediction_list
 
         # compare
         self.assertEqual(len(object_prediction_list), 16)
@@ -97,8 +100,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
                 raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
     def test_convert_original_predictions_with_mask_output(self):
-        TorchVision_detection_model = TorchVisionDetectionModel(
-            model_path=TorchVisionTestConstants.fasterrcnn_resnet50,
+        torchvision_detection_model = TorchVisionDetectionModel(
+            model_path=TorchVisionTestConstants.FASTERCNN_CONFIG_PATH,
+            config_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -107,15 +111,15 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_path = "data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
-        TorchVision_detection_model.perform_inference(image)
+        torchvision_detection_model.perform_inference(image)
 
         # convert predictions to ObjectPrediction list
-        TorchVision_detection_model.convert_original_predictions()
-        object_prediction_list = TorchVision_detection_model.object_prediction_list
+        torchvision_detection_model.convert_original_predictions()
+        object_prediction_list = torchvision_detection_model.object_prediction_list
 
         # compare
         self.assertEqual(len(object_prediction_list), 13)
@@ -141,15 +145,16 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         from sahi.predict import get_prediction
 
         # init model
-        TorchVision_detection_model = TorchVisionDetectionModel(
-            model_path=TorchVisionTestConstants.fasterrcnn_resnet50,
+        torchvision_detection_model = TorchVisionDetectionModel(
+            model_path=TorchVisionTestConstants.FASTERCNN_CONFIG_PATH,
+            config_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
-            load_at_init=True,
+            load_at_init=False,
             image_size=IMAGE_SIZE,
         )
-        TorchVision_detection_model.load_model()
+        torchvision_detection_model.load_model()
 
         # prepare image
         image_path = "data/small-vehicles1.jpeg"
@@ -158,7 +163,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         # get full sized prediction
         prediction_result = get_prediction(
             image=image,
-            detection_model=TorchVision_detection_model,
+            detection_model=torchvision_detection_model,
             shift_amount=[0, 0],
             full_shape=None,
             postprocess=None,
@@ -187,15 +192,16 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         from sahi.predict import get_sliced_prediction
 
         # init model
-        TorchVision_detection_model = TorchVisionDetectionModel(
-            model_path=TorchVisionTestConstants.fasterrcnn_resnet50,
+        torchvision_detection_model = TorchVisionDetectionModel(
+            model_path=TorchVisionTestConstants.FASTERCNN_CONFIG_PATH,
+            config_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
-            load_at_init=True,
+            load_at_init=False,
             image_size=IMAGE_SIZE,
         )
-        TorchVision_detection_model.load_model()
+        torchvision_detection_model.load_model()
 
         # prepare image
         image_path = "data/small-vehicles1.jpeg"
@@ -212,7 +218,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         # get sliced prediction
         prediction_result = get_sliced_prediction(
             image=image_path,
-            detection_model=TorchVision_detection_model,
+            detection_model=torchvision_detection_model,
             slice_height=slice_height,
             slice_width=slice_width,
             overlap_height_ratio=overlap_height_ratio,

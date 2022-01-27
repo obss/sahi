@@ -6,6 +6,7 @@ import warnings
 from typing import Dict, List, Optional, Union
 
 import numpy as np
+import torch
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
@@ -671,5 +672,20 @@ class TorchVisionDetectionModel(DetectionModel):
             import torchvision
         except ImportError:
             raise ImportError("torchvision is not installed. Please install torchvision to use this model.")
+
+        # set model
+        try:
+            model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+            model.load_state_dict(torch.load('model.pth'))
+            model = model.to(self.device)
+            self.model = model
+        except Exception as e:
+            raise Exception(f"Failed to load model from {self.model_path}. {e}")
+
+
+
+
+
+
 
 

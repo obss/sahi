@@ -1,13 +1,35 @@
+# OBSS SAHI Tool
+# Code written by Kadir Nar, 2020.
+
 import cv2
 import numpy as np
-import torch
-import torchvision.models.detection as models
+import torchvision
+import urllib.request
+from os import path
+from pathlib import Path
+from typing import Optional
 
 
 class TorchVisionTestConstants:
-    fasterrcnn_resnet50 = models.fasterrcnn_resnet50_fpn(pretrained=True)
-    retinanet_resnet50 = models.retinanet_resnet50_fpn(pretrained=True)
-    maskrcnn_resnet50 = models.maskrcnn_resnet50_fpn(pretrained=True)
+    FASTERCNN_MODEL_ZOO_NAME = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+    #RETINANET_MODEL_ZOO_NAME = detection.retinanet_resnet50_fpn(pretrained=True)
+    #MASKRCNN_MODEL_ZOO_NAME = detection.maskrcnn_resnet50_fpn(pretrained=True)
+
+    FASTERCNN_CONFIG_URL = "https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth"
+    FASTERCNN_CONFIG_PATH = "tests/data/models/torcvhvision/faster_rcnn.pt"
+
+
+def download_torchvision_model(destination_path: Optional[str] = None):
+    if destination_path is None:
+        destination_path = TorchVisionTestConstants.FASTERCNN_CONFIG_PATH
+
+    Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
+
+    if not path.exists(destination_path):
+        urllib.request.urlretrieve(
+            TorchVisionTestConstants.FASTERCNN_CONFIG_URL,
+            destination_path,
+        )
 
 
 classes = (
@@ -52,6 +74,7 @@ def read_image(image, img_size=416):
 
 
 def numpy_to_torch(image):
+    import torch
     image = image.transpose((2, 0, 1))
     image = torch.from_numpy(image).float()
     if image.max() > 1:
