@@ -48,35 +48,56 @@ classes = (
 )
 
 
-def read_image(image, img_size=416):
-    if type(image) == str:
-        image = cv2.imread(image)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+def read_image(img):
+    if type(img) == str:
+        img = cv2.imread(img)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    elif type(image) == bytes:
-        nparr = np.frombuffer(image, np.uint8)
-        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    elif type(img) == bytes:
+        nparr = np.frombuffer(img, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    elif type(image) == np.ndarray:
-        if len(image.shape) == 2:  # grayscale
-            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    elif type(img) == np.ndarray:
+        if len(img.shape) == 2:  # grayscale
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
-        elif len(image.shape) == 3 and image.shape[2] == 3:
-            image = image
+        elif len(img.shape) == 3 and img.shape[2] == 3:
+            img = img
 
-        elif len(image.shape) == 3 and image.shape[2] == 4:  # RGBAscale
-            image = image[:, :, :3]
+        elif len(img.shape) == 3 and img.shape[2] == 4:  # RGBA
+            img = img[:, :, :3]
 
-    image = cv2.resize(image, (img_size, img_size))
-    image = numpy_to_torch(image)
-    return image
+    return img
 
 
-def numpy_to_torch(image):
+def numpy_to_torch(img):
     import torch
-    image = image.transpose((2, 0, 1))
-    image = torch.from_numpy(image).float()
-    if image.max() > 1:
-        image /= 255
+
+    img = img.transpose((2, 0, 1))
+    img = torch.from_numpy(img).float()
+    if img.max() > 1:
+        img /= 255
+    return img
+
+
+def torch_to_numpy(img):
+    img = img.numpy()
+    if img.max() > 1:
+        img /= 255
+    img = img.transpose((1, 2, 0))
+    return img
+
+
+def resize_image(image, long_size, interpolation=cv2.INTER_LINEAR):
+    height, width, channel = image.shape
+
+    # set target image size
+    target_size = long_size
+
+    ratio = target_size / max(height, width)
+
+    target_h, target_w = int(height * ratio), int(width * ratio)
+    image = cv2.resize(image, (target_w, target_h), interpolation=interpolation)
+
     return image
