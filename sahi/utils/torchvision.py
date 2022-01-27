@@ -11,17 +11,17 @@ from typing import Optional
 
 
 class TorchVisionTestConstants:
-    FASTERCNN_MODEL_ZOO_NAME = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
-    #RETINANET_MODEL_ZOO_NAME = detection.retinanet_resnet50_fpn(pretrained=True)
-    #MASKRCNN_MODEL_ZOO_NAME = detection.maskrcnn_resnet50_fpn(pretrained=True)
+    FASTERCNN_CONFIG_ZOO_NAME = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+    #RETINANET_CONFIG_ZOO_NAME = detection.retinanet_resnet50_fpn(pretrained=True)
+    #MASKRCNN_CONFIG_ZOO_NAME = detection.maskrcnn_resnet50_fpn(pretrained=True)
 
     FASTERCNN_CONFIG_URL = "https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth"
-    FASTERCNN_CONFIG_PATH = "tests/data/models/torcvhvision/faster_rcnn.pt"
+    FASTERCNN_MODEL_PATH = "tests/data/models/torcvhvision/faster_rcnn.pt"
 
 
 def download_torchvision_model(destination_path: Optional[str] = None):
     if destination_path is None:
-        destination_path = TorchVisionTestConstants.FASTERCNN_CONFIG_PATH
+        destination_path = TorchVisionTestConstants.FASTERCNN_MODEL_PATH
 
     Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
 

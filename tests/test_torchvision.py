@@ -16,8 +16,8 @@ IMAGE_SIZE = 320
 class TestTorchVisionDetectionModel(unittest.TestCase):
     def test_load_model(self):
         torchvision_detection_model = TorchVisionDetectionModel(
-            model_path=TorchVisionTestConstants.FASTERCNN_CONFIG_PATH,
-            config_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            model_path=TorchVisionTestConstants.FASTERCNN_MODEL_PATH,
+            config_path=TorchVisionTestConstants.FASTERCNN_CONFIG_ZOO_NAME,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -28,8 +28,8 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
 
     def test_perform_inference_without_mask_output(self):
         torchvision_detection_model = TorchVisionDetectionModel(
-            model_path=TorchVisionTestConstants.FASTERCNN_CONFIG_PATH,
-            config_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            model_path=TorchVisionTestConstants.FASTERCNN_MODEL_PATH,
+            config_path=TorchVisionTestConstants.FASTERCNN_CONFIG_ZOO_NAME,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -59,8 +59,8 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
 
     def test_convert_original_predictions_without_mask_output(self):
         torchvision_detection_model = TorchVisionDetectionModel(
-            model_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
-            config_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            model_path=TorchVisionTestConstants.FASTERCNN_MODEL_PATH,
+            config_path=TorchVisionTestConstants.FASTERCNN_CONFIG_ZOO_NAME,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -101,8 +101,8 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
 
     def test_convert_original_predictions_with_mask_output(self):
         torchvision_detection_model = TorchVisionDetectionModel(
-            model_path=TorchVisionTestConstants.FASTERCNN_CONFIG_PATH,
-            config_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            model_path=TorchVisionTestConstants.FASTERCNN_MODEL_PATH,
+            config_path=TorchVisionTestConstants.FASTERCNN_CONFIG_ZOO_NAME,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -146,8 +146,8 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
 
         # init model
         torchvision_detection_model = TorchVisionDetectionModel(
-            model_path=TorchVisionTestConstants.FASTERCNN_CONFIG_PATH,
-            config_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            model_path=TorchVisionTestConstants.FASTERCNN_MODEL_PATH,
+            config_path=TorchVisionTestConstants.FASTERCNN_CONFIG_ZOO_NAME,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -193,8 +193,8 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
 
         # init model
         torchvision_detection_model = TorchVisionDetectionModel(
-            model_path=TorchVisionTestConstants.FASTERCNN_CONFIG_PATH,
-            config_path=TorchVisionTestConstants.FASTERCNN_MODEL_ZOO_NAME,
+            model_path=TorchVisionTestConstants.FASTERCNN_MODEL_PATH,
+            config_path=TorchVisionTestConstants.FASTERCNN_CONFIG_ZOO_NAME,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,

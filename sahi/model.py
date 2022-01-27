@@ -675,12 +675,18 @@ class TorchVisionDetectionModel(DetectionModel):
 
         # set model
         try:
-            model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+            model = self.config_path
             model.load_state_dict(torch.load('model.pth'))
             model = model.to(self.device)
             self.model = model
         except Exception as e:
             raise Exception(f"Failed to load model from {self.model_path}. {e}")
+
+
+
+
+
+
 
 
 
