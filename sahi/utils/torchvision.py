@@ -1,6 +1,14 @@
 import cv2
 import numpy as np
 import torch
+import torchvision.models.detection as models
+
+
+class TorchVisionTestConstants:
+    fasterrcnn_resnet50 = models.fasterrcnn_resnet50_fpn(pretrained=True)
+    retinanet_resnet50 = models.retinanet_resnet50_fpn(pretrained=True)
+    maskrcnn_resnet50 = models.maskrcnn_resnet50_fpn(pretrained=True)
+
 
 classes = (
     '__background__', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
