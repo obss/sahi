@@ -663,3 +663,13 @@ class Detectron2DetectionModel(DetectionModel):
         object_prediction_list_per_image = [object_prediction_list]
 
         self._object_prediction_list_per_image = object_prediction_list_per_image
+
+
+class TorchVisionDetectionModel(DetectionModel):
+    def load_model(self):
+        try:
+            import torchvision
+        except ImportError:
+            raise ImportError("torchvision is not installed. Please install torchvision to use this model.")
+
+
