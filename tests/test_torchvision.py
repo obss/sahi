@@ -4,9 +4,8 @@
 
 import unittest
 
-from sahi.model import TorchVisionDetectionModel
-from sahi.utils.cv import read_image
-from sahi.utils.torchvision import TorchVisionTestConstants
+from sahi.utils.torchvision import read_image
+from sahi.utils.torchvision import TorchVisionTestConstants, download_torchvision_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -15,6 +14,10 @@ IMAGE_SIZE = 320
 
 class TestTorchVisionDetectionModel(unittest.TestCase):
     def test_load_model(self):
+        from sahi.model import TorchVisionDetectionModel
+
+        download_torchvision_model()
+
         torchvision_detection_model = TorchVisionDetectionModel(
             model_path=TorchVisionTestConstants.FASTERCNN_MODEL_PATH,
             config_path=TorchVisionTestConstants.FASTERCNN_CONFIG_ZOO_NAME,
@@ -22,11 +25,15 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
-            image_size=IMAGE_SIZE,
         )
         self.assertNotEqual(torchvision_detection_model.model, None)
 
     def test_perform_inference_without_mask_output(self):
+        from sahi.model import TorchVisionDetectionModel
+
+        #init model
+        download_torchvision_model()
+
         torchvision_detection_model = TorchVisionDetectionModel(
             model_path=TorchVisionTestConstants.FASTERCNN_MODEL_PATH,
             config_path=TorchVisionTestConstants.FASTERCNN_CONFIG_ZOO_NAME,
@@ -44,20 +51,22 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         torchvision_detection_model.perform_inference(image)
         original_predictions = torchvision_detection_model.original_predictions
 
-        boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
-        scores = original_predictions["instances"].scores.cpu().numpy()
-        category_ids = original_predictions["instances"].pred_classes.cpu().numpy()
+        # düzeltilmesi lazım
 
-        # find box of first car detection with conf greater than 0.5
-        for ind, box in enumerate(boxes):
-            if category_ids[ind] == 2 and scores[ind] > 0.5:
-                break
+        boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(original_predictions[0]['boxes'].detach().numpy())]
+        score = list(original_predictions[0]['scores'].detach().numpy())
+        thresh = [score.index(x) for x in score if x > CONFIDENCE_THRESHOLD][-1]
+        box = boxes[:thresh + 1]
 
         # compare
-        self.assertEqual(boxes[ind].astype("int").tolist(), [831, 303, 873, 346])
-        self.assertEqual(len(boxes), 35)
+        self.assertEqual(box[:4].astype("int").tolist(), [377, 273, 410, 314])
+        self.assertEqual(len(boxes), 80)
 
     def test_convert_original_predictions_without_mask_output(self):
+        from sahi.model import TorchVisionDetectionModel
+
+        download_torchvision_model()
+
         torchvision_detection_model = TorchVisionDetectionModel(
             model_path=TorchVisionTestConstants.FASTERCNN_MODEL_PATH,
             config_path=TorchVisionTestConstants.FASTERCNN_CONFIG_ZOO_NAME,
@@ -100,6 +109,10 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
                 raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
     def test_convert_original_predictions_with_mask_output(self):
+        from sahi.model import TorchVisionDetectionModel
+
+        download_torchvision_model()
+
         torchvision_detection_model = TorchVisionDetectionModel(
             model_path=TorchVisionTestConstants.FASTERCNN_MODEL_PATH,
             config_path=TorchVisionTestConstants.FASTERCNN_CONFIG_ZOO_NAME,
@@ -142,7 +155,10 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
                 raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
     def test_get_prediction_detectron2(self):
+        from sahi.model import TorchVisionDetectionModel
         from sahi.predict import get_prediction
+
+        download_torchvision_model()
 
         # init model
         torchvision_detection_model = TorchVisionDetectionModel(
@@ -190,6 +206,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
 
     def test_get_sliced_prediction_detectron2(self):
         from sahi.predict import get_sliced_prediction
+        from sahi.model import TorchVisionDetectionModel
+
+        download_torchvision_model()
 
         # init model
         torchvision_detection_model = TorchVisionDetectionModel(
