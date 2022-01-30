@@ -377,10 +377,12 @@ def _analyse_results(
             ps[5, :, k, :, :][ps[4, :, k, :, :] > 0] = 1
             ps[6, :, k, :, :] = 1.0
 
-            curve_export_path_list = _makeplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
+            normalized_class_name = nm["name"].replace("/", "_").replace(os.sep, "_")
+
+            curve_export_path_list = _makeplot(recThrs, ps[:, :, k], res_out_dir, normalized_class_name, iou_type)
 
             if extraplots:
-                bar_plot_path = _makebarplot(recThrs, ps[:, :, k], res_out_dir, nm["name"], iou_type)
+                bar_plot_path = _makebarplot(recThrs, ps[:, :, k], res_out_dir, normalized_class_name, iou_type)
             else:
                 bar_plot_path = None
             classname_to_export_path_list[nm["name"]] = {
