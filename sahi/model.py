@@ -17,16 +17,16 @@ logger = logging.getLogger(__name__)
 
 class DetectionModel:
     def __init__(
-            self,
-            model_path: str,
-            config_path: Optional[str] = None,
-            device: Optional[str] = None,
-            mask_threshold: float = 0.5,
-            confidence_threshold: float = 0.3,
-            category_mapping: Optional[Dict] = None,
-            category_remapping: Optional[Dict] = None,
-            load_at_init: bool = True,
-            image_size: int = None,
+        self,
+        model_path: str,
+        config_path: Optional[str] = None,
+        device: Optional[str] = None,
+        mask_threshold: float = 0.5,
+        confidence_threshold: float = 0.3,
+        category_mapping: Optional[Dict] = None,
+        category_remapping: Optional[Dict] = None,
+        load_at_init: bool = True,
+        image_size: int = None,
     ):
         """
         Init object detection/instance segmentation model.
@@ -98,9 +98,9 @@ class DetectionModel:
         NotImplementedError()
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount: Optional[List[int]] = [0, 0],
-            full_shape: Optional[List[int]] = None,
+        self,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         This function should be implemented in a way that self._original_predictions should
@@ -128,9 +128,9 @@ class DetectionModel:
                 object_prediction.category.id = new_category_id_int
 
     def convert_original_predictions(
-            self,
-            shift_amount: Optional[List[int]] = [0, 0],
-            full_shape: Optional[List[int]] = None,
+        self,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         Converts original predictions of the detection model to a list of
@@ -260,9 +260,9 @@ class MmdetDetectionModel(DetectionModel):
             return self.model.CLASSES
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-            full_shape_list: Optional[List[List[int]]] = None,
+        self,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -321,20 +321,20 @@ class MmdetDetectionModel(DetectionModel):
 
                     # ignore invalid predictions
                     if (
-                            bbox[0] > bbox[2]
-                            or bbox[1] > bbox[3]
-                            or bbox[0] < 0
-                            or bbox[1] < 0
-                            or bbox[2] < 0
-                            or bbox[3] < 0
+                        bbox[0] > bbox[2]
+                        or bbox[1] > bbox[3]
+                        or bbox[0] < 0
+                        or bbox[1] < 0
+                        or bbox[2] < 0
+                        or bbox[3] < 0
                     ):
                         logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                         continue
                     if full_shape is not None and (
-                            bbox[1] > full_shape[0]
-                            or bbox[3] > full_shape[0]
-                            or bbox[0] > full_shape[1]
-                            or bbox[2] > full_shape[1]
+                        bbox[1] > full_shape[0]
+                        or bbox[3] > full_shape[0]
+                        or bbox[0] > full_shape[1]
+                        or bbox[2] > full_shape[1]
                     ):
                         logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                         continue
@@ -423,9 +423,9 @@ class Yolov5DetectionModel(DetectionModel):
         return self.model.names
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-            full_shape_list: Optional[List[List[int]]] = None,
+        self,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -467,10 +467,10 @@ class Yolov5DetectionModel(DetectionModel):
                     logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                     continue
                 if full_shape is not None and (
-                        bbox[1] > full_shape[0]
-                        or bbox[3] > full_shape[0]
-                        or bbox[0] > full_shape[1]
-                        or bbox[2] > full_shape[1]
+                    bbox[1] > full_shape[0]
+                    or bbox[3] > full_shape[0]
+                    or bbox[0] > full_shape[1]
+                    or bbox[2] > full_shape[1]
                 ):
                     logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                     continue
@@ -588,9 +588,9 @@ class Detectron2DetectionModel(DetectionModel):
         return num_categories
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-            full_shape_list: Optional[List[List[int]]] = None,
+        self,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -671,12 +671,15 @@ class TorchVisionDetectionModel(DetectionModel):
         try:
             import torchvision
         except ImportError:
-            raise ImportError("torchvision is not installed. Please run 'pip install -U torchvision to use this "
-                              "torchvision models'")
+            raise ImportError(
+                "torchvision is not installed. Please run 'pip install -U torchvision to use this "
+                "torchvision models'"
+            )
 
         # set model
         try:
             from sahi.utils.torch import torch
+
             model = self.config_path
             model.load_state_dict(torch.load(self.model_path))
             model.eval()
@@ -687,6 +690,7 @@ class TorchVisionDetectionModel(DetectionModel):
 
         # set category_mapping
         from sahi.utils.torchvision import COCO_CLASSES
+
         if self.category_mapping is None:
             category_names = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
             self.category_mapping = category_names
@@ -708,7 +712,8 @@ class TorchVisionDetectionModel(DetectionModel):
         # Confirm model is loaded
         assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
 
-        from sahi.utils.torchvision import resize_image, numpy_to_torch
+        from sahi.utils.torchvision import numpy_to_torch, resize_image
+
         if self.image_size is not None:
             image = resize_image(image, self.image_size)
             image = numpy_to_torch(image)
@@ -739,9 +744,9 @@ class TorchVisionDetectionModel(DetectionModel):
         return self.category_mapping
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-            full_shape_list: Optional[List[List[int]]] = None,
+        self,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -765,15 +770,17 @@ class TorchVisionDetectionModel(DetectionModel):
 
         # parse boxes, masks, scores, category_ids from predictions
         from sahi.utils.torchvision import COCO_CLASSES
-        prediction_class = [COCO_CLASSES[i] for i in list(original_predictions[0]['labels'].numpy())]
-        prediction_boxes = [[(i[0], i[1]), (i[2], i[3])] for i in
-                            list(original_predictions[0]['boxes'].detach().numpy())]
-        prediction_score = list(original_predictions[0]['scores'].detach().numpy())
+
+        prediction_class = [COCO_CLASSES[i] for i in list(original_predictions[0]["labels"].numpy())]
+        prediction_boxes = [
+            [(i[0], i[1]), (i[2], i[3])] for i in list(original_predictions[0]["boxes"].detach().numpy())
+        ]
+        prediction_score = list(original_predictions[0]["scores"].detach().numpy())
         prediction_thresh = [prediction_score.index(x) for x in prediction_score if x > self.confidence_threshold][-1]
 
-        boxes = prediction_boxes[:prediction_thresh + 1]
-        score = list(original_predictions[0]['scores'].detach().numpy())
-        category_name = prediction_class[:prediction_thresh + 1]
+        boxes = prediction_boxes[: prediction_thresh + 1]
+        score = list(original_predictions[0]["scores"].detach().numpy())
+        category_name = prediction_class[: prediction_thresh + 1]
 
         category_map = {}
         for i in range(len(COCO_CLASSES)):

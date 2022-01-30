@@ -4,8 +4,7 @@
 
 import unittest
 
-from sahi.utils.torchvision import read_image
-from sahi.utils.torchvision import TorchVisionTestConstants, download_torchvision_model
+from sahi.utils.torchvision import TorchVisionTestConstants, download_torchvision_model, read_image
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -30,7 +29,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
     def test_perform_inference_without_mask_output(self):
         from sahi.model import TorchVisionDetectionModel
 
-        #init model
+        # init model
         download_torchvision_model()
 
         torchvision_detection_model = TorchVisionDetectionModel(
@@ -52,10 +51,10 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
 
         # düzeltilmesi lazım
 
-        boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(original_predictions[0]['boxes'].detach().numpy())]
-        score = list(original_predictions[0]['scores'].detach().numpy())
+        boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(original_predictions[0]["boxes"].detach().numpy())]
+        score = list(original_predictions[0]["scores"].detach().numpy())
         thresh = [score.index(x) for x in score if x > CONFIDENCE_THRESHOLD][-1]
-        box = boxes[:thresh + 1]
+        box = boxes[: thresh + 1]
 
     def test_convert_original_predictions_without_mask_output(self):
         from sahi.model import TorchVisionDetectionModel
@@ -142,8 +141,8 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
     def test_get_sliced_prediction_torchvision(self):
-        from sahi.predict import get_sliced_prediction
         from sahi.model import TorchVisionDetectionModel
+        from sahi.predict import get_sliced_prediction
 
         download_torchvision_model()
 
