@@ -610,7 +610,10 @@ class NMSPostprocess(PostprocessPredictions):
 
         # to handle when only 1 prediction is selected
         selected_object_predictions = []
-        selected_object_predictions.extend(object_prediction_list[keep.tolist()].tolist())
+        if len(keep) == 1:
+            selected_object_predictions.append(object_prediction_list[keep.tolist()].tolist())
+        elif len(keep) > 1:
+            selected_object_predictions.extend(object_prediction_list[keep.tolist()].tolist())
 
         return selected_object_predictions
 
