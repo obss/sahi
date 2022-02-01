@@ -608,7 +608,9 @@ class NMSPostprocess(PostprocessPredictions):
                 object_predictions_as_torch, match_threshold=self.match_threshold, match_metric=self.match_metric
             )
 
-        selected_object_predictions = object_prediction_list[keep.tolist()].tolist()
+        # to handle when only 1 prediction is selected
+        selected_object_predictions = []
+        selected_object_predictions.extend(object_prediction_list[keep.tolist()].tolist())
 
         return selected_object_predictions
 
