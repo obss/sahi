@@ -460,7 +460,7 @@ class Yolov5DetectionModel(DetectionModel):
                 score = prediction[4]
                 category_id = int(prediction[5])
                 category_name = self.category_mapping[str(category_id)]
-                
+
                 # fix negative box coords
                 bbox[0] = max(0, bbox[0])
                 bbox[1] = max(0, bbox[1])
@@ -608,7 +608,6 @@ class Detectron2DetectionModel(DetectionModel):
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
-        category_mapping = self.category_mapping
 
         # compatilibty for sahi v0.8.15
         if isinstance(shift_amount_list[0], int):
@@ -626,7 +625,6 @@ class Detectron2DetectionModel(DetectionModel):
             masks = None
 
         # create object_prediction_list
-        num_categories = self.num_categories
         object_prediction_list_per_image = []
         object_prediction_list = []
 
