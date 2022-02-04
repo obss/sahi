@@ -360,7 +360,7 @@ def evaluate(
         dataset_json_path (str): file path for the coco dataset json file
         result_json_path (str): file path for the coco result json file
         out_dir (str): dir to save eval result
-        type (bool): 'bbox' or 'mask'
+        type (bool): 'bbox' or 'segm'
         classwise (bool): whether to evaluate the AP for each class
         max_detections (int): Maximum number of detections to consider for AP alculation. Default: 500
         iou_thrs (float): IoU threshold used for evaluating recalls/mAPs
