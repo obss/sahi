@@ -325,16 +325,15 @@ class MmdetDetectionModel(DetectionModel):
                     bbox[2] = max(0, bbox[2])
                     bbox[3] = max(0, bbox[3])
 
+                    # fix out of image box coords
+                    if full_shape is not None:
+                        bbox[0] = min(full_shape[1], bbox[0])
+                        bbox[1] = min(full_shape[0], bbox[1])
+                        bbox[2] = min(full_shape[1], bbox[2])
+                        bbox[3] = min(full_shape[0], bbox[3])
+
                     # ignore invalid predictions
                     if not (bbox[0] < bbox[2]) or not (bbox[1] < bbox[3]):
-                        logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
-                        continue
-                    if full_shape is not None and (
-                        bbox[1] > full_shape[0]
-                        or bbox[3] > full_shape[0]
-                        or bbox[0] > full_shape[1]
-                        or bbox[2] > full_shape[1]
-                    ):
                         logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                         continue
 
@@ -467,16 +466,15 @@ class Yolov5DetectionModel(DetectionModel):
                 bbox[2] = max(0, bbox[2])
                 bbox[3] = max(0, bbox[3])
 
+                # fix out of image box coords
+                if full_shape is not None:
+                    bbox[0] = min(full_shape[1], bbox[0])
+                    bbox[1] = min(full_shape[0], bbox[1])
+                    bbox[2] = min(full_shape[1], bbox[2])
+                    bbox[3] = min(full_shape[0], bbox[3])
+
                 # ignore invalid predictions
                 if not (bbox[0] < bbox[2]) or not (bbox[1] < bbox[3]):
-                    logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
-                    continue
-                if full_shape is not None and (
-                    bbox[1] > full_shape[0]
-                    or bbox[3] > full_shape[0]
-                    or bbox[0] > full_shape[1]
-                    or bbox[2] > full_shape[1]
-                ):
                     logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                     continue
 
