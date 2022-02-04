@@ -319,15 +319,14 @@ class MmdetDetectionModel(DetectionModel):
                     else:
                         bool_mask = None
 
+                    # fix negative box coords
+                    bbox[0] = max(0, bbox[0])
+                    bbox[1] = max(0, bbox[1])
+                    bbox[2] = max(0, bbox[2])
+                    bbox[3] = max(0, bbox[3])
+
                     # ignore invalid predictions
-                    if (
-                        bbox[0] > bbox[2]
-                        or bbox[1] > bbox[3]
-                        or bbox[0] < 0
-                        or bbox[1] < 0
-                        or bbox[2] < 0
-                        or bbox[3] < 0
-                    ):
+                    if not (bbox[0] < bbox[2]) or not (bbox[1] < bbox[3]):
                         logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                         continue
                     if full_shape is not None and (
@@ -461,9 +460,15 @@ class Yolov5DetectionModel(DetectionModel):
                 score = prediction[4]
                 category_id = int(prediction[5])
                 category_name = self.category_mapping[str(category_id)]
+                
+                # fix negative box coords
+                bbox[0] = max(0, bbox[0])
+                bbox[1] = max(0, bbox[1])
+                bbox[2] = max(0, bbox[2])
+                bbox[3] = max(0, bbox[3])
 
                 # ignore invalid predictions
-                if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
+                if not (bbox[0] < bbox[2]) or not (bbox[1] < bbox[3]):
                     logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                     continue
                 if full_shape is not None and (
