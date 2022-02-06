@@ -17,16 +17,16 @@ logger = logging.getLogger(__name__)
 
 class DetectionModel:
     def __init__(
-            self,
-            model_path: str,
-            config_path: Optional[str] = None,
-            device: Optional[str] = None,
-            mask_threshold: float = 0.5,
-            confidence_threshold: float = 0.3,
-            category_mapping: Optional[Dict] = None,
-            category_remapping: Optional[Dict] = None,
-            load_at_init: bool = True,
-            image_size: int = None,
+        self,
+        model_path: str,
+        config_path: Optional[str] = None,
+        device: Optional[str] = None,
+        mask_threshold: float = 0.5,
+        confidence_threshold: float = 0.3,
+        category_mapping: Optional[Dict] = None,
+        category_remapping: Optional[Dict] = None,
+        load_at_init: bool = True,
+        image_size: int = None,
     ):
         """
         Init object detection/instance segmentation model.
@@ -98,9 +98,9 @@ class DetectionModel:
         NotImplementedError()
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount: Optional[List[int]] = [0, 0],
-            full_shape: Optional[List[int]] = None,
+        self,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         This function should be implemented in a way that self._original_predictions should
@@ -128,9 +128,9 @@ class DetectionModel:
                 object_prediction.category.id = new_category_id_int
 
     def convert_original_predictions(
-            self,
-            shift_amount: Optional[List[int]] = [0, 0],
-            full_shape: Optional[List[int]] = None,
+        self,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         Converts original predictions of the detection model to a list of
@@ -260,9 +260,9 @@ class MmdetDetectionModel(DetectionModel):
             return self.model.CLASSES
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-            full_shape_list: Optional[List[List[int]]] = None,
+        self,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -319,23 +319,21 @@ class MmdetDetectionModel(DetectionModel):
                     else:
                         bool_mask = None
 
+                    # fix negative box coords
+                    bbox[0] = max(0, bbox[0])
+                    bbox[1] = max(0, bbox[1])
+                    bbox[2] = max(0, bbox[2])
+                    bbox[3] = max(0, bbox[3])
+
+                    # fix out of image box coords
+                    if full_shape is not None:
+                        bbox[0] = min(full_shape[1], bbox[0])
+                        bbox[1] = min(full_shape[0], bbox[1])
+                        bbox[2] = min(full_shape[1], bbox[2])
+                        bbox[3] = min(full_shape[0], bbox[3])
+
                     # ignore invalid predictions
-                    if (
-                            bbox[0] > bbox[2]
-                            or bbox[1] > bbox[3]
-                            or bbox[0] < 0
-                            or bbox[1] < 0
-                            or bbox[2] < 0
-                            or bbox[3] < 0
-                    ):
-                        logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
-                        continue
-                    if full_shape is not None and (
-                            bbox[1] > full_shape[0]
-                            or bbox[3] > full_shape[0]
-                            or bbox[0] > full_shape[1]
-                            or bbox[2] > full_shape[1]
-                    ):
+                    if not (bbox[0] < bbox[2]) or not (bbox[1] < bbox[3]):
                         logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                         continue
 
@@ -423,9 +421,9 @@ class Yolov5DetectionModel(DetectionModel):
         return self.model.names
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-            full_shape_list: Optional[List[List[int]]] = None,
+        self,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -462,16 +460,21 @@ class Yolov5DetectionModel(DetectionModel):
                 category_id = int(prediction[5])
                 category_name = self.category_mapping[str(category_id)]
 
+                # fix negative box coords
+                bbox[0] = max(0, bbox[0])
+                bbox[1] = max(0, bbox[1])
+                bbox[2] = max(0, bbox[2])
+                bbox[3] = max(0, bbox[3])
+
+                # fix out of image box coords
+                if full_shape is not None:
+                    bbox[0] = min(full_shape[1], bbox[0])
+                    bbox[1] = min(full_shape[0], bbox[1])
+                    bbox[2] = min(full_shape[1], bbox[2])
+                    bbox[3] = min(full_shape[0], bbox[3])
+
                 # ignore invalid predictions
-                if bbox[0] > bbox[2] or bbox[1] > bbox[3] or bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
-                    logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
-                    continue
-                if full_shape is not None and (
-                        bbox[1] > full_shape[0]
-                        or bbox[3] > full_shape[0]
-                        or bbox[0] > full_shape[1]
-                        or bbox[2] > full_shape[1]
-                ):
+                if not (bbox[0] < bbox[2]) or not (bbox[1] < bbox[3]):
                     logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                     continue
 
@@ -587,9 +590,9 @@ class Detectron2DetectionModel(DetectionModel):
         return num_categories
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-            full_shape_list: Optional[List[List[int]]] = None,
+        self,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -603,7 +606,6 @@ class Detectron2DetectionModel(DetectionModel):
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
-        category_mapping = self.category_mapping
 
         # compatilibty for sahi v0.8.15
         if isinstance(shift_amount_list[0], int):
@@ -621,7 +623,6 @@ class Detectron2DetectionModel(DetectionModel):
             masks = None
 
         # create object_prediction_list
-        num_categories = self.num_categories
         object_prediction_list_per_image = []
         object_prediction_list = []
 
