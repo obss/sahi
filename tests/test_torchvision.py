@@ -51,6 +51,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         original_predictions = torchvision_detection_model.original_predictions
 
         from sahi.utils.torchvision import COCO_CLASSES
+
         boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(original_predictions[0]["boxes"].detach().numpy())]
         scores = list(original_predictions[0]["scores"].detach().numpy())
         thresh = [scores.index(x) for x in scores if x > CONFIDENCE_THRESHOLD][-1]
@@ -175,7 +176,6 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [224, 57, 4, 3])
-
 
     def test_get_sliced_prediction_torchvision(self):
         from sahi.model import TorchVisionDetectionModel

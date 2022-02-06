@@ -744,9 +744,9 @@ class TorchVisionDetectionModel(DetectionModel):
         return self.category_mapping
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-            full_shape_list: Optional[List[List[int]]] = None,
+        self,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -789,8 +789,8 @@ class TorchVisionDetectionModel(DetectionModel):
         category_id = [category_map[i] for i in category_name]
 
         try:
-            masks = (self._original_predictions[0]['masks'] > 0.5).squeeze().detach().cpu().numpy()
-            masks = masks[:self._original_predictions + 1]
+            masks = (self._original_predictions[0]["masks"] > 0.5).squeeze().detach().cpu().numpy()
+            masks = masks[: self._original_predictions + 1]
         except:
             masks = None
 
