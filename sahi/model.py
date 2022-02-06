@@ -17,16 +17,16 @@ logger = logging.getLogger(__name__)
 
 class DetectionModel:
     def __init__(
-            self,
-            model_path: str,
-            config_path: Optional[str] = None,
-            device: Optional[str] = None,
-            mask_threshold: float = 0.5,
-            confidence_threshold: float = 0.3,
-            category_mapping: Optional[Dict] = None,
-            category_remapping: Optional[Dict] = None,
-            load_at_init: bool = True,
-            image_size: int = None,
+        self,
+        model_path: str,
+        config_path: Optional[str] = None,
+        device: Optional[str] = None,
+        mask_threshold: float = 0.5,
+        confidence_threshold: float = 0.3,
+        category_mapping: Optional[Dict] = None,
+        category_remapping: Optional[Dict] = None,
+        load_at_init: bool = True,
+        image_size: int = None,
     ):
         """
         Init object detection/instance segmentation model.
@@ -98,9 +98,9 @@ class DetectionModel:
         NotImplementedError()
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount: Optional[List[int]] = [0, 0],
-            full_shape: Optional[List[int]] = None,
+        self,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         This function should be implemented in a way that self._original_predictions should
@@ -128,9 +128,9 @@ class DetectionModel:
                 object_prediction.category.id = new_category_id_int
 
     def convert_original_predictions(
-            self,
-            shift_amount: Optional[List[int]] = [0, 0],
-            full_shape: Optional[List[int]] = None,
+        self,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         Converts original predictions of the detection model to a list of
@@ -260,9 +260,9 @@ class MmdetDetectionModel(DetectionModel):
             return self.model.CLASSES
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-            full_shape_list: Optional[List[List[int]]] = None,
+        self,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -321,20 +321,20 @@ class MmdetDetectionModel(DetectionModel):
 
                     # ignore invalid predictions
                     if (
-                            bbox[0] > bbox[2]
-                            or bbox[1] > bbox[3]
-                            or bbox[0] < 0
-                            or bbox[1] < 0
-                            or bbox[2] < 0
-                            or bbox[3] < 0
+                        bbox[0] > bbox[2]
+                        or bbox[1] > bbox[3]
+                        or bbox[0] < 0
+                        or bbox[1] < 0
+                        or bbox[2] < 0
+                        or bbox[3] < 0
                     ):
                         logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                         continue
                     if full_shape is not None and (
-                            bbox[1] > full_shape[0]
-                            or bbox[3] > full_shape[0]
-                            or bbox[0] > full_shape[1]
-                            or bbox[2] > full_shape[1]
+                        bbox[1] > full_shape[0]
+                        or bbox[3] > full_shape[0]
+                        or bbox[0] > full_shape[1]
+                        or bbox[2] > full_shape[1]
                     ):
                         logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                         continue
@@ -423,9 +423,9 @@ class Yolov5DetectionModel(DetectionModel):
         return self.model.names
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-            full_shape_list: Optional[List[List[int]]] = None,
+        self,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -467,10 +467,10 @@ class Yolov5DetectionModel(DetectionModel):
                     logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                     continue
                 if full_shape is not None and (
-                        bbox[1] > full_shape[0]
-                        or bbox[3] > full_shape[0]
-                        or bbox[0] > full_shape[1]
-                        or bbox[2] > full_shape[1]
+                    bbox[1] > full_shape[0]
+                    or bbox[3] > full_shape[0]
+                    or bbox[0] > full_shape[1]
+                    or bbox[2] > full_shape[1]
                 ):
                     logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
                     continue
@@ -536,7 +536,6 @@ class Detectron2DetectionModel(DetectionModel):
                 self.category_mapping = {
                     str(ind): category_name for ind, category_name in enumerate(self.category_names)
                 }
-
             except Exception as e:
                 logger.warning(e)
                 # https://detectron2.readthedocs.io/en/latest/tutorials/datasets.html#update-the-config-for-new-datasets
@@ -588,9 +587,9 @@ class Detectron2DetectionModel(DetectionModel):
         return num_categories
 
     def _create_object_prediction_list_from_original_predictions(
-            self,
-            shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-            full_shape_list: Optional[List[List[int]]] = None,
+        self,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -636,8 +635,6 @@ class Detectron2DetectionModel(DetectionModel):
                 continue
 
             category_id = category_ids[ind]
-            print("category_id:", category_id)
-
 
             if masks is None:
                 bbox = boxes[ind]
@@ -666,7 +663,6 @@ class Detectron2DetectionModel(DetectionModel):
         object_prediction_list_per_image = [object_prediction_list]
 
         self._object_prediction_list_per_image = object_prediction_list_per_image
-
 
 class TorchVisionDetectionModel(DetectionModel):
     def load_model(self):
