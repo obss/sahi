@@ -135,7 +135,11 @@ class CocoAnnotation:
         else:
             has_rle_segmentation = False
 
-        if annotation_dict.__contains__("segmentation") and annotation_dict["segmentation"] and not has_rle_segmentation:
+        if (
+            annotation_dict.__contains__("segmentation")
+            and annotation_dict["segmentation"]
+            and not has_rle_segmentation
+        ):
             return cls(
                 segmentation=annotation_dict["segmentation"],
                 category_id=annotation_dict["category_id"],
