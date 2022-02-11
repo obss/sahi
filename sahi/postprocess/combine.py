@@ -482,6 +482,8 @@ class NMSPostprocess(PostprocessPredictions):
             )
 
         selected_object_predictions = object_prediction_list[keep].tolist()
+        if not isinstance(selected_object_predictions, list):
+            selected_object_predictions = [selected_object_predictions]
 
         return selected_object_predictions
 
@@ -590,5 +592,7 @@ class LSNMSPostprocess(PostprocessPredictions):
         )
 
         selected_object_predictions = object_prediction_list[keep].tolist()
+        if not isinstance(selected_object_predictions, list):
+            selected_object_predictions = [selected_object_predictions]
 
         return selected_object_predictions
