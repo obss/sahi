@@ -97,7 +97,7 @@ conda install -c conda-forge shapely
 - Install your desired version of pytorch and torchvision:
 
 ```console
-conda install pytorch=1.10.0 torchvision=0.11.1 cudatoolkit=11.3 -c pytorch
+conda install pytorch=1.10.2 torchvision=0.11.3 cudatoolkit=11.3 -c pytorch
 ```
   
 - Install your desired detection framework (yolov5):
@@ -109,11 +109,11 @@ pip install yolov5
 - Install your desired detection framework (mmdet):
 
 ```console
-pip install mmcv-full==1.4.2 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html
+pip install mmcv-full==1.4.4 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html
 ```
 
 ```console
-pip install mmdet==2.20.0
+pip install mmdet==2.21.0
 ```
 
 - Install your desired detection framework (detectron2):
