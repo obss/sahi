@@ -43,6 +43,8 @@ Object detection and instance segmentation are by far the most important fields 
 
 ## <div align="center">Quick Start Examples</div>
 
+[Check this link for a list of competitions that SAHI made us win 🚀](https://github.com/obss/sahi/issues/384)
+
 ### Tutorials
 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
