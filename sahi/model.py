@@ -9,7 +9,7 @@ import numpy as np
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.cv import is_valid_bool_mask
+from sahi.utils.cv import get_bbox_from_bool_mask
 from sahi.utils.torch import cuda_is_available, empty_cuda_cache
 
 logger = logging.getLogger(__name__)
@@ -318,7 +318,7 @@ class MmdetDetectionModel(DetectionModel):
                         bool_mask = category_masks[category_predictions_ind]
                         # check if mask is valid
                         # https://github.com/obss/sahi/issues/389
-                        if not is_valid_bool_mask(bool_mask):
+                        if get_bbox_from_bool_mask(bool_mask) is None:
                             continue
                     else:
                         bool_mask = None
@@ -649,9 +649,7 @@ class Detectron2DetectionModel(DetectionModel):
 
                 # check if mask is valid
                 # https://github.com/obss/sahi/issues/389
-                if is_valid_bool_mask(mask):
-                    bbox = None
-                else:
+                if get_bbox_from_bool_mask(mask) is None:
                     continue
 
             object_prediction = ObjectPrediction(
