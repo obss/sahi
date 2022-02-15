@@ -157,7 +157,18 @@ Find detailed info on MOT utilities (ground truth dataset creation, exporting tr
 If you use this package in your work, please cite it as:
 
 ```
-@software{akyon2021sahi,
+@misc{akyon2022sahi,
+      title={Slicing Aided Hyper Inference and Fine-tuning for Small Object Detection}, 
+      author={Fatih Cagatay Akyon and Sinan Onur Altinuc and Alptekin Temizel},
+      year={2022},
+      eprint={2202.06934},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+```
+
+```
+@software{obss2021sahi,
   author       = {Akyon, Fatih Cagatay and Cengiz, Cemil and Altinuc, Sinan Onur and Cavusoglu, Devrim and Sahin, Kadir and Eryuksel, Ogulcan},
   title        = {{SAHI: A lightweight vision library for performing large scale object detection and instance segmentation}},
   month        = nov,
