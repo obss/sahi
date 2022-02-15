@@ -77,7 +77,7 @@ jobs:
         if: matrix.operating-system == 'macos-latest'
         run: pip install torch==1.10.2 torchvision==0.11.3
 
-      - name: Install MMDetection(2.20.0) with MMCV(1.4.4)
+      - name: Install MMDetection(2.21.0) with MMCV(1.4.4)
         run: >
           pip install mmcv-full==1.4.4 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.10.0/index.html
           pip install mmdet==2.21.0
