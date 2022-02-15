@@ -49,6 +49,8 @@ Object detection and instance segmentation are by far the most important fields 
 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
 
+- [Official paper](https://arxiv.org/abs/2202.06934) (NEW)
+
 - [Kaggle notebook](https://www.kaggle.com/remekkinas/sahi-slicing-aided-hyper-inference-yv5-and-yx) (NEW)
 
 - [Satellite object detection](https://blog.ml6.eu/how-to-detect-small-objects-in-very-large-images-70234bab0f98) (NEW)
