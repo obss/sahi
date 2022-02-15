@@ -316,6 +316,10 @@ class MmdetDetectionModel(DetectionModel):
                     # parse prediction mask
                     if self.has_mask:
                         bool_mask = category_masks[category_predictions_ind]
+                        # check if mask is valid
+                        # https://github.com/obss/sahi/issues/389
+                        if get_bbox_from_bool_mask(bool_mask) is None:
+                            continue
                     else:
                         bool_mask = None
 
@@ -644,10 +648,11 @@ class Detectron2DetectionModel(DetectionModel):
                 mask = np.array(masks[ind])
 
                 # check if mask is valid
-                if get_bbox_from_bool_mask(mask) is not None:
-                    bbox = None
-                else:
+                # https://github.com/obss/sahi/issues/389
+                if get_bbox_from_bool_mask(mask) is None:
                     continue
+                else:
+                    bbox = None
 
             object_prediction = ObjectPrediction(
                 bbox=bbox,
