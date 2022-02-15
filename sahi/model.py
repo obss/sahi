@@ -646,7 +646,7 @@ class Detectron2DetectionModel(DetectionModel):
                 mask = None
             else:
                 mask = np.array(masks[ind])
-                
+
                 # check if mask is valid
                 # https://github.com/obss/sahi/issues/389
                 if get_bbox_from_bool_mask(mask) is None:
