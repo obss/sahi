@@ -422,6 +422,19 @@ def get_bool_mask_from_coco_segmentation(coco_segmentation, width, height):
     return bool_mask
 
 
+def is_valid_bool_mask(bool_mask):
+    """
+    Check if given bool_mask (2D np.ndarray) is valid.
+    """
+    rows = np.any(bool_mask, axis=1)
+    cols = np.any(bool_mask, axis=0)
+
+    if not np.any(rows) or not np.any(cols):
+        return False
+    else:
+        return True
+
+
 def get_bbox_from_bool_mask(bool_mask):
     """
     Generate voc bbox ([xmin, ymin, xmax, ymax]) from given bool_mask (2D np.ndarray)
