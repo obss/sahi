@@ -617,10 +617,13 @@ class Detectron2DetectionModel(DetectionModel):
         boxes = original_predictions["instances"].pred_boxes.tensor.tolist()
         scores = original_predictions["instances"].scores.tolist()
         category_ids = original_predictions["instances"].pred_classes.tolist()
+
+        # check if predictions contain mask
         try:
             masks = original_predictions["instances"].pred_masks.tolist()
         except AttributeError:
             masks = None
+
 
         # create object_prediction_list
         object_prediction_list_per_image = []
@@ -704,13 +707,8 @@ class TorchVisionDetectionModel(DetectionModel):
             image_size: int
                 Inference input size.
         """
-        try:
-            import torchvision
-        except ImportError:
-            raise ImportError("torchvision is not installed. Please install torchvision to use this model.")
-
-        # Confirm model is loaded
-        assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
+        if self.model is None:
+            raise ValueError("model not loaded.")
 
         from sahi.utils.torchvision import numpy_to_torch, resize_image
 
@@ -736,8 +734,7 @@ class TorchVisionDetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        has_mask = self.model.with_mask
-        return has_mask
+        return self.model.with_mask
 
     @property
     def category_names(self):
@@ -762,7 +759,7 @@ class TorchVisionDetectionModel(DetectionModel):
         original_predictions = self._original_predictions
         category_mapping = self.category_mapping
 
-        # compatilibty for sahi v0.8.15
+        # compatilibty for sahi v0.8.20
         if isinstance(shift_amount_list[0], int):
             shift_amount_list = [shift_amount_list]
         if full_shape_list is not None and isinstance(full_shape_list[0], int):
@@ -788,10 +785,10 @@ class TorchVisionDetectionModel(DetectionModel):
             category_map[i] = COCO_CLASSES[i]
         category_id = [category_map[i] for i in category_name]
 
+        # check if predictions contain mask
         try:
-            masks = (self._original_predictions[0]["masks"] > 0.5).squeeze().detach().cpu().numpy()
-            masks = masks[: self._original_predictions + 1]
-        except:
+            masks = original_predictions["instances"].pred_masks.tolist()
+        except AttributeError:
             masks = None
 
         # create object_prediction_list
