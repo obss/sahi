@@ -788,7 +788,7 @@ class TorchVisionDetectionModel(DetectionModel):
         # check if predictions contain mask
         try:
             masks = original_predictions["instances"].pred_masks.tolist()
-        except AttributeError:
+        except:
             masks = None
 
         # create object_prediction_list
