@@ -624,7 +624,6 @@ class Detectron2DetectionModel(DetectionModel):
         except AttributeError:
             masks = None
 
-
         # create object_prediction_list
         object_prediction_list_per_image = []
         object_prediction_list = []
