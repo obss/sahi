@@ -23,13 +23,9 @@ class MmdetTestConstants:
     MMDET_RETINANET_MODEL_URL = "http://download.openmmlab.com/mmdetection/v2.0/retinanet/retinanet_r50_fpn_2x_coco/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
     MMDET_RETINANET_MODEL_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
     MMDET_YOLOX_TINY_MODEL_URL = "https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_tiny_8x8_300e_coco/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
-    MMDET_YOLOX_TINY_MODEL_PATH = (
-        "tests/data/models/mmdet_yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
-    )
+    MMDET_YOLOX_TINY_MODEL_PATH = "tests/data/models/mmdet_yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
 
-    MMDET_CASCADEMASKRCNN_CONFIG_PATH = (
-        "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco.py"
-    )
+    MMDET_CASCADEMASKRCNN_CONFIG_PATH = "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco.py"
     MMDET_RETINANET_CONFIG_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py"
     MMDET_YOLOX_TINY_CONFIG_PATH = "tests/data/models/mmdet_yolox/yolox_tiny_8x8_300e_coco.py"
 

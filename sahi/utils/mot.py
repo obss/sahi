@@ -171,7 +171,7 @@ class MotFrame:
                 period=1,
                 point_transience=tracker.point_transience,
                 filter_setup=tracker.filter_setup,
-                past_detections_length=0
+                past_detections_length=0,
             )
             tracked_object.id = track_id
             tracked_object.point_hit_counter = np.ones(tracked_object.num_points) * 1
