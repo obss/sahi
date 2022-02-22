@@ -159,13 +159,11 @@ Find detailed info on MOT utilities (ground truth dataset creation, exporting tr
 If you use this package in your work, please cite it as:
 
 ```
-@misc{akyon2022sahi,
-      title={Slicing Aided Hyper Inference and Fine-tuning for Small Object Detection}, 
-      author={Fatih Cagatay Akyon and Sinan Onur Altinuc and Alptekin Temizel},
-      year={2022},
-      eprint={2202.06934},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+@article{akyon2022sahi,
+  title={Slicing Aided Hyper Inference and Fine-tuning for Small Object Detection},
+  author={Akyon, Fatih Cagatay and Altinuc, Sinan Onur and Temizel, Alptekin},
+  journal={arXiv preprint arXiv:2202.06934},
+  year={2022}
 }
 ```
 
