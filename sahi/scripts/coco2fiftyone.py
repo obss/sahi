@@ -54,7 +54,7 @@ def main(
     if result_json_paths:
         # Evaluate the predictions
         first_coco_result_name = result_name_list[0]
-        results = dataset.evaluate_detections(
+        _ = dataset.evaluate_detections(
             first_coco_result_name,
             gt_field="gt_detections",
             eval_key=f"{first_coco_result_name}_eval",

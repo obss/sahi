@@ -12,11 +12,10 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 
 import numpy as np
-from shapely.geometry.geo import shape
 from tqdm import tqdm
 
 from sahi.utils.file import load_json, save_json
-from sahi.utils.shapely import ShapelyAnnotation, box, get_bbox_from_shapely, get_shapely_multipolygon
+from sahi.utils.shapely import ShapelyAnnotation, box, get_shapely_multipolygon
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -1227,7 +1226,7 @@ class Coco:
         elif train_split_rate == 1:
             split_mode = "TRAIN"
         else:
-            ValueError("train_split_rate cannot be <0 or >1")
+            raise ValueError("train_split_rate cannot be <0 or >1")
 
         # split dataset
         if split_mode == "TRAINVAL":
@@ -2194,11 +2193,11 @@ def export_coco_as_yolov5(
     elif train_coco and val_coco:
         split_mode = False
     else:
-        ValueError("'train_coco' have to be provided")
+        raise ValueError("'train_coco' have to be provided")
 
     # check train_split_rate
     if split_mode and not (0 < train_split_rate < 1):
-        ValueError("train_split_rate cannot be <0 or >1")
+        raise ValueError("train_split_rate cannot be <0 or >1")
 
     # split dataset
     if split_mode:

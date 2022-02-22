@@ -9,7 +9,6 @@ import pickle
 import re
 import urllib.request
 import zipfile
-from os import path
 from pathlib import Path
 
 import numpy as np
@@ -226,7 +225,7 @@ def download_from_url(from_url: str, to_path: str):
 
     Path(to_path).parent.mkdir(parents=True, exist_ok=True)
 
-    if not path.exists(to_path):
+    if not os.path.exists(to_path):
         urllib.request.urlretrieve(
             from_url,
             to_path,

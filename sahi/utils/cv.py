@@ -160,7 +160,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
             image_sk = skimage.io.imread(image).astype(np.uint8)
             if len(image_sk.shape) == 2:  # b&w
                 image_pil = Image.fromarray(image_sk, mode="1")
-            if image_sk.shape[2] == 4:  # rgba
+            elif image_sk.shape[2] == 4:  # rgba
                 image_pil = Image.fromarray(image_sk, mode="RGBA")
             elif image_sk.shape[2] == 3:  # rgb
                 image_pil = Image.fromarray(image_sk, mode="RGB")
@@ -173,7 +173,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
     elif isinstance(image, Image.Image):
         image_pil = image
     else:
-        TypeError("read image with 'pillow' using 'Image.open()'")
+        raise TypeError("read image with 'pillow' using 'Image.open()'")
     return image_pil
 
 

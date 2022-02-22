@@ -427,7 +427,6 @@ def nmm(
         # keep the boxes with IoU/IoS less than thresh_iou
         mask = match_metric_value < match_threshold
         matched_box_indices = other_pred_inds[(mask == False).nonzero().flatten()].flip(dims=(0,))
-        unmatched_indices = other_pred_inds[(mask == True).nonzero().flatten()]
 
         # create keep_ind to merge_ind_list mapping
         if pred_ind not in merge_to_keep:
@@ -462,7 +461,7 @@ class PostprocessPredictions:
         self.match_metric = match_metric
 
     def __call__(self):
-        NotImplementedError()
+        raise NotImplementedError()
 
 
 class NMSPostprocess(PostprocessPredictions):

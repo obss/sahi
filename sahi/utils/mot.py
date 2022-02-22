@@ -1,4 +1,3 @@
-import copy
 import os
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -10,7 +9,7 @@ from sahi.utils.file import increment_path
 try:
     import norfair
     from norfair import Detection, Tracker
-    from norfair.metrics import InformationFile, PredictionsTextFile
+    from norfair.metrics import PredictionsTextFile
     from norfair.tracker import FilterSetup, TrackedObject
 except ImportError:
     raise ImportError('Please run "pip install -U norfair" to install norfair first for MOT format handling.')
@@ -115,7 +114,7 @@ class MotFrame:
                 if annotation.score is not None:
                     scores = np.array([annotation.score])
             else:
-                ValueError("'track_points' should be one of ['centroid', 'bbox'].")
+                raise ValueError("'track_points' should be one of ['centroid', 'bbox'].")
             # create norfair formatted detection
             norfair_detections.append(Detection(points=points, scores=scores))
         return norfair_detections
@@ -159,7 +158,7 @@ class MotFrame:
                 if annotation.score is not None:
                     scores = np.array([annotation.score])
             else:
-                ValueError("'track_points' should be one of ['centroid', 'bbox'].")
+                raise ValueError("'track_points' should be one of ['centroid', 'bbox'].")
             # create norfair formatted detection
             detection = Detection(points=points, scores=scores)
             # create trackedobject from norfair detection
@@ -172,6 +171,7 @@ class MotFrame:
                 period=1,
                 point_transience=tracker.point_transience,
                 filter_setup=tracker.filter_setup,
+                past_detections_length=0
             )
             tracked_object.id = track_id
             tracked_object.point_hit_counter = np.ones(tracked_object.num_points) * 1
