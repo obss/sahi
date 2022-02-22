@@ -3,7 +3,7 @@ import os
 import fire
 
 from sahi.slicing import slice_coco
-from sahi.utils.file import Path, get_base_filename, increment_path, save_json
+from sahi.utils.file import Path, save_json
 
 
 def slice(

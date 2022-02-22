@@ -2,7 +2,7 @@
 # Code written by Fatih C Akyon, 2021.
 
 import copy
-from typing import List, Union
+from typing import List
 
 import numpy as np
 
@@ -65,7 +65,7 @@ class PostprocessPredictions:
         return intersect / smaller_area
 
     def __call__(self):
-        NotImplementedError()
+        raise NotImplementedError()
 
 
 class NMSPostprocess(PostprocessPredictions):
