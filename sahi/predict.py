@@ -286,7 +286,7 @@ def get_sliced_prediction(
         )
 
     # merge matching predictions
-    if len(object_prediction_list) > 0:
+    if len(object_prediction_list) > 1:
         object_prediction_list = postprocess(object_prediction_list)
 
     return PredictionResult(
