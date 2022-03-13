@@ -176,10 +176,14 @@ Before opening a PR:
 
 - Install required development packages:
 
+Bash:
 ```bash
 pip install -U -e .[dev]
 ```
-
+Oh My Zsh:
+```bash
+pip install -e ."[dev]"
+```
 - Reformat with black and isort:
 
 ```bash
