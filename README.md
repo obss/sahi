@@ -180,7 +180,7 @@ Bash:
 ```bash
 pip install -U -e .[dev]
 ```
-Oh My Zsh:
+Zsh:
 ```bash
 pip install -e ."[dev]"
 ```
