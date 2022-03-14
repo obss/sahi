@@ -10,8 +10,10 @@ try:
         _ = subprocess.run(["pkill", "mongod"], stderr=subprocess.DEVNULL)
     # import fo utilities
     import fiftyone as fo
-    from fiftyone.utils.coco import COCODetectionDatasetImporter as BaseCOCODetectionDatasetImporter
-    from fiftyone.utils.coco import _get_matching_image_ids, add_coco_labels, load_coco_detection_annotations
+    from fiftyone.utils.coco import \
+        COCODetectionDatasetImporter as BaseCOCODetectionDatasetImporter
+    from fiftyone.utils.coco import (_get_matching_image_ids, add_coco_labels,
+                                     load_coco_detection_annotations)
 except ModuleNotFoundError:
     raise ModuleNotFoundError('Please run "pip install -U fiftyone" to install fiftyone first for fiftyone utilities.')
 

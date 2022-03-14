@@ -5,9 +5,10 @@ import urllib.request
 from os import path
 from pathlib import Path
 from typing import Optional
-import torchvision
+
 import cv2
 import numpy as np
+import torchvision
 
 
 class TorchVisionTestConstants:

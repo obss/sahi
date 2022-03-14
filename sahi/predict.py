@@ -10,19 +10,17 @@ from typing import Dict, List, Optional
 import numpy as np
 from tqdm import tqdm
 
-from sahi.postprocess.combine import (
-    GreedyNMMPostprocess,
-    LSNMSPostprocess,
-    NMMPostprocess,
-    NMSPostprocess,
-    PostprocessPredictions,
-)
+from sahi.postprocess.combine import (GreedyNMMPostprocess, LSNMSPostprocess,
+                                      NMMPostprocess, NMSPostprocess,
+                                      PostprocessPredictions)
 from sahi.postprocess.legacy.combine import UnionMergePostprocess
 from sahi.prediction import ObjectPrediction, PredictionResult
 from sahi.slicing import slice_image
 from sahi.utils.coco import Coco, CocoImage
-from sahi.utils.cv import crop_object_predictions, read_image_as_pil, visualize_object_predictions
-from sahi.utils.file import Path, import_class, increment_path, list_files, save_json, save_pickle
+from sahi.utils.cv import (crop_object_predictions, read_image_as_pil,
+                           visualize_object_predictions)
+from sahi.utils.file import (Path, import_class, increment_path, list_files,
+                             save_json, save_pickle)
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "mmdet": "MmdetDetectionModel",

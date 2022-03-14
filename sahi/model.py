@@ -712,11 +712,9 @@ class TorchVisionDetectionModel(DetectionModel):
         from sahi.utils.torchvision import data_processing, numpy_to_torch
 
         if self.image_size is not None:
-            print("after-size", image.shape)
             image = data_processing(image, self.image_size)
             image = numpy_to_torch(image)
             prediction_result = self.model([image])
-            print("befora-size", image.shape)
 
         else:
             prediction_result = self.model([image])

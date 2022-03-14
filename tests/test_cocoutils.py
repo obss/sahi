@@ -798,7 +798,8 @@ class TestCocoUtils(unittest.TestCase):
         # TODO
 
     def test_bbox_clipping(self):
-        from sahi.utils.coco import Coco, CocoAnnotation, CocoCategory, CocoImage
+        from sahi.utils.coco import (Coco, CocoAnnotation, CocoCategory,
+                                     CocoImage)
 
         coco = Coco()
         coco.add_category(CocoCategory(id=0, name="box", supercategory="box"))

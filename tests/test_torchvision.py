@@ -4,7 +4,8 @@
 
 import unittest
 
-from sahi.utils.torchvision import TorchVisionTestConstants, download_torchvision_model, read_image
+from sahi.utils.torchvision import (TorchVisionTestConstants,
+                                    download_torchvision_model, read_image)
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -43,7 +44,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             image_size=IMAGE_SIZE,
         )
         # prepare image
-        image_path = "data/small-vehicles1.jpeg"
+        image_path = "tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -91,7 +92,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "data/small-vehicles1.jpeg"
+        image_path = "tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -123,7 +124,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "data/small-vehicles1.jpeg"
+        image_path = "tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -158,7 +159,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         torchvision_detection_model.load_model()
 
         # prepare image
-        image_path = "data/small-vehicles1.jpeg"
+        image_path = "tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # get full sized prediction
@@ -196,7 +197,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         torchvision_detection_model.load_model()
 
         # prepare image
-        image_path = "data/small-vehicles1.jpeg"
+        image_path = "tests/data/small-vehicles1.jpeg"
 
         slice_height = 512
         slice_width = 512
