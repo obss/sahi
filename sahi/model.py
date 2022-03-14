@@ -709,12 +709,14 @@ class TorchVisionDetectionModel(DetectionModel):
         if self.model is None:
             raise ValueError("model not loaded.")
 
-        from sahi.utils.torchvision import numpy_to_torch, resize_image
+        from sahi.utils.torchvision import data_processing, numpy_to_torch
 
         if self.image_size is not None:
-            image = resize_image(image, self.image_size)
+            print("after-size", image.shape)
+            image = data_processing(image, self.image_size)
             image = numpy_to_torch(image)
             prediction_result = self.model([image])
+            print("befora-size", image.shape)
 
         else:
             prediction_result = self.model([image])

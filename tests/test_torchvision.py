@@ -43,7 +43,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             image_size=IMAGE_SIZE,
         )
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_path = "data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -70,9 +70,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
                 bbox.append(boxes[ind][i][1])
 
         self.assertEqual(len(bbox), 4)
-        self.assertEqual(len(category_id), 27)
+        self.assertEqual(len(category_id), 25)
         for i in range(len(bbox)):
-            self.assertEqual(bbox[i].astype(int), [193, 45, 195, 48][i])
+            self.assertEqual(bbox[i].astype(int), [372, 85, 376, 89][i])
             self.assertEqual(category_id[i], 3)
 
     def test_convert_original_predictions_without_mask_output(self):
@@ -91,7 +91,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_path = "data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -102,10 +102,10 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         object_prediction_list = torchvision_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 27)
+        self.assertEqual(len(object_prediction_list), 25)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [224, 57, 4, 3])
+        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [177, 176, 33, 24])
 
     def test_convert_original_predictions_with_mask_output(self):
         from sahi.model import TorchVisionDetectionModel
@@ -123,7 +123,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_path = "data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -134,10 +134,10 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         object_prediction_list = torchvision_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 27)
+        self.assertEqual(len(object_prediction_list), 25)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [224, 57, 4, 3])
+        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [177, 176, 33, 24])
 
     def test_get_prediction_torchvision(self):
         from sahi.model import TorchVisionDetectionModel
@@ -158,7 +158,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         torchvision_detection_model.load_model()
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_path = "data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # get full sized prediction
@@ -172,10 +172,10 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 27)
+        self.assertEqual(len(object_prediction_list), 25)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [224, 57, 4, 3])
+        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [177, 176, 33, 24])
 
     def test_get_sliced_prediction_torchvision(self):
         from sahi.model import TorchVisionDetectionModel
@@ -196,7 +196,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         torchvision_detection_model.load_model()
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_path = "data/small-vehicles1.jpeg"
 
         slice_height = 512
         slice_width = 512
@@ -224,10 +224,10 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 122)
+        self.assertEqual(len(object_prediction_list), 121)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [843, 193, 30, 20])
+        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [843, 286, 30, 20])
 
 
 if __name__ == "__main__":

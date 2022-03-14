@@ -5,10 +5,9 @@ import urllib.request
 from os import path
 from pathlib import Path
 from typing import Optional
-
+import torchvision
 import cv2
 import numpy as np
-import torchvision
 
 
 class TorchVisionTestConstants:
@@ -166,15 +165,24 @@ def torch_to_numpy(img):
     return img
 
 
-def resize_image(image, long_size, interpolation=cv2.INTER_LINEAR):
-    height, width, channel = image.shape
+def data_processing(img, image_size):
+    import torchvision.transforms as T
+    img = numpy_to_pil(img)
+    preprocess = T.Compose([
+        T.Resize(image_size),
+    ])
+    img = preprocess(img)
+    img = pil_to_numpy(img)
+    return img
 
-    # set target image size
-    target_size = long_size
 
-    ratio = target_size / max(height, width)
+def numpy_to_pil(img):
+    import PIL.Image
+    img = PIL.Image.fromarray(img)
+    return img
 
-    target_h, target_w = int(height * ratio), int(width * ratio)
-    image = cv2.resize(image, (target_w, target_h), interpolation=interpolation)
 
-    return image
+def pil_to_numpy(img):
+    import numpy as np
+    img = np.array(img)
+    return img
