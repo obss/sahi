@@ -14,7 +14,7 @@
 <div>
     <a href="https://pepy.tech/project/sahi"><img src="https://pepy.tech/badge/sahi" alt="downloads"></a>
     <a href="https://pepy.tech/project/sahi"><img src="https://pepy.tech/badge/sahi/month" alt="downloads"></a>
-    <a href="https://doi.org/10.5281/zenodo.5718950"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.5718950.svg" alt="ci"></a>
+    <a href="https://doi.org/10.48550/arXiv.2202.06934"><img src="https://doi.org/10.48550/arXiv.2202.06934" alt="ci"></a>
     <br>
     <a href="https://badge.fury.io/py/sahi"><img src="https://badge.fury.io/py/sahi.svg" alt="pypi version"></a>
     <a href="https://anaconda.org/conda-forge/sahi"><img src="https://anaconda.org/conda-forge/sahi/badges/version.svg" alt="conda version"></a>
