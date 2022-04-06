@@ -189,8 +189,6 @@ Before opening a PR:
 
 - Install required development packages:
 
-Bash:
-
 ```bash
 pip install -e ."[dev]"
 ```
