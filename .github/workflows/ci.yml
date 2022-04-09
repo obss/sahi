@@ -94,9 +94,9 @@ jobs:
         run: |
           python -m unittest
 
-      - name: Install pycocotools(2.0.3)
+      - name: Install pycocotools(2.0.4)
         run: >
-          pip install pycocotools==2.0.3
+          pip install pycocotools==2.0.4
 
       - name: Install SAHI package from local setup.py
         run: >
