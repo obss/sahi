@@ -179,7 +179,7 @@ For skip or prev view result of prediction during inference:
 * Prev 5 frames, on opened window press key = f
 
 For input, export image:
-` sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/burak/picture.png
+` sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/burak/picture.png`
 
 
 ```
