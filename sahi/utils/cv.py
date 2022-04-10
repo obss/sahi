@@ -287,7 +287,7 @@ def visualize_prediction(
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
         save_path = os.path.join(output_dir, file_name + ".png")
-        cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        
     elapsed_time = time.time() - elapsed_time
     return {"image": image, "elapsed_time": elapsed_time}
 
@@ -380,9 +380,9 @@ def visualize_object_predictions(
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
         save_path = os.path.join(output_dir, file_name + "." + export_format)
-        cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        
     elapsed_time = time.time() - elapsed_time
-    return {"image": image, "elapsed_time": elapsed_time}
+    return {"image": image, "elapsed_time": elapsed_time}, image
 
 
 def get_coco_segmentation_from_bool_mask(bool_mask):
