@@ -158,6 +158,30 @@ Find detailed info on MOT utilities (ground truth dataset creation, exporting tr
 
 If you use this package in your work, please cite it as:
 
+### Input, Export Video Support 
+
+As the input, the video can be given and the results can be exporting as video. It can also see the SAHI prediction result during inference on opened window, video can be skip or prev. However, it can be still predicted from the image.
+
+One more thing added prediction time to terminal.
+
+For input, export video:
+` sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --export_video --video_path home/burak/video.mp4`   
+
+For view result of prediction during inference:
+` sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --export_video --video_path home/burak/video.mp4  --view_img` 
+
+For skip or prev view result of prediction during inference:
+` sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --export_video --video_path /home/burak/video.mp4  --view_img --forward_backward` 
+
+* Skip 100 frames, on opened window  press key = d 
+* Prev 100 frames, on opened window press key = a
+* Skip 5 frames, on opened window press key = g
+* Prev 5 frames, on opened window press key = f
+
+For input, export image:
+` sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/burak/picture.png
+
+
 ```
 @article{akyon2022sahi,
   title={Slicing Aided Hyper Inference and Fine-tuning for Small Object Detection},
