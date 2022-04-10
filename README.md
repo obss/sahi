@@ -154,10 +154,6 @@ Find detailed info on COCO utilities (yolov5 conversion, slicing, subsampling, f
 
 Find detailed info on MOT utilities (ground truth dataset creation, exporting tracker metrics in mot challenge format) at [mot.md](docs/mot.md).
 
-## <div align="center">Citation</div>
-
-If you use this package in your work, please cite it as:
-
 ### Input, Export Video Support 
 
 As the input, the video can be given and the results can be exporting as video. It can also see the SAHI prediction result during inference on opened window, video can be skip or prev. However, it can be still predicted from the image.
@@ -181,6 +177,9 @@ For skip or prev view result of prediction during inference:
 For input, export image:
 ` sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/burak/picture.png`
 
+## <div align="center">Citation</div>
+
+If you use this package in your work, please cite it as:
 
 ```
 @article{akyon2022sahi,
