@@ -21,9 +21,7 @@ def main(
         iou_thresh (float): iou threshold for coco evaluation
     """
 
-    from sahi.utils.fiftyone import (add_coco_labels,
-                                     create_fiftyone_dataset_from_coco_file,
-                                     fo)
+    from sahi.utils.fiftyone import add_coco_labels, create_fiftyone_dataset_from_coco_file, fo
 
     coco_result_list = []
     result_name_list = []

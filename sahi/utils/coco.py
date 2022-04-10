@@ -16,8 +16,7 @@ from shapely.geometry.geo import shape
 from tqdm import tqdm
 
 from sahi.utils.file import load_json, save_json
-from sahi.utils.shapely import (ShapelyAnnotation, box, get_bbox_from_shapely,
-                                get_shapely_multipolygon)
+from sahi.utils.shapely import ShapelyAnnotation, box, get_bbox_from_shapely, get_shapely_multipolygon
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(

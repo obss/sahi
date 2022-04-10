@@ -29,8 +29,7 @@ class TestPredict(unittest.TestCase):
     def test_get_prediction_mmdet(self):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import get_prediction
-        from sahi.utils.mmdet import (MmdetTestConstants,
-                                      download_mmdet_yolox_tiny_model)
+        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
 
         # init model
         download_mmdet_yolox_tiny_model()
@@ -76,8 +75,7 @@ class TestPredict(unittest.TestCase):
     def test_get_prediction_yolov5(self):
         from sahi.model import Yolov5DetectionModel
         from sahi.predict import get_prediction
-        from sahi.utils.yolov5 import (Yolov5TestConstants,
-                                       download_yolov5n_model)
+        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
         # init model
         download_yolov5n_model()
@@ -123,8 +121,7 @@ class TestPredict(unittest.TestCase):
     def test_get_sliced_prediction_mmdet(self):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import get_sliced_prediction
-        from sahi.utils.mmdet import (MmdetTestConstants,
-                                      download_mmdet_yolox_tiny_model)
+        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
 
         # init model
         download_mmdet_yolox_tiny_model()
@@ -189,8 +186,7 @@ class TestPredict(unittest.TestCase):
     def test_get_sliced_prediction_yolov5(self):
         from sahi.model import Yolov5DetectionModel
         from sahi.predict import get_sliced_prediction
-        from sahi.utils.yolov5 import (Yolov5TestConstants,
-                                       download_yolov5n_model)
+        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
         # init model
         download_yolov5n_model()
@@ -253,10 +249,8 @@ class TestPredict(unittest.TestCase):
 
     def test_coco_json_prediction(self):
         from sahi.predict import predict
-        from sahi.utils.mmdet import (MmdetTestConstants,
-                                      download_mmdet_yolox_tiny_model)
-        from sahi.utils.yolov5 import (Yolov5TestConstants,
-                                       download_yolov5n_model)
+        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
+        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
         # init model
         download_mmdet_yolox_tiny_model()

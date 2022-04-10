@@ -6,9 +6,7 @@ import unittest
 import numpy as np
 
 from sahi.utils.cv import read_image
-from sahi.utils.mmdet import (MmdetTestConstants,
-                              download_mmdet_cascade_mask_rcnn_model,
-                              download_mmdet_yolox_tiny_model)
+from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_yolox_tiny_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5

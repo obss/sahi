@@ -7,9 +7,11 @@ from typing import Dict, List, Optional
 import numpy as np
 
 from sahi.utils.coco import CocoAnnotation, CocoPrediction
-from sahi.utils.cv import (get_bbox_from_bool_mask,
-                           get_bool_mask_from_coco_segmentation,
-                           get_coco_segmentation_from_bool_mask)
+from sahi.utils.cv import (
+    get_bbox_from_bool_mask,
+    get_bool_mask_from_coco_segmentation,
+    get_coco_segmentation_from_bool_mask,
+)
 from sahi.utils.shapely import ShapelyAnnotation
 
 

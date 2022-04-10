@@ -168,10 +168,13 @@ def torch_to_numpy(img):
 
 def data_processing(img, image_size):
     import torchvision.transforms as T
+
     img = numpy_to_pil(img)
-    preprocess = T.Compose([
-        T.Resize(image_size),
-    ])
+    preprocess = T.Compose(
+        [
+            T.Resize(image_size),
+        ]
+    )
     img = preprocess(img)
     img = pil_to_numpy(img)
     return img
@@ -179,11 +182,13 @@ def data_processing(img, image_size):
 
 def numpy_to_pil(img):
     import PIL.Image
+
     img = PIL.Image.fromarray(img)
     return img
 
 
 def pil_to_numpy(img):
     import numpy as np
+
     img = np.array(img)
     return img

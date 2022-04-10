@@ -4,8 +4,7 @@
 
 import unittest
 
-from sahi.utils.torchvision import (TorchVisionTestConstants,
-                                    download_torchvision_model, read_image)
+from sahi.utils.torchvision import TorchVisionTestConstants, download_torchvision_model, read_image
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5

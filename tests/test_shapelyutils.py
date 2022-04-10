@@ -3,8 +3,7 @@
 
 import unittest
 
-from sahi.utils.shapely import (MultiPolygon, ShapelyAnnotation,
-                                get_shapely_box, get_shapely_multipolygon)
+from sahi.utils.shapely import MultiPolygon, ShapelyAnnotation, get_shapely_box, get_shapely_multipolygon
 
 
 class TestShapelyUtils(unittest.TestCase):
