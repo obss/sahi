@@ -156,7 +156,11 @@ Find detailed info on MOT utilities (ground truth dataset creation, exporting tr
 
 ### Input, Export Video Support 
 
+<<<<<<< HEAD
 A video can be given as input and the results can be exported as video. You can also see the SAHI predictions during inference on the interactive window where fast-forwarding or backwarding is also possible.
+=======
+As the input, the video can be given and the results can be exporting as video. It can also see the SAHI prediction result during inference on opened window, video can be skip or prev. However, it can be still predicted from the image.
+>>>>>>> 100f6fdbdafae3ee67b2bd825c7c92aa0dadb4db
 
 One more thing added prediction time to terminal.
 
@@ -166,7 +170,11 @@ For input, export video:
 For view result of prediction during inference:
 ` sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --export_video --video_path home/burak/video.mp4  --view_img` 
 
+<<<<<<< HEAD
 For fast-forwarding or backwarding at result view of prediction during inference::
+=======
+For skip or prev view result of prediction during inference:
+>>>>>>> 100f6fdbdafae3ee67b2bd825c7c92aa0dadb4db
 ` sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --export_video --video_path /home/burak/video.mp4  --view_img --forward_backward` 
 
 * Skip 100 frames, on opened window  press key = d 
