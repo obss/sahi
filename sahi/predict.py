@@ -7,11 +7,9 @@ import time
 import warnings
 from typing import Dict, List, Optional
 
-from PIL import Image
 import cv2
-from matplotlib.pyplot import pause
-
 import numpy as np
+from PIL import Image
 from tqdm import tqdm
 
 from sahi.postprocess.combine import (
@@ -322,7 +320,7 @@ def predict(
     export_video: bool = False,
     view_image: bool = False,
     video_path: str = None,
-    forward_backward: bool = False,
+    fast_forwarding_backwarding: bool = False,
     export_pickle: bool = False,
     export_crop: bool = False,
     dataset_json_path: bool = None,
@@ -385,6 +383,14 @@ def predict(
             postprocessed after sliced prediction.
         postprocess_class_agnostic: bool
             If True, postprocess will ignore category ids.
+        video_path: str
+            If you inference on a video file, give path of the video.
+        export_video: bool
+            Export predictions as video.
+        view_image: bool
+            View result of prediction during inference.
+        fast_forwarding_backwarding: bool
+            You can forwarding or backwarding on interactive windows when view image.
         export_pickle: bool
             Export predictions as .pickle
         export_crop: bool
@@ -424,10 +430,10 @@ def predict(
 
     # for profiling
     durations_in_seconds = dict()
-    
-    # Need this line, if we don't give images to model 
+
+    # Need this line, if we don't give images to model
     if source is None:
-        source = ''
+        source = ""
 
     # list image files in directory
     if dataset_json_path:
@@ -475,11 +481,9 @@ def predict(
 
     # Input video
     if export_video:
-        if video_path is not None:
-            #get video name with extension
-            image_base = os.path.basename(video_path)
-        else:
-            print("\nVideo path is none. Enter (--video_path 'path' --export_video) in terminal!\n")
+        assert video_path is not None, "Video path is none. Enter (--video_path 'path' --export_video) in terminal!"
+        # get video name with extension
+        image_base = os.path.basename(video_path)
         # get video from video path
         cap = cv2.VideoCapture(video_path)
         # get video properties
@@ -488,14 +492,15 @@ def predict(
         h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         size = (w, h)
 
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(str(save_dir) + '/{}'.format(image_base), fourcc, fps, size)
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        new_video_path = os.path.join(save_dir, image_base)
+        out = cv2.VideoWriter(new_video_path, fourcc, fps, size)
 
         if view_image:
-            cv2.namedWindow('Prediction of {}'.format(str(image_base)), cv2.WINDOW_AUTOSIZE)
-        
-        if forward_backward:
-            
+            cv2.namedWindow("Prediction of {}".format(str(image_base)), cv2.WINDOW_AUTOSIZE)
+
+        if fast_forwarding_backwarding:
+
             def get_video(cap):
                 while cap.isOpened:
                     k = cv2.waitKey(30)
@@ -503,27 +508,30 @@ def predict(
                     frame_num = cap.get(cv2.CAP_PROP_POS_FRAMES)
 
                     if k == 27:
-                        print('\nQuitting...\n') # Exit the prediction, Key = Esc
+                        print(
+                            "\n===========================Closing==========================="
+                        )  # Exit the prediction, Key = Esc
                         exit()
                     if k == 100:
-                        frame_num += 100 # Skip 100 frames, Key = d
+                        frame_num += 100  # Skip 100 frames, Key = d
                     if k == 97:
-                        frame_num -= 100 # Prev 100 frames, Key = a
+                        frame_num -= 100  # Prev 100 frames, Key = a
                     if k == 102:
-                        frame_num += 5 # Skip 5 frames, Key = g
+                        frame_num += 5  # Skip 5 frames, Key = g
                     if k == 103:
-                        frame_num -= 5 # Prev 5 frames, Key = f
+                        frame_num -= 5  # Prev 5 frames, Key = f
                     cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
 
                     ret, frame = cap.read()
                     if not ret:
-                        print('\n\nVideo ended...\n')
+                        print("\n===========================Video Ended===========================")
                         break
                     yield Image.fromarray(frame)
 
                     if view_image:
-                        cv2.imshow('Prediction of {}'.format(str(image_base)), get_image)
+                        cv2.imshow("Prediction of {}".format(str(image_base)), get_image_from_dict)
                         cv2.waitKey(1)
+
         else:
 
             def get_video(cap):
@@ -531,35 +539,38 @@ def predict(
                     k = cv2.waitKey(30)
 
                     if k == 27:
-                        print('\n\nQuitting...\n') # Exit the prediction, Key = Esc
+                        print(
+                            "\n===========================Closing==========================="
+                        )  # Exit the prediction, Key = Esc
                         exit()
-                    
+
                     ret, frame = cap.read()
                     if not ret:
-                        print('\n\nVideo ended...\n')
+                        print("\n===========================Video Ended===========================")
                         break
                     yield Image.fromarray(frame)
 
                     if view_image:
-                        cv2.imshow('Prediction of {}'.format(str(image_base)), get_image)
+                        cv2.imshow("Prediction of {}".format(str(image_base)), get_image_from_dict)
                         cv2.waitKey(1)
+
         item = get_video(cap)
-    
+
     else:
         # If you don't want to prediction on video, the model will be given image_path_list.
-        item = image_path_list                
+        item = image_path_list
 
     for ind, image_path in enumerate(tqdm(item, "Performing inference on images")):
         # get filename
         if os.path.isdir(source) and not export_video:  # preserve source folder structure in export
             relative_filepath = str(Path(image_path)).split(str(Path(source)))[-1]
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
-        
-        elif not export_video: # no process if source is single file
+
+        elif not export_video:  # no process if source is single file
             relative_filepath = Path(image_path).name
 
         else:  # When the model will be given video, used this line for don't get error.
-            relative_filepath = '.png'
+            relative_filepath = ".png"
 
         filename_without_extension = Path(relative_filepath).stem
 
@@ -599,7 +610,7 @@ def predict(
 
         durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
         # Show prediction time
-        print('\nPrediction time is: {:.2f} ms'.format(prediction_result.durations_in_seconds["prediction"] * 1000))
+        print("\nPrediction time is: {:.2f} ms".format(prediction_result.durations_in_seconds["prediction"] * 1000))
 
         if dataset_json_path:
             # append predictions in coco format
@@ -678,7 +689,8 @@ def predict(
             )
 
             # Get the image with bboxes added on it with cv.py
-            _ , get_image = visualize_object_predictions(np.ascontiguousarray(image_as_pil),
+            image_and_elapsed_time = visualize_object_predictions(
+                np.ascontiguousarray(image_as_pil),
                 object_prediction_list=object_prediction_list,
                 rect_th=visual_bbox_thickness,
                 text_size=visual_text_size,
@@ -687,17 +699,17 @@ def predict(
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
             )
- 
+            get_image_from_dict = image_and_elapsed_time["image"]
+
         time_end = time.time() - time_start
         durations_in_seconds["export_files"] = time_end
 
         if export_video:
-            out.write(get_image)
+            out.write(get_image_from_dict)
         else:
             Path(output_dir).mkdir(parents=True, exist_ok=True)
-            filename = filename_without_extension = Path(relative_filepath).stem
-            save_path = os.path.join(output_dir, filename + '.' + 'png')
-            cv2.imwrite(save_path, cv2.cvtColor(get_image, cv2.COLOR_RGB2BGR))
+            save_path = os.path.join(output_dir, filename_without_extension + "." + "png")
+            cv2.imwrite(save_path, cv2.cvtColor(get_image_from_dict, cv2.COLOR_RGB2BGR))
 
     # export coco results
     if dataset_json_path:
