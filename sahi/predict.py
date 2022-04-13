@@ -23,7 +23,7 @@ from sahi.postprocess.legacy.combine import UnionMergePostprocess
 from sahi.prediction import ObjectPrediction, PredictionResult
 from sahi.slicing import slice_image
 from sahi.utils.coco import Coco, CocoImage
-from sahi.utils.cv import crop_object_predictions, read_image_as_pil, visualize_object_predictions, get_video_reader
+from sahi.utils.cv import crop_object_predictions, get_video_reader, read_image_as_pil, visualize_object_predictions
 from sahi.utils.file import Path, import_class, increment_path, list_files, save_json, save_pickle
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
@@ -353,7 +353,7 @@ def predict(
         model_category_remapping: dict: str to int
             Remap category ids after performing inference
         source: str
-            Folder directory that contains images or path of the image to be predicted. Also video to be predicted. 
+            Folder directory that contains images or path of the image to be predicted. Also video to be predicted.
         no_standard_prediction: bool
             Dont perform standard prediction. Default: False.
         no_sliced_prediction: bool
@@ -479,16 +479,17 @@ def predict(
 
         read_video_frame, image_base = get_video_reader(source, save_dir, export_visual, view_image, fast_forwarding)
         item = read_video_frame
-    
+
     elif input_video and export_visual:
-        
-        read_video_frame, out, image_base = get_video_reader(source, save_dir, export_visual, view_image, fast_forwarding)
+
+        read_video_frame, out, image_base = get_video_reader(
+            source, save_dir, export_visual, view_image, fast_forwarding
+        )
         item = read_video_frame
-    
+
     else:
         # If you don't want to prediction on video, the model will be given image_path_list.
         item = image_path_list
-
 
     for ind, image_path in enumerate(tqdm(item, "Performing inference on images")):
         # get filename
@@ -632,11 +633,9 @@ def predict(
             Path(output_dir).mkdir(parents=True, exist_ok=True)
             save_path = os.path.join(output_dir, filename_without_extension + "." + "png")
             cv2.imwrite(save_path, cv2.cvtColor(get_image_from_dict, cv2.COLOR_RGB2BGR))
-        
+
         time_end = time.time() - time_start
         durations_in_seconds["export_files"] = time_end
-
-        
 
     # export coco results
     if dataset_json_path:
