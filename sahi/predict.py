@@ -23,7 +23,7 @@ from sahi.postprocess.legacy.combine import UnionMergePostprocess
 from sahi.prediction import ObjectPrediction, PredictionResult
 from sahi.slicing import slice_image
 from sahi.utils.coco import Coco, CocoImage
-from sahi.utils.cv import crop_object_predictions, read_image_as_pil, visualize_object_predictions
+from sahi.utils.cv import crop_object_predictions, read_image_as_pil, visualize_object_predictions, get_video_reader
 from sahi.utils.file import Path, import_class, increment_path, list_files, save_json, save_pickle
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
@@ -316,11 +316,11 @@ def predict(
     postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
-    export_visual: bool = True,
-    export_video: bool = False,
+    export_visual: bool = False,
+    input_video: bool = False,
     view_image: bool = False,
-    video_path: str = None,
-    fast_forwarding_backwarding: bool = False,
+    fast_forwarding: bool = False,
+    save_dir: str = None,
     export_pickle: bool = False,
     export_crop: bool = False,
     dataset_json_path: bool = None,
@@ -353,7 +353,7 @@ def predict(
         model_category_remapping: dict: str to int
             Remap category ids after performing inference
         source: str
-            Folder directory that contains images or path of the image to be predicted.
+            Folder directory that contains images or path of the image to be predicted. Also video to be predicted. 
         no_standard_prediction: bool
             Dont perform standard prediction. Default: False.
         no_sliced_prediction: bool
@@ -383,13 +383,11 @@ def predict(
             postprocessed after sliced prediction.
         postprocess_class_agnostic: bool
             If True, postprocess will ignore category ids.
-        video_path: str
-            If you inference on a video file, give path of the video.
-        export_video: bool
-            Export predictions as video.
+        input_video: bool
+            If True, inference on video.
         view_image: bool
             View result of prediction during inference.
-        fast_forwarding_backwarding: bool
+        fast_forwarding: bool
             You can forwarding or backwarding on interactive windows when view image.
         export_pickle: bool
             Export predictions as .pickle
@@ -431,10 +429,6 @@ def predict(
     # for profiling
     durations_in_seconds = dict()
 
-    # Need this line, if we don't give images to model
-    if source is None:
-        source = ""
-
     # list image files in directory
     if dataset_json_path:
         coco: Coco = Coco.from_coco_dict_or_path(dataset_json_path)
@@ -449,13 +443,14 @@ def predict(
     else:
         image_path_list = [source]
 
-    # init export directories
-    save_dir = Path(increment_path(Path(project) / name, exist_ok=False))  # increment run
-    crop_dir = save_dir / "crops"
-    visual_dir = save_dir / "visuals"
-    visual_with_gt_dir = save_dir / "visuals_with_gt"
-    pickle_dir = save_dir / "pickles"
-    save_dir.mkdir(parents=True, exist_ok=True)  # make dir
+    if export_visual:
+        # init export directories
+        save_dir = Path(increment_path(Path(project) / name, exist_ok=False))  # increment run
+        crop_dir = save_dir / "crops"
+        visual_dir = save_dir / "visuals"
+        visual_with_gt_dir = save_dir / "visuals_with_gt"
+        pickle_dir = save_dir / "pickles"
+        save_dir.mkdir(parents=True, exist_ok=True)  # make dir
 
     # init model instance
     time_start = time.time()
@@ -480,93 +475,28 @@ def predict(
     durations_in_seconds["slice"] = 0
 
     # Input video
-    if export_video:
-        assert video_path is not None, "Video path is none. Enter (--video_path 'path' --export_video) in terminal!"
-        # get video name with extension
-        image_base = os.path.basename(video_path)
-        # get video from video path
-        cap = cv2.VideoCapture(video_path)
-        # get video properties
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        size = (w, h)
+    if input_video and not export_visual:
 
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        new_video_path = os.path.join(save_dir, image_base)
-        out = cv2.VideoWriter(new_video_path, fourcc, fps, size)
-
-        if view_image:
-            cv2.namedWindow("Prediction of {}".format(str(image_base)), cv2.WINDOW_AUTOSIZE)
-
-        if fast_forwarding_backwarding:
-
-            def get_video(cap):
-                while cap.isOpened:
-                    k = cv2.waitKey(30)
-
-                    frame_num = cap.get(cv2.CAP_PROP_POS_FRAMES)
-
-                    if k == 27:
-                        print(
-                            "\n===========================Closing==========================="
-                        )  # Exit the prediction, Key = Esc
-                        exit()
-                    if k == 100:
-                        frame_num += 100  # Skip 100 frames, Key = d
-                    if k == 97:
-                        frame_num -= 100  # Prev 100 frames, Key = a
-                    if k == 102:
-                        frame_num += 5  # Skip 5 frames, Key = g
-                    if k == 103:
-                        frame_num -= 5  # Prev 5 frames, Key = f
-                    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
-
-                    ret, frame = cap.read()
-                    if not ret:
-                        print("\n===========================Video Ended===========================")
-                        break
-                    yield Image.fromarray(frame)
-
-                    if view_image:
-                        cv2.imshow("Prediction of {}".format(str(image_base)), get_image_from_dict)
-                        cv2.waitKey(1)
-
-        else:
-
-            def get_video(cap):
-                while cap.isOpened:
-                    k = cv2.waitKey(30)
-
-                    if k == 27:
-                        print(
-                            "\n===========================Closing==========================="
-                        )  # Exit the prediction, Key = Esc
-                        exit()
-
-                    ret, frame = cap.read()
-                    if not ret:
-                        print("\n===========================Video Ended===========================")
-                        break
-                    yield Image.fromarray(frame)
-
-                    if view_image:
-                        cv2.imshow("Prediction of {}".format(str(image_base)), get_image_from_dict)
-                        cv2.waitKey(1)
-
-        item = get_video(cap)
-
+        read_video_frame, image_base = get_video_reader(source, save_dir, export_visual, view_image, fast_forwarding)
+        item = read_video_frame
+    
+    elif input_video and export_visual:
+        
+        read_video_frame, out, image_base = get_video_reader(source, save_dir, export_visual, view_image, fast_forwarding)
+        item = read_video_frame
+    
     else:
         # If you don't want to prediction on video, the model will be given image_path_list.
         item = image_path_list
 
+
     for ind, image_path in enumerate(tqdm(item, "Performing inference on images")):
         # get filename
-        if os.path.isdir(source) and not export_video:  # preserve source folder structure in export
+        if os.path.isdir(source) and not input_video:  # preserve source folder structure in export
             relative_filepath = str(Path(image_path)).split(str(Path(source)))[-1]
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
 
-        elif not export_video:  # no process if source is single file
+        elif not input_video:  # no process if source is single file
             relative_filepath = Path(image_path).name
 
         else:  # When the model will be given video, used this line for don't get error.
@@ -677,16 +607,6 @@ def predict(
         # export visualization
         if export_visual:
             output_dir = str(visual_dir / Path(relative_filepath).parent)
-            visualize_object_predictions(
-                np.ascontiguousarray(image_as_pil),
-                object_prediction_list=object_prediction_list,
-                rect_th=visual_bbox_thickness,
-                text_size=visual_text_size,
-                text_th=visual_text_thickness,
-                output_dir=output_dir,
-                file_name=filename_without_extension,
-                export_format=visual_export_format,
-            )
 
             # Get the image with bboxes added on it with cv.py
             image_and_elapsed_time = visualize_object_predictions(
@@ -699,17 +619,24 @@ def predict(
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
             )
+
             get_image_from_dict = image_and_elapsed_time["image"]
 
-        time_end = time.time() - time_start
-        durations_in_seconds["export_files"] = time_end
-
-        if export_video:
+        if export_visual and input_video:
             out.write(get_image_from_dict)
-        else:
+
+            if view_image:
+                cv2.imshow("Prediction of {}".format(str(image_base)), get_image_from_dict)
+
+        if export_visual and not input_video:
             Path(output_dir).mkdir(parents=True, exist_ok=True)
             save_path = os.path.join(output_dir, filename_without_extension + "." + "png")
             cv2.imwrite(save_path, cv2.cvtColor(get_image_from_dict, cv2.COLOR_RGB2BGR))
+        
+        time_end = time.time() - time_start
+        durations_in_seconds["export_files"] = time_end
+
+        
 
     # export coco results
     if dataset_json_path:
