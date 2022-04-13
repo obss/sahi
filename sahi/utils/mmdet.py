@@ -6,6 +6,8 @@ from os import path
 from pathlib import Path
 from typing import Optional
 
+from sahi.utils.file import download_from_url
+
 
 def mmdet_version_as_integer():
     import mmdet
@@ -14,26 +16,18 @@ def mmdet_version_as_integer():
 
 
 class MmdetTestConstants:
-    try:
-        MMDET_CASCADEMASKRCNN_MODEL_URL = "http://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
-        MMDET_CASCADEMASKRCNN_MODEL_PATH = (
-            "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
-        )
-        MMDET_RETINANET_MODEL_URL = "http://download.openmmlab.com/mmdetection/v2.0/retinanet/retinanet_r50_fpn_2x_coco/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
-        MMDET_RETINANET_MODEL_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
+    MMDET_CASCADEMASKRCNN_MODEL_URL = "http://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
+    MMDET_CASCADEMASKRCNN_MODEL_PATH = (
+        "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
+    )
+    MMDET_RETINANET_MODEL_URL = "http://download.openmmlab.com/mmdetection/v2.0/retinanet/retinanet_r50_fpn_2x_coco/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
+    MMDET_RETINANET_MODEL_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
+    MMDET_YOLOX_TINY_MODEL_URL = "https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_tiny_8x8_300e_coco/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
+    MMDET_YOLOX_TINY_MODEL_PATH = "tests/data/models/mmdet_yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
 
-        if mmdet_version_as_integer() < 290:
-            MMDET_CASCADEMASKRCNN_CONFIG_PATH = (
-                "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco_v280.py"
-            )
-            MMDET_RETINANET_CONFIG_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco_v280.py"
-        else:
-            MMDET_CASCADEMASKRCNN_CONFIG_PATH = (
-                "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco.py"
-            )
-            MMDET_RETINANET_CONFIG_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py"
-    except ImportError:
-        print("warning: mmdet installation not found, omitting MmdetTestConstants")
+    MMDET_CASCADEMASKRCNN_CONFIG_PATH = "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco.py"
+    MMDET_RETINANET_CONFIG_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py"
+    MMDET_YOLOX_TINY_CONFIG_PATH = "tests/data/models/mmdet_yolox/yolox_tiny_8x8_300e_coco.py"
 
 
 def download_mmdet_cascade_mask_rcnn_model(destination_path: Optional[str] = None):
@@ -43,11 +37,7 @@ def download_mmdet_cascade_mask_rcnn_model(destination_path: Optional[str] = Non
 
     Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
 
-    if not path.exists(destination_path):
-        urllib.request.urlretrieve(
-            MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_URL,
-            destination_path,
-        )
+    download_from_url(MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_URL, destination_path)
 
 
 def download_mmdet_retinanet_model(destination_path: Optional[str] = None):
@@ -57,11 +47,17 @@ def download_mmdet_retinanet_model(destination_path: Optional[str] = None):
 
     Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
 
-    if not path.exists(destination_path):
-        urllib.request.urlretrieve(
-            MmdetTestConstants.MMDET_RETINANET_MODEL_URL,
-            destination_path,
-        )
+    download_from_url(MmdetTestConstants.MMDET_RETINANET_MODEL_URL, destination_path)
+
+
+def download_mmdet_yolox_tiny_model(destination_path: Optional[str] = None):
+
+    if destination_path is None:
+        destination_path = MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH
+
+    Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
+
+    download_from_url(MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_URL, destination_path)
 
 
 def download_mmdet_config(
@@ -194,11 +190,3 @@ def download_mmdet_config(
         shutil.rmtree(temp_configs_dir)
 
     return path.abspath(final_config_path)
-
-
-if __name__ == "__main__":
-    download_mmdet_config(
-        model_name="cascade_rcnn",
-        config_file_name="cascade_mask_rcnn_r50_fpn_1x_coco.py",
-        verbose=False,
-    )

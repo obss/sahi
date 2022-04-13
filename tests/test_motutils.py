@@ -12,7 +12,7 @@ class TestMotUtils(unittest.TestCase):
 
         export_dir = "tests/data/mot/"
         if os.path.isdir(export_dir):
-            shutil.rmtree(export_dir)
+            shutil.rmtree(export_dir, ignore_errors=True)
 
         mot_video = MotVideo(name="video.mp4")
         # frame 0

@@ -341,7 +341,7 @@ class TestCocoUtils(unittest.TestCase):
         image_dir = "tests/data/coco_utils/"
         output_dir = "tests/data/coco2yolo/"
         if os.path.isdir(output_dir):
-            shutil.rmtree(output_dir)
+            shutil.rmtree(output_dir, ignore_errors=True)
         coco = Coco.from_coco_dict_or_path(coco_dict_path, image_dir=image_dir)
         coco.export_as_yolov5(output_dir=output_dir, train_split_rate=0.5, numpy_seed=0)
 
@@ -460,8 +460,8 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(merged_coco_dict["annotations"][6]["image_id"], 1)
         self.assertEqual(merged_coco_dict["annotations"][6]["id"], 7)
         self.assertEqual(merged_coco_dict["annotations"][7]["category_id"], 2)
-        self.assertEqual(merged_coco_dict["annotations"][7]["image_id"], 2)
-        self.assertEqual(merged_coco_dict["annotations"][7]["id"], 8)
+        self.assertEqual(merged_coco_dict["annotations"][7]["image_id"], 3)
+        self.assertEqual(merged_coco_dict["annotations"][7]["id"], 9)
 
     def test_merge_from_list(self):
         from sahi.utils.coco import merge_from_list
@@ -496,11 +496,11 @@ class TestCocoUtils(unittest.TestCase):
         )
         self.assertEqual(
             merged_coco_dict["annotations"][12]["id"],
-            13,
+            15,
         )
         self.assertEqual(
             merged_coco_dict["annotations"][12]["image_id"],
-            3,
+            5,
         )
         self.assertEqual(
             merged_coco_dict["annotations"][9]["category_id"],
@@ -508,7 +508,7 @@ class TestCocoUtils(unittest.TestCase):
         )
         self.assertEqual(
             merged_coco_dict["annotations"][9]["image_id"],
-            2,
+            3,
         )
 
     def test_coco_merge(self):
@@ -788,7 +788,7 @@ class TestCocoUtils(unittest.TestCase):
         image_dir = "tests/data/coco_utils/"
         output_dir = "tests/data/export_coco_as_yolov5/"
         if os.path.isdir(output_dir):
-            shutil.rmtree(output_dir)
+            shutil.rmtree(output_dir, ignore_errors=True)
         coco = Coco.from_coco_dict_or_path(coco_dict_path, image_dir=image_dir)
         export_coco_as_yolov5(output_dir=output_dir, train_coco=coco, val_coco=coco, numpy_seed=0)
 

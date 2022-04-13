@@ -3,6 +3,7 @@
 # Modified by Sinan O Altinuc, 2020.
 
 import copy
+import logging
 import os
 from collections import Counter, defaultdict
 from dataclasses import dataclass
@@ -11,11 +12,17 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 
 import numpy as np
-from shapely.geometry.geo import shape
 from tqdm import tqdm
 
 from sahi.utils.file import load_json, save_json
-from sahi.utils.shapely import ShapelyAnnotation, box, get_bbox_from_shapely, get_shapely_multipolygon
+from sahi.utils.shapely import ShapelyAnnotation, box, get_shapely_multipolygon
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
+    datefmt="%m/%d/%Y %H:%M:%S",
+    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+)
 
 
 class CocoCategory:
@@ -119,7 +126,19 @@ class CocoAnnotation:
             annotation_dict: dict
                 COCO formatted annotation dict (with fields "bbox", "segmentation", "category_id")
         """
-        if annotation_dict["segmentation"]:
+        if annotation_dict.__contains__("segmentation") and not isinstance(annotation_dict["segmentation"], list):
+            has_rle_segmentation = True
+            logger.warning(
+                f"Segmentation annotation for id {annotation_dict['id']} is skipped since RLE segmentation format is not supported."
+            )
+        else:
+            has_rle_segmentation = False
+
+        if (
+            annotation_dict.__contains__("segmentation")
+            and annotation_dict["segmentation"]
+            and not has_rle_segmentation
+        ):
             return cls(
                 segmentation=annotation_dict["segmentation"],
                 category_id=annotation_dict["category_id"],
@@ -996,7 +1015,7 @@ class Coco:
         # https://github.com/obss/sahi/issues/98
         image_id_set: Set = set()
 
-        for coco_image_dict in coco_dict["images"]:
+        for coco_image_dict in tqdm(coco_dict["images"], "Loading coco annotations"):
             coco_image = CocoImage.from_coco_image_dict(coco_image_dict)
             image_id = coco_image_dict["id"]
             # https://github.com/obss/sahi/issues/98
@@ -1207,7 +1226,7 @@ class Coco:
         elif train_split_rate == 1:
             split_mode = "TRAIN"
         else:
-            ValueError("train_split_rate cannot be <0 or >1")
+            raise ValueError("train_split_rate cannot be <0 or >1")
 
         # split dataset
         if split_mode == "TRAINVAL":
@@ -1668,18 +1687,18 @@ def merge(coco_dict1: dict, coco_dict2: dict, desired_name2id: dict = None) -> d
         temp_coco_dict2 = update_categories(desired_name2id, temp_coco_dict2)
 
     # calculate first image and annotation index of the second coco file
-    last_image_id = coco_dict1["images"][-1]["id"]
-    last_annotation_id = coco_dict1["annotations"][-1]["id"]
+    max_image_id = np.array([image["id"] for image in coco_dict1["images"]]).max()
+    max_annotation_id = np.array([annotation["id"] for annotation in coco_dict1["annotations"]]).max()
 
     merged_coco_dict = temp_coco_dict1
 
     for image in temp_coco_dict2["images"]:
-        image["id"] += last_image_id
+        image["id"] += max_image_id + 1
         merged_coco_dict["images"].append(image)
 
     for annotation in temp_coco_dict2["annotations"]:
-        annotation["image_id"] += last_image_id
-        annotation["id"] += last_annotation_id
+        annotation["image_id"] += max_image_id + 1
+        annotation["id"] += max_annotation_id + 1
         merged_coco_dict["annotations"].append(annotation)
 
     return merged_coco_dict
@@ -1791,7 +1810,7 @@ def get_imageid2annotationlist_mapping(
     """
     image_id_to_annotation_list: Dict = defaultdict(list)
     print("indexing coco dataset annotations...")
-    for annotation in tqdm(coco_dict["annotations"]):
+    for annotation in coco_dict["annotations"]:
         image_id = annotation["image_id"]
         image_id_to_annotation_list[image_id].append(annotation)
 
@@ -1866,104 +1885,6 @@ def create_coco_dict(images, categories, ignore_negative_samples=False):
     }
     # return coco dict
     return coco_dict
-
-
-def split_coco_as_train_val(
-    coco_file_path_or_dict,
-    file_name=None,
-    target_dir=None,
-    train_split_rate=0.9,
-    numpy_seed=0,
-):
-    """
-    Takes single coco dataset file path, split images into train-val and saves as seperate coco dataset files.
-
-    Args:
-        coco_file_path_or_dict: str or dict
-        file_name: str
-        target_dir: str
-        train_split_rate: float
-        numpy_seed: int
-
-    Returns:
-        result : dict
-            {
-                "train_dict": "",
-                "val_dict": "",
-                "train_path": "",
-                "val_path": "",
-            }
-    """
-    # fix numpy numpy seed
-    np.random.seed(numpy_seed)
-
-    # set output coco file name
-    if file_name:
-        None
-    elif isinstance(coco_file_path_or_dict, str):
-        file_name = os.path.basename(coco_file_path_or_dict).replace(".json", "")
-    elif target_dir:
-        raise ValueError("file_name should be specified.")
-
-    # read coco dict
-    if isinstance(coco_file_path_or_dict, str):
-        coco_dict = load_json(coco_file_path_or_dict)
-    else:
-        coco_dict = coco_file_path_or_dict
-
-    # divide coco dict into train val coco dicts
-    num_images = len(coco_dict["images"])
-    random_indices = np.random.permutation(num_images).tolist()
-    random_indices = [random_indice + 1 for random_indice in random_indices]
-    image_ids = {a["image_id"] for a in coco_dict["annotations"]}
-    image_id_2_idx = {i_id: i for i, i_id in enumerate(image_ids)}
-    num_train = int(num_images * train_split_rate)
-
-    # divide images
-    train_indices = random_indices[:num_train]
-    val_indices = random_indices[num_train:]
-    train_images = np.array(coco_dict["images"])[(np.array(train_indices) - 1).tolist()].tolist()
-    val_images = np.array(coco_dict["images"])[(np.array(val_indices) - 1).tolist()].tolist()
-    # divide annotations
-    train_annotations = list()
-    val_annotations = list()
-    print("splitting coco dataset into train/val...")
-    for annotation in coco_dict["annotations"]:
-        image_index_for_annotation = image_id_2_idx[annotation["image_id"]]
-        if image_index_for_annotation in train_indices:
-            train_annotations.append(annotation)
-        elif image_index_for_annotation in val_indices:
-            val_annotations.append(annotation)
-    # form train val coco dicts
-    train_coco_dict = {
-        "images": train_images,
-        "annotations": train_annotations,
-        "categories": coco_dict["categories"],
-    }
-    val_coco_dict = {
-        "images": val_images,
-        "annotations": val_annotations,
-        "categories": coco_dict["categories"],
-    }
-    # return result
-    if not target_dir:
-        return {
-            "train_dict": train_coco_dict,
-            "val_dict": val_coco_dict,
-            "train_path": "",
-            "val_path": "",
-        }
-    else:
-        train_coco_dict_path = os.path.join(target_dir, file_name + "_train.json")
-        save_json(train_coco_dict, train_coco_dict_path)
-        val_coco_dict_path = os.path.join(target_dir, file_name + "_val.json")
-        save_json(val_coco_dict, val_coco_dict_path)
-        return {
-            "train_dict": train_coco_dict,
-            "val_dict": val_coco_dict,
-            "train_path": train_coco_dict_path,
-            "val_path": val_coco_dict_path,
-        }
 
 
 def add_bbox_and_area_to_coco(
@@ -2272,11 +2193,11 @@ def export_coco_as_yolov5(
     elif train_coco and val_coco:
         split_mode = False
     else:
-        ValueError("'train_coco' have to be provided")
+        raise ValueError("'train_coco' have to be provided")
 
     # check train_split_rate
     if split_mode and not (0 < train_split_rate < 1):
-        ValueError("train_split_rate cannot be <0 or >1")
+        raise ValueError("train_split_rate cannot be <0 or >1")
 
     # split dataset
     if split_mode:

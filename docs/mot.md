@@ -1,9 +1,6 @@
 # MOT Utilities
 
-<details closed>
-<summary>
-<big><b>MOT Challenge formatted ground truth dataset creation:</b></big>
-</summary>
+## MOT Challenge formatted ground truth dataset creation:
 
 - import required classes:
 
@@ -50,10 +47,7 @@ mot_video.export(export_dir="mot_data", type="gt")
 - your MOT challenge formatted ground truth files are ready under `mot_data/sequence_name/` folder.
 </details>
 
-<details closed>
-<summary>
-<big><b>Advanced MOT Challenge formatted ground truth dataset creation:</b></big>
-</summary>
+## Advanced MOT Challenge formatted ground truth dataset creation:
 
 - you can customize tracker while initializing mot video object:
 
@@ -71,7 +65,6 @@ mot_video = MotVideo(tracker_kwargs=tracker_params)
 ```
 
 - you can omit automatic track id generation and directly provide track ids of annotations:
-
 
 ```python
 # create annotations with track ids:
@@ -99,10 +92,7 @@ mot_video.export(export_dir="mot_data", type="gt", exist_ok=True)
 - your MOT challenge formatted ground truth files are ready at `mot_data/sequence_name/gt/gt.txt`.
 </details>
 
-<details closed>
-<summary>
-<big><b>MOT Challenge formatted tracker output creation:</b></big>
-</summary>
+## MOT Challenge formatted tracker output creation:
 
 - import required classes:
 
@@ -149,10 +139,7 @@ mot_video.export(export_dir="mot_data", type="det")
 - your MOT challenge formatted detection output file is ready at `mot_data/sequence_name/det/det.txt`.
 </details>
 
-<details closed>
-<summary>
-<big><b>Advanced MOT Challenge formatted detection output creation:</b></big>
-</summary>
+## Advanced MOT Challenge formatted detection output creation:
 
 - you can overwrite the results into already present directory by adding `exist_ok=True`:
 

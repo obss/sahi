@@ -1,5 +1,3 @@
-import argparse
-
 import fire
 
 from sahi.utils.coco import Coco
@@ -37,6 +35,8 @@ def main(
         train_split_rate=train_split,
         numpy_seed=seed,
     )
+
+    print(f"COCO to YOLOv5 conversion results are successfully exported to {save_dir}")
 
 
 if __name__ == "__main__":

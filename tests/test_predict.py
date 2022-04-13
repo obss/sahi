@@ -9,6 +9,10 @@ import numpy as np
 
 from sahi.utils.cv import read_image
 
+MODEL_DEVICE = "cpu"
+CONFIDENCE_THRESHOLD = 0.5
+IMAGE_SIZE = 320
+
 
 class TestPredict(unittest.TestCase):
     def test_prediction_score(self):
@@ -25,17 +29,18 @@ class TestPredict(unittest.TestCase):
     def test_get_prediction_mmdet(self):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import get_prediction
-        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model
+        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
 
         # init model
-        download_mmdet_cascade_mask_rcnn_model()
+        download_mmdet_yolox_tiny_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
-            config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
-            confidence_threshold=0.3,
-            device=None,
+            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            device=MODEL_DEVICE,
             category_remapping=None,
+            image_size=IMAGE_SIZE,
         )
         mmdet_detection_model.load_model()
 
@@ -45,12 +50,12 @@ class TestPredict(unittest.TestCase):
 
         # get full sized prediction
         prediction_result = get_prediction(
-            image=image, detection_model=mmdet_detection_model, shift_amount=[0, 0], full_shape=None, image_size=320
+            image=image, detection_model=mmdet_detection_model, shift_amount=[0, 0], full_shape=None
         )
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 3)
+        self.assertEqual(len(object_prediction_list), 2)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -65,7 +70,7 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 3)
+        self.assertEqual(num_car, 2)
 
     def test_get_prediction_yolov5(self):
         from sahi.model import Yolov5DetectionModel
@@ -77,10 +82,11 @@ class TestPredict(unittest.TestCase):
 
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
-            confidence_threshold=0.3,
-            device=None,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=False,
+            image_size=IMAGE_SIZE,
         )
         yolov5_detection_model.load_model()
 
@@ -95,7 +101,7 @@ class TestPredict(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 15)
+        self.assertEqual(len(object_prediction_list), 2)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -110,23 +116,24 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 15)
+        self.assertEqual(num_car, 2)
 
     def test_get_sliced_prediction_mmdet(self):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import get_sliced_prediction
-        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model
+        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
 
         # init model
-        download_mmdet_cascade_mask_rcnn_model()
+        download_mmdet_yolox_tiny_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
-            config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
-            confidence_threshold=0.3,
-            device=None,
+            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=False,
+            image_size=IMAGE_SIZE,
         )
         mmdet_detection_model.load_model()
 
@@ -137,16 +144,14 @@ class TestPredict(unittest.TestCase):
         slice_width = 512
         overlap_height_ratio = 0.1
         overlap_width_ratio = 0.2
-        postprocess_type = "UNIONMERGE"
+        postprocess_type = "GREEDYNMM"
         match_metric = "IOS"
         match_threshold = 0.5
         class_agnostic = True
-        image_size = 320
 
         # get sliced prediction
         prediction_result = get_sliced_prediction(
             image=image_path,
-            image_size=image_size,
             detection_model=mmdet_detection_model,
             slice_height=slice_height,
             slice_width=slice_width,
@@ -154,14 +159,14 @@ class TestPredict(unittest.TestCase):
             overlap_width_ratio=overlap_width_ratio,
             perform_standard_pred=False,
             postprocess_type=postprocess_type,
-            postprocess_match_metric=match_metric,
             postprocess_match_threshold=match_threshold,
+            postprocess_match_metric=match_metric,
             postprocess_class_agnostic=class_agnostic,
         )
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 15)
+        self.assertEqual(len(object_prediction_list), 14)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -171,7 +176,7 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "truck":
                 num_truck += 1
-        self.assertEqual(num_truck, 1)
+        self.assertEqual(num_truck, 0)
         num_car = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
@@ -188,10 +193,11 @@ class TestPredict(unittest.TestCase):
 
         yolov5_detection_model = Yolov5DetectionModel(
             model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
-            confidence_threshold=0.3,
-            device=None,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=False,
+            image_size=IMAGE_SIZE,
         )
         yolov5_detection_model.load_model()
 
@@ -202,7 +208,7 @@ class TestPredict(unittest.TestCase):
         slice_width = 512
         overlap_height_ratio = 0.1
         overlap_width_ratio = 0.2
-        postprocess_type = "UNIONMERGE"
+        postprocess_type = "GREEDYNMM"
         match_metric = "IOS"
         match_threshold = 0.5
         class_agnostic = True
@@ -217,14 +223,14 @@ class TestPredict(unittest.TestCase):
             overlap_width_ratio=overlap_width_ratio,
             perform_standard_pred=False,
             postprocess_type=postprocess_type,
-            postprocess_match_metric=match_metric,
             postprocess_match_threshold=match_threshold,
+            postprocess_match_metric=match_metric,
             postprocess_class_agnostic=class_agnostic,
         )
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 19)
+        self.assertEqual(len(object_prediction_list), 10)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -239,17 +245,17 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 19)
+        self.assertEqual(num_car, 10)
 
     def test_coco_json_prediction(self):
         from sahi.predict import predict
-        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model
+        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
         from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
         # init model
-        download_mmdet_cascade_mask_rcnn_model()
+        download_mmdet_yolox_tiny_model()
 
-        postprocess_type = "UNIONMERGE"
+        postprocess_type = "GREEDYNMM"
         match_metric = "IOS"
         match_threshold = 0.5
         class_agnostic = True
@@ -261,13 +267,13 @@ class TestPredict(unittest.TestCase):
 
         # get full sized prediction
         if os.path.isdir(project_dir):
-            shutil.rmtree(project_dir)
+            shutil.rmtree(project_dir, ignore_errors=True)
         predict(
             model_type="mmdet",
-            model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
-            model_config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
-            model_confidence_threshold=0.4,
-            model_device=None,
+            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
+            model_config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
+            model_confidence_threshold=CONFIDENCE_THRESHOLD,
+            model_device=MODEL_DEVICE,
             model_category_mapping=None,
             model_category_remapping=None,
             source=source,
@@ -300,13 +306,13 @@ class TestPredict(unittest.TestCase):
 
         # get full sized prediction
         if os.path.isdir(project_dir):
-            shutil.rmtree(project_dir)
+            shutil.rmtree(project_dir, ignore_errors=True)
         predict(
             model_type="yolov5",
             model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             model_config_path=None,
-            model_confidence_threshold=0.4,
-            model_device=None,
+            model_confidence_threshold=CONFIDENCE_THRESHOLD,
+            model_device=MODEL_DEVICE,
             model_category_mapping=None,
             model_category_remapping=None,
             source=source,

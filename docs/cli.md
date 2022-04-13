@@ -11,12 +11,12 @@ will perform sliced inference on default parameters and export the prediction vi
 You can specify additional sliced prediction parameters as:
 
 ```bash
-sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --model_confidence_threshold 0.25 --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
+sahi predict --slice_width 512 --slice_height 512 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --model_confidence_threshold 0.25 --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
 ```
 
 - Specify detection framework as `--model_type mmdet` for MMDetection or `--model_type yolov5` for YOLOv5, to match with your model weight
 
-- Specify postprocess type as `--postprocess_type UNIONMERGE` or `--postprocess_type NMS` to be applied over sliced predictions
+- Specify postprocess type as `--postprocess_type GREEDYNMM` or `--postprocess_type NMS` to be applied over sliced predictions
 
 - Specify postprocess match metric as `--postprocess_match_metric IOS` for intersection over smaller area or `--postprocess_match_metric IOU` for intersection over union
 
@@ -103,7 +103,7 @@ If you want to specify export directory, set it as `--out_dir output/folder/dire
 You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-command-usage) command can be used to create that.
 
 ```bash
-sahi coco analyse --dataset_json_path dataset.json --result_json_path result.json
+sahi coco analyse --dataset_json_path dataset.json --result_json_path result.json --out_dir output/directory
 ```
 
 will calculate coco error plots and export them to given output folder directory.
@@ -113,8 +113,6 @@ If you want to specify mAP result type, set it as `--type bbox` or `--type mask`
 If you want to export extra mAP bar plots and annotation area stats add `--extraplots` argument.
 
 If you want to specify area regions, set it as `--areas "[1024 9216 10000000000]"`.
-
-If you want to specify export directory, set it as `--out_dir output/folder/directory`.
 
 ## Custom scripts
 

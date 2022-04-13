@@ -9,7 +9,6 @@ import pickle
 import re
 import urllib.request
 import zipfile
-from os import path
 from pathlib import Path
 
 import numpy as np
@@ -101,9 +100,9 @@ def list_files(
             filepath_list.append(filepath)
 
     number_of_files = len(filepath_list)
-    folder_name = directory.split(os.sep)[-1]
+    folder_name = Path(directory).name
 
-    verboseprint("There are {} listed files in folder {}.".format(number_of_files, folder_name))
+    verboseprint(f"There are {str(number_of_files)} listed files in folder: {folder_name}/")
 
     return filepath_list
 
@@ -226,7 +225,7 @@ def download_from_url(from_url: str, to_path: str):
 
     Path(to_path).parent.mkdir(parents=True, exist_ok=True)
 
-    if not path.exists(to_path):
+    if not os.path.exists(to_path):
         urllib.request.urlretrieve(
             from_url,
             to_path,

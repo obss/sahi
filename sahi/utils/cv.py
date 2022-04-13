@@ -160,7 +160,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
             image_sk = skimage.io.imread(image).astype(np.uint8)
             if len(image_sk.shape) == 2:  # b&w
                 image_pil = Image.fromarray(image_sk, mode="1")
-            if image_sk.shape[2] == 4:  # rgba
+            elif image_sk.shape[2] == 4:  # rgba
                 image_pil = Image.fromarray(image_sk, mode="RGBA")
             elif image_sk.shape[2] == 3:  # rgb
                 image_pil = Image.fromarray(image_sk, mode="RGB")
@@ -173,7 +173,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
     elif isinstance(image, Image.Image):
         image_pil = image
     else:
-        TypeError("read image with 'pillow' using 'Image.open()'")
+        raise TypeError("read image with 'pillow' using 'Image.open()'")
     return image_pil
 
 
@@ -401,7 +401,12 @@ def get_coco_segmentation_from_bool_mask(bool_mask):
     polygons = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE, offset=(-1, -1))
     polygons = polygons[0] if len(polygons) == 2 else polygons[1]
     # Convert polygon to coco segmentation
-    coco_segmentation = [polygon.flatten().tolist() for polygon in polygons]
+    coco_segmentation = []
+    for polygon in polygons:
+        segmentation = polygon.flatten().tolist()
+        # at least 3 points needed for a polygon
+        if len(segmentation) >= 6:
+            coco_segmentation.append(segmentation)
     return coco_segmentation
 
 
@@ -429,8 +434,11 @@ def get_bbox_from_bool_mask(bool_mask):
 
     ymin, ymax = np.where(rows)[0][[0, -1]]
     xmin, xmax = np.where(cols)[0][[0, -1]]
-    # width = xmax - xmin
-    # height = ymax - ymin
+    width = xmax - xmin
+    height = ymax - ymin
+
+    if width == 0 or height == 0:
+        return None
 
     return [xmin, ymin, xmax, ymax]
 
