@@ -335,7 +335,7 @@ def predict(
 
     Args:
         detection_model: sahi.model.DetectionModel
-            Customly loaded input model. Custom model configuration should be set up 
+            Customly loaded input model. Custom model configuration should be set up
             before running prediction. e.g. detection_model.model.iou = 0.1
         model_type: str
             mmdet for 'MmdetDetectionModel', 'yolov5' for 'Yolov5DetectionModel'.
