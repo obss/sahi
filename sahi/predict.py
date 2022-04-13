@@ -334,6 +334,9 @@ def predict(
     Performs prediction for all present images in given folder.
 
     Args:
+        detection_model: sahi.model.DetectionModel
+            Customly loaded input model. Custom model configuration should be set up 
+            before running prediction. e.g. detection_model.model.iou = 0.1
         model_type: str
             mmdet for 'MmdetDetectionModel', 'yolov5' for 'Yolov5DetectionModel'.
         model_path: str
