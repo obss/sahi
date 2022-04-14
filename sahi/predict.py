@@ -124,6 +124,7 @@ def get_sliced_prediction(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
+    merge_buffer_length: int = None
 ) -> PredictionResult:
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -164,6 +165,9 @@ def get_sliced_prediction(
             0: no print
             1: print number of slices (default)
             2: print number of slices and slice/prediction durations
+        merge_buffer_length: int
+            The length of buffer for slices to be used during sliced prediction, which is suitable for low memory.
+            It may affect the AP if it is specified.
 
     Returns:
         A Dict with fields:
@@ -258,6 +262,12 @@ def get_sliced_prediction(
         for object_prediction in prediction_result.object_prediction_list:
             if object_prediction:  # if not empty
                 object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+
+        # merge matching predictions during sliced prediction
+        if merge_buffer_length is not None and len(
+                object_prediction_list) > merge_buffer_length:
+            object_prediction_list = postprocess(object_prediction_list)
+
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
         prediction_result = get_prediction(
@@ -269,9 +279,6 @@ def get_sliced_prediction(
             postprocess=None,
         )
         object_prediction_list.extend(prediction_result.object_prediction_list)
-
-    time_end = time.time() - time_start
-    durations_in_seconds["prediction"] = time_end
 
     if verbose == 2:
         print(
@@ -288,6 +295,9 @@ def get_sliced_prediction(
     # merge matching predictions
     if len(object_prediction_list) > 1:
         object_prediction_list = postprocess(object_prediction_list)
+
+    time_end = time.time() - time_start
+    durations_in_seconds["prediction"] = time_end
 
     return PredictionResult(
         image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
