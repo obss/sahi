@@ -124,7 +124,7 @@ def get_sliced_prediction(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
-    merge_buffer_length: int = None
+    merge_buffer_length: int = None,
 ) -> PredictionResult:
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -264,8 +264,7 @@ def get_sliced_prediction(
                 object_prediction_list.append(object_prediction.get_shifted_object_prediction())
 
         # merge matching predictions during sliced prediction
-        if merge_buffer_length is not None and len(
-                object_prediction_list) > merge_buffer_length:
+        if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
             object_prediction_list = postprocess(object_prediction_list)
 
     # perform standard prediction
