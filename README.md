@@ -162,13 +162,13 @@ A video can be given as input and the results can be exported as video. You can 
 One more thing added prediction time to terminal.
 
 #### For input, export video:
-`sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source home/user/video.mp4 --input_video --export_visual`   
+`sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source home/user/video.mp4 --export_visual`   
 
 #### For view result of prediction during inference:
-`sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/user/video.mp4 --input_video --export_visual --view_image `
+`sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/user/video.mp4 --export_visual --view_image `
 
 #### For fast-forwarding at result view of prediction during inference:
-`sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/user/video.mp4 --input_video --export_visual --view_image --fast_forwarding` 
+`sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/user/video.mp4 --export_visual --view_image --fast_forwarding` 
 
 * Skip 100 frames, on opened window  press key = d 
 * Prev 100 frames, on opened window press key = a

@@ -317,10 +317,8 @@ def predict(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     export_visual: bool = False,
-    input_video: bool = False,
     view_image: bool = False,
     fast_forwarding: bool = False,
-    save_dir: str = None,
     export_pickle: bool = False,
     export_crop: bool = False,
     dataset_json_path: bool = None,
@@ -383,8 +381,6 @@ def predict(
             postprocessed after sliced prediction.
         postprocess_class_agnostic: bool
             If True, postprocess will ignore category ids.
-        input_video: bool
-            If True, inference on video.
         view_image: bool
             View result of prediction during inference.
         fast_forwarding: bool
@@ -443,13 +439,13 @@ def predict(
     else:
         image_path_list = [source]
 
+    # init export directories
+    save_dir = Path(increment_path(Path(project) / name, exist_ok=False))  # increment run
+    crop_dir = save_dir / "crops"
+    visual_dir = save_dir / "visuals"
+    visual_with_gt_dir = save_dir / "visuals_with_gt"
+    pickle_dir = save_dir / "pickles"
     if export_visual:
-        # init export directories
-        save_dir = Path(increment_path(Path(project) / name, exist_ok=False))  # increment run
-        crop_dir = save_dir / "crops"
-        visual_dir = save_dir / "visuals"
-        visual_with_gt_dir = save_dir / "visuals_with_gt"
-        pickle_dir = save_dir / "pickles"
         save_dir.mkdir(parents=True, exist_ok=True)  # make dir
 
     # init model instance
@@ -474,7 +470,14 @@ def predict(
     durations_in_seconds["prediction"] = 0
     durations_in_seconds["slice"] = 0
 
-    # Input video
+    # Check the Input
+    video_extensions = [".mp4", ".mkv", ".flv", ".avi", ".ts", ".mpg", ".mov", "wmv"]
+
+    if bool([x for x in video_extensions if Path(source).suffix == x]):
+        input_video = True
+    else:
+        input_video = False
+
     if input_video and not export_visual:
 
         read_video_frame, image_base = get_video_reader(source, save_dir, export_visual, view_image, fast_forwarding)
@@ -498,7 +501,7 @@ def predict(
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
 
         elif not input_video:  # no process if source is single file
-            relative_filepath = Path(image_path).name
+            relative_filepath = Path(image_path).suffix
 
         else:  # When the model will be given video, used this line for don't get error.
             relative_filepath = ".png"
