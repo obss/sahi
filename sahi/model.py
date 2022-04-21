@@ -687,7 +687,7 @@ class TorchVisionDetectionModel(DetectionModel):
             model.eval()
             self.model = model.to(self.device)
         except Exception as e:
-            TypeError("model_path is not a valid yolov5 model path: ", e)
+            pass
 
         # set category_mapping
         from sahi.utils.torchvision import COCO_CLASSES
