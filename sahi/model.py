@@ -685,9 +685,10 @@ class TorchVisionDetectionModel(DetectionModel):
             model = self.config_path
             model.load_state_dict(torch.load(self.model_path))
             model.eval()
-            self.model = model.to(self.device)
+            model = model.to(self.device)
+            self.model = model
         except Exception as e:
-            pass
+            raise Exception(f"Failed to load model from {self.model_path}. {e}")
 
         # set category_mapping
         from sahi.utils.torchvision import COCO_CLASSES
@@ -705,23 +706,13 @@ class TorchVisionDetectionModel(DetectionModel):
             image_size: int
                 Inference input size.
         """
-
-        try:
-            import torchvision
-        except ImportError:
-            raise ImportError(
-                "torchvision is not installed. Please run 'pip install -U torchvision to use this "
-                "torchvision models'"
-            )
-
-        # Confirm model is loaded
-        assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
+        if self.model is None:
+            raise ValueError("model not loaded.")
 
         from sahi.utils.torchvision import data_processing, numpy_to_torch
 
         if self.image_size is not None:
-            # Problem: Resize edince box değerleri bozuluyor.
-            # image = data_processing(image, self.image_size)
+            image = data_processing(image, self.image_size)
             image = numpy_to_torch(image)
             prediction_result = self.model([image])
 
@@ -800,6 +791,7 @@ class TorchVisionDetectionModel(DetectionModel):
             masks = None
 
         # create object_prediction_list
+        num_categories = self.num_categories
         object_prediction_list_per_image = []
         object_prediction_list = []
 
