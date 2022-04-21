@@ -55,7 +55,6 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(original_predictions[0]["boxes"].detach().numpy())]
         scores = list(original_predictions[0]["scores"].detach().numpy())
         thresh = [scores.index(x) for x in scores if x > CONFIDENCE_THRESHOLD][-1]
-        box = boxes[: thresh + 1]
         prediction_class = [COCO_CLASSES[i] for i in list(original_predictions[0]["labels"].numpy())]
         category_name = prediction_class[: thresh + 1]
         category_map = {}
@@ -152,7 +151,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
-            load_at_init=False,
+            load_at_init=True,
             image_size=IMAGE_SIZE,
         )
         torchvision_detection_model.load_model()
@@ -190,7 +189,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
-            load_at_init=False,
+            load_at_init=True,
             image_size=IMAGE_SIZE,
         )
         torchvision_detection_model.load_model()

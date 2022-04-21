@@ -17,7 +17,7 @@ class TorchVisionTestConstants:
     # MASKRCNN_CONFIG_ZOO_NAME = detection.maskrcnn_resnet50_fpn(pretrained=True)
 
     FASTERCNN_CONFIG_URL = "https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth"
-    FASTERCNN_MODEL_PATH = "tests/data/models/torcvhvision/faster_rcnn.pt"
+    FASTERCNN_MODEL_PATH = "tests/data/models/torcvhvision/faster_rcnn.pth"
 
 
 def download_torchvision_model(destination_path: Optional[str] = None):
