@@ -63,7 +63,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(len(object_prediction_list), 33)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [177, 176, 33, 24])
+        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [321, 320, 61, 43])
 
     def test_get_sliced_prediction_torchvision(self):
         from sahi.model import TorchVisionDetectionModel
