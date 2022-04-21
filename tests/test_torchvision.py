@@ -40,7 +40,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
-            load_at_init=True,
+            load_at_init=False,
             image_size=IMAGE_SIZE,
         )
         torchvision_detection_model.load_model()
@@ -60,10 +60,10 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 33)
+        self.assertEqual(len(object_prediction_list), 25)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [321, 320, 61, 43])
+        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [177, 176, 33, 24])
 
     def test_get_sliced_prediction_torchvision(self):
         from sahi.model import TorchVisionDetectionModel
@@ -78,7 +78,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
-            load_at_init=True,
+            load_at_init=False,
             image_size=IMAGE_SIZE,
         )
         torchvision_detection_model.load_model()
@@ -112,7 +112,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 118)
+        self.assertEqual(len(object_prediction_list), 121)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [843, 286, 30, 20])
