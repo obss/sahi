@@ -688,7 +688,7 @@ class TorchVisionDetectionModel(DetectionModel):
             model = model.to(self.device)
             self.model = model
         except Exception as e:
-            raise Exception(f"Failed to load model from {self.model_path}. {e}")
+            TypeError("model_path is not a valid torchvision model path: ", e)
 
         # set category_mapping
         from sahi.utils.torchvision import COCO_CLASSES
