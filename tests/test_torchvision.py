@@ -71,7 +71,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(len(bbox), 4)
         self.assertEqual(len(category_id), 33)
         for i in range(len(bbox)):
-            self.assertEqual(bbox[i].astype(int), [372, 85, 376, 89][i])
+            self.assertEqual(bbox[i].astype(int), [670, 85, 376, 89][i])
             self.assertEqual(category_id[i], 3)
 
     def test_convert_original_predictions_without_mask_output(self):
@@ -104,7 +104,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(len(object_prediction_list), 33)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [177, 176, 33, 24])
+        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [321, 320, 61, 43])
 
     def test_convert_original_predictions_with_mask_output(self):
         from sahi.model import TorchVisionDetectionModel
@@ -136,7 +136,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(len(object_prediction_list), 33)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [177, 176, 33, 24])
+        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [321, 320, 61, 43])
 
     def test_get_prediction_torchvision(self):
         from sahi.model import TorchVisionDetectionModel
@@ -174,7 +174,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(len(object_prediction_list), 33)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [177, 176, 33, 24])
+        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [321, 320, 61, 43])
 
     def test_get_sliced_prediction_torchvision(self):
         from sahi.model import TorchVisionDetectionModel
@@ -226,7 +226,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(len(object_prediction_list), 118)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [843, 286, 30, 20])
+        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [858, 377, 47, 32])
 
 
 if __name__ == "__main__":
