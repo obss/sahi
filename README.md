@@ -165,16 +165,15 @@ One more thing added prediction time to terminal.
 `sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source home/user/video.mp4 --export_visual`   
 
 #### For view result of prediction during inference:
-`sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/user/video.mp4 --export_visual --view_image `
-
-#### For fast-forwarding at result view of prediction during inference:
-`sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/user/video.mp4 --export_visual --view_image --fast_forwarding` 
+`sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/user/video.mp4 --view_image`
 
 * Skip 100 frames, on opened window  press key = d 
 * Prev 100 frames, on opened window press key = a
-* Skip 10 frames, on opened window press key = g
-* Prev 10 frames, on opened window press key = f
+* Skip 20 frames, on opened window press key = g
+* Prev 20 frames, on opened window press key = f
 * Exit,  on opened window press key = Esc
+
+Note: If view_image is slow, you can add `--time_interval=(your choice)` argument without brackets as int. If you want to export video during view_image, in addition you must use `--export_visual` and `--avarage_prediction_time=(your choice)`. Details in predict.py file.
 
 #### For input, export image:
 `sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/user/picture.png --export_visual`

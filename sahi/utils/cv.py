@@ -211,79 +211,78 @@ def apply_color_mask(image: np.ndarray, color: tuple):
 
 
 def get_video_reader(
-    source: str, save_dir: str, export_visual: bool = False, view_image: bool = False, fast_forwarding: bool = False
+    source: str,
+    save_dir: str,
+    time_interval: int,
+    avarage_prediction_time: int,
+    export_visual: bool = False,
+    view_image: bool = False,
 ):
     # get video name with extension
     image_base = os.path.basename(source)
     # get video from video path
     video_capture = cv2.VideoCapture(source)
 
-    def read_video_frame(video_capture):
+    def read_video_frame(video_capture, time_interval):
         if view_image:
             cv2.imshow("Prediction of {}".format(str(image_base)), cv2.WINDOW_AUTOSIZE)
-            if fast_forwarding:
-                while video_capture.isOpened:
-                    k = cv2.waitKey(30)
 
-                    frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
+            while video_capture.isOpened:
 
-                    if k == 27:
-                        print(
-                            "\n===========================Closing==========================="
-                        )  # Exit the prediction, Key = Esc
-                        exit()
-                    if k == 100:
-                        frame_num += 100  # Skip 100 frames, Key = d
-                    if k == 97:
-                        frame_num -= 100  # Prev 100 frames, Key = a
-                    if k == 103:
-                        frame_num += 10  # Skip 10 frames, Key = g
-                    if k == 102:
-                        frame_num -= 10  # Prev 10 frames, Key = f
-                    video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
+                frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
+                video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + time_interval)
 
-                    ret, frame = video_capture.read()
-                    if not ret:
-                        print("\n===========================Video Ended===========================")
-                        break
-                    yield Image.fromarray(frame)
+                k = cv2.waitKey(20)
+                frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
 
-            else:
-                while video_capture.isOpened:
-                    k = cv2.waitKey(30)
+                if k == 27:
+                    print(
+                        "\n===========================Closing==========================="
+                    )  # Exit the prediction, Key = Esc
+                    exit()
+                if k == 100:
+                    frame_num += 100  # Skip 100 frames, Key = d
+                if k == 97:
+                    frame_num -= 100  # Prev 100 frames, Key = a
+                if k == 103:
+                    frame_num += 20  # Skip 20 frames, Key = g
+                if k == 102:
+                    frame_num -= 20  # Prev 20 frames, Key = f
+                video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
 
-                    if k == 27:
-                        print(
-                            "\n===========================Closing==========================="
-                        )  # Exit the prediction, Key = Esc
-                        exit()
+                ret, frame = video_capture.read()
+                if not ret:
+                    print("\n=========================== Video Ended ===========================")
+                    break
+                yield Image.fromarray(frame)
 
-                    ret, frame = video_capture.read()
-                    if not ret:
-                        print("\n===========================Video Ended===========================")
-                        break
-                    yield Image.fromarray(frame)
         else:
             while video_capture.isOpened:
                 ret, frame = video_capture.read()
                 if not ret:
-                    print("\n===========================Video Ended===========================")
+                    print("\n=========================== Video Ended ===========================")
                     break
                 yield Image.fromarray(frame)
 
     if export_visual:
         # get video properties and create VideoWriter object
-        fps = video_capture.get(cv2.CAP_PROP_FPS)
+        if time_interval != 0:
+            fps = video_capture.get(cv2.CAP_PROP_FPS)  # original fps of video
+            # The fps of export video is increasing during view_image because frame is skipped
+            fps = fps / time_interval  # How many time_interval equals to original fps. One time_interval skip x frames.
+        else:
+            fps = video_capture.get(cv2.CAP_PROP_FPS)
+
         w = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         size = (w, h)
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         out = cv2.VideoWriter(os.path.join(save_dir, image_base), fourcc, fps, size)
 
-        return read_video_frame(video_capture), out, image_base
-
     else:
-        return read_video_frame(video_capture), image_base
+        out = None
+
+    return read_video_frame(video_capture, time_interval), out, image_base
 
 
 def visualize_prediction(

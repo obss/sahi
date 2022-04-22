@@ -318,7 +318,8 @@ def predict(
     postprocess_class_agnostic: bool = False,
     export_visual: bool = False,
     view_image: bool = False,
-    fast_forwarding: bool = False,
+    time_interval: int = 0,
+    avarage_prediction_time: int = 250,
     export_pickle: bool = False,
     export_crop: bool = False,
     dataset_json_path: bool = None,
@@ -383,8 +384,12 @@ def predict(
             If True, postprocess will ignore category ids.
         view_image: bool
             View result of prediction during inference.
-        fast_forwarding: bool
-            You can forwarding or backwarding on interactive windows when view image.
+        time_interval: int
+            If view_image is slow, you can process one frames of 3(for exp: --time_interval=3). Only can use with view_image.
+        avarage_prediction_time: int
+            If you use time_interval and if you export video during view_image; you must enter appearing aproximately
+            avarage_prediction_time in terminal. You decide avarage_prediction_time. We use this value for skipped frames
+            with time_interval, because fps of exporting video is very increase.
         export_pickle: bool
             Export predictions as .pickle
         export_crop: bool
@@ -478,15 +483,9 @@ def predict(
     else:
         input_video = False
 
-    if input_video and not export_visual:
-
-        read_video_frame, image_base = get_video_reader(source, save_dir, export_visual, view_image, fast_forwarding)
-        item = read_video_frame
-
-    elif input_video and export_visual:
-
+    if input_video:
         read_video_frame, out, image_base = get_video_reader(
-            source, save_dir, export_visual, view_image, fast_forwarding
+            source, save_dir, time_interval, avarage_prediction_time, export_visual, view_image
         )
         item = read_video_frame
 
@@ -501,7 +500,7 @@ def predict(
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
 
         elif not input_video:  # no process if source is single file
-            relative_filepath = Path(image_path).suffix
+            relative_filepath = Path(image_path).name
 
         else:  # When the model will be given video, used this line for don't get error.
             relative_filepath = ".png"
@@ -608,10 +607,10 @@ def predict(
         if export_pickle:
             save_path = str(pickle_dir / Path(relative_filepath).parent / (filename_without_extension + ".pickle"))
             save_pickle(data=object_prediction_list, save_path=save_path)
-        # export visualization
-        if export_visual:
-            output_dir = str(visual_dir / Path(relative_filepath).parent)
 
+        # export visualization
+        if export_visual or view_image:
+            output_dir = str(visual_dir / Path(relative_filepath).parent)
             # Get the image with bboxes added on it with cv.py
             image_and_elapsed_time = visualize_object_predictions(
                 np.ascontiguousarray(image_as_pil),
@@ -629,13 +628,15 @@ def predict(
         if export_visual and input_video:
             out.write(get_image_from_dict)
 
-            if view_image:
-                cv2.imshow("Prediction of {}".format(str(image_base)), get_image_from_dict)
-
         if export_visual and not input_video:
+            output_dir = str(visual_dir / Path(relative_filepath).parent)
             Path(output_dir).mkdir(parents=True, exist_ok=True)
             save_path = os.path.join(output_dir, filename_without_extension + "." + "png")
             cv2.imwrite(save_path, cv2.cvtColor(get_image_from_dict, cv2.COLOR_RGB2BGR))
+
+        if view_image and input_video:
+            cv2.imshow("Prediction of {}".format(str(image_base)), get_image_from_dict)
+            cv2.waitKey(1)
 
         time_end = time.time() - time_start
         durations_in_seconds["export_files"] = time_end
