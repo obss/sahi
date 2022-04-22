@@ -319,7 +319,6 @@ def predict(
     export_visual: bool = False,
     view_image: bool = False,
     time_interval: int = 0,
-    avarage_prediction_time: int = 250,
     export_pickle: bool = False,
     export_crop: bool = False,
     dataset_json_path: bool = None,
@@ -385,11 +384,7 @@ def predict(
         view_image: bool
             View result of prediction during inference.
         time_interval: int
-            If view_image is slow, you can process one frames of 3(for exp: --time_interval=3). Only can use with view_image.
-        avarage_prediction_time: int
-            If you use time_interval and if you export video during view_image; you must enter appearing aproximately
-            avarage_prediction_time in terminal. You decide avarage_prediction_time. We use this value for skipped frames
-            with time_interval, because fps of exporting video is very increase.
+            If view_image or export_visual is slow, you can process one frames of 3(for exp: --time_interval=3).
         export_pickle: bool
             Export predictions as .pickle
         export_crop: bool
@@ -450,7 +445,7 @@ def predict(
     visual_dir = save_dir / "visuals"
     visual_with_gt_dir = save_dir / "visuals_with_gt"
     pickle_dir = save_dir / "pickles"
-    if export_visual:
+    if export_visual or export_pickle or export_crop or dataset_json_path is not None:
         save_dir.mkdir(parents=True, exist_ok=True)  # make dir
 
     # init model instance
@@ -484,9 +479,7 @@ def predict(
         input_video = False
 
     if input_video:
-        read_video_frame, out, image_base = get_video_reader(
-            source, save_dir, time_interval, avarage_prediction_time, export_visual, view_image
-        )
+        read_video_frame, out, image_base = get_video_reader(source, save_dir, time_interval, export_visual, view_image)
         item = read_video_frame
 
     else:

@@ -214,7 +214,6 @@ def get_video_reader(
     source: str,
     save_dir: str,
     time_interval: int,
-    avarage_prediction_time: int,
     export_visual: bool = False,
     view_image: bool = False,
 ):
@@ -258,6 +257,9 @@ def get_video_reader(
 
         else:
             while video_capture.isOpened:
+                frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
+                video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + time_interval)
+
                 ret, frame = video_capture.read()
                 if not ret:
                     print("\n=========================== Video Ended ===========================")
