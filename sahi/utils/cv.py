@@ -364,6 +364,7 @@ def visualize_prediction(
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
         save_path = os.path.join(output_dir, file_name + ".png")
+        cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
     elapsed_time = time.time() - elapsed_time
     return {"image": image, "elapsed_time": elapsed_time}
@@ -379,6 +380,10 @@ def visualize_object_predictions(
     output_dir: Optional[str] = None,
     file_name: str = "prediction_visual",
     export_format: str = "png",
+    input_video: bool = False,
+    view_image: bool = False,
+    out=None,
+    image_base: str = None,
 ):
     """
     Visualizes prediction category names, bounding boxes over the source image
@@ -452,9 +457,23 @@ def visualize_object_predictions(
             (255, 255, 255),
             thickness=text_th,
         )
-    if output_dir:
-        # create output folder if not present
+
+    if output_dir and input_video:
+        out.write(image)
+
+    if output_dir and not input_video:
         Path(output_dir).mkdir(parents=True, exist_ok=True)
+        # save inference result
+        save_path = os.path.join(output_dir, file_name + "." + export_format)
+        cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+
+    if view_image and input_video:
+        cv2.imshow("Prediction of {}".format(str(image_base)), image)
+        cv2.waitKey(1)
+    elif output_dir and view_image and input_video:
+        out.write(image)
+        cv2.imshow("Prediction of {}".format(str(image_base)), image)
+        cv2.waitKey(1)
 
     elapsed_time = time.time() - elapsed_time
     return {"image": image, "elapsed_time": elapsed_time}

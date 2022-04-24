@@ -7,7 +7,6 @@ import time
 import warnings
 from typing import Dict, List, Optional
 
-import cv2
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
@@ -571,6 +570,10 @@ def predict(
                     output_dir=None,
                     file_name=None,
                     export_format=None,
+                    input_video=None,
+                    view_image=None,
+                    out=None,
+                    image_base=None,
                 )
                 color = (255, 0, 0)  # model predictions in red
                 _ = visualize_object_predictions(
@@ -583,6 +586,10 @@ def predict(
                     output_dir=output_dir,
                     file_name=filename_without_extension,
                     export_format=visual_export_format,
+                    input_video=input_video,
+                    view_image=view_image,
+                    out=out,
+                    image_base=image_base,
                 )
 
         time_start = time.time()
@@ -602,10 +609,9 @@ def predict(
             save_pickle(data=object_prediction_list, save_path=save_path)
 
         # export visualization
-        if export_visual or view_image:
+        if export_visual and input_video:
             output_dir = str(visual_dir / Path(relative_filepath).parent)
-            # Get the image with bboxes added on it with cv.py
-            image_and_elapsed_time = visualize_object_predictions(
+            visualize_object_predictions(
                 np.ascontiguousarray(image_as_pil),
                 object_prediction_list=object_prediction_list,
                 rect_th=visual_bbox_thickness,
@@ -614,22 +620,44 @@ def predict(
                 output_dir=output_dir,
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
+                input_video=input_video,
+                view_image=view_image,
+                out=out,
+                image_base=image_base,
             )
 
-            get_image_from_dict = image_and_elapsed_time["image"]
-
-        if export_visual and input_video:
-            out.write(get_image_from_dict)
-
-        if export_visual and not input_video:
+        elif export_visual and not input_video:
             output_dir = str(visual_dir / Path(relative_filepath).parent)
-            Path(output_dir).mkdir(parents=True, exist_ok=True)
-            save_path = os.path.join(output_dir, filename_without_extension + "." + "png")
-            cv2.imwrite(save_path, cv2.cvtColor(get_image_from_dict, cv2.COLOR_RGB2BGR))
+            visualize_object_predictions(
+                np.ascontiguousarray(image_as_pil),
+                object_prediction_list=object_prediction_list,
+                rect_th=visual_bbox_thickness,
+                text_size=visual_text_size,
+                text_th=visual_text_thickness,
+                output_dir=output_dir,
+                file_name=filename_without_extension,
+                export_format=visual_export_format,
+                input_video=input_video,
+                view_image=None,
+                out=None,
+                image_base=None,
+            )
 
-        if view_image and input_video:
-            cv2.imshow("Prediction of {}".format(str(image_base)), get_image_from_dict)
-            cv2.waitKey(1)
+        elif view_image and input_video:
+            visualize_object_predictions(
+                np.ascontiguousarray(image_as_pil),
+                object_prediction_list=object_prediction_list,
+                rect_th=visual_bbox_thickness,
+                text_size=visual_text_size,
+                text_th=visual_text_thickness,
+                output_dir=None,
+                file_name=None,
+                export_format=None,
+                input_video=input_video,
+                view_image=view_image,
+                out=None,
+                image_base=image_base,
+            )
 
         time_end = time.time() - time_start
         durations_in_seconds["export_files"] = time_end
