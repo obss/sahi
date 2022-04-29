@@ -62,7 +62,7 @@ def load_json(load_path):
         load_path: "dirname/coco.json"
     """
     # read from path
-    with open(load_path) as json_file:
+    with open(load_path, encoding="utf-8") as json_file:
         data = json.load(json_file)
     return data
 
@@ -173,7 +173,7 @@ def load_pickle(load_path):
         load_path: "dirname/coco.pickle"
     """
     # read from path
-    with open(load_path) as json_file:
+    with open(load_path, encoding="utf-8") as json_file:
         data = pickle.load(json_file)
     return data
 
@@ -189,7 +189,7 @@ def save_pickle(data, save_path):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
 
     # export as json
-    with open(save_path, "wb") as outfile:
+    with open(save_path, "wb", encoding="utf-8") as outfile:
         pickle.dump(data, outfile)
 
 
