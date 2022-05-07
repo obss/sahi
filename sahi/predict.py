@@ -417,9 +417,8 @@ def predict(
             If True, auto postprocess check will e disabled
     """
     # assert prediction type
-    assert (
-        no_standard_prediction and no_sliced_prediction
-    ) is not True, "'no_standard_prediction' and 'no_sliced_prediction' cannot be True at the same time."
+    if no_standard_prediction and no_sliced_prediction:
+        raise ValueError("'no_standard_prediction' and 'no_sliced_prediction' cannot be True at the same time.")
 
     # auto postprocess type
     if not force_postprocess_type and model_confidence_threshold < LOW_MODEL_CONFIDENCE and postprocess_type != "NMS":
