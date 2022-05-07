@@ -242,7 +242,8 @@ def get_video_reader(
 
     num_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
     if view_visual:
-        num_frames /= frame_skip_interval
+        num_frames /= frame_skip_interval + 1
+        num_frames = int(num_frames)
 
     def read_video_frame(video_capture, frame_skip_interval):
         if view_visual:
