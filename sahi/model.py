@@ -419,7 +419,6 @@ class Yolov5DetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        # TODO: check if model has mask
         has_mask = self.model.with_mask
         return has_mask
 
