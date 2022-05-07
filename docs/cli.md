@@ -3,10 +3,30 @@
 ## `predict` command usage:
 
 ```bash
-sahi predict --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
+sahi predict --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config --export_visual
 ```
 
 will perform sliced inference on default parameters and export the prediction visuals to runs/predict/exp folder.
+
+- It also supports video input:
+
+```bash
+sahi predict --model_path yolov5s.pt --model_type yolov5 --source video.mp4 --export_visual
+``` 
+
+You can also view video render during video inference with `--view_video`:
+
+```bash
+sahi predict --model_path yolov5s.pt --model_type yolov5 --source video.mp4 --export_visual --view_video
+``` 
+
+- To `forward 100 frames`, on opened window press key `D `
+- To `revert 100 frames`, on opened window press key `A`
+- To `forward 20 frames`, on opened window press key `G`
+- To `revert 20 frames`, on opened window press key `F`
+- To `exit`, on opened window press key `Esc`
+
+Note: If `--view_video` is slow, you can add `--frame_skip_interval=20` argument to skip interval of 20 frames each time.
 
 You can specify additional sliced prediction parameters as:
 
