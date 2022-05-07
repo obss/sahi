@@ -14,6 +14,9 @@ from PIL import Image
 
 from sahi.utils.file import Path
 
+IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".tiff", ".bmp"]
+VIDEO_EXTENSIONS = [".mp4", ".mkv", ".flv", ".avi", ".ts", ".mpg", ".mov", "wmv"]
+
 
 class Colors:
     # color palette
@@ -143,9 +146,11 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
     """
     # https://stackoverflow.com/questions/56174099/how-to-load-images-larger-than-max-image-pixels-with-pil
     Image.MAX_IMAGE_PIXELS = None
-    # read image if str image path is provided
-    if isinstance(image, str):
-        # read image as pil
+
+    if isinstance(image, Image.Image):
+        image_pil = image
+    elif isinstance(image, str):
+        # read image if str image path is provided
         try:
             image_pil = Image.open(
                 requests.get(image, stream=True).raw if str(image).startswith("http") else image
@@ -170,8 +175,6 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
         if image.shape[0] < 5:  # image in CHW
             image = image[:, :, ::-1]
         image_pil = Image.fromarray(image)
-    elif isinstance(image, Image.Image):
-        image_pil = image
     else:
         raise TypeError("read image with 'pillow' using 'Image.open()'")
     return image_pil
@@ -213,23 +216,42 @@ def apply_color_mask(image: np.ndarray, color: tuple):
 def get_video_reader(
     source: str,
     save_dir: str,
-    time_interval: int,
+    frame_skip_interval: int,
     export_visual: bool = False,
-    view_image: bool = False,
+    view_visual: bool = False,
 ):
+    """
+    Creates OpenCV video capture object from given video file path.
+
+    Args:
+        source: Video file path
+        save_dir: Video export directory
+        frame_skip_interval: Frame skip interval
+        export_visual: Set True if you want to export visuals
+        view_visual: Set True if you want to render visual
+
+    Returns:
+        iterator: Pillow Image
+        video_writer: cv2.VideoWriter
+        video_file_name: video name with extension
+    """
     # get video name with extension
-    image_base = os.path.basename(source)
+    video_file_name = os.path.basename(source)
     # get video from video path
     video_capture = cv2.VideoCapture(source)
 
-    def read_video_frame(video_capture, time_interval):
-        if view_image:
-            cv2.imshow("Prediction of {}".format(str(image_base)), cv2.WINDOW_AUTOSIZE)
+    num_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+    if view_visual:
+        num_frames /= frame_skip_interval
+
+    def read_video_frame(video_capture, frame_skip_interval):
+        if view_visual:
+            cv2.imshow("Prediction of {}".format(str(video_file_name)), cv2.WINDOW_AUTOSIZE)
 
             while video_capture.isOpened:
 
                 frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
-                video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + time_interval)
+                video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + frame_skip_interval)
 
                 k = cv2.waitKey(20)
                 frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
@@ -258,7 +280,7 @@ def get_video_reader(
         else:
             while video_capture.isOpened:
                 frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
-                video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + time_interval)
+                video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + frame_skip_interval)
 
                 ret, frame = video_capture.read()
                 if not ret:
@@ -268,10 +290,12 @@ def get_video_reader(
 
     if export_visual:
         # get video properties and create VideoWriter object
-        if time_interval != 0:
+        if frame_skip_interval != 0:
             fps = video_capture.get(cv2.CAP_PROP_FPS)  # original fps of video
             # The fps of export video is increasing during view_image because frame is skipped
-            fps = fps / time_interval  # How many time_interval equals to original fps. One time_interval skip x frames.
+            fps = (
+                fps / frame_skip_interval
+            )  # How many time_interval equals to original fps. One time_interval skip x frames.
         else:
             fps = video_capture.get(cv2.CAP_PROP_FPS)
 
@@ -279,12 +303,11 @@ def get_video_reader(
         h = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         size = (w, h)
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        out = cv2.VideoWriter(os.path.join(save_dir, image_base), fourcc, fps, size)
-
+        video_writer = cv2.VideoWriter(os.path.join(save_dir, video_file_name), fourcc, fps, size)
     else:
-        out = None
+        video_writer = None
 
-    return read_video_frame(video_capture, time_interval), out, image_base
+    return read_video_frame(video_capture, frame_skip_interval), video_writer, video_file_name, num_frames
 
 
 def visualize_prediction(
@@ -380,10 +403,6 @@ def visualize_object_predictions(
     output_dir: Optional[str] = None,
     file_name: str = "prediction_visual",
     export_format: str = "png",
-    input_video: bool = False,
-    view_image: bool = False,
-    out=None,
-    image_base: str = None,
 ):
     """
     Visualizes prediction category names, bounding boxes over the source image
@@ -458,22 +477,13 @@ def visualize_object_predictions(
             thickness=text_th,
         )
 
-    if output_dir and input_video:
-        out.write(image)
-
-    if output_dir and not input_video:
+    # export if output_dir is present
+    if output_dir is not None:
+        # export image with predictions
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
-        save_path = os.path.join(output_dir, file_name + "." + export_format)
+        save_path = Path(output_dir / (file_name + "." + export_format))
         cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-
-    if view_image and input_video:
-        cv2.imshow("Prediction of {}".format(str(image_base)), image)
-        cv2.waitKey(1)
-    elif output_dir and view_image and input_video:
-        out.write(image)
-        cv2.imshow("Prediction of {}".format(str(image_base)), image)
-        cv2.waitKey(1)
 
     elapsed_time = time.time() - elapsed_time
     return {"image": image, "elapsed_time": elapsed_time}
