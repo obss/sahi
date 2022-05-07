@@ -33,7 +33,7 @@ Object detection and instance segmentation are by far the most important fields 
 
 | Command  | Description  |
 |---|---|
-| [predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage)  | perform sliced/standard prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection)/[detectron2](https://github.com/facebookresearch/detectron2) model |
+| [predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage)  | perform sliced/standard video/image prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection)/[detectron2](https://github.com/facebookresearch/detectron2) model |
 | [predict-fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-fiftyone-command-usage)  | perform sliced/standard prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection)/[detectron2](https://github.com/facebookresearch/detectron2) model and explore results in [fiftyone app](https://github.com/voxel51/fiftyone) |
 | [coco slice](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-slice-command-usage)  | automatically slice COCO annotation and image files |
 | [coco fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-fiftyone-command-usage)  | explore multiple prediction results on your COCO dataset with [fiftyone ui](https://github.com/voxel51/fiftyone) ordered by number of misdetections |
@@ -50,6 +50,8 @@ Object detection and instance segmentation are by far the most important fields 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
 
 - [Official paper](https://arxiv.org/abs/2202.06934) (NEW)
+
+- [Video inference support is live](https://github.com/obss/sahi/issues/457) (NEW)
 
 - [Kaggle notebook](https://www.kaggle.com/remekkinas/sahi-slicing-aided-hyper-inference-yv5-and-yx) (NEW)
 
@@ -134,6 +136,8 @@ pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113
 
 Find detailed info on `sahi predict` command at [cli.md](docs/cli.md#predict-command-usage).
 
+Find detailed info on video inference at [video inference tutorial](https://github.com/obss/sahi/issues/457).
+
 Find detailed info on image/dataset slicing utilities at [slicing.md](docs/slicing.md).
 
 ### Error Analysis Plots & Evaluation
@@ -153,31 +157,6 @@ Find detailed info at [Interactive Result Visualization and Inspection](https://
 Find detailed info on COCO utilities (yolov5 conversion, slicing, subsampling, filtering, merging, splitting) at [coco.md](docs/coco.md).
 
 Find detailed info on MOT utilities (ground truth dataset creation, exporting tracker metrics in mot challenge format) at [mot.md](docs/mot.md).
-
-
-### Input, Export Video Support 
-
-A video can be given as input and the results can be exported as video. You can also see the SAHI predictions during inference on the interactive window where fast-forwarding or backwarding is also possible.
-
-One more thing added prediction time to terminal.
-
-#### For input, export video:
-`sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source home/user/video.mp4 --export_visual`   
-
-#### For view result of prediction during inference:
-`sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/user/video.mp4 --view_image`
-
-* Skip 100 frames, on opened window  press key = d 
-* Prev 100 frames, on opened window press key = a
-* Skip 20 frames, on opened window press key = g
-* Prev 20 frames, on opened window press key = f
-* Exit,  on opened window press key = Esc
-
-Note: If view_image is slow, you can add `--time_interval=(your choice)` argument without brackets as int. If you want to export video during view_image, in addition you must use `--export_visual`. Details in predict.py file.
-
-#### For input, export image:
-`sahi predict --model_path yolov5s.pt --model_config_path coco.yaml --model_type yolov5 --source /home/user/picture.png --export_visual`
-
 
 ## <div align="center">Citation</div>
 
