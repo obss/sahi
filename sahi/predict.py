@@ -575,9 +575,6 @@ def predict(
                     output_dir=None,
                     file_name=None,
                     export_format=None,
-                    source_is_video=None,
-                    view_video=None,
-                    output_video_writer=None,
                 )
                 color = (255, 0, 0)  # model predictions in red
                 _ = visualize_object_predictions(
@@ -590,9 +587,6 @@ def predict(
                     output_dir=output_dir,
                     file_name=filename_without_extension,
                     export_format=visual_export_format,
-                    source_is_video=None,
-                    view_video=None,
-                    output_video_writer=None,
                 )
 
         time_start = time.time()
