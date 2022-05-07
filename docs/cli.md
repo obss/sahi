@@ -11,7 +11,7 @@ will perform sliced inference on default parameters and export the prediction vi
 You can specify additional sliced prediction parameters as:
 
 ```bash
-sahi predict --slice_width 256 --slice_height 256 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --model_confidence_threshold 0.25 --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
+sahi predict --slice_width 512 --slice_height 512 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --model_confidence_threshold 0.25 --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
 ```
 
 - Specify detection framework as `--model_type mmdet` for MMDetection or `--model_type yolov5` for YOLOv5, to match with your model weight

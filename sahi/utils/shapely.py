@@ -1,7 +1,7 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
-from typing import List, Tuple
+from typing import List
 
 from shapely.geometry import CAP_STYLE, JOIN_STYLE, MultiPolygon, Polygon, box
 

@@ -460,7 +460,7 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(merged_coco_dict["annotations"][6]["image_id"], 1)
         self.assertEqual(merged_coco_dict["annotations"][6]["id"], 7)
         self.assertEqual(merged_coco_dict["annotations"][7]["category_id"], 2)
-        self.assertEqual(merged_coco_dict["annotations"][7]["image_id"], 2)
+        self.assertEqual(merged_coco_dict["annotations"][7]["image_id"], 3)
         self.assertEqual(merged_coco_dict["annotations"][7]["id"], 9)
 
     def test_merge_from_list(self):
@@ -500,7 +500,7 @@ class TestCocoUtils(unittest.TestCase):
         )
         self.assertEqual(
             merged_coco_dict["annotations"][12]["image_id"],
-            4,
+            5,
         )
         self.assertEqual(
             merged_coco_dict["annotations"][9]["category_id"],
@@ -508,7 +508,7 @@ class TestCocoUtils(unittest.TestCase):
         )
         self.assertEqual(
             merged_coco_dict["annotations"][9]["image_id"],
-            2,
+            3,
         )
 
     def test_coco_merge(self):

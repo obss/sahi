@@ -1,5 +1,3 @@
-import argparse
-
 import fire
 
 from sahi.utils.coco import Coco
