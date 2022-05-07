@@ -482,7 +482,7 @@ def visualize_object_predictions(
         # export image with predictions
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
-        save_path = Path(output_dir / (file_name + "." + export_format))
+        save_path = Path(output_dir) / (file_name + "." + export_format)
         cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
     elapsed_time = time.time() - elapsed_time
