@@ -307,7 +307,7 @@ def predict(
     postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
-    export_visual: bool = False,
+    novisual: bool = False,
     view_video: bool = False,
     frame_skip_interval: int = 0,
     export_pickle: bool = False,
@@ -376,6 +376,8 @@ def predict(
             postprocessed after sliced prediction.
         postprocess_class_agnostic: bool
             If True, postprocess will ignore category ids.
+        novisual: bool
+            Dont export predicted video/image visuals.
         view_video: bool
             View result of prediction during video inference.
         frame_skip_interval: int
@@ -425,7 +427,7 @@ def predict(
     visual_dir = save_dir / "visuals"
     visual_with_gt_dir = save_dir / "visuals_with_gt"
     pickle_dir = save_dir / "pickles"
-    if export_visual or export_pickle or export_crop or dataset_json_path is not None:
+    if not novisual or export_pickle or export_crop or dataset_json_path is not None:
         save_dir.mkdir(parents=True, exist_ok=True)  # make dir
 
     # init image iterator
@@ -445,7 +447,7 @@ def predict(
     elif Path(source).suffix in VIDEO_EXTENSIONS:
         source_is_video = True
         read_video_frame, output_video_writer, video_file_name, num_frames = get_video_reader(
-            source, save_dir, frame_skip_interval, export_visual, view_video
+            source, save_dir, frame_skip_interval, not novisual, view_video
         )
         image_iterator = read_video_frame
     else:
@@ -538,7 +540,7 @@ def predict(
                 coco_prediction_json = coco_prediction.json
                 if coco_prediction_json["bbox"]:
                     coco_json.append(coco_prediction_json)
-            if export_visual:
+            if not novisual:
                 # convert ground truth annotations to object_prediction_list
                 coco_image: CocoImage = coco.images[ind]
                 object_prediction_gt_list: List[ObjectPrediction] = []
@@ -594,7 +596,7 @@ def predict(
             save_pickle(data=object_prediction_list, save_path=save_path)
 
         # export visualization
-        if export_visual or view_video:
+        if not novisual or view_video:
             output_dir = str(visual_dir / Path(relative_filepath).parent)
             result = visualize_object_predictions(
                 np.ascontiguousarray(image_as_pil),
@@ -606,7 +608,7 @@ def predict(
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
             )
-            if export_visual and source_is_video:  # export video
+            if not novisual and source_is_video:  # export video
                 output_video_writer.write(result["image"])
 
         # render video inference
@@ -622,7 +624,7 @@ def predict(
         save_path = str(save_dir / "result.json")
         save_json(coco_json, save_path)
 
-    if export_visual or export_pickle or export_crop or dataset_json_path is not None:
+    if not novisual or export_pickle or export_crop or dataset_json_path is not None:
         print(f"Prediction results are successfully exported to {save_dir}")
 
     # print prediction duration
@@ -642,7 +644,7 @@ def predict(
             durations_in_seconds["prediction"],
             "seconds.",
         )
-        if export_visual:
+        if not novisual:
             print(
                 "Exporting performed in",
                 durations_in_seconds["export_files"],
