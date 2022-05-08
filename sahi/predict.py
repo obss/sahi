@@ -19,7 +19,6 @@ from sahi.postprocess.combine import (
     NMSPostprocess,
     PostprocessPredictions,
 )
-from sahi.postprocess.legacy.combine import UnionMergePostprocess
 from sahi.prediction import ObjectPrediction, PredictionResult
 from sahi.slicing import slice_image
 from sahi.utils.coco import Coco, CocoImage
@@ -38,6 +37,12 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "mmdet": "MmdetDetectionModel",
     "yolov5": "Yolov5DetectionModel",
     "detectron2": "Detectron2DetectionModel",
+}
+POSTPROCESS_NAME_TO_CLASS = {
+    "GREEDYNMM": GreedyNMMPostprocess,
+    "NMM": NMMPostprocess,
+    "NMS": NMSPostprocess,
+    "LSNMS": LSNMSPostprocess,
 }
 
 LOW_MODEL_CONFIDENCE = 0.1
@@ -203,42 +208,19 @@ def get_sliced_prediction(
     durations_in_seconds["slice"] = time_end
 
     # init match postprocess instance
-    if postprocess_type in ["NMM"]:
-        postprocess = NMMPostprocess(
-            match_threshold=postprocess_match_threshold,
-            match_metric=postprocess_match_metric,
-            class_agnostic=postprocess_class_agnostic,
-        )
-    elif postprocess_type == "GREEDYNMM":
-        postprocess = GreedyNMMPostprocess(
-            match_threshold=postprocess_match_threshold,
-            match_metric=postprocess_match_metric,
-            class_agnostic=postprocess_class_agnostic,
-        )
-    elif postprocess_type == "NMS":
-        postprocess = NMSPostprocess(
-            match_threshold=postprocess_match_threshold,
-            match_metric=postprocess_match_metric,
-            class_agnostic=postprocess_class_agnostic,
-        )
-    elif postprocess_type == "LSNMS":
-        postprocess = LSNMSPostprocess(
-            match_threshold=postprocess_match_threshold,
-            match_metric=postprocess_match_metric,
-            class_agnostic=postprocess_class_agnostic,
+    if postprocess_type not in POSTPROCESS_NAME_TO_CLASS.keys():
+        raise ValueError(
+            f"postprocess_type should be one of {list(POSTPROCESS_NAME_TO_CLASS.keys())} but given as {postprocess_type}"
         )
     elif postprocess_type == "UNIONMERGE":
-        # sahi v0.8.16 compatibility
-        logger.warning("'UNIONMERGE' is deprecated, use 'GREEDYNMM' instead.")
-        postprocess = UnionMergePostprocess(
-            match_threshold=postprocess_match_threshold,
-            match_metric=postprocess_match_metric,
-            class_agnostic=postprocess_class_agnostic,
-        )
-    else:
-        raise ValueError(
-            f"postprocess_type should be one of ['NMS', 'NMM', 'GREEDYNMM'] but given as {postprocess_type}"
-        )
+        # deprecated in v0.9.3
+        raise ValueError("'UNIONMERGE' postprocess_type is deprecated, use 'GREEDYNMM' instead.")
+    postprocess_constructor = POSTPROCESS_NAME_TO_CLASS[postprocess_type]
+    postprocess = postprocess_constructor(
+        match_threshold=postprocess_match_threshold,
+        match_metric=postprocess_match_metric,
+        class_agnostic=postprocess_class_agnostic,
+    )
 
     # create prediction input
     num_group = int(num_slices / num_batch)
