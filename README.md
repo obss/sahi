@@ -204,7 +204,6 @@ black . --config pyproject.toml
 isort .
 ```
 
-
 ## <div align="center">Contributors</div>
 
 <div align="center">
@@ -213,16 +212,18 @@ isort .
 
 <a align="left" href="https://github.com/sinanonur" target="_blank">Sinan Onur Altinuc</a>
 
-<a align="left" href="https://github.com/kadirnar" target="_blank">Kadir Nar</a>
+<a align="left" href="https://github.com/devrimcavusoglu" target="_blank">Devrim Cavusoglu</a>
 
 <a align="left" href="https://github.com/cemilcengiz" target="_blank">Cemil Cengiz</a>
 
-<a align="left" href="https://github.com/ssahinnkadir" target="_blank">Kadir Sahin</a>
-  
-<a align="left" href="https://github.com/devrimcavusoglu" target="_blank">Devrim Cavusoglu</a>
-  
-<a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
-  
 <a align="left" href="https://github.com/oulcan" target="_blank">Ogulcan Eryuksel</a>
+
+<a align="left" href="https://github.com/kadirnar" target="_blank">Kadir Nar</a>
+
+<a align="left" href="https://github.com/madenburak" target="_blank">Burak Maden</a>
+
+<a align="left" href="https://github.com/ssahinnkadir" target="_blank">Kadir Sahin</a>
+
+<a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
 
 </div>
