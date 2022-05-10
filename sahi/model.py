@@ -3,7 +3,7 @@
 
 import logging
 import warnings
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -437,7 +437,14 @@ class Yolov5DetectionModel(DetectionModel):
         except Exception as e:
             raise TypeError("model_path is not a valid yolov5 model path: ", e)
 
-    def set_model(self, model):
+    def set_model(self, model: Any):
+        """
+        Sets the underlying YOLOv5 model.
+        Args:
+            model: Any
+                A YOLOv5 model
+        """
+
         model.conf = self.confidence_threshold
         self.model = model
 
