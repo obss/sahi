@@ -90,7 +90,16 @@ class DetectionModel:
             empty_cuda_cache()
 
     @staticmethod
-    def from_layer(model_path: str, no_cache: bool = False):
+    def from_layer(
+        model_path: str,
+        no_cache: bool = False,
+        device: Optional[str] = None,
+        mask_threshold: float = 0.5,
+        confidence_threshold: float = 0.3,
+        category_mapping: Optional[Dict] = None,
+        category_remapping: Optional[Dict] = None,
+        image_size: int = None,
+    ):
         """
         Loads a DetectionModel from Layer. You can pass additional parameters in the name to retrieve a specific version
         of the model with format: ``model_path:major_version.minor_version``
@@ -102,6 +111,18 @@ class DetectionModel:
                 Path of the Layer model (ex. '/sahi/yolo/models/yolov5')
             no_cache: bool
                 If True, force model fetch from the remote location.
+            device: str
+                Torch device, "cpu" or "cuda"
+            mask_threshold: float
+                Value to threshold mask pixels, should be between 0 and 1
+            confidence_threshold: float
+                All predictions with score < confidence_threshold will be discarded
+            category_mapping: dict: str to str
+                Mapping from category id (str) to category name (str) e.g. {"1": "pedestrian"}
+            category_remapping: dict: str to int
+                Remap category ids based on category names, after performing inference e.g. {"car": 3}
+            image_size: int
+                Inference input size.
         Returns:
             Returns an instance of a DetectionModel
         Raises:
@@ -115,7 +136,16 @@ class DetectionModel:
 
         layer_yolo_model = layer.get_model(name=model_path, no_cache=no_cache).get_train()
         if layer_yolo_model.__class__.__module__ in ["yolov5.models.common", "models.common"]:
-            model = Yolov5DetectionModel("", load_at_init=False)
+            model = Yolov5DetectionModel(
+                "",
+                device=device,
+                mask_threshold=mask_threshold,
+                confidence_threshold=confidence_threshold,
+                category_mapping=category_mapping,
+                category_remapping=category_remapping,
+                image_size=image_size,
+                load_at_init=False
+            )
             model.set_model(layer_yolo_model)
         else:
             raise Exception(f"Unsupported model: {type(layer_yolo_model)}. Only YOLOv5 models are supported.")

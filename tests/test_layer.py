@@ -9,7 +9,7 @@ from sahi.model import Yolov5DetectionModel
 
 class TestLayerDetectionModel(unittest.TestCase):
     @mock.patch("layer.get_model")
-    def given_supported_model_test_load_layer_model(self, mock_layer_get_model):
+    def test_load_layer_model(self, mock_layer_get_model):
         from layer import Model
         from sahi.model import DetectionModel
         import yolov5
@@ -30,7 +30,7 @@ class TestLayerDetectionModel(unittest.TestCase):
         self.assertIsInstance(detection_model.model, type(yolo_model))
 
     @mock.patch("layer.get_model")
-    def given_unsupported_model_test_load_layer_fails(self, mock_layer_get_model):
+    def test_load_layer_fails(self, mock_layer_get_model):
         from layer import Model
         from sahi.model import DetectionModel
         from sklearn.svm import SVC
