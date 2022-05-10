@@ -3,7 +3,7 @@
 
 import logging
 import warnings
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -84,6 +84,39 @@ class DetectionModel:
         """
         self.model = None
         empty_cuda_cache()
+
+    @staticmethod
+    def from_layer(model_path: str, no_cache: bool = False):
+        """
+        Loads a DetectionModel from Layer. You can pass additional parameters in the name to retrieve a specific version
+        of the model with format: ``model_path:major_version.minor_version``
+
+        By default, this function caches models locally when possible.
+
+        Args:
+            model_path: str
+                Path of the Layer model (ex. '/sahi/yolo/models/yolov5')
+            no_cache: bool
+                If True, force model fetch from the remote location.
+        Returns:
+            Returns an instance of a DetectionModel
+        Raises:
+            ImportError: If Layer is not installed in your environment
+            ValueError: If model path does not match expected pattern: organization_name/project_name/models/model_name
+        """
+        try:
+            import layer
+        except ImportError:
+            raise ImportError('Please run "pip install layer -U" ' "to load models from Layer.")
+
+        layer_yolo_model = layer.get_model(name=model_path, no_cache=no_cache).get_train()
+        if layer_yolo_model.__class__.__module__ in ["yolov5.models.common", "models.common"]:
+            model = Yolov5DetectionModel("", load_at_init=False)
+            model.set_model(layer_yolo_model)
+        else:
+            raise Exception(f"Unsupported model: {type(layer_yolo_model)}. Only YOLOv5 models are supported.")
+
+        return model
 
     def perform_inference(self, image: np.ndarray, image_size: int = None):
         """
@@ -370,10 +403,13 @@ class Yolov5DetectionModel(DetectionModel):
         # set model
         try:
             model = yolov5.load(self.model_path, device=self.device)
-            model.conf = self.confidence_threshold
-            self.model = model
+            self.set_model(model)
         except Exception as e:
             raise TypeError("model_path is not a valid yolov5 model path: ", e)
+
+    def set_model(self, model):
+        model.conf = self.confidence_threshold
+        self.model = model
 
         # set category_mapping
         if not self.category_mapping:
