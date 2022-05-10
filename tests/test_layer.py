@@ -10,9 +10,10 @@ from sahi.model import Yolov5DetectionModel
 class TestLayerDetectionModel(unittest.TestCase):
     @mock.patch("layer.get_model")
     def test_load_layer_model(self, mock_layer_get_model):
-        from layer import Model
-        from sahi.model import DetectionModel
         import yolov5
+        from layer import Model
+
+        from sahi.model import DetectionModel
 
         layer_model_path = "sahi/yolo/models/yolov5s"
 
@@ -32,8 +33,9 @@ class TestLayerDetectionModel(unittest.TestCase):
     @mock.patch("layer.get_model")
     def test_load_layer_fails(self, mock_layer_get_model):
         from layer import Model
-        from sahi.model import DetectionModel
         from sklearn.svm import SVC
+
+        from sahi.model import DetectionModel
 
         layer_model_path = "sahi/yolo/models/yolov5s"
 
