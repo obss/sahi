@@ -130,8 +130,8 @@ class DetectionModel:
         except ImportError:
             raise ImportError('Please run "pip install layer -U" ' "to load models from Layer.")
 
-        layer_yolo_model = layer.get_model(name=model_path, no_cache=no_cache).get_train()
-        if layer_yolo_model.__class__.__module__ in ["yolov5.models.common", "models.common"]:
+        layer_model = layer.get_model(name=model_path, no_cache=no_cache).get_train()
+        if layer_model.__class__.__module__ in ["yolov5.models.common", "models.common"]:
             model = Yolov5DetectionModel(
                 "",
                 device=device,
@@ -140,11 +140,11 @@ class DetectionModel:
                 category_mapping=category_mapping,
                 category_remapping=category_remapping,
                 image_size=image_size,
-                load_at_init=False
+                load_at_init=False,
             )
-            model.set_model(layer_yolo_model)
+            model.set_model(layer_model)
         else:
-            raise Exception(f"Unsupported model: {type(layer_yolo_model)}. Only YOLOv5 models are supported.")
+            raise Exception(f"Unsupported model: {type(layer_model)}. Only YOLOv5 models are supported.")
 
         return model
 
