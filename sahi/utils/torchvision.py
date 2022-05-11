@@ -8,7 +8,8 @@ from typing import Optional
 
 import cv2
 import numpy as np
-import torchvision # The library name is the same as the file name. Help me!
+import torchvision  # The library name is the same as the file name. Help me!
+
 
 class TorchVisionTestConstants:
     FASTERCNN_CONFIG_ZOO_NAME = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
@@ -155,6 +156,7 @@ def numpy_to_torch(img):
     if img.max() > 1:
         img /= 255
     return img
+
 
 def torch_to_numpy(img):
     img = img.numpy()

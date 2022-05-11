@@ -397,7 +397,7 @@ class Yolov5DetectionModel(DetectionModel):
             prediction_result = self.model(image, size=self.image_size)
         else:
             prediction_result = self.model(image)
-        
+
         self._original_predictions = prediction_result
 
     @property
@@ -705,7 +705,8 @@ class TorchVisionDetectionModel(DetectionModel):
                 Inference input size.
         """
         # TO DO: Check image size parameter(dont image_size parameter)
-        from sahi.utils.torchvision import resize_aspect_ratio, numpy_to_torch
+        from sahi.utils.torchvision import numpy_to_torch, resize_aspect_ratio
+
         if image_size is not None:
             model_img = resize_aspect_ratio(image, self.image_size)
             model_img = numpy_to_torch(model_img)
@@ -762,13 +763,14 @@ class TorchVisionDetectionModel(DetectionModel):
 
         # parse boxes, masks, scores, category_ids from predictions
         from sahi.utils.torchvision import COCO_CLASSES
+
         prediction_class = [COCO_CLASSES[i] for i in list(original_predictions[0]["labels"].numpy())]
         prediction_boxes = [
             [(i[0], i[1]), (i[2], i[3])] for i in list(original_predictions[0]["boxes"].detach().numpy())
         ]
-        prediction_score = list(original_predictions[0]['scores'].detach().numpy())
+        prediction_score = list(original_predictions[0]["scores"].detach().numpy())
         prediction_thresh = [prediction_score.index(x) for x in prediction_score if x > self.confidence_threshold][-1]
-        
+
         boxes = prediction_boxes[: prediction_thresh + 1]
         score = list(original_predictions[0]["scores"].detach().numpy())
         category_name = prediction_class[: prediction_thresh + 1]
