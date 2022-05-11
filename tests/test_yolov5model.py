@@ -30,8 +30,9 @@ class TestYolov5DetectionModel(unittest.TestCase):
         self.assertNotEqual(yolov5_detection_model.model, None)
 
     def test_set_model(self):
-        from sahi.model import Yolov5DetectionModel
         import yolov5
+
+        from sahi.model import Yolov5DetectionModel
 
         download_yolov5n_model()
 
@@ -46,7 +47,6 @@ class TestYolov5DetectionModel(unittest.TestCase):
         )
 
         self.assertNotEqual(yolov5_detection_model.model, None)
-
 
     def test_perform_inference(self):
         from sahi.model import Yolov5DetectionModel
