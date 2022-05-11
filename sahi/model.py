@@ -762,7 +762,6 @@ class TorchVisionDetectionModel(DetectionModel):
 
         # parse boxes, masks, scores, category_ids from predictions
         from sahi.utils.torchvision import COCO_CLASSES
-        #breakpoint()
         prediction_class = [COCO_CLASSES[i] for i in list(original_predictions[0]["labels"].numpy())]
         prediction_boxes = [
             [(i[0], i[1]), (i[2], i[3])] for i in list(original_predictions[0]["boxes"].detach().numpy())
