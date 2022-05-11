@@ -32,9 +32,10 @@ class TestLayerDetectionModel(unittest.TestCase):
 
     @mock.patch("layer.get_model")
     def test_load_layer_fails(self, mock_layer_get_model):
-        from layer import Model
-        from sahi.model import DetectionModel
         import torch
+        from layer import Model
+
+        from sahi.model import DetectionModel
 
         layer_model_path = "sahi/yolo/models/yolov5s"
 
