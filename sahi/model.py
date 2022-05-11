@@ -390,7 +390,6 @@ class Yolov5DetectionModel(DetectionModel):
 
         # Confirm model is loaded
         assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
-
         if image_size is not None:
             warnings.warn("Set 'image_size' at DetectionModel init.", DeprecationWarning)
             prediction_result = self.model(image, size=image_size)
@@ -398,7 +397,7 @@ class Yolov5DetectionModel(DetectionModel):
             prediction_result = self.model(image, size=self.image_size)
         else:
             prediction_result = self.model(image)
-
+        
         self._original_predictions = prediction_result
 
     @property
@@ -685,8 +684,7 @@ class TorchVisionDetectionModel(DetectionModel):
             model = self.config_path
             model.load_state_dict(torch.load(self.model_path))
             model.eval()
-            model = model.to(self.device)
-            self.model = model
+            self.model = model.to(self.device)
         except Exception as e:
             TypeError("model_path is not a valid torchvision model path: ", e)
 
@@ -706,15 +704,16 @@ class TorchVisionDetectionModel(DetectionModel):
             image_size: int
                 Inference input size.
         """
-        from sahi.utils.torchvision import data_processing, numpy_to_torch
-
-        if self.image_size is not None:
-            # image = data_processing(image, self.image_size)
-            image = numpy_to_torch(image)
-            prediction_result = self.model([image])
+        # TO DO: Check image size parameter(dont image_size parameter)
+        from sahi.utils.torchvision import resize_aspect_ratio, numpy_to_torch
+        if image_size is not None:
+            model_img = resize_aspect_ratio(image, self.image_size)
+            model_img = numpy_to_torch(model_img)
+            prediction_result = self.model([model_img])
 
         else:
-            prediction_result = self.model([image])
+            model_img = numpy_to_torch(image)
+            prediction_result = self.model([model_img])
 
         self._original_predictions = prediction_result
 
@@ -763,14 +762,14 @@ class TorchVisionDetectionModel(DetectionModel):
 
         # parse boxes, masks, scores, category_ids from predictions
         from sahi.utils.torchvision import COCO_CLASSES
-
+        #breakpoint()
         prediction_class = [COCO_CLASSES[i] for i in list(original_predictions[0]["labels"].numpy())]
         prediction_boxes = [
             [(i[0], i[1]), (i[2], i[3])] for i in list(original_predictions[0]["boxes"].detach().numpy())
         ]
-        prediction_score = list(original_predictions[0]["scores"].detach().numpy())
+        prediction_score = list(original_predictions[0]['scores'].detach().numpy())
         prediction_thresh = [prediction_score.index(x) for x in prediction_score if x > self.confidence_threshold][-1]
-
+        
         boxes = prediction_boxes[: prediction_thresh + 1]
         score = list(original_predictions[0]["scores"].detach().numpy())
         category_name = prediction_class[: prediction_thresh + 1]

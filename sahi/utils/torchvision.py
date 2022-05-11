@@ -8,8 +8,7 @@ from typing import Optional
 
 import cv2
 import numpy as np
-import torchvision
-
+import torchvision # The library name is the same as the file name. Help me!
 
 class TorchVisionTestConstants:
     FASTERCNN_CONFIG_ZOO_NAME = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
@@ -127,7 +126,7 @@ COCO_CLASSES = [
     "toothbrush",
 ]
 
-
+# To Do: Check functions in cv.py file
 def read_image(img):
     if type(img) == str:
         img = cv2.imread(img)
@@ -157,38 +156,43 @@ def numpy_to_torch(img):
         img /= 255
     return img
 
-
 def torch_to_numpy(img):
     img = img.numpy()
     if img.max() > 1:
         img /= 255
-    img = img.transpose((1, 2, 0))
-    return img
-
-
-def data_processing(img, image_size):
-    import torchvision.transforms as T
-
-    img = numpy_to_pil(img)
-    preprocess = T.Compose(
-        [
-            T.Resize(image_size),
-        ]
-    )
-    img = preprocess(img)
-    img = pil_to_numpy(img)
-    return img
+    return img.transpose((1, 2, 0))
 
 
 def numpy_to_pil(img):
-    import PIL.Image
+    from PIL import Image
 
-    img = PIL.Image.fromarray(img)
-    return img
+    return Image.fromarray(img)
 
 
 def pil_to_numpy(img):
     import numpy as np
 
-    img = np.array(img)
-    return img
+    return np.array(img)
+
+
+def resize_aspect_ratio(img, long_size):
+    height, width, channel = img.shape
+
+    # set target image size
+    target_size = long_size
+
+    ratio = target_size / max(height, width)
+
+    target_h, target_w = int(height * ratio), int(width * ratio)
+    proc = cv2.resize(img, (target_w, target_h), interpolation=cv2.INTER_LINEAR)
+
+    # make canvas and paste image
+    target_h32, target_w32 = target_h, target_w
+    if target_h % 32 != 0:
+        target_h32 = target_h + (32 - target_h % 32)
+    if target_w % 32 != 0:
+        target_w32 = target_w + (32 - target_w % 32)
+    resized = np.zeros((target_h32, target_w32, channel), dtype=np.float32)
+    resized[0:target_h, 0:target_w, :] = proc
+
+    return resized
