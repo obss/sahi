@@ -18,7 +18,8 @@ logger = logging.getLogger(__name__)
 class DetectionModel:
     def __init__(
         self,
-        model_path: str,
+        model_path: Optional[str] = None,
+        model: Optional[Any] = None,
         config_path: Optional[str] = None,
         device: Optional[str] = None,
         mask_threshold: float = 0.5,
@@ -68,13 +69,27 @@ class DetectionModel:
 
         # automatically load model if load_at_init is True
         if load_at_init:
-            self.load_model()
+            if model_path:
+                self.load_model()
+            if model:
+                self.set_model(model)
+            if self.model is None:
+                raise Exception("You should either provide a `model_path` or a loaded `model`")
 
     def load_model(self):
         """
         This function should be implemented in a way that detection model
         should be initialized and set to self.model.
         (self.model_path, self.config_path, and self.device should be utilized)
+        """
+        raise NotImplementedError()
+
+    def set_model(self, model: Any):
+        """
+        This function should be implemented to instantiate a DetectionModel out of an already loaded model
+        Args:
+            model: Any
+                Loaded model
         """
         raise NotImplementedError()
 
@@ -133,16 +148,14 @@ class DetectionModel:
         layer_model = layer.get_model(name=model_path, no_cache=no_cache).get_train()
         if layer_model.__class__.__module__ in ["yolov5.models.common", "models.common"]:
             model = Yolov5DetectionModel(
-                "",
+                model=layer_model,
                 device=device,
                 mask_threshold=mask_threshold,
                 confidence_threshold=confidence_threshold,
                 category_mapping=category_mapping,
                 category_remapping=category_remapping,
                 image_size=image_size,
-                load_at_init=False,
             )
-            model.set_model(layer_model)
         else:
             raise Exception(f"Unsupported model: {type(layer_model)}. Only YOLOv5 models are supported.")
 
@@ -430,7 +443,6 @@ class Yolov5DetectionModel(DetectionModel):
         except ImportError:
             raise ImportError('Please run "pip install -U yolov5" ' "to install YOLOv5 first for YOLOv5 inference.")
 
-        # set model
         try:
             model = yolov5.load(self.model_path, device=self.device)
             self.set_model(model)
@@ -444,6 +456,9 @@ class Yolov5DetectionModel(DetectionModel):
             model: Any
                 A YOLOv5 model
         """
+
+        if not model.__class__.__module__ in ["yolov5.models.common", "models.common"]:
+            raise Exception(f"Not a yolov5 model: {type(model)}")
 
         model.conf = self.confidence_threshold
         self.model = model
