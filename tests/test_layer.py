@@ -33,15 +33,14 @@ class TestLayerDetectionModel(unittest.TestCase):
     @mock.patch("layer.get_model")
     def test_load_layer_fails(self, mock_layer_get_model):
         from layer import Model
-        from sklearn.svm import SVC
-
         from sahi.model import DetectionModel
+        import torch
 
         layer_model_path = "sahi/yolo/models/yolov5s"
 
-        # Return a scikit-learn model once mocked `layer.get_model()` is called
-        yolo_model = SVC()
-        layer_model = Model(layer_model_path, trained_model_object=yolo_model)
+        # Return a basic Torch model once mocked `layer.get_model()` is called
+        torch_model = torch.nn.Sequential()
+        layer_model = Model(layer_model_path, trained_model_object=torch_model)
         mock_layer_get_model.return_value = layer_model
 
         # Make the call expecting an exception
