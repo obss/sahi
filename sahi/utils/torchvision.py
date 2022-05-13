@@ -127,7 +127,7 @@ COCO_CLASSES = [
     "toothbrush",
 ]
 
-# To Do: Check functions in cv.py file
+
 def read_image(img):
     if type(img) == str:
         img = cv2.imread(img)

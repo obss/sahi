@@ -753,7 +753,6 @@ class TorchVisionDetectionModel(DetectionModel):
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
-        category_mapping = self.category_mapping
 
         # compatilibty for sahi v0.8.20
         if isinstance(shift_amount_list[0], int):
@@ -770,15 +769,13 @@ class TorchVisionDetectionModel(DetectionModel):
         ]
         prediction_score = list(original_predictions[0]["scores"].detach().numpy())
         prediction_thresh = [prediction_score.index(x) for x in prediction_score if x > self.confidence_threshold][-1]
-
         boxes = prediction_boxes[: prediction_thresh + 1]
         score = list(original_predictions[0]["scores"].detach().numpy())
         category_name = prediction_class[: prediction_thresh + 1]
 
         category_map = {}
         for i in range(len(COCO_CLASSES)):
-            category_map[COCO_CLASSES[i]] = i
-            category_map[i] = COCO_CLASSES[i]
+            category_map = {COCO_CLASSES[i]: i for i in range(len(COCO_CLASSES))}
         category_id = [category_map[i] for i in category_name]
 
         # check if predictions contain mask
@@ -788,7 +785,6 @@ class TorchVisionDetectionModel(DetectionModel):
             masks = None
 
         # create object_prediction_list
-        num_categories = self.num_categories
         object_prediction_list_per_image = []
         object_prediction_list = []
 
@@ -802,7 +798,6 @@ class TorchVisionDetectionModel(DetectionModel):
                 masks = [masks[ind]]
             else:
                 masks = None
-
             bbox = []
             for i in range(len(boxes[ind])):
                 bbox.append(boxes[ind][i][0] + shift_amount[0])
