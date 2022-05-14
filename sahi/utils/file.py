@@ -55,14 +55,16 @@ class NumpyEncoder(json.JSONEncoder):
             return super(NumpyEncoder, self).default(obj)
 
 
-def load_json(load_path):
+def load_json(load_path:str, encoding:str = "utf-8"):
     """
     Loads json formatted data (given as "data") from load_path
+    Encoding type can be specified with 'encoding' argument
+    
     Example inputs:
         load_path: "dirname/coco.json"
     """
     # read from path
-    with open(load_path, encoding="utf-8") as json_file:
+    with open(load_path, encoding=encoding) as json_file:
         data = json.load(json_file)
     return data
 
@@ -169,7 +171,7 @@ def get_file_extension(path: str):
 def load_pickle(load_path):
     """
     Loads pickle formatted data (given as "data") from load_path
-    Example inputs:
+    Example inpts:
         load_path: "dirname/coco.pickle"
     """
     # read from path
