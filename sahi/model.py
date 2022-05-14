@@ -767,11 +767,13 @@ class TorchVisionDetectionModel(DetectionModel):
         prediction_boxes = [
             [(i[0], i[1]), (i[2], i[3])] for i in list(original_predictions[0]["boxes"].detach().numpy())
         ]
-        prediction_score = list(original_predictions[0]["scores"].detach().numpy())
-        prediction_thresh = [prediction_score.index(x) for x in prediction_score if x > self.confidence_threshold][-1]
-        boxes = prediction_boxes[: prediction_thresh + 1]
-        score = list(original_predictions[0]["scores"].detach().numpy())
-        category_name = prediction_class[: prediction_thresh + 1]
+        prediction_thresh = [
+            i for i in list(original_predictions[0]["scores"].detach().numpy()) if i > self.confidence_threshold
+        ]
+
+        boxes = prediction_boxes[: len(prediction_thresh)]
+        category_name = prediction_class[: len(prediction_thresh)]
+        score = list(original_predictions[0]["scores"].detach().numpy())[: len(prediction_thresh)]
 
         category_map = {}
         for i in range(len(COCO_CLASSES)):

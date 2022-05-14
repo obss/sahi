@@ -6,3 +6,4 @@ pyyaml
 fire
 terminaltables
 requests
+scikit-image imagecodecs
