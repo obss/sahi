@@ -599,7 +599,6 @@ class CocoImage:
         """
         Adds prediction to this CocoImage instance
 
-        annotation : CocoAnnotation
         prediction : CocoPrediction
         """
 
