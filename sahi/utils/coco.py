@@ -583,6 +583,7 @@ class CocoImage:
         self.height = int(height)
         self.width = int(width)
         self.annotations = []  # list of CocoAnnotation that belong to this image
+        self.predictions = []  # list of CocoPrediction that belong to this image
 
     def add_annotation(self, annotation):
         """
@@ -593,6 +594,17 @@ class CocoImage:
 
         assert isinstance(annotation, CocoAnnotation), "annotation must be a CocoAnnotation instance"
         self.annotations.append(annotation)
+
+    def add_prediction(self, prediction):
+        """
+        Adds prediction to this CocoImage instance
+
+        annotation : CocoAnnotation
+        prediction : CocoPrediction
+        """
+
+        assert isinstance(prediction, CocoPrediction), "prediction must be a CocoPrediction instance"
+        self.predictions.append(prediction)
 
     @property
     def json(self):
@@ -609,7 +621,8 @@ class CocoImage:
     file_name: {self.file_name},
     height: {self.height},
     width: {self.width},
-    annotations: List[CocoAnnotation]>"""
+    annotations: List[CocoAnnotation]>,
+    predictions: List[CocoPrediction]"""
 
 
 class CocoVidImage(CocoImage):
@@ -1067,6 +1080,13 @@ class Coco:
             images=self.images,
             categories=self.json_categories,
             ignore_negative_samples=self.ignore_negative_samples,
+        )
+
+    @property
+    def prediction_array(self):
+        return create_coco_prediction_array(
+            images=self.images,
+            ignore_negative_samples=self.ignore_negative_samples
         )
 
     @property
@@ -1885,6 +1905,58 @@ def create_coco_dict(images, categories, ignore_negative_samples=False):
     }
     # return coco dict
     return coco_dict
+
+
+def create_coco_prediction_array(images, ignore_negative_samples=False):
+    """
+    Creates COCO prediction array which is list of predictions
+
+    Arguments
+    ---------
+        images : List of CocoImage containing a list of CocoAnnotation
+        ignore_negative_samples : Bool
+            If True, images without predictions are ignored
+    Returns
+    -------
+        coco_prediction_array : List
+            COCO predictions array
+    """
+    predictions_array = []
+
+    num_images = len(images)
+    image_id = 1
+    prediction_id = 1
+    for image_ind in range(num_images):
+        # get coco image and its coco predictions
+        coco_image = images[image_ind]
+        coco_predictions = coco_image.predictions
+        # get num annotations
+        num_predictions = len(coco_predictions)
+        # if ignore_negative_samples is True and no annotations, skip image
+        if ignore_negative_samples and num_predictions == 0:
+            continue
+        else:
+            # create coco prediction object
+            for coco_prediction in coco_predictions:
+                # create coco prediction object
+                out_prediction = {
+                    "id": prediction_id,
+                    "image_id": image_id,
+                    "bbox": coco_prediction.bbox,
+                    "score": coco_prediction.score,
+                    "category_id": coco_prediction.category_id,
+                    "segmentation": coco_prediction.segmentation,
+                    "iscrowd": coco_prediction.iscrowd,
+                    "area": coco_prediction.area,
+                }
+                predictions_array.append(out_prediction)
+                prediction_id = prediction_id + 1
+
+            # increment annotation id
+            image_id = image_id + 1
+
+    # return predictions array
+    return predictions_array
 
 
 def add_bbox_and_area_to_coco(
