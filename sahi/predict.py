@@ -182,7 +182,8 @@ def get_sliced_prediction(
             2: print number of slices and slice/prediction durations
         merge_buffer_length: int
             The length of buffer for slices to be used during sliced prediction, which is suitable for low memory.
-            It may affect the AP if it is specified.
+            It may affect the AP if it is specified. The higher the amount, the closer results to the non-buffered.
+            scenario. See [the discussion](https://github.com/obss/sahi/pull/445).
 
     Returns:
         A Dict with fields:
