@@ -172,7 +172,7 @@ def get_file_extension(path: str):
 def load_pickle(load_path):
     """
     Loads pickle formatted data (given as "data") from load_path
-    Example inpts:
+    Example inputs:
         load_path: "dirname/coco.pickle"
     """
     # read from path
