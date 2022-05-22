@@ -1083,10 +1083,7 @@ class Coco:
 
     @property
     def prediction_array(self):
-        return create_coco_prediction_array(
-            images=self.images,
-            ignore_negative_samples=self.ignore_negative_samples
-        )
+        return create_coco_prediction_array(images=self.images, ignore_negative_samples=self.ignore_negative_samples)
 
     @property
     def stats(self):

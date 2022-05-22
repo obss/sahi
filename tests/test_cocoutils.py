@@ -144,10 +144,7 @@ class TestCocoUtils(unittest.TestCase):
         category_id = 3
         category_name = "car"
         coco_prediction_1 = CocoPrediction.from_coco_segmentation(
-            segmentation=prediction_coco_segmentation,
-            category_id=category_id,
-            category_name=category_name,
-            score=score
+            segmentation=prediction_coco_segmentation, category_id=category_id, category_name=category_name, score=score
         )
         coco_image.add_prediction(coco_prediction_1)
 
@@ -182,7 +179,6 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(coco_image.predictions[1].category_name, "bus")
         self.assertEqual(coco_image.predictions[1].bbox, prediction_coco_bbox)
         self.assertEqual(coco_image.predictions[1].score, 0.683465)
-
 
     def test_cocovid_image(self):
         from sahi.utils.coco import CocoVidAnnotation, CocoVidImage
