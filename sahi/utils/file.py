@@ -55,7 +55,7 @@ class NumpyEncoder(json.JSONEncoder):
             return super(NumpyEncoder, self).default(obj)
 
 
-def load_json(load_path: str, encoding = "utf-8"):
+def load_json(load_path: str, encoding: str = "utf-8"):
     """
     Loads json formatted data (given as "data") from load_path
     Encoding type can be specified with 'encoding' argument
