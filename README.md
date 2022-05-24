@@ -33,7 +33,7 @@ Object detection and instance segmentation are by far the most important fields 
 
 | Command  | Description  |
 |---|---|
-| [predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage)  | perform sliced/standard prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection)/[detectron2](https://github.com/facebookresearch/detectron2) model |
+| [predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage)  | perform sliced/standard video/image prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection)/[detectron2](https://github.com/facebookresearch/detectron2) model |
 | [predict-fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-fiftyone-command-usage)  | perform sliced/standard prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection)/[detectron2](https://github.com/facebookresearch/detectron2) model and explore results in [fiftyone app](https://github.com/voxel51/fiftyone) |
 | [coco slice](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-slice-command-usage)  | automatically slice COCO annotation and image files |
 | [coco fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-fiftyone-command-usage)  | explore multiple prediction results on your COCO dataset with [fiftyone ui](https://github.com/voxel51/fiftyone) ordered by number of misdetections |
@@ -50,6 +50,8 @@ Object detection and instance segmentation are by far the most important fields 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
 
 - [Official paper](https://arxiv.org/abs/2202.06934) (NEW)
+
+- [Video inference support is live](https://github.com/obss/sahi/issues/457) (NEW)
 
 - [Kaggle notebook](https://www.kaggle.com/remekkinas/sahi-slicing-aided-hyper-inference-yv5-and-yx) (NEW)
 
@@ -134,6 +136,8 @@ pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113
 
 Find detailed info on `sahi predict` command at [cli.md](docs/cli.md#predict-command-usage).
 
+Find detailed info on video inference at [video inference tutorial](https://github.com/obss/sahi/issues/457).
+
 Find detailed info on image/dataset slicing utilities at [slicing.md](docs/slicing.md).
 
 ### Error Analysis Plots & Evaluation
@@ -200,7 +204,6 @@ black . --config pyproject.toml
 isort .
 ```
 
-
 ## <div align="center">Contributors</div>
 
 <div align="center">
@@ -209,16 +212,18 @@ isort .
 
 <a align="left" href="https://github.com/sinanonur" target="_blank">Sinan Onur Altinuc</a>
 
-<a align="left" href="https://github.com/kadirnar" target="_blank">Kadir Nar</a>
+<a align="left" href="https://github.com/devrimcavusoglu" target="_blank">Devrim Cavusoglu</a>
 
 <a align="left" href="https://github.com/cemilcengiz" target="_blank">Cemil Cengiz</a>
 
-<a align="left" href="https://github.com/ssahinnkadir" target="_blank">Kadir Sahin</a>
-  
-<a align="left" href="https://github.com/devrimcavusoglu" target="_blank">Devrim Cavusoglu</a>
-  
-<a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
-  
 <a align="left" href="https://github.com/oulcan" target="_blank">Ogulcan Eryuksel</a>
+
+<a align="left" href="https://github.com/kadirnar" target="_blank">Kadir Nar</a>
+
+<a align="left" href="https://github.com/madenburak" target="_blank">Burak Maden</a>
+
+<a align="left" href="https://github.com/ssahinnkadir" target="_blank">Kadir Sahin</a>
+
+<a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
 
 </div>

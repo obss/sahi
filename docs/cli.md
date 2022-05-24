@@ -8,6 +8,26 @@ sahi predict --source image/file/or/folder --model_path path/to/model --model_co
 
 will perform sliced inference on default parameters and export the prediction visuals to runs/predict/exp folder.
 
+- It also supports video input:
+
+```bash
+sahi predict --model_path yolov5s.pt --model_type yolov5 --source video.mp4
+``` 
+
+You can also view video render during video inference with `--view_video`:
+
+```bash
+sahi predict --model_path yolov5s.pt --model_type yolov5 --source video.mp4 --view_video
+``` 
+
+- To `forward 100 frames`, on opened window press key `D `
+- To `revert 100 frames`, on opened window press key `A`
+- To `forward 20 frames`, on opened window press key `G`
+- To `revert 20 frames`, on opened window press key `F`
+- To `exit`, on opened window press key `Esc`
+
+Note: If `--view_video` is slow, you can add `--frame_skip_interval=20` argument to skip interval of 20 frames each time.
+
 You can specify additional sliced prediction parameters as:
 
 ```bash
@@ -26,7 +46,7 @@ sahi predict --slice_width 512 --slice_height 512 --overlap_height_ratio 0.1 --o
 
 - If you want to export prediction pickles and cropped predictions add `--export_pickle` and `--export_crop` arguments. If you want to change crop extension type, set it as `--visual_export_format JPG`.
 
-- If you want to export prediction visuals, add `--export_visual` argument.
+- If you don't want to export prediction visuals, add `--novisual` argument.
 
 - By default, scripts apply both standard and sliced prediction (multi-stage inference). If you don't want to perform sliced prediction add `--no_sliced_prediction` argument. If you don't want to perform standard prediction add `--no_standard_prediction` argument.
 
