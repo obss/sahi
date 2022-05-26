@@ -704,17 +704,16 @@ class TorchVisionDetectionModel(DetectionModel):
             image_size: int
                 Inference input size.
         """
-        # TO DO: Check image size parameter(dont image_size parameter)
         from sahi.utils.torchvision import numpy_to_torch, resize_aspect_ratio
 
-        if image_size is not None:
-            model_img = resize_aspect_ratio(image, self.image_size)
-            model_img = numpy_to_torch(model_img)
-            prediction_result = self.model([model_img])
+        if self.image_size is not None:
+            img = resize_aspect_ratio(image, self.image_size)
+            img = numpy_to_torch(img).to(self.device)
+            prediction_result = self.model([img])
 
         else:
-            model_img = numpy_to_torch(image)
-            prediction_result = self.model([model_img])
+            img = numpy_to_torch(image)
+            prediction_result = self.model([img])
 
         self._original_predictions = prediction_result
 
@@ -734,7 +733,7 @@ class TorchVisionDetectionModel(DetectionModel):
 
     @property
     def category_names(self):
-        return self.category_mapping
+        return list(self.category_mapping.values())
 
     def _create_object_prediction_list_from_original_predictions(
         self,
@@ -763,7 +762,7 @@ class TorchVisionDetectionModel(DetectionModel):
         # parse boxes, masks, scores, category_ids from predictions
         from sahi.utils.torchvision import COCO_CLASSES
 
-        prediction_class = [COCO_CLASSES[i] for i in list(original_predictions[0]["labels"].numpy())]
+        category_ids = list(original_predictions[0]["labels"].numpy())
         prediction_boxes = [
             [(i[0], i[1]), (i[2], i[3])] for i in list(original_predictions[0]["boxes"].detach().numpy())
         ]
@@ -772,17 +771,11 @@ class TorchVisionDetectionModel(DetectionModel):
         ]
 
         boxes = prediction_boxes[: len(prediction_thresh)]
-        category_name = prediction_class[: len(prediction_thresh)]
         score = list(original_predictions[0]["scores"].detach().numpy())[: len(prediction_thresh)]
-
-        category_map = {}
-        for i in range(len(COCO_CLASSES)):
-            category_map = {COCO_CLASSES[i]: i for i in range(len(COCO_CLASSES))}
-        category_id = [category_map[i] for i in category_name]
 
         # check if predictions contain mask
         try:
-            masks = original_predictions["instances"].pred_masks.tolist()
+            masks = original_predictions[0]["masks"].detach().numpy()
         except:
             masks = None
 
@@ -796,20 +789,21 @@ class TorchVisionDetectionModel(DetectionModel):
         for ind in range(len(boxes)):
 
             if masks is not None:
-                boxes = boxes[ind]
                 masks = [masks[ind]]
             else:
                 masks = None
+
+            # düzenlenecek.
             bbox = []
             for i in range(len(boxes[ind])):
-                bbox.append(boxes[ind][i][0] + shift_amount[0])
-                bbox.append(boxes[ind][i][1] + shift_amount[1])
+                bbox.append(boxes[ind][i][0] + shift_amount[i])
+                bbox.append(boxes[ind][i][1] + shift_amount[i])
 
             object_prediction = ObjectPrediction(
                 bbox=bbox,
                 bool_mask=masks,
-                category_id=category_id[ind],
-                category_name=category_name[ind],
+                category_id=int(category_ids[ind]),
+                category_name=self.category_mapping[str(category_ids[ind])],
                 shift_amount=shift_amount,
                 score=score[ind],
                 full_shape=full_shape,
