@@ -198,3 +198,17 @@ def resize_aspect_ratio(img, long_size):
     resized[0:target_h, 0:target_w, :] = proc
 
     return resized
+
+
+def data_transforms(image, image_size):
+    import torchvision.transforms as T
+
+    data_transforms = T.Compose(
+        transforms=[
+            T.ToPILImage(),
+            T.Resize(image_size),
+            T.ToTensor(),
+        ]
+    )
+    img = data_transforms(image)
+    return img
