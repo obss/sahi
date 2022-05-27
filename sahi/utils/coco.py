@@ -85,7 +85,12 @@ class CocoAnnotation:
             iscrowd: int
                 0 or 1
         """
-        return cls(segmentation=segmentation, category_id=category_id, category_name=category_name, iscrowd=iscrowd,)
+        return cls(
+            segmentation=segmentation,
+            category_id=category_id,
+            category_name=category_name,
+            iscrowd=iscrowd,
+        )
 
     @classmethod
     def from_coco_bbox(cls, bbox, category_id, category_name, iscrowd=0):
@@ -102,7 +107,12 @@ class CocoAnnotation:
             iscrowd: int
                 0 or 1
         """
-        return cls(bbox=bbox, category_id=category_id, category_name=category_name, iscrowd=iscrowd,)
+        return cls(
+            bbox=bbox,
+            category_id=category_id,
+            category_name=category_name,
+            iscrowd=iscrowd,
+        )
 
     @classmethod
     def from_coco_annotation_dict(cls, annotation_dict: Dict, category_name: Optional[str] = None):
@@ -136,12 +146,18 @@ class CocoAnnotation:
             )
         else:
             return cls(
-                bbox=annotation_dict["bbox"], category_id=annotation_dict["category_id"], category_name=category_name,
+                bbox=annotation_dict["bbox"],
+                category_id=annotation_dict["category_id"],
+                category_name=category_name,
             )
 
     @classmethod
     def from_shapely_annotation(
-        cls, shapely_annotation: ShapelyAnnotation, category_id: int, category_name: str, iscrowd: int,
+        cls,
+        shapely_annotation: ShapelyAnnotation,
+        category_id: int,
+        category_name: str,
+        iscrowd: int,
     ):
         """
         Creates CocoAnnotation object from ShapelyAnnotation object.
@@ -152,13 +168,24 @@ class CocoAnnotation:
             category_name (str): Category name of the annotation
             iscrowd (int): 0 or 1
         """
-        coco_annotation = cls(bbox=[0, 0, 0, 0], category_id=category_id, category_name=category_name, iscrowd=iscrowd,)
+        coco_annotation = cls(
+            bbox=[0, 0, 0, 0],
+            category_id=category_id,
+            category_name=category_name,
+            iscrowd=iscrowd,
+        )
         coco_annotation._segmentation = shapely_annotation.to_coco_segmentation()
         coco_annotation._shapely_annotation = shapely_annotation
         return coco_annotation
 
     def __init__(
-        self, segmentation=None, bbox=None, category_id=None, category_name=None, image_id=None, iscrowd=0,
+        self,
+        segmentation=None,
+        bbox=None,
+        category_id=None,
+        category_name=None,
+        image_id=None,
+        iscrowd=0,
     ):
         """
         Creates coco annotation object using bbox or segmentation
@@ -385,7 +412,14 @@ class CocoPrediction(CocoAnnotation):
             )
 
     def __init__(
-        self, segmentation=None, bbox=None, category_id=None, category_name=None, image_id=None, score=None, iscrowd=0,
+        self,
+        segmentation=None,
+        bbox=None,
+        category_id=None,
+        category_name=None,
+        image_id=None,
+        score=None,
+        iscrowd=0,
     ):
         """
 
@@ -450,7 +484,14 @@ class CocoVidAnnotation(CocoAnnotation):
     """
 
     def __init__(
-        self, bbox=None, category_id=None, category_name=None, image_id=None, instance_id=None, iscrowd=0, id=None,
+        self,
+        bbox=None,
+        category_id=None,
+        category_name=None,
+        image_id=None,
+        instance_id=None,
+        iscrowd=0,
+        id=None,
     ):
         """
         Args:
@@ -470,7 +511,11 @@ class CocoVidAnnotation(CocoAnnotation):
                 Annotation id
         """
         super(CocoVidAnnotation, self).__init__(
-            bbox=bbox, category_id=category_id, category_name=category_name, image_id=image_id, iscrowd=iscrowd,
+            bbox=bbox,
+            category_id=category_id,
+            category_name=category_name,
+            image_id=image_id,
+            iscrowd=iscrowd,
         )
         self.instance_id = instance_id
         self.id = id
@@ -574,7 +619,13 @@ class CocoVidImage(CocoImage):
     """
 
     def __init__(
-        self, file_name, height, width, video_id=None, frame_id=None, id=None,
+        self,
+        file_name,
+        height,
+        width,
+        video_id=None,
+        frame_id=None,
+        id=None,
     ):
         """
         Creates CocoVidImage object
@@ -656,7 +707,12 @@ class CocoVideo:
     """
 
     def __init__(
-        self, name: str, id: int = None, fps: float = None, height: int = None, width: int = None,
+        self,
+        name: str,
+        id: int = None,
+        fps: float = None,
+        height: int = None,
+        width: int = None,
     ):
         """
         Creates CocoVideo object
@@ -900,7 +956,8 @@ class Coco:
         # print categories
         if verbose:
             print(
-                "Categories are formed as:\n", self.json_categories,
+                "Categories are formed as:\n",
+                self.json_categories,
             )
 
     @classmethod
@@ -1007,7 +1064,9 @@ class Coco:
     @property
     def json(self):
         return create_coco_dict(
-            images=self.images, categories=self.json_categories, ignore_negative_samples=self.ignore_negative_samples,
+            images=self.images,
+            categories=self.json_categories,
+            ignore_negative_samples=self.ignore_negative_samples,
         )
 
     @property
@@ -1117,7 +1176,10 @@ class Coco:
         val_images = shuffled_images[num_train:]
 
         # form train val coco objects
-        train_coco = Coco(name=self.name if self.name else "split" + "_train", image_dir=self.image_dir,)
+        train_coco = Coco(
+            name=self.name if self.name else "split" + "_train",
+            image_dir=self.image_dir,
+        )
         train_coco.images = train_images
         train_coco.categories = self.categories
 
@@ -1168,7 +1230,10 @@ class Coco:
 
         # split dataset
         if split_mode == "TRAINVAL":
-            result = self.split_coco_as_train_val(train_split_rate=train_split_rate, numpy_seed=numpy_seed,)
+            result = self.split_coco_as_train_val(
+                train_split_rate=train_split_rate,
+                numpy_seed=numpy_seed,
+            )
             train_coco = result["train_coco"]
             val_coco = result["val_coco"]
         elif split_mode == "TRAIN":
@@ -1191,11 +1256,17 @@ class Coco:
         # create image symlinks and annotation txts
         if split_mode in ["TRAINVAL", "TRAIN"]:
             export_yolov5_images_and_txts_from_coco_object(
-                output_dir=train_dir, coco=train_coco, ignore_negative_samples=self.ignore_negative_samples, mp=mp,
+                output_dir=train_dir,
+                coco=train_coco,
+                ignore_negative_samples=self.ignore_negative_samples,
+                mp=mp,
             )
         if split_mode in ["TRAINVAL", "VAL"]:
             export_yolov5_images_and_txts_from_coco_object(
-                output_dir=val_dir, coco=val_coco, ignore_negative_samples=self.ignore_negative_samples, mp=mp,
+                output_dir=val_dir,
+                coco=val_coco,
+                ignore_negative_samples=self.ignore_negative_samples,
+                mp=mp,
             )
 
         # create yolov5 data yaml
@@ -1421,7 +1492,8 @@ def export_yolov5_images_and_txts_from_coco_object(output_dir, coco, ignore_nega
         with Pool(processes=48) as pool:
             args = [(coco_image, coco.image_dir, output_dir, ignore_negative_samples) for coco_image in coco.images]
             pool.starmap(
-                export_single_yolov5_image_and_corresponding_txt, tqdm(args, total=len(args)),
+                export_single_yolov5_image_and_corresponding_txt,
+                tqdm(args, total=len(args)),
             )
     else:
         for coco_image in tqdm(coco.images):
@@ -1675,7 +1747,8 @@ def merge_from_list(coco_dict_list, desired_name2id=None, verbose=1):
     # print categories
     if verbose:
         print(
-            "Categories are formed as:\n", merged_coco_dict["categories"],
+            "Categories are formed as:\n",
+            merged_coco_dict["categories"],
         )
 
     return merged_coco_dict
@@ -1706,7 +1779,9 @@ def merge_from_file(coco_path1: str, coco_path2: str, save_path: str):
     save_json(merged_coco_dict, save_path)
 
 
-def get_imageid2annotationlist_mapping(coco_dict: dict,) -> Dict[int, List[CocoAnnotation]]:
+def get_imageid2annotationlist_mapping(
+    coco_dict: dict,
+) -> Dict[int, List[CocoAnnotation]]:
     """
     Get image_id to annotationlist mapping for faster indexing.
 
@@ -1813,7 +1888,10 @@ def create_coco_dict(images, categories, ignore_negative_samples=False):
 
 
 def add_bbox_and_area_to_coco(
-    source_coco_path: str = "", target_coco_path: str = "", add_bbox: bool = True, add_area: bool = True,
+    source_coco_path: str = "",
+    target_coco_path: str = "",
+    add_bbox: bool = True,
+    add_area: bool = True,
 ) -> dict:
     """
     Takes single coco dataset file path, calculates and fills bbox and area fields of the annotations
@@ -2123,7 +2201,10 @@ def export_coco_as_yolov5(
 
     # split dataset
     if split_mode:
-        result = train_coco.split_coco_as_train_val(train_split_rate=train_split_rate, numpy_seed=numpy_seed,)
+        result = train_coco.split_coco_as_train_val(
+            train_split_rate=train_split_rate,
+            numpy_seed=numpy_seed,
+        )
         train_coco = result["train_coco"]
         val_coco = result["val_coco"]
 
@@ -2135,10 +2216,16 @@ def export_coco_as_yolov5(
 
     # create image symlinks and annotation txts
     export_yolov5_images_and_txts_from_coco_object(
-        output_dir=train_dir, coco=train_coco, ignore_negative_samples=train_coco.ignore_negative_samples, mp=False,
+        output_dir=train_dir,
+        coco=train_coco,
+        ignore_negative_samples=train_coco.ignore_negative_samples,
+        mp=False,
     )
     export_yolov5_images_and_txts_from_coco_object(
-        output_dir=val_dir, coco=val_coco, ignore_negative_samples=val_coco.ignore_negative_samples, mp=False,
+        output_dir=val_dir,
+        coco=val_coco,
+        ignore_negative_samples=val_coco.ignore_negative_samples,
+        mp=False,
     )
 
     # create yolov5 data yaml

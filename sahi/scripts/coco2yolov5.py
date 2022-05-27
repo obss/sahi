@@ -25,10 +25,15 @@ def main(
     # increment run
     save_dir = Path(increment_path(Path(project) / name, exist_ok=False))
     # load coco dict
-    coco = Coco.from_coco_dict_or_path(coco_dict_or_path=dataset_json_path, image_dir=image_dir,)
+    coco = Coco.from_coco_dict_or_path(
+        coco_dict_or_path=dataset_json_path,
+        image_dir=image_dir,
+    )
     # export as yolov5
     coco.export_as_yolov5(
-        output_dir=str(save_dir), train_split_rate=train_split, numpy_seed=seed,
+        output_dir=str(save_dir),
+        train_split_rate=train_split,
+        numpy_seed=seed,
     )
 
     print(f"COCO to YOLOv5 conversion results are successfully exported to {save_dir}")

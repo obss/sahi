@@ -119,7 +119,8 @@ def download_mmdet_config(
 
         # download main config file
         urllib.request.urlretrieve(
-            main_config_url, main_config_path,
+            main_config_url,
+            main_config_path,
         )
 
         # read main config file
@@ -144,7 +145,8 @@ def download_mmdet_config(
 
             # download secondary config files
             urllib.request.urlretrieve(
-                config_url, str(config_path),
+                config_url,
+                str(config_path),
             )
 
             # read secondary config file
@@ -171,7 +173,8 @@ def download_mmdet_config(
                     config_path.parent.mkdir(parents=True, exist_ok=True)
                     # download secondary config files
                     urllib.request.urlretrieve(
-                        config_url, str(config_path),
+                        config_url,
+                        str(config_path),
                     )
 
         # dump final config as single file

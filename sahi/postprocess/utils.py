@@ -161,10 +161,17 @@ def get_merged_mask(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Mask:
     mask1 = pred1.mask
     mask2 = pred2.mask
     union_mask = np.logical_or(mask1.bool_mask, mask2.bool_mask)
-    return Mask(bool_mask=union_mask, full_shape=mask1.full_shape, shift_amount=mask1.shift_amount,)
+    return Mask(
+        bool_mask=union_mask,
+        full_shape=mask1.full_shape,
+        shift_amount=mask1.shift_amount,
+    )
 
 
-def get_merged_score(pred1: ObjectPrediction, pred2: ObjectPrediction,) -> float:
+def get_merged_score(
+    pred1: ObjectPrediction,
+    pred2: ObjectPrediction,
+) -> float:
     scores: List[float] = [pred.score.value for pred in (pred1, pred2)]
     return max(scores)
 
@@ -183,7 +190,10 @@ def get_merged_category(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Cat
         return pred2.category
 
 
-def merge_object_prediction_pair(pred1: ObjectPrediction, pred2: ObjectPrediction,) -> ObjectPrediction:
+def merge_object_prediction_pair(
+    pred1: ObjectPrediction,
+    pred2: ObjectPrediction,
+) -> ObjectPrediction:
     shift_amount = pred1.bbox.shift_amount
     merged_bbox: BoundingBox = get_merged_bbox(pred1, pred2)
     merged_score: float = get_merged_score(pred1, pred2)

@@ -20,7 +20,8 @@ class TestShapelyUtils(unittest.TestCase):
         shapely_multipolygon = get_shapely_multipolygon(coco_segmentation)
 
         self.assertListEqual(
-            shapely_multipolygon.geoms[0].exterior.coords.xy[0].tolist(), [1.0, 325, 250, 5, 1],
+            shapely_multipolygon.geoms[0].exterior.coords.xy[0].tolist(),
+            [1.0, 325, 250, 5, 1],
         )
         self.assertEqual(shapely_multipolygon.area, 41177.5)
         self.assertTupleEqual(shapely_multipolygon.bounds, (1, 1, 325, 200))
@@ -34,27 +35,41 @@ class TestShapelyUtils(unittest.TestCase):
         # test conversion methods
         coco_segmentation = shapely_annotation.to_coco_segmentation()
         self.assertEqual(
-            coco_segmentation, [[1, 1, 325, 125, 250, 200, 5, 200]],
+            coco_segmentation,
+            [[1, 1, 325, 125, 250, 200, 5, 200]],
         )
         opencv_contours = shapely_annotation.to_opencv_contours()
         self.assertEqual(
-            opencv_contours, [[[[1, 1]], [[325, 125]], [[250, 200]], [[5, 200]], [[1, 1]],]],
+            opencv_contours,
+            [
+                [
+                    [[1, 1]],
+                    [[325, 125]],
+                    [[250, 200]],
+                    [[5, 200]],
+                    [[1, 1]],
+                ]
+            ],
         )
         coco_bbox = shapely_annotation.to_coco_bbox()
         self.assertEqual(
-            coco_bbox, [1, 1, 324, 199],
+            coco_bbox,
+            [1, 1, 324, 199],
         )
         voc_bbox = shapely_annotation.to_voc_bbox()
         self.assertEqual(
-            voc_bbox, [1, 1, 325, 200],
+            voc_bbox,
+            [1, 1, 325, 200],
         )
 
         # test properties
         self.assertEqual(
-            shapely_annotation.area, int(shapely_multipolygon.area),
+            shapely_annotation.area,
+            int(shapely_multipolygon.area),
         )
         self.assertEqual(
-            shapely_annotation.multipolygon, shapely_multipolygon,
+            shapely_annotation.multipolygon,
+            shapely_multipolygon,
         )
 
         # init shapely_annotation from coco bbox
@@ -65,27 +80,41 @@ class TestShapelyUtils(unittest.TestCase):
         # test conversion methods
         coco_segmentation = shapely_annotation.to_coco_segmentation()
         self.assertEqual(
-            coco_segmentation, [[101, 1, 101, 101, 1, 101, 1, 1]],
+            coco_segmentation,
+            [[101, 1, 101, 101, 1, 101, 1, 1]],
         )
         opencv_contours = shapely_annotation.to_opencv_contours()
         self.assertEqual(
-            opencv_contours, [[[[101, 1]], [[101, 101]], [[1, 101]], [[1, 1]], [[101, 1]],]],
+            opencv_contours,
+            [
+                [
+                    [[101, 1]],
+                    [[101, 101]],
+                    [[1, 101]],
+                    [[1, 1]],
+                    [[101, 1]],
+                ]
+            ],
         )
         coco_bbox = shapely_annotation.to_coco_bbox()
         self.assertEqual(
-            coco_bbox, [1, 1, 100, 100],
+            coco_bbox,
+            [1, 1, 100, 100],
         )
         voc_bbox = shapely_annotation.to_voc_bbox()
         self.assertEqual(
-            voc_bbox, [1, 1, 101, 101],
+            voc_bbox,
+            [1, 1, 101, 101],
         )
 
         # test properties
         self.assertEqual(
-            shapely_annotation.area, MultiPolygon([shapely_polygon]).area,
+            shapely_annotation.area,
+            MultiPolygon([shapely_polygon]).area,
         )
         self.assertEqual(
-            shapely_annotation.multipolygon, MultiPolygon([shapely_polygon]),
+            shapely_annotation.multipolygon,
+            MultiPolygon([shapely_polygon]),
         )
 
     def test_get_intersection(self):
@@ -104,7 +133,21 @@ class TestShapelyUtils(unittest.TestCase):
                 self.assertEqual(int(test_list[i][j]), int(true_list[i][j]))
 
         self.assertEqual(
-            intersection_shapely_annotation.to_coco_segmentation(), [[0, 0, 4, 199, 249, 199, 256, 192, 256, 97,]],
+            intersection_shapely_annotation.to_coco_segmentation(),
+            [
+                [
+                    0,
+                    0,
+                    4,
+                    199,
+                    249,
+                    199,
+                    256,
+                    192,
+                    256,
+                    97,
+                ]
+            ],
         )
 
         self.assertEqual(intersection_shapely_annotation.to_coco_bbox(), [0, 0, 256, 199])

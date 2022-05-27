@@ -53,7 +53,11 @@ def _makeplot(rs, ps, outDir, class_name, iou_type):
         for k in range(len(types)):
             ax.plot(rs, ps_curve[k + 1], color=[0, 0, 0], linewidth=0.5)
             ax.fill_between(
-                rs, ps_curve[k], ps_curve[k + 1], color=COLOR_PALETTE[k], label=str(f"[{aps[k]:.3f}]" + types[k]),
+                rs,
+                ps_curve[k],
+                ps_curve[k + 1],
+                color=COLOR_PALETTE[k],
+                label=str(f"[{aps[k]:.3f}]" + types[k]),
             )
         plt.xlabel("recall")
         plt.ylabel("precision")

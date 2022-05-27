@@ -130,7 +130,9 @@ class DetectionModel:
                 object_prediction.category.id = new_category_id_int
 
     def convert_original_predictions(
-        self, shift_amount: Optional[List[int]] = [0, 0], full_shape: Optional[List[int]] = None,
+        self,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
     ):
         """
         Converts original predictions of the detection model to a list of
@@ -142,7 +144,8 @@ class DetectionModel:
                 Size of the full image after shifting, should be in the form of [height, width]
         """
         self._create_object_prediction_list_from_original_predictions(
-            shift_amount_list=shift_amount, full_shape_list=full_shape,
+            shift_amount_list=shift_amount,
+            full_shape_list=full_shape,
         )
         if self.category_remapping:
             self._apply_category_remapping()
@@ -175,7 +178,11 @@ class MmdetDetectionModel(DetectionModel):
         from mmdet.apis import init_detector
 
         # create model
-        model = init_detector(config=self.config_path, checkpoint=self.model_path, device=self.device,)
+        model = init_detector(
+            config=self.config_path,
+            checkpoint=self.model_path,
+            device=self.device,
+        )
 
         # update model image size
         if self.image_size is not None:
