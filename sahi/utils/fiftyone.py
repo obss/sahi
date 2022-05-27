@@ -19,13 +19,9 @@ except ModuleNotFoundError:
 class COCODetectionDatasetImporter(BaseCOCODetectionDatasetImporter):
     def setup(self):
         if self.labels_path is not None and os.path.isfile(self.labels_path):
-            (
-                info,
-                classes,
-                supercategory_map,
-                images,
-                annotations,
-            ) = load_coco_detection_annotations(self.labels_path, extra_attrs=self.extra_attrs)
+            (info, classes, supercategory_map, images, annotations,) = load_coco_detection_annotations(
+                self.labels_path, extra_attrs=self.extra_attrs
+            )
 
             if classes is not None:
                 info["classes"] = classes

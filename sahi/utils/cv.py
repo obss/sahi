@@ -80,16 +80,9 @@ def crop_object_predictions(
         category_id = object_prediction.category.id
         # crop detections
         # deepcopy crops so that original is not altered
-        cropped_img = copy.deepcopy(
-            image[
-                int(bbox[1]) : int(bbox[3]),
-                int(bbox[0]) : int(bbox[2]),
-                :,
-            ]
-        )
+        cropped_img = copy.deepcopy(image[int(bbox[1]) : int(bbox[3]), int(bbox[0]) : int(bbox[2]), :,])
         save_path = os.path.join(
-            output_dir,
-            file_name + "_box" + str(ind) + "_class" + str(category_id) + "." + export_format,
+            output_dir, file_name + "_box" + str(ind) + "_class" + str(category_id) + "." + export_format,
         )
         cv2.imwrite(save_path, cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR))
 
@@ -214,11 +207,7 @@ def apply_color_mask(image: np.ndarray, color: tuple):
 
 
 def get_video_reader(
-    source: str,
-    save_dir: str,
-    frame_skip_interval: int,
-    export_visual: bool = False,
-    view_visual: bool = False,
+    source: str, save_dir: str, frame_skip_interval: int, export_visual: bool = False, view_visual: bool = False,
 ):
     """
     Creates OpenCV video capture object from given video file path.
@@ -361,11 +350,7 @@ def visualize_prediction(
         p1, p2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))
         # visualize boxes
         cv2.rectangle(
-            image,
-            p1,
-            p2,
-            color=color,
-            thickness=rect_th,
+            image, p1, p2, color=color, thickness=rect_th,
         )
         # arange bounding box text location
         label = f"{class_}"
@@ -455,11 +440,7 @@ def visualize_object_predictions(
         p1, p2 = (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]))
         # visualize boxes
         cv2.rectangle(
-            image,
-            p1,
-            p2,
-            color=color,
-            thickness=rect_th,
+            image, p1, p2, color=color, thickness=rect_th,
         )
         # arange bounding box text location
         label = f"{category_name} {score:.2f}"

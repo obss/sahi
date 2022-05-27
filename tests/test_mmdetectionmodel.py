@@ -137,14 +137,12 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         self.assertEqual(
-            object_prediction_list[0].bbox.to_coco_bbox(),
-            [448, 308, 41, 36],
+            object_prediction_list[0].bbox.to_coco_bbox(), [448, 308, 41, 36],
         )
         self.assertEqual(object_prediction_list[2].category.id, 2)
         self.assertEqual(object_prediction_list[2].category.name, "car")
         self.assertEqual(
-            object_prediction_list[2].bbox.to_coco_bbox(),
-            [381, 280, 33, 30],
+            object_prediction_list[2].bbox.to_coco_bbox(), [381, 280, 33, 30],
         )
         for object_prediction in object_prediction_list:
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
@@ -181,14 +179,12 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         self.assertEqual(
-            object_prediction_list[0].bbox.to_coco_bbox(),
-            [320, 323, 60, 42],
+            object_prediction_list[0].bbox.to_coco_bbox(), [320, 323, 60, 42],
         )
         self.assertEqual(object_prediction_list[1].category.id, 2)
         self.assertEqual(object_prediction_list[1].category.name, "car")
         self.assertEqual(
-            object_prediction_list[1].bbox.to_coco_bbox(),
-            [448, 310, 44, 31],
+            object_prediction_list[1].bbox.to_coco_bbox(), [448, 310, 44, 31],
         )
         for object_prediction in object_prediction_list:
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
