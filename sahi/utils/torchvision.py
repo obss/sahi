@@ -8,7 +8,7 @@ from typing import Optional
 
 import cv2
 import numpy as np
-import torchvision  # The library name is the same as the file name. Help me!
+import torchvision
 
 
 class TorchVisionTestConstants:
