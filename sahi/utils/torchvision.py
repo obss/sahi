@@ -1,5 +1,5 @@
 # OBSS SAHI Tool
-# Code written by Kadir Nar, 2020.
+# Code written by Kadir Nar, 2022.
 
 import urllib.request
 from os import path
@@ -9,6 +9,8 @@ from typing import Optional
 import cv2
 import numpy as np
 import torchvision
+from PIL import Image
+from torchvision.io.image import read_image
 
 
 class TorchVisionTestConstants:
@@ -128,46 +130,7 @@ COCO_CLASSES = [
 ]
 
 
-def read_image(img):
-    if type(img) == str:
-        img = cv2.imread(img)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    elif type(img) == bytes:
-        nparr = np.frombuffer(img, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    elif type(img) == np.ndarray:
-        if len(img.shape) == 2:  # grayscale
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-
-        elif len(img.shape) == 3 and img.shape[2] == 4:  # RGBA
-            img = img[:, :, :3]
-
-    return img
-
-
-def numpy_to_torch(img):
-    import torch
-
-    img = img.transpose((2, 0, 1))
-    img = torch.from_numpy(img).float()
-    if img.max() > 1:
-        img /= 255
-    return img
-
-
-def torch_to_numpy(img):
-    img = img.numpy()
-    if img.max() > 1:
-        img /= 255
-    return img.transpose((1, 2, 0))
-
-
 def numpy_to_pil(img):
-    from PIL import Image
-
     return Image.fromarray(img)
 
 
@@ -198,17 +161,3 @@ def resize_aspect_ratio(img, long_size):
     resized[0:target_h, 0:target_w, :] = proc
 
     return resized
-
-
-def data_transforms(image, image_size):
-    import torchvision.transforms as T
-
-    data_transforms = T.Compose(
-        transforms=[
-            T.ToPILImage(),
-            T.Resize(image_size),
-            T.ToTensor(),
-        ]
-    )
-    img = data_transforms(image)
-    return img
