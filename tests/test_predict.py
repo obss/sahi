@@ -126,7 +126,7 @@ class TestPredict(unittest.TestCase):
         # init model
         download_yolov5n_model()
 
-        yolov5_detection_model = AutoDetectionModel(
+        yolov5_detection_model = AutoDetectionModel.from_local(
             model_type="yolov5",
             model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
