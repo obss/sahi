@@ -11,6 +11,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
+from sahi.auto_model import AutoDetectionModel
 from sahi.model import DetectionModel
 from sahi.postprocess.combine import (
     GreedyNMMPostprocess,
@@ -31,13 +32,8 @@ from sahi.utils.cv import (
     read_image_as_pil,
     visualize_object_predictions,
 )
-from sahi.utils.file import Path, import_class, increment_path, list_files, save_json, save_pickle
+from sahi.utils.file import Path, increment_path, list_files, save_json, save_pickle
 
-MODEL_TYPE_TO_MODEL_CLASS_NAME = {
-    "mmdet": "MmdetDetectionModel",
-    "yolov5": "Yolov5DetectionModel",
-    "detectron2": "Detectron2DetectionModel",
-}
 POSTPROCESS_NAME_TO_CLASS = {
     "GREEDYNMM": GreedyNMMPostprocess,
     "NMM": NMMPostprocess,
@@ -466,9 +462,8 @@ def predict(
     # init model instance
     time_start = time.time()
     if detection_model is None:
-        model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
-        DetectionModel = import_class(model_class_name)
-        detection_model = DetectionModel(
+        detection_model = AutoDetectionModel.from_local(
+            model_type=model_type,
             model_path=model_path,
             config_path=model_config_path,
             confidence_threshold=model_confidence_threshold,
@@ -540,7 +535,7 @@ def predict(
         tqdm.write("Prediction time is: {:.2f} ms".format(prediction_result.durations_in_seconds["prediction"] * 1000))
 
         if dataset_json_path:
-            if source_is_video == True:
+            if source_is_video is True:
                 raise NotImplementedError("Video input type not supported with coco formatted dataset json")
 
             # append predictions in coco format
@@ -760,9 +755,8 @@ def predict_fiftyone(
 
     # init model instance
     time_start = time.time()
-    model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
-    DetectionModel = import_class(model_class_name)
-    detection_model = DetectionModel(
+    detection_model = AutoDetectionModel.from_local(
+        model_type=model_type,
         model_path=model_path,
         config_path=model_config_path,
         confidence_threshold=model_confidence_threshold,
