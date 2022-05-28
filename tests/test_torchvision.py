@@ -4,7 +4,8 @@
 
 import unittest
 
-from sahi.utils.torchvision import TorchVisionTestConstants, download_torchvision_model, read_image
+from sahi.utils.cv import read_image
+from sahi.utils.torchvision import TorchVisionTestConstants, download_torchvision_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -52,28 +53,32 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
 
         from sahi.utils.torchvision import COCO_CLASSES
 
-        boxes = [[(i[0], i[1]), (i[2], i[3])] for i in list(original_predictions[0]["boxes"].detach().numpy())]
+        boxes = list(original_predictions[0]["boxes"].detach().numpy())
         scores = list(original_predictions[0]["scores"].detach().numpy())
-        thresh = [scores.index(x) for x in scores if x > CONFIDENCE_THRESHOLD][-1]
-        box = boxes[: thresh + 1]
-        prediction_class = [COCO_CLASSES[i] for i in list(original_predictions[0]["labels"].numpy())]
-        category_name = prediction_class[: thresh + 1]
-        category_map = {}
-        for i in range(len(COCO_CLASSES)):
-            category_map[COCO_CLASSES[i]] = i
-            category_map[i] = COCO_CLASSES[i]
-        category_id = [category_map[i] for i in category_name]
-        for ind in range(len(boxes)):
-            bbox = []
-            for i in range(len(boxes[ind])):
-                bbox.append(boxes[ind][i][0])
-                bbox.append(boxes[ind][i][1])
+        category_ids = list(original_predictions[0]["labels"].detach().numpy())
 
-        self.assertEqual(len(bbox), 4)
-        self.assertEqual(len(category_id), 33)
-        for i in range(len(bbox)):
-            self.assertEqual(bbox[i].astype(int), [670, 170, 676, 178][i])
-            self.assertEqual(category_id[i], 3)
+        # get image height and width
+        image_height, image_width = image.shape[:2]
+
+        # ensure all box coords are valid
+        for box_ind in range(len(boxes)):
+            self.assertEqual(len(boxes[box_ind]), 4)
+            self.assertTrue(boxes[box_ind][0] < image_width)
+            self.assertTrue(boxes[box_ind][1] < image_height)
+            self.assertTrue(boxes[box_ind][2] < image_width)
+            self.assertTrue(boxes[box_ind][3] < image_height)
+            for coord_ind in range(len(boxes[box_ind])):
+                self.assertTrue(boxes[box_ind][coord_ind] >= 0)
+
+        # ensure all category ids are valid
+        for category_id_ind in range(len(category_ids)):
+            self.assertTrue(category_ids[category_id_ind] < len(COCO_CLASSES))
+            self.assertTrue(category_ids[category_id_ind] >= 0)
+
+        # ensure all scores are valid
+        for score_ind in range(len(scores)):
+            self.assertTrue(scores[score_ind] <= 1)
+            self.assertTrue(scores[score_ind] >= 0)
 
     def test_convert_original_predictions_without_mask_output(self):
         from sahi.model import TorchVisionDetectionModel
@@ -102,10 +107,10 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         object_prediction_list = torchvision_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 33)
+        self.assertEqual(len(object_prediction_list), 7)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [321, 320, 61, 43])
+        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [315, 309, 65, 57])
 
     def test_convert_original_predictions_with_mask_output(self):
         from sahi.model import TorchVisionDetectionModel

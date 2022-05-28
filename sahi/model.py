@@ -10,7 +10,8 @@ import numpy as np
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_bbox_from_bool_mask
-from sahi.utils.torch import cuda_is_available, empty_cuda_cache
+from sahi.utils.import_utils import is_torch_available
+from sahi.utils.torch import is_torch_cuda_available
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ class DetectionModel:
 
         # automatically set device if its None
         if not (self.device):
-            self.device = "cuda:0" if cuda_is_available() else "cpu"
+            self.device = "cuda:0" if is_torch_cuda_available() else "cpu"
 
         # automatically load model if load_at_init is True
         if load_at_init:
@@ -83,7 +84,10 @@ class DetectionModel:
         Unloads the model from CPU/GPU.
         """
         self.model = None
-        empty_cuda_cache()
+        if is_torch_available():
+            from sahi.utils.torch import empty_cuda_cache
+
+            empty_cuda_cache()
 
     def perform_inference(self, image: np.ndarray, image_size: int = None):
         """
@@ -678,13 +682,14 @@ class TorchVisionDetectionModel(DetectionModel):
             )
 
         # set model
-        try:
-            from sahi.utils.torch import torch
+        from sahi.utils.torch import torch_load
 
+        try:
             model = self.config_path
-            model.load_state_dict(torch.load(self.model_path))
+            model.load_state_dict(torch_load(self.model_path))
             model.eval()
             self.model = model.to(self.device)
+
         except Exception as e:
             TypeError("model_path is not a valid torchvision model path: ", e)
 
@@ -704,16 +709,20 @@ class TorchVisionDetectionModel(DetectionModel):
             image_size: int
                 Inference input size.
         """
-        from sahi.utils.torchvision import data_transforms, numpy_to_torch
+        from sahi.utils.torch import to_float_tensor
 
+        # arrange model input size
         if self.image_size is not None:
+            # get min and max of image height and width
+            min_shape, max_shape = min(image.shape[:2]), max(image.shape[:2])
+            # torchvision resize transform scales the shorter dimension to the target size
+            # we want to scale the longer dimension to the target size
+            image_size = self.image_size * min_shape / max_shape
+            self.model.transform.min_size = (image_size,)  # default is (800,)
+            self.model.transform.max_size = image_size  # default is 1333
 
-            img = data_transforms(image, self.image_size).to(self.device)
-            prediction_result = self.model([img])
-        else:
-
-            img = numpy_to_torch(image).to(self.device)
-            prediction_result = self.model([img])
+        image = to_float_tensor(image)
+        prediction_result = self.model([image])
 
         self._original_predictions = prediction_result
 
@@ -759,47 +768,48 @@ class TorchVisionDetectionModel(DetectionModel):
         if full_shape_list is not None and isinstance(full_shape_list[0], int):
             full_shape_list = [full_shape_list]
 
-        # parse boxes, masks, scores, category_ids from predictions
-        category_ids = list(original_predictions[0]["labels"].numpy())
-        boxes = list(original_predictions[0]["boxes"].detach().numpy())
-        scores = list(original_predictions[0]["scores"].detach().numpy())
+        for image_predictions in original_predictions:
+            object_prediction_list_per_image = []
 
-        pred_conf = [scores[i] >= self.confidence_threshold for i in range(len(scores))]
-        boxes = [boxes[i] for i in range(len(boxes)) if pred_conf[i]]
-        scores = [scores[i] for i in range(len(scores)) if pred_conf[i]]
-        category_ids = [category_ids[i] for i in range(len(category_ids)) if pred_conf[i]]
+            # get indices of boxes with score > confidence_threshold
+            scores = image_predictions["scores"].detach().numpy()
+            selected_indices = np.where(scores > self.confidence_threshold)[0]
 
-        # check if predictions contain mask
-        try:
-            masks = list(original_predictions[0]["masks"].detach().numpy())
-            masks = [masks[i] for i in range(len(masks)) if pred_conf[i]]
-        except:
-            masks = None
+            # parse boxes, masks, scores, category_ids from predictions
+            category_ids = list(image_predictions["labels"][selected_indices].detach().numpy())
+            boxes = list(image_predictions["boxes"][selected_indices].detach().numpy())
+            scores = scores[selected_indices]
 
-        # create object_prediction_list
-        object_prediction_list_per_image = []
-        object_prediction_list = []
-
-        shift_amount = shift_amount_list[0]
-        full_shape = None if full_shape_list is None else full_shape_list[0]
-
-        for ind in range(len(boxes)):
-
+            # check if predictions contain mask
+            masks = image_predictions.get("masks", None)
             if masks is not None:
-                masks = np.array(masks[ind])
+                masks = list(image_predictions["masks"][selected_indices].detach().numpy())
             else:
                 masks = None
 
-            object_prediction = ObjectPrediction(
-                bbox=boxes[ind],
-                bool_mask=None,
-                category_id=int(category_ids[ind]),
-                category_name=self.category_mapping[str(int(category_ids[ind]))],
-                shift_amount=shift_amount,
-                score=scores[ind],
-                full_shape=full_shape,
-            )
-            object_prediction_list.append(object_prediction)
-        object_prediction_list_per_image = [object_prediction_list]
+            # create object_prediction_list
+            object_prediction_list = []
+
+            shift_amount = shift_amount_list[0]
+            full_shape = None if full_shape_list is None else full_shape_list[0]
+
+            for ind in range(len(boxes)):
+
+                if masks is not None:
+                    mask = np.array(masks[ind])
+                else:
+                    mask = None
+
+                object_prediction = ObjectPrediction(
+                    bbox=boxes[ind],
+                    bool_mask=mask,
+                    category_id=int(category_ids[ind]),
+                    category_name=self.category_mapping[str(int(category_ids[ind]))],
+                    shift_amount=shift_amount,
+                    score=scores[ind],
+                    full_shape=full_shape,
+                )
+                object_prediction_list.append(object_prediction)
+            object_prediction_list_per_image.append(object_prediction_list)
 
         self._object_prediction_list_per_image = object_prediction_list_per_image
