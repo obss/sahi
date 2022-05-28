@@ -77,7 +77,7 @@ class DetectionModel:
         should be initialized and set to self.model.
         (self.model_path, self.config_path, and self.device should be utilized)
         """
-        NotImplementedError()
+        raise NotImplementedError()
 
     def unload_model(self):
         """
@@ -99,24 +99,26 @@ class DetectionModel:
             image_size: int
                 Inference input size.
         """
-        NotImplementedError()
+        raise NotImplementedError()
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount: Optional[List[int]] = [0, 0],
-        full_shape: Optional[List[int]] = None,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         This function should be implemented in a way that self._original_predictions should
         be converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list. self.mask_threshold can also be utilized.
         Args:
-            shift_amount: list
-                To shift the box and mask predictions from sliced image to full sized image, should be in the form of [shift_x, shift_y]
-            full_shape: list
-                Size of the full image after shifting, should be in the form of [height, width]
+            shift_amount_list: list of list
+                To shift the box and mask predictions from sliced image to full sized image, should
+                be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
+            full_shape_list: list of list
+                Size of the full image after shifting, should be in the form of
+                List[[height, width],[height, width],...]
         """
-        NotImplementedError()
+        raise NotImplementedError()
 
     def _apply_category_remapping(self):
         """
@@ -320,6 +322,10 @@ class MmdetDetectionModel(DetectionModel):
                     # parse prediction mask
                     if self.has_mask:
                         bool_mask = category_masks[category_predictions_ind]
+                        # check if mask is valid
+                        # https://github.com/obss/sahi/issues/389
+                        if get_bbox_from_bool_mask(bool_mask) is None:
+                            continue
                     else:
                         bool_mask = None
 
@@ -371,7 +377,7 @@ class Yolov5DetectionModel(DetectionModel):
             model.conf = self.confidence_threshold
             self.model = model
         except Exception as e:
-            TypeError("model_path is not a valid yolov5 model path: ", e)
+            raise TypeError("model_path is not a valid yolov5 model path: ", e)
 
         # set category_mapping
         if not self.category_mapping:
@@ -649,10 +655,11 @@ class Detectron2DetectionModel(DetectionModel):
                 mask = np.array(masks[ind])
 
                 # check if mask is valid
-                if get_bbox_from_bool_mask(mask) is not None:
-                    bbox = None
-                else:
+                # https://github.com/obss/sahi/issues/389
+                if get_bbox_from_bool_mask(mask) is None:
                     continue
+                else:
+                    bbox = None
 
             object_prediction = ObjectPrediction(
                 bbox=bbox,

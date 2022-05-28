@@ -36,7 +36,6 @@ def to_float_tensor(img):
     """
     Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range
     [0, 255] to a torch.FloatTensor of shape (C x H x W).
-
     Args:
         img: np.ndarray
     Returns:

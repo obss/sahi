@@ -14,6 +14,9 @@ from PIL import Image
 
 from sahi.utils.file import Path
 
+IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".tiff", ".bmp"]
+VIDEO_EXTENSIONS = [".mp4", ".mkv", ".flv", ".avi", ".ts", ".mpg", ".mov", "wmv"]
+
 
 class Colors:
     # color palette
@@ -143,9 +146,11 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
     """
     # https://stackoverflow.com/questions/56174099/how-to-load-images-larger-than-max-image-pixels-with-pil
     Image.MAX_IMAGE_PIXELS = None
-    # read image if str image path is provided
-    if isinstance(image, str):
-        # read image as pil
+
+    if isinstance(image, Image.Image):
+        image_pil = image
+    elif isinstance(image, str):
+        # read image if str image path is provided
         try:
             image_pil = Image.open(
                 requests.get(image, stream=True).raw if str(image).startswith("http") else image
@@ -160,7 +165,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
             image_sk = skimage.io.imread(image).astype(np.uint8)
             if len(image_sk.shape) == 2:  # b&w
                 image_pil = Image.fromarray(image_sk, mode="1")
-            if image_sk.shape[2] == 4:  # rgba
+            elif image_sk.shape[2] == 4:  # rgba
                 image_pil = Image.fromarray(image_sk, mode="RGBA")
             elif image_sk.shape[2] == 3:  # rgb
                 image_pil = Image.fromarray(image_sk, mode="RGB")
@@ -170,10 +175,8 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
         if image.shape[0] < 5:  # image in CHW
             image = image[:, :, ::-1]
         image_pil = Image.fromarray(image)
-    elif isinstance(image, Image.Image):
-        image_pil = image
     else:
-        TypeError("read image with 'pillow' using 'Image.open()'")
+        raise TypeError("read image with 'pillow' using 'Image.open()'")
     return image_pil
 
 
@@ -208,6 +211,104 @@ def apply_color_mask(image: np.ndarray, color: tuple):
     (r[image == 1], g[image == 1], b[image == 1]) = color
     colored_mask = np.stack([r, g, b], axis=2)
     return colored_mask
+
+
+def get_video_reader(
+    source: str,
+    save_dir: str,
+    frame_skip_interval: int,
+    export_visual: bool = False,
+    view_visual: bool = False,
+):
+    """
+    Creates OpenCV video capture object from given video file path.
+
+    Args:
+        source: Video file path
+        save_dir: Video export directory
+        frame_skip_interval: Frame skip interval
+        export_visual: Set True if you want to export visuals
+        view_visual: Set True if you want to render visual
+
+    Returns:
+        iterator: Pillow Image
+        video_writer: cv2.VideoWriter
+        video_file_name: video name with extension
+    """
+    # get video name with extension
+    video_file_name = os.path.basename(source)
+    # get video from video path
+    video_capture = cv2.VideoCapture(source)
+
+    num_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+    if view_visual:
+        num_frames /= frame_skip_interval + 1
+        num_frames = int(num_frames)
+
+    def read_video_frame(video_capture, frame_skip_interval):
+        if view_visual:
+            cv2.imshow("Prediction of {}".format(str(video_file_name)), cv2.WINDOW_AUTOSIZE)
+
+            while video_capture.isOpened:
+
+                frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
+                video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + frame_skip_interval)
+
+                k = cv2.waitKey(20)
+                frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
+
+                if k == 27:
+                    print(
+                        "\n===========================Closing==========================="
+                    )  # Exit the prediction, Key = Esc
+                    exit()
+                if k == 100:
+                    frame_num += 100  # Skip 100 frames, Key = d
+                if k == 97:
+                    frame_num -= 100  # Prev 100 frames, Key = a
+                if k == 103:
+                    frame_num += 20  # Skip 20 frames, Key = g
+                if k == 102:
+                    frame_num -= 20  # Prev 20 frames, Key = f
+                video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
+
+                ret, frame = video_capture.read()
+                if not ret:
+                    print("\n=========================== Video Ended ===========================")
+                    break
+                yield Image.fromarray(frame)
+
+        else:
+            while video_capture.isOpened:
+                frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
+                video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + frame_skip_interval)
+
+                ret, frame = video_capture.read()
+                if not ret:
+                    print("\n=========================== Video Ended ===========================")
+                    break
+                yield Image.fromarray(frame)
+
+    if export_visual:
+        # get video properties and create VideoWriter object
+        if frame_skip_interval != 0:
+            fps = video_capture.get(cv2.CAP_PROP_FPS)  # original fps of video
+            # The fps of export video is increasing during view_image because frame is skipped
+            fps = (
+                fps / frame_skip_interval
+            )  # How many time_interval equals to original fps. One time_interval skip x frames.
+        else:
+            fps = video_capture.get(cv2.CAP_PROP_FPS)
+
+        w = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+        h = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        size = (w, h)
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        video_writer = cv2.VideoWriter(os.path.join(save_dir, video_file_name), fourcc, fps, size)
+    else:
+        video_writer = None
+
+    return read_video_frame(video_capture, frame_skip_interval), video_writer, video_file_name, num_frames
 
 
 def visualize_prediction(
@@ -288,6 +389,7 @@ def visualize_prediction(
         # save inference result
         save_path = os.path.join(output_dir, file_name + ".png")
         cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+
     elapsed_time = time.time() - elapsed_time
     return {"image": image, "elapsed_time": elapsed_time}
 
@@ -375,12 +477,15 @@ def visualize_object_predictions(
             (255, 255, 255),
             thickness=text_th,
         )
-    if output_dir:
-        # create output folder if not present
+
+    # export if output_dir is present
+    if output_dir is not None:
+        # export image with predictions
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
-        save_path = os.path.join(output_dir, file_name + "." + export_format)
+        save_path = str(Path(output_dir) / (file_name + "." + export_format))
         cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+
     elapsed_time = time.time() - elapsed_time
     return {"image": image, "elapsed_time": elapsed_time}
 

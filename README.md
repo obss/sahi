@@ -14,7 +14,7 @@
 <div>
     <a href="https://pepy.tech/project/sahi"><img src="https://pepy.tech/badge/sahi" alt="downloads"></a>
     <a href="https://pepy.tech/project/sahi"><img src="https://pepy.tech/badge/sahi/month" alt="downloads"></a>
-    <a href="https://doi.org/10.5281/zenodo.5718950"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.5718950.svg" alt="ci"></a>
+    <a href="https://doi.org/10.48550/arXiv.2202.06934"><img src="https://img.shields.io/badge/arXiv-2202.06934-b31b1b.svg" alt="ci"></a>
     <br>
     <a href="https://badge.fury.io/py/sahi"><img src="https://badge.fury.io/py/sahi.svg" alt="pypi version"></a>
     <a href="https://anaconda.org/conda-forge/sahi"><img src="https://anaconda.org/conda-forge/sahi/badges/version.svg" alt="conda version"></a>
@@ -33,7 +33,7 @@ Object detection and instance segmentation are by far the most important fields 
 
 | Command  | Description  |
 |---|---|
-| [predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage)  | perform sliced/standard prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection)/[detectron2](https://github.com/facebookresearch/detectron2) model |
+| [predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage)  | perform sliced/standard video/image prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection)/[detectron2](https://github.com/facebookresearch/detectron2) model |
 | [predict-fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-fiftyone-command-usage)  | perform sliced/standard prediction using any [yolov5](https://github.com/ultralytics/yolov5)/[mmdet](https://github.com/open-mmlab/mmdetection)/[detectron2](https://github.com/facebookresearch/detectron2) model and explore results in [fiftyone app](https://github.com/voxel51/fiftyone) |
 | [coco slice](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-slice-command-usage)  | automatically slice COCO annotation and image files |
 | [coco fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-fiftyone-command-usage)  | explore multiple prediction results on your COCO dataset with [fiftyone ui](https://github.com/voxel51/fiftyone) ordered by number of misdetections |
@@ -43,9 +43,15 @@ Object detection and instance segmentation are by far the most important fields 
 
 ## <div align="center">Quick Start Examples</div>
 
+[Check this link for a list of competitions that SAHI made us win 🚀](https://github.com/obss/sahi/issues/384)
+
 ### Tutorials
 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
+
+- [Official paper](https://arxiv.org/abs/2202.06934) (NEW)
+
+- [Video inference support is live](https://github.com/obss/sahi/issues/457) (NEW)
 
 - [Kaggle notebook](https://www.kaggle.com/remekkinas/sahi-slicing-aided-hyper-inference-yv5-and-yx) (NEW)
 
@@ -97,7 +103,7 @@ conda install -c conda-forge shapely
 - Install your desired version of pytorch and torchvision:
 
 ```console
-conda install pytorch=1.10.0 torchvision=0.11.1 cudatoolkit=11.3 -c pytorch
+conda install pytorch=1.10.2 torchvision=0.11.3 cudatoolkit=11.3 -c pytorch
 ```
   
 - Install your desired detection framework (yolov5):
@@ -109,11 +115,11 @@ pip install yolov5
 - Install your desired detection framework (mmdet):
 
 ```console
-pip install mmcv-full==1.4.2 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html
+pip install mmcv-full==1.4.4 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html
 ```
 
 ```console
-pip install mmdet==2.20.0
+pip install mmdet==2.21.0
 ```
 
 - Install your desired detection framework (detectron2):
@@ -129,6 +135,8 @@ pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113
 <img width="700" alt="sahi-predict" src="https://user-images.githubusercontent.com/34196005/149310540-e32f504c-6c9e-4691-8afd-59f3a1a457f0.gif">
 
 Find detailed info on `sahi predict` command at [cli.md](docs/cli.md#predict-command-usage).
+
+Find detailed info on video inference at [video inference tutorial](https://github.com/obss/sahi/issues/457).
 
 Find detailed info on image/dataset slicing utilities at [slicing.md](docs/slicing.md).
 
@@ -155,7 +163,16 @@ Find detailed info on MOT utilities (ground truth dataset creation, exporting tr
 If you use this package in your work, please cite it as:
 
 ```
-@software{akyon2021sahi,
+@article{akyon2022sahi,
+  title={Slicing Aided Hyper Inference and Fine-tuning for Small Object Detection},
+  author={Akyon, Fatih Cagatay and Altinuc, Sinan Onur and Temizel, Alptekin},
+  journal={arXiv preprint arXiv:2202.06934},
+  year={2022}
+}
+```
+
+```
+@software{obss2021sahi,
   author       = {Akyon, Fatih Cagatay and Cengiz, Cemil and Altinuc, Sinan Onur and Cavusoglu, Devrim and Sahin, Kadir and Eryuksel, Ogulcan},
   title        = {{SAHI: A lightweight vision library for performing large scale object detection and instance segmentation}},
   month        = nov,
@@ -177,7 +194,7 @@ Before opening a PR:
 - Install required development packages:
 
 ```bash
-pip install -U -e .[dev]
+pip install -e ."[dev]"
 ```
 
 - Reformat with black and isort:
@@ -187,7 +204,6 @@ black . --config pyproject.toml
 isort .
 ```
 
-
 ## <div align="center">Contributors</div>
 
 <div align="center">
@@ -196,16 +212,18 @@ isort .
 
 <a align="left" href="https://github.com/sinanonur" target="_blank">Sinan Onur Altinuc</a>
 
-<a align="left" href="https://github.com/kadirnar" target="_blank">Kadir Nar</a>
+<a align="left" href="https://github.com/devrimcavusoglu" target="_blank">Devrim Cavusoglu</a>
 
 <a align="left" href="https://github.com/cemilcengiz" target="_blank">Cemil Cengiz</a>
 
-<a align="left" href="https://github.com/ssahinnkadir" target="_blank">Kadir Sahin</a>
-  
-<a align="left" href="https://github.com/devrimcavusoglu" target="_blank">Devrim Cavusoglu</a>
-  
-<a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
-  
 <a align="left" href="https://github.com/oulcan" target="_blank">Ogulcan Eryuksel</a>
+
+<a align="left" href="https://github.com/kadirnar" target="_blank">Kadir Nar</a>
+
+<a align="left" href="https://github.com/madenburak" target="_blank">Burak Maden</a>
+
+<a align="left" href="https://github.com/ssahinnkadir" target="_blank">Kadir Sahin</a>
+
+<a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
 
 </div>
