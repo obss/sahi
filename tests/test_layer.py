@@ -19,7 +19,7 @@ class TestLayerDetectionModel(unittest.TestCase):
 
         # Return a YOLO model once mocked `layer.get_model()` is called
         yolo_model = yolov5.load("tests/data/models/yolov5n.pt")
-        layer_model = Model(layer_model_path, trained_model_object=yolo_model)
+        layer_model = Model(layer_model_path, model_artifact=yolo_model)
         mock_layer_get_model.return_value = layer_model
 
         # Make the call
@@ -41,7 +41,7 @@ class TestLayerDetectionModel(unittest.TestCase):
 
         # Return a basic Torch model once mocked `layer.get_model()` is called
         torch_model = torch.nn.Sequential()
-        layer_model = Model(layer_model_path, trained_model_object=torch_model)
+        layer_model = Model(layer_model_path, model_artifact=torch_model)
         mock_layer_get_model.return_value = layer_model
 
         # Make the call expecting an exception
