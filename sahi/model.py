@@ -10,7 +10,8 @@ import numpy as np
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_bbox_from_bool_mask
-from sahi.utils.torch import cuda_is_available, empty_cuda_cache
+from sahi.utils.import_utils import is_torch_available
+from sahi.utils.torch import is_torch_cuda_available
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ class DetectionModel:
 
         # automatically set device if its None
         if not (self.device):
-            self.device = "cuda:0" if cuda_is_available() else "cpu"
+            self.device = "cuda:0" if is_torch_cuda_available() else "cpu"
 
         # automatically load model if load_at_init is True
         if load_at_init:
@@ -83,7 +84,10 @@ class DetectionModel:
         Unloads the model from CPU/GPU.
         """
         self.model = None
-        empty_cuda_cache()
+        if is_torch_available():
+            from sahi.utils.torch import empty_cuda_cache
+
+            empty_cuda_cache()
 
     def perform_inference(self, image: np.ndarray, image_size: int = None):
         """
