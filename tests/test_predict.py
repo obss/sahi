@@ -118,6 +118,53 @@ class TestPredict(unittest.TestCase):
                 num_car += 1
         self.assertEqual(num_car, 2)
 
+    def test_get_prediction_automodel_yolov5(self):
+        from sahi.auto_model import AutoDetectionModel
+        from sahi.predict import get_prediction
+        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
+
+        # init model
+        download_yolov5n_model()
+
+        yolov5_detection_model = AutoDetectionModel(
+            model_type="yolov5",
+            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            device=MODEL_DEVICE,
+            category_remapping=None,
+            load_at_init=False,
+            image_size=IMAGE_SIZE,
+        )
+        yolov5_detection_model.load_model()
+
+        # prepare image
+        image_path = "tests/data/small-vehicles1.jpeg"
+        image = read_image(image_path)
+
+        # get full sized prediction
+        prediction_result = get_prediction(
+            image=image, detection_model=yolov5_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
+        )
+        object_prediction_list = prediction_result.object_prediction_list
+
+        # compare
+        self.assertEqual(len(object_prediction_list), 2)
+        num_person = 0
+        for object_prediction in object_prediction_list:
+            if object_prediction.category.name == "person":
+                num_person += 1
+        self.assertEqual(num_person, 0)
+        num_truck = 0
+        for object_prediction in object_prediction_list:
+            if object_prediction.category.name == "truck":
+                num_truck += 1
+        self.assertEqual(num_truck, 0)
+        num_car = 0
+        for object_prediction in object_prediction_list:
+            if object_prediction.category.name == "car":
+                num_car += 1
+        self.assertEqual(num_car, 2)
+
     def test_get_sliced_prediction_mmdet(self):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import get_sliced_prediction
