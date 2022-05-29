@@ -4,6 +4,9 @@
 import unittest
 from unittest import mock
 
+from layer.flavors.base import ModelRuntimeObjects
+
+from sahi.auto_model import AutoDetectionModel
 from sahi.model import Yolov5DetectionModel
 
 
@@ -19,14 +22,15 @@ class TestLayerDetectionModel(unittest.TestCase):
 
         # Return a YOLO model once mocked `layer.get_model()` is called
         yolo_model = yolov5.load("tests/data/models/yolov5n.pt")
-        layer_model = Model(layer_model_path, model_artifact=yolo_model)
+        layer_model = Model(layer_model_path, model_runtime_objects=ModelRuntimeObjects(yolo_model))
         mock_layer_get_model.return_value = layer_model
 
         # Make the call
-        detection_model = DetectionModel.from_layer(layer_model_path)
+        detection_model = AutoDetectionModel.from_layer(layer_model_path)
 
         # Run assertions
         mock_layer_get_model.assert_called_once_with(name=layer_model_path, no_cache=False)
+
         self.assertIsInstance(detection_model, Yolov5DetectionModel)
         self.assertIsInstance(detection_model.model, type(yolo_model))
 
@@ -41,12 +45,12 @@ class TestLayerDetectionModel(unittest.TestCase):
 
         # Return a basic Torch model once mocked `layer.get_model()` is called
         torch_model = torch.nn.Sequential()
-        layer_model = Model(layer_model_path, model_artifact=torch_model)
+        layer_model = Model(layer_model_path, model_runtime_objects=ModelRuntimeObjects(torch_model))
         mock_layer_get_model.return_value = layer_model
 
         # Make the call expecting an exception
         with self.assertRaises(Exception):
-            DetectionModel.from_layer(layer_model_path)
+            AutoDetectionModel.from_layer(layer_model_path)
 
 
 if __name__ == "__main__":
