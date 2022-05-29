@@ -90,6 +90,10 @@ jobs:
         run: >
           python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch1.10/index.html
 
+      - name: Install Layer (0.10.*)
+        run: >
+          pip install -U "layer>=0.10.0,<1.0.0"
+
       - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
         run: |
           python -m unittest

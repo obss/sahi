@@ -29,6 +29,25 @@ class TestYolov5DetectionModel(unittest.TestCase):
 
         self.assertNotEqual(yolov5_detection_model.model, None)
 
+    def test_set_model(self):
+        import yolov5
+
+        from sahi.model import Yolov5DetectionModel
+
+        download_yolov5n_model()
+
+        yolo_model = yolov5.load(Yolov5TestConstants.YOLOV5N_MODEL_PATH)
+
+        yolov5_detection_model = Yolov5DetectionModel(
+            model=yolo_model,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            device=MODEL_DEVICE,
+            category_remapping=None,
+            load_at_init=True,
+        )
+
+        self.assertNotEqual(yolov5_detection_model.model, None)
+
     def test_perform_inference(self):
         from sahi.model import Yolov5DetectionModel
 
