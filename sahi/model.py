@@ -3,7 +3,7 @@
 
 import logging
 import warnings
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 class DetectionModel:
     def __init__(
         self,
-        model_path: str,
+        model_path: Optional[str] = None,
+        model: Optional[Any] = None,
         config_path: Optional[str] = None,
         device: Optional[str] = None,
         mask_threshold: float = 0.5,
@@ -69,13 +70,27 @@ class DetectionModel:
 
         # automatically load model if load_at_init is True
         if load_at_init:
-            self.load_model()
+            if model_path:
+                self.load_model()
+            if model:
+                self.set_model(model)
+            if self.model is None:
+                raise Exception("You should either provide a `model_path` or a loaded `model`")
 
     def load_model(self):
         """
         This function should be implemented in a way that detection model
         should be initialized and set to self.model.
         (self.model_path, self.config_path, and self.device should be utilized)
+        """
+        raise NotImplementedError()
+
+    def set_model(self, model: Any):
+        """
+        This function should be implemented to instantiate a DetectionModel out of an already loaded model
+        Args:
+            model: Any
+                Loaded model
         """
         raise NotImplementedError()
 
@@ -371,13 +386,25 @@ class Yolov5DetectionModel(DetectionModel):
         except ImportError:
             raise ImportError('Please run "pip install -U yolov5" ' "to install YOLOv5 first for YOLOv5 inference.")
 
-        # set model
         try:
             model = yolov5.load(self.model_path, device=self.device)
-            model.conf = self.confidence_threshold
-            self.model = model
+            self.set_model(model)
         except Exception as e:
             raise TypeError("model_path is not a valid yolov5 model path: ", e)
+
+    def set_model(self, model: Any):
+        """
+        Sets the underlying YOLOv5 model.
+        Args:
+            model: Any
+                A YOLOv5 model
+        """
+
+        if not model.__class__.__module__ in ["yolov5.models.common", "models.common"]:
+            raise Exception(f"Not a yolov5 model: {type(model)}")
+
+        model.conf = self.confidence_threshold
+        self.model = model
 
         # set category_mapping
         if not self.category_mapping:
