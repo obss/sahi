@@ -120,7 +120,8 @@ class AutoDetectionModel:
         else:
             raise Exception(f"Unsupported model: {type(layer_model)}. Only YOLOv5 models are supported.")
 
-        DetectionModel = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
+        class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
+        DetectionModel = import_model_class(class_name)
         return DetectionModel(
             model=layer_model,
             device=device,
