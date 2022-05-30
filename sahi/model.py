@@ -719,10 +719,23 @@ class TorchVisionDetectionModel(DetectionModel):
         from sahi.utils.torch import torch_load
 
         try:
-            model = self.config_path
-            model.load_state_dict(torch_load(self.model_path))
-            model.eval()
-            self.model = model.to(self.device)
+            import yaml
+
+            with open("sahi/utils/config/torchvision.yaml", "r") as stream:
+                try:
+                    config = yaml.safe_load(stream)
+                except yaml.YAMLError as exc:
+                    print(exc)
+
+            if self.model_type == "fasterrcnn_resnet50_fpn":
+                # torchvision.models.detection.fasterrcnn_resnet50_fpn(num_classes=80)
+                model_path = config["fasterrcnn_resnet50_fpn"]["model_path"]
+                num_classes = config["fasterrcnn_resnet50_fpn"]["num_classes"]
+
+                model = model_path + "(num_classes=" + str(num_classes) + ")"
+                model.load_state_dict(torch_load(self.model_path))
+                model.eval()
+                self.model = model.to(self.device)
 
         except Exception as e:
             TypeError("model_path is not a valid torchvision model path: ", e)
