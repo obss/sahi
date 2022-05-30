@@ -1,6 +1,5 @@
 from typing import Dict, Optional
 
-from sahi.model import Yolov5DetectionModel
 from sahi.utils.file import import_model_class
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
@@ -86,16 +85,14 @@ class AutoDetectionModel:
         """
         Loads a DetectionModel from Layer. You can pass additional parameters in the name to retrieve a specific version
         of the model with format: ``model_path:major_version.minor_version``
-
         By default, this function caches models locally when possible.
-
         Args:
             model_path: str
                 Path of the Layer model (ex. '/sahi/yolo/models/yolov5')
             no_cache: bool
                 If True, force model fetch from the remote location.
             device: str
-                Torch device, "cpu" or "cuda"
+                Device, "cpu" or "cuda:0"
             mask_threshold: float
                 Value to threshold mask pixels, should be between 0 and 1
             confidence_threshold: float
@@ -119,16 +116,18 @@ class AutoDetectionModel:
 
         layer_model = layer.get_model(name=model_path, no_cache=no_cache).get_train()
         if layer_model.__class__.__module__ in ["yolov5.models.common", "models.common"]:
-            model = Yolov5DetectionModel(
-                model=layer_model,
-                device=device,
-                mask_threshold=mask_threshold,
-                confidence_threshold=confidence_threshold,
-                category_mapping=category_mapping,
-                category_remapping=category_remapping,
-                image_size=image_size,
-            )
+            model_type = "yolov5"
         else:
             raise Exception(f"Unsupported model: {type(layer_model)}. Only YOLOv5 models are supported.")
 
-        return model
+        class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
+        DetectionModel = import_model_class(class_name)
+        return DetectionModel(
+            model=layer_model,
+            device=device,
+            mask_threshold=mask_threshold,
+            confidence_threshold=confidence_threshold,
+            category_mapping=category_mapping,
+            category_remapping=category_remapping,
+            image_size=image_size,
+        )
