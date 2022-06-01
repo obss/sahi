@@ -1871,9 +1871,10 @@ def create_coco_dict(images, categories, ignore_negative_samples=False, image_id
     assert image_id_setting in ["auto", "manual"]
 
     # define accumulators
+    image_index = 1
     annotation_id = 1
     coco_dict = dict(images=[], annotations=[], categories=categories)
-    for image_index, coco_image in enumerate(images):
+    for coco_image in images:
         # get coco annotations
         coco_annotations = coco_image.annotations
         # get num annotations
@@ -1884,7 +1885,8 @@ def create_coco_dict(images, categories, ignore_negative_samples=False, image_id
         else:
             # get image_id
             if image_id_setting == "auto":
-                image_id = image_index + 1
+                image_id = image_index
+                image_index += 1
             elif image_id_setting == "manual":
                 assert coco_image.id is not None
                 image_id = coco_image.id
@@ -1940,9 +1942,10 @@ def create_coco_prediction_array(images, ignore_negative_samples=False, image_id
     assert image_id_setting in ["auto", "manual"]
 
     # define accumulators
+    image_index = 1
     prediction_id = 1
     predictions_array = []
-    for image_index, coco_image in enumerate(images):
+    for coco_image in images:
         # get coco predictions
         coco_predictions = coco_image.predictions
         # get num annotations
@@ -1953,7 +1956,8 @@ def create_coco_prediction_array(images, ignore_negative_samples=False, image_id
         else:
             # get image_id
             if image_id_setting == "auto":
-                image_id = image_index + 1
+                image_id = image_index
+                image_index += 1
             elif image_id_setting == "manual":
                 assert coco_image.id is not None
                 image_id = coco_image.id
