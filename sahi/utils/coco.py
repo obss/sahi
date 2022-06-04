@@ -620,8 +620,8 @@ class CocoImage:
     file_name: {self.file_name},
     height: {self.height},
     width: {self.width},
-    annotations: List[CocoAnnotation]>,
-    predictions: List[CocoPrediction]"""
+    annotations: List[CocoAnnotation],
+    predictions: List[CocoPrediction]>"""
 
 
 class CocoVidImage(CocoImage):
