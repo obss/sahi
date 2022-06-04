@@ -62,7 +62,7 @@ coco_image.add_prediction(
 coco_image.add_prediction(
   CocoPrediction(
     score=0.653424,
-    segmentation=[x_min, y_min, width, height],
+    bbox=[x_min, y_min, width, height],
     category_id=1,
     category_name='vehicle'
   )

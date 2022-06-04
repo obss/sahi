@@ -1868,7 +1868,8 @@ def create_coco_dict(images, categories, ignore_negative_samples=False, image_id
             COCO dict with fields "images", "annotations", "categories"
     """
     # assertion of parameters
-    assert image_id_setting in ["auto", "manual"]
+    if image_id_setting not in ["auto", "manual"]:
+        raise ValueError(f"'image_id_setting' should be one of ['auto', 'manual']")
 
     # define accumulators
     image_index = 1
@@ -1888,7 +1889,8 @@ def create_coco_dict(images, categories, ignore_negative_samples=False, image_id
                 image_id = image_index
                 image_index += 1
             elif image_id_setting == "manual":
-                assert coco_image.id is not None
+                if coco_image.id is None:
+                    raise ValueError("'coco_image.id' should be set manually when image_id_setting == 'manual'")
                 image_id = coco_image.id
 
             # create coco image object
@@ -1939,8 +1941,8 @@ def create_coco_prediction_array(images, ignore_negative_samples=False, image_id
             COCO predictions array
     """
     # assertion of parameters
-    assert image_id_setting in ["auto", "manual"]
-
+    if image_id_setting not in ["auto", "manual"]:
+        raise ValueError(f"'image_id_setting' should be one of ['auto', 'manual']")
     # define accumulators
     image_index = 1
     prediction_id = 1
@@ -1948,7 +1950,7 @@ def create_coco_prediction_array(images, ignore_negative_samples=False, image_id
     for coco_image in images:
         # get coco predictions
         coco_predictions = coco_image.predictions
-        # get num annotations
+        # get num predictions
         num_predictions = len(coco_predictions)
         # if ignore_negative_samples is True and no annotations, skip image
         if ignore_negative_samples and num_predictions == 0:
@@ -1959,7 +1961,8 @@ def create_coco_prediction_array(images, ignore_negative_samples=False, image_id
                 image_id = image_index
                 image_index += 1
             elif image_id_setting == "manual":
-                assert coco_image.id is not None
+                if coco_image.id is None:
+                    raise ValueError("'coco_image.id' should be set manually when image_id_setting == 'manual'")
                 image_id = coco_image.id
 
             # create coco prediction object
