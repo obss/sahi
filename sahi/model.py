@@ -6,6 +6,7 @@ import warnings
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+import torch
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
@@ -701,4 +702,189 @@ class Detectron2DetectionModel(DetectionModel):
         # detectron2 DefaultPredictor supports single image
         object_prediction_list_per_image = [object_prediction_list]
 
+        self._object_prediction_list_per_image = object_prediction_list_per_image
+
+
+class HFTransformersDetectionModel(DetectionModel):
+    def __init__(
+            self,
+            model_path: Optional[str] = None,
+            model: Optional[Any] = None,
+            config_path: Optional[str] = None,
+            device: Optional[str] = None,
+            mask_threshold: float = 0.5,
+            confidence_threshold: float = 0.3,
+            category_mapping: Optional[Dict] = None,
+            category_remapping: Optional[Dict] = None,
+            load_at_init: bool = True,
+            image_size: int = None,
+    ):
+        self._feature_extractor = None
+        self._base_model = None
+        super(HFTransformersDetectionModel, self).__init__(
+                model_path,
+                model,
+                config_path,
+                device,
+                mask_threshold,
+                confidence_threshold,
+                category_mapping,
+                category_remapping,
+                load_at_init,
+                image_size
+        )
+        
+    @property
+    def feature_extractor(self):
+        return self._feature_extractor
+    
+    def load_model(self):
+        try:
+            import transformers
+        except ImportError:
+            raise ImportError(
+                "Please install transformers. Check "
+                "`https://github.com/huggingface/transformers#installation` "
+                "for instalattion details."
+            )
+
+        self.set_model(self.model_path)
+
+    def _check_model_support(self):
+        from transformers import DetrModel
+
+        if not isinstance(self.model.base_model, DetrModel):
+            raise ValueError("Currently only DETR model is supported.")
+
+    def set_model(self, model: Any):
+        if not isinstance(model, str):
+            raise ValueError("`model` has to be path to the model as feature_extractor is also needed.")
+
+        from transformers import AutoFeatureExtractor, AutoModelForObjectDetection
+
+        self.model = AutoModelForObjectDetection.from_pretrained(self.model_path)
+        self._feature_extractor = AutoFeatureExtractor.from_pretrained(self.model_path)
+        self._base_model = self.model.base_model.__class__
+        self.category_mapping = self.model.config.id2label
+
+    def perform_inference(self, image: np.ndarray, image_size: int = None):
+        """
+        Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+        Args:
+            image: np.ndarray
+                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+        """
+        try:
+            import transformers
+        except ImportError:
+            raise ImportError("Please install transformers via `pip install transformers`")
+
+        # Check if loaded model is supported
+        self._check_model_support()
+
+        # confirm image_size is not provided
+        if image_size is not None:
+            warnings.warn("Set 'image_size' at DetectionModel init.")
+
+        # Confirm model is loaded
+        if self.model is None:
+            raise RuntimeError("Model is not loaded, load it by calling .load_model()")
+
+        with torch.no_grad():
+            inputs = self.feature_extractor(images=image, return_tensors="pt")
+            outputs = self.model(**inputs)
+
+        # model predicts bounding boxes and corresponding COCO classes
+        logits = outputs.logits
+        bboxes = outputs.pred_boxes
+
+        self._original_predictions = {
+            "logits": logits,
+            "bboxes": bboxes,
+            "image_shape": image.shape
+        }
+
+    @property
+    def num_categories(self) -> int:
+        """
+        Returns number of categories
+        """
+        return self.model.config.num_labels
+
+    def convert_bbox_type(self, bbox, image_width, image_height):
+        from transformers import DetrModel
+
+        if isinstance(self.model.base_model, DetrModel):
+            # DETR returns YOLO style bounding-box
+            x_c, y_c, w, h = np.array(bbox) * np.tile([image_width, image_height], 2)
+            x_tl = x_c - w/2
+            y_tl = y_c - h/2
+            x_br = x_c + w/2
+            y_br = y_tl + h/2
+            return [round(x_tl), round(y_tl), round(x_br), round(y_br)]
+
+    def _create_object_prediction_list_from_original_predictions(
+        self,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
+    ):
+        """
+        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        self._object_prediction_list_per_image.
+        Args:
+            shift_amount_list: list of list
+                To shift the box and mask predictions from sliced image to full sized image, should
+                be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
+            full_shape_list: list of list
+                Size of the full image after shifting, should be in the form of
+                List[[height, width],[height, width],...]
+        """
+        original_predictions = self._original_predictions
+        image_height, image_width, _ = original_predictions["image_shape"]
+
+        # compatilibty for sahi v0.8.15
+        shift_amount_list = fix_shift_amount_list(shift_amount_list)
+        full_shape_list = fix_full_shape_list(full_shape_list)
+
+        probs = original_predictions["logits"].softmax(-1)
+        scores = probs.max(-1).values
+        cat_ids = probs.argmax(-1)
+        valid_detections = torch.where(cat_ids < self.num_categories)
+        scores = scores[valid_detections]
+        cat_ids = cat_ids[valid_detections]
+        bboxes = original_predictions["bboxes"][valid_detections]
+
+        # create object_prediction_list
+        object_prediction_list = []
+
+        shift_amount = shift_amount_list[0]
+        full_shape = None if full_shape_list is None else full_shape_list[0]
+
+        for ind in range(len(bboxes)):
+            score = scores[ind]
+            if score < self.confidence_threshold:
+                continue
+
+            category_id = cat_ids[ind].item()
+            bbox = bboxes[ind].tolist()
+            bbox = self.convert_bbox_type(bbox, image_width, image_height)
+
+            # fix negative box coords
+            bbox[0] = max(0, int(bbox[0]))
+            bbox[1] = max(0, int(bbox[1]))
+            bbox[2] = min(bbox[2], image_width)
+            bbox[3] = min(bbox[3], image_height)
+
+            object_prediction = ObjectPrediction(
+                bbox=bbox,
+                bool_mask=None,
+                category_id=category_id,
+                category_name=self.category_mapping[category_id],
+                shift_amount=shift_amount,
+                score=score,
+                full_shape=full_shape,
+            )
+            object_prediction_list.append(object_prediction)
+
+        object_prediction_list_per_image = [object_prediction_list]
         self._object_prediction_list_per_image = object_prediction_list_per_image
