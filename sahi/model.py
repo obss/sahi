@@ -6,6 +6,7 @@ import warnings
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+import pybboxes.functional as pbf
 import torch
 
 from sahi.prediction import ObjectPrediction
@@ -705,7 +706,7 @@ class Detectron2DetectionModel(DetectionModel):
         self._object_prediction_list_per_image = object_prediction_list_per_image
 
 
-class HFTransformersDetectionModel(DetectionModel):
+class HuggingfaceDetectionModel(DetectionModel):
     def __init__(
             self,
             model_path: Optional[str] = None,
@@ -720,7 +721,7 @@ class HFTransformersDetectionModel(DetectionModel):
             image_size: int = None,
     ):
         self._feature_extractor = None
-        super(HFTransformersDetectionModel, self).__init__(
+        super(HuggingfaceDetectionModel, self).__init__(
                 model_path,
                 model,
                 config_path,
@@ -756,7 +757,10 @@ class HFTransformersDetectionModel(DetectionModel):
         from transformers import AutoFeatureExtractor, AutoModelForObjectDetection
 
         self.model = AutoModelForObjectDetection.from_pretrained(self.model_path)
-        self._feature_extractor = AutoFeatureExtractor.from_pretrained(self.model_path)
+        if self.image_size is not None:
+            self._feature_extractor = AutoFeatureExtractor.from_pretrained(self.model_path, size=self.image_size, do_resize=True)
+        else:
+            self._feature_extractor = AutoFeatureExtractor.from_pretrained(self.model_path)
         self.category_mapping = self.model.config.id2label
 
     def perform_inference(self, image: np.ndarray, image_size: int = None):
@@ -783,15 +787,19 @@ class HFTransformersDetectionModel(DetectionModel):
             inputs = self.feature_extractor(images=image, return_tensors="pt")
             outputs = self.model(**inputs)
 
-        # model predicts bounding boxes and corresponding COCO classes
-        logits = outputs.logits
-        bboxes = outputs.pred_boxes
+        outputs["image_shape"] = image.shape
+        if self.feature_extractor.size and self.feature_extractor.do_resize:
+            h, w, _ = image.shape
+            if h > w:
+                scale_factor = self.feature_extractor.size / w
+            else:
+                scale_factor = self.feature_extractor.size / h
+        else:
+            scale_factor = None
 
-        self._original_predictions = {
-            "logits": logits,
-            "bboxes": bboxes,
-            "image_shape": image.shape
-        }
+        outputs["scale_factor"] = scale_factor
+
+        self._original_predictions = outputs
 
     @property
     def num_categories(self) -> int:
@@ -799,18 +807,6 @@ class HFTransformersDetectionModel(DetectionModel):
         Returns number of categories
         """
         return self.model.config.num_labels
-
-    def convert_bbox_type(self, bbox, image_width, image_height):
-        from transformers import DetrModel
-
-        if isinstance(self.model.base_model, DetrModel):
-            # DETR returns YOLO style bounding-box
-            x_c, y_c, w, h = np.array(bbox) * np.tile([image_width, image_height], 2)
-            x_tl = x_c - w/2
-            y_tl = y_c - h/2
-            x_br = x_c + w/2
-            y_br = y_tl + h/2
-            return [round(x_tl), round(y_tl), round(x_br), round(y_br)]
 
     def _create_object_prediction_list_from_original_predictions(
         self,
@@ -829,19 +825,19 @@ class HFTransformersDetectionModel(DetectionModel):
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
-        image_height, image_width, _ = original_predictions["image_shape"]
+        image_height, image_width, _ = original_predictions.image_shape
 
         # compatilibty for sahi v0.8.15
         shift_amount_list = fix_shift_amount_list(shift_amount_list)
         full_shape_list = fix_full_shape_list(full_shape_list)
 
-        probs = original_predictions["logits"].softmax(-1)
+        probs = original_predictions.logits.softmax(-1)
         scores = probs.max(-1).values
         cat_ids = probs.argmax(-1)
         valid_detections = torch.where(cat_ids < self.num_categories)
         scores = scores[valid_detections]
         cat_ids = cat_ids[valid_detections]
-        bboxes = original_predictions["bboxes"][valid_detections]
+        bboxes = original_predictions.pred_boxes[valid_detections]
 
         # create object_prediction_list
         object_prediction_list = []
@@ -850,13 +846,13 @@ class HFTransformersDetectionModel(DetectionModel):
         full_shape = None if full_shape_list is None else full_shape_list[0]
 
         for ind in range(len(bboxes)):
-            score = scores[ind]
+            score = scores[ind].item()
             if score < self.confidence_threshold:
                 continue
 
             category_id = cat_ids[ind].item()
-            bbox = bboxes[ind].tolist()
-            bbox = self.convert_bbox_type(bbox, image_width, image_height)
+            yolo_bbox = bboxes[ind].tolist()
+            bbox = list(pbf.convert_bbox(yolo_bbox, from_type="yolo", to_type="voc", image_size=(image_width, image_height), return_values=True))
 
             # fix negative box coords
             bbox[0] = max(0, int(bbox[0]))
@@ -877,11 +873,3 @@ class HFTransformersDetectionModel(DetectionModel):
 
         object_prediction_list_per_image = [object_prediction_list]
         self._object_prediction_list_per_image = object_prediction_list_per_image
-
-
-if __name__ == "__main__":
-    from sahi.utils.cv import read_image_as_pil
-    img = read_image_as_pil(r"C:\Users\devri\lab\projects\sahi\demo\demo_data\small-vehicles1.jpeg")
-    hf_model = HFTransformersDetectionModel()
-    out = hf_model.perform_inference(img)
-    print(out)
