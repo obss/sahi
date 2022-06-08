@@ -788,17 +788,6 @@ class HuggingfaceDetectionModel(DetectionModel):
             outputs = self.model(**inputs)
 
         outputs["image_shape"] = image.shape
-        if self.feature_extractor.size and self.feature_extractor.do_resize:
-            h, w, _ = image.shape
-            if h > w:
-                scale_factor = self.feature_extractor.size / w
-            else:
-                scale_factor = self.feature_extractor.size / h
-        else:
-            scale_factor = None
-
-        outputs["scale_factor"] = scale_factor
-
         self._original_predictions = outputs
 
     @property
