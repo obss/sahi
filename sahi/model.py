@@ -720,7 +720,6 @@ class HFTransformersDetectionModel(DetectionModel):
             image_size: int = None,
     ):
         self._feature_extractor = None
-        self._base_model = None
         super(HFTransformersDetectionModel, self).__init__(
                 model_path,
                 model,
@@ -750,12 +749,6 @@ class HFTransformersDetectionModel(DetectionModel):
 
         self.set_model(self.model_path)
 
-    def _check_model_support(self):
-        from transformers import DetrModel
-
-        if not isinstance(self.model.base_model, DetrModel):
-            raise ValueError("Currently only DETR model is supported.")
-
     def set_model(self, model: Any):
         if not isinstance(model, str):
             raise ValueError("`model` has to be path to the model as feature_extractor is also needed.")
@@ -764,7 +757,6 @@ class HFTransformersDetectionModel(DetectionModel):
 
         self.model = AutoModelForObjectDetection.from_pretrained(self.model_path)
         self._feature_extractor = AutoFeatureExtractor.from_pretrained(self.model_path)
-        self._base_model = self.model.base_model.__class__
         self.category_mapping = self.model.config.id2label
 
     def perform_inference(self, image: np.ndarray, image_size: int = None):
@@ -778,9 +770,6 @@ class HFTransformersDetectionModel(DetectionModel):
             import transformers
         except ImportError:
             raise ImportError("Please install transformers via `pip install transformers`")
-
-        # Check if loaded model is supported
-        self._check_model_support()
 
         # confirm image_size is not provided
         if image_size is not None:
@@ -888,3 +877,11 @@ class HFTransformersDetectionModel(DetectionModel):
 
         object_prediction_list_per_image = [object_prediction_list]
         self._object_prediction_list_per_image = object_prediction_list_per_image
+
+
+if __name__ == "__main__":
+    from sahi.utils.cv import read_image_as_pil
+    img = read_image_as_pil(r"C:\Users\devri\lab\projects\sahi\demo\demo_data\small-vehicles1.jpeg")
+    hf_model = HFTransformersDetectionModel()
+    out = hf_model.perform_inference(img)
+    print(out)
