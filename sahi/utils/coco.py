@@ -583,6 +583,7 @@ class CocoImage:
         self.height = int(height)
         self.width = int(width)
         self.annotations = []  # list of CocoAnnotation that belong to this image
+        self.predictions = []  # list of CocoPrediction that belong to this image
 
     def add_annotation(self, annotation):
         """
@@ -593,6 +594,16 @@ class CocoImage:
 
         assert isinstance(annotation, CocoAnnotation), "annotation must be a CocoAnnotation instance"
         self.annotations.append(annotation)
+
+    def add_prediction(self, prediction):
+        """
+        Adds prediction to this CocoImage instance
+
+        prediction : CocoPrediction
+        """
+
+        assert isinstance(prediction, CocoPrediction), "prediction must be a CocoPrediction instance"
+        self.predictions.append(prediction)
 
     @property
     def json(self):
@@ -609,7 +620,8 @@ class CocoImage:
     file_name: {self.file_name},
     height: {self.height},
     width: {self.width},
-    annotations: List[CocoAnnotation]>"""
+    annotations: List[CocoAnnotation],
+    predictions: List[CocoPrediction]>"""
 
 
 class CocoVidImage(CocoImage):
@@ -786,6 +798,7 @@ class Coco:
         remapping_dict=None,
         ignore_negative_samples=False,
         clip_bboxes_to_img_dims=False,
+        image_id_setting="auto",
     ):
         """
         Creates Coco object.
@@ -799,7 +812,12 @@ class Coco:
                 {1:0, 2:1} maps category id 1 to 0 and category id 2 to 1
             ignore_negative_samples: bool
                 If True ignores images without annotations in all operations.
+            image_id_setting: str
+                how to assign image ids while exporting can be
+                    auto --> will assign id from scratch (<CocoImage>.id will be ignored)
+                    manual --> you will need to provide image ids in <CocoImage> instances (<CocoImage>.id can not be None)
         """
+        assert image_id_setting in ["auto", "manual"]
         self.name = name
         self.image_dir = image_dir
         self.remapping_dict = remapping_dict
@@ -808,6 +826,7 @@ class Coco:
         self.images = []
         self._stats = None
         self.clip_bboxes_to_img_dims = clip_bboxes_to_img_dims
+        self.image_id_setting = image_id_setting
 
     def add_categories_from_coco_category_list(self, coco_category_list):
         """
@@ -851,6 +870,8 @@ class Coco:
         """
 
         assert type(image) == CocoImage, "image must be a CocoImage instance"
+        if self.image_id_setting == "manual":
+            assert image.id is not None
 
         self.images.append(image)
 
@@ -1067,6 +1088,15 @@ class Coco:
             images=self.images,
             categories=self.json_categories,
             ignore_negative_samples=self.ignore_negative_samples,
+            image_id_setting=self.image_id_setting,
+        )
+
+    @property
+    def prediction_array(self):
+        return create_coco_prediction_array(
+            images=self.images,
+            ignore_negative_samples=self.ignore_negative_samples,
+            image_id_setting=self.image_id_setting,
         )
 
     @property
@@ -1817,7 +1847,7 @@ def get_imageid2annotationlist_mapping(
     return image_id_to_annotation_list
 
 
-def create_coco_dict(images, categories, ignore_negative_samples=False):
+def create_coco_dict(images, categories, ignore_negative_samples=False, image_id_setting="auto"):
     """
     Creates COCO dict with fields "images", "annotations", "categories".
 
@@ -1828,21 +1858,25 @@ def create_coco_dict(images, categories, ignore_negative_samples=False):
             COCO categories
         ignore_negative_samples : Bool
             If True, images without annotations are ignored
+        image_id_setting: str
+            how to assign image ids while exporting can be
+                auto --> will assign id from scratch (<CocoImage>.id will be ignored)
+                manual --> you will need to provide image ids in <CocoImage> instances (<CocoImage>.id can not be None)
     Returns
     -------
         coco_dict : Dict
             COCO dict with fields "images", "annotations", "categories"
     """
-    out_images = []
-    out_annotations = []
-    out_categories = categories
+    # assertion of parameters
+    if image_id_setting not in ["auto", "manual"]:
+        raise ValueError(f"'image_id_setting' should be one of ['auto', 'manual']")
 
-    num_images = len(images)
-    image_id = 1
+    # define accumulators
+    image_index = 1
     annotation_id = 1
-    for image_ind in range(num_images):
-        # get coco image and its coco annotations
-        coco_image = images[image_ind]
+    coco_dict = dict(images=[], annotations=[], categories=categories)
+    for coco_image in images:
+        # get coco annotations
         coco_annotations = coco_image.annotations
         # get num annotations
         num_annotations = len(coco_annotations)
@@ -1850,6 +1884,15 @@ def create_coco_dict(images, categories, ignore_negative_samples=False):
         if ignore_negative_samples and num_annotations == 0:
             continue
         else:
+            # get image_id
+            if image_id_setting == "auto":
+                image_id = image_index
+                image_index += 1
+            elif image_id_setting == "manual":
+                if coco_image.id is None:
+                    raise ValueError("'coco_image.id' should be set manually when image_id_setting == 'manual'")
+                image_id = coco_image.id
+
             # create coco image object
             out_image = {
                 "height": coco_image.height,
@@ -1857,7 +1900,7 @@ def create_coco_dict(images, categories, ignore_negative_samples=False):
                 "id": image_id,
                 "file_name": coco_image.file_name,
             }
-            out_images.append(out_image)
+            coco_dict["images"].append(out_image)
 
             # do the same for image annotations
             for coco_annotation in coco_annotations:
@@ -1871,20 +1914,77 @@ def create_coco_dict(images, categories, ignore_negative_samples=False):
                     "id": annotation_id,
                     "area": coco_annotation.area,
                 }
-                out_annotations.append(out_annotation)
-                annotation_id = annotation_id + 1
+                coco_dict["annotations"].append(out_annotation)
+                # increment annotation id
+                annotation_id += 1
 
-            # increment annotation id
-            image_id = image_id + 1
-
-    # form coco dict
-    coco_dict = {
-        "images": out_images,
-        "annotations": out_annotations,
-        "categories": out_categories,
-    }
     # return coco dict
     return coco_dict
+
+
+def create_coco_prediction_array(images, ignore_negative_samples=False, image_id_setting="auto"):
+    """
+    Creates COCO prediction array which is list of predictions
+
+    Arguments
+    ---------
+        images : List of CocoImage containing a list of CocoAnnotation
+        ignore_negative_samples : Bool
+            If True, images without predictions are ignored
+        image_id_setting: str
+            how to assign image ids while exporting can be
+                auto --> will assign id from scratch (<CocoImage>.id will be ignored)
+                manual --> you will need to provide image ids in <CocoImage> instances (<CocoImage>.id can not be None)
+    Returns
+    -------
+        coco_prediction_array : List
+            COCO predictions array
+    """
+    # assertion of parameters
+    if image_id_setting not in ["auto", "manual"]:
+        raise ValueError(f"'image_id_setting' should be one of ['auto', 'manual']")
+    # define accumulators
+    image_index = 1
+    prediction_id = 1
+    predictions_array = []
+    for coco_image in images:
+        # get coco predictions
+        coco_predictions = coco_image.predictions
+        # get num predictions
+        num_predictions = len(coco_predictions)
+        # if ignore_negative_samples is True and no annotations, skip image
+        if ignore_negative_samples and num_predictions == 0:
+            continue
+        else:
+            # get image_id
+            if image_id_setting == "auto":
+                image_id = image_index
+                image_index += 1
+            elif image_id_setting == "manual":
+                if coco_image.id is None:
+                    raise ValueError("'coco_image.id' should be set manually when image_id_setting == 'manual'")
+                image_id = coco_image.id
+
+            # create coco prediction object
+            for prediction_index, coco_prediction in enumerate(coco_predictions):
+                # create coco prediction object
+                out_prediction = {
+                    "id": prediction_id,
+                    "image_id": image_id,
+                    "bbox": coco_prediction.bbox,
+                    "score": coco_prediction.score,
+                    "category_id": coco_prediction.category_id,
+                    "segmentation": coco_prediction.segmentation,
+                    "iscrowd": coco_prediction.iscrowd,
+                    "area": coco_prediction.area,
+                }
+                predictions_array.append(out_prediction)
+
+                # increment prediction id
+                prediction_id += 1
+
+    # return predictions array
+    return predictions_array
 
 
 def add_bbox_and_area_to_coco(

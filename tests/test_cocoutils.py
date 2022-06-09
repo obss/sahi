@@ -110,7 +110,7 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(cocovid_annotation.json["iscrowd"], iscrowd)
 
     def test_coco_image(self):
-        from sahi.utils.coco import CocoAnnotation, CocoImage
+        from sahi.utils.coco import CocoAnnotation, CocoImage, CocoPrediction
 
         # init coco image
         file_name = "tests/data/small-vehicles1.jpeg"
@@ -138,6 +138,26 @@ class TestCocoUtils(unittest.TestCase):
         )
         coco_image.add_annotation(coco_annotation_2)
 
+        # create and add first prediction
+        prediction_coco_segmentation = [[4, 3, 315, 124, 265, 198, 5, 198]]
+        score = 0.983425
+        category_id = 3
+        category_name = "car"
+        coco_prediction_1 = CocoPrediction.from_coco_segmentation(
+            segmentation=prediction_coco_segmentation, category_id=category_id, category_name=category_name, score=score
+        )
+        coco_image.add_prediction(coco_prediction_1)
+
+        # create and add second prediction
+        prediction_coco_bbox = [2, 5, 103, 98]
+        score = 0.683465
+        category_id = 2
+        category_name = "bus"
+        coco_prediction_2 = CocoPrediction.from_coco_bbox(
+            bbox=prediction_coco_bbox, category_id=category_id, category_name=category_name, score=score
+        )
+        coco_image.add_prediction(coco_prediction_2)
+
         # compare
         self.assertEqual(coco_image.file_name, file_name)
         self.assertEqual(coco_image.height, height)
@@ -149,6 +169,16 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(coco_image.annotations[1].category_id, 2)
         self.assertEqual(coco_image.annotations[1].category_name, "bus")
         self.assertEqual(coco_image.annotations[1].bbox, coco_bbox)
+
+        self.assertEqual(len(coco_image.predictions), 2)
+        self.assertEqual(coco_image.predictions[0].category_id, 3)
+        self.assertEqual(coco_image.predictions[0].category_name, "car")
+        self.assertEqual(coco_image.predictions[0].segmentation, prediction_coco_segmentation)
+        self.assertEqual(coco_image.predictions[0].score, 0.983425)
+        self.assertEqual(coco_image.predictions[1].category_id, 2)
+        self.assertEqual(coco_image.predictions[1].category_name, "bus")
+        self.assertEqual(coco_image.predictions[1].bbox, prediction_coco_bbox)
+        self.assertEqual(coco_image.predictions[1].score, 0.683465)
 
     def test_cocovid_image(self):
         from sahi.utils.coco import CocoVidAnnotation, CocoVidImage
