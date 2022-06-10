@@ -87,7 +87,7 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
-    def set_model(self, model: Any):
+    def set_model(self, model: Any, **kwargs):
         """
         This function should be implemented to instantiate a DetectionModel out of an already loaded model
         Args:
@@ -753,22 +753,30 @@ class HuggingfaceDetectionModel(DetectionModel):
                 "for instalattion details."
             )
 
-        self.set_model(self.model_path)
-
-    def set_model(self, model: Any):
-        if not isinstance(model, str):
-            raise ValueError("`model` has to be path to the model as feature_extractor is also needed.")
-
         from transformers import AutoFeatureExtractor, AutoModelForObjectDetection
 
-        self.model = AutoModelForObjectDetection.from_pretrained(self.model_path)
-        self.model.to(self.device)
+        model = AutoModelForObjectDetection.from_pretrained(self.model_path)
         if self.image_size is not None:
-            self._feature_extractor = AutoFeatureExtractor.from_pretrained(
+            feature_extractor = AutoFeatureExtractor.from_pretrained(
                 self.model_path, size=self.image_size, do_resize=True
             )
         else:
-            self._feature_extractor = AutoFeatureExtractor.from_pretrained(self.model_path)
+            feature_extractor = AutoFeatureExtractor.from_pretrained(self.model_path)
+        self.set_model(model, feature_extractor)
+
+    def set_model(self, model: Any, feature_extractor: Any = None):
+        if feature_extractor is None:
+            raise ValueError(f"'feature_extractor' is required to be set, got {feature_extractor}.")
+        elif (
+            "objectdetection" not in model.__class__.__name__.lower()
+            or "featureextractor" not in feature_extractor.__class__.__name__
+        ):
+            raise ValueError(
+                f"Given 'model' is not an ObjectDetectionModel or 'feature_extractor' is not a valid FeatureExtractor."
+            )
+        self.model = model
+        self.model.to(self.device)
+        self._feature_extractor = feature_extractor
         self.category_mapping = self.model.config.id2label
 
     def perform_inference(self, image: Union[List, np.ndarray], image_size: int = None):
