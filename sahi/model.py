@@ -911,11 +911,11 @@ if __name__ == "__main__":
 
     model_path = "facebook/detr-resnet-50"
     detection_model = HuggingfaceDetectionModel(
-            model_path=model_path,
-            config_path=model_path,
-            confidence_threshold=0.5,
-            image_size=640,
-            device="cpu",  # or 'cuda:0'
+        model_path=model_path,
+        config_path=model_path,
+        confidence_threshold=0.5,
+        image_size=640,
+        device="cpu",  # or 'cuda:0'
     )
     img = read_image("/home/devrim/lab/gh/sahi/demo/demo_data/small-vehicles1.jpeg")
     result = get_prediction(img, detection_model)
