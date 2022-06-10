@@ -6,11 +6,11 @@ import unittest
 import pybboxes.functional as pbf
 
 from sahi.utils.cv import read_image
+from sahi.utils.huggingface import HuggingfaceTestConstants
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3
 IMAGE_SIZE = 320
-TEST_MODEL_PATH = "hustvl/yolos-tiny"
 
 
 class TestHuggingfaceDetectionModel(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestHuggingfaceDetectionModel(unittest.TestCase):
         from sahi.model import HuggingfaceDetectionModel
 
         huggingface_detection_model = HuggingfaceDetectionModel(
-            model_path=TEST_MODEL_PATH,
+            model_path=HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -32,8 +32,10 @@ class TestHuggingfaceDetectionModel(unittest.TestCase):
 
         from sahi.model import HuggingfaceDetectionModel
 
-        huggingface_model = AutoModelForObjectDetection.from_pretrained(TEST_MODEL_PATH)
-        huggingface_feature_extractor = AutoFeatureExtractor.from_pretrained(TEST_MODEL_PATH)
+        huggingface_model = AutoModelForObjectDetection.from_pretrained(HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH)
+        huggingface_feature_extractor = AutoFeatureExtractor.from_pretrained(
+            HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH
+        )
 
         huggingface_detection_model = HuggingfaceDetectionModel(
             model=huggingface_model,
@@ -50,7 +52,7 @@ class TestHuggingfaceDetectionModel(unittest.TestCase):
         from sahi.model import HuggingfaceDetectionModel
 
         huggingface_detection_model = HuggingfaceDetectionModel(
-            model_path=TEST_MODEL_PATH,
+            model_path=HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -99,7 +101,7 @@ class TestHuggingfaceDetectionModel(unittest.TestCase):
         from sahi.model import HuggingfaceDetectionModel
 
         huggingface_detection_model = HuggingfaceDetectionModel(
-            model_path=TEST_MODEL_PATH,
+            model_path=HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
