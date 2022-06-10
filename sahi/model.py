@@ -3,7 +3,7 @@
 
 import logging
 import warnings
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pybboxes.functional as pbf
@@ -708,36 +708,41 @@ class Detectron2DetectionModel(DetectionModel):
 
 class HuggingfaceDetectionModel(DetectionModel):
     def __init__(
-            self,
-            model_path: Optional[str] = None,
-            model: Optional[Any] = None,
-            config_path: Optional[str] = None,
-            device: Optional[str] = None,
-            mask_threshold: float = 0.5,
-            confidence_threshold: float = 0.3,
-            category_mapping: Optional[Dict] = None,
-            category_remapping: Optional[Dict] = None,
-            load_at_init: bool = True,
-            image_size: int = None,
+        self,
+        model_path: Optional[str] = None,
+        model: Optional[Any] = None,
+        config_path: Optional[str] = None,
+        device: Optional[str] = None,
+        mask_threshold: float = 0.5,
+        confidence_threshold: float = 0.3,
+        category_mapping: Optional[Dict] = None,
+        category_remapping: Optional[Dict] = None,
+        load_at_init: bool = True,
+        image_size: int = None,
     ):
         self._feature_extractor = None
+        self._image_shapes = []
         super(HuggingfaceDetectionModel, self).__init__(
-                model_path,
-                model,
-                config_path,
-                device,
-                mask_threshold,
-                confidence_threshold,
-                category_mapping,
-                category_remapping,
-                load_at_init,
-                image_size
+            model_path,
+            model,
+            config_path,
+            device,
+            mask_threshold,
+            confidence_threshold,
+            category_mapping,
+            category_remapping,
+            load_at_init,
+            image_size,
         )
-        
+
     @property
     def feature_extractor(self):
         return self._feature_extractor
-    
+
+    @property
+    def image_shapes(self):
+        return self._image_shapes
+
     def load_model(self):
         try:
             import transformers
@@ -757,13 +762,16 @@ class HuggingfaceDetectionModel(DetectionModel):
         from transformers import AutoFeatureExtractor, AutoModelForObjectDetection
 
         self.model = AutoModelForObjectDetection.from_pretrained(self.model_path)
+        self.model.to(self.device)
         if self.image_size is not None:
-            self._feature_extractor = AutoFeatureExtractor.from_pretrained(self.model_path, size=self.image_size, do_resize=True)
+            self._feature_extractor = AutoFeatureExtractor.from_pretrained(
+                self.model_path, size=self.image_size, do_resize=True
+            )
         else:
             self._feature_extractor = AutoFeatureExtractor.from_pretrained(self.model_path)
         self.category_mapping = self.model.config.id2label
 
-    def perform_inference(self, image: np.ndarray, image_size: int = None):
+    def perform_inference(self, image: Union[List, np.ndarray], image_size: int = None):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
@@ -785,9 +793,15 @@ class HuggingfaceDetectionModel(DetectionModel):
 
         with torch.no_grad():
             inputs = self.feature_extractor(images=image, return_tensors="pt")
+            inputs["pixel_values"] = inputs.pixel_values.to(self.device)
+            if hasattr(inputs, "pixel_mask"):
+                inputs["pixel_mask"] = inputs.pixel_mask.to(self.device)
             outputs = self.model(**inputs)
 
-        outputs["image_shape"] = image.shape
+        if isinstance(image, list):
+            self._image_shapes = [img.shape for img in image]
+        else:
+            self._image_shapes = [image.shape]
         self._original_predictions = outputs
 
     @property
@@ -796,6 +810,20 @@ class HuggingfaceDetectionModel(DetectionModel):
         Returns number of categories
         """
         return self.model.config.num_labels
+
+    def get_valid_predictions(
+        self, logits: torch.Tensor, pred_boxes: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        probs = logits.softmax(-1)
+        scores = probs.max(-1).values
+        cat_ids = probs.argmax(-1)
+        valid_detections = torch.where(cat_ids < self.num_categories, 1, 0)
+        valid_confidences = torch.where(scores >= self.confidence_threshold, 1, 0)
+        valid_mask = valid_detections.logical_and(valid_confidences)
+        scores = scores[valid_mask]
+        cat_ids = cat_ids[valid_mask]
+        boxes = pred_boxes[valid_mask]
+        return scores, cat_ids, boxes
 
     def _create_object_prediction_list_from_original_predictions(
         self,
@@ -814,51 +842,68 @@ class HuggingfaceDetectionModel(DetectionModel):
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
-        image_height, image_width, _ = original_predictions.image_shape
 
         # compatilibty for sahi v0.8.15
         shift_amount_list = fix_shift_amount_list(shift_amount_list)
         full_shape_list = fix_full_shape_list(full_shape_list)
 
-        probs = original_predictions.logits.softmax(-1)
-        scores = probs.max(-1).values
-        cat_ids = probs.argmax(-1)
-        valid_detections = torch.where(cat_ids < self.num_categories)
-        scores = scores[valid_detections]
-        cat_ids = cat_ids[valid_detections]
-        bboxes = original_predictions.pred_boxes[valid_detections]
-
-        # create object_prediction_list
-        object_prediction_list = []
-
-        shift_amount = shift_amount_list[0]
-        full_shape = None if full_shape_list is None else full_shape_list[0]
-
-        for ind in range(len(bboxes)):
-            score = scores[ind].item()
-            if score < self.confidence_threshold:
-                continue
-
-            category_id = cat_ids[ind].item()
-            yolo_bbox = bboxes[ind].tolist()
-            bbox = list(pbf.convert_bbox(yolo_bbox, from_type="yolo", to_type="voc", image_size=(image_width, image_height), return_values=True))
-
-            # fix negative box coords
-            bbox[0] = max(0, int(bbox[0]))
-            bbox[1] = max(0, int(bbox[1]))
-            bbox[2] = min(bbox[2], image_width)
-            bbox[3] = min(bbox[3], image_height)
-
-            object_prediction = ObjectPrediction(
-                bbox=bbox,
-                bool_mask=None,
-                category_id=category_id,
-                category_name=self.category_mapping[category_id],
-                shift_amount=shift_amount,
-                score=score,
-                full_shape=full_shape,
+        n_image = original_predictions.logits.shape[0]
+        object_prediction_list_per_image = []
+        for image_ind in range(n_image):
+            image_width, image_height, _ = self.image_shapes[image_ind]
+            scores, cat_ids, boxes = self.get_valid_predictions(
+                logits=original_predictions.logits[image_ind], pred_boxes=original_predictions.pred_boxes[image_ind]
             )
-            object_prediction_list.append(object_prediction)
 
-        object_prediction_list_per_image = [object_prediction_list]
+            # create object_prediction_list
+            object_prediction_list = []
+
+            shift_amount = shift_amount_list[image_ind]
+            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+
+            for ind in range(len(boxes)):
+                category_id = cat_ids[ind].item()
+                yolo_bbox = boxes[ind].tolist()
+                bbox = list(
+                    pbf.convert_bbox(
+                        yolo_bbox,
+                        from_type="yolo",
+                        to_type="voc",
+                        image_size=(image_width, image_height),
+                        return_values=True,
+                    )
+                )
+
+                # fix negative box coords
+                bbox[0] = max(0, int(bbox[0]))
+                bbox[1] = max(0, int(bbox[1]))
+                bbox[2] = min(bbox[2], image_width)
+                bbox[3] = min(bbox[3], image_height)
+
+                object_prediction = ObjectPrediction(
+                    bbox=bbox,
+                    bool_mask=None,
+                    category_id=category_id,
+                    category_name=self.category_mapping[category_id],
+                    shift_amount=shift_amount,
+                    score=scores[ind].item(),
+                    full_shape=full_shape,
+                )
+                object_prediction_list.append(object_prediction)
+            object_prediction_list_per_image.append(object_prediction_list)
+
         self._object_prediction_list_per_image = object_prediction_list_per_image
+
+
+if __name__ == "__main__":
+    from sahi.predict import get_sliced_prediction
+    from sahi.utils.cv import read_image
+
+    img = read_image("/home/devrim/lab/gh/sahi/demo/demo_data/small-vehicles1.jpeg")
+    img2 = read_image("/home/devrim/lab/gh/sahi/demo/demo_data/terrain2.png")
+    # model = Yolov5DetectionModel(model_path="/home/devrim/lab/gh/sahi/models/yolov5s6.pt",
+    #                                     confidence_threshold=0.5,
+    #                                     image_size=480)
+    model = HuggingfaceDetectionModel(model_path="facebook/detr-resnet-50", confidence_threshold=0.5, image_size=480)
+    result = get_sliced_prediction(img, model)
+    print(result)
