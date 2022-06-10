@@ -59,7 +59,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "data/small-vehicles1.jpeg"
+        image_path = "tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -108,7 +108,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "data/small-vehicles1.jpeg"
+        image_path = "tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
