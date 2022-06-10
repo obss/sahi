@@ -777,8 +777,8 @@ class HuggingfaceDetectionModel(DetectionModel):
         if feature_extractor is None:
             raise ValueError(f"'feature_extractor' is required to be set, got {feature_extractor}.")
         elif (
-            "objectdetection" not in model.__class__.__name__.lower()
-            or "featureextractor" not in feature_extractor.__class__.__name__
+            "ObjectDetection" not in model.__class__.__name__
+            or "FeatureExtractor" not in feature_extractor.__class__.__name__
         ):
             raise ValueError(
                 f"Given 'model' is not an ObjectDetectionModel or 'feature_extractor' is not a valid FeatureExtractor."
