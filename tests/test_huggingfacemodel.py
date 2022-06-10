@@ -17,7 +17,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
     def test_load_model(self):
         from sahi.model import HuggingfaceDetectionModel
 
-        yolov5_detection_model = HuggingfaceDetectionModel(
+        huggingface_detection_model = HuggingfaceDetectionModel(
             model_path=TEST_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
@@ -25,16 +25,16 @@ class TestYolov5DetectionModel(unittest.TestCase):
             load_at_init=True,
         )
 
-        self.assertNotEqual(yolov5_detection_model.model, None)
+        self.assertNotEqual(huggingface_detection_model.model, None)
 
     def test_set_model(self):
         from transformers import AutoModelForObjectDetection
 
-        from sahi.model import Yolov5DetectionModel
+        from sahi.model import HuggingfaceDetectionModel
 
         huggingface_model = AutoModelForObjectDetection.from_pretrained(TEST_MODEL_PATH)
 
-        yolov5_detection_model = Yolov5DetectionModel(
+        huggingface_detection_model = HuggingfaceDetectionModel(
             model=huggingface_model,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
@@ -42,7 +42,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
             load_at_init=True,
         )
 
-        self.assertNotEqual(yolov5_detection_model.model, None)
+        self.assertNotEqual(huggingface_detection_model.model, None)
 
     def test_perform_inference(self):
         from sahi.model import HuggingfaceDetectionModel
@@ -96,7 +96,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
     def test_convert_original_predictions(self):
         from sahi.model import HuggingfaceDetectionModel
 
-        yolov5_detection_model = HuggingfaceDetectionModel(
+        huggingface_detection_model = HuggingfaceDetectionModel(
             model_path=TEST_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
@@ -110,11 +110,11 @@ class TestYolov5DetectionModel(unittest.TestCase):
         image = read_image(image_path)
 
         # perform inference
-        yolov5_detection_model.perform_inference(image)
+        huggingface_detection_model.perform_inference(image)
 
         # convert predictions to ObjectPrediction list
-        yolov5_detection_model.convert_original_predictions()
-        object_prediction_list = yolov5_detection_model.object_prediction_list
+        huggingface_detection_model.convert_original_predictions()
+        object_prediction_list = huggingface_detection_model.object_prediction_list
 
         # compare
         self.assertEqual(len(object_prediction_list), 46)
