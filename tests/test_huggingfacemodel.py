@@ -28,14 +28,16 @@ class TestYolov5DetectionModel(unittest.TestCase):
         self.assertNotEqual(huggingface_detection_model.model, None)
 
     def test_set_model(self):
-        from transformers import AutoModelForObjectDetection
+        from transformers import AutoFeatureExtractor, AutoModelForObjectDetection
 
         from sahi.model import HuggingfaceDetectionModel
 
         huggingface_model = AutoModelForObjectDetection.from_pretrained(TEST_MODEL_PATH)
+        huggingface_feature_extractor = AutoFeatureExtractor.from_pretrained(TEST_MODEL_PATH)
 
         huggingface_detection_model = HuggingfaceDetectionModel(
             model=huggingface_model,
+            feature_extractor=huggingface_feature_extractor,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,

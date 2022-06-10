@@ -711,6 +711,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         self,
         model_path: Optional[str] = None,
         model: Optional[Any] = None,
+        feature_extractor: Optional[Any] = None,
         config_path: Optional[str] = None,
         device: Optional[str] = None,
         mask_threshold: float = 0.5,
@@ -720,7 +721,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         load_at_init: bool = True,
         image_size: int = None,
     ):
-        self._feature_extractor = None
+        self._feature_extractor = feature_extractor
         self._image_shapes = []
         super(HuggingfaceDetectionModel, self).__init__(
             model_path,
@@ -742,6 +743,13 @@ class HuggingfaceDetectionModel(DetectionModel):
     @property
     def image_shapes(self):
         return self._image_shapes
+
+    @property
+    def num_categories(self) -> int:
+        """
+        Returns number of categories
+        """
+        return self.model.config.num_labels
 
     def load_model(self):
         try:
@@ -765,6 +773,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         self.set_model(model, feature_extractor)
 
     def set_model(self, model: Any, feature_extractor: Any = None):
+        feature_extractor = feature_extractor or self.feature_extractor
         if feature_extractor is None:
             raise ValueError(f"'feature_extractor' is required to be set, got {feature_extractor}.")
         elif (
@@ -811,13 +820,6 @@ class HuggingfaceDetectionModel(DetectionModel):
         else:
             self._image_shapes = [image.shape]
         self._original_predictions = outputs
-
-    @property
-    def num_categories(self) -> int:
-        """
-        Returns number of categories
-        """
-        return self.model.config.num_labels
 
     def get_valid_predictions(
         self, logits: torch.Tensor, pred_boxes: torch.Tensor
