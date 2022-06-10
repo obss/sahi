@@ -893,17 +893,3 @@ class HuggingfaceDetectionModel(DetectionModel):
             object_prediction_list_per_image.append(object_prediction_list)
 
         self._object_prediction_list_per_image = object_prediction_list_per_image
-
-
-if __name__ == "__main__":
-    from sahi.predict import get_sliced_prediction
-    from sahi.utils.cv import read_image
-
-    img = read_image("/home/devrim/lab/gh/sahi/demo/demo_data/small-vehicles1.jpeg")
-    img2 = read_image("/home/devrim/lab/gh/sahi/demo/demo_data/terrain2.png")
-    # model = Yolov5DetectionModel(model_path="/home/devrim/lab/gh/sahi/models/yolov5s6.pt",
-    #                                     confidence_threshold=0.5,
-    #                                     image_size=480)
-    model = HuggingfaceDetectionModel(model_path="facebook/detr-resnet-50", confidence_threshold=0.5, image_size=480)
-    result = get_sliced_prediction(img, model)
-    print(result)

@@ -48,6 +48,26 @@ coco_image.add_annotation(
   )
 )
 ```
+- add predictions to coco image:
+
+```python
+coco_image.add_prediction(
+  CocoPrediction(
+    score=0.864434,
+    bbox=[x_min, y_min, width, height],
+    category_id=0,
+    category_name='human'
+  )
+)
+coco_image.add_prediction(
+  CocoPrediction(
+    score=0.653424,
+    bbox=[x_min, y_min, width, height],
+    category_id=1,
+    category_name='vehicle'
+  )
+)
+```
 
 - add coco image to Coco object:
 
@@ -68,6 +88,32 @@ from sahi.utils.file import save_json
 
 save_json(coco_json, "coco_dataset.json")
 ```
+- you can also export prediction array in coco prediction format and save it as json :
+
+```python
+from sahi.utils.file import save_json
+
+predictions_array = coco.prediction_array
+save_json = save_json(predictions_array, "coco_predictions.json")
+```
+- this prediction array can be used to get standard coco metrics for the predictions using official pycocotool api :
+
+```python
+# note:- pycocotools need to be installed seperately 
+from pycocotools.cocoeval import COCOeval
+from pycocotools.coco import COCO
+
+coco_ground_truth = COCO(annotation_file="coco_dataset.json")
+coco_predictions = coco_ground_truth.loadRes("coco_predictions.json")
+
+coco_evaluator = COCOeval(coco_ground_truth, coco_predictions, "bbox")
+coco_evaluator.evaluate()
+coco_evaluator.accumulate()
+coco_evaluator.summarize()
+```
+
+
+
 </details>
 
 <details closed>
