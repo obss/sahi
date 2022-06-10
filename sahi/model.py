@@ -860,7 +860,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         n_image = original_predictions.logits.shape[0]
         object_prediction_list_per_image = []
         for image_ind in range(n_image):
-            image_width, image_height, _ = self.image_shapes[image_ind]
+            image_height, image_width, _ = self.image_shapes[image_ind]
             scores, cat_ids, boxes = self.get_valid_predictions(
                 logits=original_predictions.logits[image_ind], pred_boxes=original_predictions.pred_boxes[image_ind]
             )
@@ -903,3 +903,20 @@ class HuggingfaceDetectionModel(DetectionModel):
             object_prediction_list_per_image.append(object_prediction_list)
 
         self._object_prediction_list_per_image = object_prediction_list_per_image
+
+
+if __name__ == "__main__":
+    from sahi.predict import get_prediction
+    from sahi.utils.cv import read_image
+
+    model_path = "facebook/detr-resnet-50"
+    detection_model = HuggingfaceDetectionModel(
+            model_path=model_path,
+            config_path=model_path,
+            confidence_threshold=0.5,
+            image_size=640,
+            device="cpu",  # or 'cuda:0'
+    )
+    img = read_image("/home/devrim/lab/gh/sahi/demo/demo_data/small-vehicles1.jpeg")
+    result = get_prediction(img, detection_model)
+    result.export_visuals(export_dir="demo_data/")
