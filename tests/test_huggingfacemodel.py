@@ -1,5 +1,5 @@
 # OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
+# Code written by Devrim Cavusoglu, 2022.
 
 import unittest
 
@@ -13,7 +13,7 @@ IMAGE_SIZE = 320
 TEST_MODEL_PATH = "hustvl/yolos-tiny"
 
 
-class TestYolov5DetectionModel(unittest.TestCase):
+class TestHuggingfaceDetectionModel(unittest.TestCase):
     def test_load_model(self):
         from sahi.model import HuggingfaceDetectionModel
 
