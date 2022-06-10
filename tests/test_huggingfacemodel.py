@@ -59,7 +59,7 @@ class TestHuggingfaceDetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_path = "data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -75,7 +75,7 @@ class TestHuggingfaceDetectionModel(unittest.TestCase):
             if huggingface_detection_model.category_mapping[cat_ids[i].item()] == "car":  # if category car
                 break
 
-        image_width, image_height, _ = huggingface_detection_model.image_shapes[0]
+        image_height, image_width, _ = huggingface_detection_model.image_shapes[0]
         box = list(
             pbf.convert_bbox(
                 box.tolist(),
@@ -87,7 +87,7 @@ class TestHuggingfaceDetectionModel(unittest.TestCase):
         )
 
         # compare
-        desired_bbox = [347, 365, 360, 401]
+        desired_bbox = [639, 198, 663, 218]
         predicted_bbox = list(map(int, box[:4]))
         margin = 2
         for ind, point in enumerate(predicted_bbox):
@@ -108,7 +108,7 @@ class TestHuggingfaceDetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_path = "data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
         # perform inference
@@ -122,14 +122,14 @@ class TestHuggingfaceDetectionModel(unittest.TestCase):
         self.assertEqual(len(object_prediction_list), 46)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        desired_bbox = [347, 365, 13, 36]
+        desired_bbox = [639, 198, 24, 20]
         predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
         margin = 2
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
         self.assertEqual(object_prediction_list[2].category.id, 3)
         self.assertEqual(object_prediction_list[2].category.name, "car")
-        desired_bbox = [360, 345, 9, 28]
+        desired_bbox = [663, 187, 17, 16]
         predicted_bbox = object_prediction_list[2].bbox.to_coco_bbox()
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
