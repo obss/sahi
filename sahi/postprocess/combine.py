@@ -8,10 +8,12 @@ import torch
 
 from sahi.postprocess.utils import ObjectPredictionList, has_match, merge_object_prediction_pair
 from sahi.prediction import ObjectPrediction
+from sahi.utils.import_utils import check_requirements
 
 logger = logging.getLogger(__name__)
 
 
+@check_requirements(["torch"])
 def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):
     """
     Apply non-maximum suppression to avoid detecting too many
@@ -38,6 +40,7 @@ def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_thre
     return keep_indices
 
 
+@check_requirements(["torch"])
 def nms(
     predictions: torch.tensor,
     match_metric: str = "IOU",
@@ -144,6 +147,7 @@ def nms(
     return keep
 
 
+@check_requirements(["torch"])
 def batched_greedy_nmm(
     object_predictions_as_tensor: torch.tensor,
     match_metric: str = "IOU",
@@ -175,6 +179,7 @@ def batched_greedy_nmm(
     return keep_to_merge_list
 
 
+@check_requirements(["torch"])
 def greedy_nmm(
     object_predictions_as_tensor: torch.tensor,
     match_metric: str = "IOU",
@@ -297,6 +302,7 @@ def greedy_nmm(
     return keep_to_merge_list
 
 
+@check_requirements(["torch"])
 def batched_nmm(
     object_predictions_as_tensor: torch.tensor,
     match_metric: str = "IOU",
@@ -328,6 +334,7 @@ def batched_nmm(
     return keep_to_merge_list
 
 
+@check_requirements(["torch"])
 def nmm(
     object_predictions_as_tensor: torch.tensor,
     match_metric: str = "IOU",

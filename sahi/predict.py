@@ -33,6 +33,7 @@ from sahi.utils.cv import (
     visualize_object_predictions,
 )
 from sahi.utils.file import Path, increment_path, list_files, save_json, save_pickle
+from sahi.utils.import_utils import check_requirements
 
 POSTPROCESS_NAME_TO_CLASS = {
     "GREEDYNMM": GreedyNMMPostprocess,
@@ -661,6 +662,7 @@ def predict(
         return {"export_dir": save_dir}
 
 
+@check_requirements(["fiftyone"])
 def predict_fiftyone(
     model_type: str = "mmdet",
     model_path: str = None,
