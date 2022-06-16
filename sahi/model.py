@@ -756,8 +756,8 @@ class TorchVisionDetectionModel(DetectionModel):
 
         # complete params if not provided in config
         if not model_name:
-            logger.warning("model_name not provided in config, using default model_type: fcos_resnet50_fpn'")
-            model_name = "fcos_resnet50_fpn"
+            model_name = "fasterrcnn_resnet50_fpn"
+            logger.warning(f"model_name not provided in config, using default model_type: {model_name}'")
         if num_classes is None:
             logger.warning("num_classes not provided in config, using default num_classes: 91")
             num_classes = 91
