@@ -12,7 +12,7 @@ import torch
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_bbox_from_bool_mask
-from sahi.utils.import_utils import is_torch_available
+from sahi.utils.import_utils import check_requirements, is_available
 from sahi.utils.torch import is_torch_cuda_available
 
 logger = logging.getLogger(__name__)
@@ -72,12 +72,10 @@ class DetectionModel:
 
         # automatically load model if load_at_init is True
         if load_at_init:
-            if model_path:
-                self.load_model()
             if model:
                 self.set_model(model)
-            if self.model is None:
-                raise Exception("You should either provide a `model_path` or a loaded `model`")
+            else:
+                self.load_model()
 
     def load_model(self):
         """
@@ -101,7 +99,7 @@ class DetectionModel:
         Unloads the model from CPU/GPU.
         """
         self.model = None
-        if is_torch_available():
+        if is_available("torch"):
             from sahi.utils.torch import empty_cuda_cache
 
             empty_cuda_cache()
@@ -402,7 +400,7 @@ class Yolov5DetectionModel(DetectionModel):
                 A YOLOv5 model
         """
 
-        if not model.__class__.__module__ in ["yolov5.models.common", "models.common"]:
+        if model.__class__.__module__ not in ["yolov5.models.common", "models.common"]:
             raise Exception(f"Not a yolov5 model: {type(model)}")
 
         model.conf = self.confidence_threshold
@@ -429,7 +427,6 @@ class Yolov5DetectionModel(DetectionModel):
 
         # Confirm model is loaded
         assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
-
         if image_size is not None:
             warnings.warn("Set 'image_size' at DetectionModel init.", DeprecationWarning)
             prediction_result = self.model(image, size=image_size)
@@ -658,6 +655,8 @@ class Detectron2DetectionModel(DetectionModel):
         boxes = original_predictions["instances"].pred_boxes.tensor.tolist()
         scores = original_predictions["instances"].scores.tolist()
         category_ids = original_predictions["instances"].pred_classes.tolist()
+
+        # check if predictions contain mask
         try:
             masks = original_predictions["instances"].pred_masks.tolist()
         except AttributeError:
