@@ -35,6 +35,7 @@ _mmdet_available, _mmdet_version = get_package_info("mmdet")
 _mmcv_available, _mmcv_version = get_package_info("mmcv")
 _detectron2_available, _detectron2_version = get_package_info("detectron2")
 _fiftyone_available, _fiftyone_version = get_package_info("fiftyone")
+_norfair_available, _norfair_version = get_package_info("norfair")
 _layer_available, _layer_version = get_package_info("layer")
 
 

@@ -55,9 +55,8 @@ mot_video.export(export_dir="mot_data", type="gt")
 tracker_params = {
   'distance_threshold': 30,
   'detection_threshold': 0,
-  'hit_inertia_min': 10,
-  'hit_inertia_max': 12,
-  'point_transience': 4,
+  'hit_counter_max': 12,
+  'pointwise_hit_counter_max': 4,
 }
 # for details: https://github.com/tryolabs/norfair/tree/master/docs#arguments
 
