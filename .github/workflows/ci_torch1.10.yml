@@ -1,4 +1,4 @@
-name: CI
+name: CI (PyTorch 1.10.2, TorchVision 0.11.3)
 
 on:
   push:
