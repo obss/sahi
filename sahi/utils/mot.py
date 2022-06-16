@@ -5,17 +5,16 @@ from typing import Dict, List, Optional
 import numpy as np
 
 from sahi.utils.file import increment_path
+from sahi.utils.import_utils import _norfair_available, check_requirements
 
-try:
-    import norfair
-    from norfair import Detection, Tracker
+if _norfair_available:
     from norfair.metrics import PredictionsTextFile
-    from norfair.tracker import FilterSetup, TrackedObject
-except ImportError:
-    raise ImportError('Please run "pip install -U norfair" to install norfair first for MOT format handling.')
 
 
+@check_requirements(["norfair"])
 class MotTextFile(PredictionsTextFile):
+    from norfair.tracker import TrackedObject
+
     def __init__(self, save_dir: str = ".", save_name: str = "gt"):
 
         if not os.path.exists(save_dir):
@@ -80,6 +79,7 @@ class MotAnnotation:
         self.score = score
 
 
+@check_requirements(["norfair"])
 class MotFrame:
     def __init__(self, file_name: Optional[str] = None):
         self.annotation_list: List[MotAnnotation] = []
@@ -94,6 +94,8 @@ class MotFrame:
         Args:
             track_points (str): 'centroid' or 'bbox'. Defaults to 'bbox'.
         """
+        from norfair import Detection
+
         norfair_detections: List[Detection] = []
         # convert all detections to norfair detections
         for annotation in self.annotation_list:
@@ -124,13 +126,15 @@ class MotFrame:
         Args:
             track_points (str): 'centroid' or 'bbox'. Defaults to 'bbox'.
         """
+        from norfair import Detection, Tracker
+        from norfair.tracker import TrackedObject
+
         tracker = Tracker(
             distance_function=euclidean_distance,
             distance_threshold=30,
             detection_threshold=0,
-            hit_inertia_min=0,
-            hit_inertia_max=12,
-            point_transience=4,
+            hit_counter_max=12,
+            pointwise_hit_counter_max=4,
         )
 
         tracked_object_list: List[TrackedObject] = []
@@ -164,13 +168,12 @@ class MotFrame:
             # create trackedobject from norfair detection
             tracked_object = TrackedObject(
                 detection,
-                tracker.hit_inertia_min,
-                tracker.hit_inertia_max,
+                tracker.hit_counter_max,
                 tracker.initialization_delay,
-                tracker.detection_threshold,
+                pointwise_hit_counter_max=tracker.pointwise_hit_counter_max,
+                detection_threshold=tracker.detection_threshold,
                 period=1,
-                point_transience=tracker.point_transience,
-                filter_setup=tracker.filter_setup,
+                filter_factory=tracker.filter_factory,
                 past_detections_length=0,
             )
             tracked_object.id = track_id
@@ -180,6 +183,7 @@ class MotFrame:
         return tracked_object_list
 
 
+@check_requirements(["norfair"])
 class MotVideo:
     def __init__(
         self,
@@ -279,7 +283,8 @@ class MotVideo:
             i += 1
 
     def add_frame(self, frame: MotFrame):
-        assert type(frame) == MotFrame, "'frame' should be a MotFrame object."
+        if not isinstance(frame, type(MotFrame())):
+            raise TypeError("'frame' should be a MotFrame object.")
         self.frame_list.append(frame)
 
     def export(
@@ -299,6 +304,9 @@ class MotVideo:
                 It is always False for type='det'.
             exist_ok (bool): If True overwrites given directory.
         """
+        from norfair import Detection, Tracker
+        from norfair.filter import FilterPyKalmanFilterFactory
+
         assert type in ["gt", "det"], TypeError(f"'type' can be one of ['gt', 'det'], you provided: {type}")
 
         export_dir: str = str(increment_path(Path(export_dir), exist_ok=exist_ok))
@@ -316,12 +324,11 @@ class MotVideo:
         tracker = Tracker(
             distance_function=self.tracker_kwargs.get("distance_function", euclidean_distance),
             distance_threshold=self.tracker_kwargs.get("distance_threshold", 50),
-            hit_inertia_min=self.tracker_kwargs.get("hit_inertia_min", 1),
-            hit_inertia_max=self.tracker_kwargs.get("hit_inertia_max", 1),
+            hit_counter_max=self.tracker_kwargs.get("hit_counter_max", 1),
             initialization_delay=self.tracker_kwargs.get("initialization_delay", 0),
             detection_threshold=self.tracker_kwargs.get("detection_threshold", 0),
-            point_transience=self.tracker_kwargs.get("point_transience", 4),
-            filter_setup=self.tracker_kwargs.get("filter_setup", FilterSetup(R=0.2)),
+            pointwise_hit_counter_max=self.tracker_kwargs.get("pointwise_hit_counter_max", 4),
+            filter_factory=self.tracker_kwargs.get("filter_factory", FilterPyKalmanFilterFactory(R=0.2)),
         )
 
         for mot_frame in self.frame_list:
