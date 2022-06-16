@@ -487,7 +487,8 @@ def predict(
     ):
         # get filename
         if source_is_video:
-            relative_filepath = ".png"
+            video_name = Path(source).stem
+            relative_filepath = video_name + "_frame_" + str(ind)
         elif os.path.isdir(source):  # preserve source folder structure in export
             relative_filepath = str(Path(image_path)).split(str(Path(source)))[-1]
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
