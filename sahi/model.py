@@ -10,7 +10,7 @@ import numpy as np
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_bbox_from_bool_mask
-from sahi.utils.import_utils import is_torch_available
+from sahi.utils.import_utils import check_requirements, is_available
 from sahi.utils.torch import is_torch_cuda_available
 
 logger = logging.getLogger(__name__)
@@ -70,12 +70,10 @@ class DetectionModel:
 
         # automatically load model if load_at_init is True
         if load_at_init:
-            if model_path:
-                self.load_model()
             if model:
                 self.set_model(model)
-            if self.model is None:
-                raise Exception("You should either provide a `model_path` or a loaded `model`")
+            else:
+                self.load_model()
 
     def load_model(self):
         """
@@ -99,7 +97,7 @@ class DetectionModel:
         Unloads the model from CPU/GPU.
         """
         self.model = None
-        if is_torch_available():
+        if is_available("torch"):
             from sahi.utils.torch import empty_cuda_cache
 
             empty_cuda_cache()
@@ -400,7 +398,7 @@ class Yolov5DetectionModel(DetectionModel):
                 A YOLOv5 model
         """
 
-        if not model.__class__.__module__ in ["yolov5.models.common", "models.common"]:
+        if model.__class__.__module__ not in ["yolov5.models.common", "models.common"]:
             raise Exception(f"Not a yolov5 model: {type(model)}")
 
         model.conf = self.confidence_threshold
@@ -707,40 +705,88 @@ class Detectron2DetectionModel(DetectionModel):
         self._object_prediction_list_per_image = object_prediction_list_per_image
 
 
+@check_requirements(["torchvision", "torch"])
 class TorchVisionDetectionModel(DetectionModel):
+    def __init__(
+        self,
+        model_path: Optional[str] = None,
+        model: Optional[Any] = None,
+        config_path: Optional[str] = None,
+        device: Optional[str] = None,
+        mask_threshold: float = 0.5,
+        confidence_threshold: float = 0.3,
+        category_mapping: Optional[Dict] = None,
+        category_remapping: Optional[Dict] = None,
+        load_at_init: bool = True,
+        image_size: int = None,
+    ):
+
+        super().__init__(
+            model_path=model_path,
+            model=model,
+            config_path=config_path,
+            device=device,
+            mask_threshold=mask_threshold,
+            confidence_threshold=confidence_threshold,
+            category_mapping=category_mapping,
+            category_remapping=category_remapping,
+            load_at_init=load_at_init,
+            image_size=image_size,
+        )
+
     def load_model(self):
-        try:
-            import torchvision
-        except ImportError:
-            raise ImportError(
-                "torchvision is not installed. Please run 'pip install -U torchvision to use this "
-                "torchvision models'"
-            )
+        import torch
 
-        # set model
-        from sahi.utils.torch import torch_load
+        from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
 
-        try:
+        # read config params
+        model_name = None
+        num_classes = None
+        if self.config_path is not None:
             import yaml
 
-            with open("sahi/utils/config/torchvision.yaml", "r") as stream:
+            with open(self.config_path, "r") as stream:
                 try:
                     config = yaml.safe_load(stream)
                 except yaml.YAMLError as exc:
-                    print(exc)
+                    raise RuntimeError(exc)
 
-            if self.model_type == "fasterrcnn_resnet50_fpn":
-                # torchvision.models.detection.fasterrcnn_resnet50_fpn(num_classes=80)
-                model_path = config["fasterrcnn_resnet50_fpn"]["model_path"]
-                num_classes = config["fasterrcnn_resnet50_fpn"]["num_classes"]
+            model_name = config.get("model_name", None)
+            num_classes = config.get("num_classes", None)
 
-                model = model_path + "(num_classes=" + str(num_classes) + ")"
-                model.load_state_dict(torch_load(self.model_path))
-                model.eval()
-                self.model = model.to(self.device)
+        # complete params if not provided in config
+        if not model_name:
+            logger.warning("model_name not provided in config, using default model_type: fcos_resnet50_fpn'")
+            model_name = "fcos_resnet50_fpn"
+        if num_classes is None:
+            logger.warning("num_classes not provided in config, using default num_classes: 91")
+            num_classes = 91
+        if self.model_path is None:
+            logger.warning("model_path not provided in config, using pretrained weights and default num_classes: 91.")
+            pretrained = True
+            num_classes = 91
+        else:
+            pretrained = False
 
+        # load model
+        model = MODEL_NAME_TO_CONSTRUCTOR[model_name](num_classes=num_classes, pretrained=pretrained)
+        try:
+            model.load_state_dict(torch.load(self.model_path))
         except Exception as e:
             TypeError("model_path is not a valid torchvision model path: ", e)
+
+        self.set_model(model)
+
+    def set_model(self, model: Any):
+        """
+        Sets the underlying TorchVision model.
+        Args:
+            model: Any
+                A TorchVision model
+        """
+
+        model.eval()
+        self.model = model.to(self.device)
 
         # set category_mapping
         from sahi.utils.torchvision import COCO_CLASSES
@@ -771,6 +817,7 @@ class TorchVisionDetectionModel(DetectionModel):
             self.model.transform.max_size = image_size  # default is 1333
 
         image = to_float_tensor(image)
+        image = image.to(self.device)
         prediction_result = self.model([image])
 
         self._original_predictions = prediction_result
@@ -821,18 +868,18 @@ class TorchVisionDetectionModel(DetectionModel):
             object_prediction_list_per_image = []
 
             # get indices of boxes with score > confidence_threshold
-            scores = image_predictions["scores"].detach().numpy()
+            scores = image_predictions["scores"].cpu().detach().numpy()
             selected_indices = np.where(scores > self.confidence_threshold)[0]
 
             # parse boxes, masks, scores, category_ids from predictions
-            category_ids = list(image_predictions["labels"][selected_indices].detach().numpy())
-            boxes = list(image_predictions["boxes"][selected_indices].detach().numpy())
+            category_ids = list(image_predictions["labels"][selected_indices].cpu().detach().numpy())
+            boxes = list(image_predictions["boxes"][selected_indices].cpu().detach().numpy())
             scores = scores[selected_indices]
 
             # check if predictions contain mask
             masks = image_predictions.get("masks", None)
             if masks is not None:
-                masks = list(image_predictions["masks"][selected_indices].detach().numpy())
+                masks = list(image_predictions["masks"][selected_indices].cpu().detach().numpy())
             else:
                 masks = None
 
