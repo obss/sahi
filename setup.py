@@ -33,7 +33,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/obss/sahi",
     packages=setuptools.find_packages(exclude=["demo", "docs", "resources", "tests"]),
-    python_requires=">=3.7",
+    python_requires=">=3.6",
     install_requires=get_requirements(),
     extras_require={
         "tests": ["pytest", "mmdet", "norfair", "layer"],
