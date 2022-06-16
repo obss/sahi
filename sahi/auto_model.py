@@ -1,12 +1,12 @@
 from typing import Dict, Optional
 
-from sahi.utils.file import import_model_class
+from sahi.model import Detectron2DetectionModel, MmdetDetectionModel, TorchVisionDetectionModel, Yolov5DetectionModel
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
-    "mmdet": "MmdetDetectionModel",
-    "yolov5": "Yolov5DetectionModel",
-    "detectron2": "Detectron2DetectionModel",
-    "torchvision": "TorchVisionDetectionModel",
+    "mmdet": MmdetDetectionModel,
+    "yolov5": Yolov5DetectionModel,
+    "detectron2": Detectron2DetectionModel,
+    "torchvision": TorchVisionDetectionModel,
 }
 
 
@@ -55,8 +55,7 @@ class AutoDetectionModel:
             ImportError: If given {model_type} framework is not installed
         """
 
-        class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
-        DetectionModel = import_model_class(class_name)
+        DetectionModel = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
 
         return DetectionModel(
             model_path=model_path,
@@ -120,8 +119,7 @@ class AutoDetectionModel:
         else:
             raise Exception(f"Unsupported model: {type(layer_model)}. Only YOLOv5 models are supported.")
 
-        class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
-        DetectionModel = import_model_class(class_name)
+        DetectionModel = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
         return DetectionModel(
             model=layer_model,
             device=device,
