@@ -19,13 +19,17 @@ def get_package_info(package_name: str):
     """
     try:
         package = importlib.import_module(package_name)
-        version = package.__version__
+        try:
+            version = package.__version__
+        except AttributeError:
+            version = "unknown"
         name = package.__name__
         logger.info(f"{name} version {version} available.")
+        _is_available = True
     except ImportError:
-        version = None
-        name = None
-    return version, name
+        _is_available = False
+        version = "unknown"
+    return _is_available, version
 
 
 _torch_available, _torch_version = get_package_info("torch")
@@ -35,6 +39,7 @@ _mmdet_available, _mmdet_version = get_package_info("mmdet")
 _mmcv_available, _mmcv_version = get_package_info("mmcv")
 _detectron2_available, _detectron2_version = get_package_info("detectron2")
 _fiftyone_available, _fiftyone_version = get_package_info("fiftyone")
+_norfair_available, _norfair_version = get_package_info("norfair")
 _layer_available, _layer_version = get_package_info("layer")
 
 

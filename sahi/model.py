@@ -3,9 +3,10 @@
 
 import logging
 import warnings
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+import pybboxes.functional as pbf
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
@@ -83,7 +84,7 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
-    def set_model(self, model: Any):
+    def set_model(self, model: Any, **kwargs):
         """
         This function should be implemented to instantiate a DetectionModel out of an already loaded model
         Args:
@@ -180,6 +181,7 @@ class DetectionModel:
         return self._original_predictions
 
 
+@check_requirements(["torch", "mmdet", "mmcv"])
 class MmdetDetectionModel(DetectionModel):
     def load_model(self):
         """
@@ -374,15 +376,13 @@ class MmdetDetectionModel(DetectionModel):
         self._object_prediction_list_per_image = object_prediction_list_per_image
 
 
+@check_requirements(["torch", "yolov5"])
 class Yolov5DetectionModel(DetectionModel):
     def load_model(self):
         """
         Detection model is initialized and set to self.model.
         """
-        try:
-            import yolov5
-        except ImportError:
-            raise ImportError('Please run "pip install -U yolov5" ' "to install YOLOv5 first for YOLOv5 inference.")
+        import yolov5
 
         try:
             model = yolov5.load(self.model_path, device=self.device)
@@ -418,10 +418,6 @@ class Yolov5DetectionModel(DetectionModel):
             image_size: int
                 Inference input size.
         """
-        try:
-            import yolov5
-        except ImportError:
-            raise ImportError('Please run "pip install -U yolov5" ' "to install YOLOv5 first for YOLOv5 inference.")
 
         # Confirm model is loaded
         assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
@@ -527,17 +523,9 @@ class Yolov5DetectionModel(DetectionModel):
         self._object_prediction_list_per_image = object_prediction_list_per_image
 
 
+@check_requirements(["torch", "detectron2"])
 class Detectron2DetectionModel(DetectionModel):
     def load_model(self):
-        try:
-            import detectron2
-        except ImportError:
-            raise ImportError(
-                "Please install detectron2. Check "
-                "`https://detectron2.readthedocs.io/en/latest/tutorials/install.html` "
-                "for instalattion details."
-            )
-
         from detectron2.config import get_cfg
         from detectron2.data import MetadataCatalog
         from detectron2.engine import DefaultPredictor
@@ -596,10 +584,6 @@ class Detectron2DetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-        try:
-            import detectron2
-        except ImportError:
-            raise ImportError("Please install detectron2 via `pip install detectron2`")
 
         # confirm image_size is not provided
         if image_size is not None:
@@ -705,12 +689,15 @@ class Detectron2DetectionModel(DetectionModel):
         self._object_prediction_list_per_image = object_prediction_list_per_image
 
 
-@check_requirements(["torchvision", "torch"])
-class TorchVisionDetectionModel(DetectionModel):
+@check_requirements(["torch", "transformers"])
+class HuggingfaceDetectionModel(DetectionModel):
+    import torch
+
     def __init__(
         self,
         model_path: Optional[str] = None,
         model: Optional[Any] = None,
+        feature_extractor: Optional[Any] = None,
         config_path: Optional[str] = None,
         device: Optional[str] = None,
         mask_threshold: float = 0.5,
@@ -720,125 +707,109 @@ class TorchVisionDetectionModel(DetectionModel):
         load_at_init: bool = True,
         image_size: int = None,
     ):
-
+        self._feature_extractor = feature_extractor
+        self._image_shapes = []
         super().__init__(
-            model_path=model_path,
-            model=model,
-            config_path=config_path,
-            device=device,
-            mask_threshold=mask_threshold,
-            confidence_threshold=confidence_threshold,
-            category_mapping=category_mapping,
-            category_remapping=category_remapping,
-            load_at_init=load_at_init,
-            image_size=image_size,
+            model_path,
+            model,
+            config_path,
+            device,
+            mask_threshold,
+            confidence_threshold,
+            category_mapping,
+            category_remapping,
+            load_at_init,
+            image_size,
         )
 
+    @property
+    def feature_extractor(self):
+        return self._feature_extractor
+
+    @property
+    def image_shapes(self):
+        return self._image_shapes
+
+    @property
+    def num_categories(self) -> int:
+        """
+        Returns number of categories
+        """
+        return self.model.config.num_labels
+
     def load_model(self):
-        import torch
+        from transformers import AutoFeatureExtractor, AutoModelForObjectDetection
 
-        from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
-
-        # read config params
-        model_name = None
-        num_classes = None
-        if self.config_path is not None:
-            import yaml
-
-            with open(self.config_path, "r") as stream:
-                try:
-                    config = yaml.safe_load(stream)
-                except yaml.YAMLError as exc:
-                    raise RuntimeError(exc)
-
-            model_name = config.get("model_name", None)
-            num_classes = config.get("num_classes", None)
-
-        # complete params if not provided in config
-        if not model_name:
-            model_name = "fasterrcnn_resnet50_fpn"
-            logger.warning(f"model_name not provided in config, using default model_type: {model_name}'")
-        if num_classes is None:
-            logger.warning("num_classes not provided in config, using default num_classes: 91")
-            num_classes = 91
-        if self.model_path is None:
-            logger.warning("model_path not provided in config, using pretrained weights and default num_classes: 91.")
-            pretrained = True
-            num_classes = 91
+        model = AutoModelForObjectDetection.from_pretrained(self.model_path)
+        if self.image_size is not None:
+            feature_extractor = AutoFeatureExtractor.from_pretrained(
+                self.model_path, size=self.image_size, do_resize=True
+            )
         else:
-            pretrained = False
+            feature_extractor = AutoFeatureExtractor.from_pretrained(self.model_path)
+        self.set_model(model, feature_extractor)
 
-        # load model
-        model = MODEL_NAME_TO_CONSTRUCTOR[model_name](num_classes=num_classes, pretrained=pretrained)
-        try:
-            model.load_state_dict(torch.load(self.model_path))
-        except Exception as e:
-            TypeError("model_path is not a valid torchvision model path: ", e)
+    def set_model(self, model: Any, feature_extractor: Any = None):
+        feature_extractor = feature_extractor or self.feature_extractor
+        if feature_extractor is None:
+            raise ValueError(f"'feature_extractor' is required to be set, got {feature_extractor}.")
+        elif (
+            "ObjectDetection" not in model.__class__.__name__
+            or "FeatureExtractor" not in feature_extractor.__class__.__name__
+        ):
+            raise ValueError(
+                f"Given 'model' is not an ObjectDetectionModel or 'feature_extractor' is not a valid FeatureExtractor."
+            )
+        self.model = model
+        self.model.to(self.device)
+        self._feature_extractor = feature_extractor
+        self.category_mapping = self.model.config.id2label
 
-        self.set_model(model)
-
-    def set_model(self, model: Any):
-        """
-        Sets the underlying TorchVision model.
-        Args:
-            model: Any
-                A TorchVision model
-        """
-
-        model.eval()
-        self.model = model.to(self.device)
-
-        # set category_mapping
-        from sahi.utils.torchvision import COCO_CLASSES
-
-        if self.category_mapping is None:
-            category_names = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
-            self.category_mapping = category_names
-
-    def perform_inference(self, image: np.ndarray, image_size: int = None):
+    def perform_inference(self, image: Union[List, np.ndarray], image_size: int = None):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
-            image_size: int
-                Inference input size.
         """
-        from sahi.utils.torch import to_float_tensor
+        import torch
 
-        # arrange model input size
-        if self.image_size is not None:
-            # get min and max of image height and width
-            min_shape, max_shape = min(image.shape[:2]), max(image.shape[:2])
-            # torchvision resize transform scales the shorter dimension to the target size
-            # we want to scale the longer dimension to the target size
-            image_size = self.image_size * min_shape / max_shape
-            self.model.transform.min_size = (image_size,)  # default is (800,)
-            self.model.transform.max_size = image_size  # default is 1333
+        # confirm image_size is not provided
+        if image_size is not None:
+            warnings.warn("Set 'image_size' at DetectionModel init.")
 
-        image = to_float_tensor(image)
-        image = image.to(self.device)
-        prediction_result = self.model([image])
+        # Confirm model is loaded
+        if self.model is None:
+            raise RuntimeError("Model is not loaded, load it by calling .load_model()")
 
-        self._original_predictions = prediction_result
+        with torch.no_grad():
+            inputs = self.feature_extractor(images=image, return_tensors="pt")
+            inputs["pixel_values"] = inputs.pixel_values.to(self.device)
+            if hasattr(inputs, "pixel_mask"):
+                inputs["pixel_mask"] = inputs.pixel_mask.to(self.device)
+            outputs = self.model(**inputs)
 
-    @property
-    def num_categories(self):
-        """
-        Returns number of categories
-        """
-        return len(self.category_mapping)
+        if isinstance(image, list):
+            self._image_shapes = [img.shape for img in image]
+        else:
+            self._image_shapes = [image.shape]
+        self._original_predictions = outputs
 
-    @property
-    def has_mask(self):
-        """
-        Returns if model output contains segmentation mask
-        """
-        return self.model.with_mask
+    def get_valid_predictions(
+        self, logits: torch.Tensor, pred_boxes: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        import torch
 
-    @property
-    def category_names(self):
-        return list(self.category_mapping.values())
+        probs = logits.softmax(-1)
+        scores = probs.max(-1).values
+        cat_ids = probs.argmax(-1)
+        valid_detections = torch.where(cat_ids < self.num_categories, 1, 0)
+        valid_confidences = torch.where(scores >= self.confidence_threshold, 1, 0)
+        valid_mask = valid_detections.logical_and(valid_confidences)
+        scores = scores[valid_mask]
+        cat_ids = cat_ids[valid_mask]
+        boxes = pred_boxes[valid_mask]
+        return scores, cat_ids, boxes
 
     def _create_object_prediction_list_from_original_predictions(
         self,
@@ -858,51 +829,50 @@ class TorchVisionDetectionModel(DetectionModel):
         """
         original_predictions = self._original_predictions
 
-        # compatilibty for sahi v0.8.20
-        if isinstance(shift_amount_list[0], int):
-            shift_amount_list = [shift_amount_list]
-        if full_shape_list is not None and isinstance(full_shape_list[0], int):
-            full_shape_list = [full_shape_list]
+        # compatilibty for sahi v0.8.15
+        shift_amount_list = fix_shift_amount_list(shift_amount_list)
+        full_shape_list = fix_full_shape_list(full_shape_list)
 
-        for image_predictions in original_predictions:
-            object_prediction_list_per_image = []
-
-            # get indices of boxes with score > confidence_threshold
-            scores = image_predictions["scores"].cpu().detach().numpy()
-            selected_indices = np.where(scores > self.confidence_threshold)[0]
-
-            # parse boxes, masks, scores, category_ids from predictions
-            category_ids = list(image_predictions["labels"][selected_indices].cpu().detach().numpy())
-            boxes = list(image_predictions["boxes"][selected_indices].cpu().detach().numpy())
-            scores = scores[selected_indices]
-
-            # check if predictions contain mask
-            masks = image_predictions.get("masks", None)
-            if masks is not None:
-                masks = list(image_predictions["masks"][selected_indices].cpu().detach().numpy())
-            else:
-                masks = None
+        n_image = original_predictions.logits.shape[0]
+        object_prediction_list_per_image = []
+        for image_ind in range(n_image):
+            image_height, image_width, _ = self.image_shapes[image_ind]
+            scores, cat_ids, boxes = self.get_valid_predictions(
+                logits=original_predictions.logits[image_ind], pred_boxes=original_predictions.pred_boxes[image_ind]
+            )
 
             # create object_prediction_list
             object_prediction_list = []
 
-            shift_amount = shift_amount_list[0]
-            full_shape = None if full_shape_list is None else full_shape_list[0]
+            shift_amount = shift_amount_list[image_ind]
+            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
 
             for ind in range(len(boxes)):
+                category_id = cat_ids[ind].item()
+                yolo_bbox = boxes[ind].tolist()
+                bbox = list(
+                    pbf.convert_bbox(
+                        yolo_bbox,
+                        from_type="yolo",
+                        to_type="voc",
+                        image_size=(image_width, image_height),
+                        return_values=True,
+                    )
+                )
 
-                if masks is not None:
-                    mask = np.array(masks[ind])
-                else:
-                    mask = None
+                # fix negative box coords
+                bbox[0] = max(0, int(bbox[0]))
+                bbox[1] = max(0, int(bbox[1]))
+                bbox[2] = min(bbox[2], image_width)
+                bbox[3] = min(bbox[3], image_height)
 
                 object_prediction = ObjectPrediction(
-                    bbox=boxes[ind],
-                    bool_mask=mask,
-                    category_id=int(category_ids[ind]),
-                    category_name=self.category_mapping[str(int(category_ids[ind]))],
+                    bbox=bbox,
+                    bool_mask=None,
+                    category_id=category_id,
+                    category_name=self.category_mapping[category_id],
                     shift_amount=shift_amount,
-                    score=scores[ind],
+                    score=scores[ind].item(),
                     full_shape=full_shape,
                 )
                 object_prediction_list.append(object_prediction)
