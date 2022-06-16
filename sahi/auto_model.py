@@ -1,12 +1,19 @@
 from typing import Dict, Optional
 
-from sahi.model import Detectron2DetectionModel, HuggingfaceDetectionModel, MmdetDetectionModel, Yolov5DetectionModel
+from sahi.model import (
+    Detectron2DetectionModel,
+    HuggingfaceDetectionModel,
+    MmdetDetectionModel,
+    TorchVisionDetectionModel,
+    Yolov5DetectionModel,
+)
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "mmdet": MmdetDetectionModel,
     "yolov5": Yolov5DetectionModel,
     "detectron2": Detectron2DetectionModel,
     "huggingface": HuggingfaceDetectionModel,
+    "torchvision": TorchVisionDetectionModel
 }
 
 
