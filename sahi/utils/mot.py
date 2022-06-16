@@ -170,9 +170,9 @@ class MotFrame:
                 detection,
                 tracker.hit_counter_max,
                 tracker.initialization_delay,
-                tracker.detection_threshold,
-                period=1,
                 pointwise_hit_counter_max=tracker.pointwise_hit_counter_max,
+                detection_threshold=tracker.detection_threshold,
+                period=1,
                 filter_factory=tracker.filter_factory,
                 past_detections_length=0,
             )
