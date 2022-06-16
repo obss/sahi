@@ -13,7 +13,7 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "yolov5": Yolov5DetectionModel,
     "detectron2": Detectron2DetectionModel,
     "huggingface": HuggingfaceDetectionModel,
-    "torchvision": TorchVisionDetectionModel
+    "torchvision": TorchVisionDetectionModel,
 }
 
 
