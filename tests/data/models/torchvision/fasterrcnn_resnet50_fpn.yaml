@@ -1,0 +1,2 @@
+model_name: fasterrcnn_resnet50_fpn
+num_classes: 91
