@@ -28,7 +28,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(isinstance(torchvision_detection_model.model.roi_heads, RoIHeads), True)
 
     def test_load_model_without_config_path(self):
-        from torchvision.models.detection.fcos import FCOSHead
+        from torchvision.models.detection.faster_rcnn import RoIHeads
 
         from sahi.model import TorchVisionDetectionModel
 
@@ -38,7 +38,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             category_remapping=None,
             load_at_init=True,
         )
-        self.assertEqual(isinstance(torchvision_detection_model.model.head, FCOSHead), True)
+        self.assertEqual(isinstance(torchvision_detection_model.model.roi_heads, RoIHeads), True)
 
     def test_set_model(self):
         import torchvision

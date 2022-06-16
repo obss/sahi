@@ -3,8 +3,6 @@ import importlib.util
 import logging
 import os
 
-from sahi.utils.versions import importlib_metadata
-
 # adapted from https://github.com/huggingface/transformers/src/transformers/utils/import_utils.py
 
 logger = logging.getLogger(__name__)
