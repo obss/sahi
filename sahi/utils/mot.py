@@ -283,7 +283,8 @@ class MotVideo:
             i += 1
 
     def add_frame(self, frame: MotFrame):
-        assert type(frame) == MotFrame, "'frame' should be a MotFrame object."
+        if not isinstance(frame, type(MotFrame())):
+            raise TypeError("'frame' should be a MotFrame object.")
         self.frame_list.append(frame)
 
     def export(
