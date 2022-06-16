@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pybboxes.functional as pbf
-import torch
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
@@ -692,6 +691,8 @@ class Detectron2DetectionModel(DetectionModel):
 
 @check_requirements(["torch", "transformers"])
 class HuggingfaceDetectionModel(DetectionModel):
+    import torch
+
     def __init__(
         self,
         model_path: Optional[str] = None,
@@ -771,6 +772,7 @@ class HuggingfaceDetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
+        import torch
 
         # confirm image_size is not provided
         if image_size is not None:
@@ -796,6 +798,8 @@ class HuggingfaceDetectionModel(DetectionModel):
     def get_valid_predictions(
         self, logits: torch.Tensor, pred_boxes: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        import torch
+
         probs = logits.softmax(-1)
         scores = probs.max(-1).values
         cat_ids = probs.argmax(-1)
