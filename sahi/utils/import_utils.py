@@ -19,13 +19,17 @@ def get_package_info(package_name: str):
     """
     try:
         package = importlib.import_module(package_name)
-        version = package.__version__
+        try:
+            version = package.__version__
+        except AttributeError:
+            version = "unknown"
         name = package.__name__
         logger.info(f"{name} version {version} available.")
+        _is_available = True
     except ImportError:
-        version = None
-        name = None
-    return version, name
+        _is_available = False
+        version = "unknown"
+    return _is_available, version
 
 
 _torch_available, _torch_version = get_package_info("torch")
