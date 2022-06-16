@@ -31,7 +31,7 @@ class TestLayerDetectionModel(unittest.TestCase):
         # Run assertions
         mock_layer_get_model.assert_called_once_with(name=layer_model_path, no_cache=False)
 
-        self.assertIsInstance(detection_model, Yolov5DetectionModel)
+        self.assertIsInstance(detection_model, type(Yolov5DetectionModel()))
         self.assertIsInstance(detection_model.model, type(yolo_model))
 
     @mock.patch("layer.get_model")
