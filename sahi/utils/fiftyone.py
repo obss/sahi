@@ -11,7 +11,6 @@ if _fiftyone_available:
     else:
         _ = subprocess.run(["pkill", "mongod"], stderr=subprocess.DEVNULL)
 
-
     # import fo utilities
     import fiftyone as fo
     from fiftyone.utils.coco import COCODetectionDatasetImporter as BaseCOCODetectionDatasetImporter
