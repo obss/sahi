@@ -546,7 +546,6 @@ class Detectron2DetectionModel(DetectionModel):
         from detectron2.model_zoo import model_zoo
 
         cfg = get_cfg()
-        cfg.MODEL.DEVICE = self.device
 
         try:  # try to load from model zoo
             config_file = model_zoo.get_config_file(self.config_path)
@@ -557,6 +556,9 @@ class Detectron2DetectionModel(DetectionModel):
             if self.config_path is not None:
                 cfg.merge_from_file(self.config_path)
             cfg.MODEL.WEIGHTS = self.model_path
+
+        # set model device
+        cfg.MODEL.DEVICE = self.device
         # set input image size
         if self.image_size is not None:
             cfg.INPUT.MIN_SIZE_TEST = self.image_size
