@@ -708,7 +708,7 @@ class HuggingfaceDetectionModel(DetectionModel):
     ):
         self._feature_extractor = feature_extractor
         self._image_shapes = []
-        super(HuggingfaceDetectionModel, self).__init__(
+        super().__init__(
             model_path,
             model,
             config_path,
