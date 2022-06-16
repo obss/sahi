@@ -182,6 +182,7 @@ class DetectionModel:
         return self._original_predictions
 
 
+@check_requirements(["torch", "mmdet", "mmcv"])
 class MmdetDetectionModel(DetectionModel):
     def load_model(self):
         """
@@ -376,15 +377,13 @@ class MmdetDetectionModel(DetectionModel):
         self._object_prediction_list_per_image = object_prediction_list_per_image
 
 
+@check_requirements(["torch", "yolov5"])
 class Yolov5DetectionModel(DetectionModel):
     def load_model(self):
         """
         Detection model is initialized and set to self.model.
         """
-        try:
-            import yolov5
-        except ImportError:
-            raise ImportError('Please run "pip install -U yolov5" ' "to install YOLOv5 first for YOLOv5 inference.")
+        import yolov5
 
         try:
             model = yolov5.load(self.model_path, device=self.device)
@@ -420,10 +419,6 @@ class Yolov5DetectionModel(DetectionModel):
             image_size: int
                 Inference input size.
         """
-        try:
-            import yolov5
-        except ImportError:
-            raise ImportError('Please run "pip install -U yolov5" ' "to install YOLOv5 first for YOLOv5 inference.")
 
         # Confirm model is loaded
         assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
@@ -529,17 +524,9 @@ class Yolov5DetectionModel(DetectionModel):
         self._object_prediction_list_per_image = object_prediction_list_per_image
 
 
+@check_requirements(["torch", "detectron2"])
 class Detectron2DetectionModel(DetectionModel):
     def load_model(self):
-        try:
-            import detectron2
-        except ImportError:
-            raise ImportError(
-                "Please install detectron2. Check "
-                "`https://detectron2.readthedocs.io/en/latest/tutorials/install.html` "
-                "for instalattion details."
-            )
-
         from detectron2.config import get_cfg
         from detectron2.data import MetadataCatalog
         from detectron2.engine import DefaultPredictor
@@ -598,10 +585,6 @@ class Detectron2DetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-        try:
-            import detectron2
-        except ImportError:
-            raise ImportError("Please install detectron2 via `pip install detectron2`")
 
         # confirm image_size is not provided
         if image_size is not None:
@@ -707,6 +690,7 @@ class Detectron2DetectionModel(DetectionModel):
         self._object_prediction_list_per_image = object_prediction_list_per_image
 
 
+@check_requirements(["torch", "transformers"])
 class HuggingfaceDetectionModel(DetectionModel):
     def __init__(
         self,
@@ -753,15 +737,6 @@ class HuggingfaceDetectionModel(DetectionModel):
         return self.model.config.num_labels
 
     def load_model(self):
-        try:
-            import transformers
-        except ImportError:
-            raise ImportError(
-                "Please install transformers. Check "
-                "`https://github.com/huggingface/transformers#installation` "
-                "for instalattion details."
-            )
-
         from transformers import AutoFeatureExtractor, AutoModelForObjectDetection
 
         model = AutoModelForObjectDetection.from_pretrained(self.model_path)
@@ -796,10 +771,6 @@ class HuggingfaceDetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-        try:
-            import transformers
-        except ImportError:
-            raise ImportError("Please install transformers via `pip install transformers`")
 
         # confirm image_size is not provided
         if image_size is not None:
@@ -904,20 +875,3 @@ class HuggingfaceDetectionModel(DetectionModel):
             object_prediction_list_per_image.append(object_prediction_list)
 
         self._object_prediction_list_per_image = object_prediction_list_per_image
-
-
-if __name__ == "__main__":
-    from sahi.predict import get_prediction
-    from sahi.utils.cv import read_image
-
-    model_path = "facebook/detr-resnet-50"
-    detection_model = HuggingfaceDetectionModel(
-        model_path=model_path,
-        config_path=model_path,
-        confidence_threshold=0.5,
-        image_size=640,
-        device="cpu",  # or 'cuda:0'
-    )
-    img = read_image("/home/devrim/lab/gh/sahi/demo/demo_data/small-vehicles1.jpeg")
-    result = get_prediction(img, detection_model)
-    result.export_visuals(export_dir="demo_data/")
