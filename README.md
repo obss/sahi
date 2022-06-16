@@ -229,8 +229,14 @@ isort .
 <a align="left" href="https://github.com/kadirnar" target="_blank">Kadir Nar</a>
 
 <a align="left" href="https://github.com/madenburak" target="_blank">Burak Maden</a>
+  
+<a align="left" href="https://github.com/PushpakBhoge" target="_blank">Pushpak Bhoge</a>
+  
+<a align="left" href="https://github.com/mecevit" target="_blank">Mehmet Ecevit</a>
 
 <a align="left" href="https://github.com/ssahinnkadir" target="_blank">Kadir Sahin</a>
+  
+<a align="left" href="https://github.com/weypro" target="_blank">Wey</a>
 
 <a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
 
