@@ -11,6 +11,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
+from sahi.auto_model import AutoDetectionModel
 from sahi.model import DetectionModel
 from sahi.postprocess.combine import (
     GreedyNMMPostprocess,
@@ -31,13 +32,9 @@ from sahi.utils.cv import (
     read_image_as_pil,
     visualize_object_predictions,
 )
-from sahi.utils.file import Path, import_class, increment_path, list_files, save_json, save_pickle
+from sahi.utils.file import Path, increment_path, list_files, save_json, save_pickle
+from sahi.utils.import_utils import check_requirements
 
-MODEL_TYPE_TO_MODEL_CLASS_NAME = {
-    "mmdet": "MmdetDetectionModel",
-    "yolov5": "Yolov5DetectionModel",
-    "detectron2": "Detectron2DetectionModel",
-}
 POSTPROCESS_NAME_TO_CLASS = {
     "GREEDYNMM": GreedyNMMPostprocess,
     "NMM": NMMPostprocess,
@@ -139,6 +136,7 @@ def get_sliced_prediction(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
+    merge_buffer_length: int = None,
 ) -> PredictionResult:
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -179,6 +177,10 @@ def get_sliced_prediction(
             0: no print
             1: print number of slices (default)
             2: print number of slices and slice/prediction durations
+        merge_buffer_length: int
+            The length of buffer for slices to be used during sliced prediction, which is suitable for low memory.
+            It may affect the AP if it is specified. The higher the amount, the closer results to the non-buffered.
+            scenario. See [the discussion](https://github.com/obss/sahi/pull/445).
 
     Returns:
         A Dict with fields:
@@ -250,6 +252,11 @@ def get_sliced_prediction(
         for object_prediction in prediction_result.object_prediction_list:
             if object_prediction:  # if not empty
                 object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+
+        # merge matching predictions during sliced prediction
+        if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
+            object_prediction_list = postprocess(object_prediction_list)
+
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
         prediction_result = get_prediction(
@@ -261,9 +268,6 @@ def get_sliced_prediction(
             postprocess=None,
         )
         object_prediction_list.extend(prediction_result.object_prediction_list)
-
-    time_end = time.time() - time_start
-    durations_in_seconds["prediction"] = time_end
 
     if verbose == 2:
         print(
@@ -280,6 +284,9 @@ def get_sliced_prediction(
     # merge matching predictions
     if len(object_prediction_list) > 1:
         object_prediction_list = postprocess(object_prediction_list)
+
+    time_end = time.time() - time_start
+    durations_in_seconds["prediction"] = time_end
 
     return PredictionResult(
         image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
@@ -456,9 +463,8 @@ def predict(
     # init model instance
     time_start = time.time()
     if detection_model is None:
-        model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
-        DetectionModel = import_class(model_class_name)
-        detection_model = DetectionModel(
+        detection_model = AutoDetectionModel.from_local(
+            model_type=model_type,
             model_path=model_path,
             config_path=model_config_path,
             confidence_threshold=model_confidence_threshold,
@@ -482,7 +488,8 @@ def predict(
     ):
         # get filename
         if source_is_video:
-            relative_filepath = ".png"
+            video_name = Path(source).stem
+            relative_filepath = video_name + "_frame_" + str(ind)
         elif os.path.isdir(source):  # preserve source folder structure in export
             relative_filepath = str(Path(image_path)).split(str(Path(source)))[-1]
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
@@ -530,7 +537,7 @@ def predict(
         tqdm.write("Prediction time is: {:.2f} ms".format(prediction_result.durations_in_seconds["prediction"] * 1000))
 
         if dataset_json_path:
-            if source_is_video == True:
+            if source_is_video is True:
                 raise NotImplementedError("Video input type not supported with coco formatted dataset json")
 
             # append predictions in coco format
@@ -655,6 +662,7 @@ def predict(
         return {"export_dir": save_dir}
 
 
+@check_requirements(["fiftyone"])
 def predict_fiftyone(
     model_type: str = "mmdet",
     model_path: str = None,
@@ -750,9 +758,8 @@ def predict_fiftyone(
 
     # init model instance
     time_start = time.time()
-    model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
-    DetectionModel = import_class(model_class_name)
-    detection_model = DetectionModel(
+    detection_model = AutoDetectionModel.from_local(
+        model_type=model_type,
         model_path=model_path,
         config_path=model_config_path,
         confidence_threshold=model_confidence_threshold,

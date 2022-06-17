@@ -1,21 +1,55 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
-import torch
-from torch import stack as torch_stack
-from torch.cuda import empty_cache as empty_cuda_cache
-from torch.cuda import is_available as cuda_is_available
+
+from sahi.utils.import_utils import check_requirements, is_available
 
 
-def to_float_tensor(img) -> torch.tensor:
-    """
-    Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range
-    [0, 255] to a torch.FloatTensor of shape (C x H x W).
+@check_requirements(["torch"])
+def empty_cuda_cache():
+    if is_torch_cuda_available():
+        import torch
 
-    Args:
-        img: np.ndarray
-    Returns:
-        torch.tensor
-    """
-    #
-    return torch.from_numpy(img.transpose(2, 0, 1)).float()
+        return torch.cuda.empty_cache()
+    else:
+        raise RuntimeError("CUDA not available.")
+
+
+if is_available("torch"):
+
+    @check_requirements(["torch"])
+    def to_float_tensor(img):
+        """
+        Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range
+        [0, 255] to a torch.FloatTensor of shape (C x H x W).
+        Args:
+            img: np.ndarray
+        Returns:
+            torch.tensor
+        """
+        import torch
+
+        img = img.transpose((2, 0, 1))
+        img = torch.from_numpy(img).float()
+        if img.max() > 1:
+            img /= 255
+
+        return img
+
+    @check_requirements(["torch"])
+    def torch_to_numpy(img):
+        import torch
+
+        img = img.numpy()
+        if img.max() > 1:
+            img /= 255
+        return img.transpose((1, 2, 0))
+
+
+def is_torch_cuda_available():
+    if is_available("torch"):
+        import torch
+
+        return torch.cuda.is_available()
+    else:
+        return False

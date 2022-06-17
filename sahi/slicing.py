@@ -308,12 +308,17 @@ def slice_image(
     # init images and annotations lists
     sliced_image_result = SliceImageResult(original_image_size=[image_height, image_width], image_dir=output_dir)
 
+    image_pil_arr = np.asarray(image_pil)
     # iterate over slices
     for slice_bbox in slice_bboxes:
         n_ims += 1
 
         # extract image
-        image_pil_slice = image_pil.crop(slice_bbox)
+        tlx = slice_bbox[0]
+        tly = slice_bbox[1]
+        brx = slice_bbox[2]
+        bry = slice_bbox[3]
+        image_pil_slice = image_pil_arr[tly:bry, tlx:brx]
 
         # process annotations if coco_annotations is given
         if coco_annotation_list is not None:
@@ -344,7 +349,7 @@ def slice_image(
 
         # create sliced image and append to sliced_image_result
         sliced_image = SlicedImage(
-            image=np.asarray(image_pil_slice),
+            image=image_pil_slice,
             coco_image=coco_image,
             starting_pixel=[slice_bbox[0], slice_bbox[1]],
         )

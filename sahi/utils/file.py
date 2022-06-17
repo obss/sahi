@@ -55,14 +55,16 @@ class NumpyEncoder(json.JSONEncoder):
             return super(NumpyEncoder, self).default(obj)
 
 
-def load_json(load_path):
+def load_json(load_path: str, encoding: str = "utf-8"):
     """
     Loads json formatted data (given as "data") from load_path
+    Encoding type can be specified with 'encoding' argument
+
     Example inputs:
         load_path: "dirname/coco.json"
     """
     # read from path
-    with open(load_path) as json_file:
+    with open(load_path, encoding=encoding) as json_file:
         data = json.load(json_file)
     return data
 
@@ -193,7 +195,7 @@ def save_pickle(data, save_path):
         pickle.dump(data, outfile)
 
 
-def import_class(model_name):
+def import_model_class(class_name):
     """
     Imports a predefined detection class by class name.
 
@@ -203,8 +205,8 @@ def import_class(model_name):
     Returns:
         class_: class with given path
     """
-    module = __import__("sahi.model", fromlist=[model_name])
-    class_ = getattr(module, model_name)
+    module = __import__("sahi.model", fromlist=[class_name])
+    class_ = getattr(module, class_name)
     return class_
 
 
