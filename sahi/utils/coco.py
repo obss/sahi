@@ -204,7 +204,7 @@ class CocoAnnotation:
             iscrowd: int
                 0 or 1
         """
-        if bbox is not None or segmentation is not None: #  Check if this is correct
+        if bbox is not None or segmentation is not None:  #  Check if this is correct
             raise NotImplementedError("bbox or segmentation is not supported")
 
         self._segmentation = segmentation
@@ -862,7 +862,7 @@ class Coco:
             category: CocoCategory
         """
 
-        #assert type(category) == CocoCategory, "category must be a CocoCategory instance"
+        # assert type(category) == CocoCategory, "category must be a CocoCategory instance"
         if not isinstance(category, CocoCategory):
             raise TypeError("category must be a CocoCategory instance")
         self.categories.append(category)
@@ -879,7 +879,7 @@ class Coco:
             raise TypeError("image must be a CocoImage instance")
         if self.image_id_setting == "manual":
             if image.id is not None:
-                self.images.append(image) # check if this is correct!
+                self.images.append(image)  # check if this is correct!
 
     def update_categories(self, desired_name2id, update_image_filenames=False):
         """
@@ -1566,9 +1566,9 @@ def export_single_yolov5_image_and_corresponding_txt(
         else:
             if coco_image_dir is not None:
                 raise ValueError("You have to specify image_dir of Coco object for yolov5 conversion.")
-            
+
             coco_image_path = os.path.abspath(str(Path(coco_image_dir) / coco_image.file_name))
-            
+
         yolo_image_path_temp = str(Path(output_dir) / Path(coco_image.file_name).name)
         # increment target file name if already present
         yolo_image_path = copy.deepcopy(yolo_image_path_temp)
