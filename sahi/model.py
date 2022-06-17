@@ -110,8 +110,6 @@ class DetectionModel:
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted.
-            image_size: int
-                Inference input size.
         """
         raise NotImplementedError()
 
@@ -221,8 +219,6 @@ class MmdetDetectionModel(DetectionModel):
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
-            image_size: int
-                Inference input size.
         """
         try:
             import mmdet
@@ -410,8 +406,6 @@ class Yolov5DetectionModel(DetectionModel):
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
-            image_size: int
-                Inference input size.
         """
 
         # Confirm model is loaded

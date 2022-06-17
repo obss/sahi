@@ -4,8 +4,7 @@
 import logging
 import os
 import time
-import warnings
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import numpy as np
 from PIL import Image
@@ -292,6 +291,7 @@ def predict(
     source: str = None,
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
+    image_size: int = None,
     slice_height: int = 512,
     slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
@@ -322,7 +322,7 @@ def predict(
     Args:
         detection_model: sahi.model.DetectionModel
             Optionally provide custom DetectionModel to be used for inference. When provided,
-            model_type, model_path, config_path, model_device, model_category_mapping
+            model_type, model_path, config_path, model_device, model_category_mapping, image_size
             params will be ignored
         model_type: str
             mmdet for 'MmdetDetectionModel', 'yolov5' for 'Yolov5DetectionModel'.
@@ -344,6 +344,8 @@ def predict(
             Dont perform standard prediction. Default: False.
         no_sliced_prediction: bool
             Dont perform sliced prediction. Default: False.
+        image_size: int
+            Input image size for each inference (image is scaled by preserving asp. rat.).
         slice_height: int
             Height of each slice.  Defaults to ``512``.
         slice_width: int
@@ -456,6 +458,7 @@ def predict(
             category_mapping=model_category_mapping,
             category_remapping=model_category_remapping,
             load_at_init=False,
+            image_size=image_size,
         )
         detection_model.load_model()
     time_end = time.time() - time_start
@@ -658,6 +661,7 @@ def predict_fiftyone(
     image_dir: str = None,
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
+    image_size: int = None,
     slice_height: int = 256,
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
@@ -694,6 +698,8 @@ def predict_fiftyone(
             Dont perform standard prediction. Default: False.
         no_sliced_prediction: bool
             Dont perform sliced prediction. Default: False.
+        image_size: int
+            Input image size for each inference (image is scaled by preserving asp. rat.).
         slice_height: int
             Height of each slice.  Defaults to ``256``.
         slice_width: int
@@ -747,6 +753,7 @@ def predict_fiftyone(
         category_mapping=model_category_mapping,
         category_remapping=model_category_remapping,
         load_at_init=False,
+        image_size=image_size,
     )
     detection_model.load_model()
     time_end = time.time() - time_start
