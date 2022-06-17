@@ -204,8 +204,8 @@ class CocoAnnotation:
             iscrowd: int
                 0 or 1
         """
-        if bbox is not None or segmentation is not None:  #  Check if this is correct
-            raise NotImplementedError("bbox or segmentation is not supported")
+        if bbox is None and segmentation is None:
+            raise ValueError("you must provide a bbox or polygon")
 
         self._segmentation = segmentation
         bbox = [round(point) for point in bbox] if bbox else bbox
@@ -822,7 +822,7 @@ class Coco:
                     manual --> you will need to provide image ids in <CocoImage> instances (<CocoImage>.id can not be None)
         """
         if image_id_setting not in ["auto", "manual"]:
-            raise ValueError("image_id_setting must be either auto or manual")
+            raise ValueError("image_id_setting must be either 'auto' or 'manual'")
         self.name = name
         self.image_dir = image_dir
         self.remapping_dict = remapping_dict
@@ -875,11 +875,9 @@ class Coco:
             image: CocoImage
         """
 
-        if not isinstance(image, CocoImage):
-            raise TypeError("image must be a CocoImage instance")
-        if self.image_id_setting == "manual":
-            if image.id is not None:
-                self.images.append(image)  # check if this is correct!
+        if self.image_id_setting == "manual" and image.id is None:
+            raise ValueError("image id should be manually set for image_id_setting='manual'")
+        self.images.append(image)
 
     def update_categories(self, desired_name2id, update_image_filenames=False):
         """
@@ -950,7 +948,7 @@ class Coco:
             verbose: bool
                 If True, merging info is printed
         """
-        if self.image_dir and coco.image_dir:
+        if self.image_dir is None or coco.image_dir is None:
             raise ValueError("image_dir should be provided for merging.")
         if verbose:
             if not desired_name2id:
@@ -1024,8 +1022,8 @@ class Coco:
             clip_bboxes_to_img_dims=clip_bboxes_to_img_dims,
         )
 
-        if type(coco_dict_or_path) == str or type(coco_dict_or_path) == dict:
-            raise ValueError("coco_dict_or_path should be list of dict or str")
+        if type(coco_dict_or_path) not in [list, dict]:
+            raise TypeError("coco_dict_or_path should be a dict or str")
 
         # load coco dict if path is given
         if type(coco_dict_or_path) == str:
@@ -1564,7 +1562,7 @@ def export_single_yolov5_image_and_corresponding_txt(
         if Path(coco_image.file_name).is_file():
             coco_image_path = os.path.abspath(coco_image.file_name)
         else:
-            if coco_image_dir is not None:
+            if coco_image_dir is None:
                 raise ValueError("You have to specify image_dir of Coco object for yolov5 conversion.")
 
             coco_image_path = os.path.abspath(str(Path(coco_image_dir) / coco_image.file_name))
@@ -2136,8 +2134,8 @@ class CocoVid:
             category: CocoCategory
         """
 
-        if type(category) == CocoCategory:
-            raise Exception("category must be a CocoCategory instance")
+        if type(category) != CocoCategory:
+            raise TypeError("category must be a CocoCategory instance")
         self.categories.append(category)
 
     @property
@@ -2162,8 +2160,8 @@ class CocoVid:
             video: CocoVideo
         """
 
-        if type(video) == CocoVideo:
-            raise Exception("video must be a CocoVideo instance")
+        if type(video) != CocoVideo:
+            raise TypeError("video must be a CocoVideo instance")
         self.videos.append(video)
 
     @property
