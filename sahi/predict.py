@@ -182,7 +182,7 @@ def get_sliced_prediction(
             object_prediction_list: a list of sahi.prediction.ObjectPrediction
             durations_in_seconds: a dict containing elapsed times for profiling
     """
-    
+
     # for profiling
     durations_in_seconds = dict()
 
