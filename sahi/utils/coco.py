@@ -204,7 +204,8 @@ class CocoAnnotation:
             iscrowd: int
                 0 or 1
         """
-        assert bbox or segmentation, "you must provide a bbox or polygon"
+        if bbox is not None or segmentation is not None: #  Check if this is correct
+            raise NotImplementedError("bbox or segmentation is not supported")
 
         self._segmentation = segmentation
         bbox = [round(point) for point in bbox] if bbox else bbox
@@ -592,7 +593,8 @@ class CocoImage:
         annotation : CocoAnnotation
         """
 
-        assert isinstance(annotation, CocoAnnotation), "annotation must be a CocoAnnotation instance"
+        if not isinstance(annotation, CocoAnnotation):
+            raise TypeError("annotation must be a CocoAnnotation instance")
         self.annotations.append(annotation)
 
     def add_prediction(self, prediction):
@@ -602,7 +604,8 @@ class CocoImage:
         prediction : CocoPrediction
         """
 
-        assert isinstance(prediction, CocoPrediction), "prediction must be a CocoPrediction instance"
+        if not isinstance(prediction, CocoPrediction):
+            raise TypeError("prediction must be a CocoPrediction instance")
         self.predictions.append(prediction)
 
     @property
@@ -687,7 +690,8 @@ class CocoVidImage(CocoImage):
         annotation : CocoVidAnnotation
         """
 
-        assert type(annotation) == CocoVidAnnotation, "annotation must be a CocoVidAnnotation instance"
+        if not isinstance(annotation, CocoVidAnnotation):
+            raise TypeError("annotation must be a CocoVidAnnotation instance")
         self.annotations.append(annotation)
 
     @property
@@ -755,8 +759,8 @@ class CocoVideo:
             image: CocoImage
         """
 
-        assert type(image) == CocoImage, "image must be a CocoImage instance"
-
+        if not isinstance(image, CocoImage):
+            raise TypeError("image must be a CocoImage instance")
         self.images.append(CocoVidImage.from_coco_image(image))
 
     def add_cocovidimage(self, cocovidimage):
@@ -766,8 +770,8 @@ class CocoVideo:
             cocovidimage: CocoVidImage
         """
 
-        assert type(cocovidimage) == CocoVidImage, "cocovidimage must be a CocoVidImage instance"
-
+        if not isinstance(cocovidimage, CocoVidImage):
+            raise TypeError("cocovidimage must be a CocoVidImage instance")
         self.images.append(cocovidimage)
 
     @property
@@ -817,7 +821,8 @@ class Coco:
                     auto --> will assign id from scratch (<CocoImage>.id will be ignored)
                     manual --> you will need to provide image ids in <CocoImage> instances (<CocoImage>.id can not be None)
         """
-        assert image_id_setting in ["auto", "manual"]
+        if image_id_setting not in ["auto", "manual"]:
+            raise ValueError("image_id_setting must be either auto or manual")
         self.name = name
         self.image_dir = image_dir
         self.remapping_dict = remapping_dict
@@ -857,8 +862,9 @@ class Coco:
             category: CocoCategory
         """
 
-        assert type(category) == CocoCategory, "category must be a CocoCategory instance"
-
+        #assert type(category) == CocoCategory, "category must be a CocoCategory instance"
+        if not isinstance(category, CocoCategory):
+            raise TypeError("category must be a CocoCategory instance")
         self.categories.append(category)
 
     def add_image(self, image):
@@ -869,11 +875,11 @@ class Coco:
             image: CocoImage
         """
 
-        assert type(image) == CocoImage, "image must be a CocoImage instance"
+        if not isinstance(image, CocoImage):
+            raise TypeError("image must be a CocoImage instance")
         if self.image_id_setting == "manual":
-            assert image.id is not None
-
-        self.images.append(image)
+            if image.id is not None:
+                self.images.append(image) # check if this is correct!
 
     def update_categories(self, desired_name2id, update_image_filenames=False):
         """
@@ -944,8 +950,8 @@ class Coco:
             verbose: bool
                 If True, merging info is printed
         """
-        assert self.image_dir and coco.image_dir, "image_dir should be provided for merging."
-
+        if self.image_dir and coco.image_dir:
+            raise ValueError("image_dir should be provided for merging.")
         if verbose:
             if not desired_name2id:
                 print("'desired_name2id' is not specified, combining all categories.")
@@ -1018,9 +1024,8 @@ class Coco:
             clip_bboxes_to_img_dims=clip_bboxes_to_img_dims,
         )
 
-        assert (
-            type(coco_dict_or_path) == str or type(coco_dict_or_path) == dict
-        ), "coco_dict_or_path should be dict or str"
+        if type(coco_dict_or_path) == str or type(coco_dict_or_path) == dict:
+            raise ValueError("coco_dict_or_path should be list of dict or str")
 
         # load coco dict if path is given
         if type(coco_dict_or_path) == str:
@@ -1559,8 +1564,11 @@ def export_single_yolov5_image_and_corresponding_txt(
         if Path(coco_image.file_name).is_file():
             coco_image_path = os.path.abspath(coco_image.file_name)
         else:
-            assert coco_image_dir is not None, "You have to specify image_dir " "of Coco object for yolov5 conversion."
+            if coco_image_dir is not None:
+                raise ValueError("You have to specify image_dir of Coco object for yolov5 conversion.")
+            
             coco_image_path = os.path.abspath(str(Path(coco_image_dir) / coco_image.file_name))
+            
         yolo_image_path_temp = str(Path(output_dir) / Path(coco_image.file_name).name)
         # increment target file name if already present
         yolo_image_path = copy.deepcopy(yolo_image_path_temp)
@@ -2128,8 +2136,8 @@ class CocoVid:
             category: CocoCategory
         """
 
-        assert type(category) == CocoCategory, "category must be a CocoCategory instance"
-
+        if type(category) == CocoCategory:
+            raise Exception("category must be a CocoCategory instance")
         self.categories.append(category)
 
     @property
@@ -2154,8 +2162,8 @@ class CocoVid:
             video: CocoVideo
         """
 
-        assert type(video) == CocoVideo, "video must be a CocoVideo instance"
-
+        if type(video) == CocoVideo:
+            raise Exception("video must be a CocoVideo instance")
         self.videos.append(video)
 
     @property
