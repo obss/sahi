@@ -50,7 +50,7 @@ jobs:
       - name: Update pip
         run: python -m pip install --upgrade pip
 
-      - name: Install PyTorch(1.11.0) and TorchVision(0.12.0) on Linux and Windows
+      - name: Install PyTorch(1.10.2) and TorchVision(0.11.3) on Linux and Windows
         if: >
           matrix.operating-system == 'ubuntu-latest' ||
           matrix.operating-system == 'windows-latest'
