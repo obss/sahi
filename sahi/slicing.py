@@ -166,7 +166,7 @@ class SliceImageResult:
     def add_sliced_image(self, sliced_image: SlicedImage):
         if not isinstance(sliced_image, SlicedImage):
             raise TypeError("sliced_image must be a SlicedImage instance")
-        
+
         self._sliced_image_list.append(sliced_image)
 
     @property

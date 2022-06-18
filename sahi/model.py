@@ -412,7 +412,8 @@ class Yolov5DetectionModel(DetectionModel):
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
-        elif self.image_size is not None:
+
+        if self.image_size is not None:
             prediction_result = self.model(image, size=self.image_size)
         else:
             prediction_result = self.model(image)

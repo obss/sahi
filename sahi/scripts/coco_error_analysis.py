@@ -299,9 +299,7 @@ def _analyse_results(
             raise ValueError(f"res_type {res_type} is not supported")
     if areas is not None:
         if len(areas) != 3:
-            raise ValueError(
-                "3 integers should be specified as areas,representing 3 area regions"
-            )
+            raise ValueError("3 integers should be specified as areas,representing 3 area regions")
 
     if out_dir is None:
         out_dir = Path(res_file).parent
