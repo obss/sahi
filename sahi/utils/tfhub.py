@@ -1,7 +1,7 @@
 def get_image(array):
-    import tensorflow as tf
     import numpy as np
-    
+    import tensorflow as tf
+
     array = np.asarray(array, np.float32)
     normalized_array = array
     if array.max() <= 1:
@@ -11,9 +11,11 @@ def get_image(array):
     normalized_array = tf.convert_to_tensor([normalized_array], tf.uint8)
     return normalized_array
 
+
 def resize(array, size):
-    import tensorflow as tf 
-    return tf.image.resize(array, [size,size]).numpy()
+    import tensorflow as tf
+
+    return tf.image.resize(array, [size, size]).numpy()
 
 
 COCO_CLASSES = (
