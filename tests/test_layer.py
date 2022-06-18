@@ -8,8 +8,7 @@ from unittest import mock
 from sahi.auto_model import AutoDetectionModel
 
 # layer is not available for python<3.7
-python_major_version, python_minor_version = sys.version_info[:1]
-if python_major_version == 3 and python_minor_version > 6:
+if sys.version_info >= (3, 7):
 
     class TestLayerDetectionModel(unittest.TestCase):
         @mock.patch("layer.get_model")
