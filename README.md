@@ -75,6 +75,8 @@ Object detection and instance segmentation are by far the most important fields 
 
 - `HuggingFace` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_huggingface.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-huggingface"></a> (NEW)
 
+- `TorchVision` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_torchvision.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-torchvision"></a> (NEW)
+
 <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img width="600" src="https://user-images.githubusercontent.com/34196005/144092739-c1d9bade-a128-4346-947f-424ce00e5c4f.gif" alt="sahi-yolox"></a> 
 
 
@@ -111,17 +113,17 @@ conda install pytorch=1.10.2 torchvision=0.11.3 cudatoolkit=11.3 -c pytorch
 - Install your desired detection framework (yolov5):
 
 ```console
-pip install yolov5
+pip install yolov5==6.1.3
 ```
 
 - Install your desired detection framework (mmdet):
 
 ```console
-pip install mmcv-full==1.4.4 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html
+pip install mmcv-full==1.5.3 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html
 ```
 
 ```console
-pip install mmdet==2.21.0
+pip install mmdet==2.25.0
 ```
 
 - Install your desired detection framework (detectron2):
