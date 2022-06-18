@@ -10,7 +10,7 @@ from sahi.utils.cv import read_image
 from sahi.utils.huggingface import HuggingfaceTestConstants
 
 MODEL_DEVICE = "cpu"
-CONFIDENCE_THRESHOLD = 0.3
+CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
 
 
@@ -127,7 +127,7 @@ if sys.version_info >= (3, 7):
             object_prediction_list = huggingface_detection_model.object_prediction_list
 
             # compare
-            self.assertEqual(len(object_prediction_list), 46)
+            self.assertEqual(len(object_prediction_list), 28)
             self.assertEqual(object_prediction_list[0].category.id, 3)
             self.assertEqual(object_prediction_list[0].category.name, "car")
             desired_bbox = [639, 198, 24, 20]
@@ -137,7 +137,7 @@ if sys.version_info >= (3, 7):
                 assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
             self.assertEqual(object_prediction_list[2].category.id, 3)
             self.assertEqual(object_prediction_list[2].category.name, "car")
-            desired_bbox = [663, 187, 17, 16]
+            desired_bbox = [745, 169, 15, 14]
             predicted_bbox = object_prediction_list[2].bbox.to_coco_bbox()
             for ind, point in enumerate(predicted_bbox):
                 assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
