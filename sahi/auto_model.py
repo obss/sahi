@@ -7,6 +7,7 @@ from sahi.model import (
     TorchVisionDetectionModel,
     Yolov5DetectionModel,
 )
+from sahi.utils.import_utils import check_requirements
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "mmdet": MmdetDetectionModel,
@@ -78,6 +79,7 @@ class AutoDetectionModel:
         )
 
     @staticmethod
+    @check_requirements(["layer"])
     def from_layer(
         model_path: str,
         no_cache: bool = False,
@@ -115,10 +117,7 @@ class AutoDetectionModel:
             ImportError: If Layer is not installed in your environment
             ValueError: If model path does not match expected pattern: organization_name/project_name/models/model_name
         """
-        try:
-            import layer
-        except ImportError:
-            raise ImportError('Please run "pip install layer -U" ' "to load models from Layer.")
+        import layer
 
         layer_model = layer.get_model(name=model_path, no_cache=no_cache).get_train()
         if layer_model.__class__.__module__ in ["yolov5.models.common", "models.common"]:

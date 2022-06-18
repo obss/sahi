@@ -2,7 +2,7 @@ opencv-python>=4.2.0.32
 shapely>=1.8.0
 tqdm>=4.48.2
 pillow>=8.2.0
-pybboxes
+pybboxes==0.1.1
 pyyaml
 fire
 terminaltables
