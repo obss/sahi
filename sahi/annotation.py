@@ -99,9 +99,9 @@ class Category:
             name: str
                 Name of the object category
         """
-        if isinstance(id, int):
+        if not isinstance(id, int):
             raise TypeError("id should be integer")
-        if isinstance(name, str):
+        if not isinstance(name, str):
             raise TypeError("name should be string")
         self.id = id
         self.name = name

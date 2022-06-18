@@ -2227,7 +2227,7 @@ def remove_invalid_coco_results(result_list_or_path: Union[List, str], dataset_d
     else:
         raise TypeError('incorrect type for "result_list_or_path"')
 
-    # prepare image info from- coco dataset
+    # prepare image info from coco dataset
     if dataset_dict_or_path is not None:
         if isinstance(dataset_dict_or_path, str):
             dataset_dict = load_json(dataset_dict_or_path)

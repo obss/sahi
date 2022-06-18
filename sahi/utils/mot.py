@@ -143,7 +143,7 @@ class MotFrame:
         for annotation in self.annotation_list:
             # ensure annotation.track_id is not None
             if annotation.track_id is None:
-                raise TypeError("to_norfair_trackedobjects() requires annotation.track_id to be set.")
+                raise ValueError("to_norfair_trackedobjects() requires annotation.track_id to be set.")
             # calculate bbox points
             xmin = annotation.bbox[0]
             ymin = annotation.bbox[1]
@@ -308,7 +308,7 @@ class MotVideo:
         from norfair.filter import FilterPyKalmanFilterFactory
 
         if type not in ["gt", "det"]:
-            raise TypeError(f"'type' can be one of ['gt', 'det'], you provided: {type}")
+            raise ValueError(f"'type' can be one of ['gt', 'det'], you provided: {type}")
         export_dir: str = str(increment_path(Path(export_dir), exist_ok=exist_ok))
 
         if type == "gt":
