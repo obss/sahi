@@ -1022,7 +1022,7 @@ class Coco:
             clip_bboxes_to_img_dims=clip_bboxes_to_img_dims,
         )
 
-        if type(coco_dict_or_path) not in [list, dict]:
+        if type(coco_dict_or_path) not in [str, dict]:
             raise TypeError("coco_dict_or_path should be a dict or str")
 
         # load coco dict if path is given
@@ -2227,7 +2227,7 @@ def remove_invalid_coco_results(result_list_or_path: Union[List, str], dataset_d
     else:
         raise TypeError('incorrect type for "result_list_or_path"')
 
-    # prepare image info from coco dataset
+    # prepare image info from- coco dataset
     if dataset_dict_or_path is not None:
         if isinstance(dataset_dict_or_path, str):
             dataset_dict = load_json(dataset_dict_or_path)

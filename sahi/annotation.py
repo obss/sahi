@@ -99,8 +99,10 @@ class Category:
             name: str
                 Name of the object category
         """
-        assert isinstance(id, int), "id should be integer"
-        assert isinstance(name, str), "name should be string"
+        if isinstance(id, int):
+            raise TypeError("id should be integer")
+        if isinstance(name, str):
+            raise TypeError("name should be string")
         self.id = id
         self.name = name
 
@@ -160,8 +162,8 @@ class Mask:
                 sized image, should be in the form of [shift_x, shift_y]
         """
         # confirm full_shape is given
-        assert full_shape is not None, "full_shape must be provided"
-
+        if full_shape is None:
+            raise ValueError("full_shape must be provided")
         bool_mask = get_bool_mask_from_coco_segmentation(segmentation, height=full_shape[0], width=full_shape[1])
         return cls(
             bool_mask=bool_mask,
@@ -232,7 +234,8 @@ class Mask:
 
     def get_shifted_mask(self):
         # Confirm full_shape is specified
-        assert (self.full_shape_height is not None) and (self.full_shape_width is not None), "full_shape is None"
+        if (self.full_shape_height is None) or (self.full_shape_width is None):
+            raise ValueError("full_shape is None")
         # init full mask
         mask_fullsized = np.full(
             (
