@@ -58,9 +58,9 @@ jobs:
           pip install torch==1.10.2+cpu torchvision==0.11.3+cpu
           -f https://download.pytorch.org/whl/torch_stable.html
 
-      - name: Install PyTorch(1.10.2) and TorchVision(0.11.2) on MacOS
+      - name: Install PyTorch(1.10.1) and TorchVision(0.11.2) on MacOS
         if: matrix.operating-system == 'macos-latest'
-        run: pip install torch==1.10.2 torchvision==0.11.2
+        run: pip install torch==1.10.1 torchvision==0.11.2
 
       - name: Install MMDetection(2.25.0) with MMCV(1.5.3)
         run: >
