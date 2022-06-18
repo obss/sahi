@@ -1,0 +1,2 @@
+model_name: ssd300_vgg16
+num_classes: 91
