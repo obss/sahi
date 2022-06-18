@@ -103,15 +103,13 @@ class DetectionModel:
 
             empty_cuda_cache()
 
-    def perform_inference(self, image: np.ndarray, image_size: int = None):
+    def perform_inference(self, image: np.ndarray):
         """
         This function should be implemented in a way that prediction should be
         performed using self.model and the prediction result should be set to self._original_predictions.
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted.
-            image_size: int
-                Inference input size.
         """
         raise NotImplementedError()
 
@@ -215,14 +213,12 @@ class MmdetDetectionModel(DetectionModel):
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
-    def perform_inference(self, image: np.ndarray, image_size: int = None):
+    def perform_inference(self, image: np.ndarray):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
-            image_size: int
-                Inference input size.
         """
         try:
             import mmdet
@@ -236,11 +232,6 @@ class MmdetDetectionModel(DetectionModel):
 
         # Supports only batch of 1
         from mmdet.apis import inference_detector
-
-        # update model image size
-        if image_size is not None:
-            warnings.warn("Set 'image_size' at DetectionModel init.", DeprecationWarning)
-            self.model.cfg.data.test.pipeline[1]["img_scale"] = (image_size, image_size)
 
         # perform inference
         if isinstance(image, np.ndarray):
@@ -409,22 +400,17 @@ class Yolov5DetectionModel(DetectionModel):
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
-    def perform_inference(self, image: np.ndarray, image_size: int = None):
+    def perform_inference(self, image: np.ndarray):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
-            image_size: int
-                Inference input size.
         """
 
         # Confirm model is loaded
         assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
-        if image_size is not None:
-            warnings.warn("Set 'image_size' at DetectionModel init.", DeprecationWarning)
-            prediction_result = self.model(image, size=image_size)
-        elif self.image_size is not None:
+        if self.image_size is not None:
             prediction_result = self.model(image, size=self.image_size)
         else:
             prediction_result = self.model(image)
@@ -577,17 +563,13 @@ class Detectron2DetectionModel(DetectionModel):
         else:
             self.category_names = list(self.category_mapping.values())
 
-    def perform_inference(self, image: np.ndarray, image_size: int = None):
+    def perform_inference(self, image: np.ndarray):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-
-        # confirm image_size is not provided
-        if image_size is not None:
-            warnings.warn("Set 'image_size' at DetectionModel init.")
 
         # Confirm model is loaded
         if self.model is None:
@@ -765,7 +747,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         self._feature_extractor = feature_extractor
         self.category_mapping = self.model.config.id2label
 
-    def perform_inference(self, image: Union[List, np.ndarray], image_size: int = None):
+    def perform_inference(self, image: Union[List, np.ndarray]):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
@@ -773,10 +755,6 @@ class HuggingfaceDetectionModel(DetectionModel):
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
         import torch
-
-        # confirm image_size is not provided
-        if image_size is not None:
-            warnings.warn("Set 'image_size' at DetectionModel init.")
 
         # Confirm model is loaded
         if self.model is None:
