@@ -164,7 +164,9 @@ class SliceImageResult:
         self.image_dir = image_dir
 
     def add_sliced_image(self, sliced_image: SlicedImage):
-        assert type(sliced_image) == SlicedImage, "sliced_image must be a SlicedImage instance"
+        if not isinstance(sliced_image, SlicedImage):
+            raise TypeError("sliced_image must be a SlicedImage instance")
+
         self._sliced_image_list.append(sliced_image)
 
     @property
