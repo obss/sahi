@@ -8,5 +8,4 @@ pyyaml
 fire
 terminaltables
 requests
-click==8.0.4; python_version < '3.8'
-click; python_version >= '3.8'
+click==8.0.4
