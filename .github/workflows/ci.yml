@@ -94,11 +94,9 @@ jobs:
           pip install -U "layer>=0.10.0,<0.11.0"
           
       - name: Install tensorflow(2.9.1) and tensorflow_hub(0.12.0)
-        if: >
-            matrix.python-version != '3.6'
         run: >
           pip install  tensorflow==2.9.1
-          pip install tensorflow_hub==0.12.0  
+          pip install tensorflow_hub==0.12.0
 
       - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
         run: |
