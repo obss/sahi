@@ -2,9 +2,9 @@ import os
 import subprocess
 import sys
 
-from sahi.utils.import_utils import _fiftyone_available
+from sahi.utils.import_utils import is_available
 
-if _fiftyone_available:
+if is_available("fiftyone"):
     # to fix https://github.com/voxel51/fiftyone/issues/845
     if sys.platform == "win32":
         _ = subprocess.run("tskill mongod", stderr=subprocess.DEVNULL)
