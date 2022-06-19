@@ -295,12 +295,11 @@ def _analyse_results(
     COCOeval=None,
 ):
     for res_type in res_types:
-        assert res_type in ["bbox", "segm"]
+        if res_type not in ["bbox", "segm"]:
+            raise ValueError(f"res_type {res_type} is not supported")
     if areas is not None:
-        assert (
-            len(areas) == 3
-        ), "3 integers should be specified as areas, \
-            representing 3 area regions"
+        if len(areas) != 3:
+            raise ValueError("3 integers should be specified as areas,representing 3 area regions")
 
     if out_dir is None:
         out_dir = Path(res_file).parent
@@ -365,7 +364,8 @@ def _analyse_results(
             nm = cocoGt.loadCats(catId)[0]
             print(f'--------------saving {k + 1}-{nm["name"]}---------------')
             analyze_result = analyze_results[k]
-            assert k == analyze_result[0]
+            if k != analyze_result[0]:
+                raise ValueError(f"k {k} != analyze_result[0] {analyze_result[0]}")
             ps_supercategory = analyze_result[1]["ps_supercategory"]
             ps_allcategory = analyze_result[1]["ps_allcategory"]
             # compute precision but ignore superclass confusion

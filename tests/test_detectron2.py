@@ -6,7 +6,7 @@ import unittest
 from sahi.model import Detectron2DetectionModel
 from sahi.utils.cv import read_image
 from sahi.utils.detectron2 import Detectron2TestConstants
-from sahi.utils.import_utils import _torch_version
+from sahi.utils.import_utils import get_package_info
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -14,7 +14,7 @@ IMAGE_SIZE = 320
 
 # note that detectron2 binaries are available only for linux
 
-if _torch_version == "1.10.2":
+if get_package_info("torch", verbose=False)[1] == "1.10.2":
 
     class TestDetectron2DetectionModel(unittest.TestCase):
         def test_load_model(self):
