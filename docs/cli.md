@@ -134,6 +134,22 @@ If you want to export extra mAP bar plots and annotation area stats add `--extra
 
 If you want to specify area regions, set it as `--areas "[1024 9216 10000000000]"`.
 
+## `env` command usage:
+
+Print related package versions in the current env as:
+
+```bash
+sahi env
+```
+
+## `version` command usage:
+
+Print your SAHI verison as:
+
+```bash
+sahi version
+```
+
 ## Custom scripts
 
 All scripts can be downloaded from [scripts directory](https://github.com/obss/sahi/main/cli/sahi/scripts) and modified by your needs. After installing `sahi` by pip, all scripts can be called from any directory as:
