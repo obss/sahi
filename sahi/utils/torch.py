@@ -15,37 +15,37 @@ def empty_cuda_cache():
         raise RuntimeError("CUDA not available.")
 
 
-if is_available("torch"):
+@check_requirements(["torch"])
+def to_float_tensor(img):
+    """
+    Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range
+    [0, 255] to a torch.FloatTensor of shape (C x H x W).
+    Args:
+        img: np.ndarray
+    Returns:
+        torch.tensor
+    """
+    import torch
 
-    @check_requirements(["torch"])
-    def to_float_tensor(img):
-        """
-        Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range
-        [0, 255] to a torch.FloatTensor of shape (C x H x W).
-        Args:
-            img: np.ndarray
-        Returns:
-            torch.tensor
-        """
-        import torch
+    img = img.transpose((2, 0, 1))
+    img = torch.from_numpy(img).float()
+    if img.max() > 1:
+        img /= 255
 
-        img = img.transpose((2, 0, 1))
-        img = torch.from_numpy(img).float()
-        if img.max() > 1:
-            img /= 255
-
-        return img
-
-    @check_requirements(["torch"])
-    def torch_to_numpy(img):
-        import torch
-
-        img = img.numpy()
-        if img.max() > 1:
-            img /= 255
-        return img.transpose((1, 2, 0))
+    return img
 
 
+@check_requirements(["torch"])
+def torch_to_numpy(img):
+    import torch
+
+    img = img.numpy()
+    if img.max() > 1:
+        img /= 255
+    return img.transpose((1, 2, 0))
+
+
+@check_requirements(["torch"])
 def is_torch_cuda_available():
     if is_available("torch"):
         import torch

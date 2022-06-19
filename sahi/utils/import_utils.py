@@ -13,34 +13,44 @@ logging.basicConfig(
 )
 
 
-def get_package_info(package_name: str):
+def get_package_info(package_name: str, verbose: bool = True):
     """
     Returns the package version as a string and the package name as a string.
     """
-    try:
-        package = importlib.import_module(package_name)
+    _is_available = is_available(package_name)
+
+    if _is_available:
         try:
-            version = package.__version__
-        except AttributeError:
-            version = "unknown"
-        name = package.__name__
-        logger.info(f"{name} version {version} available.")
-        _is_available = True
-    except ImportError:
-        _is_available = False
-        version = "unknown"
-    return _is_available, version
+            import importlib.metadata as _importlib_metadata
+
+            _version = _importlib_metadata.version(package_name)
+        except (ModuleNotFoundError, AttributeError):
+            try:
+                _version = importlib.import_module(package_name).__version__
+            except AttributeError:
+                _version = "unknown"
+        if verbose:
+            logger.info(f"{package_name} version {_version} is available.")
+    else:
+        _version = "N/A"
+
+    return _is_available, _version
 
 
-_torch_available, _torch_version = get_package_info("torch")
-_torchvision_available, _torchvision_version = get_package_info("torchvision")
-_yolov5_available, _yolov5_version = get_package_info("yolov5")
-_mmdet_available, _mmdet_version = get_package_info("mmdet")
-_mmcv_available, _mmcv_version = get_package_info("mmcv")
-_detectron2_available, _detectron2_version = get_package_info("detectron2")
-_fiftyone_available, _fiftyone_version = get_package_info("fiftyone")
-_norfair_available, _norfair_version = get_package_info("norfair")
-_layer_available, _layer_version = get_package_info("layer")
+def print_enviroment_info():
+    _torch_available, _torch_version = get_package_info("torch")
+    _torchvision_available, _torchvision_version = get_package_info("torchvision")
+    _tensorflow_available, _tensorflow_version = get_package_info("tensorflow")
+    _tensorflow_hub_available, _tensorflow_hub_version = get_package_info("tensorflow-hub")
+    _yolov5_available, _yolov5_version = get_package_info("yolov5")
+    _mmdet_available, _mmdet_version = get_package_info("mmdet")
+    _mmcv_available, _mmcv_version = get_package_info("mmcv")
+    _detectron2_available, _detectron2_version = get_package_info("detectron2")
+    _transformers_available, _transformers_version = get_package_info("transformers")
+    _timm_available, _timm_version = get_package_info("timm")
+    _layer_available, _layer_version = get_package_info("layer")
+    _fiftyone_available, _fiftyone_version = get_package_info("fiftyone")
+    _norfair_available, _norfair_version = get_package_info("norfair")
 
 
 def is_available(module_name: str):

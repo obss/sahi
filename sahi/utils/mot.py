@@ -5,9 +5,9 @@ from typing import Dict, List, Optional
 import numpy as np
 
 from sahi.utils.file import increment_path
-from sahi.utils.import_utils import _norfair_available, check_requirements
+from sahi.utils.import_utils import check_requirements, is_available
 
-if _norfair_available:
+if is_available("norfair"):
     from norfair.metrics import PredictionsTextFile
 
 
