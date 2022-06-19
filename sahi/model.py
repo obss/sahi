@@ -1069,10 +1069,12 @@ class TensorflowHubDetectionModel(DetectionModel):
     def load_model(self):
         import tensorflow_hub as hub
 
-        if self.model_path[: len("https://tfhub.dev/tensorflow")] == "https://tfhub.dev/tensorflow":
+        if "tfhub.dev/tensorflow" in self.model_path and "object_detection" in self.model_path:
             self.model = hub.load(self.model_path)
         else:
-            raise ValueError("model_path is not a valid tensorflow hub model path: ", self.model_path)
+            raise ValueError(
+                "Check 'https://tfhub.dev/tensorflow/collections/object_detection/' for supported TF Hub models."
+            )
 
     def perform_inference(self, image: np.ndarray):
         from sahi.utils.tensorflow import resize, to_float_tensor
