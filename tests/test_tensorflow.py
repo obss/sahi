@@ -17,7 +17,7 @@ class TestTensorflowHubDetectionModel(unittest.TestCase):
         from sahi.model import TensorflowHubDetectionModel
 
         tensorflow_hub_model = TensorflowHubDetectionModel(
-            model_path="https://tfhub.dev/tensorflow/efficientdet/d0/1",
+            model_path=EFFICIENTDET_URL,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -63,7 +63,7 @@ class TestTensorflowHubDetectionModel(unittest.TestCase):
     def test_convert_original_predictions(self):
 
         tensorflow_hub_model = TensorflowHubDetectionModel(
-            model_path="https://tfhub.dev/tensorflow/efficientdet/d0/1",
+            model_path=EFFICIENTDET_URL,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -90,7 +90,6 @@ class TestTensorflowHubDetectionModel(unittest.TestCase):
         desidred_bbox = [317, 324, 64, 40]
         predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
         self.assertEqual(desidred_bbox, predicted_bbox)
-
 
 if __name__ == "__main__":
     unittest.main()

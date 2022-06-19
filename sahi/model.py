@@ -2,7 +2,6 @@
 # Code written by Fatih C Akyon, 2020.
 
 import logging
-import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -1068,14 +1067,7 @@ class TorchVisionDetectionModel(DetectionModel):
 @check_requirements(["tensorflow", "tensorflow_hub"])
 class TensorflowHubDetectionModel(DetectionModel):
     def load_model(self):
-        try:
-            import tensorflow_hub as hub
-
-        except ImportError:
-            raise ImportError(
-                "Please install tensorflow and tensorflow_hub via `pip install tensorflow' and 'pip install tensorflow_hub`"
-            )
-
+        import tensorflow_hub as hub
         self.model = hub.load(self.model_path)
 
     def perform_inference(self, image: np.ndarray):
@@ -1091,6 +1083,7 @@ class TensorflowHubDetectionModel(DetectionModel):
             prediction_result = self.model(img)
 
         self._original_predictions = prediction_result
+        # TODO: add support for multiple image prediction
         self.image_height, self.image_width = image.shape[0], image.shape[1]
 
         if self.category_mapping is None:
@@ -1106,7 +1099,8 @@ class TensorflowHubDetectionModel(DetectionModel):
 
     @property
     def has_mask(self):
-        return self.model.with_mask
+        # TODO: check if model output contains segmentation mask
+        return False
 
     @property
     def category_names(self):
@@ -1140,6 +1134,7 @@ class TensorflowHubDetectionModel(DetectionModel):
             if scores[i] >= self.confidence_threshold:
                 score = float(scores[i])
                 category_id = int(category_ids[i])
+                # Tfhub categories start from 1
                 category_names = self.category_mapping[str(category_id - 1)]
                 box = [float(box) for box in boxes[i]]
                 x1, y1, x2, y2 = (
@@ -1149,7 +1144,7 @@ class TensorflowHubDetectionModel(DetectionModel):
                     int(box[2] * self.image_height),
                 )
                 bbox = [x1, y1, x2, y2]
-
+                
                 object_prediction = ObjectPrediction(
                     bbox=bbox,
                     bool_mask=None,
