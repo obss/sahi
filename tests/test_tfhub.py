@@ -1,12 +1,7 @@
 # OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
+# Code written by Kadir Nar, 2022.
 
 import unittest
-from turtle import width
-from unicodedata import category
-
-from regex import P
-from torch import hinge_embedding_loss
 
 from sahi.model import TensorflowHubDetectionModel
 from sahi.utils.cv import read_image
@@ -14,6 +9,7 @@ from sahi.utils.cv import read_image
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3
 IMAGE_SIZE = 320
+EFFICIENTDET_URL = "https://tfhub.dev/tensorflow/efficientdet/d0/1"
 
 
 class TestTensorflowHubDetectionModel(unittest.TestCase):
@@ -33,7 +29,7 @@ class TestTensorflowHubDetectionModel(unittest.TestCase):
         from sahi.model import TensorflowHubDetectionModel
 
         tensorflow_hub_model = TensorflowHubDetectionModel(
-            model_path="https://tfhub.dev/tensorflow/efficientdet/d0/1",
+            model_path=EFFICIENTDET_URL,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,

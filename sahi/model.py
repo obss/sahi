@@ -1079,23 +1079,19 @@ class TensorflowHubDetectionModel(DetectionModel):
         self.model = hub.load(self.model_path)
 
     def perform_inference(self, image: np.ndarray):
-        if self.image_size is not None:
-            from sahi.utils.tfhub import get_image, resize
+        from sahi.utils.tfhub import get_image, resize
 
+        if self.image_size is not None:
             img = get_image(image)
             img = resize(img, self.image_size)
-
             prediction_result = self.model(img)
 
         else:
-            from sahi.utils.tfhub import get_image
-
             img = get_image(image)
-
             prediction_result = self.model(img)
 
         self._original_predictions = prediction_result
-        self.img = get_image(image)
+        self.image_height, self.image_width = image.shape[0], image.shape[1]
 
         if self.category_mapping is None:
             from sahi.utils.tfhub import COCO_CLASSES
@@ -1132,9 +1128,9 @@ class TensorflowHubDetectionModel(DetectionModel):
         shift_amount = shift_amount_list[0]
         full_shape = None if full_shape_list is None else full_shape_list[0]
 
-        boxes = original_predictions["detection_boxes"][0]
-        scores = original_predictions["detection_scores"][0]
-        category_ids = original_predictions["detection_classes"][0]
+        boxes = original_predictions["detection_boxes"][0].numpy()
+        scores = original_predictions["detection_scores"][0].numpy()
+        category_ids = original_predictions["detection_classes"][0].numpy()
 
         # create object_prediction_list
         object_prediction_list = []
@@ -1142,15 +1138,15 @@ class TensorflowHubDetectionModel(DetectionModel):
 
         for i in range(min(boxes.shape[0], 100)):
             if scores[i] >= self.confidence_threshold:
-                score = float(scores[i].numpy())
-                category_id = int(category_ids[i].numpy())
+                score = float(scores[i])
+                category_id = int(category_ids[i])
                 category_names = self.category_mapping[str(category_id - 1)]
-                box = [float(box) for box in boxes[i].numpy()]
+                box = [float(box) for box in boxes[i]]
                 x1, y1, x2, y2 = (
-                    int(box[1] * self.img.shape[2]),
-                    int(box[0] * self.img.shape[1]),
-                    int(box[3] * self.img.shape[2]),
-                    int(box[2] * self.img.shape[1]),
+                    int(box[1] * self.image_width),
+                    int(box[0] * self.image_height),
+                    int(box[3] * self.image_width),
+                    int(box[2] * self.image_height),
                 )
                 bbox = [x1, y1, x2, y2]
 
