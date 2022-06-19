@@ -7,7 +7,7 @@ import numpy as np
 from sahi.utils.file import increment_path
 from sahi.utils.import_utils import check_requirements, is_available
 
-if is_available('norfair'):
+if is_available("norfair"):
     from norfair.metrics import PredictionsTextFile
 
 
