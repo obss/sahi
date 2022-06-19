@@ -24,7 +24,7 @@ def get_package_info(package_name: str, verbose: bool = True):
             import importlib.metadata as _importlib_metadata
 
             _version = _importlib_metadata.version(package_name)
-        except (importlib.metadata.PackageNotFoundError, AttributeError):
+        except (ModuleNotFoundError, AttributeError):
             try:
                 _version = importlib.import_module(package_name).__version__
             except AttributeError:
