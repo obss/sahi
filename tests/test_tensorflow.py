@@ -14,7 +14,6 @@ EFFICIENTDET_URL = "https://tfhub.dev/tensorflow/efficientdet/d0/1"
 
 class TestTensorflowHubDetectionModel(unittest.TestCase):
     def test_load_model(self):
-        from sahi.model import TensorflowHubDetectionModel
 
         tensorflow_hub_model = TensorflowHubDetectionModel(
             model_path=EFFICIENTDET_URL,
@@ -26,7 +25,6 @@ class TestTensorflowHubDetectionModel(unittest.TestCase):
         self.assertNotEqual(tensorflow_hub_model.model, None)
 
     def test_perform_inference(self):
-        from sahi.model import TensorflowHubDetectionModel
 
         tensorflow_hub_model = TensorflowHubDetectionModel(
             model_path=EFFICIENTDET_URL,

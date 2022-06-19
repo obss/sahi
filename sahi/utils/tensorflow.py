@@ -1,15 +1,14 @@
-def get_image(array):
-    import numpy as np
+import numpy as np
+
+
+def to_float_tensor(image: np.ndarray):
     import tensorflow as tf
 
-    array = np.asarray(array, np.float32)
-    normalized_array = array
-    if array.max() <= 1:
-        normalized_array = array * 255.0
-
-    normalized_array = np.asarray(normalized_array, np.uint8)
-    normalized_array = tf.convert_to_tensor([normalized_array], tf.uint8)
-    return normalized_array
+    float_image = np.asarray(image, np.float32)
+    if image.max() <= 1:
+        float_image = float_image * 255.0
+    image_tensor = tf.convert_to_tensor([np.asarray(float_image, np.uint8)], tf.uint8)
+    return image_tensor
 
 
 def resize(array, size):

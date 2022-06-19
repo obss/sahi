@@ -1069,18 +1069,21 @@ class TensorflowHubDetectionModel(DetectionModel):
     def load_model(self):
         import tensorflow_hub as hub
 
-        self.model = hub.load(self.model_path)
+        if self.model_path[: len("https://tfhub.dev/tensorflow")] == "https://tfhub.dev/tensorflow":
+            self.model = hub.load(self.model_path)
+        else:
+            raise ValueError("model_path is not a valid tensorflow hub model path: ", self.model_path)
 
     def perform_inference(self, image: np.ndarray):
-        from sahi.utils.tfhub import get_image, resize
+        from sahi.utils.tensorflow import resize, to_float_tensor
 
         if self.image_size is not None:
-            img = get_image(image)
+            img = to_float_tensor(image)
             img = resize(img, self.image_size)
             prediction_result = self.model(img)
 
         else:
-            img = get_image(image)
+            img = to_float_tensor(image)
             prediction_result = self.model(img)
 
         self._original_predictions = prediction_result
@@ -1088,7 +1091,7 @@ class TensorflowHubDetectionModel(DetectionModel):
         self.image_height, self.image_width = image.shape[0], image.shape[1]
 
         if self.category_mapping is None:
-            from sahi.utils.tfhub import COCO_CLASSES
+            from sahi.utils.tensorflow import COCO_CLASSES
 
             category_mapping = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
             self.category_mapping = category_mapping

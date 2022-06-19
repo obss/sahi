@@ -92,6 +92,11 @@ jobs:
       - name: Install Layer (0.10.*)
         run: >
           pip install -U "layer>=0.10.0,<0.11.0"
+          
+      - name: Install tensorflow(2.9.1) and tensorflow_hub(0.12.0)
+        run: >
+          pip install  tensorflow==2.9.1
+          pip install tensorflow_hub==0.12.0    
 
       - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
         run: |
@@ -100,11 +105,6 @@ jobs:
       - name: Install pycocotools(2.0.4)
         run: >
           pip install pycocotools==2.0.4
-
-      - name: Install tensorflow(2.9.1) and tensorflow_hub(0.12.0)
-        run: >
-          pip install  tensorflow==2.9.1
-          pip install tensorflow_hub==0.12.0
 
       - name: Install SAHI package from local setup.py
         run: >
