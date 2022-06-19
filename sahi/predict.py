@@ -733,10 +733,8 @@ def predict_fiftyone(
     from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file, fo
 
     # assert prediction type
-    assert (
-        no_standard_prediction and no_sliced_prediction
-    ) is not True, "'no_standard_pred' and 'no_sliced_prediction' cannot be True at the same time."
-
+    if no_standard_prediction and no_sliced_prediction:
+        raise ValueError("'no_standard_pred' and 'no_sliced_prediction' cannot be True at the same time.")
     # for profiling
     durations_in_seconds = dict()
 

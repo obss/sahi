@@ -86,7 +86,8 @@ class MotFrame:
         self.file_name = file_name
 
     def add_annotation(self, detection: MotAnnotation):
-        assert type(detection) == MotAnnotation, "'detection' should be a MotAnnotation object."
+        if not isinstance(detection, MotAnnotation):
+            raise TypeError("'detection' should be a MotAnnotation object.")
         self.annotation_list.append(detection)
 
     def to_norfair_detections(self, track_points: str = "bbox"):
@@ -141,9 +142,8 @@ class MotFrame:
         # convert all detections to norfair detections
         for annotation in self.annotation_list:
             # ensure annotation.track_id is not None
-            assert annotation.track_id is not None, TypeError(
-                "to_norfair_trackedobjects() requires annotation.track_id to be set."
-            )
+            if annotation.track_id is None:
+                raise ValueError("to_norfair_trackedobjects() requires annotation.track_id to be set.")
             # calculate bbox points
             xmin = annotation.bbox[0]
             ymin = annotation.bbox[1]
@@ -307,8 +307,8 @@ class MotVideo:
         from norfair import Detection, Tracker
         from norfair.filter import FilterPyKalmanFilterFactory
 
-        assert type in ["gt", "det"], TypeError(f"'type' can be one of ['gt', 'det'], you provided: {type}")
-
+        if type not in ["gt", "det"]:
+            raise ValueError(f"'type' can be one of ['gt', 'det'], you provided: {type}")
         export_dir: str = str(increment_path(Path(export_dir), exist_ok=exist_ok))
 
         if type == "gt":

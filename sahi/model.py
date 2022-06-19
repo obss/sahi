@@ -137,7 +137,8 @@ class DetectionModel:
         Applies category remapping based on mapping given in self.category_remapping
         """
         # confirm self.category_remapping is not None
-        assert self.category_remapping is not None, "self.category_remapping cannot be None"
+        if self.category_remapping is None:
+            raise ValueError("self.category_remapping cannot be None")
         # remap categories
         for object_prediction_list in self._object_prediction_list_per_image:
             for object_prediction in object_prediction_list:
@@ -228,8 +229,8 @@ class MmdetDetectionModel(DetectionModel):
             )
 
         # Confirm model is loaded
-        assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
-
+        if self.model is None:
+            raise ValueError("Model is not loaded, load it by calling .load_model()")
         # Supports only batch of 1
         from mmdet.apis import inference_detector
 
@@ -409,7 +410,8 @@ class Yolov5DetectionModel(DetectionModel):
         """
 
         # Confirm model is loaded
-        assert self.model is not None, "Model is not loaded, load it by calling .load_model()"
+        if self.model is None:
+            raise ValueError("Model is not loaded, load it by calling .load_model()")
         if self.image_size is not None:
             prediction_result = self.model(image, size=self.image_size)
         else:
