@@ -1068,6 +1068,7 @@ class TorchVisionDetectionModel(DetectionModel):
 class TensorflowHubDetectionModel(DetectionModel):
     def load_model(self):
         import tensorflow_hub as hub
+
         self.model = hub.load(self.model_path)
 
     def perform_inference(self, image: np.ndarray):
@@ -1144,7 +1145,7 @@ class TensorflowHubDetectionModel(DetectionModel):
                     int(box[2] * self.image_height),
                 )
                 bbox = [x1, y1, x2, y2]
-                
+
                 object_prediction = ObjectPrediction(
                     bbox=bbox,
                     bool_mask=None,

@@ -91,5 +91,6 @@ class TestTensorflowHubDetectionModel(unittest.TestCase):
         predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
         self.assertEqual(desidred_bbox, predicted_bbox)
 
+
 if __name__ == "__main__":
     unittest.main()
