@@ -13,7 +13,7 @@ logging.basicConfig(
 )
 
 
-def get_package_info(package_name: str):
+def get_package_info(package_name: str, verbose: bool = True):
     """
     Returns the package version as a string and the package name as a string.
     """
@@ -29,7 +29,8 @@ def get_package_info(package_name: str):
                 _version = importlib.import_module(package_name).__version__
             except AttributeError:
                 _version = "unknown"
-        logger.info(f"{package_name} version {_version} is available.")
+        if verbose:
+            logger.info(f"{package_name} version {_version} is available.")
     else:
         _version = "N/A"
 

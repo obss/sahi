@@ -4,13 +4,15 @@
 
 from packaging import version
 
-from sahi.utils.import_utils import _torchvision_available, _torchvision_version, is_available
+from sahi.utils.import_utils import get_package_info
 
 
 class TorchVisionTestConstants:
     FASTERRCNN_CONFIG_PATH = "tests/data/models/torchvision/fasterrcnn_resnet50_fpn.yaml"
     SSD300_CONFIG_PATH = "tests/data/models/torchvision/ssd300_vgg16.yaml"
 
+
+_torchvision_available, _torchvision_version = get_package_info("torchvision", verbose=False)
 
 if _torchvision_available:
     import torchvision
