@@ -1071,7 +1071,7 @@ class TensorflowHubDetectionModel(DetectionModel):
     def load_model(self):
         import tensorflow_hub as hub
 
-        if "tfhub.dev/tensorflow" in self.model_path and "object_detection" in self.model_path:
+        if "tfhub.dev/tensorflow" in self.model_path:
             self.model = hub.load(self.model_path)
         else:
             raise ValueError(
