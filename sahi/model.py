@@ -1069,10 +1069,12 @@ class TorchVisionDetectionModel(DetectionModel):
 @check_requirements(["tensorflow", "tensorflow_hub"])
 class TensorflowhubDetectionModel(DetectionModel):
     def load_model(self):
+        import tensorflow as tf
         import tensorflow_hub as hub
 
         if "tfhub.dev/tensorflow" in self.model_path:
-            self.model = hub.load(self.model_path)
+            with tf.device(self.device):
+                self.model = hub.load(self.model_path)
         else:
             raise ValueError(
                 "Check 'https://tfhub.dev/tensorflow/collections/object_detection/' for supported TF Hub models."
@@ -1119,6 +1121,8 @@ class TensorflowhubDetectionModel(DetectionModel):
         shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
         full_shape_list: Optional[List[List[int]]] = None,
     ):
+        import tensorflow as tf
+
         original_predictions = self._original_predictions
 
         # compatilibty for sahi v0.8.20
@@ -1137,31 +1141,31 @@ class TensorflowhubDetectionModel(DetectionModel):
         # create object_prediction_list
         object_prediction_list = []
         object_prediction_list_per_image = []
+        with tf.device(self.device):
+            for i in range(min(boxes.shape[0], 100)):
+                if scores[i] >= self.confidence_threshold:
+                    score = float(scores[i])
+                    category_id = int(category_ids[i])
+                    # Tfhub categories start from 1
+                    category_names = self.category_mapping[str(category_id - 1)]
+                    box = [float(box) for box in boxes[i]]
+                    x1, y1, x2, y2 = (
+                        int(box[1] * self.image_width),
+                        int(box[0] * self.image_height),
+                        int(box[3] * self.image_width),
+                        int(box[2] * self.image_height),
+                    )
+                    bbox = [x1, y1, x2, y2]
 
-        for i in range(min(boxes.shape[0], 100)):
-            if scores[i] >= self.confidence_threshold:
-                score = float(scores[i])
-                category_id = int(category_ids[i])
-                # Tfhub categories start from 1
-                category_names = self.category_mapping[str(category_id - 1)]
-                box = [float(box) for box in boxes[i]]
-                x1, y1, x2, y2 = (
-                    int(box[1] * self.image_width),
-                    int(box[0] * self.image_height),
-                    int(box[3] * self.image_width),
-                    int(box[2] * self.image_height),
-                )
-                bbox = [x1, y1, x2, y2]
-
-                object_prediction = ObjectPrediction(
-                    bbox=bbox,
-                    bool_mask=None,
-                    category_id=category_id,
-                    category_name=category_names,
-                    shift_amount=shift_amount,
-                    score=score,
-                    full_shape=full_shape,
-                )
-                object_prediction_list.append(object_prediction)
-        object_prediction_list_per_image.append(object_prediction_list)
-        self._object_prediction_list_per_image = object_prediction_list_per_image
+                    object_prediction = ObjectPrediction(
+                        bbox=bbox,
+                        bool_mask=None,
+                        category_id=category_id,
+                        category_name=category_names,
+                        shift_amount=shift_amount,
+                        score=score,
+                        full_shape=full_shape,
+                    )
+                    object_prediction_list.append(object_prediction)
+            object_prediction_list_per_image.append(object_prediction_list)
+            self._object_prediction_list_per_image = object_prediction_list_per_image
