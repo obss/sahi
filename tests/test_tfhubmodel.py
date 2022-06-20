@@ -15,7 +15,7 @@ EFFICIENTDET_URL = "https://tfhub.dev/tensorflow/efficientdet/d0/1"
 # Tensorflow is not available for python<3.7
 if sys.version_info >= (3, 7):
 
-    class TestTensorflowHubDetectionModel(unittest.TestCase):
+    class TestTensorflowhubDetectionModel(unittest.TestCase):
         def test_load_model(self):
 
             tensorflow_hub_model = TensorflowHubDetectionModel(
