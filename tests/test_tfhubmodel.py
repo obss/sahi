@@ -4,7 +4,7 @@
 import sys
 import unittest
 
-from sahi.model import TensorflowHubDetectionModel
+from sahi.model import TensorflowhubDetectionModel
 from sahi.utils.cv import read_image
 
 MODEL_DEVICE = "cpu"
@@ -18,7 +18,7 @@ if sys.version_info >= (3, 7):
     class TestTensorflowhubDetectionModel(unittest.TestCase):
         def test_load_model(self):
 
-            tensorflow_hub_model = TensorflowHubDetectionModel(
+            tensorflow_hub_model = TensorflowhubDetectionModel(
                 model_path=EFFICIENTDET_URL,
                 confidence_threshold=CONFIDENCE_THRESHOLD,
                 device=MODEL_DEVICE,
@@ -29,7 +29,7 @@ if sys.version_info >= (3, 7):
 
         def test_perform_inference(self):
 
-            tensorflow_hub_model = TensorflowHubDetectionModel(
+            tensorflow_hub_model = TensorflowhubDetectionModel(
                 model_path=EFFICIENTDET_URL,
                 confidence_threshold=CONFIDENCE_THRESHOLD,
                 device=MODEL_DEVICE,
@@ -63,7 +63,7 @@ if sys.version_info >= (3, 7):
 
         def test_convert_original_predictions(self):
 
-            tensorflow_hub_model = TensorflowHubDetectionModel(
+            tensorflow_hub_model = TensorflowhubDetectionModel(
                 model_path=EFFICIENTDET_URL,
                 confidence_threshold=CONFIDENCE_THRESHOLD,
                 device=MODEL_DEVICE,
