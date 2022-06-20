@@ -7,7 +7,6 @@ import time
 from typing import List, Optional
 
 import numpy as np
-from PIL import Image
 from tqdm import tqdm
 
 from sahi.auto_model import AutoDetectionModel

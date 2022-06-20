@@ -1067,7 +1067,7 @@ class TorchVisionDetectionModel(DetectionModel):
 
 
 @check_requirements(["tensorflow", "tensorflow_hub"])
-class TensorflowHubDetectionModel(DetectionModel):
+class TensorflowhubDetectionModel(DetectionModel):
     def load_model(self):
         import tensorflow_hub as hub
 

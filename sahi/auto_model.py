@@ -4,6 +4,7 @@ from sahi.model import (
     Detectron2DetectionModel,
     HuggingfaceDetectionModel,
     MmdetDetectionModel,
+    TensorflowhubDetectionModel,
     TorchVisionDetectionModel,
     Yolov5DetectionModel,
 )
@@ -15,6 +16,7 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "detectron2": Detectron2DetectionModel,
     "huggingface": HuggingfaceDetectionModel,
     "torchvision": TorchVisionDetectionModel,
+    "tensorflow": TensorflowhubDetectionModel,
 }
 
 
