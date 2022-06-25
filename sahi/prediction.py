@@ -164,8 +164,9 @@ class PredictionResult:
         self.object_prediction_list: List[ObjectPrediction] = object_prediction_list
         self.durations_in_seconds = durations_in_seconds
 
-    def export_visuals(self, export_dir: str, text_size: float = None, rect_th: int = None,
-                       file_name: str = "prediction_visual"):
+    def export_visuals(
+        self, export_dir: str, text_size: float = None, rect_th: int = None, file_name: str = "prediction_visual"
+    ):
         """
 
         Args:
