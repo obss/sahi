@@ -14,7 +14,7 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
 
 class AutoDetectionModel:
     @staticmethod
-    def from_local(
+    def from_pretrained(
         model_type: str,
         model_path: str,
         config_path: Optional[str] = None,
@@ -28,7 +28,7 @@ class AutoDetectionModel:
         **kwargs,
     ):
         """
-        Loads a DetectionModel from local path.
+        Loads a DetectionModel from given path.
 
         Args:
             model_type: str
