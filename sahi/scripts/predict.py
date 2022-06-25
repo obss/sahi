@@ -463,7 +463,7 @@ def predict(
     # init model instance
     time_start = time.time()
     if detection_model is None:
-        detection_model = AutoDetectionModel.from_local(
+        detection_model = AutoDetectionModel.from_pretrained(
             model_type=model_type,
             model_path=model_path,
             config_path=model_config_path,
@@ -756,7 +756,7 @@ def predict_fiftyone(
 
     # init model instance
     time_start = time.time()
-    detection_model = AutoDetectionModel.from_local(
+    detection_model = AutoDetectionModel.from_pretrained(
         model_type=model_type,
         model_path=model_path,
         config_path=model_config_path,
