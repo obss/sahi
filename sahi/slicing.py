@@ -235,7 +235,7 @@ def slice_image(
     coco_annotation_list: Optional[CocoAnnotation] = None,
     output_file_name: Optional[str] = None,
     output_dir: Optional[str] = None,
-    slice_height: int = 512,
+    slice_height: int = None,
     slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
