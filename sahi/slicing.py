@@ -63,7 +63,7 @@ def get_slice_bboxes(
     y_max = y_min = 0
 
     if None in (slice_width, slice_height, overlap_height_ratio, overlap_width_ratio):
-        x_overlap, y_overlap, slice_width, slice_height = select_resolution(height=image_width, width=image_height)
+        x_overlap, y_overlap, slice_width, slice_height = calc_slice_params(height=image_height, width=image_width)
     else:
         y_overlap = int(overlap_height_ratio * slice_height)
         x_overlap = int(overlap_width_ratio * slice_width)
@@ -646,7 +646,7 @@ def resolution_selector(res: str, height: int, width: int):
     return resolution_select.get(res)
 
 
-def select_resolution(height: int, width: int):
+def calc_slice_params(height: int, width: int):
     """
     According to Image HxW calculate overlap sliding window and buffer params
     factor is the power value of 2 closest to the image resolution.
