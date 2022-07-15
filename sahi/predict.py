@@ -273,7 +273,7 @@ def get_sliced_prediction(
             durations_in_seconds["prediction"],
             "seconds.",
         )
-        
+
     return PredictionResult(
         image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
     )
