@@ -1,26 +1,20 @@
 from typing import Dict, Optional
 
-from sahi.model import (
-    Detectron2DetectionModel,
-    HuggingfaceDetectionModel,
-    MmdetDetectionModel,
-    TorchVisionDetectionModel,
-    Yolov5DetectionModel,
-)
+from sahi.utils.file import import_model_class
 from sahi.utils.import_utils import check_requirements
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
-    "mmdet": MmdetDetectionModel,
-    "yolov5": Yolov5DetectionModel,
-    "detectron2": Detectron2DetectionModel,
-    "huggingface": HuggingfaceDetectionModel,
-    "torchvision": TorchVisionDetectionModel,
+    "mmdet": "MmdetDetectionModel",
+    "yolov5": "Yolov5DetectionModel",
+    "detectron2": "Detectron2DetectionModel",
+    "huggingface": "HuggingfaceDetectionModel",
+    "torchvision": "TorchVisionDetectionModel",
 }
 
 
 class AutoDetectionModel:
     @staticmethod
-    def from_local(
+    def from_pretrained(
         model_type: str,
         model_path: str,
         config_path: Optional[str] = None,
@@ -34,7 +28,7 @@ class AutoDetectionModel:
         **kwargs,
     ):
         """
-        Loads a DetectionModel from local path.
+        Loads a DetectionModel from given path.
 
         Args:
             model_type: str
@@ -63,7 +57,8 @@ class AutoDetectionModel:
             ImportError: If given {model_type} framework is not installed
         """
 
-        DetectionModel = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
+        model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
+        DetectionModel = import_model_class(model_class_name)
 
         return DetectionModel(
             model_path=model_path,
@@ -125,7 +120,9 @@ class AutoDetectionModel:
         else:
             raise Exception(f"Unsupported model: {type(layer_model)}. Only YOLOv5 models are supported.")
 
-        DetectionModel = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
+        model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
+        DetectionModel = import_model_class(model_class_name)
+
         return DetectionModel(
             model=layer_model,
             device=device,

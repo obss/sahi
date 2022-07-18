@@ -193,7 +193,7 @@ if sys.version_info >= (3, 7):
             from sahi.predict import get_prediction
             from sahi.utils.huggingface import HuggingfaceTestConstants
 
-            huggingface_detection_model = AutoDetectionModel.from_local(
+            huggingface_detection_model = AutoDetectionModel.from_pretrained(
                 model_type="huggingface",
                 model_path=HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH,
                 confidence_threshold=CONFIDENCE_THRESHOLD,
