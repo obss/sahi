@@ -18,6 +18,7 @@ def resize(array, size):
 
 
 COCO_CLASSES = (
+    "background",
     "person",
     "bicycle",
     "car",
