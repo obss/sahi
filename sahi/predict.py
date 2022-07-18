@@ -254,6 +254,13 @@ def get_sliced_prediction(
         )
         object_prediction_list.extend(prediction_result.object_prediction_list)
 
+    # merge matching predictions
+    if len(object_prediction_list) > 1:
+        object_prediction_list = postprocess(object_prediction_list)
+
+    time_end = time.time() - time_start
+    durations_in_seconds["prediction"] = time_end
+
     if verbose == 2:
         print(
             "Slicing performed in",
@@ -265,13 +272,6 @@ def get_sliced_prediction(
             durations_in_seconds["prediction"],
             "seconds.",
         )
-
-    # merge matching predictions
-    if len(object_prediction_list) > 1:
-        object_prediction_list = postprocess(object_prediction_list)
-
-    time_end = time.time() - time_start
-    durations_in_seconds["prediction"] = time_end
 
     return PredictionResult(
         image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
@@ -448,7 +448,7 @@ def predict(
     # init model instance
     time_start = time.time()
     if detection_model is None:
-        detection_model = AutoDetectionModel.from_local(
+        detection_model = AutoDetectionModel.from_pretrained(
             model_type=model_type,
             model_path=model_path,
             config_path=model_config_path,
@@ -519,7 +519,10 @@ def predict(
 
         durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
         # Show prediction time
-        tqdm.write("Prediction time is: {:.2f} ms".format(prediction_result.durations_in_seconds["prediction"] * 1000))
+        if verbose:
+            tqdm.write(
+                "Prediction time is: {:.2f} ms".format(prediction_result.durations_in_seconds["prediction"] * 1000)
+            )
 
         if dataset_json_path:
             if source_is_video is True:
@@ -741,7 +744,7 @@ def predict_fiftyone(
 
     # init model instance
     time_start = time.time()
-    detection_model = AutoDetectionModel.from_local(
+    detection_model = AutoDetectionModel.from_pretrained(
         model_type=model_type,
         model_path=model_path,
         config_path=model_config_path,
