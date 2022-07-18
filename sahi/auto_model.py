@@ -30,6 +30,7 @@ class AutoDetectionModel:
     ):
         """
         Loads a DetectionModel from given path.
+
         Args:
             model_type: str
                 Name of the detection framework (example: "yolov5", "mmdet", "detectron2")
