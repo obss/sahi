@@ -1146,8 +1146,7 @@ class TensorflowhubDetectionModel(DetectionModel):
                 if scores[i] >= self.confidence_threshold:
                     score = float(scores[i])
                     category_id = int(category_ids[i])
-                    # Tfhub categories start from 1
-                    category_names = self.category_mapping[str(category_id - 1)]
+                    category_names = self.category_mapping[str(category_id)]
                     box = [float(box) for box in boxes[i]]
                     x1, y1, x2, y2 = (
                         int(box[1] * self.image_width),
