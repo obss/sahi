@@ -540,42 +540,31 @@ def calc_slice_and_overlap_params(resolution: str, height: int, width: int, orie
         x_overlap, y_overlap, slice_width, slice_height
     """
 
-    if resolution == "low":
-        slice_height = height // 1
-        slice_width = width // 1
-
-        x_overlap = slice_width * 1
-        y_overlap = slice_height * 1
-    elif resolution == "medium":
+    if resolution == "medium":
         split_row, split_col, overlap_height_ratio, overlap_width_ratio = calc_ratio_and_slice(
             orientation, slide=1, ratio=0.8
         )
 
-        slice_height = height // split_col  # noqa
-        slice_width = width // split_row  # noqa
-
-        x_overlap = int(slice_width * overlap_width_ratio)  # noqa
-        y_overlap = int(slice_height * overlap_height_ratio)  # noqa
     elif resolution == "high":
         split_row, split_col, overlap_height_ratio, overlap_width_ratio = calc_ratio_and_slice(
             orientation, slide=2, ratio=0.4
         )
 
-        slice_height = height // split_col  # noqa
-        slice_width = width // split_row  # noqa
-
-        x_overlap = int(slice_width * overlap_width_ratio)  # noqa
-        y_overlap = int(slice_height * overlap_height_ratio)  # noqa
     elif resolution == "ultra-high":
         split_row, split_col, overlap_height_ratio, overlap_width_ratio = calc_ratio_and_slice(
             orientation, slide=4, ratio=0.4
         )
+    else:  # low condition
+        split_col = 1
+        split_row = 1
+        overlap_width_ratio = 1
+        overlap_height_ratio = 1
 
-        slice_height = height // split_col  # noqa
-        slice_width = width // split_row  # noqa
+    slice_height = height // split_col
+    slice_width = width // split_row
 
-        x_overlap = int(slice_width * overlap_width_ratio)  # noqa
-        y_overlap = int(slice_height * overlap_height_ratio)  # noqa
+    x_overlap = int(slice_width * overlap_width_ratio)
+    y_overlap = int(slice_height * overlap_height_ratio)
 
     return x_overlap, y_overlap, slice_width, slice_height  # noqa
 
