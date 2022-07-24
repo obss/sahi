@@ -4,6 +4,7 @@
 import logging
 import os
 import time
+import torch
 from typing import List, Optional
 
 import numpy as np
