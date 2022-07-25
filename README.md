@@ -49,13 +49,13 @@ Object detection and instance segmentation are by far the most important fields 
 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
 
-- [Official paper](https://arxiv.org/abs/2202.06934) (NEW)
+- [Official paper](https://arxiv.org/abs/2202.06934) (ICIP22 oral, 5+ citations)
 
 - [Video inference support is live](https://github.com/obss/sahi/issues/457) (NEW)
 
-- [Kaggle notebook](https://www.kaggle.com/remekkinas/sahi-slicing-aided-hyper-inference-yv5-and-yx) (NEW)
+- [Kaggle notebook](https://www.kaggle.com/remekkinas/sahi-slicing-aided-hyper-inference-yv5-and-yx)
 
-- [Satellite object detection](https://blog.ml6.eu/how-to-detect-small-objects-in-very-large-images-70234bab0f98) (NEW)
+- [Satellite object detection](https://blog.ml6.eu/how-to-detect-small-objects-in-very-large-images-70234bab0f98)
 
 - [Error analysis plots & evaluation](https://github.com/obss/sahi/issues/356) (NEW)
 
@@ -233,12 +233,18 @@ isort .
 <a align="left" href="https://github.com/madenburak" target="_blank">Burak Maden</a>
   
 <a align="left" href="https://github.com/PushpakBhoge" target="_blank">Pushpak Bhoge</a>
+
+<a align="left" href="https://github.com/mcvarer" target="_blank">M. Can V.</a>
   
 <a align="left" href="https://github.com/mecevit" target="_blank">Mehmet Ecevit</a>
 
 <a align="left" href="https://github.com/ssahinnkadir" target="_blank">Kadir Sahin</a>
   
 <a align="left" href="https://github.com/weypro" target="_blank">Wey</a>
+
+<a align="left" href="https://github.com/youngjae-avikus" target="_blank">Youngjae</a>
+
+<a align="left" href="https://github.com/tureckova" target="_blank">Alzbeta Tureckova</a>
 
 <a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
 
