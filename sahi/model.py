@@ -837,6 +837,7 @@ class HuggingfaceDetectionModel(DetectionModel):
                         to_type="voc",
                         image_size=(image_width, image_height),
                         return_values=True,
+                        strict=False
                     )
                 )
 
