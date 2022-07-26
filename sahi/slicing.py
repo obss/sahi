@@ -41,7 +41,6 @@ def get_slice_bboxes(
     `slice_width`, `overlap_height_ratio` and `overlap_width_ratio` arguments.
 
     Args:
-        auto_slice_resolution:
         image_height (int): Height of the original image.
         image_width (int): Width of the original image.
         slice_height (int): Height of each slice. Default 512.
@@ -52,6 +51,8 @@ def get_slice_bboxes(
         overlap_width_ratio(float): Fractional overlap in width of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
+        auto_slice_resolution (bool): if not set slice parameters such as slice_height and slice_width,
+            it enables automatically calculate these params from image resolution and orientation.
 
     Returns:
         List[List[int]]: List of 4 corner coordinates for each N slices.
@@ -63,6 +64,11 @@ def get_slice_bboxes(
     """
     slice_bboxes = []
     y_max = y_min = 0
+    logger.warning(
+        "Starting from version `0.10.2`, `auto_slice_resolution=True` is introduced as "
+        "the default behavior for determining slice height and width automatically "
+        "calculated by the image properties (resolution, aspect ratio and orientation."
+    )
 
     if slice_height and slice_width:
         y_overlap = int(overlap_height_ratio * slice_height)
@@ -70,7 +76,7 @@ def get_slice_bboxes(
     elif auto_slice_resolution:
         x_overlap, y_overlap, slice_width, slice_height = get_auto_slice_params(height=image_height, width=image_width)
     else:
-        raise ValueError("Compute type is not auto and no values are provided.")  # Mine is just a placeholder message
+        raise ValueError("Compute type is not auto and slice width and height are not provided.")
 
     while y_max < image_height:
         x_min = x_max = 0
@@ -240,9 +246,10 @@ def slice_image(
     output_file_name: Optional[str] = None,
     output_dir: Optional[str] = None,
     slice_height: int = None,
-    slice_width: int = 512,
-    overlap_height_ratio: float = 0.2,
-    overlap_width_ratio: float = 0.2,
+    slice_width: int = None,
+    overlap_height_ratio: float = None,
+    overlap_width_ratio: float = None,
+    auto_slice_resolution: bool = True,
     min_area_ratio: float = 0.1,
     out_ext: Optional[str] = None,
     verbose: bool = False,
@@ -251,6 +258,7 @@ def slice_image(
     sliced images.
 
     Args:
+        auto_slice_resolution:
         image (str or PIL.Image): File path of image or Pillow Image to be sliced.
         coco_annotation_list (CocoAnnotation): List of CocoAnnotation objects.
         output_file_name (str, optional): Root name of output files (coordinates will
@@ -306,6 +314,7 @@ def slice_image(
     slice_bboxes = get_slice_bboxes(
         image_height=image_height,
         image_width=image_width,
+        auto_slice_resolution=auto_slice_resolution,
         slice_height=slice_height,
         slice_width=slice_width,
         overlap_height_ratio=overlap_height_ratio,
