@@ -67,7 +67,7 @@ def get_slice_bboxes(
     logger.warning(
         "Starting from version `0.10.2`, `auto_slice_resolution=True` is introduced as "
         "the default behavior for determining slice height and width automatically "
-        "calculated by the image properties (resolution, aspect ratio and orientation."
+        "calculated by the image properties (resolution, aspect ratio and orientation)."
     )
 
     if slice_height and slice_width:

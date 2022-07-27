@@ -173,7 +173,7 @@ def get_sliced_prediction(
             It may affect the AP if it is specified. The higher the amount, the closer results to the non-buffered.
             scenario. See [the discussion](https://github.com/obss/sahi/pull/445).
         auto_slice_resolution: bool
-            if not set slice parameters (slice_height, slice_width),
+            if slice parameters (slice_height, slice_width) are not given,
             it enables automatically calculate these params from image resolution and orientation.
 
     Returns:
