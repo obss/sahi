@@ -32,7 +32,11 @@ from sahi.utils.cv import (
     visualize_object_predictions,
 )
 from sahi.utils.file import Path, increment_path, list_files, save_json, save_pickle
-from sahi.utils.import_utils import check_requirements
+from sahi.utils.import_utils import check_requirements, is_available
+
+# https://github.com/obss/sahi/issues/526
+if is_available("torch"):
+    import torch
 
 POSTPROCESS_NAME_TO_CLASS = {
     "GREEDYNMM": GreedyNMMPostprocess,
