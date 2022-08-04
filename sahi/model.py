@@ -4,8 +4,8 @@
 import logging
 import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
-import cv2
 
+import cv2
 import numpy as np
 import pybboxes.functional as pbf
 
@@ -1068,16 +1068,17 @@ class TorchVisionDetectionModel(DetectionModel):
 
         self._object_prediction_list_per_image = object_prediction_list_per_image
 
+
 @check_requirements(["torch"])
 class Yolov7DetectionModel(DetectionModel):
     def load_model(self):
         import torch
-        
-        try:   
-            self.model = torch.hub.load('WongKinYiu/yolov7', 'custom', self.model_path) 
+
+        try:
+            self.model = torch.hub.load("WongKinYiu/yolov7", "custom", self.model_path)
         except Exception as e:
             raise TypeError("model_path is not a valid yolov5 model path: ", e)
-        
+
     def perform_inference(self, image: np.ndarray):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
@@ -1085,8 +1086,16 @@ class Yolov7DetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-        self.prediction = self.model(image, self.image_size)
-    
+        # Confirm model is loaded
+        if self.model is None:
+            raise ValueError("Model is not loaded, load it by calling .load_model()")
+        if self.image_size is not None:
+            prediction_result = self.model(image, size=self.image_size)
+        else:
+            prediction_result = self.model(image)
+
+        self._original_predictions = prediction_result
+
     def _create_object_prediction_list_from_original_predictions(
         self,
         shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
@@ -1100,10 +1109,10 @@ class Yolov7DetectionModel(DetectionModel):
 
         shift_amount = shift_amount_list[0]
         full_shape = None if full_shape_list is None else full_shape_list[0]
-        
+
         object_prediction_list_per_image = []
         object_prediction_list = []
-        for _, image_predictions_in_xyxy_format in enumerate(self.prediction.xyxy):
+        for _, image_predictions_in_xyxy_format in enumerate(self._original_predictions.xyxy):
             for pred in image_predictions_in_xyxy_format.cpu().detach().numpy():
                 x1, y1, x2, y2 = (
                     int(pred[0]),
@@ -1127,4 +1136,4 @@ class Yolov7DetectionModel(DetectionModel):
                 object_prediction_list.append(object_prediction)
             object_prediction_list_per_image.append(object_prediction_list)
 
-        self._object_prediction_list_per_image = object_prediction_list_per_image        
+        self._object_prediction_list_per_image = object_prediction_list_per_image

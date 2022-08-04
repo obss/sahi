@@ -26,23 +26,6 @@ class TestYolov7DetectionModel(unittest.TestCase):
 
         self.assertNotEqual(yolov7_detection_model.model, None)
 
-    def test_set_model(self):
-        import torch
-
-        from sahi.model import Yolov7DetectionModel
-
-        download_yolov7_model()
-        yolov7_model = torch.hub.load('WongKinYiu/yolov7', 'custom', Yolov7TestConstants.YOLOV7_MODEL_PATH) 
-
-        yolov7_detection_model = Yolov7DetectionModel(
-            model=yolov7_model,
-            confidence_threshold=CONFIDENCE_THRESHOLD,
-            device=MODEL_DEVICE,
-            load_at_init=True,
-        )
-
-        self.assertNotEqual(yolov7_detection_model.model, None)
-
     def test_perform_inference(self):
         from sahi.model import Yolov7DetectionModel
 
@@ -64,24 +47,18 @@ class TestYolov7DetectionModel(unittest.TestCase):
         # perform inference
         yolov7_detection_model.perform_inference(image)
         original_predictions = yolov7_detection_model.original_predictions
+        for _, image_predictions_in_xyxy_format in enumerate(original_predictions.xyxy):
+            for pred in image_predictions_in_xyxy_format.cpu().detach().numpy():
+                x1, y1, x2, y2 = (
+                    int(pred[0]),
+                    int(pred[1]),
+                    int(pred[2]),
+                    int(pred[3]),
+                )
 
-        boxes = original_predictions.xyxy
-
-        # find box of first car detection with conf greater than 0.5
-        for box in boxes[0]:
-            if box[5].item() == 2:  # if category car
-                if box[4].item() > 0.5:
-                    break
-
-        # compare
-        desired_bbox = [321, 329, 378, 368]
-        predicted_bbox = list(map(int, box[:4].tolist()))
-        margin = 2
-        for ind, point in enumerate(predicted_bbox):
-            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
-        self.assertEqual(len(original_predictions.names), 80)
-        for box in boxes[0]:
-            self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
+        desidred_bbox = [521, 228, 543, 243]
+        predicted_bbox = [x1, y1, x2, y2]
+        self.assertEqual(desidred_bbox, predicted_bbox)
 
     def test_convert_original_predictions(self):
         from sahi.model import Yolov7DetectionModel
@@ -109,23 +86,12 @@ class TestYolov7DetectionModel(unittest.TestCase):
         object_prediction_list = yolov7_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 3)
+        self.assertEqual(len(object_prediction_list), 12)
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        desired_bbox = [321, 329, 57, 39]
+        desidred_bbox = [322, 323, 61, 41]
         predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
-        margin = 2
-        for ind, point in enumerate(predicted_bbox):
-            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
-        self.assertEqual(object_prediction_list[2].category.id, 2)
-        self.assertEqual(object_prediction_list[2].category.name, "car")
-        desired_bbox = [381, 275, 42, 28]
-        predicted_bbox = object_prediction_list[2].bbox.to_coco_bbox()
-        for ind, point in enumerate(predicted_bbox):
-            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
-
-        for object_prediction in object_prediction_list:
-            self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
+        self.assertEqual(desidred_bbox, predicted_bbox)
 
 
 if __name__ == "__main__":
