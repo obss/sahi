@@ -6,8 +6,13 @@ import os
 import time
 from typing import List, Optional
 
+from sahi.utils.import_utils import is_available
+
+# https://github.com/obss/sahi/issues/526
+if is_available("torch"):
+    import torch
+
 import numpy as np
-from PIL import Image
 from tqdm import tqdm
 
 from sahi.auto_model import AutoDetectionModel
@@ -32,11 +37,7 @@ from sahi.utils.cv import (
     visualize_object_predictions,
 )
 from sahi.utils.file import Path, increment_path, list_files, save_json, save_pickle
-from sahi.utils.import_utils import check_requirements, is_available
-
-# https://github.com/obss/sahi/issues/526
-if is_available("torch"):
-    import torch
+from sahi.utils.import_utils import check_requirements
 
 POSTPROCESS_NAME_TO_CLASS = {
     "GREEDYNMM": GreedyNMMPostprocess,
