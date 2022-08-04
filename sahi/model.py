@@ -1075,9 +1075,10 @@ class Yolov7DetectionModel(DetectionModel):
         import torch
 
         try:
-            self.model = torch.hub.load("WongKinYiu/yolov7", "custom", self.model_path)
+            model = torch.hub.load("WongKinYiu/yolov7", "custom", self.model_path)
+            self.model = model.to(self.device)
         except Exception as e:
-            raise TypeError("model_path is not a valid yolov5 model path: ", e)
+            raise TypeError("model_path is not a valid yolov7 model path: ", e)
 
     def perform_inference(self, image: np.ndarray):
         """
