@@ -1084,8 +1084,7 @@ class TensorflowhubDetectionModel(DetectionModel):
             from sahi.utils.tensorflow import COCO_CLASSES
 
             category_mapping = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
-
-        self.category_mapping = category_mapping
+            self.category_mapping = category_mapping
 
     def perform_inference(self, image: np.ndarray):
         from sahi.utils.tensorflow import resize, to_float_tensor
