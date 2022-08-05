@@ -1080,6 +1080,13 @@ class TensorflowhubDetectionModel(DetectionModel):
                 "Check 'https://tfhub.dev/tensorflow/collections/object_detection/' for supported TF Hub models."
             )
 
+        if self.category_mapping is None:
+            from sahi.utils.tensorflow import COCO_CLASSES
+
+            category_mapping = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
+
+        self.category_mapping = category_mapping
+
     def perform_inference(self, image: np.ndarray):
         from sahi.utils.tensorflow import resize, to_float_tensor
 
@@ -1095,12 +1102,6 @@ class TensorflowhubDetectionModel(DetectionModel):
         self._original_predictions = prediction_result
         # TODO: add support for multiple image prediction
         self.image_height, self.image_width = image.shape[0], image.shape[1]
-
-        if self.category_mapping is None:
-            from sahi.utils.tensorflow import COCO_CLASSES
-
-            category_mapping = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
-            self.category_mapping = category_mapping
 
     @property
     def num_categories(self):
