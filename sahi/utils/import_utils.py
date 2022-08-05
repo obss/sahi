@@ -57,7 +57,6 @@ def is_available(module_name: str):
     return importlib.util.find_spec(module_name) is not None
 
 
-@contextlib.contextmanager
 def check_requirements(package_names):
     """
     Raise error if module is not installed.

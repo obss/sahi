@@ -11,11 +11,12 @@ if is_available("norfair"):
     from norfair.metrics import PredictionsTextFile
 
 
-@check_requirements(["norfair"])
 class MotTextFile(PredictionsTextFile):
     from norfair.tracker import TrackedObject
 
     def __init__(self, save_dir: str = ".", save_name: str = "gt"):
+
+        check_requirements(["norfair"])
 
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -79,11 +80,12 @@ class MotAnnotation:
         self.score = score
 
 
-@check_requirements(["norfair"])
 class MotFrame:
     def __init__(self, file_name: Optional[str] = None):
         self.annotation_list: List[MotAnnotation] = []
         self.file_name = file_name
+
+        check_requirements(["norfair"])
 
     def add_annotation(self, detection: MotAnnotation):
         if not isinstance(detection, MotAnnotation):
@@ -183,7 +185,6 @@ class MotFrame:
         return tracked_object_list
 
 
-@check_requirements(["norfair"])
 class MotVideo:
     def __init__(
         self,
@@ -207,6 +208,7 @@ class MotVideo:
                 - point_transience (int)
                 For details: https://github.com/tryolabs/norfair/tree/master/docs#arguments
         """
+        check_requirements(["norfair"])
 
         self.name = name
         self.frame_rate = frame_rate

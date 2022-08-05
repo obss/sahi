@@ -2,20 +2,16 @@
 # Code written by Fatih C Akyon, 2020.
 
 
-from sahi.utils.import_utils import check_requirements, is_available
+from sahi.utils.import_utils import is_available
 
 
-@check_requirements(["torch"])
 def empty_cuda_cache():
     if is_torch_cuda_available():
         import torch
 
         return torch.cuda.empty_cache()
-    else:
-        raise RuntimeError("CUDA not available.")
 
 
-@check_requirements(["torch"])
 def to_float_tensor(img):
     """
     Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range
@@ -25,6 +21,7 @@ def to_float_tensor(img):
     Returns:
         torch.tensor
     """
+
     import torch
 
     img = img.transpose((2, 0, 1))
@@ -35,7 +32,6 @@ def to_float_tensor(img):
     return img
 
 
-@check_requirements(["torch"])
 def torch_to_numpy(img):
     import torch
 
@@ -45,7 +41,6 @@ def torch_to_numpy(img):
     return img.transpose((1, 2, 0))
 
 
-@check_requirements(["torch"])
 def is_torch_cuda_available():
     if is_available("torch"):
         import torch
