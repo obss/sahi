@@ -55,7 +55,7 @@ jobs:
         run: |
           pip install -e .[dev]
           # stop the build if there are Python syntax errors or undefined names
-          python scripts/run_code_style check
+          python scripts/run_code_style.py check
 
       - name: Install core dependencies
         run: >
