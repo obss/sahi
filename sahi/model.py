@@ -2,10 +2,8 @@
 # Code written by Fatih C Akyon, 2020.
 
 import logging
-import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import cv2
 import numpy as np
 import pybboxes.functional as pbf
 
@@ -1076,7 +1074,8 @@ class Yolov7DetectionModel(DetectionModel):
 
         try:
             model = torch.hub.load("WongKinYiu/yolov7", "custom", self.model_path)
-            self.model = model.to(self.device)
+            model.conf = self.confidence_threshold
+            self.model = model
         except Exception as e:
             raise TypeError("model_path is not a valid yolov7 model path: ", e)
 
