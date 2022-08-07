@@ -661,7 +661,6 @@ def predict(
         return {"export_dir": save_dir}
 
 
-@check_requirements(["fiftyone"])
 def predict_fiftyone(
     model_type: str = "mmdet",
     model_path: str = None,
@@ -743,6 +742,8 @@ def predict_fiftyone(
             0: no print
             1: print slice/prediction durations, number of slices, model loading/file exporting durations
     """
+    check_requirements(["fiftyone"])
+
     from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file, fo
 
     # assert prediction type
