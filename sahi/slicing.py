@@ -30,8 +30,9 @@ MAX_WORKERS = 20
 def get_slice_bboxes(
     image_height: int,
     image_width: int,
-    slice_height: int = 512,
-    slice_width: int = 512,
+    slice_height: int = None,
+    slice_width: int = None,
+    auto_slice_resolution: bool = True,
     overlap_height_ratio: int = 0.2,
     overlap_width_ratio: int = 0.2,
 ) -> List[List[int]]:
@@ -50,6 +51,8 @@ def get_slice_bboxes(
         overlap_width_ratio(float): Fractional overlap in width of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
+        auto_slice_resolution (bool): if not set slice parameters such as slice_height and slice_width,
+            it enables automatically calculate these params from image resolution and orientation.
 
     Returns:
         List[List[int]]: List of 4 corner coordinates for each N slices.
@@ -61,8 +64,20 @@ def get_slice_bboxes(
     """
     slice_bboxes = []
     y_max = y_min = 0
-    y_overlap = int(overlap_height_ratio * slice_height)
-    x_overlap = int(overlap_width_ratio * slice_width)
+    logger.warning(
+        "Starting from version `0.10.2`, `auto_slice_resolution=True` is introduced as "
+        "the default behavior for determining slice height and width automatically "
+        "calculated by the image properties (resolution, aspect ratio and orientation)."
+    )
+
+    if slice_height and slice_width:
+        y_overlap = int(overlap_height_ratio * slice_height)
+        x_overlap = int(overlap_width_ratio * slice_width)
+    elif auto_slice_resolution:
+        x_overlap, y_overlap, slice_width, slice_height = get_auto_slice_params(height=image_height, width=image_width)
+    else:
+        raise ValueError("Compute type is not auto and slice width and height are not provided.")
+
     while y_max < image_height:
         x_min = x_max = 0
         y_max = y_min + slice_height
@@ -230,19 +245,20 @@ def slice_image(
     coco_annotation_list: Optional[CocoAnnotation] = None,
     output_file_name: Optional[str] = None,
     output_dir: Optional[str] = None,
-    slice_height: int = 512,
-    slice_width: int = 512,
-    overlap_height_ratio: float = 0.2,
-    overlap_width_ratio: float = 0.2,
+    slice_height: int = None,
+    slice_width: int = None,
+    overlap_height_ratio: float = None,
+    overlap_width_ratio: float = None,
+    auto_slice_resolution: bool = True,
     min_area_ratio: float = 0.1,
     out_ext: Optional[str] = None,
     verbose: bool = False,
 ) -> SliceImageResult:
-
     """Slice a large image into smaller windows. If output_file_name is given export
     sliced images.
 
     Args:
+        auto_slice_resolution:
         image (str or PIL.Image): File path of image or Pillow Image to be sliced.
         coco_annotation_list (CocoAnnotation): List of CocoAnnotation objects.
         output_file_name (str, optional): Root name of output files (coordinates will
@@ -298,6 +314,7 @@ def slice_image(
     slice_bboxes = get_slice_bboxes(
         image_height=image_height,
         image_width=image_width,
+        auto_slice_resolution=auto_slice_resolution,
         slice_height=slice_height,
         slice_width=slice_width,
         overlap_height_ratio=overlap_height_ratio,
@@ -351,9 +368,7 @@ def slice_image(
 
         # create sliced image and append to sliced_image_result
         sliced_image = SlicedImage(
-            image=image_pil_slice,
-            coco_image=coco_image,
-            starting_pixel=[slice_bbox[0], slice_bbox[1]],
+            image=image_pil_slice, coco_image=coco_image, starting_pixel=[slice_bbox[0], slice_bbox[1]]
         )
         sliced_image_result.add_sliced_image(sliced_image)
 
@@ -368,7 +383,7 @@ def slice_image(
         )
 
     verboselog(
-        "Num slices: " + str(n_ims) + " slice_height: " + str(slice_height) + " slice_width: " + str(slice_width),
+        "Num slices: " + str(n_ims) + " slice_height: " + str(slice_height) + " slice_width: " + str(slice_width)
     )
 
     return sliced_image_result
@@ -388,7 +403,6 @@ def slice_coco(
     out_ext: Optional[str] = None,
     verbose: bool = False,
 ) -> List[Union[Dict, str]]:
-
     """
     Slice large images given in a directory, into smaller windows. If out_name is given export sliced images and coco file.
 
@@ -456,9 +470,7 @@ def slice_coco(
 
     # create and save coco dict
     coco_dict = create_coco_dict(
-        sliced_coco_images,
-        coco_dict["categories"],
-        ignore_negative_samples=ignore_negative_samples,
+        sliced_coco_images, coco_dict["categories"], ignore_negative_samples=ignore_negative_samples
     )
     save_path = ""
     if output_coco_annotation_file_name and output_dir:
@@ -466,3 +478,147 @@ def slice_coco(
         save_json(coco_dict, save_path)
 
     return coco_dict, save_path
+
+
+def calc_ratio_and_slice(orientation, slide=1, ratio=0.1):
+    """
+    According to image resolution calculation overlap params
+    Args:
+        orientation: image capture angle
+        slide: sliding window
+        ratio: buffer value
+
+    Returns:
+        overlap params
+    """
+    if orientation == "vertical":
+        slice_row, slice_col, overlap_height_ratio, overlap_width_ratio = slide, slide * 2, ratio, ratio
+    elif orientation == "horizontal":
+        slice_row, slice_col, overlap_height_ratio, overlap_width_ratio = slide * 2, slide, ratio, ratio
+    elif orientation == "square":
+        slice_row, slice_col, overlap_height_ratio, overlap_width_ratio = slide, slide, ratio, ratio
+
+    return slice_row, slice_col, overlap_height_ratio, overlap_width_ratio  # noqa
+
+
+def calc_resolution_factor(resolution: int) -> int:
+    """
+    According to image resolution calculate power(2,n) and return the closest smaller `n`.
+    Args:
+        resolution: the width and height of the image multiplied. such as 1024x720 = 737280
+
+    Returns:
+
+    """
+    expo = 0
+    while np.power(2, expo) < resolution:
+        expo += 1
+
+    return expo - 1
+
+
+def calc_aspect_ratio_orientation(width: int, height: int) -> str:
+    """
+
+    Args:
+        width:
+        height:
+
+    Returns:
+        image capture orientation
+    """
+
+    if width < height:
+        return "vertical"
+    elif width > height:
+        return "horizontal"
+    else:
+        return "square"
+
+
+def calc_slice_and_overlap_params(resolution: str, height: int, width: int, orientation: str) -> List:
+    """
+    This function calculate according to image resolution slice and overlap params.
+    Args:
+        resolution: str
+        height: int
+        width: int
+        orientation: str
+
+    Returns:
+        x_overlap, y_overlap, slice_width, slice_height
+    """
+
+    if resolution == "medium":
+        split_row, split_col, overlap_height_ratio, overlap_width_ratio = calc_ratio_and_slice(
+            orientation, slide=1, ratio=0.8
+        )
+
+    elif resolution == "high":
+        split_row, split_col, overlap_height_ratio, overlap_width_ratio = calc_ratio_and_slice(
+            orientation, slide=2, ratio=0.4
+        )
+
+    elif resolution == "ultra-high":
+        split_row, split_col, overlap_height_ratio, overlap_width_ratio = calc_ratio_and_slice(
+            orientation, slide=4, ratio=0.4
+        )
+    else:  # low condition
+        split_col = 1
+        split_row = 1
+        overlap_width_ratio = 1
+        overlap_height_ratio = 1
+
+    slice_height = height // split_col
+    slice_width = width // split_row
+
+    x_overlap = int(slice_width * overlap_width_ratio)
+    y_overlap = int(slice_height * overlap_height_ratio)
+
+    return x_overlap, y_overlap, slice_width, slice_height  # noqa
+
+
+def get_resolution_selector(res: str, height: int, width: int):
+    """
+
+    Args:
+        res: resolution of image such as low, medium
+        height:
+        width:
+
+    Returns:
+        trigger slicing params function and return overlap params
+    """
+    orientation = calc_aspect_ratio_orientation(width=width, height=height)
+    x_overlap, y_overlap, slice_width, slice_height = calc_slice_and_overlap_params(
+        resolution=res, height=height, width=width, orientation=orientation
+    )
+
+    return x_overlap, y_overlap, slice_width, slice_height
+
+
+def get_auto_slice_params(height: int, width: int):
+    """
+    According to Image HxW calculate overlap sliding window and buffer params
+    factor is the power value of 2 closest to the image resolution.
+        factor <= 18: low resolution image such as 300x300, 640x640
+        18 < factor <= 21: medium resolution image such as 1024x1024, 1336x960
+        21 < factor <= 24: high resolution image such as 2048x2048, 2048x4096, 4096x4096
+        factor > 24: ultra-high resolution image such as 6380x6380, 4096x8192
+    Args:
+        height:
+        width:
+
+    Returns:
+        slicing overlap params x_overlap, y_overlap, slice_width, slice_height
+    """
+    resolution = height * width
+    factor = calc_resolution_factor(resolution)
+    if factor <= 18:
+        return get_resolution_selector("low", height=height, width=width)
+    elif 18 <= factor < 21:
+        return get_resolution_selector("medium", height=height, width=width)
+    elif 21 <= factor < 24:
+        return get_resolution_selector("high", height=height, width=width)
+    else:
+        return get_resolution_selector("ultra-high", height=height, width=width)

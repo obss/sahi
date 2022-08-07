@@ -6,6 +6,12 @@ import os
 import time
 from typing import List, Optional
 
+from sahi.utils.import_utils import is_available
+
+# https://github.com/obss/sahi/issues/526
+if is_available("torch"):
+    import torch
+
 import numpy as np
 from tqdm import tqdm
 
@@ -117,8 +123,8 @@ def get_prediction(
 def get_sliced_prediction(
     image,
     detection_model=None,
-    slice_height: int = 512,
-    slice_width: int = 512,
+    slice_height: int = None,
+    slice_width: int = None,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     perform_standard_pred: bool = True,
@@ -128,6 +134,7 @@ def get_sliced_prediction(
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
     merge_buffer_length: int = None,
+    auto_slice_resolution: bool = True,
 ) -> PredictionResult:
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -137,9 +144,9 @@ def get_sliced_prediction(
             Location of image or numpy image matrix to slice
         detection_model: model.DetectionModel
         slice_height: int
-            Height of each slice.  Defaults to ``512``.
+            Height of each slice.  Defaults to ``None``.
         slice_width: int
-            Width of each slice.  Defaults to ``512``.
+            Width of each slice.  Defaults to ``None``.
         overlap_height_ratio: float
             Fractional overlap in height of each window (e.g. an overlap of 0.2 for a window
             of size 512 yields an overlap of 102 pixels).
@@ -170,6 +177,9 @@ def get_sliced_prediction(
             The length of buffer for slices to be used during sliced prediction, which is suitable for low memory.
             It may affect the AP if it is specified. The higher the amount, the closer results to the non-buffered.
             scenario. See [the discussion](https://github.com/obss/sahi/pull/445).
+        auto_slice_resolution: bool
+            if slice parameters (slice_height, slice_width) are not given,
+            it enables automatically calculate these params from image resolution and orientation.
 
     Returns:
         A Dict with fields:
@@ -191,6 +201,7 @@ def get_sliced_prediction(
         slice_width=slice_width,
         overlap_height_ratio=overlap_height_ratio,
         overlap_width_ratio=overlap_width_ratio,
+        auto_slice_resolution=auto_slice_resolution,
     )
     num_slices = len(slice_image_result)
     time_end = time.time() - time_start
@@ -650,7 +661,6 @@ def predict(
         return {"export_dir": save_dir}
 
 
-@check_requirements(["fiftyone"])
 def predict_fiftyone(
     model_type: str = "mmdet",
     model_path: str = None,
@@ -732,6 +742,8 @@ def predict_fiftyone(
             0: no print
             1: print slice/prediction durations, number of slices, model loading/file exporting durations
     """
+    check_requirements(["fiftyone"])
+
     from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file, fo
 
     # assert prediction type

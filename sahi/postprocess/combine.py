@@ -13,7 +13,6 @@ from sahi.utils.import_utils import check_requirements
 logger = logging.getLogger(__name__)
 
 
-@check_requirements(["torch"])
 def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):
     """
     Apply non-maximum suppression to avoid detecting too many
@@ -27,6 +26,7 @@ def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_thre
     Returns:
         A list of filtered indexes, Shape: [ ,]
     """
+
     scores = predictions[:, 4].squeeze()
     category_ids = predictions[:, 5].squeeze()
     keep_mask = torch.zeros_like(category_ids, dtype=torch.bool)
@@ -40,7 +40,6 @@ def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_thre
     return keep_indices
 
 
-@check_requirements(["torch"])
 def nms(
     predictions: torch.tensor,
     match_metric: str = "IOU",
@@ -58,6 +57,7 @@ def nms(
     Returns:
         A list of filtered indexes, Shape: [ ,]
     """
+
     # we extract coordinates for every
     # prediction box present in P
     x1 = predictions[:, 0]
@@ -147,7 +147,6 @@ def nms(
     return keep
 
 
-@check_requirements(["torch"])
 def batched_greedy_nmm(
     object_predictions_as_tensor: torch.tensor,
     match_metric: str = "IOU",
@@ -179,7 +178,6 @@ def batched_greedy_nmm(
     return keep_to_merge_list
 
 
-@check_requirements(["torch"])
 def greedy_nmm(
     object_predictions_as_tensor: torch.tensor,
     match_metric: str = "IOU",
@@ -302,7 +300,6 @@ def greedy_nmm(
     return keep_to_merge_list
 
 
-@check_requirements(["torch"])
 def batched_nmm(
     object_predictions_as_tensor: torch.tensor,
     match_metric: str = "IOU",
@@ -334,7 +331,6 @@ def batched_nmm(
     return keep_to_merge_list
 
 
-@check_requirements(["torch"])
 def nmm(
     object_predictions_as_tensor: torch.tensor,
     match_metric: str = "IOU",
@@ -466,6 +462,8 @@ class PostprocessPredictions:
         self.match_threshold = match_threshold
         self.class_agnostic = class_agnostic
         self.match_metric = match_metric
+
+        check_requirements(["torch"])
 
     def __call__(self):
         raise NotImplementedError()

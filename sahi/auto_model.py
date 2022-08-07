@@ -75,7 +75,6 @@ class AutoDetectionModel:
         )
 
     @staticmethod
-    @check_requirements(["layer"])
     def from_layer(
         model_path: str,
         no_cache: bool = False,
@@ -113,6 +112,8 @@ class AutoDetectionModel:
             ImportError: If Layer is not installed in your environment
             ValueError: If model path does not match expected pattern: organization_name/project_name/models/model_name
         """
+        check_requirements(["layer"])
+
         import layer
 
         layer_model = layer.get_model(name=model_path, no_cache=no_cache).get_train()
