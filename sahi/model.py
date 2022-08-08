@@ -1075,7 +1075,7 @@ class Yolov7DetectionModel(DetectionModel):
         except Exception as e:
             raise ImportError(
                 'Please run "pip install -r https://raw.githubusercontent.com/WongKinYiu/yolov7/main/requirements.txt" '
-                "to install YOLOv5 first for YOLOv5 inference."
+                "to install Yolov7 first for Yolov7 inference."
             )
 
     def perform_inference(self, image: np.ndarray):
