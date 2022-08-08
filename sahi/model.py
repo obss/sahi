@@ -1063,9 +1063,9 @@ class TorchVisionDetectionModel(DetectionModel):
         self._object_prediction_list_per_image = object_prediction_list_per_image
 
 
-@check_requirements(["tensorflow", "tensorflow_hub"])
 class TensorflowhubDetectionModel(DetectionModel):
     def load_model(self):
+        check_requirements(["tensorflow", "tensorflow_hub"])
         import tensorflow as tf
         import tensorflow_hub as hub
 
@@ -1084,6 +1084,7 @@ class TensorflowhubDetectionModel(DetectionModel):
             self.category_mapping = category_mapping
 
     def perform_inference(self, image: np.ndarray):
+        check_requirements(["tensorflow"])
         from sahi.utils.tensorflow import resize, to_float_tensor
 
         if self.image_size is not None:
