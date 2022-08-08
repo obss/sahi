@@ -1063,9 +1063,9 @@ class TorchVisionDetectionModel(DetectionModel):
         self._object_prediction_list_per_image = object_prediction_list_per_image
 
 
-@check_requirements(["torch"])
 class Yolov7DetectionModel(DetectionModel):
     def load_model(self):
+        check_requirements(["torch"])
         import torch
 
         try:
@@ -1073,7 +1073,10 @@ class Yolov7DetectionModel(DetectionModel):
             model.conf = self.confidence_threshold
             self.model = model
         except Exception as e:
-            raise TypeError("model_path is not a valid yolov7 model path: ", e)
+            raise ImportError(
+                'Please run "pip install -r https://raw.githubusercontent.com/WongKinYiu/yolov7/main/requirements.txt" '
+                "to install YOLOv5 first for YOLOv5 inference."
+            )
 
     def perform_inference(self, image: np.ndarray):
         """
@@ -1082,6 +1085,7 @@ class Yolov7DetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
+        check_requirements(["torch"])
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")

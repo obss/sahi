@@ -56,7 +56,7 @@ class TestYolov7DetectionModel(unittest.TestCase):
                     int(pred[3]),
                 )
 
-        desidred_bbox = [521, 228, 543, 243]
+        desidred_bbox = [617, 200, 637, 218]
         predicted_bbox = [x1, y1, x2, y2]
         self.assertEqual(desidred_bbox, predicted_bbox)
 
@@ -86,10 +86,10 @@ class TestYolov7DetectionModel(unittest.TestCase):
         object_prediction_list = yolov7_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 12)
+        self.assertEqual(len(object_prediction_list), 11)
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        desidred_bbox = [322, 323, 61, 41]
+        desidred_bbox = [322, 323, 62, 41]
         predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
         self.assertEqual(desidred_bbox, predicted_bbox)
 
