@@ -210,7 +210,7 @@ pip install -e ."[dev]"
 - Reformat with black and isort:
 
 ```bash
-python scripts/run_code_style format
+python scripts/run_code_style.py format
 ```
 
 ## <div align="center">Contributors</div>
