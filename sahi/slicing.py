@@ -33,8 +33,8 @@ def get_slice_bboxes(
     slice_height: int = None,
     slice_width: int = None,
     auto_slice_resolution: bool = True,
-    overlap_height_ratio: int = 0.2,
-    overlap_width_ratio: int = 0.2,
+    overlap_height_ratio: float = 0.2,
+    overlap_width_ratio: float = 0.2,
 ) -> List[List[int]]:
     """Slices `image_pil` in crops.
     Corner values of each slice will be generated using the `slice_height`,
