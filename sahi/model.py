@@ -1062,3 +1062,84 @@ class TorchVisionDetectionModel(DetectionModel):
             object_prediction_list_per_image.append(object_prediction_list)
 
         self._object_prediction_list_per_image = object_prediction_list_per_image
+
+
+class YoloxDetectionModel(DetectionModel):
+    def load_model(self):
+        """
+        Detection model is initialized and set to self.model.
+        """
+        check_requirements(["torch"])
+        import torch
+
+        try:
+            model = torch.hub.load("Megvii-BaseDetection/YOLOX", self.model_path)
+            model = model.eval()
+            model = model.to(self.device)
+            self.model = model
+
+        except Exception as e:
+            raise TypeError("model_path is not a valid yolox model path: ", e)
+
+        # set category_mapping
+        from sahi.utils.torchvision import COCO_CLASSES
+
+        if self.category_mapping is None:
+            category_names = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
+            self.category_mapping = category_names
+
+    def perform_inference(self, image: np.ndarray):
+        """
+        Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+        Args:
+            image: np.ndarray
+                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+        """
+        import cv2
+        import torch
+
+        # TODO: add support for image_size module
+        img = cv2.resize(image, (416, 416))
+        img = torch.from_numpy(img).permute(2, 0, 1).unsqueeze(0).float().to(self.device)
+        prediction_result = self.model(img)
+        self._original_predictions = prediction_result
+
+    def _create_object_prediction_list_from_original_predictions(
+        self,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
+    ):
+        # compatilibty for sahi v0.8.20
+        if isinstance(shift_amount_list[0], int):
+            shift_amount_list = [shift_amount_list]
+        if full_shape_list is not None and isinstance(full_shape_list[0], int):
+            full_shape_list = [full_shape_list]
+
+        shift_amount = shift_amount_list[0]
+        full_shape = None if full_shape_list is None else full_shape_list[0]
+
+        from sahi.utils.yolox import postprocess
+
+        object_prediction_list_per_image = []
+        object_prediction_list = []
+
+        original_predictions = postprocess(
+            self._original_predictions, conf_thre=self.confidence_threshold, nms_thre=0.45, class_agnostic=False
+        )[0]
+        for prediction in original_predictions.cpu().detach().numpy():
+            bbox = prediction[0:4]
+            score = prediction[4]
+            category_id = int(prediction[6])
+            category_name = self.category_mapping[str(category_id)]
+            object_prediction = ObjectPrediction(
+                bbox=bbox,
+                bool_mask=None,
+                category_id=category_id,
+                category_name=category_name,
+                shift_amount=shift_amount,
+                score=score,
+                full_shape=full_shape,
+            )
+            object_prediction_list.append(object_prediction)
+        object_prediction_list_per_image.append(object_prediction_list)
+        self._object_prediction_list_per_image = object_prediction_list_per_image
