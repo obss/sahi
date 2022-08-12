@@ -1079,7 +1079,7 @@ class YoloxDetectionModel(DetectionModel):
             self.model = model
 
         except Exception as e:
-            raise TypeError("model_path is not a valid yolox model path: ", e)
+            raise ImportError("model_path is not a valid yolox model path: ", e)
 
         # set category_mapping
         from sahi.utils.torchvision import COCO_CLASSES
@@ -1095,14 +1095,25 @@ class YoloxDetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-        import cv2
         import torch
 
-        # TODO: add support for image_size module
-        img = cv2.resize(image, (416, 416))
-        img = torch.from_numpy(img).permute(2, 0, 1).unsqueeze(0).float().to(self.device)
+        from sahi.utils.yolox import preproc
+
+        # arrange model input size
+        if self.image_size is not None:
+            ratio = min(self.image_size / image.shape[0], self.image_size / image.shape[1])
+            img, _ = preproc(image, input_size=(self.image_size, self.image_size))
+            img = torch.from_numpy(img).to(self.device).unsqueeze(0).float()
+        else:
+            manuel_size = 640
+            ratio = min(manuel_size / image.shape[0], manuel_size / image.shape[1])
+            img, _ = preproc(image, input_size=(manuel_size, manuel_size))
+            img = torch.from_numpy(img).to(self.device).unsqueeze(0).float()
+
         prediction_result = self.model(img)
+
         self._original_predictions = prediction_result
+        self.ratio = ratio
 
     def _create_object_prediction_list_from_original_predictions(
         self,
@@ -1124,11 +1135,12 @@ class YoloxDetectionModel(DetectionModel):
         object_prediction_list = []
 
         original_predictions = postprocess(
-            self._original_predictions, conf_thre=self.confidence_threshold, nms_thre=0.45, class_agnostic=False
+            self._original_predictions, conf_thre=self.confidence_threshold, nms_thre=0.35, class_agnostic=False
         )[0]
         for prediction in original_predictions.cpu().detach().numpy():
             bbox = prediction[0:4]
-            score = prediction[4]
+            bbox /= self.ratio
+            score = prediction[4] * prediction[5]
             category_id = int(prediction[6])
             category_name = self.category_mapping[str(category_id)]
             object_prediction = ObjectPrediction(

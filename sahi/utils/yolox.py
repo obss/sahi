@@ -1,3 +1,5 @@
+import cv2
+import numpy as np
 import torch
 import torchvision
 
@@ -49,3 +51,25 @@ def postprocess(prediction, num_classes=80, conf_thre=0.7, nms_thre=0.45, class_
             output[i] = torch.cat((output[i], detections))
 
     return output
+
+
+# adapted from https://github.com/Megvii-BaseDetection/YOLOX/blob/main/yolox/data/data_augment.py
+
+
+def preproc(img, input_size, swap=(2, 0, 1)):
+    if len(img.shape) == 3:
+        padded_img = np.ones((input_size[0], input_size[1], 3), dtype=np.uint8) * 114
+    else:
+        padded_img = np.ones(input_size, dtype=np.uint8) * 114
+
+    r = min(input_size[0] / img.shape[0], input_size[1] / img.shape[1])
+    resized_img = cv2.resize(
+        img,
+        (int(img.shape[1] * r), int(img.shape[0] * r)),
+        interpolation=cv2.INTER_LINEAR,
+    ).astype(np.uint8)
+    padded_img[: int(img.shape[0] * r), : int(img.shape[1] * r)] = resized_img
+
+    padded_img = padded_img.transpose(swap)
+    padded_img = np.ascontiguousarray(padded_img, dtype=np.float32)
+    return padded_img, r
