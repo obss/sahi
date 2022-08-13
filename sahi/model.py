@@ -1072,11 +1072,13 @@ class Yolov7DetectionModel(DetectionModel):
             model = torch.hub.load("WongKinYiu/yolov7", "custom", self.model_path)
             model.conf = self.confidence_threshold
             self.model = model
-        except Exception as e:
+        except ImportError:
             raise ImportError(
                 'Please run "pip install -r https://raw.githubusercontent.com/WongKinYiu/yolov7/main/requirements.txt" '
                 "to install Yolov7 first for Yolov7 inference."
             )
+        except Exception as e:
+            TypeError("model_path is not a valid torchvision model path: ", e)
 
     def perform_inference(self, image: np.ndarray):
         """
