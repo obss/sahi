@@ -3,7 +3,7 @@ import importlib.util
 import logging
 import os
 
-# adapted from https://github.com/huggingface/transformers/src/transformers/utils/import_utils.py
+# adapted from https://github.com/huggingface/transformers/blob/main/src/transformers/utils/import_utils.py
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
