@@ -2,7 +2,6 @@
 # Code written by Fatih C Akyon, 2020.
 
 import logging
-import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -1073,16 +1072,21 @@ class YoloxDetectionModel(DetectionModel):
         import torch
 
         try:
-            model = torch.hub.load("Megvii-BaseDetection/YOLOX", self.model_path)
+            model = torch.hub.load(
+                "Megvii-BaseDetection/YOLOX",
+                "yolox_custom",
+                ckpt_path=self.model_path,
+                exp_path=self.config_path,
+                device=self.device,
+            )
             model = model.eval()
-            model = model.to(self.device)
             self.model = model
 
         except Exception as e:
             raise ImportError("model_path is not a valid yolox model path: ", e)
 
         # set category_mapping
-        from sahi.utils.torchvision import COCO_CLASSES
+        from sahi.utils.yolox import COCO_CLASSES
 
         if self.category_mapping is None:
             category_names = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}

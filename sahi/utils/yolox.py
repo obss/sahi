@@ -1,7 +1,49 @@
+import urllib.request
+from os import path
+from pathlib import Path
+from typing import Optional
+
 import cv2
 import numpy as np
 import torch
 import torchvision
+
+
+class YoloxTestConstants:
+    YOLOX_LARGE_MODEL_URL = "https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_x.pth"
+    YOLOX_LARGE_MODEL_PATH = "tests/data/models/yolox/yolox_x.pth"
+
+    YOLOX_MODEL_URL = "https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_m.pth"
+    YOLOX_MODEL_PATH = "tests/data/models/yolox/yolox_m.pth"
+
+
+def download_yolox_model(destination_path: Optional[str] = None):
+
+    if destination_path is None:
+        destination_path = YoloxTestConstants.YOLOX_MODEL_PATH
+
+    Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
+
+    if not path.exists(destination_path):
+        urllib.request.urlretrieve(
+            YoloxTestConstants.YOLOX_MODEL_URL,
+            destination_path,
+        )
+
+
+def download_yolox_large_model(destination_path: Optional[str] = None):
+
+    if destination_path is None:
+        destination_path = YoloxTestConstants.YOLOX_LARGE_MODEL_PATH
+
+    Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
+
+    if not path.exists(destination_path):
+        urllib.request.urlretrieve(
+            YoloxTestConstants.YOLOX_LARGE_MODEL_URL,
+            destination_path,
+        )
+
 
 # adapted from https://github.com/Megvii-BaseDetection/YOLOX/blob/main/yolox/utils/boxes.py
 
@@ -73,3 +115,87 @@ def preproc(img, input_size, swap=(2, 0, 1)):
     padded_img = padded_img.transpose(swap)
     padded_img = np.ascontiguousarray(padded_img, dtype=np.float32)
     return padded_img, r
+
+
+COCO_CLASSES = [
+    "person",
+    "bicycle",
+    "car",
+    "motorcycle",
+    "airplane",
+    "bus",
+    "train",
+    "truck",
+    "boat",
+    "traffic light",
+    "fire hydrant",
+    "stop sign",
+    "parking meter",
+    "bench",
+    "bird",
+    "cat",
+    "dog",
+    "horse",
+    "sheep",
+    "cow",
+    "elephant",
+    "bear",
+    "zebra",
+    "giraffe",
+    "backpack",
+    "umbrella",
+    "handbag",
+    "tie",
+    "suitcase",
+    "frisbee",
+    "skis",
+    "snowboard",
+    "sports ball",
+    "kite",
+    "baseball bat",
+    "baseball glove",
+    "skateboard",
+    "surfboard",
+    "tennis racket",
+    "bottle",
+    "wine glass",
+    "cup",
+    "fork",
+    "knife",
+    "spoon",
+    "bowl",
+    "banana",
+    "apple",
+    "sandwich",
+    "orange",
+    "broccoli",
+    "carrot",
+    "hot dog",
+    "pizza",
+    "donut",
+    "cake",
+    "chair",
+    "couch",
+    "potted plant",
+    "bed",
+    "dining table",
+    "toilet",
+    "tv",
+    "laptop",
+    "mouse",
+    "remote",
+    "keyboard",
+    "cell phone",
+    "microwave",
+    "oven",
+    "toaster",
+    "sink",
+    "refrigerator",
+    "book",
+    "clock",
+    "vase",
+    "scissors",
+    "teddy bear",
+    "hair drier",
+    "toothbrush",
+]
