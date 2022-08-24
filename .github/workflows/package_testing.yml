@@ -90,6 +90,10 @@ jobs:
       - name: Install pycocotools(2.0.4)
         run: >
           pip install pycocotools==2.0.4
+      
+      - name: Install yolov7
+        run: >
+          pip install -r https://raw.githubusercontent.com/WongKinYiu/yolov7/main/requirements.txt
 
       - name: Install latest SAHI package
         run: >
