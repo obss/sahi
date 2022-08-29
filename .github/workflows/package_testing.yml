@@ -62,14 +62,14 @@ jobs:
         if: matrix.operating-system == 'macos-latest'
         run: pip install torch==1.10.1 torchvision==0.11.2
 
-      - name: Install MMDetection(2.25.0) with MMCV(1.5.3)
+      - name: Install MMDetection(2.25.1) with MMCV(1.6.1)
         run: >
-          pip install mmcv-full==1.5.3 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.10.0/index.html
-          pip install mmdet==2.25.0
+          pip install mmcv-full==1.6.1 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.10.0/index.html
+          pip install mmdet==2.25.1
 
-      - name: Install YOLOv5(6.1.5) and Norfair(1.0.0)
+      - name: Install YOLOv5(6.1.8) and Norfair(1.0.0)
         run: >
-          pip install yolov5==6.1.5 norfair==1.0.0
+          pip install yolov5==6.1.8 norfair==1.0.0
           
       - name: Install Detectron2(0.6)
         run: >
@@ -79,7 +79,7 @@ jobs:
         if: >
           matrix.python-version != '3.6'
         run: >
-          pip install transformers==4.20.0
+          pip install transformers==4.21.2
 
       - name: Install Layer (0.10.*)
         if: >
