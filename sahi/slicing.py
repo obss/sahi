@@ -258,7 +258,6 @@ def slice_image(
     sliced images.
 
     Args:
-        auto_slice_resolution:
         image (str or PIL.Image): File path of image or Pillow Image to be sliced.
         coco_annotation_list (CocoAnnotation): List of CocoAnnotation objects.
         output_file_name (str, optional): Root name of output files (coordinates will
@@ -298,6 +297,7 @@ def slice_image(
         slice_file_path = str(Path(output_dir) / slice_file_name)
         # export sliced image
         image_pil.save(slice_file_path)
+        image_pil.close() # to fix https://github.com/obss/sahi/issues/565
         verboselog("sliced image path: " + slice_file_path)
 
     # create outdir if not present
