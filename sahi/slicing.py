@@ -64,7 +64,6 @@ def get_slice_bboxes(
     """
     slice_bboxes = []
     y_max = y_min = 0
-    
 
     if slice_height and slice_width:
         y_overlap = int(overlap_height_ratio * slice_height)
