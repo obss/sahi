@@ -65,7 +65,7 @@ class DetectionModel:
         self._object_prediction_list_per_image = None
 
         # automatically set device if its None
-        if not (self.device):
+        if not (self.set_device):
             self.device = "cuda:0" if is_torch_cuda_available() else "cpu"
 
         # automatically load model if load_at_init is True
@@ -96,7 +96,10 @@ class DetectionModel:
         """
         Sets the device for the model.
         """
-        raise NotImplementedError()
+        import tensorflow as tf
+
+        if not (self.device):
+            self.device = "/gpu:0" if tf.test.is_gpu_available() else "/cpu:0"
 
     def unload_model(self):
         """
