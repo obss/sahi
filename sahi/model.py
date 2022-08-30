@@ -92,6 +92,12 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
+    def set_device(self):
+        """
+        Sets the device for the model.
+        """
+        raise NotImplementedError()
+
     def unload_model(self):
         """
         Unloads the model from CPU/GPU.
@@ -1064,6 +1070,12 @@ class TorchVisionDetectionModel(DetectionModel):
 
 
 class TensorflowhubDetectionModel(DetectionModel):
+    def set_device(self):
+        import tensorflow as tf
+
+        if not (self.device):
+            self.device = "/gpu:0" if tf.test.is_gpu_available() else "/cpu:0"
+
     def load_model(self):
         check_requirements(["tensorflow", "tensorflow_hub"])
         import tensorflow as tf
