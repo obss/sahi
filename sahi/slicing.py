@@ -64,16 +64,16 @@ def get_slice_bboxes(
     """
     slice_bboxes = []
     y_max = y_min = 0
-    logger.warning(
-        "Starting from version `0.10.2`, `auto_slice_resolution=True` is introduced as "
-        "the default behavior for determining slice height and width automatically "
-        "calculated by the image properties (resolution, aspect ratio and orientation)."
-    )
 
     if slice_height and slice_width:
         y_overlap = int(overlap_height_ratio * slice_height)
         x_overlap = int(overlap_width_ratio * slice_width)
     elif auto_slice_resolution:
+        logger.warning(
+            "Starting from version `0.10.2`, `auto_slice_resolution=True` is introduced as "
+            "the default behavior for determining slice height and width automatically "
+            "calculated by the image properties (resolution, aspect ratio and orientation)."
+        )
         x_overlap, y_overlap, slice_width, slice_height = get_auto_slice_params(height=image_height, width=image_width)
     else:
         raise ValueError("Compute type is not auto and slice width and height are not provided.")
