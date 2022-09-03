@@ -65,7 +65,7 @@ class DetectionModel:
         self._object_prediction_list_per_image = None
 
         # automatically set device if its None
-        if not (self.device):
+        if not (self.set_device):
             self.device = "cuda:0" if is_torch_cuda_available() else "cpu"
 
         # automatically load model if load_at_init is True
