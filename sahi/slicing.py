@@ -258,7 +258,6 @@ def slice_image(
     sliced images.
 
     Args:
-        auto_slice_resolution:
         image (str or PIL.Image): File path of image or Pillow Image to be sliced.
         coco_annotation_list (CocoAnnotation): List of CocoAnnotation objects.
         output_file_name (str, optional): Root name of output files (coordinates will
@@ -272,6 +271,8 @@ def slice_image(
         overlap_width_ratio (float): Fractional overlap in width of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
+        auto_slice_resolution (bool): if not set slice parameters such as slice_height and slice_width,
+            it enables automatically calculate these params from image resolution and orientation.
         min_area_ratio (float): If the cropped annotation area to original annotation
             ratio is smaller than this value, the annotation is filtered out. Default 0.1.
         out_ext (str, optional): Extension of saved images. Default is the
@@ -298,6 +299,7 @@ def slice_image(
         slice_file_path = str(Path(output_dir) / slice_file_name)
         # export sliced image
         image_pil.save(slice_file_path)
+        image_pil.close()  # to fix https://github.com/obss/sahi/issues/565
         verboselog("sliced image path: " + slice_file_path)
 
     # create outdir if not present
