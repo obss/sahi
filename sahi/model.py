@@ -99,7 +99,7 @@ class DetectionModel:
         import tensorflow as tf
 
         if not (self.device):
-            self.device = "/gpu:0" if tf.test.is_gpu_available() else "/cpu:0"
+            self.device = "cuda:0" if is_torch_cuda_available() else "cpu"
 
     def unload_model(self):
         """
