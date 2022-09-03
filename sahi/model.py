@@ -96,7 +96,6 @@ class DetectionModel:
         """
         Sets the device for the model.
         """
-        import tensorflow as tf
 
         if not (self.device):
             self.device = "cuda:0" if is_torch_cuda_available() else "cpu"
