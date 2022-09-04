@@ -49,7 +49,9 @@ Object detection and instance segmentation are by far the most important fields 
 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
 
-- [Official paper](https://arxiv.org/abs/2202.06934) (ICIP22 oral, 5+ citations)
+- [Official paper](https://arxiv.org/abs/2202.06934) (ICIP 2022 oral, 9+ citations)
+
+- [Pretrained weights and ICIP 2022 paper files](https://github.com/fcakyon/small-object-detection-benchmark)
 
 - [Video inference support is live](https://github.com/obss/sahi/issues/457) (NEW)
 
