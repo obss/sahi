@@ -80,13 +80,13 @@ jobs:
           pip install mmcv-full==1.6.1 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.11.0/index.html
           pip install mmdet==2.25.1
 
-      - name: Install YOLOv5(6.1.8) and Norfair(1.0.0)
+      - name: Install YOLOv5(6.2.1) and Norfair(1.0.0)
         run: >
-          pip install yolov5==6.1.8 norfair==1.0.0
+          pip install yolov5==6.2.1 norfair==1.0.0
 
-      - name: Install Transformers(4.21.2)
+      - name: Install Transformers(4.22.1)
         run: >
-          pip install transformers==4.21.2
+          pip install transformers==4.22.1
 
       - name: Install Layer (0.10.*)
         run: >
@@ -96,9 +96,9 @@ jobs:
         run: |
           python -m unittest
 
-      - name: Install pycocotools(2.0.4)
+      - name: Install pycocotools(2.0.5)
         run: >
-          pip install pycocotools==2.0.4
+          pip install pycocotools==2.0.5
 
       - name: Install SAHI package from local setup.py
         run: >

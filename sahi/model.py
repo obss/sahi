@@ -421,12 +421,23 @@ class Yolov5DetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        has_mask = self.model.with_mask
-        return has_mask
+        import yolov5
+        from packaging import version
+
+        if version.parse(yolov5.__version__) < version.parse("6.2.0"):
+            return False
+        else:
+            return False  # fix when yolov5 supports segmentation models
 
     @property
     def category_names(self):
-        return self.model.names
+        import yolov5
+        from packaging import version
+
+        if version.parse(yolov5.__version__) >= version.parse("6.1.9"):
+            return list(self.model.names.values())
+        else:
+            return self.model.names
 
     def _create_object_prediction_list_from_original_predictions(
         self,
