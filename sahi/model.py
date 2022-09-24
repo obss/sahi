@@ -429,6 +429,7 @@ class Yolov5DetectionModel(DetectionModel):
         else:
             return False  # fix when yolov5 supports segmentation models
 
+    @property
     def category_names(self):
         import yolov5
         from packaging import version
