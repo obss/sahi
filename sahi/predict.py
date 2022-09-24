@@ -4,12 +4,19 @@
 import logging
 import os
 import time
-import warnings
-from typing import Dict, List, Optional
+from typing import List, Optional
+
+from sahi.utils.import_utils import is_available
+
+# https://github.com/obss/sahi/issues/526
+if is_available("torch"):
+    import torch
 
 import numpy as np
 from tqdm import tqdm
 
+from sahi.auto_model import AutoDetectionModel
+from sahi.model import DetectionModel
 from sahi.postprocess.combine import (
     GreedyNMMPostprocess,
     LSNMSPostprocess,
@@ -17,17 +24,26 @@ from sahi.postprocess.combine import (
     NMSPostprocess,
     PostprocessPredictions,
 )
-from sahi.postprocess.legacy.combine import UnionMergePostprocess
 from sahi.prediction import ObjectPrediction, PredictionResult
 from sahi.slicing import slice_image
 from sahi.utils.coco import Coco, CocoImage
-from sahi.utils.cv import crop_object_predictions, read_image_as_pil, visualize_object_predictions
-from sahi.utils.file import Path, import_class, increment_path, list_files, save_json, save_pickle
+from sahi.utils.cv import (
+    IMAGE_EXTENSIONS,
+    VIDEO_EXTENSIONS,
+    crop_object_predictions,
+    cv2,
+    get_video_reader,
+    read_image_as_pil,
+    visualize_object_predictions,
+)
+from sahi.utils.file import Path, increment_path, list_files, save_json, save_pickle
+from sahi.utils.import_utils import check_requirements
 
-MODEL_TYPE_TO_MODEL_CLASS_NAME = {
-    "mmdet": "MmdetDetectionModel",
-    "yolov5": "Yolov5DetectionModel",
-    "detectron2": "Detectron2DetectionModel",
+POSTPROCESS_NAME_TO_CLASS = {
+    "GREEDYNMM": GreedyNMMPostprocess,
+    "NMM": NMMPostprocess,
+    "NMS": NMSPostprocess,
+    "LSNMS": LSNMSPostprocess,
 }
 
 LOW_MODEL_CONFIDENCE = 0.1
@@ -39,7 +55,6 @@ logger = logging.getLogger(__name__)
 def get_prediction(
     image,
     detection_model,
-    image_size: int = None,
     shift_amount: list = [0, 0],
     full_shape=None,
     postprocess: Optional[PostprocessPredictions] = None,
@@ -52,8 +67,6 @@ def get_prediction(
         image: str or np.ndarray
             Location of image or numpy image matrix to slice
         detection_model: model.DetectionMode
-        image_size: int
-            Inference input size.
         shift_amount: List
             To shift the box and mask predictions from sliced image to full
             sized image, should be in the form of [shift_x, shift_y]
@@ -69,16 +82,13 @@ def get_prediction(
             object_prediction_list: a list of ObjectPrediction
             durations_in_seconds: a dict containing elapsed times for profiling
     """
-    if image_size is not None:
-        warnings.warn("Set 'image_size' at DetectionModel init.", DeprecationWarning)
-
     durations_in_seconds = dict()
 
     # read image as pil
     image_as_pil = read_image_as_pil(image)
     # get prediction
     time_start = time.time()
-    detection_model.perform_inference(np.ascontiguousarray(image_as_pil), image_size=image_size)
+    detection_model.perform_inference(np.ascontiguousarray(image_as_pil))
     time_end = time.time() - time_start
     durations_in_seconds["prediction"] = time_end
 
@@ -113,9 +123,8 @@ def get_prediction(
 def get_sliced_prediction(
     image,
     detection_model=None,
-    image_size: int = None,
-    slice_height: int = 512,
-    slice_width: int = 512,
+    slice_height: int = None,
+    slice_width: int = None,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     perform_standard_pred: bool = True,
@@ -124,6 +133,8 @@ def get_sliced_prediction(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
+    merge_buffer_length: int = None,
+    auto_slice_resolution: bool = True,
 ) -> PredictionResult:
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -132,12 +143,10 @@ def get_sliced_prediction(
         image: str or np.ndarray
             Location of image or numpy image matrix to slice
         detection_model: model.DetectionModel
-        image_size: int
-            Input image size for each inference (image is scaled by preserving asp. rat.).
         slice_height: int
-            Height of each slice.  Defaults to ``512``.
+            Height of each slice.  Defaults to ``None``.
         slice_width: int
-            Width of each slice.  Defaults to ``512``.
+            Width of each slice.  Defaults to ``None``.
         overlap_height_ratio: float
             Fractional overlap in height of each window (e.g. an overlap of 0.2 for a window
             of size 512 yields an overlap of 102 pixels).
@@ -164,14 +173,19 @@ def get_sliced_prediction(
             0: no print
             1: print number of slices (default)
             2: print number of slices and slice/prediction durations
+        merge_buffer_length: int
+            The length of buffer for slices to be used during sliced prediction, which is suitable for low memory.
+            It may affect the AP if it is specified. The higher the amount, the closer results to the non-buffered.
+            scenario. See [the discussion](https://github.com/obss/sahi/pull/445).
+        auto_slice_resolution: bool
+            if slice parameters (slice_height, slice_width) are not given,
+            it enables automatically calculate these params from image resolution and orientation.
 
     Returns:
         A Dict with fields:
             object_prediction_list: a list of sahi.prediction.ObjectPrediction
             durations_in_seconds: a dict containing elapsed times for profiling
     """
-    if image_size is not None:
-        warnings.warn("Set 'image_size' at DetectionModel init.", DeprecationWarning)
 
     # for profiling
     durations_in_seconds = dict()
@@ -187,48 +201,26 @@ def get_sliced_prediction(
         slice_width=slice_width,
         overlap_height_ratio=overlap_height_ratio,
         overlap_width_ratio=overlap_width_ratio,
+        auto_slice_resolution=auto_slice_resolution,
     )
     num_slices = len(slice_image_result)
     time_end = time.time() - time_start
     durations_in_seconds["slice"] = time_end
 
     # init match postprocess instance
-    if postprocess_type in ["NMM"]:
-        postprocess = NMMPostprocess(
-            match_threshold=postprocess_match_threshold,
-            match_metric=postprocess_match_metric,
-            class_agnostic=postprocess_class_agnostic,
-        )
-    elif postprocess_type == "GREEDYNMM":
-        postprocess = GreedyNMMPostprocess(
-            match_threshold=postprocess_match_threshold,
-            match_metric=postprocess_match_metric,
-            class_agnostic=postprocess_class_agnostic,
-        )
-    elif postprocess_type == "NMS":
-        postprocess = NMSPostprocess(
-            match_threshold=postprocess_match_threshold,
-            match_metric=postprocess_match_metric,
-            class_agnostic=postprocess_class_agnostic,
-        )
-    elif postprocess_type == "LSNMS":
-        postprocess = LSNMSPostprocess(
-            match_threshold=postprocess_match_threshold,
-            match_metric=postprocess_match_metric,
-            class_agnostic=postprocess_class_agnostic,
+    if postprocess_type not in POSTPROCESS_NAME_TO_CLASS.keys():
+        raise ValueError(
+            f"postprocess_type should be one of {list(POSTPROCESS_NAME_TO_CLASS.keys())} but given as {postprocess_type}"
         )
     elif postprocess_type == "UNIONMERGE":
-        # sahi v0.8.16 compatibility
-        logger.warning("'UNIONMERGE' is deprecated, use 'GREEDYNMM' instead.")
-        postprocess = UnionMergePostprocess(
-            match_threshold=postprocess_match_threshold,
-            match_metric=postprocess_match_metric,
-            class_agnostic=postprocess_class_agnostic,
-        )
-    else:
-        raise ValueError(
-            f"postprocess_type should be one of ['NMS', 'NMM', 'GREEDYNMM'] but given as {postprocess_type}"
-        )
+        # deprecated in v0.9.3
+        raise ValueError("'UNIONMERGE' postprocess_type is deprecated, use 'GREEDYNMM' instead.")
+    postprocess_constructor = POSTPROCESS_NAME_TO_CLASS[postprocess_type]
+    postprocess = postprocess_constructor(
+        match_threshold=postprocess_match_threshold,
+        match_metric=postprocess_match_metric,
+        class_agnostic=postprocess_class_agnostic,
+    )
 
     # create prediction input
     num_group = int(num_slices / num_batch)
@@ -247,7 +239,6 @@ def get_sliced_prediction(
         prediction_result = get_prediction(
             image=image_list[0],
             detection_model=detection_model,
-            image_size=image_size,
             shift_amount=shift_amount_list[0],
             full_shape=[
                 slice_image_result.original_image_height,
@@ -258,17 +249,25 @@ def get_sliced_prediction(
         for object_prediction in prediction_result.object_prediction_list:
             if object_prediction:  # if not empty
                 object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+
+        # merge matching predictions during sliced prediction
+        if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
+            object_prediction_list = postprocess(object_prediction_list)
+
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
         prediction_result = get_prediction(
             image=image,
             detection_model=detection_model,
-            image_size=image_size,
             shift_amount=[0, 0],
             full_shape=None,
             postprocess=None,
         )
         object_prediction_list.extend(prediction_result.object_prediction_list)
+
+    # merge matching predictions
+    if len(object_prediction_list) > 1:
+        object_prediction_list = postprocess(object_prediction_list)
 
     time_end = time.time() - time_start
     durations_in_seconds["prediction"] = time_end
@@ -285,15 +284,13 @@ def get_sliced_prediction(
             "seconds.",
         )
 
-    # merge matching predictions
-    object_prediction_list = postprocess(object_prediction_list)
-
     return PredictionResult(
         image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
     )
 
 
 def predict(
+    detection_model: DetectionModel = None,
     model_type: str = "mmdet",
     model_path: str = None,
     model_config_path: str = None,
@@ -313,7 +310,9 @@ def predict(
     postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
-    export_visual: bool = False,
+    novisual: bool = False,
+    view_video: bool = False,
+    frame_skip_interval: int = 0,
     export_pickle: bool = False,
     export_crop: bool = False,
     dataset_json_path: bool = None,
@@ -331,6 +330,10 @@ def predict(
     Performs prediction for all present images in given folder.
 
     Args:
+        detection_model: sahi.model.DetectionModel
+            Optionally provide custom DetectionModel to be used for inference. When provided,
+            model_type, model_path, config_path, model_device, model_category_mapping, image_size
+            params will be ignored
         model_type: str
             mmdet for 'MmdetDetectionModel', 'yolov5' for 'Yolov5DetectionModel'.
         model_path: str
@@ -346,7 +349,7 @@ def predict(
         model_category_remapping: dict: str to int
             Remap category ids after performing inference
         source: str
-            Folder directory that contains images or path of the image to be predicted.
+            Folder directory that contains images or path of the image to be predicted. Also video to be predicted.
         no_standard_prediction: bool
             Dont perform standard prediction. Default: False.
         no_sliced_prediction: bool
@@ -376,6 +379,12 @@ def predict(
             postprocessed after sliced prediction.
         postprocess_class_agnostic: bool
             If True, postprocess will ignore category ids.
+        novisual: bool
+            Dont export predicted video/image visuals.
+        view_video: bool
+            View result of prediction during video inference.
+        frame_skip_interval: int
+            If view_video or export_visual is slow, you can process one frames of 3(for exp: --frame_skip_interval=3).
         export_pickle: bool
             Export predictions as .pickle
         export_crop: bool
@@ -401,9 +410,8 @@ def predict(
             If True, auto postprocess check will e disabled
     """
     # assert prediction type
-    assert (
-        no_standard_prediction and no_sliced_prediction
-    ) is not True, "'no_standard_prediction' and 'no_sliced_prediction' cannot be True at the same time."
+    if no_standard_prediction and no_sliced_prediction:
+        raise ValueError("'no_standard_prediction' and 'no_sliced_prediction' cannot be True at the same time.")
 
     # auto postprocess type
     if not force_postprocess_type and model_confidence_threshold < LOW_MODEL_CONFIDENCE and postprocess_type != "NMS":
@@ -416,57 +424,76 @@ def predict(
     # for profiling
     durations_in_seconds = dict()
 
-    # list image files in directory
-    if dataset_json_path:
-        coco: Coco = Coco.from_coco_dict_or_path(dataset_json_path)
-        image_path_list = [str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images]
-        coco_json = []
-    elif os.path.isdir(source):
-        image_path_list = list_files(
-            directory=source,
-            contains=[".jpg", ".jpeg", ".png", ".tiff", ".bmp"],
-            verbose=verbose,
-        )
-    else:
-        image_path_list = [source]
-
     # init export directories
     save_dir = Path(increment_path(Path(project) / name, exist_ok=False))  # increment run
     crop_dir = save_dir / "crops"
     visual_dir = save_dir / "visuals"
     visual_with_gt_dir = save_dir / "visuals_with_gt"
     pickle_dir = save_dir / "pickles"
-    save_dir.mkdir(parents=True, exist_ok=True)  # make dir
+    if not novisual or export_pickle or export_crop or dataset_json_path is not None:
+        save_dir.mkdir(parents=True, exist_ok=True)  # make dir
+
+    # init image iterator
+    # TODO: rewrite this as iterator class as in https://github.com/ultralytics/yolov5/blob/d059d1da03aee9a3c0059895aa4c7c14b7f25a9e/utils/datasets.py#L178
+    source_is_video = False
+    num_frames = None
+    if dataset_json_path:
+        coco: Coco = Coco.from_coco_dict_or_path(dataset_json_path)
+        image_iterator = [str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images]
+        coco_json = []
+    elif os.path.isdir(source):
+        image_iterator = list_files(
+            directory=source,
+            contains=IMAGE_EXTENSIONS,
+            verbose=verbose,
+        )
+    elif Path(source).suffix in VIDEO_EXTENSIONS:
+        source_is_video = True
+        read_video_frame, output_video_writer, video_file_name, num_frames = get_video_reader(
+            source, save_dir, frame_skip_interval, not novisual, view_video
+        )
+        image_iterator = read_video_frame
+    else:
+        image_iterator = [source]
 
     # init model instance
     time_start = time.time()
-    model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
-    DetectionModel = import_class(model_class_name)
-    detection_model = DetectionModel(
-        model_path=model_path,
-        config_path=model_config_path,
-        confidence_threshold=model_confidence_threshold,
-        device=model_device,
-        category_mapping=model_category_mapping,
-        category_remapping=model_category_remapping,
-        load_at_init=False,
-        image_size=image_size,
-    )
-    detection_model.load_model()
+    if detection_model is None:
+        detection_model = AutoDetectionModel.from_pretrained(
+            model_type=model_type,
+            model_path=model_path,
+            config_path=model_config_path,
+            confidence_threshold=model_confidence_threshold,
+            device=model_device,
+            category_mapping=model_category_mapping,
+            category_remapping=model_category_remapping,
+            load_at_init=False,
+            image_size=image_size,
+        )
+        detection_model.load_model()
     time_end = time.time() - time_start
     durations_in_seconds["model_load"] = time_end
 
     # iterate over source images
     durations_in_seconds["prediction"] = 0
     durations_in_seconds["slice"] = 0
-    for ind, image_path in enumerate(tqdm(image_path_list, "Performing inference on images")):
+
+    input_type_str = "video frames" if source_is_video else "images"
+    for ind, image_path in enumerate(
+        tqdm(image_iterator, f"Performing inference on {input_type_str}", total=num_frames)
+    ):
         # get filename
-        if os.path.isdir(source):  # preserve source folder structure in export
+        if source_is_video:
+            video_name = Path(source).stem
+            relative_filepath = video_name + "_frame_" + str(ind)
+        elif os.path.isdir(source):  # preserve source folder structure in export
             relative_filepath = str(Path(image_path)).split(str(Path(source)))[-1]
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
         else:  # no process if source is single file
             relative_filepath = Path(image_path).name
+
         filename_without_extension = Path(relative_filepath).stem
+
         # load image
         image_as_pil = read_image_as_pil(image_path)
 
@@ -474,7 +501,7 @@ def predict(
         if not no_sliced_prediction:
             # get sliced prediction
             prediction_result = get_sliced_prediction(
-                image=image_path,
+                image=image_as_pil,
                 detection_model=detection_model,
                 slice_height=slice_height,
                 slice_width=slice_width,
@@ -492,7 +519,7 @@ def predict(
         else:
             # get standard prediction
             prediction_result = get_prediction(
-                image=image_path,
+                image=image_as_pil,
                 detection_model=detection_model,
                 shift_amount=[0, 0],
                 full_shape=None,
@@ -502,8 +529,16 @@ def predict(
             object_prediction_list = prediction_result.object_prediction_list
 
         durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
+        # Show prediction time
+        if verbose:
+            tqdm.write(
+                "Prediction time is: {:.2f} ms".format(prediction_result.durations_in_seconds["prediction"] * 1000)
+            )
 
         if dataset_json_path:
+            if source_is_video is True:
+                raise NotImplementedError("Video input type not supported with coco formatted dataset json")
+
             # append predictions in coco format
             for object_prediction in object_prediction_list:
                 coco_prediction = object_prediction.to_coco_prediction()
@@ -511,7 +546,7 @@ def predict(
                 coco_prediction_json = coco_prediction.json
                 if coco_prediction_json["bbox"]:
                     coco_json.append(coco_prediction_json)
-            if export_visual:
+            if not novisual:
                 # convert ground truth annotations to object_prediction_list
                 coco_image: CocoImage = coco.images[ind]
                 object_prediction_gt_list: List[ObjectPrediction] = []
@@ -565,19 +600,28 @@ def predict(
         if export_pickle:
             save_path = str(pickle_dir / Path(relative_filepath).parent / (filename_without_extension + ".pickle"))
             save_pickle(data=object_prediction_list, save_path=save_path)
+
         # export visualization
-        if export_visual:
+        if not novisual or view_video:
             output_dir = str(visual_dir / Path(relative_filepath).parent)
-            visualize_object_predictions(
+            result = visualize_object_predictions(
                 np.ascontiguousarray(image_as_pil),
                 object_prediction_list=object_prediction_list,
                 rect_th=visual_bbox_thickness,
                 text_size=visual_text_size,
                 text_th=visual_text_thickness,
-                output_dir=output_dir,
+                output_dir=output_dir if not source_is_video else None,
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
             )
+            if not novisual and source_is_video:  # export video
+                output_video_writer.write(result["image"])
+
+        # render video inference
+        if view_video:
+            cv2.imshow("Prediction of {}".format(str(video_file_name)), result["image"])
+            cv2.waitKey(1)
+
         time_end = time.time() - time_start
         durations_in_seconds["export_files"] = time_end
 
@@ -586,7 +630,7 @@ def predict(
         save_path = str(save_dir / "result.json")
         save_json(coco_json, save_path)
 
-    if export_visual or export_pickle or export_crop or dataset_json_path is not None:
+    if not novisual or export_pickle or export_crop or dataset_json_path is not None:
         print(f"Prediction results are successfully exported to {save_dir}")
 
     # print prediction duration
@@ -606,7 +650,7 @@ def predict(
             durations_in_seconds["prediction"],
             "seconds.",
         )
-        if export_visual:
+        if not novisual:
             print(
                 "Exporting performed in",
                 durations_in_seconds["export_files"],
@@ -698,13 +742,13 @@ def predict_fiftyone(
             0: no print
             1: print slice/prediction durations, number of slices, model loading/file exporting durations
     """
+    check_requirements(["fiftyone"])
+
     from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file, fo
 
     # assert prediction type
-    assert (
-        no_standard_prediction and no_sliced_prediction
-    ) is not True, "'no_standard_pred' and 'no_sliced_prediction' cannot be True at the same time."
-
+    if no_standard_prediction and no_sliced_prediction:
+        raise ValueError("'no_standard_pred' and 'no_sliced_prediction' cannot be True at the same time.")
     # for profiling
     durations_in_seconds = dict()
 
@@ -712,9 +756,8 @@ def predict_fiftyone(
 
     # init model instance
     time_start = time.time()
-    model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
-    DetectionModel = import_class(model_class_name)
-    detection_model = DetectionModel(
+    detection_model = AutoDetectionModel.from_pretrained(
+        model_type=model_type,
         model_path=model_path,
         config_path=model_config_path,
         confidence_threshold=model_confidence_threshold,

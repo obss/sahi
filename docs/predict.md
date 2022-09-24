@@ -67,7 +67,6 @@ result = predict(
     slice_width=512,
     overlap_height_ratio=0.2, 
     overlap_width_ratio=0.2,
-    export_visual=True,
     export_pickle=False,
     export_crop=False,
 )

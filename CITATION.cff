@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use this package, please cite it as below."
+message: "If you use this package, please consider citing it."
 authors:
 - family-names: "Akyon"
   given-names: "Fatih Cagatay"
@@ -14,8 +14,17 @@ authors:
 - family-names: "Eryuksel"
   given-names: "Ogulcan"
 title: "SAHI: A lightweight vision library for performing large scale object detection and instance segmentation"
-doi: 10.5281/zenodo.5718950
-month: nov
-year: 2021
-publisher: Zenodo
-url: "https://doi.org/10.5281/zenodo.5718950"
+preferred-citation:
+  type: article
+  title: "Slicing Aided Hyper Inference and Fine-tuning for Small Object Detection"
+  doi: https://doi.org/10.48550/arXiv.2202.06934
+  url: https://arxiv.org/abs/2202.06934
+  journal: arXiv
+  authors:
+  - family-names: "Akyon"
+    given-names: "Fatih Cagatay"
+  - family-names: "Altinuc"
+    given-names: "Sinan Onur"
+  - family-names: "Temizel"
+    given-names: "Alptekin"
+  year: 2022

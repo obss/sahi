@@ -1,4 +1,5 @@
-name: CI (PyTorch 1.11.0, TorchVision 0.12.0)
+name: CI (PyTorch 1.10.2, TorchVision 0.11.3)
+
 on:
   push:
     branches: [main]
@@ -11,7 +12,7 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: [3.7, 3.8, 3.9, '3.10']
+        python-version: [3.6, 3.7, 3.8, 3.9]
       fail-fast: false
 
     steps:
@@ -63,32 +64,40 @@ jobs:
         run: >
           pip install -r requirements.txt
 
-      - name: Install PyTorch(1.11.0) and TorchVision(0.12.0) on Linux and Windows
+      - name: Install PyTorch(1.10.2) and TorchVision(0.11.3) on Linux and Windows
         if: >
           matrix.operating-system == 'ubuntu-latest' ||
           matrix.operating-system == 'windows-latest'
         run: >
-          pip install torch==1.11.0+cpu torchvision==0.12.0+cpu
+          pip install torch==1.10.2+cpu torchvision==0.11.3+cpu
           -f https://download.pytorch.org/whl/torch_stable.html
 
-      - name: Install PyTorch on MacOS
+      - name: Install PyTorch(1.10.1) and TorchVision(0.11.2) on MacOS
         if: matrix.operating-system == 'macos-latest'
-        run: pip install torch==1.11.0 torchvision==0.12.0
+        run: pip install torch==1.10.1 torchvision==0.11.2
 
       - name: Install MMDetection(2.25.1) with MMCV(1.6.1)
         run: >
-          pip install mmcv-full==1.6.1 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.11.0/index.html
+          pip install mmcv-full==1.6.1 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.10.0/index.html
           pip install mmdet==2.25.1
 
       - name: Install YOLOv5(6.2.1) and Norfair(1.0.0)
         run: >
           pip install yolov5==6.2.1 norfair==1.0.0
 
-      - name: Install Transformers(4.22.1)
+      - name: Install Detectron2(0.6)
         run: >
-          pip install transformers==4.22.1
+          python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch1.10/index.html
+
+      - name: Install Transformers(4.22.1)
+        if: >
+          matrix.python-version != '3.6'
+        run: >
+          pip install transformers==4.21.2
 
       - name: Install Layer (0.10.*)
+        if: >
+          matrix.python-version != '3.6'
         run: >
           pip install -U "layer>=0.10.0,<0.11.0"
 

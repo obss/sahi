@@ -21,7 +21,9 @@ def main(
         iou_thresh (float): iou threshold for coco evaluation
     """
 
-    from sahi.utils.fiftyone import add_coco_labels, create_fiftyone_dataset_from_coco_file, fo
+    from fiftyone.utils.coco import add_coco_labels
+
+    from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file, fo
 
     coco_result_list = []
     result_name_list = []
@@ -54,7 +56,7 @@ def main(
     if result_json_paths:
         # Evaluate the predictions
         first_coco_result_name = result_name_list[0]
-        results = dataset.evaluate_detections(
+        _ = dataset.evaluate_detections(
             first_coco_result_name,
             gt_field="gt_detections",
             eval_key=f"{first_coco_result_name}_eval",

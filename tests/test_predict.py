@@ -118,6 +118,53 @@ class TestPredict(unittest.TestCase):
                 num_car += 1
         self.assertEqual(num_car, 2)
 
+    def test_get_prediction_automodel_yolov5(self):
+        from sahi.auto_model import AutoDetectionModel
+        from sahi.predict import get_prediction
+        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
+
+        # init model
+        download_yolov5n_model()
+
+        yolov5_detection_model = AutoDetectionModel.from_pretrained(
+            model_type="yolov5",
+            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            device=MODEL_DEVICE,
+            category_remapping=None,
+            load_at_init=False,
+            image_size=IMAGE_SIZE,
+        )
+        yolov5_detection_model.load_model()
+
+        # prepare image
+        image_path = "tests/data/small-vehicles1.jpeg"
+        image = read_image(image_path)
+
+        # get full sized prediction
+        prediction_result = get_prediction(
+            image=image, detection_model=yolov5_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
+        )
+        object_prediction_list = prediction_result.object_prediction_list
+
+        # compare
+        self.assertEqual(len(object_prediction_list), 2)
+        num_person = 0
+        for object_prediction in object_prediction_list:
+            if object_prediction.category.name == "person":
+                num_person += 1
+        self.assertEqual(num_person, 0)
+        num_truck = 0
+        for object_prediction in object_prediction_list:
+            if object_prediction.category.name == "truck":
+                num_truck += 1
+        self.assertEqual(num_truck, 0)
+        num_car = 0
+        for object_prediction in object_prediction_list:
+            if object_prediction.category.name == "car":
+                num_car += 1
+        self.assertEqual(num_car, 2)
+
     def test_get_sliced_prediction_mmdet(self):
         from sahi.model import MmdetDetectionModel
         from sahi.predict import get_sliced_prediction
@@ -265,7 +312,7 @@ class TestPredict(unittest.TestCase):
         source = "tests/data/coco_utils/"
         project_dir = "tests/data/predict_result"
 
-        # get full sized prediction
+        # get sliced prediction
         if os.path.isdir(project_dir):
             shutil.rmtree(project_dir, ignore_errors=True)
         predict(
@@ -287,7 +334,7 @@ class TestPredict(unittest.TestCase):
             postprocess_match_metric=match_metric,
             postprocess_match_threshold=match_threshold,
             postprocess_class_agnostic=class_agnostic,
-            export_visual=False,
+            novisual=True,
             export_pickle=False,
             export_crop=False,
             dataset_json_path=dataset_json_path,
@@ -304,7 +351,7 @@ class TestPredict(unittest.TestCase):
         source = "tests/data/coco_utils/"
         project_dir = "tests/data/predict_result"
 
-        # get full sized prediction
+        # get sliced prediction
         if os.path.isdir(project_dir):
             shutil.rmtree(project_dir, ignore_errors=True)
         predict(
@@ -326,10 +373,136 @@ class TestPredict(unittest.TestCase):
             postprocess_match_metric=match_metric,
             postprocess_match_threshold=match_threshold,
             postprocess_class_agnostic=class_agnostic,
-            export_visual=False,
+            novisual=True,
             export_pickle=False,
             export_crop=False,
             dataset_json_path=dataset_json_path,
+            project=project_dir,
+            name="exp",
+            verbose=1,
+        )
+
+    def test_video_prediction(self):
+        from os import path
+
+        from sahi.predict import predict
+        from sahi.utils.file import download_from_url
+        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
+
+        # download video file
+        source_url = "https://github.com/obss/sahi/releases/download/0.9.2/test.mp4"
+        destination_path = "tests/data/test.mp4"
+        if not path.exists(destination_path):
+            download_from_url(source_url, destination_path)
+
+        # init model
+        download_yolov5n_model()
+
+        postprocess_type = "GREEDYNMM"
+        match_metric = "IOS"
+        match_threshold = 0.5
+        image_size = 320
+        class_agnostic = True
+
+        # prepare paths
+        source = destination_path
+        project_dir = "tests/data/predict_result"
+
+        # get sliced inference from video input without exporting visual
+        if os.path.isdir(project_dir):
+            shutil.rmtree(project_dir, ignore_errors=True)
+        predict(
+            model_type="yolov5",
+            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
+            model_config_path=None,
+            model_confidence_threshold=CONFIDENCE_THRESHOLD,
+            model_device=MODEL_DEVICE,
+            model_category_mapping=None,
+            model_category_remapping=None,
+            source=source,
+            no_sliced_prediction=False,
+            no_standard_prediction=True,
+            slice_height=512,
+            slice_width=512,
+            image_size=image_size,
+            overlap_height_ratio=0.2,
+            overlap_width_ratio=0.2,
+            postprocess_type=postprocess_type,
+            postprocess_match_metric=match_metric,
+            postprocess_match_threshold=match_threshold,
+            postprocess_class_agnostic=class_agnostic,
+            novisual=True,
+            export_pickle=False,
+            export_crop=False,
+            dataset_json_path=None,
+            project=project_dir,
+            name="exp",
+            verbose=1,
+        )
+
+        postprocess_type = "GREEDYNMM"
+        match_metric = "IOS"
+        match_threshold = 0.5
+        image_size = 320
+        class_agnostic = True
+
+        # get standard inference from video input without exporting visual
+        if os.path.isdir(project_dir):
+            shutil.rmtree(project_dir, ignore_errors=True)
+        predict(
+            model_type="yolov5",
+            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
+            model_config_path=None,
+            model_confidence_threshold=CONFIDENCE_THRESHOLD,
+            model_device=MODEL_DEVICE,
+            model_category_mapping=None,
+            model_category_remapping=None,
+            source=source,
+            no_sliced_prediction=True,
+            no_standard_prediction=False,
+            image_size=image_size,
+            postprocess_type=postprocess_type,
+            postprocess_match_metric=match_metric,
+            postprocess_match_threshold=match_threshold,
+            postprocess_class_agnostic=class_agnostic,
+            novisual=True,
+            export_pickle=False,
+            export_crop=False,
+            dataset_json_path=None,
+            project=project_dir,
+            name="exp",
+            verbose=1,
+        )
+
+        # get standard inference from video input and export visual
+        postprocess_type = "GREEDYNMM"
+        match_metric = "IOS"
+        match_threshold = 0.5
+        image_size = 320
+        class_agnostic = True
+
+        # get full sized prediction
+        if os.path.isdir(project_dir):
+            shutil.rmtree(project_dir, ignore_errors=True)
+        predict(
+            model_type="yolov5",
+            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
+            model_config_path=None,
+            model_confidence_threshold=CONFIDENCE_THRESHOLD,
+            model_device=MODEL_DEVICE,
+            model_category_mapping=None,
+            model_category_remapping=None,
+            source=source,
+            no_sliced_prediction=True,
+            no_standard_prediction=False,
+            image_size=image_size,
+            postprocess_type=postprocess_type,
+            postprocess_match_metric=match_metric,
+            postprocess_match_threshold=match_threshold,
+            postprocess_class_agnostic=class_agnostic,
+            export_pickle=False,
+            export_crop=False,
+            dataset_json_path=None,
             project=project_dir,
             name="exp",
             verbose=1,
