@@ -49,7 +49,7 @@ Object detection and instance segmentation are by far the most important fields 
 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
 
-- [Official paper](https://arxiv.org/abs/2202.06934) (ICIP 2022 oral, 9+ citations)
+- [Official paper](https://arxiv.org/abs/2202.06934) (ICIP 2022 oral, 11+ citations)
 
 - [Pretrained weights and ICIP 2022 paper files](https://github.com/fcakyon/small-object-detection-benchmark)
 
@@ -115,7 +115,7 @@ conda install pytorch=1.11.0 torchvision=0.12.0 cudatoolkit=11.3 -c pytorch
 - Install your desired detection framework (yolov5):
 
 ```console
-pip install yolov5==6.1.8
+pip install yolov5==6.2.1
 ```
 
 - Install your desired detection framework (mmdet):
