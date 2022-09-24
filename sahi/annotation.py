@@ -13,7 +13,7 @@ from sahi.utils.cv import (
     get_coco_segmentation_from_bool_mask,
 )
 from sahi.utils.shapely import ShapelyAnnotation
-
+from pycocotools import mask as mask_utils
 
 class BoundingBox:
     """
@@ -194,9 +194,9 @@ class Mask:
             has_bool_mask = False
 
         if has_bool_mask:
-            self.bool_mask = bool_mask.astype(bool)
+            self.rle = mask_utils.encode(np.asfortranarray(bool_mask.astype(np.uint8))) #bool_mask.astype(bool)
         else:
-            self.bool_mask = None
+            self.rle = None
 
         self.shift_x = shift_amount[0]
         self.shift_y = shift_amount[1]
@@ -210,6 +210,10 @@ class Mask:
         else:
             self.full_shape_height = None
             self.full_shape_width = None
+
+    @property
+    def bool_mask(self):
+        return mask_utils.decode(self.rle).astype(bool)
 
     @property
     def shape(self):
