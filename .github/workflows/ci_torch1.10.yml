@@ -81,15 +81,15 @@ jobs:
           pip install mmcv-full==1.6.1 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.10.0/index.html
           pip install mmdet==2.25.1
 
-      - name: Install YOLOv5(6.1.8) and Norfair(1.0.0)
+      - name: Install YOLOv5(6.2.1) and Norfair(1.0.0)
         run: >
-          pip install yolov5==6.1.8 norfair==1.0.0
+          pip install yolov5==6.2.1 norfair==1.0.0
 
       - name: Install Detectron2(0.6)
         run: >
           python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch1.10/index.html
 
-      - name: Install Transformers(4.21.2)
+      - name: Install Transformers(4.22.1)
         if: >
           matrix.python-version != '3.6'
         run: >
@@ -105,9 +105,9 @@ jobs:
         run: |
           python -m unittest
 
-      - name: Install pycocotools(2.0.4)
+      - name: Install pycocotools(2.0.5)
         run: >
-          pip install pycocotools==2.0.4
+          pip install pycocotools==2.0.5
 
       - name: Install SAHI package from local setup.py
         run: >
