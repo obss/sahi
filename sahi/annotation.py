@@ -16,9 +16,11 @@ from sahi.utils.shapely import ShapelyAnnotation
 
 try:
     from pycocotools import mask as mask_utils
+
     use_rle = True
 except ImportError:
     use_rle = False
+
 
 class BoundingBox:
     """
@@ -122,7 +124,7 @@ class Mask:
         mask,
         full_shape=None,
         mask_threshold: float = 0.5,
-        shift_amount: list = [0, 0], 
+        shift_amount: list = [0, 0],
     ):
         """
         Args:
