@@ -2,7 +2,6 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
-import re
 from typing import Dict, List, Optional
 
 import numpy as np
