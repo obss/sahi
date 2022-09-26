@@ -149,8 +149,8 @@ def evaluate_core(
         cocoEval = COCOeval(cocoGt, cocoDt, iou_type)
         if areas is not None:
             cocoEval.params.areaRng = [
-                [0**2, areas[2]],
-                [0**2, areas[0]],
+                [0 ** 2, areas[2]],
+                [0 ** 2, areas[0]],
                 [areas[0], areas[1]],
                 [areas[1], areas[2]],
             ]
