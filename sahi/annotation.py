@@ -3,7 +3,6 @@
 
 import copy
 from typing import Dict, List, Optional
-
 import numpy as np
 
 from sahi.utils.coco import CocoAnnotation, CocoPrediction
@@ -122,7 +121,7 @@ class Mask:
         mask,
         full_shape=None,
         mask_threshold: float = 0.5,
-        shift_amount: list = [0, 0],
+        shift_amount: list = [0, 0], 
     ):
         """
         Args:
