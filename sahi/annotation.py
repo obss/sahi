@@ -3,6 +3,7 @@
 
 import copy
 from typing import Dict, List, Optional
+
 import numpy as np
 
 from sahi.utils.coco import CocoAnnotation, CocoPrediction
@@ -16,7 +17,7 @@ from sahi.utils.shapely import ShapelyAnnotation
 try:
     from pycocotools import mask as mask_utils
     use_rle = True
-except:
+except ImportError:
     use_rle = False
 
 class BoundingBox:
