@@ -38,6 +38,7 @@ setuptools.setup(
     extras_require={
         "tests": ["pytest", "mmdet", "norfair", "layer"],
         "dev": ["black==21.7b0", "flake8==3.9.2", "isort==5.9.2", "jupyterlab==3.0.14"],
+        "rle": ["pycocotools"]
     },
     classifiers=[
         "License :: OSI Approved :: MIT License",

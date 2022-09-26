@@ -2,6 +2,7 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
+import re
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -13,7 +14,12 @@ from sahi.utils.cv import (
     get_coco_segmentation_from_bool_mask,
 )
 from sahi.utils.shapely import ShapelyAnnotation
-from pycocotools import mask as mask_utils
+
+try:
+    from pycocotools import mask as mask_utils
+    use_rle = True
+except:
+    use_rle = False
 
 class BoundingBox:
     """
@@ -194,9 +200,9 @@ class Mask:
             has_bool_mask = False
 
         if has_bool_mask:
-            self.rle = mask_utils.encode(np.asfortranarray(bool_mask.astype(np.uint8))) #bool_mask.astype(bool)
+            self._mask = self.encode_bool_mask(bool_mask)
         else:
-            self.rle = None
+            self._mask = None
 
         self.shift_x = shift_amount[0]
         self.shift_y = shift_amount[1]
@@ -211,9 +217,21 @@ class Mask:
             self.full_shape_height = None
             self.full_shape_width = None
 
+    def encode_bool_mask(self, bool_mask):
+        _mask = bool_mask
+        if use_rle:
+            _mask = mask_utils.encode(np.asfortranarray(bool_mask.astype(np.uint8)))
+        return _mask
+
+    def decode_bool_mask(self, bool_mask):
+        _mask = bool_mask
+        if use_rle:
+            _mask = mask_utils.decode(bool_mask).astype(bool)
+        return _mask
+
     @property
     def bool_mask(self):
-        return mask_utils.decode(self.rle).astype(bool)
+        return self.decode_bool_mask(self._mask)
 
     @property
     def shape(self):
