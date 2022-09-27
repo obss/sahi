@@ -200,6 +200,16 @@ class MmdetDetectionModel(DetectionModel):
         if self.image_size is not None:
             model.cfg.data.test.pipeline[1]["img_scale"] = (self.image_size, self.image_size)
 
+        self.set_model(model)
+
+    def set_model(self, model: Any):
+        """
+        Sets the underlying MMDetection model.
+        Args:
+            model: Any
+                A MMDetection model
+        """
+
         # set self.model
         self.model = model
 
