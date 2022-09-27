@@ -101,13 +101,13 @@ jobs:
         run: >
           pip install -U "layer>=0.10.0,<0.11.0"
 
-      - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
-        run: |
-          python -m unittest
-
       - name: Install pycocotools(2.0.5)
         run: >
           pip install pycocotools==2.0.5
+
+      - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
+        run: |
+          python -m unittest
 
       - name: Install SAHI package from local setup.py
         run: >

@@ -79,7 +79,7 @@ jobs:
         if: >
           matrix.python-version != '3.6'
         run: >
-          pip install transformers==4.21.2
+          pip install transformers==4.22.1
 
       - name: Install Layer (0.10.*)
         if: >
