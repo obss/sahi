@@ -434,7 +434,7 @@ class Yolov5DetectionModel(DetectionModel):
         import yolov5
         from packaging import version
 
-        if version.parse(yolov5.__version__) >= version.parse("6.1.9"):
+        if version.parse(yolov5.__version__) >= version.parse("6.2.0"):
             return list(self.model.names.values())
         else:
             return self.model.names
