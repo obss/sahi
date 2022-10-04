@@ -42,7 +42,7 @@ setuptools.setup(
             "flake8==3.9.2",
             "importlib-metadata>=1.1.0,<4.3;python_version<'3.8'",
             "isort==5.9.2",
-            "jupyterlab==3.0.14"
+            "jupyterlab==3.0.14",
         ],
     },
     classifiers=[
