@@ -17,15 +17,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Restore Ubuntu cache
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         if: matrix.operating-system == 'ubuntu-latest'
         with:
           path: ~/.cache/pip
@@ -33,7 +33,7 @@ jobs:
           restore-keys: ${{ matrix.os }}-${{ matrix.python-version }}-
 
       - name: Restore MacOS cache
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         if: matrix.operating-system == 'macos-latest'
         with:
           path: ~/Library/Caches/pip
@@ -41,7 +41,7 @@ jobs:
           restore-keys: ${{ matrix.os }}-${{ matrix.python-version }}-
 
       - name: Restore Windows cache
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         if: matrix.operating-system == 'windows-latest'
         with:
           path: ~\AppData\Local\pip\Cache
@@ -76,24 +76,28 @@ jobs:
         if: matrix.operating-system == 'macos-latest'
         run: pip install torch==1.10.1 torchvision==0.11.2
 
-      - name: Install MMDetection(2.25.0) with MMCV(1.5.3)
+      - name: Install MMDetection(2.25.1) with MMCV(1.6.1)
         run: >
-          pip install mmcv-full==1.5.3 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.10.0/index.html
-          pip install mmdet==2.25.0
+          pip install mmcv-full==1.6.1 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.10.0/index.html
+          pip install mmdet==2.25.1
 
-      - name: Install YOLOv5(6.1.5) and Norfair(1.0.0)
+      - name: Install YOLOv5(6.2.1) and Norfair(2.0.0)
         run: >
-          pip install yolov5==6.1.5 norfair==1.0.0
+          pip install yolov5==6.2.1 norfair==2.0.0
 
+      - name: Install Yolov7
+        run: >
+          pip install -r https://raw.githubusercontent.com/WongKinYiu/yolov7/main/requirements.txt
+          
       - name: Install Detectron2(0.6)
         run: >
           python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch1.10/index.html
 
-      - name: Install Transformers(4.20.0)
+      - name: Install Transformers(4.22.1)
         if: >
           matrix.python-version != '3.6'
         run: >
-          pip install transformers==4.20.0
+          pip install transformers==4.21.2
 
       - name: Install Layer (0.10.*)
         if: >
@@ -101,17 +105,13 @@ jobs:
         run: >
           pip install -U "layer>=0.10.0,<0.11.0"
 
+      - name: Install pycocotools(2.0.5)
+        run: >
+          pip install pycocotools==2.0.5
+
       - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
         run: |
           python -m unittest
-
-      - name: Install pycocotools(2.0.4)
-        run: >
-          pip install pycocotools==2.0.4
-      
-      - name: Install Yolov7
-        run: >
-          pip install -r https://raw.githubusercontent.com/WongKinYiu/yolov7/main/requirements.txt
 
       - name: Install SAHI package from local setup.py
         run: >
