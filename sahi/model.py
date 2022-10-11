@@ -199,6 +199,16 @@ class MmdetDetectionModel(DetectionModel):
         if self.image_size is not None:
             model.cfg.data.test.pipeline[1]["img_scale"] = (self.image_size, self.image_size)
 
+        self.set_model(model)
+
+    def set_model(self, model: Any):
+        """
+        Sets the underlying MMDetection model.
+        Args:
+            model: Any
+                A MMDetection model
+        """
+
         # set self.model
         self.model = model
 
@@ -420,12 +430,23 @@ class Yolov5DetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        has_mask = self.model.with_mask
-        return has_mask
+        import yolov5
+        from packaging import version
+
+        if version.parse(yolov5.__version__) < version.parse("6.2.0"):
+            return False
+        else:
+            return False  # fix when yolov5 supports segmentation models
 
     @property
     def category_names(self):
-        return self.model.names
+        import yolov5
+        from packaging import version
+
+        if version.parse(yolov5.__version__) >= version.parse("6.2.0"):
+            return list(self.model.names.values())
+        else:
+            return self.model.names
 
     def _create_object_prediction_list_from_original_predictions(
         self,

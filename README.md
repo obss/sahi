@@ -18,11 +18,11 @@
     <br>
     <a href="https://badge.fury.io/py/sahi"><img src="https://badge.fury.io/py/sahi.svg" alt="pypi version"></a>
     <a href="https://anaconda.org/conda-forge/sahi"><img src="https://anaconda.org/conda-forge/sahi/badges/version.svg" alt="conda version"></a>
-    <a href="https://github.com/obss/sahi/actions?query=event%3Apush+branch%3Amain+is%3Acompleted+workflow%3ACI"><img src="https://github.com/obss/sahi/workflows/CI/badge.svg" alt="ci"></a>
     <br>
     <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov5.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
     <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img src="https://raw.githubusercontent.com/obss/sahi/main/resources/hf_spaces_badge.svg" alt="HuggingFace Spaces"></a>
     <br>
+    <a href="https://github.com/obss/sahi/actions/workflows/package_testing.yml"><img src="https://github.com/obss/sahi/actions/workflows/package_testing.yml/badge.svg" alt="package testing"></a>
     
 </div>
 </div>
@@ -49,7 +49,9 @@ Object detection and instance segmentation are by far the most important fields 
 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
 
-- [Official paper](https://arxiv.org/abs/2202.06934) (ICIP22 oral, 5+ citations)
+- [Official paper](https://arxiv.org/abs/2202.06934) (ICIP 2022 oral, 11+ citations)
+
+- [Pretrained weights and ICIP 2022 paper files](https://github.com/fcakyon/small-object-detection-benchmark)
 
 - [Video inference support is live](https://github.com/obss/sahi/issues/457) (NEW)
 
@@ -107,23 +109,23 @@ conda install -c conda-forge shapely
 - Install your desired version of pytorch and torchvision:
 
 ```console
-conda install pytorch=1.10.2 torchvision=0.11.3 cudatoolkit=11.3 -c pytorch
+conda install pytorch=1.11.0 torchvision=0.12.0 cudatoolkit=11.3 -c pytorch
 ```
   
 - Install your desired detection framework (yolov5):
 
 ```console
-pip install yolov5==6.1.3
+pip install yolov5==6.2.1
 ```
 
 - Install your desired detection framework (mmdet):
 
 ```console
-pip install mmcv-full==1.5.3 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html
+pip install mmcv-full==1.6.1 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
 ```
 
 ```console
-pip install mmdet==2.25.0
+pip install mmdet==2.25.1
 ```
 
 - Install your desired detection framework (detectron2):
@@ -210,7 +212,7 @@ pip install -e ."[dev]"
 - Reformat with black and isort:
 
 ```bash
-python scripts/run_code_style.py format
+python -m scripts.run_code_style format
 ```
 
 ## <div align="center">Contributors</div>

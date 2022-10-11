@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from sahi.utils.file import import_model_class
 from sahi.utils.import_utils import check_requirements
@@ -17,7 +17,8 @@ class AutoDetectionModel:
     @staticmethod
     def from_pretrained(
         model_type: str,
-        model_path: str,
+        model_path: Optional[str] = None,
+        model: Optional[Any] = None,
         config_path: Optional[str] = None,
         device: Optional[str] = None,
         mask_threshold: float = 0.5,
@@ -63,6 +64,7 @@ class AutoDetectionModel:
 
         return DetectionModel(
             model_path=model_path,
+            model=model,
             config_path=config_path,
             device=device,
             mask_threshold=mask_threshold,

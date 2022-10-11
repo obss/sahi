@@ -69,10 +69,6 @@ jobs:
 
       - name: Install YOLOv5(6.2.1) and Norfair(2.0.0)
         run: >
-          pip install yolov5==6.2.1 norfair==2.0.0
-          
-      - name: Install Yolov7(1.0.0)
-        run: >
           pip install -r https://raw.githubusercontent.com/WongKinYiu/yolov7/main/requirements.txt
           
       - name: Install Detectron2(0.6)

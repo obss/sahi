@@ -14,6 +14,13 @@ from sahi.utils.cv import (
 )
 from sahi.utils.shapely import ShapelyAnnotation
 
+try:
+    from pycocotools import mask as mask_utils
+
+    use_rle = True
+except ImportError:
+    use_rle = False
+
 
 class BoundingBox:
     """
@@ -194,9 +201,9 @@ class Mask:
             has_bool_mask = False
 
         if has_bool_mask:
-            self.bool_mask = bool_mask.astype(bool)
+            self._mask = self.encode_bool_mask(bool_mask)
         else:
-            self.bool_mask = None
+            self._mask = None
 
         self.shift_x = shift_amount[0]
         self.shift_y = shift_amount[1]
@@ -210,6 +217,22 @@ class Mask:
         else:
             self.full_shape_height = None
             self.full_shape_width = None
+
+    def encode_bool_mask(self, bool_mask):
+        _mask = bool_mask
+        if use_rle:
+            _mask = mask_utils.encode(np.asfortranarray(bool_mask.astype(np.uint8)))
+        return _mask
+
+    def decode_bool_mask(self, bool_mask):
+        _mask = bool_mask
+        if use_rle:
+            _mask = mask_utils.decode(bool_mask).astype(bool)
+        return _mask
+
+    @property
+    def bool_mask(self):
+        return self.decode_bool_mask(self._mask)
 
     @property
     def shape(self):
