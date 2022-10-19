@@ -43,25 +43,25 @@ Object detection and instance segmentation are by far the most important fields 
 
 ## <div align="center">Quick Start Examples</div>
 
-[Check this link for a list of competitions that SAHI made us win 🚀](https://github.com/obss/sahi/issues/384)
+[Check this link for a list of competitions that SAHI made us win 🚀](https://github.com/obss/sahi/discussions/688)
 
 ### Tutorials
 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
 
-- [Official paper](https://arxiv.org/abs/2202.06934) (ICIP 2022 oral, 11+ citations)
+- [Official paper](https://arxiv.org/abs/2202.06934) (ICIP 2022 oral, 17+ citations) (NEW)
 
 - [Pretrained weights and ICIP 2022 paper files](https://github.com/fcakyon/small-object-detection-benchmark)
 
-- [Video inference support is live](https://github.com/obss/sahi/issues/457) (NEW)
+- [Video inference support is live](https://github.com/obss/sahi/discussions/626)
 
 - [Kaggle notebook](https://www.kaggle.com/remekkinas/sahi-slicing-aided-hyper-inference-yv5-and-yx)
 
 - [Satellite object detection](https://blog.ml6.eu/how-to-detect-small-objects-in-very-large-images-70234bab0f98)
 
-- [Error analysis plots & evaluation](https://github.com/obss/sahi/issues/356) (NEW)
+- [Error analysis plots & evaluation](https://github.com/obss/sahi/discussions/622) (NEW)
 
-- [Interactive result visualization and inspection](https://github.com/obss/sahi/issues/357) (NEW)
+- [Interactive result visualization and inspection](https://github.com/obss/sahi/discussions/624) (NEW)
 
 - [COCO dataset conversion](https://medium.com/codable/convert-any-dataset-to-coco-object-detection-format-with-sahi-95349e1fe2b7)
 
@@ -148,7 +148,7 @@ pip install transformers timm
 
 Find detailed info on `sahi predict` command at [cli.md](docs/cli.md#predict-command-usage).
 
-Find detailed info on video inference at [video inference tutorial](https://github.com/obss/sahi/issues/457).
+Find detailed info on video inference at [video inference tutorial](https://github.com/obss/sahi/discussions/626).
 
 Find detailed info on image/dataset slicing utilities at [slicing.md](docs/slicing.md).
 
@@ -156,13 +156,13 @@ Find detailed info on image/dataset slicing utilities at [slicing.md](docs/slici
 
 <img width="700" alt="sahi-analyse" src="https://user-images.githubusercontent.com/34196005/149537858-22b2e274-04e8-4e10-8139-6bdcea32feab.gif">
 
-Find detailed info at [Error Analysis Plots & Evaluation](https://github.com/obss/sahi/issues/356).
+Find detailed info at [Error Analysis Plots & Evaluation](https://github.com/obss/sahi/discussions/622).
 
 ### Interactive Visualization & Inspection
 
 <img width="700" alt="sahi-fiftyone" src="https://user-images.githubusercontent.com/34196005/149321540-e6ddd5f3-36dc-4267-8574-a985dd0c6578.gif">
 
-Find detailed info at [Interactive Result Visualization and Inspection](https://github.com/obss/sahi/issues/357).
+Find detailed info at [Interactive Result Visualization and Inspection](https://github.com/obss/sahi/discussions/624).
 
 ### Other utilities
 
