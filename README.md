@@ -14,15 +14,16 @@
 <div>
     <a href="https://pepy.tech/project/sahi"><img src="https://pepy.tech/badge/sahi" alt="downloads"></a>
     <a href="https://pepy.tech/project/sahi"><img src="https://pepy.tech/badge/sahi/month" alt="downloads"></a>
-    <a href="https://doi.org/10.48550/arXiv.2202.06934"><img src="https://img.shields.io/badge/arXiv-2202.06934-b31b1b.svg" alt="ci"></a>
     <br>
     <a href="https://badge.fury.io/py/sahi"><img src="https://badge.fury.io/py/sahi.svg" alt="pypi version"></a>
     <a href="https://anaconda.org/conda-forge/sahi"><img src="https://anaconda.org/conda-forge/sahi/badges/version.svg" alt="conda version"></a>
-    <br>
+    <a href="https://github.com/obss/sahi/actions/workflows/package_testing.yml"><img src="https://github.com/obss/sahi/actions/workflows/package_testing.yml/badge.svg" alt="package testing"></a>
+  <br>
+    <a href="https://ieeexplore.ieee.org/document/9897990"><img src="https://img.shields.io/badge/DOI-10.1109%2FICIP46576.2022.9897990-orange.svg" alt="ci"></a>
+  <br>
     <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov5.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
     <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img src="https://raw.githubusercontent.com/obss/sahi/main/resources/hf_spaces_badge.svg" alt="HuggingFace Spaces"></a>
-    <br>
-    <a href="https://github.com/obss/sahi/actions/workflows/package_testing.yml"><img src="https://github.com/obss/sahi/actions/workflows/package_testing.yml/badge.svg" alt="package testing"></a>
+    
     
 </div>
 </div>
@@ -49,7 +50,7 @@ Object detection and instance segmentation are by far the most important fields 
 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
 
-- [Official paper](https://arxiv.org/abs/2202.06934) (ICIP 2022 oral, 17+ citations) (NEW)
+- [Official paper](https://ieeexplore.ieee.org/document/9897990) (ICIP 2022 oral, 18+ citations) (NEW)
 
 - [Pretrained weights and ICIP 2022 paper files](https://github.com/fcakyon/small-object-detection-benchmark)
 
@@ -178,7 +179,9 @@ If you use this package in your work, please cite it as:
 @article{akyon2022sahi,
   title={Slicing Aided Hyper Inference and Fine-tuning for Small Object Detection},
   author={Akyon, Fatih Cagatay and Altinuc, Sinan Onur and Temizel, Alptekin},
-  journal={arXiv preprint arXiv:2202.06934},
+  journal={2022 IEEE International Conference on Image Processing (ICIP)},
+  doi={10.1109/ICIP46576.2022.9897990},
+  pages={966-970},
   year={2022}
 }
 ```
