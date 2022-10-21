@@ -17,9 +17,9 @@ title: "SAHI: A lightweight vision library for performing large scale object det
 preferred-citation:
   type: article
   title: "Slicing Aided Hyper Inference and Fine-tuning for Small Object Detection"
-  doi: https://doi.org/10.48550/arXiv.2202.06934
-  url: https://arxiv.org/abs/2202.06934
-  journal: arXiv
+  doi: 10.1109/ICIP46576.2022.9897990
+  url: https://ieeexplore.ieee.org/document/9897990
+  journal: 2022 IEEE International Conference on Image Processing (ICIP)
   authors:
   - family-names: "Akyon"
     given-names: "Fatih Cagatay"
@@ -28,3 +28,5 @@ preferred-citation:
   - family-names: "Temizel"
     given-names: "Alptekin"
   year: 2022
+  start: 966
+  end: 970
