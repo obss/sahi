@@ -91,6 +91,13 @@ jobs:
         run: >
           pip install pycocotools==2.0.5
 
+      - name: Install tensorflow(2.9.1) and tensorflow_hub(0.12.0)
+        if: >
+            matrix.python-version != '3.6'
+        run: >
+          pip install  tensorflow==2.9.1
+          pip install tensorflow_hub==0.12.0
+
       - name: Install latest SAHI package
         run: >
           pip install --upgrade --force-reinstall sahi
