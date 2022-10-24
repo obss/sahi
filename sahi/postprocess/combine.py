@@ -235,6 +235,7 @@ def greedy_nmm(
 
         # sanity check
         if len(order) == 0:
+            keep_to_merge_list[idx.tolist()] = []
             break
 
         # select coordinates of BBoxes according to
