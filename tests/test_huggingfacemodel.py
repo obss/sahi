@@ -287,7 +287,7 @@ if sys.version_info >= (3, 7):
                     num_car += 1
             self.assertEqual(num_person, 0)
             self.assertEqual(num_truck, 5)
-            self.assertEqual(num_car, 48)
+            self.assertEqual(num_car, 49)
 
 
 if __name__ == "__main__":
