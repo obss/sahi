@@ -3,8 +3,6 @@
 
 import unittest
 
-import numpy as np
-
 from sahi.utils.cv import read_image
 from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_yolox_tiny_model
 
@@ -15,7 +13,7 @@ IMAGE_SIZE = 320
 
 class TestMmdetDetectionModel(unittest.TestCase):
     def test_load_model(self):
-        from sahi.model import MmdetDetectionModel
+        from sahi.models.mmdet import MmdetDetectionModel
 
         download_mmdet_cascade_mask_rcnn_model()
 
@@ -31,7 +29,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self.assertNotEqual(mmdet_detection_model.model, None)
 
     def test_perform_inference_with_mask_output(self):
-        from sahi.model import MmdetDetectionModel
+        from sahi.models.mmdet import MmdetDetectionModel
 
         # init model
         download_mmdet_cascade_mask_rcnn_model()
@@ -69,7 +67,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self.assertEqual(len(masks), 80)
 
     def test_perform_inference_without_mask_output(self):
-        from sahi.model import MmdetDetectionModel
+        from sahi.models.mmdet import MmdetDetectionModel
 
         # init model
         download_mmdet_yolox_tiny_model()
@@ -106,7 +104,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self.assertEqual(len(boxes), 80)
 
     def test_convert_original_predictions_with_mask_output(self):
-        from sahi.model import MmdetDetectionModel
+        from sahi.models.mmdet import MmdetDetectionModel
 
         # init model
         download_mmdet_cascade_mask_rcnn_model()
@@ -150,7 +148,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
     def test_convert_original_predictions_without_mask_output(self):
-        from sahi.model import MmdetDetectionModel
+        from sahi.models.mmdet import MmdetDetectionModel
 
         # init model
         download_mmdet_yolox_tiny_model()

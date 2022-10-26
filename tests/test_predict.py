@@ -27,7 +27,7 @@ class TestPredict(unittest.TestCase):
         from sahi.prediction import ObjectPrediction
 
     def test_get_prediction_mmdet(self):
-        from sahi.model import MmdetDetectionModel
+        from sahi.models.mmdet import MmdetDetectionModel
         from sahi.predict import get_prediction
         from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
 
@@ -73,7 +73,7 @@ class TestPredict(unittest.TestCase):
         self.assertEqual(num_car, 2)
 
     def test_get_prediction_yolov5(self):
-        from sahi.model import Yolov5DetectionModel
+        from sahi.models.yolov5 import Yolov5DetectionModel
         from sahi.predict import get_prediction
         from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
@@ -166,7 +166,7 @@ class TestPredict(unittest.TestCase):
         self.assertEqual(num_car, 2)
 
     def test_get_sliced_prediction_mmdet(self):
-        from sahi.model import MmdetDetectionModel
+        from sahi.models.mmdet import MmdetDetectionModel
         from sahi.predict import get_sliced_prediction
         from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
 
@@ -231,7 +231,7 @@ class TestPredict(unittest.TestCase):
         self.assertEqual(num_car, 15)
 
     def test_get_sliced_prediction_yolov5(self):
-        from sahi.model import Yolov5DetectionModel
+        from sahi.models.yolov5 import Yolov5DetectionModel
         from sahi.predict import get_sliced_prediction
         from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 

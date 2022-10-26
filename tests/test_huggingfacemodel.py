@@ -19,7 +19,7 @@ if sys.version_info >= (3, 7):
 
     class TestHuggingfaceDetectionModel(unittest.TestCase):
         def test_load_model(self):
-            from sahi.model import HuggingfaceDetectionModel
+            from sahi.models.huggingface import HuggingfaceDetectionModel
 
             huggingface_detection_model = HuggingfaceDetectionModel(
                 model_path=HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH,
@@ -34,7 +34,7 @@ if sys.version_info >= (3, 7):
         def test_set_model(self):
             from transformers import AutoFeatureExtractor, AutoModelForObjectDetection
 
-            from sahi.model import HuggingfaceDetectionModel
+            from sahi.models.huggingface import HuggingfaceDetectionModel
 
             huggingface_model = AutoModelForObjectDetection.from_pretrained(
                 HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH
@@ -55,7 +55,7 @@ if sys.version_info >= (3, 7):
             self.assertNotEqual(huggingface_detection_model.model, None)
 
         def test_perform_inference(self):
-            from sahi.model import HuggingfaceDetectionModel
+            from sahi.models.huggingface import HuggingfaceDetectionModel
 
             huggingface_detection_model = HuggingfaceDetectionModel(
                 model_path=HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH,
@@ -104,7 +104,7 @@ if sys.version_info >= (3, 7):
                 self.assertGreaterEqual(score.item(), CONFIDENCE_THRESHOLD)
 
         def test_convert_original_predictions(self):
-            from sahi.model import HuggingfaceDetectionModel
+            from sahi.models.huggingface import HuggingfaceDetectionModel
 
             huggingface_detection_model = HuggingfaceDetectionModel(
                 model_path=HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH,
@@ -146,7 +146,7 @@ if sys.version_info >= (3, 7):
                 self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
         def test_get_prediction_huggingface(self):
-            from sahi.model import HuggingfaceDetectionModel
+            from sahi.models.huggingface import HuggingfaceDetectionModel
             from sahi.predict import get_prediction
             from sahi.utils.huggingface import HuggingfaceTestConstants
 
@@ -233,7 +233,7 @@ if sys.version_info >= (3, 7):
             self.assertEqual(num_car, 27)
 
         def test_get_sliced_prediction_huggingface(self):
-            from sahi.model import HuggingfaceDetectionModel
+            from sahi.models.huggingface import HuggingfaceDetectionModel
             from sahi.predict import get_sliced_prediction
             from sahi.utils.huggingface import HuggingfaceTestConstants
 

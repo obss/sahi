@@ -15,7 +15,7 @@ IMAGE_SIZE = 320
 
 class TestYolov5DetectionModel(unittest.TestCase):
     def test_load_model(self):
-        from sahi.model import Yolov5DetectionModel
+        from sahi.models.yolov5 import Yolov5DetectionModel
 
         download_yolov5n_model()
 
@@ -32,7 +32,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
     def test_set_model(self):
         import yolov5
 
-        from sahi.model import Yolov5DetectionModel
+        from sahi.models.yolov5 import Yolov5DetectionModel
 
         download_yolov5n_model()
 
@@ -49,7 +49,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
         self.assertNotEqual(yolov5_detection_model.model, None)
 
     def test_perform_inference(self):
-        from sahi.model import Yolov5DetectionModel
+        from sahi.models.yolov5 import Yolov5DetectionModel
 
         # init model
         download_yolov5n_model()
@@ -90,7 +90,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
             self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
 
     def test_convert_original_predictions(self):
-        from sahi.model import Yolov5DetectionModel
+        from sahi.models.yolov5 import Yolov5DetectionModel
 
         # init model
         download_yolov5n_model()

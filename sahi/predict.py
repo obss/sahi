@@ -16,7 +16,7 @@ import numpy as np
 from tqdm import tqdm
 
 from sahi.auto_model import AutoDetectionModel
-from sahi.model import DetectionModel
+from sahi.models.base import DetectionModel
 from sahi.postprocess.combine import (
     GreedyNMMPostprocess,
     LSNMSPostprocess,
