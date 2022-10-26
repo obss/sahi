@@ -148,7 +148,6 @@ Print related package versions in the current env as:
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   detectron2 version 0.6+cpu is available.
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   transformers version 4.20.0 is available.
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   timm version 0.4.12 is available.
-06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   layer version 0.10.2510447650 is available.
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   fiftyone version 0.14.2 is available.
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   norfair version 1.0.0 is available.
 ```

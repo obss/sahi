@@ -1,4 +1,3 @@
-import contextlib
 import importlib.util
 import logging
 import os
@@ -48,7 +47,6 @@ def print_enviroment_info():
     _detectron2_available, _detectron2_version = get_package_info("detectron2")
     _transformers_available, _transformers_version = get_package_info("transformers")
     _timm_available, _timm_version = get_package_info("timm")
-    _layer_available, _layer_version = get_package_info("layer")
     _fiftyone_available, _fiftyone_version = get_package_info("fiftyone")
     _norfair_available, _norfair_version = get_package_info("norfair")
 

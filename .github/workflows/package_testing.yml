@@ -81,12 +81,6 @@ jobs:
         run: >
           pip install transformers==4.22.1
 
-      - name: Install Layer (0.10.*)
-        if: >
-          matrix.python-version != '3.6'
-        run: >
-          pip install -U "layer>=0.10.0,<0.11.0"
-
       - name: Install pycocotools(2.0.5)
         run: >
           pip install pycocotools==2.0.5
