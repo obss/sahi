@@ -228,7 +228,7 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 14)
+        self.assertEqual(num_car, 15)
 
     def test_get_sliced_prediction_yolov5(self):
         from sahi.model import Yolov5DetectionModel
@@ -292,7 +292,7 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 10)
+        self.assertEqual(num_car, 11)
 
     def test_coco_json_prediction(self):
         from sahi.predict import predict
