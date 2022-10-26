@@ -16,7 +16,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
     def test_load_model(self):
         from torchvision.models.detection.faster_rcnn import RoIHeads
 
-        from sahi.model import TorchVisionDetectionModel
+        from sahi.models.torchvision import TorchVisionDetectionModel
 
         torchvision_detection_model = TorchVisionDetectionModel(
             config_path=TorchVisionTestConstants.FASTERRCNN_CONFIG_PATH,
@@ -30,7 +30,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
     def test_load_model_without_config_path(self):
         from torchvision.models.detection.faster_rcnn import RoIHeads
 
-        from sahi.model import TorchVisionDetectionModel
+        from sahi.models.torchvision import TorchVisionDetectionModel
 
         torchvision_detection_model = TorchVisionDetectionModel(
             confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -44,7 +44,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         import torchvision
         from torchvision.models.detection.ssd import SSDHead
 
-        from sahi.model import TorchVisionDetectionModel
+        from sahi.models.torchvision import TorchVisionDetectionModel
 
         NUM_CLASSES = 15
         PRETRAINED = False
@@ -61,7 +61,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(isinstance(torchvision_detection_model.model.head, SSDHead), True)
 
     def test_perform_inference_without_mask_output(self):
-        from sahi.model import TorchVisionDetectionModel
+        from sahi.models.torchvision import TorchVisionDetectionModel
 
         # init model
         torchvision_detection_model = TorchVisionDetectionModel(
@@ -110,7 +110,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             self.assertTrue(scores[score_ind] >= 0)
 
     def test_convert_original_predictions_without_mask_output(self):
-        from sahi.model import TorchVisionDetectionModel
+        from sahi.models.torchvision import TorchVisionDetectionModel
 
         torchvision_detection_model = TorchVisionDetectionModel(
             config_path=TorchVisionTestConstants.FASTERRCNN_CONFIG_PATH,
@@ -139,7 +139,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [315, 309, 65, 57])
 
     def test_convert_original_predictions_with_mask_output(self):
-        from sahi.model import TorchVisionDetectionModel
+        from sahi.models.torchvision import TorchVisionDetectionModel
 
         torchvision_detection_model = TorchVisionDetectionModel(
             config_path=TorchVisionTestConstants.FASTERRCNN_CONFIG_PATH,
@@ -168,7 +168,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [315, 309, 65, 57])
 
     def test_get_prediction_torchvision(self):
-        from sahi.model import TorchVisionDetectionModel
+        from sahi.models.torchvision import TorchVisionDetectionModel
         from sahi.predict import get_prediction
 
         # init model
@@ -203,7 +203,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [315, 309, 65, 57])
 
     def test_get_sliced_prediction_torchvision(self):
-        from sahi.model import TorchVisionDetectionModel
+        from sahi.models.torchvision import TorchVisionDetectionModel
         from sahi.predict import get_sliced_prediction
 
         # init model

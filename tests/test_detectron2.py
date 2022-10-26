@@ -3,7 +3,7 @@
 
 import unittest
 
-from sahi.model import Detectron2DetectionModel
+from sahi.models.detectron2 import Detectron2DetectionModel
 from sahi.utils.cv import read_image
 from sahi.utils.detectron2 import Detectron2TestConstants
 from sahi.utils.import_utils import get_package_info

@@ -1,7 +1,6 @@
 from typing import Any, Dict, Optional
 
 from sahi.utils.file import import_model_class
-from sahi.utils.import_utils import check_requirements
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "mmdet": "MmdetDetectionModel",
@@ -59,7 +58,7 @@ class AutoDetectionModel:
         """
 
         model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
-        DetectionModel = import_model_class(model_class_name)
+        DetectionModel = import_model_class(model_type, model_class_name)
 
         return DetectionModel(
             model_path=model_path,

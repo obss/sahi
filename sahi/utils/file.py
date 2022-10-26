@@ -195,17 +195,19 @@ def save_pickle(data, save_path):
         pickle.dump(data, outfile)
 
 
-def import_model_class(class_name):
+def import_model_class(model_type, class_name):
     """
     Imports a predefined detection class by class name.
 
     Args:
+        model_type: str
+            "yolov5", "detectron2", "mmdet", "huggingface" etc
         model_name: str
             Name of the detection model class (example: "MmdetDetectionModel")
     Returns:
         class_: class with given path
     """
-    module = __import__("sahi.model", fromlist=[class_name])
+    module = __import__(f"sahi.models.{model_type}", fromlist=[class_name])
     class_ = getattr(module, class_name)
     return class_
 
