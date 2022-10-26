@@ -276,7 +276,7 @@ if sys.version_info >= (3, 7):
             object_prediction_list = prediction_result.object_prediction_list
 
             # compare
-            self.assertEqual(len(object_prediction_list), 53)
+            self.assertEqual(len(object_prediction_list), 54)
             num_person = num_truck = num_car = 0
             for object_prediction in object_prediction_list:
                 if object_prediction.category.name == "person":

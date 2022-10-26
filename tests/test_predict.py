@@ -213,7 +213,7 @@ class TestPredict(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 14)
+        self.assertEqual(len(object_prediction_list), 15)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -277,7 +277,7 @@ class TestPredict(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 10)
+        self.assertEqual(len(object_prediction_list), 11)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":

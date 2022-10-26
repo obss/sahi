@@ -246,7 +246,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 18)
+        self.assertEqual(len(object_prediction_list), 19)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [765, 259, 29, 25])
