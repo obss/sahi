@@ -164,7 +164,7 @@ class MmdetDetectionModel(DetectionModel):
                     if self.has_mask:
                         bool_mask = category_masks[category_predictions_ind]
                         # check if mask is valid
-                        # https://github.com/obss/sahi/issues/389
+                        # https://github.com/obss/sahi/discussions/696
                         if get_bbox_from_bool_mask(bool_mask) is None:
                             continue
                     else:
