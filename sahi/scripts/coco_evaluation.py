@@ -125,22 +125,6 @@ def evaluate_core(
         with open(result_path) as json_file:
             results = json.load(json_file)
         try:
-            if iou_type == "segm":
-                # Refer to https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocotools/coco.py#L331  # noqa
-                # When evaluating mask AP, if the results contain bbox,
-                # cocoapi will use the box area instead of the mask area
-                # for calculating the instance area. Though the overall AP
-                # is not affected, this leads to different
-                # small/medium/large mask AP results.
-                for x in results:
-                    x.pop("bbox")
-                warnings.simplefilter("once")
-                warnings.warn(
-                    'The key "bbox" is deleted for more accurate mask AP '
-                    "of small/medium/large instances since v2.12.0. This "
-                    "does not change the overall mAP calculation.",
-                    UserWarning,
-                )
             cocoDt = cocoGt.loadRes(results)
         except IndexError:
             print("The testing results of the whole dataset is empty.")
