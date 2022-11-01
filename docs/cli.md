@@ -128,7 +128,7 @@ You need to convert your predictions into [COCO result json](https://cocodataset
 
 will calculate coco error plots and export them to given output folder directory.
 
-If you want to specify mAP result type, set it as `--type bbox` or `--type mask`.
+If you want to specify mAP result type, set it as `--type bbox` or `--type segm`.
 
 If you want to export extra mAP bar plots and annotation area stats add `--extraplots` argument.
 
@@ -149,7 +149,6 @@ Print related package versions in the current env as:
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   transformers version 4.20.0 is available.
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   timm version 0.4.12 is available.
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   fiftyone version 0.14.2 is available.
-06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   norfair version 1.0.0 is available.
 ```
 
 ## `version` command usage:
