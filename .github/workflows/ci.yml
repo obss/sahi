@@ -80,13 +80,13 @@ jobs:
           pip install mmcv-full==1.6.1 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.11.0/index.html
           pip install mmdet==2.25.1
 
-      - name: Install YOLOv5(6.2.1) and Norfair(2.0.0)
+      - name: Install YOLOv5(6.2.3)
         run: >
-          pip install yolov5==6.2.1 norfair==2.0.0
+          pip install yolov5==6.2.3
 
-      - name: Install Transformers(4.22.1)
+      - name: Install Transformers(4.24.0)
         run: >
-          pip install transformers==4.22.1
+          pip install transformers==4.24.0
 
       - name: Install pycocotools(2.0.5)
         run: >

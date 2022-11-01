@@ -28,7 +28,7 @@ class TestShapelyUtils(unittest.TestCase):
 
     def test_shapely_annotation(self):
         # init shapely_annotation from coco segmentation
-        segmentation = [[1, 1, 325, 125, 250, 200, 5, 200]]
+        segmentation = [[1, 1, 325, 125.2, 250, 200, 5, 200]]
         shapely_multipolygon = get_shapely_multipolygon(segmentation)
         shapely_annotation = ShapelyAnnotation.from_coco_segmentation(segmentation)
 

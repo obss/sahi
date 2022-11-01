@@ -41,9 +41,7 @@ def get_bbox_from_shapely(shapely_object):
     width = maxx - minx
     height = maxy - miny
     coco_bbox = [minx, miny, width, height]
-    coco_bbox = [round(point) for point in coco_bbox] if coco_bbox else coco_bbox
     voc_bbox = [minx, miny, maxx, maxy]
-    voc_bbox = [round(point) for point in voc_bbox] if voc_bbox else voc_bbox
 
     return coco_bbox, voc_bbox
 
@@ -161,7 +159,7 @@ class ShapelyAnnotation:
             if coco_polygon[:2] == coco_polygon[-2:]:
                 del coco_polygon[-2:]
             # append coco_polygon to coco_segmentation
-            coco_polygon = [round(point) for point in coco_polygon] if coco_polygon else coco_polygon
+            coco_polygon = [point for point in coco_polygon] if coco_polygon else coco_polygon
             coco_segmentation.append(coco_polygon)
         return coco_segmentation
 
@@ -200,10 +198,10 @@ class ShapelyAnnotation:
             coco_bbox, _ = get_bbox_from_shapely(self.multipolygon)
             # fix coord by slice box
             if self.slice_bbox:
-                minx = round(self.slice_bbox[0])
-                miny = round(self.slice_bbox[1])
-                coco_bbox[0] = round(coco_bbox[0] - minx)
-                coco_bbox[1] = round(coco_bbox[1] - miny)
+                minx = self.slice_bbox[0]
+                miny = self.slice_bbox[1]
+                coco_bbox[0] = coco_bbox[0] - minx
+                coco_bbox[1] = coco_bbox[1] - miny
         else:
             coco_bbox: List = []
         return coco_bbox
@@ -218,10 +216,10 @@ class ShapelyAnnotation:
             if self.slice_bbox:
                 minx = self.slice_bbox[0]
                 miny = self.slice_bbox[1]
-                voc_bbox[0] = round(voc_bbox[0] - minx)
-                voc_bbox[2] = round(voc_bbox[2] - minx)
-                voc_bbox[1] = round(voc_bbox[1] - miny)
-                voc_bbox[3] = round(voc_bbox[3] - miny)
+                voc_bbox[0] = voc_bbox[0] - minx
+                voc_bbox[2] = voc_bbox[2] - minx
+                voc_bbox[1] = voc_bbox[1] - miny
+                voc_bbox[3] = voc_bbox[3] - miny
         else:
             voc_bbox = []
         return voc_bbox

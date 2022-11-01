@@ -3,6 +3,8 @@
 
 import unittest
 
+import numpy as np
+
 from sahi.utils.cv import read_image
 from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_yolox_tiny_model
 
@@ -178,15 +180,13 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self.assertEqual(len(object_prediction_list), 2)
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(
-            object_prediction_list[0].bbox.to_coco_bbox(),
-            [320, 323, 60, 42],
+        np.testing.assert_almost_equal(
+            object_prediction_list[0].bbox.to_coco_bbox(), [320.28, 323.55, 60.60, 41.91], decimal=1
         )
         self.assertEqual(object_prediction_list[1].category.id, 2)
         self.assertEqual(object_prediction_list[1].category.name, "car")
-        self.assertEqual(
-            object_prediction_list[1].bbox.to_coco_bbox(),
-            [448, 310, 44, 31],
+        np.testing.assert_almost_equal(
+            object_prediction_list[1].bbox.to_coco_bbox(), [448.45, 310.97, 44.49, 30.86], decimal=1
         )
         for object_prediction in object_prediction_list:
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)

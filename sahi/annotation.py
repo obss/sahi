@@ -30,7 +30,7 @@ class BoundingBox:
     def __init__(self, box: List[int], shift_amount: List[int] = [0, 0]):
         """
         Args:
-            box: List[int]
+            box: List[float]
                 [minx, miny, maxx, maxy]
             shift_amount: List[int]
                 To shift the box and mask predictions from sliced image
@@ -38,10 +38,10 @@ class BoundingBox:
         """
         if box[0] < 0 or box[1] < 0 or box[2] < 0 or box[3] < 0:
             raise Exception("Box coords [minx, miny, maxx, maxy] cannot be negative")
-        self.minx = int(box[0])
-        self.miny = int(box[1])
-        self.maxx = int(box[2])
-        self.maxy = int(box[3])
+        self.minx = box[0]
+        self.miny = box[1]
+        self.maxx = box[2]
+        self.maxy = box[3]
 
         self.shift_x = shift_amount[0]
         self.shift_y = shift_amount[1]

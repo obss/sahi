@@ -48,7 +48,6 @@ def print_enviroment_info():
     _transformers_available, _transformers_version = get_package_info("transformers")
     _timm_available, _timm_version = get_package_info("timm")
     _fiftyone_available, _fiftyone_version = get_package_info("fiftyone")
-    _norfair_available, _norfair_version = get_package_info("norfair")
 
 
 def is_available(module_name: str):
