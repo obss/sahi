@@ -185,7 +185,9 @@ class TestMmdetDetectionModel(unittest.TestCase):
         )
         self.assertEqual(object_prediction_list[1].category.id, 2)
         self.assertEqual(object_prediction_list[1].category.name, "car")
-        np.testing.assert_almost_equal(object_prediction_list[1].bbox.to_coco_bbox(), [448.45, 310.97, 44.49, 30.86], decimal=1)
+        np.testing.assert_almost_equal(
+            object_prediction_list[1].bbox.to_coco_bbox(), [448.45, 310.97, 44.49, 30.86], decimal=1
+        )
         for object_prediction in object_prediction_list:
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
