@@ -4,6 +4,8 @@
 
 import unittest
 
+import numpy as np
+
 from sahi.utils.cv import read_image
 from sahi.utils.torchvision import TorchVisionTestConstants
 
@@ -136,7 +138,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(len(object_prediction_list), 7)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [315, 309, 65, 57])
+        np.testing.assert_almost_equal(
+            object_prediction_list[0].bbox.to_coco_bbox(), [315.79, 309.33, 64.28, 56.94], decimal=1
+        )
 
     def test_convert_original_predictions_with_mask_output(self):
         from sahi.models.torchvision import TorchVisionDetectionModel
@@ -165,7 +169,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(len(object_prediction_list), 7)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [315, 309, 65, 57])
+        np.testing.assert_almost_equal(
+            object_prediction_list[0].bbox.to_coco_bbox(), [315.79, 309.33, 64.28, 56.94], decimal=1
+        )
 
     def test_get_prediction_torchvision(self):
         from sahi.models.torchvision import TorchVisionDetectionModel
@@ -200,7 +206,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(len(object_prediction_list), 7)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [315, 309, 65, 57])
+        np.testing.assert_almost_equal(
+            object_prediction_list[0].bbox.to_coco_bbox(), [315.79, 309.33, 64.28, 56.94], decimal=1
+        )
 
     def test_get_sliced_prediction_torchvision(self):
         from sahi.models.torchvision import TorchVisionDetectionModel
@@ -249,7 +257,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(len(object_prediction_list), 19)
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        self.assertEqual(object_prediction_list[0].bbox.to_coco_bbox(), [765, 259, 29, 25])
+        np.testing.assert_almost_equal(
+            object_prediction_list[0].bbox.to_coco_bbox(), [765.81, 259.37, 28.62, 24.63], decimal=1
+        )
 
 
 if __name__ == "__main__":

@@ -208,7 +208,6 @@ class CocoAnnotation:
             raise ValueError("you must provide a bbox or polygon")
 
         self._segmentation = segmentation
-        bbox = [round(point) for point in bbox] if bbox else bbox
         self._category_id = category_id
         self._category_name = category_name
         self._image_id = image_id
@@ -2024,10 +2023,10 @@ def add_bbox_and_area_to_coco(
                 ]
             )
             x, y, width, height = (
-                round(minx),
-                round(miny),
-                round(maxx - minx),
-                round(maxy - miny),
+                minx,
+                miny,
+                maxx - minx,
+                maxy - miny,
             )
             annotations[ind]["bbox"] = [x, y, width, height]
 

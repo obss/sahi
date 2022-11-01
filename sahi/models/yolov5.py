@@ -127,10 +127,10 @@ class Yolov5DetectionModel(DetectionModel):
 
             # process predictions
             for prediction in image_predictions_in_xyxy_format.cpu().detach().numpy():
-                x1 = int(prediction[0])
-                y1 = int(prediction[1])
-                x2 = int(prediction[2])
-                y2 = int(prediction[3])
+                x1 = prediction[0]
+                y1 = prediction[1]
+                x2 = prediction[2]
+                y2 = prediction[3]
                 bbox = [x1, y1, x2, y2]
                 score = prediction[4]
                 category_id = int(prediction[5])
