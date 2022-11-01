@@ -36,7 +36,7 @@ setuptools.setup(
     python_requires=">=3.6",
     install_requires=get_requirements(),
     extras_require={
-        "tests": ["mmdet==2.25.1", "norfair==2.0.0", "pycocotools==2.0.5"],
+        "tests": ["mmdet==2.25.1", "pycocotools==2.0.5"],
         "dev": [
             "black==21.7b0",
             "flake8==3.9.2",
