@@ -1874,7 +1874,7 @@ def create_coco_dict(images, categories, ignore_negative_samples=False, image_id
     """
     # assertion of parameters
     if image_id_setting not in ["auto", "manual"]:
-        raise ValueError(f"'image_id_setting' should be one of ['auto', 'manual']")
+        raise ValueError("'image_id_setting' should be one of ['auto', 'manual']")
 
     # define accumulators
     image_index = 1
@@ -1947,7 +1947,7 @@ def create_coco_prediction_array(images, ignore_negative_samples=False, image_id
     """
     # assertion of parameters
     if image_id_setting not in ["auto", "manual"]:
-        raise ValueError(f"'image_id_setting' should be one of ['auto', 'manual']")
+        raise ValueError("'image_id_setting' should be one of ['auto', 'manual']")
     # define accumulators
     image_index = 1
     prediction_id = 1
