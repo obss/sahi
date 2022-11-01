@@ -87,7 +87,7 @@ class HuggingfaceDetectionModel(DetectionModel):
             or "FeatureExtractor" not in feature_extractor.__class__.__name__
         ):
             raise ValueError(
-                f"Given 'model' is not an ObjectDetectionModel or 'feature_extractor' is not a valid FeatureExtractor."
+                "Given 'model' is not an ObjectDetectionModel or 'feature_extractor' is not a valid FeatureExtractor."
             )
         self.model = model
         self.model.to(self.device)
