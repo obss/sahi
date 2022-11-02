@@ -2,8 +2,13 @@ name: CI (PyTorch 1.11.0, TorchVision 0.12.0)
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**.md'
 
 jobs:
   build:
