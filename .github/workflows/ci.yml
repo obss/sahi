@@ -4,11 +4,15 @@ on:
     branches: [main]
     paths-ignore:
       - '**.md'
+      - '**.ipynb'
+      - '**.cff'
 
   pull_request:
     branches: [main]
     paths-ignore:
       - '**.md'
+      - '**.ipynb'
+      - '**.cff'
 
 jobs:
   build:
