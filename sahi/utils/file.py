@@ -97,7 +97,7 @@ def list_files(
 
     for file in os.listdir(directory):
         # check if filename contains any of the terms given in contains list
-        if any(strtocheck in file for strtocheck in contains):
+        if any(strtocheck in file.lower() for strtocheck in contains):
             filepath = os.path.join(directory, file)
             filepath_list.append(filepath)
 
@@ -140,7 +140,7 @@ def list_files_recursively(directory: str, contains: list = [".json"], verbose: 
     for r, _, f in os.walk(directory):
         for file in f:
             # check if filename contains any of the terms given in contains list
-            if any(strtocheck in file for strtocheck in contains):
+            if any(strtocheck in file.lower() for strtocheck in contains):
                 abs_filepath = os.path.join(r, file)
                 abs_filepath_list.append(abs_filepath)
                 relative_filepath = abs_filepath.split(directory)[-1]
