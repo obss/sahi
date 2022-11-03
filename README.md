@@ -204,7 +204,7 @@ If you use this package in your work, please cite it as:
 
 `sahi` library currently supports all [YOLOv5 models](https://github.com/ultralytics/yolov5/releases), [MMDetection models](https://github.com/open-mmlab/mmdetection/blob/master/docs/en/model_zoo.md), [Detectron2 models](https://github.com/facebookresearch/detectron2/blob/main/MODEL_ZOO.md), and [HuggingFace object detection models](https://huggingface.co/models?pipeline_tag=object-detection&sort=downloads). Moreover, it is easy to add new frameworks.
 
-All you need to do is, creating a new class in [model.py](sahi/model.py) that implements [DetectionModel class](https://github.com/obss/sahi/blob/21ecb285aa6bf93c2a00605dfb9b138f19d8d62d/sahi/model.py#L21). You can take the [MMDetection wrapper](https://github.com/obss/sahi/blob/21ecb285aa6bf93c2a00605dfb9b138f19d8d62d/sahi/model.py#L177) or [YOLOv5 wrapper](https://github.com/obss/sahi/blob/21ecb285aa6bf93c2a00605dfb9b138f19d8d62d/sahi/model.py#L388) as a reference.
+All you need to do is, create a new .py file under [sahi/models/](https://github.com/obss/sahi/tree/main/sahi/models) folder and create a new class in that .py file that implements [DetectionModel class](https://github.com/obss/sahi/blob/7e48bdb6afda26f977b763abdd7d8c9c170636bd/sahi/models/base.py#L12). You can take the [MMDetection wrapper](https://github.com/obss/sahi/blob/7e48bdb6afda26f977b763abdd7d8c9c170636bd/sahi/models/mmdet.py#L18) or [YOLOv5 wrapper](https://github.com/obss/sahi/blob/7e48bdb6afda26f977b763abdd7d8c9c170636bd/sahi/models/yolov5.py#L17) as a reference.
 
 Before opening a PR:
 
@@ -241,6 +241,10 @@ python -m scripts.run_code_style format
 <a align="left" href="https://github.com/PushpakBhoge" target="_blank">Pushpak Bhoge</a>
 
 <a align="left" href="https://github.com/mcvarer" target="_blank">M. Can V.</a>
+
+<a align="left" href="https://github.com/ChristofferEdlund" target="_blank">Christoffer Edlund</a>
+
+<a align="left" href="https://github.com/ishworii" target="_blank">Ishwor</a>
   
 <a align="left" href="https://github.com/mecevit" target="_blank">Mehmet Ecevit</a>
 
@@ -253,5 +257,7 @@ python -m scripts.run_code_style format
 <a align="left" href="https://github.com/tureckova" target="_blank">Alzbeta Tureckova</a>
 
 <a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
+
+<a align="left" href="https://github.com/aynursusuz" target="_blank">Aynur Susuz</a>
 
 </div>
