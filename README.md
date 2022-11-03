@@ -118,17 +118,17 @@ conda install pytorch=1.11.0 torchvision=0.12.0 cudatoolkit=11.3 -c pytorch
 - Install your desired detection framework (yolov5):
 
 ```console
-pip install yolov5==6.2.1
+pip install yolov5==6.2.3
 ```
 
 - Install your desired detection framework (mmdet):
 
 ```console
-pip install mmcv-full==1.6.1 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
+pip install mmcv-full==1.7.0 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
 ```
 
 ```console
-pip install mmdet==2.25.1
+pip install mmdet==2.25.3
 ```
 
 - Install your desired detection framework (detectron2):
