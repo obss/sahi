@@ -260,6 +260,4 @@ python -m scripts.run_code_style format
 
 <a align="left" href="https://github.com/aynursusuz" target="_blank">Aynur Susuz</a>
 
-
-
 </div>
