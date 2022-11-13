@@ -4,12 +4,13 @@
 
 ```python
 from sahi.predict import get_sliced_prediction
-from sahi.model import MmdetDetectionModel, Yolov5DetectionModel, Detectron2DetectionModel
+from sahi import AutoDetectionModel
 
 # init any model
-detection_model = MmdetDetectionModel(...)
-detection_model = Yolov5DetectionModel(...)
-detection_model = Detectron2DetectionModel(...)
+detection_model = AutoDetectionModel.from_pretrained(model_type='mmdet',...) # for MMDetection models
+detection_model = AutoDetectionModel.from_pretrained(model_type='yolov5',...) # for YOLOv5 models
+detection_model = AutoDetectionModel.from_pretrained(model_type='huggingface',...) # for HuggingFace detection models
+detection_model = AutoDetectionModel.from_pretrained(model_type='torchvision',...) # for Torchvision detection models
 
 # get sliced prediction result
 result = get_sliced_prediction(
@@ -27,12 +28,10 @@ result = get_sliced_prediction(
 
 ```python
 from sahi.predict import get_prediction
-from sahi.model import MmdetDetectionModel, Yolov5DetectionModel, Detectron2DetectionModel
+from sahi import AutoDetectionModel
 
-# init any model
-detection_model = MmdetDetectionModel(...)
-detection_model = Yolov5DetectionModel(...)
-detection_model = Detectron2DetectionModel(...)
+# init a model
+detection_model = AutoDetectionModel.from_pretrained(...)
 
 # get standard prediction result
 result = get_prediction(
@@ -46,12 +45,10 @@ result = get_prediction(
 
 ```python
 from sahi.predict import predict
-from sahi.model import MmdetDetectionModel, Yolov5DetectionModel, Detectron2DetectionModel
+from sahi import AutoDetectionModel
 
-# init any model
-detection_model = MmdetDetectionModel(...)
-detection_model = Yolov5DetectionModel(...)
-detection_model = Detectron2DetectionModel(...)
+# init a model
+detection_model = AutoDetectionModel.from_pretrained(...)
 
 # get batch predict result
 result = predict(
