@@ -15,9 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 class Detectron2DetectionModel(DetectionModel):
-    def load_model(self):
+    def check_dependencies(self):
         check_requirements(["torch", "detectron2"])
 
+    def load_model(self):
         from detectron2.config import get_cfg
         from detectron2.data import MetadataCatalog
         from detectron2.engine import DefaultPredictor

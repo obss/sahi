@@ -32,7 +32,6 @@ class HuggingfaceDetectionModel(DetectionModel):
         load_at_init: bool = True,
         image_size: int = None,
     ):
-        check_requirements(["torch", "transformers"])
 
         self._feature_extractor = feature_extractor
         self._image_shapes = []
@@ -48,6 +47,9 @@ class HuggingfaceDetectionModel(DetectionModel):
             load_at_init,
             image_size,
         )
+
+    def check_dependencies(self):
+        check_requirements(["torch", "transformers"])
 
     @property
     def feature_extractor(self):
@@ -65,7 +67,6 @@ class HuggingfaceDetectionModel(DetectionModel):
         return self.model.config.num_labels
 
     def load_model(self):
-        check_requirements(["torch", "transformers"])
 
         from transformers import AutoFeatureExtractor, AutoModelForObjectDetection
 

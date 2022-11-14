@@ -15,11 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 class Yolov5DetectionModel(DetectionModel):
+    def check_dependencies(self) -> None:
+        check_requirements(["torch", "yolov5"])
+
     def load_model(self):
         """
         Detection model is initialized and set to self.model.
         """
-        check_requirements(["torch", "yolov5"])
 
         import yolov5
 

@@ -14,36 +14,10 @@ logger = logging.getLogger(__name__)
 
 
 class TorchVisionDetectionModel(DetectionModel):
-    def __init__(
-        self,
-        model_path: Optional[str] = None,
-        model: Optional[Any] = None,
-        config_path: Optional[str] = None,
-        device: Optional[str] = None,
-        mask_threshold: float = 0.5,
-        confidence_threshold: float = 0.3,
-        category_mapping: Optional[Dict] = None,
-        category_remapping: Optional[Dict] = None,
-        load_at_init: bool = True,
-        image_size: int = None,
-    ):
-
-        super().__init__(
-            model_path=model_path,
-            model=model,
-            config_path=config_path,
-            device=device,
-            mask_threshold=mask_threshold,
-            confidence_threshold=confidence_threshold,
-            category_mapping=category_mapping,
-            category_remapping=category_remapping,
-            load_at_init=load_at_init,
-            image_size=image_size,
-        )
-
-    def load_model(self):
+    def check_dependencies(self) -> None:
         check_requirements(["torch", "torchvision"])
 
+    def load_model(self):
         import torch
 
         from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
