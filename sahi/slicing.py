@@ -231,6 +231,29 @@ class SliceImageResult:
             filenames.append(sliced_image.coco_image.file_name)
         return filenames
 
+    def __getitem__(self, i):
+        def _prepare_ith_dict(i):
+            return {
+                "image": self.images[i],
+                "coco_image": self.coco_images[i],
+                "starting_pixel": self.starting_pixels[i],
+                "filename": self.filenames[i],
+            }
+
+        if isinstance(i, np.ndarray):
+            i = i.tolist()
+
+        if isinstance(i, int):
+            return _prepare_ith_dict(i)
+        elif isinstance(i, slice):
+            start, stop, step = i.indices(len(self))
+            return [_prepare_ith_dict(i) for i in range(start, stop, step)]
+        elif isinstance(i, (tuple, list)):
+            accessed_mapping = map(_prepare_ith_dict, i)
+            return list(accessed_mapping)
+        else:
+            raise NotImplementedError(f"{type(i)}")
+
     def __len__(self):
         return len(self._sliced_image_list)
 
