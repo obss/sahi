@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 
 from sahi.utils.import_utils import is_available
-from sahi.utils.torch import select_device
+from sahi.utils.torch import select_device as select_torch_device
 
 
 class DetectionModel:
@@ -93,8 +93,10 @@ class DetectionModel:
         """
         Sets the device for the model.
         """
-
-        self.device = select_device(self.device)
+        if is_available("torch"):
+            self.device = select_torch_device(self.device)
+        else:
+            raise NotImplementedError()
 
     def unload_model(self):
         """
