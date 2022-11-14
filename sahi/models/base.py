@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 
 from sahi.utils.import_utils import is_available
-from sahi.utils.torch import is_torch_cuda_available
+from sahi.utils.torch import select_device as select_torch_device
 
 
 class DetectionModel:
@@ -57,9 +57,7 @@ class DetectionModel:
         self._original_predictions = None
         self._object_prediction_list_per_image = None
 
-        # automatically set device if its None
-        if not (self.device):
-            self.device = "cuda:0" if is_torch_cuda_available() else "cpu"
+        self.set_device()
 
         # automatically load model if load_at_init is True
         if load_at_init:
@@ -67,6 +65,12 @@ class DetectionModel:
                 self.set_model(model)
             else:
                 self.load_model()
+
+    def check_dependencies(self) -> None:
+        """
+        This function can be implemented to ensure model dependencies are installed.
+        """
+        pass
 
     def load_model(self):
         """
@@ -84,6 +88,15 @@ class DetectionModel:
                 Loaded model
         """
         raise NotImplementedError()
+
+    def set_device(self):
+        """
+        Sets the device for the model.
+        """
+        if is_available("torch"):
+            self.device = select_torch_device(self.device)
+        else:
+            raise NotImplementedError()
 
     def unload_model(self):
         """

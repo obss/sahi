@@ -16,12 +16,13 @@ logger = logging.getLogger(__name__)
 
 
 class MmdetDetectionModel(DetectionModel):
+    def check_dependencies(self):
+        check_requirements(["torch", "mmdet", "mmcv"])
+
     def load_model(self):
         """
         Detection model is initialized and set to self.model.
         """
-        check_requirements(["torch", "mmdet", "mmcv"])
-
         from mmdet.apis import init_detector
 
         # create model
@@ -60,7 +61,6 @@ class MmdetDetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-        check_requirements(["torch", "mmdet", "mmcv"])
 
         # Confirm model is loaded
         if self.model is None:
