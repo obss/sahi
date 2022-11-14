@@ -62,10 +62,10 @@ jobs:
         if: matrix.operating-system == 'macos-latest'
         run: pip install torch==1.10.1 torchvision==0.11.2
 
-      - name: Install MMDetection(2.25.1) with MMCV(1.6.1)
+      - name: Install MMDetection(2.25.3) with MMCV(1.7.0)
         run: >
-          pip install mmcv-full==1.6.1 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.10.0/index.html
-          pip install mmdet==2.25.1
+          pip install mmcv-full==1.7.0 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.10.0/index.html
+          pip install mmdet==2.25.3
 
       - name: Install YOLOv5(6.2.3)
         run: >
@@ -81,9 +81,9 @@ jobs:
         run: >
           pip install transformers==4.24.0
 
-      - name: Install pycocotools(2.0.5)
+      - name: Install pycocotools(2.0.6)
         run: >
-          pip install pycocotools==2.0.5
+          pip install pycocotools==2.0.6
 
       - name: Install latest SAHI package
         run: >

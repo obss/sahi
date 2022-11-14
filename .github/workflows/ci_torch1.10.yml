@@ -104,9 +104,9 @@ jobs:
         run: >
           pip install transformers==4.24.0
 
-      - name: Install pycocotools(2.0.5)
+      - name: Install pycocotools(2.0.6)
         run: >
-          pip install pycocotools==2.0.5
+          pip install pycocotools==2.0.6
 
       - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
         run: |
