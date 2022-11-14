@@ -34,6 +34,7 @@ class TestSlicing(unittest.TestCase):
             verbose=False,
         )
 
+        self.assertEqual(len(slice_image_result), 18)
         self.assertEqual(len(slice_image_result.images), 18)
         self.assertEqual(len(slice_image_result.coco_images), 18)
         self.assertEqual(slice_image_result.coco_images[0].annotations, [])
@@ -42,6 +43,11 @@ class TestSlicing(unittest.TestCase):
             slice_image_result.coco_images[15].annotations[1].bbox,
             [17, 186, 48, 152],
         )
+        self.assertEqual(type(slice_image_result[0]), dict)
+        self.assertEqual(slice_image_result[0]["image"].shape, (512, 512, 3))
+        self.assertEqual(slice_image_result[3]["starting_pixel"], [924, 0])
+        self.assertEqual(type(slice_image_result[0:4]), list)
+        self.assertEqual(len(slice_image_result[0:4]), 4)
 
         image_cv = read_image(image_path)
         slice_image_result = slice_image(
