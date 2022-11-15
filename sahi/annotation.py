@@ -79,7 +79,7 @@ class BoundingBox:
         """
         Returns: [xmin, ymin, width, height]
         """
-        return self.to_xywh(self)
+        return self.to_xywh()
 
     def to_xyxy(self):
         """
@@ -91,7 +91,7 @@ class BoundingBox:
         """
         Returns: [xmin, ymin, xmax, ymax]
         """
-        return self.to_xyxy(self)
+        return self.to_xyxy()
 
     def get_shifted_box(self):
         """

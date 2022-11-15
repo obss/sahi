@@ -71,7 +71,7 @@ def object_prediction_list_to_torch(object_prediction_list: ObjectPredictionList
     num_predictions = len(object_prediction_list)
     torch_predictions = torch.zeros([num_predictions, 6], dtype=torch.float32)
     for ind, object_prediction in enumerate(object_prediction_list):
-        torch_predictions[ind, :4] = torch.tensor(object_prediction.tolist().bbox.to_voc_bbox(), dtype=torch.float32)
+        torch_predictions[ind, :4] = torch.tensor(object_prediction.tolist().bbox.to_xyxy(), dtype=torch.float32)
         torch_predictions[ind, 4] = object_prediction.tolist().score.value
         torch_predictions[ind, 5] = object_prediction.tolist().category.id
     return torch_predictions
@@ -85,7 +85,7 @@ def object_prediction_list_to_numpy(object_prediction_list: ObjectPredictionList
     num_predictions = len(object_prediction_list)
     numpy_predictions = np.zeros([num_predictions, 6], dtype=np.float32)
     for ind, object_prediction in enumerate(object_prediction_list):
-        numpy_predictions[ind, :4] = np.array(object_prediction.tolist().bbox.to_voc_bbox(), dtype=np.float32)
+        numpy_predictions[ind, :4] = np.array(object_prediction.tolist().bbox.to_xyxy(), dtype=np.float32)
         numpy_predictions[ind, 4] = object_prediction.tolist().score.value
         numpy_predictions[ind, 5] = object_prediction.tolist().category.id
     return numpy_predictions

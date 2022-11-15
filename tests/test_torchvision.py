@@ -139,7 +139,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         np.testing.assert_almost_equal(
-            object_prediction_list[0].bbox.to_coco_bbox(), [315.79, 309.33, 64.28, 56.94], decimal=1
+            object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
         )
 
     def test_convert_original_predictions_with_mask_output(self):
@@ -170,7 +170,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         np.testing.assert_almost_equal(
-            object_prediction_list[0].bbox.to_coco_bbox(), [315.79, 309.33, 64.28, 56.94], decimal=1
+            object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
         )
 
     def test_get_prediction_torchvision(self):

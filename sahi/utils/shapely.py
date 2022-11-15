@@ -190,7 +190,7 @@ class ShapelyAnnotation:
         # return result
         return opencv_contours
 
-    def to_coco_bbox(self):
+    def to_xywh(self):
         """
         [xmin, ymin, width, height]
         """
@@ -206,7 +206,13 @@ class ShapelyAnnotation:
             coco_bbox: List = []
         return coco_bbox
 
-    def to_voc_bbox(self):
+    def to_coco_bbox(self):
+        """
+        [xmin, ymin, width, height]
+        """
+        return self.to_xywh()
+
+    def to_xyxy(self):
         """
         [xmin, ymin, xmax, ymax]
         """
@@ -223,6 +229,12 @@ class ShapelyAnnotation:
         else:
             voc_bbox = []
         return voc_bbox
+
+    def to_voc_bbox(self):
+        """
+        [xmin, ymin, xmax, ymax]
+        """
+        return self.to_xyxy()
 
     def get_convex_hull_shapely_annotation(self):
         shapely_multipolygon = MultiPolygon([self.multipolygon.convex_hull])

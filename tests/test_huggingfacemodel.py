@@ -131,14 +131,14 @@ if sys.version_info >= (3, 7):
             self.assertEqual(object_prediction_list[0].category.id, 3)
             self.assertEqual(object_prediction_list[0].category.name, "car")
             desired_bbox = [639, 198, 24, 20]
-            predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
+            predicted_bbox = object_prediction_list[0].bbox.to_xywh()
             margin = 2
             for ind, point in enumerate(predicted_bbox):
                 assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
             self.assertEqual(object_prediction_list[2].category.id, 3)
             self.assertEqual(object_prediction_list[2].category.name, "car")
             desired_bbox = [745, 169, 15, 14]
-            predicted_bbox = object_prediction_list[2].bbox.to_coco_bbox()
+            predicted_bbox = object_prediction_list[2].bbox.to_xywh()
             for ind, point in enumerate(predicted_bbox):
                 assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
 

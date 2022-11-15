@@ -51,12 +51,12 @@ class TestShapelyUtils(unittest.TestCase):
                 ]
             ],
         )
-        coco_bbox = shapely_annotation.to_coco_bbox()
+        coco_bbox = shapely_annotation.to_xywh()
         self.assertEqual(
             coco_bbox,
             [1, 1, 324, 199],
         )
-        voc_bbox = shapely_annotation.to_voc_bbox()
+        voc_bbox = shapely_annotation.to_xyxy()
         self.assertEqual(
             voc_bbox,
             [1, 1, 325, 200],
@@ -96,12 +96,12 @@ class TestShapelyUtils(unittest.TestCase):
                 ]
             ],
         )
-        coco_bbox = shapely_annotation.to_coco_bbox()
+        coco_bbox = shapely_annotation.to_xywh()
         self.assertEqual(
             coco_bbox,
             [1, 1, 100, 100],
         )
-        voc_bbox = shapely_annotation.to_voc_bbox()
+        voc_bbox = shapely_annotation.to_xyxy()
         self.assertEqual(
             voc_bbox,
             [1, 1, 101, 101],
@@ -150,9 +150,9 @@ class TestShapelyUtils(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(intersection_shapely_annotation.to_coco_bbox(), [0, 0, 256, 199])
+        self.assertEqual(intersection_shapely_annotation.to_xywh(), [0, 0, 256, 199])
 
-        self.assertEqual(intersection_shapely_annotation.to_voc_bbox(), [0, 0, 256, 199])
+        self.assertEqual(intersection_shapely_annotation.to_xyxy(), [0, 0, 256, 199])
 
     def test_get_empty_intersection(self):
         x, y, width, height = 300, 300, 256, 256
@@ -165,7 +165,7 @@ class TestShapelyUtils(unittest.TestCase):
 
         self.assertEqual(intersection_shapely_annotation.area, 0)
 
-        self.assertEqual(intersection_shapely_annotation.to_coco_bbox(), [])
+        self.assertEqual(intersection_shapely_annotation.to_xywh(), [])
 
 
 if __name__ == "__main__":
