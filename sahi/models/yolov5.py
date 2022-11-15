@@ -90,9 +90,7 @@ class Yolov5DetectionModel(DetectionModel):
 
     @property
     def category_names(self):
-        import yolov5
-
-        if check_package_minimum_version(yolov5.__version__, "6.2.0"):
+        if check_package_minimum_version('yolov5', "6.2.0"):
             return list(self.model.names.values())
         else:
             return self.model.names
