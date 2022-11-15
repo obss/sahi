@@ -658,8 +658,6 @@ def shift_bboxes(bboxes, offset: Sequence[int]):
     Returns:
         Tensor, np.ndarray, list: Shifted bboxes.
     """
-    from sahi.utils.import_utils import _torch_available
-
     shifted_bboxes = []
 
     if type(bboxes).__module__ == "torch":
