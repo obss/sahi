@@ -207,7 +207,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         np.testing.assert_almost_equal(
-            object_prediction_list[0].bbox.to_coco_bbox(), [315.79, 309.33, 64.28, 56.94], decimal=1
+            object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
         )
 
     def test_get_sliced_prediction_torchvision(self):
@@ -258,7 +258,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.id, 3)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         np.testing.assert_almost_equal(
-            object_prediction_list[0].bbox.to_coco_bbox(), [765.81, 259.37, 28.62, 24.63], decimal=1
+            object_prediction_list[0].bbox.to_xywh(), [765.81, 259.37, 28.62, 24.63], decimal=1
         )
 
 
