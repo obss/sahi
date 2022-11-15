@@ -89,7 +89,7 @@ class ObjectPrediction(ObjectAnnotation):
         """
         if self.mask:
             return ObjectPrediction(
-                bbox=self.bbox.get_shifted_box().to_voc_bbox(),
+                bbox=self.bbox.get_shifted_box().to_xyxy(),
                 category_id=self.category.id,
                 score=self.score.value,
                 bool_mask=self.mask.get_shifted_mask().bool_mask,
@@ -99,7 +99,7 @@ class ObjectPrediction(ObjectAnnotation):
             )
         else:
             return ObjectPrediction(
-                bbox=self.bbox.get_shifted_box().to_voc_bbox(),
+                bbox=self.bbox.get_shifted_box().to_xyxy(),
                 category_id=self.category.id,
                 score=self.score.value,
                 bool_mask=None,
@@ -122,7 +122,7 @@ class ObjectPrediction(ObjectAnnotation):
             )
         else:
             coco_prediction = CocoPrediction.from_coco_bbox(
-                bbox=self.bbox.to_coco_bbox(),
+                bbox=self.bbox.to_xywh(),
                 category_id=self.category.id,
                 category_name=self.category.name,
                 score=self.score.value,
@@ -139,7 +139,7 @@ class ObjectPrediction(ObjectAnnotation):
         except ImportError:
             raise ImportError('Please run "pip install -U fiftyone" to install fiftyone first for fiftyone conversion.')
 
-        x1, y1, x2, y2 = self.bbox.to_voc_bbox()
+        x1, y1, x2, y2 = self.bbox.to_xyxy()
         rel_box = [x1 / image_width, y1 / image_height, (x2 - x1) / image_width, (y2 - y1) / image_height]
         fiftyone_detection = fo.Detection(label=self.category.name, bounding_box=rel_box, confidence=self.score.value)
         return fiftyone_detection

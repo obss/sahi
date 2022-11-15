@@ -137,13 +137,13 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         self.assertEqual(
-            object_prediction_list[0].bbox.to_coco_bbox(),
+            object_prediction_list[0].bbox.to_xywh(),
             [448, 308, 41, 36],
         )
         self.assertEqual(object_prediction_list[2].category.id, 2)
         self.assertEqual(object_prediction_list[2].category.name, "car")
         self.assertEqual(
-            object_prediction_list[2].bbox.to_coco_bbox(),
+            object_prediction_list[2].bbox.to_xywh(),
             [381, 280, 33, 30],
         )
         for object_prediction in object_prediction_list:
@@ -181,12 +181,12 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
         np.testing.assert_almost_equal(
-            object_prediction_list[0].bbox.to_coco_bbox(), [320.28, 323.55, 60.60, 41.91], decimal=1
+            object_prediction_list[0].bbox.to_xywh(), [320.28, 323.55, 60.60, 41.91], decimal=1
         )
         self.assertEqual(object_prediction_list[1].category.id, 2)
         self.assertEqual(object_prediction_list[1].category.name, "car")
         np.testing.assert_almost_equal(
-            object_prediction_list[1].bbox.to_coco_bbox(), [448.45, 310.97, 44.49, 30.86], decimal=1
+            object_prediction_list[1].bbox.to_xywh(), [448.45, 310.97, 44.49, 30.86], decimal=1
         )
         for object_prediction in object_prediction_list:
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)

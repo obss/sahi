@@ -46,8 +46,8 @@ class PostprocessPredictions:
     @staticmethod
     def calculate_bbox_iou(pred1: ObjectPrediction, pred2: ObjectPrediction) -> float:
         """Returns the ratio of intersection area to the union"""
-        box1 = np.array(pred1.bbox.to_voc_bbox())
-        box2 = np.array(pred2.bbox.to_voc_bbox())
+        box1 = np.array(pred1.bbox.to_xyxy())
+        box2 = np.array(pred2.bbox.to_xyxy())
         area1 = calculate_area(box1)
         area2 = calculate_area(box2)
         intersect = calculate_intersection_area(box1, box2)
@@ -56,8 +56,8 @@ class PostprocessPredictions:
     @staticmethod
     def calculate_bbox_ios(pred1: ObjectPrediction, pred2: ObjectPrediction) -> float:
         """Returns the ratio of intersection area to the smaller box's area"""
-        box1 = np.array(pred1.bbox.to_voc_bbox())
-        box2 = np.array(pred2.bbox.to_voc_bbox())
+        box1 = np.array(pred1.bbox.to_xyxy())
+        box2 = np.array(pred2.bbox.to_xyxy())
         area1 = calculate_area(box1)
         area2 = calculate_area(box2)
         intersect = calculate_intersection_area(box1, box2)
@@ -138,7 +138,7 @@ class UnionMergePostprocess(PostprocessPredictions):
             bool_mask = None
             full_shape = None
         return ObjectPrediction(
-            bbox=merged_bbox.to_voc_bbox(),
+            bbox=merged_bbox.to_xyxy(),
             score=merged_score,
             category_id=merged_category.id,
             category_name=merged_category.name,
@@ -156,8 +156,8 @@ class UnionMergePostprocess(PostprocessPredictions):
 
     @staticmethod
     def _get_merged_bbox(pred1: ObjectPrediction, pred2: ObjectPrediction) -> BoundingBox:
-        box1: List[int] = pred1.bbox.to_voc_bbox()
-        box2: List[int] = pred2.bbox.to_voc_bbox()
+        box1: List[int] = pred1.bbox.to_xyxy()
+        box2: List[int] = pred2.bbox.to_xyxy()
         bbox = BoundingBox(box=calculate_box_union(box1, box2))
         return bbox
 

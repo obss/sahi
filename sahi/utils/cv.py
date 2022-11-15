@@ -76,7 +76,7 @@ def crop_object_predictions(
     for ind, object_prediction in enumerate(object_prediction_list):
         # deepcopy object_prediction_list so that original is not altered
         object_prediction = object_prediction.deepcopy()
-        bbox = object_prediction.bbox.to_voc_bbox()
+        bbox = object_prediction.bbox.to_xyxy()
         category_id = object_prediction.category.id
         # crop detections
         # deepcopy crops so that original is not altered
@@ -437,7 +437,7 @@ def visualize_object_predictions(
         # deepcopy object_prediction_list so that original is not altered
         object_prediction = object_prediction.deepcopy()
 
-        bbox = object_prediction.bbox.to_voc_bbox()
+        bbox = object_prediction.bbox.to_xyxy()
         category_name = object_prediction.category.name
         score = object_prediction.score.value
 

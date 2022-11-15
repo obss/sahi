@@ -241,7 +241,7 @@ class CocoAnnotation:
         """
         Returns coco formatted bbox of the annotation as [xmin, ymin, width, height]
         """
-        return self._shapely_annotation.to_coco_bbox()
+        return self._shapely_annotation.to_xywh()
 
     @property
     def segmentation(self):
@@ -1489,7 +1489,7 @@ class Coco:
                 ann_dict: Dict = coco_ann.json
                 if annotation_inside_slice(annotation=ann_dict, slice_bbox=img_dims):
                     shapely_ann = coco_ann.get_sliced_coco_annotation(img_dims)
-                    bbox = ShapelyAnnotation.to_coco_bbox(shapely_ann._shapely_annotation)
+                    bbox = ShapelyAnnotation.to_xywh(shapely_ann._shapely_annotation)
                     coco_ann_from_shapely = CocoAnnotation(
                         bbox=bbox,
                         category_id=coco_ann.category_id,

@@ -86,7 +86,7 @@ if get_package_info("torch", verbose=False)[1] == "1.10.2":
             self.assertEqual(len(object_prediction_list), 16)
             self.assertEqual(object_prediction_list[0].category.id, 2)
             self.assertEqual(object_prediction_list[0].category.name, "car")
-            predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
+            predicted_bbox = object_prediction_list[0].bbox.to_xywh()
             desired_bbox = [831, 303, 42, 43]
             margin = 3
             for ind, point in enumerate(predicted_bbox):
@@ -95,7 +95,7 @@ if get_package_info("torch", verbose=False)[1] == "1.10.2":
 
             self.assertEqual(object_prediction_list[5].category.id, 2)
             self.assertEqual(object_prediction_list[5].category.name, "car")
-            predicted_bbox = object_prediction_list[2].bbox.to_coco_bbox()
+            predicted_bbox = object_prediction_list[2].bbox.to_xywh()
             desired_bbox = [383, 277, 36, 29]
             margin = 3
             for ind, point in enumerate(predicted_bbox):
@@ -128,7 +128,7 @@ if get_package_info("torch", verbose=False)[1] == "1.10.2":
             self.assertEqual(len(object_prediction_list), 13)
             self.assertEqual(object_prediction_list[0].category.id, 2)
             self.assertEqual(object_prediction_list[0].category.name, "car")
-            predicted_bbox = object_prediction_list[0].bbox.to_coco_bbox()
+            predicted_bbox = object_prediction_list[0].bbox.to_xywh()
             desired_bbox = [321, 324, 59, 38]
             margin = 3
             for ind, point in enumerate(predicted_bbox):
@@ -137,7 +137,7 @@ if get_package_info("torch", verbose=False)[1] == "1.10.2":
 
             self.assertEqual(object_prediction_list[5].category.id, 2)
             self.assertEqual(object_prediction_list[5].category.name, "car")
-            predicted_bbox = object_prediction_list[5].bbox.to_coco_bbox()
+            predicted_bbox = object_prediction_list[5].bbox.to_xywh()
             desired_bbox = [719, 243, 27, 30]
             margin = 3
             for ind, point in enumerate(predicted_bbox):

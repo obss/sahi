@@ -71,7 +71,7 @@ def object_prediction_list_to_torch(object_prediction_list: ObjectPredictionList
     num_predictions = len(object_prediction_list)
     torch_predictions = torch.zeros([num_predictions, 6], dtype=torch.float32)
     for ind, object_prediction in enumerate(object_prediction_list):
-        torch_predictions[ind, :4] = torch.tensor(object_prediction.tolist().bbox.to_voc_bbox(), dtype=torch.float32)
+        torch_predictions[ind, :4] = torch.tensor(object_prediction.tolist().bbox.to_xyxy(), dtype=torch.float32)
         torch_predictions[ind, 4] = object_prediction.tolist().score.value
         torch_predictions[ind, 5] = object_prediction.tolist().category.id
     return torch_predictions
@@ -85,7 +85,7 @@ def object_prediction_list_to_numpy(object_prediction_list: ObjectPredictionList
     num_predictions = len(object_prediction_list)
     numpy_predictions = np.zeros([num_predictions, 6], dtype=np.float32)
     for ind, object_prediction in enumerate(object_prediction_list):
-        numpy_predictions[ind, :4] = np.array(object_prediction.tolist().bbox.to_voc_bbox(), dtype=np.float32)
+        numpy_predictions[ind, :4] = np.array(object_prediction.tolist().bbox.to_xyxy(), dtype=np.float32)
         numpy_predictions[ind, 4] = object_prediction.tolist().score.value
         numpy_predictions[ind, 5] = object_prediction.tolist().category.id
     return numpy_predictions
@@ -126,8 +126,8 @@ def calculate_intersection_area(box1: np.ndarray, box2: np.ndarray) -> float:
 
 def calculate_bbox_iou(pred1: ObjectPrediction, pred2: ObjectPrediction) -> float:
     """Returns the ratio of intersection area to the union"""
-    box1 = np.array(pred1.bbox.to_voc_bbox())
-    box2 = np.array(pred2.bbox.to_voc_bbox())
+    box1 = np.array(pred1.bbox.to_xyxy())
+    box2 = np.array(pred2.bbox.to_xyxy())
     area1 = calculate_area(box1)
     area2 = calculate_area(box2)
     intersect = calculate_intersection_area(box1, box2)
@@ -136,8 +136,8 @@ def calculate_bbox_iou(pred1: ObjectPrediction, pred2: ObjectPrediction) -> floa
 
 def calculate_bbox_ios(pred1: ObjectPrediction, pred2: ObjectPrediction) -> float:
     """Returns the ratio of intersection area to the smaller box's area"""
-    box1 = np.array(pred1.bbox.to_voc_bbox())
-    box2 = np.array(pred2.bbox.to_voc_bbox())
+    box1 = np.array(pred1.bbox.to_xyxy())
+    box2 = np.array(pred2.bbox.to_xyxy())
     area1 = calculate_area(box1)
     area2 = calculate_area(box2)
     intersect = calculate_intersection_area(box1, box2)
@@ -177,8 +177,8 @@ def get_merged_score(
 
 
 def get_merged_bbox(pred1: ObjectPrediction, pred2: ObjectPrediction) -> BoundingBox:
-    box1: List[int] = pred1.bbox.to_voc_bbox()
-    box2: List[int] = pred2.bbox.to_voc_bbox()
+    box1: List[int] = pred1.bbox.to_xyxy()
+    box2: List[int] = pred2.bbox.to_xyxy()
     bbox = BoundingBox(box=calculate_box_union(box1, box2))
     return bbox
 
@@ -206,7 +206,7 @@ def merge_object_prediction_pair(
         bool_mask = None
         full_shape = None
     return ObjectPrediction(
-        bbox=merged_bbox.to_voc_bbox(),
+        bbox=merged_bbox.to_xyxy(),
         score=merged_score,
         category_id=merged_category.id,
         category_name=merged_category.name,
