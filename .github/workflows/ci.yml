@@ -1,4 +1,4 @@
-name: CI (PyTorch 1.11.0, TorchVision 0.12.0)
+name: CI (PyTorch 1.12.1, TorchVision 0.13.1)
 on:
   push:
     branches: [main]
