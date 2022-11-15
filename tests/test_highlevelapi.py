@@ -18,7 +18,7 @@ class TestAnnotation(unittest.TestCase):
         shifted_bbox = bbox.get_shifted_box()
 
         # compare
-        self.assertEqual(expanded_bbox.to_xyxy(), [18, 23, 94, 134])
+        self.assertEqual(expanded_bbox.to_xywh(), [18, 23, 94, 134])
         self.assertEqual(expanded_bbox.to_xyxy(), [18, 23, 112, 157])
         self.assertEqual(shifted_bbox.to_xyxy(), [80, 70, 150, 190])
 
