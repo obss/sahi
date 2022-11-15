@@ -582,6 +582,10 @@ class ObjectAnnotation:
         else:
             self.mask = None
 
+        # if bbox is a numpy object, convert it to python List[float]
+        if type(bbox).__module__ == "numpy":
+            bbox = copy.deepcopy(bbox).tolist()
+
         # make sure bbox coords lie inside [0, image_size]
         xmin = max(bbox[0], 0)
         ymin = max(bbox[1], 0)
