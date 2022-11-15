@@ -690,7 +690,7 @@ def shift_masks(masks: np.ndarray, offset: Sequence[int], full_shape: Sequence[i
         np.ndarray: Shifted masks.
     """
     # empty masks
-    if not masks:
+    if masks is None:
         return masks
 
     shifted_masks = []
