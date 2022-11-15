@@ -9,7 +9,7 @@ import numpy as np
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.import_utils import check_requirements
+from sahi.utils.import_utils import check_package_minimum_version, check_requirements
 
 logger = logging.getLogger(__name__)
 
@@ -90,10 +90,7 @@ class Yolov5DetectionModel(DetectionModel):
 
     @property
     def category_names(self):
-        import yolov5
-        from packaging import version
-
-        if version.parse(yolov5.__version__) >= version.parse("6.2.0"):
+        if check_package_minimum_version("yolov5", "6.2.0"):
             return list(self.model.names.values())
         else:
             return self.model.names

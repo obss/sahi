@@ -10,7 +10,7 @@ import pybboxes.functional as pbf
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.import_utils import check_requirements
+from sahi.utils.import_utils import check_requirements, ensure_package_minimum_version
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,7 @@ class HuggingfaceDetectionModel(DetectionModel):
 
     def check_dependencies(self):
         check_requirements(["torch", "transformers"])
+        ensure_package_minimum_version("transformers", "4.24.0")
 
     @property
     def feature_extractor(self):

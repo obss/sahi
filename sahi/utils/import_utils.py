@@ -65,3 +65,41 @@ def check_requirements(package_names):
     if missing_packages:
         raise ImportError(f"The following packages are required to use this module: {missing_packages}")
     yield
+
+
+def check_package_minimum_version(package_name: str, minimum_version: str):
+    """
+    Raise error if module version is not compatible.
+    """
+    from packaging import version
+
+    _is_available, _version = get_package_info(package_name)
+    if _is_available:
+        if _version == "unknown":
+            logger.warning(
+                f"Could not determine version of {package_name}. Assuming version {minimum_version} is compatible."
+            )
+        else:
+            if version.parse(_version) < version.parse(minimum_version):
+                return False
+    return True
+
+
+def ensure_package_minimum_version(package_name: str, minimum_version: str):
+    """
+    Raise error if module version is not compatible.
+    """
+    from packaging import version
+
+    _is_available, _version = get_package_info(package_name)
+    if _is_available:
+        if _version == "unknown":
+            logger.warning(
+                f"Could not determine version of {package_name}. Assuming version {minimum_version} is compatible."
+            )
+        else:
+            if version.parse(_version) < version.parse(minimum_version):
+                raise ImportError(
+                    f"Please upgrade {package_name} to version {minimum_version} or higher to use this module."
+                )
+    yield
