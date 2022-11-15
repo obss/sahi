@@ -656,7 +656,7 @@ def shift_bboxes(bboxes, offset: Sequence[int]):
             be (n, 4), which means (x, y, x, y).
         offset (Sequence[int]): The translation offsets with shape of (2, ).
     Returns:
-        Tensor: Shifted bboxes.
+        Tensor, np.ndarray, list: Shifted bboxes.
     """
     from sahi.utils.import_utils import _torch_available
 
