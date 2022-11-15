@@ -6,11 +6,14 @@ import os
 
 from sahi.utils.import_utils import is_available
 
+if is_available("torch"):
+    import torch
+else:
+    torch = None
+
 
 def empty_cuda_cache():
     if is_torch_cuda_available():
-        import torch
-
         return torch.cuda.empty_cache()
 
 
@@ -24,8 +27,6 @@ def to_float_tensor(img):
         torch.tensor
     """
 
-    import torch
-
     img = img.transpose((2, 0, 1))
     img = torch.from_numpy(img).float()
     if img.max() > 1:
@@ -35,8 +36,6 @@ def to_float_tensor(img):
 
 
 def torch_to_numpy(img):
-    import torch
-
     img = img.numpy()
     if img.max() > 1:
         img /= 255
@@ -45,8 +44,6 @@ def torch_to_numpy(img):
 
 def is_torch_cuda_available():
     if is_available("torch"):
-        import torch
-
         return torch.cuda.is_available()
     else:
         return False
@@ -65,8 +62,6 @@ def select_device(device: str):
 
     Inspired by https://github.com/ultralytics/yolov5/blob/6371de8879e7ad7ec5283e8b95cc6dd85d6a5e72/utils/torch_utils.py#L107
     """
-    import torch
-
     if device == "cuda":
         device = "cuda:0"
     device = str(device).strip().lower().replace("none", "")  # to string, 'cuda:0' to '0'

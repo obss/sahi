@@ -6,13 +6,14 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 import numpy as np
 from PIL import Image
 from shapely.errors import TopologicalError
 from tqdm import tqdm
 
+from sahi.annotation import BoundingBox, Mask
 from sahi.utils.coco import Coco, CocoAnnotation, CocoImage, create_coco_dict
 from sahi.utils.cv import read_image_as_pil
 from sahi.utils.file import load_json, save_json
@@ -642,3 +643,62 @@ def get_auto_slice_params(height: int, width: int):
         return get_resolution_selector("high", height=height, width=width)
     else:
         return get_resolution_selector("ultra-high", height=height, width=width)
+
+
+def shift_bboxes(bboxes, offset: Sequence[int]):
+    """
+    Shift bboxes w.r.t offset.
+
+    Suppo
+
+    Args:
+        bboxes (Tensor, np.ndarray, list): The bboxes need to be translated. Its shape can
+            be (n, 4), which means (x, y, x, y).
+        offset (Sequence[int]): The translation offsets with shape of (2, ).
+    Returns:
+        Tensor: Shifted bboxes.
+    """
+    from sahi.utils.import_utils import _torch_available
+
+    shifted_bboxes = []
+
+    if type(bboxes).__module__ == "torch":
+        bboxes_is_torch_tensor = True
+    else:
+        bboxes_is_torch_tensor = False
+
+    for bbox in bboxes:
+        if bboxes_is_torch_tensor or isinstance(bbox, np.ndarray):
+            bbox = bbox.tolist()
+        bbox = BoundingBox(bbox, shift_amount=offset)
+        bbox = bbox.get_shifted_box()
+        shifted_bboxes.append(bbox.to_xyxy())
+
+    if isinstance(bboxes, np.ndarray):
+        return np.stack(shifted_bboxes, axis=0)
+    elif bboxes_is_torch_tensor:
+        return bboxes.new_tensor(shifted_bboxes)
+    else:
+        return shifted_bboxes
+
+
+def shift_masks(masks: np.ndarray, offset: Sequence[int], full_shape: Sequence[int]) -> np.ndarray:
+    """Shift masks to the original image.
+    Args:
+        masks (np.ndarray): masks that need to be shifted.
+        offset (Sequence[int]): The offset to translate with shape of (2, ).
+        full_shape (Sequence[int]): A (height, width) tuple of the huge image's shape.
+    Returns:
+        np.ndarray: Shifted masks.
+    """
+    # empty masks
+    if not masks:
+        return masks
+
+    shifted_masks = []
+    for mask in masks:
+        mask = Mask(bool_mask=mask, shift_amount=offset, full_shape=full_shape)
+        mask = mask.get_shifted_mask()
+        shifted_masks.append(mask.bool_mask)
+
+    return np.stack(shifted_masks, axis=0)
