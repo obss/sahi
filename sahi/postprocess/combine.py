@@ -5,6 +5,7 @@ import logging
 from typing import List
 
 import torch
+from torchvision.ops import batched_nms as batched_nms_torchvision
 
 from sahi.postprocess.utils import ObjectPredictionList, has_match, merge_object_prediction_pair
 from sahi.prediction import ObjectPrediction
@@ -13,7 +14,38 @@ from sahi.utils.import_utils import check_requirements
 logger = logging.getLogger(__name__)
 
 
-def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):
+def batched_nms(
+    object_predictions_as_tensor: torch.tensor,
+    match_metric: str = "IOU",
+    match_threshold: float = 0.5,
+):
+    """
+    Apply non-maximum suppression to avoid detecting too many
+    overlapping bounding boxes for a given object.
+    Args:
+        object_predictions_as_tensor: (tensor) The location preds for the image
+            along with the class predscores, Shape: [num_boxes,5].
+        match_metric: (str) IOU or IOS
+        match_threshold: (float) The overlap thresh for
+            match metric.
+    Returns:
+        keep_indices: (List[int]) list of prediction indices to keep.
+    """
+    if match_metric == "IOU":
+        keep_indices = batched_nms_torchvision(
+            object_predictions_as_tensor[:, :4],
+            object_predictions_as_tensor[:, 4],
+            object_predictions_as_tensor[:, 5],
+            match_threshold,
+        )
+    elif match_metric == "IOS":
+        keep_indices = batched_nms_sahi(object_predictions_as_tensor, match_metric, match_threshold)
+    else:
+        raise ValueError(f"Match metric {match_metric} is not supported.")
+    return keep_indices
+
+
+def batched_nms_sahi(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):
     """
     Apply non-maximum suppression to avoid detecting too many
     overlapping bounding boxes for a given object.
