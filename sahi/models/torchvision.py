@@ -79,30 +79,30 @@ class TorchVisionDetectionModel(DetectionModel):
             category_names = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
             self.category_mapping = category_names
 
-    def perform_inference(self, image: np.ndarray, image_size: int = None):
+    def perform_inference(self, images: List):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
-            image: np.ndarray
-                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
-            image_size: int
-                Inference input size.
+            images: List[np.ndarray, PIL.Image.Image]
+                A numpy array that contains a list of images to be predicted. 3 channel image should be in RGB order.
         """
-        from sahi.utils.torch import to_float_tensor
+        from sahi.utils.torch import to_float_tensors
+
+        if not isinstance(images, list):
+            images = [images]
 
         # arrange model input size
         if self.image_size is not None:
             # get min and max of image height and width
-            min_shape, max_shape = min(image.shape[:2]), max(image.shape[:2])
+            min_shape, max_shape = min(images[0].shape[:2]), max(images[0].shape[:2])
             # torchvision resize transform scales the shorter dimension to the target size
             # we want to scale the longer dimension to the target size
             image_size = self.image_size * min_shape / max_shape
             self.model.transform.min_size = (image_size,)  # default is (800,)
             self.model.transform.max_size = image_size  # default is 1333
 
-        image = to_float_tensor(image)
-        image = image.to(self.device)
-        prediction_result = self.model([image])
+        images = to_float_tensors(images, device=self.device)
+        prediction_result = self.model(images)
 
         self._original_predictions = prediction_result
 
@@ -156,14 +156,14 @@ class TorchVisionDetectionModel(DetectionModel):
             selected_indices = np.where(scores > self.confidence_threshold)[0]
 
             # parse boxes, masks, scores, category_ids from predictions
-            category_ids = list(image_predictions["labels"][selected_indices].cpu().detach().numpy())
-            boxes = list(image_predictions["boxes"][selected_indices].cpu().detach().numpy())
+            category_ids = image_predictions["labels"][selected_indices].tolist()
+            boxes = image_predictions["boxes"][selected_indices].tolist()
             scores = scores[selected_indices]
 
             # check if predictions contain mask
             masks = image_predictions.get("masks", None)
             if masks is not None:
-                masks = list(image_predictions["masks"][selected_indices].cpu().detach().numpy())
+                masks = image_predictions["masks"][selected_indices].tolist()
             else:
                 masks = None
 

@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pybboxes.functional as pbf
+from PIL import Image
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
@@ -96,30 +97,38 @@ class HuggingfaceDetectionModel(DetectionModel):
         self._feature_extractor = feature_extractor
         self.category_mapping = self.model.config.id2label
 
-    def perform_inference(self, image: Union[List, np.ndarray]):
+    def perform_inference(self, images: List):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
-            image: np.ndarray
-                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+            images: List[np.ndarray, PIL.Image.Image]
+                A numpy array that contains a list of images to be predicted. 3 channel image should be in RGB order.
         """
         import torch
+
+        if not isinstance(images, list):
+            images = [images]
 
         # Confirm model is loaded
         if self.model is None:
             raise RuntimeError("Model is not loaded, load it by calling .load_model()")
 
+        # save image shapes
+        for image in images:
+            if isinstance(image, np.ndarray):
+                self._image_shapes.append(image.shape[:2])
+            elif isinstance(image, Image.Image):
+                self._image_shapes.append(image.size[::-1])
+            else:
+                raise ValueError(f"Unsupported image type {type(image)}")
+
         with torch.no_grad():
-            inputs = self.feature_extractor(images=image, return_tensors="pt")
+            inputs = self.feature_extractor(images=images, return_tensors="pt")
             inputs["pixel_values"] = inputs.pixel_values.to(self.device)
             if hasattr(inputs, "pixel_mask"):
                 inputs["pixel_mask"] = inputs.pixel_mask.to(self.device)
             outputs = self.model(**inputs)
 
-        if isinstance(image, list):
-            self._image_shapes = [img.shape for img in image]
-        else:
-            self._image_shapes = [image.shape]
         self._original_predictions = outputs
 
     def get_valid_predictions(
@@ -163,7 +172,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         n_image = original_predictions.logits.shape[0]
         object_predictions_per_image = []
         for image_ind in range(n_image):
-            image_height, image_width, _ = self.image_shapes[image_ind]
+            image_height, image_width = self.image_shapes[image_ind]
             scores, cat_ids, boxes = self.get_valid_predictions(
                 logits=original_predictions.logits[image_ind], pred_boxes=original_predictions.pred_boxes[image_ind]
             )

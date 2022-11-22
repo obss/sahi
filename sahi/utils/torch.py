@@ -17,6 +17,36 @@ def empty_cuda_cache():
         return torch.cuda.empty_cache()
 
 
+def to_float_tensors(images, device):
+    """
+    Converts a list of PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range
+    [0, 255] to a torch.FloatTensor of shape (N x C x H x W).
+    Args:
+        images: list[np.ndarray]
+    Returns:
+        List[torch.FloatTensor]
+    """
+    batch = []
+    for img in images:
+        batch.append(to_float_tensor(img).to(device))
+    return batch
+
+
+def to_float_batch_tensor(images):
+    """
+    Converts a list of PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range
+    [0, 255] to a torch.FloatTensor of shape (N x C x H x W).
+    Args:
+        images: list[np.ndarray]
+    Returns:
+        torch.tensor
+    """
+    batch = []
+    for img in images:
+        batch.append(to_float_tensor(img))
+    return torch.stack(batch)
+
+
 def to_float_tensor(img):
     """
     Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range

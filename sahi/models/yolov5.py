@@ -2,9 +2,7 @@
 # Code written by Fatih C Akyon, 2020.
 
 import logging
-from typing import Any, Dict, List, Optional
-
-import numpy as np
+from typing import Any, Dict, List, Optional, Sequence
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
@@ -50,21 +48,24 @@ class Yolov5DetectionModel(DetectionModel):
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, images: List):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
-            image: np.ndarray
-                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+            images: List[np.ndarray, str, PIL.Image.Image]
+                A numpy array that contains a list of images to be predicted. 3 channel image should be in RGB order.
         """
+
+        if not isinstance(images, list):
+            images = [images]
 
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
         if self.image_size is not None:
-            prediction_result = self.model(image, size=self.image_size)
+            prediction_result = self.model(images, size=self.image_size)
         else:
-            prediction_result = self.model(image)
+            prediction_result = self.model(images)
 
         self._original_predictions = prediction_result
 
@@ -125,7 +126,7 @@ class Yolov5DetectionModel(DetectionModel):
             object_predictions = []
 
             # process predictions
-            for prediction in image_predictions_in_xyxy_format.cpu().detach().numpy():
+            for prediction in image_predictions_in_xyxy_format.tolist():
                 x1 = prediction[0]
                 y1 = prediction[1]
                 x2 = prediction[2]

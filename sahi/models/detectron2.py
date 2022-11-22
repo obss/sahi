@@ -70,23 +70,29 @@ class Detectron2DetectionModel(DetectionModel):
         else:
             self.category_names = list(self.category_mapping.values())
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, images: List):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
-            image: np.ndarray
-                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+            images: List[np.ndarray, PIL.Image.Image]
+                A numpy array that contains one image to be predicted. 3 channel image should be in RGB order.
         """
+
+        if not isinstance(images, list):
+            images = [images]
+
+        if len(images) > 1:
+            raise NotImplementedError("Detectron2 does not support batch inference.")
 
         # Confirm model is loaded
         if self.model is None:
             raise RuntimeError("Model is not loaded, load it by calling .load_model()")
 
-        if isinstance(image, np.ndarray) and self.model.input_format == "BGR":
+        if isinstance(images[0], np.ndarray) and self.model.input_format == "BGR":
             # convert RGB image to BGR format
-            image = image[:, :, ::-1]
+            images[0] = images[0][:, :, ::-1]
 
-        prediction_result = self.model(image)
+        prediction_result = self.model(images[0])
 
         self._original_predictions = prediction_result
 

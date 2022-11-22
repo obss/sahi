@@ -54,13 +54,16 @@ class MmdetDetectionModel(DetectionModel):
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, images: List):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
-            image: np.ndarray
-                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+            images: List[np.ndarray, str, PIL.Image.Image]
+                A numpy array that contains a list of images to be predicted. 3 channel image should be in RGB order.
         """
+
+        if not isinstance(images, list):
+            images = [images]
 
         # Confirm model is loaded
         if self.model is None:
@@ -69,13 +72,12 @@ class MmdetDetectionModel(DetectionModel):
         from mmdet.apis import inference_detector
 
         # perform inference
-        if isinstance(image, np.ndarray):
-            # https://github.com/obss/sahi/issues/265
-            image = image[:, :, ::-1]
-        # compatibility with sahi v0.8.15
-        if not isinstance(image, list):
-            image = [image]
-        prediction_result = inference_detector(self.model, image)
+        if isinstance(images[0], np.ndarray):
+            # mmdet accepts in BGR order
+            for i, image in enumerate(images):
+                images[i] = image[..., ::-1]
+
+        prediction_result = inference_detector(self.model, images)
 
         self._original_predictions = prediction_result
 
