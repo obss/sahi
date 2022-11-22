@@ -83,7 +83,7 @@ if sys.version_info >= (3, 7):
                 if huggingface_detection_model.category_mapping[cat_ids[i].item()] == "car":  # if category car
                     break
 
-            image_height, image_width, _ = huggingface_detection_model.image_shapes[0]
+            image_height, image_width = huggingface_detection_model.image_shapes[0]
             box = list(
                 pbf.convert_bbox(
                     box.tolist(),
