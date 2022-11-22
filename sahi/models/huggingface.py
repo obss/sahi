@@ -204,6 +204,6 @@ class HuggingfaceDetectionModel(DetectionModel):
                     full_shape=full_shape,
                 )
                 object_predictions.append(object_prediction)
-            object_predictionst_per_image.append(object_predictions)
+            object_predictions_per_image.append(object_predictions)
 
         self._object_predictions_per_image = object_predictions_per_image
