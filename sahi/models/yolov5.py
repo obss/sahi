@@ -2,9 +2,7 @@
 # Code written by Fatih C Akyon, 2020.
 
 import logging
-from typing import Any, Dict, List, Optional
-
-import numpy as np
+from typing import Any, Dict, List, Optional, Sequence
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
@@ -50,21 +48,24 @@ class Yolov5DetectionModel(DetectionModel):
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, images: List):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
-            image: np.ndarray
-                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+            images: List[np.ndarray, str, PIL.Image.Image]
+                A numpy array that contains a list of images to be predicted. 3 channel image should be in RGB order.
         """
+
+        if not isinstance(images, list):
+            images = [images]
 
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
         if self.image_size is not None:
-            prediction_result = self.model(image, size=self.image_size)
+            prediction_result = self.model(images, size=self.image_size)
         else:
-            prediction_result = self.model(image)
+            prediction_result = self.model(images)
 
         self._original_predictions = prediction_result
 
@@ -95,37 +96,33 @@ class Yolov5DetectionModel(DetectionModel):
         else:
             return self.model.names
 
-    def _create_object_prediction_list_from_original_predictions(
+    def _create_object_predictions_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+        full_shapes: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list_per_image.
+        self._object_predictions_per_image.
         Args:
-            shift_amount_list: list of list
+            shift_amounts: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
                 be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
-            full_shape_list: list of list
+            full_shapes: list of list
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
 
-        # compatilibty for sahi v0.8.15
-        shift_amount_list = fix_shift_amount_list(shift_amount_list)
-        full_shape_list = fix_full_shape_list(full_shape_list)
-
         # handle all predictions
-        object_prediction_list_per_image = []
+        object_predictions_per_image = []
         for image_ind, image_predictions_in_xyxy_format in enumerate(original_predictions.xyxy):
-            shift_amount = shift_amount_list[image_ind]
-            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
-            object_prediction_list = []
+            shift_amount = shift_amounts[image_ind]
+            full_shape = None if full_shapes is None else full_shapes[image_ind]
+            object_predictions = []
 
             # process predictions
-            for prediction in image_predictions_in_xyxy_format.cpu().detach().numpy():
+            for prediction in image_predictions_in_xyxy_format.tolist():
                 x1 = prediction[0]
                 y1 = prediction[1]
                 x2 = prediction[2]
@@ -162,7 +159,7 @@ class Yolov5DetectionModel(DetectionModel):
                     shift_amount=shift_amount,
                     full_shape=full_shape,
                 )
-                object_prediction_list.append(object_prediction)
-            object_prediction_list_per_image.append(object_prediction_list)
+                object_predictions.append(object_prediction)
+            object_predictions_per_image.append(object_predictions)
 
-        self._object_prediction_list_per_image = object_prediction_list_per_image
+        self._object_predictions_per_image = object_predictions_per_image

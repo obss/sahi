@@ -79,30 +79,31 @@ class TorchVisionDetectionModel(DetectionModel):
             category_names = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
             self.category_mapping = category_names
 
-    def perform_inference(self, image: np.ndarray, image_size: int = None):
+    def perform_inference(self, images: List):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
-            image: np.ndarray
-                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
-            image_size: int
-                Inference input size.
+            images: List[np.ndarray, PIL.Image.Image]
+                A numpy array that contains a list of images to be predicted. 3 channel image should be in RGB order.
         """
-        from sahi.utils.torch import to_float_tensor
+        from sahi.utils.torch import to_float_tensors
+
+        if not isinstance(images, list):
+            images = [images]
+
+        images = to_float_tensors(images, device=self.device)
 
         # arrange model input size
         if self.image_size is not None:
             # get min and max of image height and width
-            min_shape, max_shape = min(image.shape[:2]), max(image.shape[:2])
+            min_shape, max_shape = min(images[0].shape[1:]), max(images[0].shape[1:])
             # torchvision resize transform scales the shorter dimension to the target size
             # we want to scale the longer dimension to the target size
             image_size = self.image_size * min_shape / max_shape
             self.model.transform.min_size = (image_size,)  # default is (800,)
             self.model.transform.max_size = image_size  # default is 1333
 
-        image = to_float_tensor(image)
-        image = image.to(self.device)
-        prediction_result = self.model([image])
+        prediction_result = self.model(images)
 
         self._original_predictions = prediction_result
 
@@ -124,54 +125,48 @@ class TorchVisionDetectionModel(DetectionModel):
     def category_names(self):
         return list(self.category_mapping.values())
 
-    def _create_object_prediction_list_from_original_predictions(
+    def _create_object_predictions_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+        full_shapes: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list_per_image.
+        self._object_predictions_per_image.
         Args:
-            shift_amount_list: list of list
+            shift_amounts: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
                 be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
-            full_shape_list: list of list
+            full_shapes: list of list
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
 
-        # compatilibty for sahi v0.8.20
-        if isinstance(shift_amount_list[0], int):
-            shift_amount_list = [shift_amount_list]
-        if full_shape_list is not None and isinstance(full_shape_list[0], int):
-            full_shape_list = [full_shape_list]
-
-        for image_predictions in original_predictions:
-            object_prediction_list_per_image = []
+        for image_ind, image_predictions in enumerate(original_predictions):
+            object_predictions_per_image = []
 
             # get indices of boxes with score > confidence_threshold
             scores = image_predictions["scores"].cpu().detach().numpy()
             selected_indices = np.where(scores > self.confidence_threshold)[0]
 
             # parse boxes, masks, scores, category_ids from predictions
-            category_ids = list(image_predictions["labels"][selected_indices].cpu().detach().numpy())
-            boxes = list(image_predictions["boxes"][selected_indices].cpu().detach().numpy())
+            category_ids = image_predictions["labels"][selected_indices].tolist()
+            boxes = image_predictions["boxes"][selected_indices].tolist()
             scores = scores[selected_indices]
 
             # check if predictions contain mask
             masks = image_predictions.get("masks", None)
             if masks is not None:
-                masks = list(image_predictions["masks"][selected_indices].cpu().detach().numpy())
+                masks = image_predictions["masks"][selected_indices].tolist()
             else:
                 masks = None
 
-            # create object_prediction_list
-            object_prediction_list = []
+            # create object_predictions
+            object_predictions = []
 
-            shift_amount = shift_amount_list[0]
-            full_shape = None if full_shape_list is None else full_shape_list[0]
+            shift_amount = shift_amounts[image_ind]
+            full_shape = None if full_shapes is None else full_shapes[image_ind]
 
             for ind in range(len(boxes)):
 
@@ -189,7 +184,7 @@ class TorchVisionDetectionModel(DetectionModel):
                     score=scores[ind],
                     full_shape=full_shape,
                 )
-                object_prediction_list.append(object_prediction)
-            object_prediction_list_per_image.append(object_prediction_list)
+                object_predictions.append(object_prediction)
+            object_predictions_per_image.append(object_predictions)
 
-        self._object_prediction_list_per_image = object_prediction_list_per_image
+        self._object_predictions_per_image = object_predictions_per_image

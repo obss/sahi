@@ -5,6 +5,7 @@ import logging
 from typing import List
 
 import torch
+from torchvision.ops import batched_nms as batched_nms_torchvision
 
 from sahi.postprocess.utils import ObjectPredictionList, has_match, merge_object_prediction_pair
 from sahi.prediction import ObjectPrediction
@@ -13,7 +14,38 @@ from sahi.utils.import_utils import check_requirements
 logger = logging.getLogger(__name__)
 
 
-def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):
+def batched_nms(
+    object_predictions_as_tensor: torch.tensor,
+    match_metric: str = "IOU",
+    match_threshold: float = 0.5,
+):
+    """
+    Apply non-maximum suppression to avoid detecting too many
+    overlapping bounding boxes for a given object.
+    Args:
+        object_predictions_as_tensor: (tensor) The location preds for the image
+            along with the class predscores, Shape: [num_boxes,5].
+        match_metric: (str) IOU or IOS
+        match_threshold: (float) The overlap thresh for
+            match metric.
+    Returns:
+        keep_indices: (List[int]) list of prediction indices to keep.
+    """
+    if match_metric == "IOU":
+        keep_indices = batched_nms_torchvision(
+            object_predictions_as_tensor[:, :4],
+            object_predictions_as_tensor[:, 4],
+            object_predictions_as_tensor[:, 5],
+            match_threshold,
+        )
+    elif match_metric == "IOS":
+        keep_indices = batched_nms_sahi(object_predictions_as_tensor, match_metric, match_threshold)
+    else:
+        raise ValueError(f"Match metric {match_metric} is not supported.")
+    return keep_indices
+
+
+def batched_nms_sahi(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):
     """
     Apply non-maximum suppression to avoid detecting too many
     overlapping bounding boxes for a given object.
@@ -475,8 +507,8 @@ class NMSPostprocess(PostprocessPredictions):
         self,
         object_predictions: List[ObjectPrediction],
     ):
-        object_prediction_list = ObjectPredictionList(object_predictions)
-        object_predictions_as_torch = object_prediction_list.totensor()
+        object_predictions = ObjectPredictionList(object_predictions)
+        object_predictions_as_torch = object_predictions.totensor()
         if self.class_agnostic:
             keep = nms(
                 object_predictions_as_torch, match_threshold=self.match_threshold, match_metric=self.match_metric
@@ -486,7 +518,7 @@ class NMSPostprocess(PostprocessPredictions):
                 object_predictions_as_torch, match_threshold=self.match_threshold, match_metric=self.match_metric
             )
 
-        selected_object_predictions = object_prediction_list[keep].tolist()
+        selected_object_predictions = object_predictions[keep].tolist()
         if not isinstance(selected_object_predictions, list):
             selected_object_predictions = [selected_object_predictions]
 
@@ -498,8 +530,8 @@ class NMMPostprocess(PostprocessPredictions):
         self,
         object_predictions: List[ObjectPrediction],
     ):
-        object_prediction_list = ObjectPredictionList(object_predictions)
-        object_predictions_as_torch = object_prediction_list.totensor()
+        object_predictions = ObjectPredictionList(object_predictions)
+        object_predictions_as_torch = object_predictions.totensor()
         if self.class_agnostic:
             keep_to_merge_list = nmm(
                 object_predictions_as_torch,
@@ -517,15 +549,15 @@ class NMMPostprocess(PostprocessPredictions):
         for keep_ind, merge_ind_list in keep_to_merge_list.items():
             for merge_ind in merge_ind_list:
                 if has_match(
-                    object_prediction_list[keep_ind].tolist(),
-                    object_prediction_list[merge_ind].tolist(),
+                    object_predictions[keep_ind].tolist(),
+                    object_predictions[merge_ind].tolist(),
                     self.match_metric,
                     self.match_threshold,
                 ):
-                    object_prediction_list[keep_ind] = merge_object_prediction_pair(
-                        object_prediction_list[keep_ind].tolist(), object_prediction_list[merge_ind].tolist()
+                    object_predictions[keep_ind] = merge_object_prediction_pair(
+                        object_predictions[keep_ind].tolist(), object_predictions[merge_ind].tolist()
                     )
-            selected_object_predictions.append(object_prediction_list[keep_ind].tolist())
+            selected_object_predictions.append(object_predictions[keep_ind].tolist())
 
         return selected_object_predictions
 
@@ -535,8 +567,8 @@ class GreedyNMMPostprocess(PostprocessPredictions):
         self,
         object_predictions: List[ObjectPrediction],
     ):
-        object_prediction_list = ObjectPredictionList(object_predictions)
-        object_predictions_as_torch = object_prediction_list.totensor()
+        object_predictions = ObjectPredictionList(object_predictions)
+        object_predictions_as_torch = object_predictions.totensor()
         if self.class_agnostic:
             keep_to_merge_list = greedy_nmm(
                 object_predictions_as_torch,
@@ -554,15 +586,15 @@ class GreedyNMMPostprocess(PostprocessPredictions):
         for keep_ind, merge_ind_list in keep_to_merge_list.items():
             for merge_ind in merge_ind_list:
                 if has_match(
-                    object_prediction_list[keep_ind].tolist(),
-                    object_prediction_list[merge_ind].tolist(),
+                    object_predictions[keep_ind].tolist(),
+                    object_predictions[merge_ind].tolist(),
                     self.match_metric,
                     self.match_threshold,
                 ):
-                    object_prediction_list[keep_ind] = merge_object_prediction_pair(
-                        object_prediction_list[keep_ind].tolist(), object_prediction_list[merge_ind].tolist()
+                    object_predictions[keep_ind] = merge_object_prediction_pair(
+                        object_predictions[keep_ind].tolist(), object_predictions[merge_ind].tolist()
                     )
-            selected_object_predictions.append(object_prediction_list[keep_ind].tolist())
+            selected_object_predictions.append(object_predictions[keep_ind].tolist())
 
         return selected_object_predictions
 
@@ -585,8 +617,8 @@ class LSNMSPostprocess(PostprocessPredictions):
 
         logger.warning("LSNMSPostprocess is experimental and not recommended to use.")
 
-        object_prediction_list = ObjectPredictionList(object_predictions)
-        object_predictions_as_numpy = object_prediction_list.tonumpy()
+        object_predictions = ObjectPredictionList(object_predictions)
+        object_predictions_as_numpy = object_predictions.tonumpy()
 
         boxes = object_predictions_as_numpy[:, :4]
         scores = object_predictions_as_numpy[:, 4]
@@ -596,7 +628,7 @@ class LSNMSPostprocess(PostprocessPredictions):
             boxes, scores, iou_threshold=self.match_threshold, class_ids=None if self.class_agnostic else class_ids
         )
 
-        selected_object_predictions = object_prediction_list[keep].tolist()
+        selected_object_predictions = object_predictions[keep].tolist()
         if not isinstance(selected_object_predictions, list):
             selected_object_predictions = [selected_object_predictions]
 

@@ -83,7 +83,7 @@ if sys.version_info >= (3, 7):
                 if huggingface_detection_model.category_mapping[cat_ids[i].item()] == "car":  # if category car
                     break
 
-            image_height, image_width, _ = huggingface_detection_model.image_shapes[0]
+            image_height, image_width = huggingface_detection_model.image_shapes[0]
             box = list(
                 pbf.convert_bbox(
                     box.tolist(),
@@ -124,25 +124,25 @@ if sys.version_info >= (3, 7):
 
             # convert predictions to ObjectPrediction list
             huggingface_detection_model.convert_original_predictions()
-            object_prediction_list = huggingface_detection_model.object_prediction_list
+            object_predictions = huggingface_detection_model.object_predictions
 
             # compare
-            self.assertEqual(len(object_prediction_list), 28)
-            self.assertEqual(object_prediction_list[0].category.id, 3)
-            self.assertEqual(object_prediction_list[0].category.name, "car")
+            self.assertEqual(len(object_predictions), 28)
+            self.assertEqual(object_predictions[0].category.id, 3)
+            self.assertEqual(object_predictions[0].category.name, "car")
             desired_bbox = [639, 198, 24, 20]
-            predicted_bbox = object_prediction_list[0].bbox.to_xywh()
+            predicted_bbox = object_predictions[0].bbox.to_xywh()
             margin = 2
             for ind, point in enumerate(predicted_bbox):
                 assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
-            self.assertEqual(object_prediction_list[2].category.id, 3)
-            self.assertEqual(object_prediction_list[2].category.name, "car")
+            self.assertEqual(object_predictions[2].category.id, 3)
+            self.assertEqual(object_predictions[2].category.name, "car")
             desired_bbox = [745, 169, 15, 14]
-            predicted_bbox = object_prediction_list[2].bbox.to_xywh()
+            predicted_bbox = object_predictions[2].bbox.to_xywh()
             for ind, point in enumerate(predicted_bbox):
                 assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
 
-            for object_prediction in object_prediction_list:
+            for object_prediction in object_predictions:
                 self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
         def test_get_prediction_huggingface(self):
@@ -166,18 +166,18 @@ if sys.version_info >= (3, 7):
 
             # get full sized prediction
             prediction_result = get_prediction(
-                image=image,
+                images=image,
                 detection_model=huggingface_detection_model,
-                shift_amount=[0, 0],
-                full_shape=None,
+                shift_amounts=[[0, 0]],
+                full_shapes=None,
                 postprocess=None,
             )
-            object_prediction_list = prediction_result.object_prediction_list
+            object_predictions = prediction_result.object_predictions
 
             # compare
-            self.assertEqual(len(object_prediction_list), 28)
+            self.assertEqual(len(object_predictions), 28)
             num_person = num_truck = num_car = 0
-            for object_prediction in object_prediction_list:
+            for object_prediction in object_predictions:
                 if object_prediction.category.name == "person":
                     num_person += 1
                 elif object_prediction.category.name == "truck":
@@ -210,18 +210,18 @@ if sys.version_info >= (3, 7):
 
             # get full sized prediction
             prediction_result = get_prediction(
-                image=image,
+                images=image,
                 detection_model=huggingface_detection_model,
-                shift_amount=[0, 0],
-                full_shape=None,
+                shift_amounts=[[0, 0]],
+                full_shapes=None,
                 postprocess=None,
             )
-            object_prediction_list = prediction_result.object_prediction_list
+            object_predictions = prediction_result.object_predictions
 
             # compare
-            self.assertEqual(len(object_prediction_list), 28)
+            self.assertEqual(len(object_predictions), 28)
             num_person = num_truck = num_car = 0
-            for object_prediction in object_prediction_list:
+            for object_prediction in object_predictions:
                 if object_prediction.category.name == "person":
                     num_person += 1
                 elif object_prediction.category.name == "truck":
@@ -273,12 +273,12 @@ if sys.version_info >= (3, 7):
                 postprocess_match_metric=match_metric,
                 postprocess_class_agnostic=class_agnostic,
             )
-            object_prediction_list = prediction_result.object_prediction_list
+            object_predictions = prediction_result.object_predictions
 
             # compare
-            self.assertEqual(len(object_prediction_list), 54)
+            self.assertEqual(len(object_predictions), 54)
             num_person = num_truck = num_car = 0
-            for object_prediction in object_prediction_list:
+            for object_prediction in object_predictions:
                 if object_prediction.category.name == "person":
                     num_person += 1
                 elif object_prediction.category.name == "truck":

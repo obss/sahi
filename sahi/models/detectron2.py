@@ -70,23 +70,29 @@ class Detectron2DetectionModel(DetectionModel):
         else:
             self.category_names = list(self.category_mapping.values())
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, images: List):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
-            image: np.ndarray
-                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+            images: List[np.ndarray, PIL.Image.Image]
+                A numpy array that contains one image to be predicted. 3 channel image should be in RGB order.
         """
+
+        if not isinstance(images, list):
+            images = [images]
+
+        if len(images) > 1:
+            raise NotImplementedError("Detectron2 does not support batch inference.")
 
         # Confirm model is loaded
         if self.model is None:
             raise RuntimeError("Model is not loaded, load it by calling .load_model()")
 
-        if isinstance(image, np.ndarray) and self.model.input_format == "BGR":
+        if isinstance(images[0], np.ndarray) and self.model.input_format == "BGR":
             # convert RGB image to BGR format
-            image = image[:, :, ::-1]
+            images[0] = images[0][:, :, ::-1]
 
-        prediction_result = self.model(image)
+        prediction_result = self.model(images[0])
 
         self._original_predictions = prediction_result
 
@@ -98,14 +104,14 @@ class Detectron2DetectionModel(DetectionModel):
         num_categories = len(self.category_mapping)
         return num_categories
 
-    def _create_object_prediction_list_from_original_predictions(
+    def _create_object_predictions_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+        full_shapes: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list_per_image.
+        self._object_predictions_per_image.
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
@@ -115,12 +121,6 @@ class Detectron2DetectionModel(DetectionModel):
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
-
-        # compatilibty for sahi v0.8.15
-        if isinstance(shift_amount_list[0], int):
-            shift_amount_list = [shift_amount_list]
-        if full_shape_list is not None and isinstance(full_shape_list[0], int):
-            full_shape_list = [full_shape_list]
 
         # parse boxes, masks, scores, category_ids from predictions
         boxes = original_predictions["instances"].pred_boxes.tensor.tolist()
@@ -133,13 +133,13 @@ class Detectron2DetectionModel(DetectionModel):
         except AttributeError:
             masks = None
 
-        # create object_prediction_list
-        object_prediction_list_per_image = []
-        object_prediction_list = []
+        # create object_predictions
+        object_predictions_per_image = []
+        object_predictions = []
 
         # detectron2 DefaultPredictor supports single image
-        shift_amount = shift_amount_list[0]
-        full_shape = None if full_shape_list is None else full_shape_list[0]
+        shift_amount = shift_amounts[0]
+        full_shape = None if full_shapes is None else full_shapes[0]
 
         for ind in range(len(boxes)):
             score = scores[ind]
@@ -170,9 +170,9 @@ class Detectron2DetectionModel(DetectionModel):
                 score=score,
                 full_shape=full_shape,
             )
-            object_prediction_list.append(object_prediction)
+            object_predictions.append(object_prediction)
 
         # detectron2 DefaultPredictor supports single image
-        object_prediction_list_per_image = [object_prediction_list]
+        object_predictions_per_image = [object_predictions]
 
-        self._object_prediction_list_per_image = object_prediction_list_per_image
+        self._object_predictions_per_image = object_predictions_per_image

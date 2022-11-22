@@ -130,23 +130,23 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
         # convert predictions to ObjectPrediction list
         mmdet_detection_model.convert_original_predictions()
-        object_prediction_list = mmdet_detection_model.object_prediction_list
+        object_predictions = mmdet_detection_model.object_predictions
 
         # compare
-        self.assertEqual(len(object_prediction_list), 3)
-        self.assertEqual(object_prediction_list[0].category.id, 2)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
+        self.assertEqual(len(object_predictions), 3)
+        self.assertEqual(object_predictions[0].category.id, 2)
+        self.assertEqual(object_predictions[0].category.name, "car")
         self.assertEqual(
-            object_prediction_list[0].bbox.to_xywh(),
+            object_predictions[0].bbox.to_xywh(),
             [448, 308, 41, 36],
         )
-        self.assertEqual(object_prediction_list[2].category.id, 2)
-        self.assertEqual(object_prediction_list[2].category.name, "car")
+        self.assertEqual(object_predictions[2].category.id, 2)
+        self.assertEqual(object_predictions[2].category.name, "car")
         self.assertEqual(
-            object_prediction_list[2].bbox.to_xywh(),
+            object_predictions[2].bbox.to_xywh(),
             [381, 280, 33, 30],
         )
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
     def test_convert_original_predictions_without_mask_output(self):
@@ -174,21 +174,17 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
         # convert predictions to ObjectPrediction list
         mmdet_detection_model.convert_original_predictions()
-        object_prediction_list = mmdet_detection_model.object_prediction_list
+        object_predictions = mmdet_detection_model.object_predictions
 
         # compare
-        self.assertEqual(len(object_prediction_list), 2)
-        self.assertEqual(object_prediction_list[0].category.id, 2)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
-        np.testing.assert_almost_equal(
-            object_prediction_list[0].bbox.to_xywh(), [320.28, 323.55, 60.60, 41.91], decimal=1
-        )
-        self.assertEqual(object_prediction_list[1].category.id, 2)
-        self.assertEqual(object_prediction_list[1].category.name, "car")
-        np.testing.assert_almost_equal(
-            object_prediction_list[1].bbox.to_xywh(), [448.45, 310.97, 44.49, 30.86], decimal=1
-        )
-        for object_prediction in object_prediction_list:
+        self.assertEqual(len(object_predictions), 2)
+        self.assertEqual(object_predictions[0].category.id, 2)
+        self.assertEqual(object_predictions[0].category.name, "car")
+        np.testing.assert_almost_equal(object_predictions[0].bbox.to_xywh(), [320.28, 323.55, 60.60, 41.91], decimal=1)
+        self.assertEqual(object_predictions[1].category.id, 2)
+        self.assertEqual(object_predictions[1].category.name, "car")
+        np.testing.assert_almost_equal(object_predictions[1].bbox.to_xywh(), [448.45, 310.97, 44.49, 30.86], decimal=1)
+        for object_prediction in object_predictions:
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
 

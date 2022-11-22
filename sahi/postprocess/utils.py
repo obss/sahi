@@ -47,8 +47,8 @@ class ObjectPredictionList(Sequence):
     def __str__(self):
         return str(self.list)
 
-    def extend(self, object_prediction_list):
-        self.list.extend(object_prediction_list.list)
+    def extend(self, object_predictions):
+        self.list.extend(object_predictions.list)
 
     def totensor(self):
         return object_prediction_list_to_torch(self)

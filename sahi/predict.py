@@ -53,10 +53,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_prediction(
-    image,
-    detection_model,
-    shift_amount: list = [0, 0],
-    full_shape=None,
+    images,
+    detection_model: DetectionModel,
+    shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+    full_shapes: Optional[List[List[int]]] = None,
     postprocess: Optional[PostprocessPredictions] = None,
     verbose: int = 0,
 ) -> PredictionResult:
@@ -64,31 +64,38 @@ def get_prediction(
     Function for performing prediction for given image using given detection_model.
 
     Arguments:
-        image: str or np.ndarray
-            Location of image or numpy image matrix to slice
+        images: List[str, np.ndarray]
+            List of iamge file paths or numpy images to slice
         detection_model: model.DetectionMode
-        shift_amount: List
-            To shift the box and mask predictions from sliced image to full
-            sized image, should be in the form of [shift_x, shift_y]
-        full_shape: List
-            Size of the full image, should be in the form of [height, width]
+        shift_amounts: list of list
+            To shift the box and mask predictions from sliced image to full sized image, should
+            be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
+        full_shapes: list of list
+            Size of the full image after shifting, should be in the form of
+            List[[height, width],[height, width],...]
         postprocess: sahi.postprocess.combine.PostprocessPredictions
         verbose: int
             0: no print (default)
             1: print prediction duration
+        batch_size: int
+            Batch size for prediction
 
     Returns:
         A dict with fields:
-            object_prediction_list: a list of ObjectPrediction
+            object_predictions: a list of ObjectPrediction
             durations_in_seconds: a dict containing elapsed times for profiling
     """
     durations_in_seconds = dict()
 
-    # read image as pil
-    image_as_pil = read_image_as_pil(image)
+    if not isinstance(images, list):
+        images = [images]
+
+    # read images as pil
+    for ind, image in enumerate(images):
+        images[ind] = read_image_as_pil(image)
     # get prediction
     time_start = time.time()
-    detection_model.perform_inference(np.ascontiguousarray(image_as_pil))
+    detection_model.perform_inference(images)
     time_end = time.time() - time_start
     durations_in_seconds["prediction"] = time_end
 
@@ -96,14 +103,14 @@ def get_prediction(
     time_start = time.time()
     # works only with 1 batch
     detection_model.convert_original_predictions(
-        shift_amount=shift_amount,
-        full_shape=full_shape,
+        shift_amounts=shift_amounts,
+        full_shapes=full_shapes,
     )
-    object_prediction_list: List[ObjectPrediction] = detection_model.object_prediction_list
+    object_predictions: List[ObjectPrediction] = detection_model.object_predictions
 
     # postprocess matching predictions
     if postprocess is not None:
-        object_prediction_list = postprocess(object_prediction_list)
+        object_predictions = postprocess(object_predictions)
 
     time_end = time.time() - time_start
     durations_in_seconds["postprocess"] = time_end
@@ -116,7 +123,7 @@ def get_prediction(
         )
 
     return PredictionResult(
-        image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
+        image=image, object_predictions=object_predictions, durations_in_seconds=durations_in_seconds
     )
 
 
@@ -128,13 +135,14 @@ def get_sliced_prediction(
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     perform_standard_pred: bool = True,
-    postprocess_type: str = "GREEDYNMM",
-    postprocess_match_metric: str = "IOS",
+    postprocess_type: str = "NMS",
+    postprocess_match_metric: str = "IOU",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
     merge_buffer_length: int = None,
     auto_slice_resolution: bool = True,
+    batch_size: int = 1,
 ) -> PredictionResult:
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -180,18 +188,17 @@ def get_sliced_prediction(
         auto_slice_resolution: bool
             if slice parameters (slice_height, slice_width) are not given,
             it enables automatically calculate these params from image resolution and orientation.
+        batch_size: int
+            Batch size for sliced prediction. Default is 1.
 
     Returns:
         A Dict with fields:
-            object_prediction_list: a list of sahi.prediction.ObjectPrediction
+            object_predictions: a list of sahi.prediction.ObjectPrediction
             durations_in_seconds: a dict containing elapsed times for profiling
     """
 
     # for profiling
     durations_in_seconds = dict()
-
-    # currently only 1 batch supported
-    num_batch = 1
 
     # create slices from full image
     time_start = time.time()
@@ -212,9 +219,6 @@ def get_sliced_prediction(
         raise ValueError(
             f"postprocess_type should be one of {list(POSTPROCESS_NAME_TO_CLASS.keys())} but given as {postprocess_type}"
         )
-    elif postprocess_type == "UNIONMERGE":
-        # deprecated in v0.9.3
-        raise ValueError("'UNIONMERGE' postprocess_type is deprecated, use 'GREEDYNMM' instead.")
     postprocess_constructor = POSTPROCESS_NAME_TO_CLASS[postprocess_type]
     postprocess = postprocess_constructor(
         match_threshold=postprocess_match_threshold,
@@ -222,52 +226,60 @@ def get_sliced_prediction(
         class_agnostic=postprocess_class_agnostic,
     )
 
-    # create prediction input
-    num_group = int(num_slices / num_batch)
+    # perform sliced inference
     if verbose == 1 or verbose == 2:
         tqdm.write(f"Performing prediction on {num_slices} number of slices.")
-    object_prediction_list = []
-    # perform sliced prediction
-    for group_ind in range(num_group):
-        # prepare batch (currently supports only 1 batch)
-        image_list = []
-        shift_amount_list = []
-        for image_ind in range(num_batch):
-            image_list.append(slice_image_result.images[group_ind * num_batch + image_ind])
-            shift_amount_list.append(slice_image_result.starting_pixels[group_ind * num_batch + image_ind])
+
+    object_predictions = []
+    start = 0
+    while True:
+        # prepare batch slices
+        end = min(start + batch_size, num_slices)
+        images = []
+        for sliced_image in slice_image_result.images[start:end]:
+            images.append(sliced_image)
+
         # perform batch prediction
-        prediction_result = get_prediction(
-            image=image_list[0],
-            detection_model=detection_model,
-            shift_amount=shift_amount_list[0],
-            full_shape=[
+        full_shapes = [
+            [
                 slice_image_result.original_image_height,
                 slice_image_result.original_image_width,
-            ],
+            ]
+            for _ in range(len(images))
+        ]
+        prediction_result = get_prediction(
+            images=images,
+            detection_model=detection_model,
+            shift_amounts=slice_image_result.starting_pixels[start:end],
+            full_shapes=full_shapes,
         )
         # convert sliced predictions to full predictions
-        for object_prediction in prediction_result.object_prediction_list:
+        for object_prediction in prediction_result.object_predictions:
             if object_prediction:  # if not empty
-                object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+                object_predictions.append(object_prediction.get_shifted_object_prediction())
 
         # merge matching predictions during sliced prediction
-        if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
-            object_prediction_list = postprocess(object_prediction_list)
+        if merge_buffer_length is not None and len(object_predictions) > merge_buffer_length:
+            object_predictions = postprocess(object_predictions)
+
+        if end >= num_slices:
+            break
+        start += batch_size
 
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
         prediction_result = get_prediction(
-            image=image,
+            images=image,
             detection_model=detection_model,
-            shift_amount=[0, 0],
-            full_shape=None,
+            shift_amounts=[[0, 0]],
+            full_shapes=None,
             postprocess=None,
         )
-        object_prediction_list.extend(prediction_result.object_prediction_list)
+        object_predictions.extend(prediction_result.object_predictions)
 
     # merge matching predictions
-    if len(object_prediction_list) > 1:
-        object_prediction_list = postprocess(object_prediction_list)
+    if len(object_predictions) > 1:
+        object_predictions = postprocess(object_predictions)
 
     time_end = time.time() - time_start
     durations_in_seconds["prediction"] = time_end
@@ -285,7 +297,7 @@ def get_sliced_prediction(
         )
 
     return PredictionResult(
-        image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
+        image=image, object_predictions=object_predictions, durations_in_seconds=durations_in_seconds
     )
 
 
@@ -306,8 +318,8 @@ def predict(
     slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
-    postprocess_type: str = "GREEDYNMM",
-    postprocess_match_metric: str = "IOS",
+    postprocess_type: str = "NMS",
+    postprocess_match_metric: str = "IOU",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     novisual: bool = False,
@@ -325,6 +337,7 @@ def predict(
     verbose: int = 1,
     return_dict: bool = False,
     force_postprocess_type: bool = False,
+    batch_size: int = 1,
 ):
     """
     Performs prediction for all present images in given folder.
@@ -370,7 +383,7 @@ def predict(
             Default to ``0.2``.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
-            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'GRREDYNMM'.
+            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'NMS'.
         postprocess_match_metric: str
             Metric to be used during object prediction matching after sliced prediction.
             'IOU' for intersection over union, 'IOS' for intersection over smaller area.
@@ -408,6 +421,8 @@ def predict(
             If True, returns a dict with 'export_dir' field.
         force_postprocess_type: bool
             If True, auto postprocess check will e disabled
+        batch_size: int
+            Batch size for inference. Default is 1.
     """
     # assert prediction type
     if no_standard_prediction and no_sliced_prediction:
@@ -513,20 +528,21 @@ def predict(
                 postprocess_match_threshold=postprocess_match_threshold,
                 postprocess_class_agnostic=postprocess_class_agnostic,
                 verbose=1 if verbose else 0,
+                batch_size=batch_size,
             )
-            object_prediction_list = prediction_result.object_prediction_list
+            object_predictions = prediction_result.object_predictions
             durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
         else:
             # get standard prediction
             prediction_result = get_prediction(
-                image=image_as_pil,
+                images=image_as_pil,
                 detection_model=detection_model,
-                shift_amount=[0, 0],
-                full_shape=None,
+                shift_amounts=[[0, 0]],
+                full_shapes=None,
                 postprocess=None,
                 verbose=0,
             )
-            object_prediction_list = prediction_result.object_prediction_list
+            object_predictions = prediction_result.object_predictions
 
         durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
         # Show prediction time
@@ -540,16 +556,16 @@ def predict(
                 raise NotImplementedError("Video input type not supported with coco formatted dataset json")
 
             # append predictions in coco format
-            for object_prediction in object_prediction_list:
+            for object_prediction in object_predictions:
                 coco_prediction = object_prediction.to_coco_prediction()
                 coco_prediction.image_id = coco.images[ind].id
                 coco_prediction_json = coco_prediction.json
                 if coco_prediction_json["bbox"]:
                     coco_json.append(coco_prediction_json)
             if not novisual:
-                # convert ground truth annotations to object_prediction_list
+                # convert ground truth annotations to object_predictions
                 coco_image: CocoImage = coco.images[ind]
-                object_prediction_gt_list: List[ObjectPrediction] = []
+                object_prediction_gts: List[ObjectPrediction] = []
                 for coco_annotation in coco_image.annotations:
                     coco_annotation_dict = coco_annotation.json
                     category_name = coco_annotation.category_name
@@ -557,13 +573,13 @@ def predict(
                     object_prediction_gt = ObjectPrediction.from_coco_annotation_dict(
                         annotation_dict=coco_annotation_dict, category_name=category_name, full_shape=full_shape
                     )
-                    object_prediction_gt_list.append(object_prediction_gt)
+                    object_prediction_gts.append(object_prediction_gt)
                 # export visualizations with ground truths
                 output_dir = str(visual_with_gt_dir / Path(relative_filepath).parent)
                 color = (0, 255, 0)  # original annotations in green
                 result = visualize_object_predictions(
                     np.ascontiguousarray(image_as_pil),
-                    object_prediction_list=object_prediction_gt_list,
+                    object_predictions=object_prediction_gts,
                     rect_th=visual_bbox_thickness,
                     text_size=visual_text_size,
                     text_th=visual_text_thickness,
@@ -575,7 +591,7 @@ def predict(
                 color = (255, 0, 0)  # model predictions in red
                 _ = visualize_object_predictions(
                     result["image"],
-                    object_prediction_list=object_prediction_list,
+                    object_predictions=object_predictions,
                     rect_th=visual_bbox_thickness,
                     text_size=visual_text_size,
                     text_th=visual_text_thickness,
@@ -591,7 +607,7 @@ def predict(
             output_dir = str(crop_dir / Path(relative_filepath).parent)
             crop_object_predictions(
                 image=np.ascontiguousarray(image_as_pil),
-                object_prediction_list=object_prediction_list,
+                object_predictions=object_predictions,
                 output_dir=output_dir,
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
@@ -599,14 +615,14 @@ def predict(
         # export prediction list as pickle
         if export_pickle:
             save_path = str(pickle_dir / Path(relative_filepath).parent / (filename_without_extension + ".pickle"))
-            save_pickle(data=object_prediction_list, save_path=save_path)
+            save_pickle(data=object_predictions, save_path=save_path)
 
         # export visualization
         if not novisual or view_video:
             output_dir = str(visual_dir / Path(relative_filepath).parent)
             result = visualize_object_predictions(
                 np.ascontiguousarray(image_as_pil),
-                object_prediction_list=object_prediction_list,
+                object_predictions=object_predictions,
                 rect_th=visual_bbox_thickness,
                 text_size=visual_text_size,
                 text_th=visual_text_thickness,
@@ -678,8 +694,8 @@ def predict_fiftyone(
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
-    postprocess_type: str = "GREEDYNMM",
-    postprocess_match_metric: str = "IOS",
+    postprocess_type: str = "NMS",
+    postprocess_match_metric: str = "IOU",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
@@ -726,7 +742,7 @@ def predict_fiftyone(
             Default to ``0.2``.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
-            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'GRREDYNMM'.
+            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'NMS'.
         postprocess_match_metric: str
             Metric to be used during object prediction matching after sliced prediction.
             'IOU' for intersection over union, 'IOS' for intersection over smaller area.

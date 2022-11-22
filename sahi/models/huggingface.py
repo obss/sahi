@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pybboxes.functional as pbf
+from PIL import Image
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
@@ -96,30 +97,38 @@ class HuggingfaceDetectionModel(DetectionModel):
         self._feature_extractor = feature_extractor
         self.category_mapping = self.model.config.id2label
 
-    def perform_inference(self, image: Union[List, np.ndarray]):
+    def perform_inference(self, images: List):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
-            image: np.ndarray
-                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+            images: List[np.ndarray, PIL.Image.Image]
+                A numpy array that contains a list of images to be predicted. 3 channel image should be in RGB order.
         """
         import torch
+
+        if not isinstance(images, list):
+            images = [images]
 
         # Confirm model is loaded
         if self.model is None:
             raise RuntimeError("Model is not loaded, load it by calling .load_model()")
 
+        # save image shapes
+        for image in images:
+            if isinstance(image, np.ndarray):
+                self._image_shapes.append(image.shape[:2])
+            elif isinstance(image, Image.Image):
+                self._image_shapes.append(image.size[::-1])
+            else:
+                raise ValueError(f"Unsupported image type {type(image)}")
+
         with torch.no_grad():
-            inputs = self.feature_extractor(images=image, return_tensors="pt")
+            inputs = self.feature_extractor(images=images, return_tensors="pt")
             inputs["pixel_values"] = inputs.pixel_values.to(self.device)
             if hasattr(inputs, "pixel_mask"):
                 inputs["pixel_mask"] = inputs.pixel_mask.to(self.device)
             outputs = self.model(**inputs)
 
-        if isinstance(image, list):
-            self._image_shapes = [img.shape for img in image]
-        else:
-            self._image_shapes = [image.shape]
         self._original_predictions = outputs
 
     def get_valid_predictions(
@@ -138,14 +147,14 @@ class HuggingfaceDetectionModel(DetectionModel):
         boxes = pred_boxes[valid_mask]
         return scores, cat_ids, boxes
 
-    def _create_object_prediction_list_from_original_predictions(
+    def _create_object_predictions_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+        full_shapes: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list_per_image.
+        self._object_predictions_per_image.
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
@@ -156,23 +165,19 @@ class HuggingfaceDetectionModel(DetectionModel):
         """
         original_predictions = self._original_predictions
 
-        # compatilibty for sahi v0.8.15
-        shift_amount_list = fix_shift_amount_list(shift_amount_list)
-        full_shape_list = fix_full_shape_list(full_shape_list)
-
         n_image = original_predictions.logits.shape[0]
-        object_prediction_list_per_image = []
+        object_predictions_per_image = []
         for image_ind in range(n_image):
-            image_height, image_width, _ = self.image_shapes[image_ind]
+            image_height, image_width = self.image_shapes[image_ind]
             scores, cat_ids, boxes = self.get_valid_predictions(
                 logits=original_predictions.logits[image_ind], pred_boxes=original_predictions.pred_boxes[image_ind]
             )
 
-            # create object_prediction_list
-            object_prediction_list = []
+            # create object_predictions
+            object_predictions = []
 
-            shift_amount = shift_amount_list[image_ind]
-            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+            shift_amount = shift_amounts[image_ind]
+            full_shape = None if full_shapes is None else full_shapes[image_ind]
 
             for ind in range(len(boxes)):
                 category_id = cat_ids[ind].item()
@@ -203,7 +208,7 @@ class HuggingfaceDetectionModel(DetectionModel):
                     score=scores[ind].item(),
                     full_shape=full_shape,
                 )
-                object_prediction_list.append(object_prediction)
-            object_prediction_list_per_image.append(object_prediction_list)
+                object_predictions.append(object_prediction)
+            object_predictions_per_image.append(object_predictions)
 
-        self._object_prediction_list_per_image = object_prediction_list_per_image
+        self._object_predictions_per_image = object_predictions_per_image

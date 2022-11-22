@@ -4,6 +4,9 @@
 
 import os
 
+import numpy as np
+from PIL import Image
+
 from sahi.utils.import_utils import is_available
 
 if is_available("torch"):
@@ -17,7 +20,37 @@ def empty_cuda_cache():
         return torch.cuda.empty_cache()
 
 
-def to_float_tensor(img):
+def to_float_tensors(images, device):
+    """
+    Converts a list of PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range
+    [0, 255] to a torch.FloatTensor of shape (N x C x H x W).
+    Args:
+        images: list[np.ndarray]
+    Returns:
+        List[torch.FloatTensor]
+    """
+    batch = []
+    for img in images:
+        batch.append(to_float_tensor(img).to(device))
+    return batch
+
+
+def to_float_batch_tensor(images):
+    """
+    Converts a list of PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range
+    [0, 255] to a torch.FloatTensor of shape (N x C x H x W).
+    Args:
+        images: list[np.ndarray]
+    Returns:
+        torch.tensor
+    """
+    batch = []
+    for img in images:
+        batch.append(to_float_tensor(img))
+    return torch.stack(batch)
+
+
+def to_float_tensor(img: Image.Image) -> torch.Tensor:
     """
     Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range
     [0, 255] to a torch.FloatTensor of shape (C x H x W).
@@ -27,7 +60,7 @@ def to_float_tensor(img):
         torch.tensor
     """
 
-    img = img.transpose((2, 0, 1))
+    img = np.array(img).transpose((2, 0, 1))
     img = torch.from_numpy(img).float()
     if img.max() > 1:
         img /= 255

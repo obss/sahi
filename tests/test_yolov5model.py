@@ -113,25 +113,25 @@ class TestYolov5DetectionModel(unittest.TestCase):
 
         # convert predictions to ObjectPrediction list
         yolov5_detection_model.convert_original_predictions()
-        object_prediction_list = yolov5_detection_model.object_prediction_list
+        object_predictions = yolov5_detection_model.object_predictions
 
         # compare
-        self.assertEqual(len(object_prediction_list), 3)
-        self.assertEqual(object_prediction_list[0].category.id, 2)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
+        self.assertEqual(len(object_predictions), 3)
+        self.assertEqual(object_predictions[0].category.id, 2)
+        self.assertEqual(object_predictions[0].category.name, "car")
         desired_bbox = [321, 329, 57, 39]
-        predicted_bbox = object_prediction_list[0].bbox.to_xywh()
+        predicted_bbox = object_predictions[0].bbox.to_xywh()
         margin = 2
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
-        self.assertEqual(object_prediction_list[2].category.id, 2)
-        self.assertEqual(object_prediction_list[2].category.name, "car")
+        self.assertEqual(object_predictions[2].category.id, 2)
+        self.assertEqual(object_predictions[2].category.name, "car")
         desired_bbox = [381, 275, 42, 28]
-        predicted_bbox = object_prediction_list[2].bbox.to_xywh()
+        predicted_bbox = object_predictions[2].bbox.to_xywh()
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
 
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
 
