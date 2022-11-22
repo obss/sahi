@@ -128,8 +128,8 @@ def get_sliced_prediction(
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     perform_standard_pred: bool = True,
-    postprocess_type: str = "GREEDYNMM",
-    postprocess_match_metric: str = "IOS",
+    postprocess_type: str = "NMS",
+    postprocess_match_metric: str = "IOU",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
@@ -306,8 +306,8 @@ def predict(
     slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
-    postprocess_type: str = "GREEDYNMM",
-    postprocess_match_metric: str = "IOS",
+    postprocess_type: str = "NMS",
+    postprocess_match_metric: str = "IOU",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     novisual: bool = False,
@@ -370,7 +370,7 @@ def predict(
             Default to ``0.2``.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
-            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'GRREDYNMM'.
+            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'NMS'.
         postprocess_match_metric: str
             Metric to be used during object prediction matching after sliced prediction.
             'IOU' for intersection over union, 'IOS' for intersection over smaller area.
@@ -678,8 +678,8 @@ def predict_fiftyone(
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
-    postprocess_type: str = "GREEDYNMM",
-    postprocess_match_metric: str = "IOS",
+    postprocess_type: str = "NMS",
+    postprocess_match_metric: str = "IOU",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
@@ -726,7 +726,7 @@ def predict_fiftyone(
             Default to ``0.2``.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
-            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'GRREDYNMM'.
+            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'NMS'.
         postprocess_match_metric: str
             Metric to be used during object prediction matching after sliced prediction.
             'IOU' for intersection over union, 'IOS' for intersection over smaller area.
