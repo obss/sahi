@@ -106,8 +106,8 @@ class Detectron2DetectionModel(DetectionModel):
 
     def _create_object_predictions_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+        full_shapes: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -121,12 +121,6 @@ class Detectron2DetectionModel(DetectionModel):
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
-
-        # compatilibty for sahi v0.8.15
-        if isinstance(shift_amount_list[0], int):
-            shift_amount_list = [shift_amount_list]
-        if full_shape_list is not None and isinstance(full_shape_list[0], int):
-            full_shape_list = [full_shape_list]
 
         # parse boxes, masks, scores, category_ids from predictions
         boxes = original_predictions["instances"].pred_boxes.tensor.tolist()
@@ -144,8 +138,8 @@ class Detectron2DetectionModel(DetectionModel):
         object_predictions = []
 
         # detectron2 DefaultPredictor supports single image
-        shift_amount = shift_amount_list[0]
-        full_shape = None if full_shape_list is None else full_shape_list[0]
+        shift_amount = shift_amounts[0]
+        full_shape = None if full_shapes is None else full_shapes[0]
 
         for ind in range(len(boxes)):
             score = scores[ind]

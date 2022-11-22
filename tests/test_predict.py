@@ -50,7 +50,7 @@ class TestPredict(unittest.TestCase):
 
         # get full sized prediction
         prediction_result = get_prediction(
-            image=image, detection_model=mmdet_detection_model, shift_amount=[0, 0], full_shape=None
+            images=image, detection_model=mmdet_detection_model, shift_amounts=[[0, 0]], full_shapes=None
         )
         object_predictions = prediction_result.object_predictions
 
@@ -96,7 +96,11 @@ class TestPredict(unittest.TestCase):
 
         # get full sized prediction
         prediction_result = get_prediction(
-            image=image, detection_model=yolov5_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
+            images=image,
+            detection_model=yolov5_detection_model,
+            shift_amounts=[[0, 0]],
+            full_shapes=None,
+            postprocess=None,
         )
         object_predictions = prediction_result.object_predictions
 
@@ -143,7 +147,11 @@ class TestPredict(unittest.TestCase):
 
         # get full sized prediction
         prediction_result = get_prediction(
-            image=image, detection_model=yolov5_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
+            images=image,
+            detection_model=yolov5_detection_model,
+            shift_amounts=[[0, 0]],
+            full_shapes=None,
+            postprocess=None,
         )
         object_predictions = prediction_result.object_predictions
 

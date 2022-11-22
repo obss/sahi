@@ -91,17 +91,18 @@ class TorchVisionDetectionModel(DetectionModel):
         if not isinstance(images, list):
             images = [images]
 
+        images = to_float_tensors(images, device=self.device)
+
         # arrange model input size
         if self.image_size is not None:
             # get min and max of image height and width
-            min_shape, max_shape = min(images[0].shape[:2]), max(images[0].shape[:2])
+            min_shape, max_shape = min(images[0].shape[1:]), max(images[0].shape[1:])
             # torchvision resize transform scales the shorter dimension to the target size
             # we want to scale the longer dimension to the target size
             image_size = self.image_size * min_shape / max_shape
             self.model.transform.min_size = (image_size,)  # default is (800,)
             self.model.transform.max_size = image_size  # default is 1333
 
-        images = to_float_tensors(images, device=self.device)
         prediction_result = self.model(images)
 
         self._original_predictions = prediction_result
@@ -126,29 +127,23 @@ class TorchVisionDetectionModel(DetectionModel):
 
     def _create_object_predictions_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+        full_shapes: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_predictions_per_image.
         Args:
-            shift_amount_list: list of list
+            shift_amounts: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
                 be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
-            full_shape_list: list of list
+            full_shapes: list of list
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
 
-        # compatilibty for sahi v0.8.20
-        if isinstance(shift_amount_list[0], int):
-            shift_amount_list = [shift_amount_list]
-        if full_shape_list is not None and isinstance(full_shape_list[0], int):
-            full_shape_list = [full_shape_list]
-
-        for image_predictions in original_predictions:
+        for image_ind, image_predictions in enumerate(original_predictions):
             object_predictions_per_image = []
 
             # get indices of boxes with score > confidence_threshold
@@ -170,8 +165,8 @@ class TorchVisionDetectionModel(DetectionModel):
             # create object_predictions
             object_predictions = []
 
-            shift_amount = shift_amount_list[0]
-            full_shape = None if full_shape_list is None else full_shape_list[0]
+            shift_amount = shift_amounts[image_ind]
+            full_shape = None if full_shapes is None else full_shapes[image_ind]
 
             for ind in range(len(boxes)):
 

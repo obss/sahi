@@ -149,8 +149,8 @@ class HuggingfaceDetectionModel(DetectionModel):
 
     def _create_object_predictions_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+        full_shapes: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
@@ -165,10 +165,6 @@ class HuggingfaceDetectionModel(DetectionModel):
         """
         original_predictions = self._original_predictions
 
-        # compatilibty for sahi v0.8.15
-        shift_amount_list = fix_shift_amount_list(shift_amount_list)
-        full_shape_list = fix_full_shape_list(full_shape_list)
-
         n_image = original_predictions.logits.shape[0]
         object_predictions_per_image = []
         for image_ind in range(n_image):
@@ -180,8 +176,8 @@ class HuggingfaceDetectionModel(DetectionModel):
             # create object_predictions
             object_predictions = []
 
-            shift_amount = shift_amount_list[image_ind]
-            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+            shift_amount = shift_amounts[image_ind]
+            full_shape = None if full_shapes is None else full_shapes[image_ind]
 
             for ind in range(len(boxes)):
                 category_id = cat_ids[ind].item()

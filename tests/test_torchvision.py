@@ -190,10 +190,10 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
 
         # get full sized prediction
         prediction_result = get_prediction(
-            image=image,
+            images=image,
             detection_model=torchvision_detection_model,
-            shift_amount=[0, 0],
-            full_shape=None,
+            shift_amounts=[[0, 0]],
+            full_shapes=None,
             postprocess=None,
         )
         object_predictions = prediction_result.object_predictions

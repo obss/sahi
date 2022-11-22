@@ -166,10 +166,10 @@ if sys.version_info >= (3, 7):
 
             # get full sized prediction
             prediction_result = get_prediction(
-                image=image,
+                images=image,
                 detection_model=huggingface_detection_model,
-                shift_amount=[0, 0],
-                full_shape=None,
+                shift_amounts=[[0, 0]],
+                full_shapes=None,
                 postprocess=None,
             )
             object_predictions = prediction_result.object_predictions
@@ -210,10 +210,10 @@ if sys.version_info >= (3, 7):
 
             # get full sized prediction
             prediction_result = get_prediction(
-                image=image,
+                images=image,
                 detection_model=huggingface_detection_model,
-                shift_amount=[0, 0],
-                full_shape=None,
+                shift_amounts=[[0, 0]],
+                full_shapes=None,
                 postprocess=None,
             )
             object_predictions = prediction_result.object_predictions
