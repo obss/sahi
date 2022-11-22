@@ -138,7 +138,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         boxes = pred_boxes[valid_mask]
         return scores, cat_ids, boxes
 
-    def _create_object_prediction_list_from_original_predictions(
+    def _create_object_predictions_from_original_predictions(
         self,
         shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
         full_shape_list: Optional[List[List[int]]] = None,
