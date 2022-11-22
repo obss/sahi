@@ -98,14 +98,14 @@ class Detectron2DetectionModel(DetectionModel):
         num_categories = len(self.category_mapping)
         return num_categories
 
-    def _create_object_prediction_list_from_original_predictions(
+    def _create_object_predictions_from_original_predictions(
         self,
         shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
         full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list_per_image.
+        self._object_predictions_per_image.
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
@@ -133,9 +133,9 @@ class Detectron2DetectionModel(DetectionModel):
         except AttributeError:
             masks = None
 
-        # create object_prediction_list
-        object_prediction_list_per_image = []
-        object_prediction_list = []
+        # create object_predictions
+        object_predictions_per_image = []
+        object_predictions = []
 
         # detectron2 DefaultPredictor supports single image
         shift_amount = shift_amount_list[0]
@@ -170,9 +170,9 @@ class Detectron2DetectionModel(DetectionModel):
                 score=score,
                 full_shape=full_shape,
             )
-            object_prediction_list.append(object_prediction)
+            object_predictions.append(object_prediction)
 
         # detectron2 DefaultPredictor supports single image
-        object_prediction_list_per_image = [object_prediction_list]
+        object_predictions_per_image = [object_predictions]
 
-        self._object_prediction_list_per_image = object_prediction_list_per_image
+        self._object_predictions_per_image = object_predictions_per_image

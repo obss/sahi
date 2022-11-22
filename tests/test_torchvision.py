@@ -132,15 +132,13 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
 
         # convert predictions to ObjectPrediction list
         torchvision_detection_model.convert_original_predictions()
-        object_prediction_list = torchvision_detection_model.object_prediction_list
+        object_predictions = torchvision_detection_model.object_predictions
 
         # compare
-        self.assertEqual(len(object_prediction_list), 7)
-        self.assertEqual(object_prediction_list[0].category.id, 3)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
-        np.testing.assert_almost_equal(
-            object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
-        )
+        self.assertEqual(len(object_predictions), 7)
+        self.assertEqual(object_predictions[0].category.id, 3)
+        self.assertEqual(object_predictions[0].category.name, "car")
+        np.testing.assert_almost_equal(object_predictions[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1)
 
     def test_convert_original_predictions_with_mask_output(self):
         from sahi.models.torchvision import TorchVisionDetectionModel
@@ -163,15 +161,13 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
 
         # convert predictions to ObjectPrediction list
         torchvision_detection_model.convert_original_predictions()
-        object_prediction_list = torchvision_detection_model.object_prediction_list
+        object_predictions = torchvision_detection_model.object_predictions
 
         # compare
-        self.assertEqual(len(object_prediction_list), 7)
-        self.assertEqual(object_prediction_list[0].category.id, 3)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
-        np.testing.assert_almost_equal(
-            object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
-        )
+        self.assertEqual(len(object_predictions), 7)
+        self.assertEqual(object_predictions[0].category.id, 3)
+        self.assertEqual(object_predictions[0].category.name, "car")
+        np.testing.assert_almost_equal(object_predictions[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1)
 
     def test_get_prediction_torchvision(self):
         from sahi.models.torchvision import TorchVisionDetectionModel
@@ -200,15 +196,13 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             full_shape=None,
             postprocess=None,
         )
-        object_prediction_list = prediction_result.object_prediction_list
+        object_predictions = prediction_result.object_predictions
 
         # compare
-        self.assertEqual(len(object_prediction_list), 7)
-        self.assertEqual(object_prediction_list[0].category.id, 3)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
-        np.testing.assert_almost_equal(
-            object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
-        )
+        self.assertEqual(len(object_predictions), 7)
+        self.assertEqual(object_predictions[0].category.id, 3)
+        self.assertEqual(object_predictions[0].category.name, "car")
+        np.testing.assert_almost_equal(object_predictions[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1)
 
     def test_get_sliced_prediction_torchvision(self):
         from sahi.models.torchvision import TorchVisionDetectionModel
@@ -251,15 +245,13 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             postprocess_match_metric=match_metric,
             postprocess_class_agnostic=class_agnostic,
         )
-        object_prediction_list = prediction_result.object_prediction_list
+        object_predictions = prediction_result.object_predictions
 
         # compare
-        self.assertEqual(len(object_prediction_list), 20)
-        self.assertEqual(object_prediction_list[0].category.id, 3)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
-        np.testing.assert_almost_equal(
-            object_prediction_list[0].bbox.to_xywh(), [765.81, 259.37, 28.62, 24.63], decimal=1
-        )
+        self.assertEqual(len(object_predictions), 20)
+        self.assertEqual(object_predictions[0].category.id, 3)
+        self.assertEqual(object_predictions[0].category.name, "car")
+        np.testing.assert_almost_equal(object_predictions[0].bbox.to_xywh(), [765.81, 259.37, 28.62, 24.63], decimal=1)
 
 
 if __name__ == "__main__":

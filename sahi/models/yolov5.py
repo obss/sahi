@@ -95,14 +95,14 @@ class Yolov5DetectionModel(DetectionModel):
         else:
             return self.model.names
 
-    def _create_object_prediction_list_from_original_predictions(
+    def _create_object_predictions_from_original_predictions(
         self,
         shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
         full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list_per_image.
+        self._object_predictions_per_image.
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
@@ -118,11 +118,11 @@ class Yolov5DetectionModel(DetectionModel):
         full_shape_list = fix_full_shape_list(full_shape_list)
 
         # handle all predictions
-        object_prediction_list_per_image = []
+        object_predictions_per_image = []
         for image_ind, image_predictions_in_xyxy_format in enumerate(original_predictions.xyxy):
             shift_amount = shift_amount_list[image_ind]
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
-            object_prediction_list = []
+            object_predictions = []
 
             # process predictions
             for prediction in image_predictions_in_xyxy_format.cpu().detach().numpy():
@@ -162,7 +162,7 @@ class Yolov5DetectionModel(DetectionModel):
                     shift_amount=shift_amount,
                     full_shape=full_shape,
                 )
-                object_prediction_list.append(object_prediction)
-            object_prediction_list_per_image.append(object_prediction_list)
+                object_predictions.append(object_prediction)
+            object_predictions_per_image.append(object_predictions)
 
-        self._object_prediction_list_per_image = object_prediction_list_per_image
+        self._object_predictions_per_image = object_predictions_per_image

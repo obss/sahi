@@ -57,7 +57,7 @@ class Colors:
 
 def crop_object_predictions(
     image: np.ndarray,
-    object_prediction_list,
+    object_predictions,
     output_dir: str = "",
     file_name: str = "prediction_visual",
     export_format: str = "png",
@@ -73,8 +73,8 @@ def crop_object_predictions(
     # create output folder if not present
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     # add bbox and mask to image if present
-    for ind, object_prediction in enumerate(object_prediction_list):
-        # deepcopy object_prediction_list so that original is not altered
+    for ind, object_prediction in enumerate(object_predictions):
+        # deepcopy object_predictions so that original is not altered
         object_prediction = object_prediction.deepcopy()
         bbox = object_prediction.bbox.to_xyxy()
         category_id = object_prediction.category.id
@@ -396,7 +396,7 @@ def visualize_prediction(
 
 def visualize_object_predictions(
     image: np.array,
-    object_prediction_list,
+    object_predictions,
     rect_th: int = None,
     text_size: float = None,
     text_th: float = None,
@@ -409,7 +409,7 @@ def visualize_object_predictions(
     Visualizes prediction category names, bounding boxes over the source image
     and exports it to output folder.
     Arguments:
-        object_prediction_list: a list of prediction.ObjectPrediction
+        object_predictions: a list of prediction.ObjectPrediction
         rect_th: rectangle thickness
         text_size: size of the category name over box
         text_th: text thickness
@@ -433,8 +433,8 @@ def visualize_object_predictions(
     # set text_size for category names
     text_size = text_size or rect_th / 3
     # add bbox and mask to image if present
-    for object_prediction in object_prediction_list:
-        # deepcopy object_prediction_list so that original is not altered
+    for object_prediction in object_predictions:
+        # deepcopy object_predictions so that original is not altered
         object_prediction = object_prediction.deepcopy()
 
         bbox = object_prediction.bbox.to_xyxy()

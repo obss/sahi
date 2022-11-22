@@ -1,6 +1,7 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
+import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -55,7 +56,7 @@ class DetectionModel:
         self.category_remapping = category_remapping
         self.image_size = image_size
         self._original_predictions = None
-        self._object_prediction_list_per_image = None
+        self._object_predictions_per_image = None
 
         self.set_device()
 
@@ -118,7 +119,7 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
-    def _create_object_prediction_list_from_original_predictions(
+    def _create_object_predictions_from_original_predictions(
         self,
         shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
         full_shape_list: Optional[List[List[int]]] = None,
@@ -126,7 +127,7 @@ class DetectionModel:
         """
         This function should be implemented in a way that self._original_predictions should
         be converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list. self.mask_threshold can also be utilized.
+        self._object_predictions. self.mask_threshold can also be utilized.
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
@@ -145,8 +146,8 @@ class DetectionModel:
         if self.category_remapping is None:
             raise ValueError("self.category_remapping cannot be None")
         # remap categories
-        for object_prediction_list in self._object_prediction_list_per_image:
-            for object_prediction in object_prediction_list:
+        for object_predictions in self._object_predictions_per_image:
+            for object_prediction in object_predictions:
                 old_category_id_str = str(object_prediction.category.id)
                 new_category_id_int = self.category_remapping[old_category_id_str]
                 object_prediction.category.id = new_category_id_int
@@ -165,7 +166,7 @@ class DetectionModel:
             full_shape: list
                 Size of the full image after shifting, should be in the form of [height, width]
         """
-        self._create_object_prediction_list_from_original_predictions(
+        self._create_object_predictions_from_original_predictions(
             shift_amount_list=shift_amount,
             full_shape_list=full_shape,
         )
@@ -174,11 +175,27 @@ class DetectionModel:
 
     @property
     def object_prediction_list(self):
-        return self._object_prediction_list_per_image[0]
+        warnings.warn(
+            "object_prediction_list is deprecated, use object_predictions instead",
+            DeprecationWarning,
+        )
+        return self._object_predictions_per_image[0]
+
+    @property
+    def object_predictions(self):
+        return self._object_predictions_per_image[0]
 
     @property
     def object_prediction_list_per_image(self):
-        return self._object_prediction_list_per_image
+        warnings.warn(
+            "object_prediction_list_per_image is deprecated, use object_predictions_per_image instead",
+            DeprecationWarning,
+        )
+        return self._object_predictions_per_image
+
+    @property
+    def object_predictions_per_image(self):
+        return self._object_predictions_per_image
 
     @property
     def original_predictions(self):

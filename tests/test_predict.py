@@ -52,22 +52,22 @@ class TestPredict(unittest.TestCase):
         prediction_result = get_prediction(
             image=image, detection_model=mmdet_detection_model, shift_amount=[0, 0], full_shape=None
         )
-        object_prediction_list = prediction_result.object_prediction_list
+        object_predictions = prediction_result.object_predictions
 
         # compare
-        self.assertEqual(len(object_prediction_list), 2)
+        self.assertEqual(len(object_predictions), 2)
         num_person = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "person":
                 num_person += 1
         self.assertEqual(num_person, 0)
         num_truck = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "truck":
                 num_truck += 1
         self.assertEqual(num_truck, 0)
         num_car = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "car":
                 num_car += 1
         self.assertEqual(num_car, 2)
@@ -98,22 +98,22 @@ class TestPredict(unittest.TestCase):
         prediction_result = get_prediction(
             image=image, detection_model=yolov5_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
         )
-        object_prediction_list = prediction_result.object_prediction_list
+        object_predictions = prediction_result.object_predictions
 
         # compare
-        self.assertEqual(len(object_prediction_list), 2)
+        self.assertEqual(len(object_predictions), 2)
         num_person = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "person":
                 num_person += 1
         self.assertEqual(num_person, 0)
         num_truck = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "truck":
                 num_truck += 1
         self.assertEqual(num_truck, 0)
         num_car = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "car":
                 num_car += 1
         self.assertEqual(num_car, 2)
@@ -145,22 +145,22 @@ class TestPredict(unittest.TestCase):
         prediction_result = get_prediction(
             image=image, detection_model=yolov5_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
         )
-        object_prediction_list = prediction_result.object_prediction_list
+        object_predictions = prediction_result.object_predictions
 
         # compare
-        self.assertEqual(len(object_prediction_list), 2)
+        self.assertEqual(len(object_predictions), 2)
         num_person = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "person":
                 num_person += 1
         self.assertEqual(num_person, 0)
         num_truck = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "truck":
                 num_truck += 1
         self.assertEqual(num_truck, 0)
         num_car = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "car":
                 num_car += 1
         self.assertEqual(num_car, 2)
@@ -210,22 +210,22 @@ class TestPredict(unittest.TestCase):
             postprocess_match_metric=match_metric,
             postprocess_class_agnostic=class_agnostic,
         )
-        object_prediction_list = prediction_result.object_prediction_list
+        object_predictions = prediction_result.object_predictions
 
         # compare
-        self.assertEqual(len(object_prediction_list), 15)
+        self.assertEqual(len(object_predictions), 15)
         num_person = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "person":
                 num_person += 1
         self.assertEqual(num_person, 0)
         num_truck = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "truck":
                 num_truck += 1
         self.assertEqual(num_truck, 0)
         num_car = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "car":
                 num_car += 1
         self.assertEqual(num_car, 15)
@@ -274,22 +274,22 @@ class TestPredict(unittest.TestCase):
             postprocess_match_metric=match_metric,
             postprocess_class_agnostic=class_agnostic,
         )
-        object_prediction_list = prediction_result.object_prediction_list
+        object_predictions = prediction_result.object_predictions
 
         # compare
-        self.assertEqual(len(object_prediction_list), 11)
+        self.assertEqual(len(object_predictions), 11)
         num_person = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "person":
                 num_person += 1
         self.assertEqual(num_person, 0)
         num_truck = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "truck":
                 num_truck += 2
         self.assertEqual(num_truck, 0)
         num_car = 0
-        for object_prediction in object_prediction_list:
+        for object_prediction in object_predictions:
             if object_prediction.category.name == "car":
                 num_car += 1
         self.assertEqual(num_car, 11)

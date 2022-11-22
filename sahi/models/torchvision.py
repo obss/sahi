@@ -124,14 +124,14 @@ class TorchVisionDetectionModel(DetectionModel):
     def category_names(self):
         return list(self.category_mapping.values())
 
-    def _create_object_prediction_list_from_original_predictions(
+    def _create_object_predictions_from_original_predictions(
         self,
         shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
         full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list_per_image.
+        self._object_predictions_per_image.
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
@@ -149,7 +149,7 @@ class TorchVisionDetectionModel(DetectionModel):
             full_shape_list = [full_shape_list]
 
         for image_predictions in original_predictions:
-            object_prediction_list_per_image = []
+            object_predictions_per_image = []
 
             # get indices of boxes with score > confidence_threshold
             scores = image_predictions["scores"].cpu().detach().numpy()
@@ -167,8 +167,8 @@ class TorchVisionDetectionModel(DetectionModel):
             else:
                 masks = None
 
-            # create object_prediction_list
-            object_prediction_list = []
+            # create object_predictions
+            object_predictions = []
 
             shift_amount = shift_amount_list[0]
             full_shape = None if full_shape_list is None else full_shape_list[0]
@@ -189,7 +189,7 @@ class TorchVisionDetectionModel(DetectionModel):
                     score=scores[ind],
                     full_shape=full_shape,
                 )
-                object_prediction_list.append(object_prediction)
-            object_prediction_list_per_image.append(object_prediction_list)
+                object_predictions.append(object_prediction)
+            object_predictions_per_image.append(object_predictions)
 
-        self._object_prediction_list_per_image = object_prediction_list_per_image
+        self._object_predictions_per_image = object_predictions_per_image

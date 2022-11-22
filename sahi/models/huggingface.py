@@ -145,7 +145,7 @@ class HuggingfaceDetectionModel(DetectionModel):
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list_per_image.
+        self._object_predictions_per_image.
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
@@ -161,15 +161,15 @@ class HuggingfaceDetectionModel(DetectionModel):
         full_shape_list = fix_full_shape_list(full_shape_list)
 
         n_image = original_predictions.logits.shape[0]
-        object_prediction_list_per_image = []
+        object_predictions_per_image = []
         for image_ind in range(n_image):
             image_height, image_width, _ = self.image_shapes[image_ind]
             scores, cat_ids, boxes = self.get_valid_predictions(
                 logits=original_predictions.logits[image_ind], pred_boxes=original_predictions.pred_boxes[image_ind]
             )
 
-            # create object_prediction_list
-            object_prediction_list = []
+            # create object_predictions
+            object_predictions = []
 
             shift_amount = shift_amount_list[image_ind]
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
@@ -203,7 +203,7 @@ class HuggingfaceDetectionModel(DetectionModel):
                     score=scores[ind].item(),
                     full_shape=full_shape,
                 )
-                object_prediction_list.append(object_prediction)
-            object_prediction_list_per_image.append(object_prediction_list)
+                object_predictions.append(object_prediction)
+            object_predictionst_per_image.append(object_predictions)
 
-        self._object_prediction_list_per_image = object_prediction_list_per_image
+        self._object_predictions_per_image = object_predictions_per_image

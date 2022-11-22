@@ -2,6 +2,7 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
+import warnings
 from typing import Dict, List, Optional, Union
 
 import numpy as np
@@ -155,14 +156,19 @@ class ObjectPrediction(ObjectAnnotation):
 class PredictionResult:
     def __init__(
         self,
-        object_prediction_list: List[ObjectPrediction],
+        object_predictions: List[ObjectPrediction],
         image: Union[Image.Image, str, np.ndarray],
+        object_prediction_list: List[ObjectPrediction] = None,
         durations_in_seconds: Optional[Dict] = None,
     ):
         self.image: Image.Image = read_image_as_pil(image)
         self.image_width, self.image_height = self.image.size
-        self.object_prediction_list: List[ObjectPrediction] = object_prediction_list
         self.durations_in_seconds = durations_in_seconds
+
+        if object_prediction_list is not None:
+            warnings.warn("'object_prediction_list' is deprecated. Use 'object_predictions' instead.")
+            object_predictions = object_prediction_list
+        self.object_predictions: List[ObjectPrediction] = object_predictions
 
     def export_visuals(
         self, export_dir: str, text_size: float = None, rect_th: int = None, file_name: str = "prediction_visual"
@@ -180,7 +186,7 @@ class PredictionResult:
         Path(export_dir).mkdir(parents=True, exist_ok=True)
         visualize_object_predictions(
             image=np.ascontiguousarray(self.image),
-            object_prediction_list=self.object_prediction_list,
+            object_predictions=self.object_predictions,
             rect_th=rect_th,
             text_size=text_size,
             text_th=None,
@@ -192,19 +198,19 @@ class PredictionResult:
 
     def to_coco_annotations(self):
         coco_annotation_list = []
-        for object_prediction in self.object_prediction_list:
+        for object_prediction in self.object_predictions:
             coco_annotation_list.append(object_prediction.to_coco_prediction().json)
         return coco_annotation_list
 
     def to_coco_predictions(self, image_id: Optional[int] = None):
         coco_prediction_list = []
-        for object_prediction in self.object_prediction_list:
+        for object_prediction in self.object_predictions:
             coco_prediction_list.append(object_prediction.to_coco_prediction(image_id=image_id).json)
         return coco_prediction_list
 
     def to_imantics_annotations(self):
         imantics_annotation_list = []
-        for object_prediction in self.object_prediction_list:
+        for object_prediction in self.object_predictions:
             imantics_annotation_list.append(object_prediction.to_imantics_annotation())
         return imantics_annotation_list
 
@@ -215,7 +221,7 @@ class PredictionResult:
             raise ImportError('Please run "pip install -U fiftyone" to install fiftyone first for fiftyone conversion.')
 
         fiftyone_detection_list: List[fo.Detection] = []
-        for object_prediction in self.object_prediction_list:
+        for object_prediction in self.object_predictions:
             fiftyone_detection_list.append(
                 object_prediction.to_fiftyone_detection(image_height=self.image_height, image_width=self.image_width)
             )

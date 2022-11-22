@@ -79,7 +79,7 @@ def get_prediction(
 
     Returns:
         A dict with fields:
-            object_prediction_list: a list of ObjectPrediction
+            object_predictions: a list of ObjectPrediction
             durations_in_seconds: a dict containing elapsed times for profiling
     """
     durations_in_seconds = dict()
@@ -99,11 +99,11 @@ def get_prediction(
         shift_amount=shift_amount,
         full_shape=full_shape,
     )
-    object_prediction_list: List[ObjectPrediction] = detection_model.object_prediction_list
+    object_predictions: List[ObjectPrediction] = detection_model.object_predictions
 
     # postprocess matching predictions
     if postprocess is not None:
-        object_prediction_list = postprocess(object_prediction_list)
+        object_predictions = postprocess(object_predictions)
 
     time_end = time.time() - time_start
     durations_in_seconds["postprocess"] = time_end
@@ -116,7 +116,7 @@ def get_prediction(
         )
 
     return PredictionResult(
-        image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
+        image=image, object_predictions=object_predictions, durations_in_seconds=durations_in_seconds
     )
 
 
@@ -183,7 +183,7 @@ def get_sliced_prediction(
 
     Returns:
         A Dict with fields:
-            object_prediction_list: a list of sahi.prediction.ObjectPrediction
+            object_predictions: a list of sahi.prediction.ObjectPrediction
             durations_in_seconds: a dict containing elapsed times for profiling
     """
 
@@ -226,7 +226,7 @@ def get_sliced_prediction(
     num_group = int(num_slices / num_batch)
     if verbose == 1 or verbose == 2:
         tqdm.write(f"Performing prediction on {num_slices} number of slices.")
-    object_prediction_list = []
+    object_predictions = []
     # perform sliced prediction
     for group_ind in range(num_group):
         # prepare batch (currently supports only 1 batch)
@@ -246,13 +246,13 @@ def get_sliced_prediction(
             ],
         )
         # convert sliced predictions to full predictions
-        for object_prediction in prediction_result.object_prediction_list:
+        for object_prediction in prediction_result.object_predictions:
             if object_prediction:  # if not empty
-                object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+                object_predictions.append(object_prediction.get_shifted_object_prediction())
 
         # merge matching predictions during sliced prediction
-        if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
-            object_prediction_list = postprocess(object_prediction_list)
+        if merge_buffer_length is not None and len(object_predictions) > merge_buffer_length:
+            object_predictions = postprocess(object_predictions)
 
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
@@ -263,11 +263,11 @@ def get_sliced_prediction(
             full_shape=None,
             postprocess=None,
         )
-        object_prediction_list.extend(prediction_result.object_prediction_list)
+        object_predictions.extend(prediction_result.object_predictions)
 
     # merge matching predictions
-    if len(object_prediction_list) > 1:
-        object_prediction_list = postprocess(object_prediction_list)
+    if len(object_predictions) > 1:
+        object_predictions = postprocess(object_predictions)
 
     time_end = time.time() - time_start
     durations_in_seconds["prediction"] = time_end
@@ -285,7 +285,7 @@ def get_sliced_prediction(
         )
 
     return PredictionResult(
-        image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
+        image=image, object_predictions=object_predictions, durations_in_seconds=durations_in_seconds
     )
 
 
@@ -514,7 +514,7 @@ def predict(
                 postprocess_class_agnostic=postprocess_class_agnostic,
                 verbose=1 if verbose else 0,
             )
-            object_prediction_list = prediction_result.object_prediction_list
+            object_predictions = prediction_result.object_predictions
             durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
         else:
             # get standard prediction
@@ -526,7 +526,7 @@ def predict(
                 postprocess=None,
                 verbose=0,
             )
-            object_prediction_list = prediction_result.object_prediction_list
+            object_predictions = prediction_result.object_predictions
 
         durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
         # Show prediction time
@@ -540,16 +540,16 @@ def predict(
                 raise NotImplementedError("Video input type not supported with coco formatted dataset json")
 
             # append predictions in coco format
-            for object_prediction in object_prediction_list:
+            for object_prediction in object_predictions:
                 coco_prediction = object_prediction.to_coco_prediction()
                 coco_prediction.image_id = coco.images[ind].id
                 coco_prediction_json = coco_prediction.json
                 if coco_prediction_json["bbox"]:
                     coco_json.append(coco_prediction_json)
             if not novisual:
-                # convert ground truth annotations to object_prediction_list
+                # convert ground truth annotations to object_predictions
                 coco_image: CocoImage = coco.images[ind]
-                object_prediction_gt_list: List[ObjectPrediction] = []
+                object_prediction_gts: List[ObjectPrediction] = []
                 for coco_annotation in coco_image.annotations:
                     coco_annotation_dict = coco_annotation.json
                     category_name = coco_annotation.category_name
@@ -557,13 +557,13 @@ def predict(
                     object_prediction_gt = ObjectPrediction.from_coco_annotation_dict(
                         annotation_dict=coco_annotation_dict, category_name=category_name, full_shape=full_shape
                     )
-                    object_prediction_gt_list.append(object_prediction_gt)
+                    object_prediction_gts.append(object_prediction_gt)
                 # export visualizations with ground truths
                 output_dir = str(visual_with_gt_dir / Path(relative_filepath).parent)
                 color = (0, 255, 0)  # original annotations in green
                 result = visualize_object_predictions(
                     np.ascontiguousarray(image_as_pil),
-                    object_prediction_list=object_prediction_gt_list,
+                    object_predictions=object_prediction_gts,
                     rect_th=visual_bbox_thickness,
                     text_size=visual_text_size,
                     text_th=visual_text_thickness,
@@ -575,7 +575,7 @@ def predict(
                 color = (255, 0, 0)  # model predictions in red
                 _ = visualize_object_predictions(
                     result["image"],
-                    object_prediction_list=object_prediction_list,
+                    object_predictions=object_predictions,
                     rect_th=visual_bbox_thickness,
                     text_size=visual_text_size,
                     text_th=visual_text_thickness,
@@ -591,7 +591,7 @@ def predict(
             output_dir = str(crop_dir / Path(relative_filepath).parent)
             crop_object_predictions(
                 image=np.ascontiguousarray(image_as_pil),
-                object_prediction_list=object_prediction_list,
+                object_predictions=object_predictions,
                 output_dir=output_dir,
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
@@ -599,14 +599,14 @@ def predict(
         # export prediction list as pickle
         if export_pickle:
             save_path = str(pickle_dir / Path(relative_filepath).parent / (filename_without_extension + ".pickle"))
-            save_pickle(data=object_prediction_list, save_path=save_path)
+            save_pickle(data=object_predictions, save_path=save_path)
 
         # export visualization
         if not novisual or view_video:
             output_dir = str(visual_dir / Path(relative_filepath).parent)
             result = visualize_object_predictions(
                 np.ascontiguousarray(image_as_pil),
-                object_prediction_list=object_prediction_list,
+                object_predictions=object_predictions,
                 rect_th=visual_bbox_thickness,
                 text_size=visual_text_size,
                 text_th=visual_text_thickness,

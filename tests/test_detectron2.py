@@ -3,9 +3,7 @@
 
 import unittest
 
-from sahi.models.detectron2 import Detectron2DetectionModel
 from sahi.utils.cv import read_image
-from sahi.utils.detectron2 import Detectron2TestConstants
 from sahi.utils.import_utils import get_package_info
 
 MODEL_DEVICE = "cpu"
@@ -15,6 +13,8 @@ IMAGE_SIZE = 320
 # note that detectron2 binaries are available only for linux
 
 if get_package_info("torch", verbose=False)[1] == "1.10.2":
+    from sahi.models.detectron2 import Detectron2DetectionModel
+    from sahi.utils.detectron2 import Detectron2TestConstants
 
     class TestDetectron2DetectionModel(unittest.TestCase):
         def test_load_model(self):
@@ -80,22 +80,22 @@ if get_package_info("torch", verbose=False)[1] == "1.10.2":
 
             # convert predictions to ObjectPrediction list
             detectron2_detection_model.convert_original_predictions()
-            object_prediction_list = detectron2_detection_model.object_prediction_list
+            object_predictions = detectron2_detection_model.object_predictions
 
             # compare
-            self.assertEqual(len(object_prediction_list), 16)
-            self.assertEqual(object_prediction_list[0].category.id, 2)
-            self.assertEqual(object_prediction_list[0].category.name, "car")
-            predicted_bbox = object_prediction_list[0].bbox.to_xywh()
+            self.assertEqual(len(object_predictions), 16)
+            self.assertEqual(object_predictions[0].category.id, 2)
+            self.assertEqual(object_predictions[0].category.name, "car")
+            predicted_bbox = object_predictions[0].bbox.to_xywh()
             desired_bbox = [831, 303, 42, 43]
             margin = 3
             for ind, point in enumerate(predicted_bbox):
                 if not (point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin):
                     raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
-            self.assertEqual(object_prediction_list[5].category.id, 2)
-            self.assertEqual(object_prediction_list[5].category.name, "car")
-            predicted_bbox = object_prediction_list[2].bbox.to_xywh()
+            self.assertEqual(object_predictions[5].category.id, 2)
+            self.assertEqual(object_predictions[5].category.name, "car")
+            predicted_bbox = object_predictions[2].bbox.to_xywh()
             desired_bbox = [383, 277, 36, 29]
             margin = 3
             for ind, point in enumerate(predicted_bbox):
@@ -122,22 +122,22 @@ if get_package_info("torch", verbose=False)[1] == "1.10.2":
 
             # convert predictions to ObjectPrediction list
             detectron2_detection_model.convert_original_predictions()
-            object_prediction_list = detectron2_detection_model.object_prediction_list
+            object_predictions = detectron2_detection_model.object_predictions
 
             # compare
-            self.assertEqual(len(object_prediction_list), 13)
-            self.assertEqual(object_prediction_list[0].category.id, 2)
-            self.assertEqual(object_prediction_list[0].category.name, "car")
-            predicted_bbox = object_prediction_list[0].bbox.to_xywh()
+            self.assertEqual(len(object_predictions), 13)
+            self.assertEqual(object_predictions[0].category.id, 2)
+            self.assertEqual(object_predictions[0].category.name, "car")
+            predicted_bbox = object_predictions[0].bbox.to_xywh()
             desired_bbox = [321, 324, 59, 38]
             margin = 3
             for ind, point in enumerate(predicted_bbox):
                 if not (point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin):
                     raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
-            self.assertEqual(object_prediction_list[5].category.id, 2)
-            self.assertEqual(object_prediction_list[5].category.name, "car")
-            predicted_bbox = object_prediction_list[5].bbox.to_xywh()
+            self.assertEqual(object_predictions[5].category.id, 2)
+            self.assertEqual(object_predictions[5].category.name, "car")
+            predicted_bbox = object_predictions[5].bbox.to_xywh()
             desired_bbox = [719, 243, 27, 30]
             margin = 3
             for ind, point in enumerate(predicted_bbox):
@@ -145,7 +145,6 @@ if get_package_info("torch", verbose=False)[1] == "1.10.2":
                     raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
         def test_get_prediction_detectron2(self):
-            from sahi.model import Detectron2DetectionModel
             from sahi.predict import get_prediction
             from sahi.utils.detectron2 import Detectron2TestConstants
 
@@ -173,28 +172,27 @@ if get_package_info("torch", verbose=False)[1] == "1.10.2":
                 full_shape=None,
                 postprocess=None,
             )
-            object_prediction_list = prediction_result.object_prediction_list
+            object_predictions = prediction_result.object_predictions
 
             # compare
-            self.assertEqual(len(object_prediction_list), 16)
+            self.assertEqual(len(object_predictions), 16)
             num_person = 0
-            for object_prediction in object_prediction_list:
+            for object_prediction in object_predictions:
                 if object_prediction.category.name == "person":
                     num_person += 1
             self.assertEqual(num_person, 0)
             num_truck = 0
-            for object_prediction in object_prediction_list:
+            for object_prediction in object_predictions:
                 if object_prediction.category.name == "truck":
                     num_truck += 1
             self.assertEqual(num_truck, 0)
             num_car = 0
-            for object_prediction in object_prediction_list:
+            for object_prediction in object_predictions:
                 if object_prediction.category.name == "car":
                     num_car += 1
             self.assertEqual(num_car, 16)
 
         def test_get_sliced_prediction_detectron2(self):
-            from sahi.model import Detectron2DetectionModel
             from sahi.predict import get_sliced_prediction
             from sahi.utils.detectron2 import Detectron2TestConstants
 
@@ -236,22 +234,22 @@ if get_package_info("torch", verbose=False)[1] == "1.10.2":
                 postprocess_match_metric=match_metric,
                 postprocess_class_agnostic=class_agnostic,
             )
-            object_prediction_list = prediction_result.object_prediction_list
+            object_predictions = prediction_result.object_predictions
 
             # compare
-            self.assertEqual(len(object_prediction_list), 18)
+            self.assertEqual(len(object_predictions), 18)
             num_person = 0
-            for object_prediction in object_prediction_list:
+            for object_prediction in object_predictions:
                 if object_prediction.category.name == "person":
                     num_person += 1
             self.assertEqual(num_person, 0)
             num_truck = 0
-            for object_prediction in object_prediction_list:
+            for object_prediction in object_predictions:
                 if object_prediction.category.name == "truck":
                     num_truck += 1
             self.assertEqual(num_truck, 0)
             num_car = 0
-            for object_prediction in object_prediction_list:
+            for object_prediction in object_predictions:
                 if object_prediction.category.name == "car":
                     num_car += 1
             self.assertEqual(num_car, 18)
