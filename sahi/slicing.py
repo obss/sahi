@@ -647,7 +647,7 @@ def get_auto_slice_params(height: int, width: int):
 
 def shift_bboxes(bboxes, offset: Sequence[int]):
     """
-    Shift bboxes w.r.t offset.
+    Remap bboxes w.r.t offset.
 
     Suppo
 
@@ -656,9 +656,9 @@ def shift_bboxes(bboxes, offset: Sequence[int]):
             be (n, 4), which means (x, y, x, y).
         offset (Sequence[int]): The translation offsets with shape of (2, ).
     Returns:
-        Tensor, np.ndarray, list: Shifted bboxes.
+        Tensor, np.ndarray, list: Remapped bboxes.
     """
-    shifted_bboxes = []
+    remapped_bboxes = []
 
     if type(bboxes).__module__ == "torch":
         bboxes_is_torch_tensor = True
@@ -669,34 +669,34 @@ def shift_bboxes(bboxes, offset: Sequence[int]):
         if bboxes_is_torch_tensor or isinstance(bbox, np.ndarray):
             bbox = bbox.tolist()
         bbox = BoundingBox(bbox, offset_amount=offset)
-        bbox = bbox.get_shifted_box()
-        shifted_bboxes.append(bbox.to_xyxy())
+        bbox.remap(inplace=True)
+        remapped_bboxes.append(bbox.to_xyxy())
 
     if isinstance(bboxes, np.ndarray):
-        return np.stack(shifted_bboxes, axis=0)
+        return np.stack(remapped_bboxes, axis=0)
     elif bboxes_is_torch_tensor:
-        return bboxes.new_tensor(shifted_bboxes)
+        return bboxes.new_tensor(remapped_bboxes)
     else:
-        return shifted_bboxes
+        return remapped_bboxes
 
 
 def shift_masks(masks: np.ndarray, offset: Sequence[int], full_shape: Sequence[int]) -> np.ndarray:
-    """Shift masks to the original image.
+    """Remap masks to the original image.
     Args:
-        masks (np.ndarray): masks that need to be shifted.
+        masks (np.ndarray): masks that need to be remapped.
         offset (Sequence[int]): The offset to translate with shape of (2, ).
         full_shape (Sequence[int]): A (height, width) tuple of the huge image's shape.
     Returns:
-        np.ndarray: Shifted masks.
+        np.ndarray: Stacked Remapped masks.
     """
     # empty masks
     if masks is None:
         return masks
 
-    shifted_masks = []
+    remapped_masks = []
     for mask in masks:
         mask = Mask(bool_mask=mask, offset_amount=offset, full_shape=full_shape)
-        mask = mask.get_shifted_mask()
-        shifted_masks.append(mask.bool_mask)
+        mask.remap(inplace=True)
+        remapped_masks.append(mask.bool_mask)
 
-    return np.stack(shifted_masks, axis=0)
+    return np.stack(remapped_masks, axis=0)

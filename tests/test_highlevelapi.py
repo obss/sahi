@@ -15,12 +15,12 @@ class TestAnnotation(unittest.TestCase):
         expanded_bbox = bbox.get_expanded_box(ratio=0.1)
 
         bbox = BoundingBox(bbox_minmax, offset_amount=offset_amount)
-        shifted_bbox = bbox.get_shifted_box()
+        remapped_bbox = bbox.remap()
 
         # compare
         self.assertEqual(expanded_bbox.to_xywh(), [18, 23, 94, 134])
         self.assertEqual(expanded_bbox.to_xyxy(), [18, 23, 112, 157])
-        self.assertEqual(shifted_bbox.to_xyxy(), [80, 70, 150, 190])
+        self.assertEqual(remapped_bbox.to_xyxy(), [80, 70, 150, 190])
 
     def test_category(self):
         from sahi import Category
