@@ -55,7 +55,7 @@ logger = logging.getLogger(__name__)
 def get_prediction(
     images,
     detection_model: DetectionModel,
-    shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+    offset_amounts: Optional[List[List[int]]] = [[0, 0]],
     full_shapes: Optional[List[List[int]]] = None,
     postprocess: Optional[PostprocessPredictions] = None,
     verbose: int = 0,
@@ -67,11 +67,11 @@ def get_prediction(
         images: List[str, np.ndarray]
             List of iamge file paths or numpy images to slice
         detection_model: model.DetectionMode
-        shift_amounts: list of list
-            To shift the box and mask predictions from sliced image to full sized image, should
-            be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
+        offset_amounts: list of list
+            To remap the box and mask predictions from sliced image to full sized image, should
+            be in the form of List[[offset_x, offset_y],[offset_x, offset_y],...]
         full_shapes: list of list
-            Size of the full image after shifting, should be in the form of
+            Size of the full image after remapping, should be in the form of
             List[[height, width],[height, width],...]
         postprocess: sahi.postprocess.combine.PostprocessPredictions
         verbose: int
@@ -103,7 +103,7 @@ def get_prediction(
     time_start = time.time()
     # works only with 1 batch
     detection_model.convert_original_predictions(
-        shift_amounts=shift_amounts,
+        offset_amounts=offset_amounts,
         full_shapes=full_shapes,
     )
     object_predictions: List[ObjectPrediction] = detection_model.object_predictions
@@ -250,13 +250,13 @@ def get_sliced_prediction(
         prediction_result = get_prediction(
             images=images,
             detection_model=detection_model,
-            shift_amounts=slice_image_result.starting_pixels[start:end],
+            offset_amounts=slice_image_result.starting_pixels[start:end],
             full_shapes=full_shapes,
         )
         # convert sliced predictions to full predictions
         for object_prediction in prediction_result.object_predictions:
             if object_prediction:  # if not empty
-                object_predictions.append(object_prediction.get_shifted_object_prediction())
+                object_predictions.append(object_prediction.remap(inplace=True))
 
         # merge matching predictions during sliced prediction
         if merge_buffer_length is not None and len(object_predictions) > merge_buffer_length:
@@ -271,7 +271,7 @@ def get_sliced_prediction(
         prediction_result = get_prediction(
             images=image,
             detection_model=detection_model,
-            shift_amounts=[[0, 0]],
+            offset_amounts=[[0, 0]],
             full_shapes=None,
             postprocess=None,
         )
@@ -537,7 +537,7 @@ def predict(
             prediction_result = get_prediction(
                 images=image_as_pil,
                 detection_model=detection_model,
-                shift_amounts=[[0, 0]],
+                offset_amounts=[[0, 0]],
                 full_shapes=None,
                 postprocess=None,
                 verbose=0,
@@ -816,7 +816,7 @@ def predict_fiftyone(
                 prediction_result = get_prediction(
                     image=sample.filepath,
                     detection_model=detection_model,
-                    shift_amount=[0, 0],
+                    offset_amount=[0, 0],
                     full_shape=None,
                     postprocess=None,
                     verbose=0,

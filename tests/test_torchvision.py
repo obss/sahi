@@ -192,7 +192,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         prediction_result = get_prediction(
             images=image,
             detection_model=torchvision_detection_model,
-            shift_amounts=[[0, 0]],
+            offset_amounts=[[0, 0]],
             full_shapes=None,
             postprocess=None,
         )

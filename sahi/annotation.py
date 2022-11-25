@@ -27,14 +27,14 @@ class BoundingBox:
     Bounding box of the annotation.
     """
 
-    def __init__(self, box: List[float], shift_amount: List[int] = [0, 0]):
+    def __init__(self, box: List[float], offset_amount: List[int] = [0, 0]):
         """
         Args:
             box: List[float]
                 [minx, miny, maxx, maxy]
-            shift_amount: List[int]
-                To shift the box and mask predictions from sliced image
-                to full sized image, should be in the form of [shift_x, shift_y]
+            offset_amount: List[int]
+                To remap the box and mask predictions from sliced image
+                to full sized image, should be in the form of [offset_x, offset_y]
         """
         if box[0] < 0 or box[1] < 0 or box[2] < 0 or box[3] < 0:
             raise Exception("Box coords [minx, miny, maxx, maxy] cannot be negative")
@@ -43,15 +43,15 @@ class BoundingBox:
         self.maxx = box[2]
         self.maxy = box[3]
 
-        self.shift_x = shift_amount[0]
-        self.shift_y = shift_amount[1]
+        self.offset_x = offset_amount[0]
+        self.offset_y = offset_amount[1]
 
     @property
-    def shift_amount(self):
+    def offset_amount(self):
         """
-        Returns the shift amount of the bbox slice as [shift_x, shift_y]
+        Returns the offset amount of the bbox slice as [offset_x, offset_y]
         """
-        return [self.shift_x, self.shift_y]
+        return [self.offset_x, self.offset_y]
 
     @property
     def area(self):
@@ -93,17 +93,35 @@ class BoundingBox:
         """
         return self.to_xyxy()
 
-    def get_shifted_box(self):
+    def remap(self, inplace: bool = False):
         """
-        Returns: shifted BoundingBox
+        Remaps bbox coords using offset_amount
+
+        Args:
+            inplace: bool
+                If True, remaps the bbox coords inplace, else returns a new BoundingBox object
+
+        Returns:
+            BoundingBox: remapped bbox
         """
-        box = [
-            self.minx + self.shift_x,
-            self.miny + self.shift_y,
-            self.maxx + self.shift_x,
-            self.maxy + self.shift_y,
-        ]
-        return BoundingBox(box)
+        minx = self.minx + self.offset_x
+        miny = self.miny + self.offset_y
+        maxx = self.maxx + self.offset_x
+        maxy = self.maxy + self.offset_y
+
+        if inplace:
+            self.minx = minx
+            self.miny = miny
+            self.maxx = maxx
+            self.maxy = maxy
+
+            self.offset_x = 0
+            self.offset_y = 0
+
+            return self
+        else:
+            box = [minx, miny, maxx, maxy]
+            return BoundingBox(box, offset_amount=[0, 0])
 
     def __repr__(self):
         return f"BoundingBox: <{(self.minx, self.miny, self.maxx, self.maxy)}, w: {self.maxx - self.minx}, h: {self.maxy - self.miny}>"
@@ -140,7 +158,7 @@ class Mask:
         mask,
         full_shape=None,
         mask_threshold: float = 0.5,
-        shift_amount: list = [0, 0],
+        offset_amount: list = [0, 0],
     ):
         """
         Args:
@@ -148,16 +166,16 @@ class Mask:
                 Mask values between 0 and 1 (should have a shape of height*width)
             mask_threshold: float
                 Value to threshold mask pixels between 0 and 1
-            shift_amount: List
-                To shift the box and mask predictions from sliced image
-                to full sized image, should be in the form of [shift_x, shift_y]
+            offset_amount: List
+                To remap the predicted mask from sliced image to full
+                sized image, should be in the form of [offset_x, offset_y]
             full_shape: List
-                Size of the full image after shifting, should be in the form of [height, width]
+                Size of the full image after remapping, should be in the form of [height, width]
         """
         bool_mask = mask > mask_threshold
         return cls(
             bool_mask=bool_mask,
-            shift_amount=shift_amount,
+            offset_amount=offset_amount,
             full_shape=full_shape,
         )
 
@@ -166,7 +184,7 @@ class Mask:
         cls,
         segmentation,
         full_shape=None,
-        shift_amount: list = [0, 0],
+        offset_amount: list = [0, 0],
     ):
         """
         Init Mask from coco segmentation representation.
@@ -180,9 +198,9 @@ class Mask:
                 ]
             full_shape: List
                 Size of the full image, should be in the form of [height, width]
-            shift_amount: List
-                To shift the box and mask predictions from sliced image to full
-                sized image, should be in the form of [shift_x, shift_y]
+            offset_amount: List
+                To remap the predicted mask from sliced image to full
+                sized image, should be in the form of [offset_x, offset_y]
         """
         # confirm full_shape is given
         if full_shape is None:
@@ -190,7 +208,7 @@ class Mask:
         bool_mask = get_bool_mask_from_coco_segmentation(segmentation, height=full_shape[0], width=full_shape[1])
         return cls(
             bool_mask=bool_mask,
-            shift_amount=shift_amount,
+            offset_amount=offset_amount,
             full_shape=full_shape,
         )
 
@@ -198,7 +216,7 @@ class Mask:
         self,
         bool_mask=None,
         full_shape=None,
-        shift_amount: list = [0, 0],
+        offset_amount: list = [0, 0],
     ):
         """
         Args:
@@ -206,28 +224,20 @@ class Mask:
                 2D mask of object, should have a shape of height*width
             full_shape: List
                 Size of the full image, should be in the form of [height, width]
-            shift_amount: List
-                To shift the box and mask predictions from sliced image to full
-                sized image, should be in the form of [shift_x, shift_y]
+            offset_amount: List
+                To remap the predicted mask from sliced image to full
+                sized image, should be in the form of [offset_x, offset_y]
         """
 
-        if len(bool_mask) > 0:
-            has_bool_mask = True
-        else:
-            has_bool_mask = False
+        self.bool_mask = bool_mask
 
-        if has_bool_mask:
-            self._mask = self.encode_bool_mask(bool_mask)
-        else:
-            self._mask = None
-
-        self.shift_x = shift_amount[0]
-        self.shift_y = shift_amount[1]
+        self.offset_x = offset_amount[0]
+        self.offset_y = offset_amount[1]
 
         if full_shape:
             self.full_shape_height = full_shape[0]
             self.full_shape_width = full_shape[1]
-        elif has_bool_mask:
+        elif self.bool_mask is not None:
             self.full_shape_height = self.bool_mask.shape[0]
             self.full_shape_width = self.bool_mask.shape[1]
         else:
@@ -250,6 +260,18 @@ class Mask:
     def bool_mask(self):
         return self.decode_bool_mask(self._mask)
 
+    @bool_mask.setter
+    def bool_mask(self, bool_mask: np.ndarray):
+        if len(bool_mask) > 0:
+            has_bool_mask = True
+        else:
+            has_bool_mask = False
+
+        if has_bool_mask:
+            self._mask = self.encode_bool_mask(bool_mask)
+        else:
+            self._mask = None
+
     @property
     def shape(self):
         """
@@ -260,18 +282,28 @@ class Mask:
     @property
     def full_shape(self):
         """
-        Returns full mask shape after shifting as [height, width]
+        Returns full mask shape after remapping as [height, width]
         """
         return [self.full_shape_height, self.full_shape_width]
 
     @property
-    def shift_amount(self):
+    def offset_amount(self):
         """
-        Returns the shift amount of the mask slice as [shift_x, shift_y]
+        Returns the offset amount of the mask slice as [offset_x, offset_y]
         """
-        return [self.shift_x, self.shift_y]
+        return [self.offset_x, self.offset_y]
 
-    def get_shifted_mask(self):
+    def remap(self, inplace: bool = False):
+        """
+        Remap the mask to full sized image.
+
+        Args:
+            inplace: bool
+                If True, remap the mask in place, otherwise return a new Mask object
+
+        Returns:
+            Mask: remapped mask
+        """
         # Confirm full_shape is specified
         if (self.full_shape_height is None) or (self.full_shape_width is None):
             raise ValueError("full_shape is None")
@@ -286,7 +318,7 @@ class Mask:
         )
 
         # arrange starting ending indexes
-        starting_pixel = [self.shift_x, self.shift_y]
+        starting_pixel = [self.offset_x, self.offset_y]
         ending_pixel = [
             min(starting_pixel[0] + self.bool_mask.shape[1], self.full_shape_width),
             min(starting_pixel[1] + self.bool_mask.shape[0], self.full_shape_height),
@@ -297,11 +329,19 @@ class Mask:
             : ending_pixel[1] - starting_pixel[1], : ending_pixel[0] - starting_pixel[0]
         ]
 
-        return Mask(
-            mask_fullsized,
-            shift_amount=[0, 0],
-            full_shape=self.full_shape,
-        )
+        if inplace:
+            self.bool_mask = mask_fullsized
+            self.offset_x = 0
+            self.offset_y = 0
+
+            return self
+        else:
+            new_mask = self.deepcopy()
+            new_mask.bool_mask = mask_fullsized
+            new_mask.offset_x = 0
+            new_mask.offset_y = 0
+
+            return new_mask
 
     def to_coco_segmentation(self):
         """
@@ -327,7 +367,7 @@ class ObjectAnnotation:
         bool_mask,
         category_id: Optional[int] = None,
         category_name: Optional[str] = None,
-        shift_amount: Optional[List[int]] = [0, 0],
+        offset_amount: Optional[List[int]] = [0, 0],
         full_shape: Optional[List[int]] = None,
     ):
         """
@@ -342,15 +382,15 @@ class ObjectAnnotation:
                 Name of the object category
             full_shape: List
                 Size of the full image, should be in the form of [height, width]
-            shift_amount: List
-                To shift the box and mask predictions from sliced image to full
-                sized image, should be in the form of [shift_x, shift_y]
+            offset_amount: List
+                To remap the box and mask predictions from sliced image to full
+                sized image, should be in the form of [offset_x, offset_y]
         """
         return cls(
             category_id=category_id,
             bool_mask=bool_mask,
             category_name=category_name,
-            shift_amount=shift_amount,
+            offset_amount=offset_amount,
             full_shape=full_shape,
         )
 
@@ -361,7 +401,7 @@ class ObjectAnnotation:
         full_shape: List[int],
         category_id: Optional[int] = None,
         category_name: Optional[str] = None,
-        shift_amount: Optional[List[int]] = [0, 0],
+        offset_amount: Optional[List[int]] = [0, 0],
     ):
         """
         Creates ObjectAnnotation from coco segmentation:
@@ -384,16 +424,16 @@ class ObjectAnnotation:
                 Name of the object category
             full_shape: List
                 Size of the full image, should be in the form of [height, width]
-            shift_amount: List
-                To shift the box and mask predictions from sliced image to full
-                sized image, should be in the form of [shift_x, shift_y]
+            offset_amount: List
+                To remap the box and mask predictions from sliced image to full
+                sized image, should be in the form of [offset_x, offset_y]
         """
         bool_mask = get_bool_mask_from_coco_segmentation(segmentation, width=full_shape[1], height=full_shape[0])
         return cls(
             category_id=category_id,
             bool_mask=bool_mask,
             category_name=category_name,
-            shift_amount=shift_amount,
+            offset_amount=offset_amount,
             full_shape=full_shape,
         )
 
@@ -403,7 +443,7 @@ class ObjectAnnotation:
         bbox: List[int],
         category_id: Optional[int] = None,
         category_name: Optional[str] = None,
-        shift_amount: Optional[List[int]] = [0, 0],
+        offset_amount: Optional[List[int]] = [0, 0],
         full_shape: Optional[List[int]] = None,
     ):
         """
@@ -418,9 +458,9 @@ class ObjectAnnotation:
                 Name of the object category
             full_shape: List
                 Size of the full image, should be in the form of [height, width]
-            shift_amount: List
-                To shift the box and mask predictions from sliced image to full
-                sized image, should be in the form of [shift_x, shift_y]
+            offset_amount: List
+                To remap the box and mask predictions from sliced image to full
+                sized image, should be in the form of [offset_x, offset_y]
         """
         xmin = bbox[0]
         ymin = bbox[1]
@@ -431,7 +471,7 @@ class ObjectAnnotation:
             category_id=category_id,
             bbox=bbox,
             category_name=category_name,
-            shift_amount=shift_amount,
+            offset_amount=offset_amount,
             full_shape=full_shape,
         )
 
@@ -441,7 +481,7 @@ class ObjectAnnotation:
         annotation_dict: Dict,
         full_shape: List[int],
         category_name: str = None,
-        shift_amount: Optional[List[int]] = [0, 0],
+        offset_amount: Optional[List[int]] = [0, 0],
     ):
         """
         Creates ObjectAnnotation object from category name and COCO formatted
@@ -454,16 +494,16 @@ class ObjectAnnotation:
                 Category name of the annotation
             full_shape: List
                 Size of the full image, should be in the form of [height, width]
-            shift_amount: List
-                To shift the box and mask predictions from sliced image to full
-                sized image, should be in the form of [shift_x, shift_y]
+            offset_amount: List
+                To remap the box and mask predictions from sliced image to full
+                sized image, should be in the form of [soffset_x, offset_y]
         """
         if annotation_dict["segmentation"]:
             return cls.from_coco_segmentation(
                 segmentation=annotation_dict["segmentation"],
                 category_id=annotation_dict["category_id"],
                 category_name=category_name,
-                shift_amount=shift_amount,
+                offset_amount=offset_amount,
                 full_shape=full_shape,
             )
         else:
@@ -471,7 +511,7 @@ class ObjectAnnotation:
                 bbox=annotation_dict["bbox"],
                 category_id=annotation_dict["category_id"],
                 category_name=category_name,
-                shift_amount=shift_amount,
+                offset_amount=offset_amount,
                 full_shape=full_shape,
             )
 
@@ -482,7 +522,7 @@ class ObjectAnnotation:
         full_shape: List[int],
         category_id: Optional[int] = None,
         category_name: Optional[str] = None,
-        shift_amount: Optional[List[int]] = [0, 0],
+        offset_amount: Optional[List[int]] = [0, 0],
     ):
         """
         Creates ObjectAnnotation from shapely_utils.ShapelyAnnotation
@@ -495,9 +535,9 @@ class ObjectAnnotation:
                 Name of the object category
             full_shape: List
                 Size of the full image, should be in the form of [height, width]
-            shift_amount: List
-                To shift the box and mask predictions from sliced image to full
-                sized image, should be in the form of [shift_x, shift_y]
+            offset_amount: List
+                To remap the box and mask predictions from sliced image to full
+                sized image, should be in the form of [offset_x, offset_y]
         """
         bool_mask = get_bool_mask_from_coco_segmentation(
             annotation.to_coco_segmentation(), width=full_shape[1], height=full_shape[0]
@@ -506,7 +546,7 @@ class ObjectAnnotation:
             category_id=category_id,
             bool_mask=bool_mask,
             category_name=category_name,
-            shift_amount=shift_amount,
+            offset_amount=offset_amount,
             full_shape=full_shape,
         )
 
@@ -514,7 +554,7 @@ class ObjectAnnotation:
     def from_imantics_annotation(
         cls,
         annotation,
-        shift_amount: Optional[List[int]] = [0, 0],
+        offset_amount: Optional[List[int]] = [0, 0],
         full_shape: Optional[List[int]] = None,
     ):
         """
@@ -522,9 +562,9 @@ class ObjectAnnotation:
 
         Args:
             annotation: imantics.annotation.Annotation
-            shift_amount: List
-                To shift the box and mask predictions from sliced image to full
-                sized image, should be in the form of [shift_x, shift_y]
+            offset_amount: List
+                To remap the box and mask predictions from sliced image to full
+                sized image, should be in the form of [offset_x, offset_y]
             full_shape: List
                 Size of the full image, should be in the form of [height, width]
         """
@@ -532,7 +572,7 @@ class ObjectAnnotation:
             category_id=annotation.category.id,
             bool_mask=annotation.mask.array,
             category_name=annotation.category.name,
-            shift_amount=shift_amount,
+            offset_amount=offset_amount,
             full_shape=full_shape,
         )
 
@@ -542,7 +582,7 @@ class ObjectAnnotation:
         bool_mask: Optional[np.ndarray] = None,
         category_id: Optional[int] = None,
         category_name: Optional[str] = None,
-        shift_amount: Optional[List[int]] = [0, 0],
+        offset_amount: Optional[List[int]] = [0, 0],
         full_shape: Optional[List[int]] = None,
     ):
         """
@@ -555,11 +595,11 @@ class ObjectAnnotation:
                 ID of the object category
             category_name: str
                 Name of the object category
-            shift_amount: List
-                To shift the box and mask predictions from sliced image
-                to full sized image, should be in the form of [shift_x, shift_y]
+            offset_amount: List
+                To remap the box and mask predictions from sliced image
+                to full sized image, should be in the form of [offset_x, offset_y]
             full_shape: List
-                Size of the full image after shifting, should be in
+                Size of the full image after remapping, should be in
                 the form of [height, width]
         """
         if not isinstance(category_id, int):
@@ -570,7 +610,7 @@ class ObjectAnnotation:
         if bool_mask is not None:
             self.mask = Mask(
                 bool_mask=bool_mask,
-                shift_amount=shift_amount,
+                offset_amount=offset_amount,
                 full_shape=full_shape,
             )
             bbox_from_bool_mask = get_bbox_from_bool_mask(bool_mask)
@@ -597,7 +637,7 @@ class ObjectAnnotation:
             ymax = bbox[3]
         bbox = [xmin, ymin, xmax, ymax]
         # set bbox
-        self.bbox = BoundingBox(bbox, shift_amount)
+        self.bbox = BoundingBox(bbox, offset_amount)
 
         category_name = category_name if category_name else str(category_id)
         self.category = Category(
@@ -693,25 +733,31 @@ class ObjectAnnotation:
     def get_empty_mask(cls):
         return Mask(bool_mask=None)
 
-    def get_shifted_object_annotation(self):
-        if self.mask:
-            return ObjectAnnotation(
-                bbox=self.bbox.get_shifted_box().to_xyxy(),
-                category_id=self.category.id,
-                bool_mask=self.mask.get_shifted_mask().bool_mask,
-                category_name=self.category.name,
-                shift_amount=[0, 0],
-                full_shape=self.mask.get_shifted_mask().full_shape,
-            )
+    def remap(self, inplace: bool = False):
+        """
+        Remaps the box and mask annotations from sliced image to full sized image.
+
+        Args:
+            inplace: bool
+                If True, remaps the current instance, otherwise returns a new instance.
+
+        Returns:
+            ObjectAnnotation: remapped ObjectAnnotation
+        """
+
+        if inplace:
+            self.bbox.remap(inplace=True)
+
+            if self.mask:
+                self.mask.remap(inplace=True)
+
+            return self
         else:
-            return ObjectAnnotation(
-                bbox=self.bbox.get_shifted_box().to_xyxy(),
-                category_id=self.category.id,
-                bool_mask=None,
-                category_name=self.category.name,
-                shift_amount=[0, 0],
-                full_shape=None,
-            )
+            new_instance = self.deepcopy()
+            new_instance.bbox = self.bbox.remap(inplace=False)
+            if self.mask:
+                new_instance.mask = self.mask.remap(inplace=False)
+            return new_instance
 
     def __repr__(self):
         return f"""ObjectAnnotation<

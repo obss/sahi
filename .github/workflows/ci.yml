@@ -1,4 +1,5 @@
 name: CI (PyTorch 1.12.1, TorchVision 0.13.1)
+
 on:
   push:
     branches: [main]
@@ -8,7 +9,6 @@ on:
       - '**.cff'
 
   pull_request:
-    branches: [main]
     paths-ignore:
       - '**.md'
       - '**.ipynb'

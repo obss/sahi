@@ -164,7 +164,7 @@ def get_merged_mask(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Mask:
     return Mask(
         bool_mask=union_mask,
         full_shape=mask1.full_shape,
-        shift_amount=mask1.shift_amount,
+        offset_amount=mask1.offset_amount,
     )
 
 
@@ -194,7 +194,7 @@ def merge_object_prediction_pair(
     pred1: ObjectPrediction,
     pred2: ObjectPrediction,
 ) -> ObjectPrediction:
-    shift_amount = pred1.bbox.shift_amount
+    offset_amount = pred1.bbox.offset_amount
     merged_bbox: BoundingBox = get_merged_bbox(pred1, pred2)
     merged_score: float = get_merged_score(pred1, pred2)
     merged_category: Category = get_merged_category(pred1, pred2)
@@ -211,6 +211,6 @@ def merge_object_prediction_pair(
         category_id=merged_category.id,
         category_name=merged_category.name,
         bool_mask=bool_mask,
-        shift_amount=shift_amount,
+        offset_amount=offset_amount,
         full_shape=full_shape,
     )

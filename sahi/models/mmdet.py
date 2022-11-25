@@ -2,14 +2,13 @@
 # Code written by Fatih C Akyon, 2020.
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 import numpy as np
 from PIL import Image
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
-from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_bbox_from_bool_mask
 from sahi.utils.import_utils import check_requirements
 
@@ -113,18 +112,18 @@ class MmdetDetectionModel(DetectionModel):
 
     def _create_object_predictions_from_original_predictions(
         self,
-        shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+        offset_amounts: Optional[List[List[int]]] = [[0, 0]],
         full_shapes: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_predictions_per_image.
         Args:
-            shift_amounts: list of list
-                To shift the box and mask predictions from sliced image to full sized image, should
-                be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
+            offset_amounts: list of list
+                To remap the box and mask predictions from sliced image to full sized image, should
+                be in the form of List[[offset_x, offset_y],[offset_x, offset_y],...]
             full_shapes: list of list
-                Size of the full image after shifting, should be in the form of
+                Size of the full image after remapping, should be in the form of
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
@@ -134,7 +133,7 @@ class MmdetDetectionModel(DetectionModel):
         num_categories = self.num_categories
         object_predictions_per_image = []
         for image_ind, original_prediction in enumerate(original_predictions):
-            shift_amount = shift_amounts[image_ind]
+            offset_amount = offset_amounts[image_ind]
             full_shape = None if full_shapes is None else full_shapes[image_ind]
 
             if self.has_mask:
@@ -195,7 +194,7 @@ class MmdetDetectionModel(DetectionModel):
                         score=score,
                         bool_mask=bool_mask,
                         category_name=category_name,
-                        shift_amount=shift_amount,
+                        offset_amount=offset_amount,
                         full_shape=full_shape,
                     )
                     object_predictions.append(object_prediction)

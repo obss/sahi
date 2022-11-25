@@ -10,7 +10,6 @@ from PIL import Image
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
-from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.import_utils import check_requirements, ensure_package_minimum_version
 
 logger = logging.getLogger(__name__)
@@ -149,18 +148,18 @@ class HuggingfaceDetectionModel(DetectionModel):
 
     def _create_object_predictions_from_original_predictions(
         self,
-        shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+        offset_amounts: Optional[List[List[int]]] = [[0, 0]],
         full_shapes: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_predictions_per_image.
         Args:
-            shift_amount_list: list of list
-                To shift the box and mask predictions from sliced image to full sized image, should
-                be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
-            full_shape_list: list of list
-                Size of the full image after shifting, should be in the form of
+            offset_amounts: list of list
+                To remap the box and mask predictions from sliced image to full sized image, should
+                be in the form of List[[offset_x, offset_y],[offset_x, offset_y],...]
+            full_shapes: list of list
+                Size of the full image after remapping, should be in the form of
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
@@ -176,7 +175,7 @@ class HuggingfaceDetectionModel(DetectionModel):
             # create object_predictions
             object_predictions = []
 
-            shift_amount = shift_amounts[image_ind]
+            offset_amount = offset_amounts[image_ind]
             full_shape = None if full_shapes is None else full_shapes[image_ind]
 
             for ind in range(len(boxes)):
@@ -204,7 +203,7 @@ class HuggingfaceDetectionModel(DetectionModel):
                     bool_mask=None,
                     category_id=category_id,
                     category_name=self.category_mapping[category_id],
-                    shift_amount=shift_amount,
+                    offset_amount=offset_amount,
                     score=scores[ind].item(),
                     full_shape=full_shape,
                 )

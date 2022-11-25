@@ -9,18 +9,18 @@ class TestAnnotation(unittest.TestCase):
         from sahi.annotation import BoundingBox
 
         bbox_minmax = [30, 30, 100, 150]
-        shift_amount = [50, 40]
+        offset_amount = [50, 40]
 
-        bbox = BoundingBox(bbox_minmax, shift_amount=[0, 0])
+        bbox = BoundingBox(bbox_minmax, offset_amount=[0, 0])
         expanded_bbox = bbox.get_expanded_box(ratio=0.1)
 
-        bbox = BoundingBox(bbox_minmax, shift_amount=shift_amount)
-        shifted_bbox = bbox.get_shifted_box()
+        bbox = BoundingBox(bbox_minmax, offset_amount=offset_amount)
+        remapped_bbox = bbox.remap(inplace=False)
 
         # compare
         self.assertEqual(expanded_bbox.to_xywh(), [18, 23, 94, 134])
         self.assertEqual(expanded_bbox.to_xyxy(), [18, 23, 112, 157])
-        self.assertEqual(shifted_bbox.to_xyxy(), [80, 70, 150, 190])
+        self.assertEqual(remapped_bbox.to_xyxy(), [80, 70, 150, 190])
 
     def test_category(self):
         from sahi.annotation import Category
@@ -51,7 +51,7 @@ class TestAnnotation(unittest.TestCase):
         coco_bbox = [bbox[0], bbox[1], bbox[2] - bbox[0], bbox[3] - bbox[1]]
         category_id = 2
         category_name = "car"
-        shift_amount = [0, 0]
+        offset_amount = [0, 0]
         image_height = 1080
         image_width = 1920
         full_shape = [image_height, image_width]
@@ -60,7 +60,7 @@ class TestAnnotation(unittest.TestCase):
             bbox=bbox,
             category_id=category_id,
             category_name=category_name,
-            shift_amount=shift_amount,
+            offset_amount=offset_amount,
             full_shape=full_shape,
         )
 
@@ -68,7 +68,7 @@ class TestAnnotation(unittest.TestCase):
             annotation_dict={"bbox": coco_bbox, "category_id": category_id, "segmentation": []},
             category_name=category_name,
             full_shape=full_shape,
-            shift_amount=shift_amount,
+            offset_amount=offset_amount,
         )
 
         object_annotation3 = ObjectAnnotation.from_coco_bbox(
@@ -76,7 +76,7 @@ class TestAnnotation(unittest.TestCase):
             category_id=category_id,
             category_name=category_name,
             full_shape=full_shape,
-            shift_amount=shift_amount,
+            offset_amount=offset_amount,
         )
 
         self.assertEqual(object_annotation1.bbox.minx, bbox[0])
