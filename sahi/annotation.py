@@ -284,7 +284,7 @@ class Mask:
         """
         return [self.offset_x, self.offset_y]
 
-    def remap(self, inplace:bool=False):
+    def remap(self, inplace: bool = False):
         """
         Remap the mask to full sized image.
 
