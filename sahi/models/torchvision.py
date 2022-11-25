@@ -2,7 +2,7 @@
 # Code written by Fatih C Akyon and Kadir Nar, 2021.
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 import numpy as np
 
@@ -127,18 +127,18 @@ class TorchVisionDetectionModel(DetectionModel):
 
     def _create_object_predictions_from_original_predictions(
         self,
-        shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+        offset_amounts: Optional[List[List[int]]] = [[0, 0]],
         full_shapes: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_predictions_per_image.
         Args:
-            shift_amounts: list of list
-                To shift the box and mask predictions from sliced image to full sized image, should
-                be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
+            offset_amounts: list of list
+                To remap the box and mask predictions from sliced image to full sized image, should
+                be in the form of List[[offset_x, offset_y],[offset_x, offset_y],...]
             full_shapes: list of list
-                Size of the full image after shifting, should be in the form of
+                Size of the full image after remapping, should be in the form of
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
@@ -165,7 +165,7 @@ class TorchVisionDetectionModel(DetectionModel):
             # create object_predictions
             object_predictions = []
 
-            shift_amount = shift_amounts[image_ind]
+            offset_amount = offset_amounts[image_ind]
             full_shape = None if full_shapes is None else full_shapes[image_ind]
 
             for ind in range(len(boxes)):
@@ -180,7 +180,7 @@ class TorchVisionDetectionModel(DetectionModel):
                     bool_mask=mask,
                     category_id=int(category_ids[ind]),
                     category_name=self.category_mapping[str(int(category_ids[ind]))],
-                    shift_amount=shift_amount,
+                    offset_amount=offset_amount,
                     score=scores[ind],
                     full_shape=full_shape,
                 )

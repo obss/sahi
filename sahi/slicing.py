@@ -668,7 +668,7 @@ def shift_bboxes(bboxes, offset: Sequence[int]):
     for bbox in bboxes:
         if bboxes_is_torch_tensor or isinstance(bbox, np.ndarray):
             bbox = bbox.tolist()
-        bbox = BoundingBox(bbox, shift_amount=offset)
+        bbox = BoundingBox(bbox, offset_amount=offset)
         bbox = bbox.get_shifted_box()
         shifted_bboxes.append(bbox.to_xyxy())
 
@@ -695,7 +695,7 @@ def shift_masks(masks: np.ndarray, offset: Sequence[int], full_shape: Sequence[i
 
     shifted_masks = []
     for mask in masks:
-        mask = Mask(bool_mask=mask, shift_amount=offset, full_shape=full_shape)
+        mask = Mask(bool_mask=mask, offset_amount=offset, full_shape=full_shape)
         mask = mask.get_shifted_mask()
         shifted_masks.append(mask.bool_mask)
 

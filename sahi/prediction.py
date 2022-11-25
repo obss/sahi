@@ -48,7 +48,7 @@ class ObjectPrediction(ObjectAnnotation):
         category_name: Optional[str] = None,
         bool_mask: Optional[np.ndarray] = None,
         score: Optional[float] = 0,
-        shift_amount: Optional[List[int]] = [0, 0],
+        offset_amount: Optional[List[int]] = [0, 0],
         full_shape: Optional[List[int]] = None,
     ):
         """
@@ -65,11 +65,11 @@ class ObjectPrediction(ObjectAnnotation):
                 Name of the object category
             bool_mask: np.ndarray
                 2D boolean mask array. Should be None if model doesn't output segmentation mask.
-            shift_amount: list
-                To shift the box and mask predictions from sliced image
-                to full sized image, should be in the form of [shift_x, shift_y]
+            offset_amount: list
+                To remap the box and mask predictions from sliced image
+                to full sized image, should be in the form of [offset_x, offset_y]
             full_shape: list
-                Size of the full image after shifting, should be in
+                Size of the full image after remapping, should be in
                 the form of [height, width]
         """
         self.score = PredictionScore(score)
@@ -78,36 +78,37 @@ class ObjectPrediction(ObjectAnnotation):
             category_id=category_id,
             bool_mask=bool_mask,
             category_name=category_name,
-            shift_amount=shift_amount,
+            offset_amount=offset_amount,
             full_shape=full_shape,
         )
 
-    def get_shifted_object_prediction(self):
+    def remap(self, inplace: bool = True):
         """
-        Returns shifted version ObjectPrediction.
-        Shifts bbox and mask coords.
+        Returns remapped ObjectPrediction.
+        Remaps bbox and mask coords.
         Used for mapping sliced predictions over full image.
+
+        Args
+            inplace: bool
+                If True, remaps the object inplace. If False, returns a new object.
+
+        Returns
+            ObjectPrediction: remapped ObjectPrediction
         """
-        if self.mask:
-            return ObjectPrediction(
-                bbox=self.bbox.get_shifted_box().to_xyxy(),
-                category_id=self.category.id,
-                score=self.score.value,
-                bool_mask=self.mask.get_shifted_mask().bool_mask,
-                category_name=self.category.name,
-                shift_amount=[0, 0],
-                full_shape=self.mask.get_shifted_mask().full_shape,
-            )
+        if inplace:
+            self.bbox.remap()
+
+            if self.mask:
+                self.mask.remap()
+            return self
         else:
-            return ObjectPrediction(
-                bbox=self.bbox.get_shifted_box().to_xyxy(),
-                category_id=self.category.id,
-                score=self.score.value,
-                bool_mask=None,
-                category_name=self.category.name,
-                shift_amount=[0, 0],
-                full_shape=None,
-            )
+            new_object = copy.deepcopy(self)
+            new_object.bbox.remap()
+
+            if new_object.mask:
+                new_object.mask.remap()
+
+            return new_object
 
     def to_coco_prediction(self, image_id=None):
         """

@@ -168,7 +168,7 @@ if sys.version_info >= (3, 7):
             prediction_result = get_prediction(
                 images=image,
                 detection_model=huggingface_detection_model,
-                shift_amounts=[[0, 0]],
+                offset_amounts=[[0, 0]],
                 full_shapes=None,
                 postprocess=None,
             )
@@ -212,7 +212,7 @@ if sys.version_info >= (3, 7):
             prediction_result = get_prediction(
                 images=image,
                 detection_model=huggingface_detection_model,
-                shift_amounts=[[0, 0]],
+                offset_amounts=[[0, 0]],
                 full_shapes=None,
                 postprocess=None,
             )

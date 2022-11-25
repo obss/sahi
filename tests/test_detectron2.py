@@ -168,7 +168,7 @@ if get_package_info("torch", verbose=False)[1] == "1.10.2":
             prediction_result = get_prediction(
                 image=image,
                 detection_model=detector2_detection_model,
-                shift_amount=[0, 0],
+                offset_amount=[0, 0],
                 full_shape=None,
                 postprocess=None,
             )

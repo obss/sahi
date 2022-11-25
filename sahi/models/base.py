@@ -121,7 +121,7 @@ class DetectionModel:
 
     def _create_object_predictions_from_original_predictions(
         self,
-        shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+        offset_amounts: Optional[List[List[int]]] = [[0, 0]],
         full_shapes: Optional[List[List[int]]] = None,
     ):
         """
@@ -129,11 +129,11 @@ class DetectionModel:
         be converted to a list of prediction.ObjectPrediction and set to
         self._object_predictions. self.mask_threshold can also be utilized.
         Args:
-            shift_amounts: list of list
-                To shift the box and mask predictions from sliced image to full sized image, should
-                be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
+            offset_amounts: list of list
+                To remap the box and mask predictions from sliced image to full sized image, should
+                be in the form of List[[offset_x, offset_y],[offset_x, offset_y],...]
             full_shapes: list of list
-                Size of the full image after shifting, should be in the form of
+                Size of the full image after remapping, should be in the form of
                 List[[height, width],[height, width],...]
         """
         raise NotImplementedError()
@@ -154,22 +154,22 @@ class DetectionModel:
 
     def convert_original_predictions(
         self,
-        shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+        offset_amounts: Optional[List[List[int]]] = [[0, 0]],
         full_shapes: Optional[List[List[int]]] = None,
     ):
         """
         Converts original predictions of the detection model to a list of
         prediction.ObjectPrediction object. Should be called after perform_inference().
         Args:
-            shift_amounts: list of list
-                To shift the box and mask predictions from sliced image to full sized image, should
-                be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
+            offset_amounts: list of list
+                To remap the box and mask predictions from sliced image to full sized image, should
+                be in the form of List[[offset_x, offset_y],[offset_x, offset_y],...]
             full_shapes: list of list
-                Size of the full image after shifting, should be in the form of
+                Size of the full image after remapping, should be in the form of
                 List[[height, width],[height, width],...]
         """
         self._create_object_predictions_from_original_predictions(
-            shift_amounts=shift_amounts,
+            offset_amounts=offset_amounts,
             full_shapes=full_shapes,
         )
         if self.category_remapping:

@@ -106,18 +106,18 @@ class Detectron2DetectionModel(DetectionModel):
 
     def _create_object_predictions_from_original_predictions(
         self,
-        shift_amounts: Optional[List[List[int]]] = [[0, 0]],
+        offset_amounts: Optional[List[List[int]]] = [[0, 0]],
         full_shapes: Optional[List[List[int]]] = None,
     ):
         """
         self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_predictions_per_image.
         Args:
-            shift_amount_list: list of list
-                To shift the box and mask predictions from sliced image to full sized image, should
-                be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
+            offset_amount_list: list of list
+                To remap the box and mask predictions from sliced image to full sized image, should
+                be in the form of List[[offset_x, offset_y],[offset_x, offset_y],...]
             full_shape_list: list of list
-                Size of the full image after shifting, should be in the form of
+                Size of the full image after remapping, should be in the form of
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
@@ -138,7 +138,7 @@ class Detectron2DetectionModel(DetectionModel):
         object_predictions = []
 
         # detectron2 DefaultPredictor supports single image
-        shift_amount = shift_amounts[0]
+        offset_amount = offset_amounts[0]
         full_shape = None if full_shapes is None else full_shapes[0]
 
         for ind in range(len(boxes)):
@@ -166,7 +166,7 @@ class Detectron2DetectionModel(DetectionModel):
                 bool_mask=mask,
                 category_id=category_id,
                 category_name=self.category_mapping[str(category_id)],
-                shift_amount=shift_amount,
+                offset_amount=offset_amount,
                 score=score,
                 full_shape=full_shape,
             )
