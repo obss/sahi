@@ -336,11 +336,12 @@ class Mask:
 
             return self
         else:
-            return Mask(
-                bool_mask=mask_fullsized,
-                offset_amount=[0, 0],
-                full_shape=self.full_shape,
-            )
+            new_mask = self.deepcopy()
+            new_mask.bool_mask = mask_fullsized
+            new_mask.offset_x = 0
+            new_mask.offset_y = 0
+
+            return new_mask
 
     def to_coco_segmentation(self):
         """
