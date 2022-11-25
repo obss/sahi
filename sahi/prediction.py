@@ -82,34 +82,6 @@ class ObjectPrediction(ObjectAnnotation):
             full_shape=full_shape,
         )
 
-    def remap(self, inplace: bool = True):
-        """
-        Returns remapped ObjectPrediction.
-        Remaps bbox and mask coords.
-        Used for mapping sliced predictions over full image.
-
-        Args
-            inplace: bool
-                If True, remaps the object inplace. If False, returns a new object.
-
-        Returns
-            ObjectPrediction: remapped ObjectPrediction
-        """
-        if inplace:
-            self.bbox.remap()
-
-            if self.mask:
-                self.mask.remap()
-            return self
-        else:
-            new_object = copy.deepcopy(self)
-            new_object.bbox.remap()
-
-            if new_object.mask:
-                new_object.mask.remap()
-
-            return new_object
-
     def to_coco_prediction(self, image_id=None):
         """
         Returns sahi.utils.coco.CocoPrediction representation of ObjectAnnotation.
