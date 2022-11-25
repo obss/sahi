@@ -237,7 +237,7 @@ class Mask:
         if full_shape:
             self.full_shape_height = full_shape[0]
             self.full_shape_width = full_shape[1]
-        elif self.bool_mask:
+        elif self.bool_mask is not None:
             self.full_shape_height = self.bool_mask.shape[0]
             self.full_shape_width = self.bool_mask.shape[1]
         else:
