@@ -229,15 +229,7 @@ class Mask:
                 sized image, should be in the form of [offset_x, offset_y]
         """
 
-        if len(bool_mask) > 0:
-            has_bool_mask = True
-        else:
-            has_bool_mask = False
-
-        if has_bool_mask:
-            self._mask = self.encode_bool_mask(bool_mask)
-        else:
-            self._mask = None
+        self.bool_mask = bool_mask
 
         self.offset_x = offset_amount[0]
         self.offset_y = offset_amount[1]
@@ -245,7 +237,7 @@ class Mask:
         if full_shape:
             self.full_shape_height = full_shape[0]
             self.full_shape_width = full_shape[1]
-        elif has_bool_mask:
+        elif self.bool_mask:
             self.full_shape_height = self.bool_mask.shape[0]
             self.full_shape_width = self.bool_mask.shape[1]
         else:
@@ -267,6 +259,18 @@ class Mask:
     @property
     def bool_mask(self):
         return self.decode_bool_mask(self._mask)
+
+    @bool_mask.setter
+    def bool_mask(self, bool_mask: np.ndarray):
+        if len(bool_mask) > 0:
+            has_bool_mask = True
+        else:
+            has_bool_mask = False
+
+        if has_bool_mask:
+            self._mask = self.encode_bool_mask(bool_mask)
+        else:
+            self._mask = None
 
     @property
     def shape(self):
