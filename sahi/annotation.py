@@ -329,7 +329,6 @@ class Mask:
             self.bool_mask = mask_fullsized
             self.offset_x = 0
             self.offset_y = 0
-            self.full_shape = self.full_shape
 
             return self
         else:
