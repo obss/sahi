@@ -104,18 +104,23 @@ class BoundingBox:
         Returns:
             BoundingBox: remapped bbox
         """
+        minx = self.minx + self.offset_x
+        miny = self.miny + self.offset_y
+        maxx = self.maxx + self.offset_x
+        maxy = self.maxy + self.offset_y
+
         if inplace:
-            self.minx = self.minx + self.offset_x
-            self.miny = self.miny + self.offset_y
-            self.maxx = self.maxx + self.offset_x
-            self.maxy = self.maxy + self.offset_y
+            self.minx = minx
+            self.miny = miny
+            self.maxx = maxx
+            self.maxy = maxy
 
             self.offset_x = 0
             self.offset_y = 0
 
             return self
         else:
-            box = [self.minx, self.miny, self.maxx, self.maxy]
+            box = [minx, miny, maxx, maxy]
             return BoundingBox(box, offset_amount=[0, 0])
 
     def __repr__(self):
