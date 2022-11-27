@@ -97,7 +97,7 @@ def select_device(device: str):
     """
     if device == "cuda":
         device = "cuda:0"
-    device = str(device).strip().lower().replace("none", "")  # to string, 'cuda:0' to '0'
+    device = str(device).strip().lower().replace("cuda:", "").replace("none", "")  # to string, 'cuda:0' to '0'
     cpu = device == "cpu"
     mps = device == "mps"  # Apple Metal Performance Shaders (MPS)
     if cpu or mps:
