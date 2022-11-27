@@ -231,15 +231,14 @@ def get_sliced_prediction(
         tqdm.write(f"Performing prediction on {num_slices} number of slices.")
 
     object_predictions = []
-    start = 0
+    start_ind = 0
     while True:
         # prepare batch slices
-        end = min(start + batch_size, num_slices)
+        end_ind = min(start_ind + batch_size, num_slices)
         images = []
-        for sliced_image in slice_image_result.images[start:end]:
+        for sliced_image in slice_image_result.images[start_ind:end_ind]:
             images.append(sliced_image)
 
-        # perform batch prediction
         full_shapes = [
             [
                 slice_image_result.original_image_height,
@@ -247,10 +246,12 @@ def get_sliced_prediction(
             ]
             for _ in range(len(images))
         ]
+
+        # perform batch prediction
         prediction_result = get_prediction(
             images=images,
             detection_model=detection_model,
-            offset_amounts=slice_image_result.starting_pixels[start:end],
+            offset_amounts=slice_image_result.starting_pixels[start_ind:end_ind],
             full_shapes=full_shapes,
         )
         # convert sliced predictions to full predictions
@@ -262,9 +263,9 @@ def get_sliced_prediction(
         if merge_buffer_length is not None and len(object_predictions) > merge_buffer_length:
             object_predictions = postprocess(object_predictions)
 
-        if end >= num_slices:
+        if end_ind >= num_slices:
             break
-        start += batch_size
+        start_ind += batch_size
 
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:

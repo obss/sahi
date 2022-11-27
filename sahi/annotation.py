@@ -306,16 +306,10 @@ class Mask:
         """
         # Confirm full_shape is specified
         if (self.full_shape_height is None) or (self.full_shape_width is None):
-            raise ValueError("full_shape is None")
+            raise ValueError("full_shape must be provided to remap the mask")
+
         # init full mask
-        mask_fullsized = np.full(
-            (
-                self.full_shape_height,
-                self.full_shape_width,
-            ),
-            0,
-            dtype="float32",
-        )
+        fullsized_mask = np.zeros((self.full_shape_height, self.full_shape_width), dtype=bool)
 
         # arrange starting ending indexes
         starting_pixel = [self.offset_x, self.offset_y]
@@ -325,19 +319,19 @@ class Mask:
         ]
 
         # convert sliced mask to full mask
-        mask_fullsized[starting_pixel[1] : ending_pixel[1], starting_pixel[0] : ending_pixel[0]] = self.bool_mask[
+        fullsized_mask[starting_pixel[1] : ending_pixel[1], starting_pixel[0] : ending_pixel[0]] = self.bool_mask[
             : ending_pixel[1] - starting_pixel[1], : ending_pixel[0] - starting_pixel[0]
         ]
 
         if inplace:
-            self.bool_mask = mask_fullsized
+            self.bool_mask = fullsized_mask
             self.offset_x = 0
             self.offset_y = 0
 
             return self
         else:
             new_mask = self.deepcopy()
-            new_mask.bool_mask = mask_fullsized
+            new_mask.bool_mask = fullsized_mask
             new_mask.offset_x = 0
             new_mask.offset_y = 0
 
@@ -354,6 +348,15 @@ class Mask:
         """
         coco_segmentation = get_coco_segmentation_from_bool_mask(self.bool_mask)
         return coco_segmentation
+
+    def deepcopy(self):
+        """
+        Returns a deep copy of the mask
+        """
+        return copy.deepcopy(self)
+
+    def __array__(self):
+        return self.bool_mask
 
 
 class ObjectAnnotation:
