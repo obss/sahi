@@ -68,13 +68,6 @@ def to_float_tensor(img: Image.Image) -> torch.Tensor:
     return img
 
 
-def torch_to_numpy(img):
-    img = img.numpy()
-    if img.max() > 1:
-        img /= 255
-    return img.transpose((1, 2, 0))
-
-
 def is_torch_cuda_available():
     if is_available("torch"):
         return torch.cuda.is_available()
@@ -113,3 +106,14 @@ def select_device(device: str):
         arg = "cpu"
 
     return torch.device(arg)
+
+
+def tensor_to_numpy(tensor):
+    """
+    Converts a PyTorch tensor to a numpy array.
+    """
+    if tensor is None:
+        return None
+    if tensor.requires_grad:
+        tensor = tensor.detach()
+    return tensor.cpu().numpy()
