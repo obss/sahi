@@ -169,7 +169,7 @@ class SliceImageResult:
         original_image_size: list of int
             Size of the unsliced original image in [height, width]
         """
-        self._sliced_image_list: List[SlicedImage] = []
+        self._sliced_images: List[SlicedImage] = []
         self.original_image_height = original_image_size[0]
         self.original_image_width = original_image_size[1]
         self.image_dir = image_dir
@@ -178,11 +178,11 @@ class SliceImageResult:
         if not isinstance(sliced_image, SlicedImage):
             raise TypeError("sliced_image must be a SlicedImage instance")
 
-        self._sliced_image_list.append(sliced_image)
+        self._sliced_images.append(sliced_image)
 
     @property
-    def sliced_image_list(self):
-        return self._sliced_image_list
+    def sliced_images(self):
+        return self._sliced_images
 
     @property
     def images(self):
@@ -192,7 +192,7 @@ class SliceImageResult:
             images: a list of np.array
         """
         images = []
-        for sliced_image in self._sliced_image_list:
+        for sliced_image in self._sliced_images:
             images.append(sliced_image.image)
         return images
 
@@ -204,7 +204,7 @@ class SliceImageResult:
             coco_images: a list of CocoImage
         """
         coco_images: List = []
-        for sliced_image in self._sliced_image_list:
+        for sliced_image in self._sliced_images:
             coco_images.append(sliced_image.coco_image)
         return coco_images
 
@@ -216,7 +216,7 @@ class SliceImageResult:
             starting_pixels: a list of starting pixel coords [x,y]
         """
         starting_pixels = []
-        for sliced_image in self._sliced_image_list:
+        for sliced_image in self._sliced_images:
             starting_pixels.append(sliced_image.starting_pixel)
         return starting_pixels
 
@@ -228,7 +228,7 @@ class SliceImageResult:
             filenames: a list of filenames as str
         """
         filenames = []
-        for sliced_image in self._sliced_image_list:
+        for sliced_image in self._sliced_images:
             filenames.append(sliced_image.coco_image.file_name)
         return filenames
 
@@ -256,7 +256,7 @@ class SliceImageResult:
             raise NotImplementedError(f"{type(i)}")
 
     def __len__(self):
-        return len(self._sliced_image_list)
+        return len(self._sliced_images)
 
 
 def slice_image(
