@@ -128,7 +128,7 @@ pip install mmcv-full==1.7.0 -f https://download.openmmlab.com/mmcv/dist/cu113/t
 ```
 
 ```console
-pip install mmdet==2.25.3
+pip install mmdet==2.26.0
 ```
 
 - Install your desired detection framework (detectron2):
