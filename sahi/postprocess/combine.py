@@ -18,7 +18,7 @@ def batched_nms(
     object_predictions_as_tensor: torch.tensor,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
-):
+) -> torch.tensor:
     """
     Apply non-maximum suppression to avoid detecting too many
     overlapping bounding boxes for a given object.
@@ -29,7 +29,7 @@ def batched_nms(
         match_threshold: (float) The overlap thresh for
             match metric.
     Returns:
-        keep_indices: (List[int]) list of prediction indices to keep.
+        keep_indices: (torch.tensor) list of prediction indices to keep.
     """
     if match_metric == "IOU":
         keep_indices = batched_nms_torchvision(
@@ -68,7 +68,7 @@ def batched_nms_sahi(predictions: torch.tensor, match_metric: str = "IOU", match
         keep_mask[curr_indices[curr_keep_indices]] = True
     keep_indices = torch.where(keep_mask)[0]
     # sort selected indices by their scores
-    keep_indices = keep_indices[scores[keep_indices].sort(descending=True)[1]].tolist()
+    keep_indices = keep_indices[scores[keep_indices].sort(descending=True)[1]]
     return keep_indices
 
 
