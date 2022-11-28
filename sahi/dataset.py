@@ -1,11 +1,13 @@
+# OBSS SAHI Tool
+# Code written by Fatih C Akyon, 2022.
+
 import os
 import time
 from typing import List, Union
 
 import numpy as np
 from PIL import Image
-from torch.utils.data import DataLoader, IterableDataset
-from tqdm import tqdm
+from torch.utils.data import IterableDataset
 
 from sahi.prediction import PredictionResult
 from sahi.slicing import SliceImageResult, get_slice_bboxes, slice_image
