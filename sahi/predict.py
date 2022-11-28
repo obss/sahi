@@ -101,7 +101,6 @@ def get_prediction(
 
     # process prediction
     time_start = time.time()
-    # works only with 1 batch
     detection_model.convert_original_predictions(
         offset_amounts=offset_amounts,
         full_shapes=full_shapes,
