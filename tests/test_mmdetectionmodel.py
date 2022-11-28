@@ -191,6 +191,43 @@ class TestMmdetDetectionModel(unittest.TestCase):
         for object_prediction in object_prediction_list:
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
+    def test_perform_inference_without_mask_output_with_automodel(self):
+        from sahi import AutoDetectionModel
+
+        # init model
+        download_mmdet_yolox_tiny_model()
+
+        mmdet_detection_model = AutoDetectionModel.from_pretrained(
+            model_type="mmdet",
+            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            category_remapping=None,
+            load_at_init=True,
+            image_size=IMAGE_SIZE,
+        )
+
+        # prepare image
+        image_path = "tests/data/small-vehicles1.jpeg"
+        image = read_image(image_path)
+
+        # perform inference
+        mmdet_detection_model.perform_inference(image)
+        original_predictions = mmdet_detection_model.original_predictions
+
+        boxes = original_predictions[0]
+
+        # find box of first car detection with conf greater than 0.5
+        for box in boxes[2]:
+            print(len(box))
+            if len(box) == 5:
+                if box[4] > 0.5:
+                    break
+
+        # compare
+        self.assertEqual(box[:4].astype("int").tolist(), [320, 323, 380, 365])
+        self.assertEqual(len(boxes), 80)
+
 
 if __name__ == "__main__":
     unittest.main()
