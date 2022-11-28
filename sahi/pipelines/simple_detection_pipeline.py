@@ -43,6 +43,8 @@ def simple_detection_pipeline(
         target_image_format=target_image_format,
     )
 
+    # TODO: add support for num_workers > 0 using worker_init_fn https://medium.com/speechmatics/how-to-build-a-streaming-dataloader-with-pytorch-a66dd891d9dd
+
     dataloader = DataLoader(
         image_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, collate_fn=collate_fn
     )
