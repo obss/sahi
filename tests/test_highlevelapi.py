@@ -4,7 +4,7 @@
 import unittest
 
 
-class TestAnnotation(unittest.TestCase):
+class TestHighLevelApi(unittest.TestCase):
     def test_bounding_box(self):
         from sahi import BoundingBox
 
