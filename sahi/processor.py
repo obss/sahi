@@ -1,12 +1,16 @@
 import os
 import time
+from typing import List, Union
 
-from torch.utils.data import DataLoader, Dataset
+import numpy as np
+from PIL import Image
+from torch.utils.data import DataLoader, IterableDataset
 from tqdm import tqdm
 
 from sahi.prediction import PredictionResult
-from sahi.slicing import get_slice_bboxes
-from sahi.utils.cv import read_image_as_pil
+from sahi.slicing import SliceImageResult, get_slice_bboxes, slice_image
+from sahi.utils.cv import IMAGE_EXTENSIONS, read_image_as_pil
+from sahi.utils.file import list_files
 
 
 def collate_fn(input_batch):
@@ -70,96 +74,122 @@ def process_predictions(postprocess_queue, result_queue, max_counter):
     result_queue.put(prediction_results)
 
 
-class SAHIImageDataset(Dataset):
+class ImageProcessor(IterableDataset):
     def __init__(
         self,
-        image_path=None,
-        image_dir=None,
-        image_ids=None,
-        sliced_prediction=False,
-        standard_prediction=True,
-        slice_height=512,
-        slice_width=512,
-        overlap_height_ratio=0.2,
-        overlap_width_ratio=0.2,
-        target_image_format="rgb",
+        image: Union[np.ndarray, Image.Image, str] = None,
+        image_folder_dir: str = None,
+        image_ids: List[int] = None,
+        include_slices: bool = False,
+        include_original: bool = True,
+        slice_height: int = 512,
+        slice_width: int = 512,
+        overlap_height_ratio: float = 0.2,
+        overlap_width_ratio: float = 0.2,
+        target_image_format: str = "rgb",
+        batch_size: int = 1,
+        export_folder_dir: str = None,
+        verbose: int = 1,
+        load_images_as_numpy: bool = True,
     ):
-        self.image_dir = image_dir
-        self.sliced_prediction = sliced_prediction
+        self.image = image
+        self.image_folder_dir = image_folder_dir
         self.slice_height = slice_height
         self.slice_width = slice_width
         self.overlap_height_ratio = overlap_height_ratio
         self.overlap_width_ratio = overlap_width_ratio
         self.target_image_format = target_image_format
+        self.batch_size = batch_size
+        self.export_folder_dir = export_folder_dir
+        self.include_original = include_original
+        self.include_slices = include_slices
+        self.load_images_as_numpy = load_images_as_numpy
 
-        relative_image_path_list = []
-        new_image_path_list = []
-        slice_bbox_list = []
-        new_image_id_list = []
-        for ind, image_path in enumerate(tqdm(image_paths, "preparing dataloader")):
-            if image_ids is not None:
-                image_id = ind
-            else:
-                image_id = image_ids[ind]
-            # get filename
-            if self.image_dir is not None:  # preserve source folder structure in export
-                relative_filepath = image_path.split(self.image_dir)[-1]
-                relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
-            else:  # no process if source is single file
-                relative_filepath = image_path
-            relative_image_path_list.append(relative_filepath)
+        self._image_paths = []
+        self._image_queue = []
+        self._current_image_id = 0
 
-            # prepare image slices and paths
-            image_width, image_height = read_image_as_pil(image_path).size
-            if sliced_prediction:
-                slice_bboxes = get_slice_bboxes(
-                    image_height=image_height,
-                    image_width=image_width,
-                    slice_height=slice_height,
-                    slice_width=slice_width,
-                    overlap_height_ratio=overlap_height_ratio,
-                    overlap_width_ratio=overlap_width_ratio,
-                )
-                for slice_bbox in slice_bboxes:
-                    slice_bbox_list.append(slice_bbox)
-                    relative_image_path_list.append(relative_filepath)
-                    new_image_path_list.append(image_path)
-                    new_image_id_list.append(image_id)
-            if standard_prediction:
-                slice_bboxes = get_slice_bboxes(
-                    image_height=image_height,
-                    image_width=image_width,
-                    slice_height=image_height,
-                    slice_width=image_width,
-                    overlap_height_ratio=0,
-                    overlap_width_ratio=0,
-                )
-                slice_bbox_list.append(slice_bboxes[0])
-                relative_image_path_list.append(relative_filepath)
-                new_image_path_list.append(image_path)
-                new_image_id_list.append(image_id)
+        if image_ids is None:
+            self.image_ids = []
+        else:
+            self.image_ids = image_ids
 
-        self.slice_bbox_list = slice_bbox_list
-        self.image_path_list = new_image_path_list
-        self.image_id_list = new_image_id_list
-        self.relative_image_path_list = relative_image_path_list
+        if image is None and image_folder_dir is None:
+            raise ValueError("Either image or image_folder_dir must be provided.")
 
-    def __len__(self):
-        return len(self.image_path_list)
+        if image is not None and image_folder_dir is not None:
+            raise ValueError("Only one of image or image_folder_dir must be provided.")
 
-    def __getitem__(self, idx):
-        image = read_image_as_pil(self.image_path_list[idx])
-        image_width, image_height = image.size
+        if image is None and image_folder_dir is not None:
+            if not os.path.isdir(image_folder_dir):
+                raise ValueError(f"image_folder_dir {image_folder_dir} does not exist.")
+            self._image_paths = list_files(
+                directory=image_folder_dir,
+                contains=IMAGE_EXTENSIONS,
+                verbose=verbose,
+            )
 
-        sample = {}
-        sample["image_paths"] = self.image_path_list[idx]
-        sample["relative_image_paths"] = self.relative_image_path_list[idx]
-        sample["image_ids"] = self.image_id_list[idx]
-        sample["offset_amounts"] = (self.slice_bbox_list[idx][0], self.slice_bbox_list[idx][1])
-        image = image.crop(self.slice_bbox_list[idx])
-        if self.target_image_format == "bgr":
-            image = image[:, :, ::-1]
-        sample["images"] = image
-        sample["full_shapes"] = (image_height, image_width)
+    def _slice_new_image(self, image) -> SliceImageResult:
+        sliced_image_result = slice_image(
+            image,
+            slice_height=self.slice_height,
+            slice_width=self.slice_width,
+            overlap_height_ratio=self.overlap_height_ratio,
+            overlap_width_ratio=self.overlap_width_ratio,
+        )
+        return sliced_image_result
 
-        return sample
+    def _populate_image_queue(self):
+        if self.include_original:
+            if self.image:
+                pil_image = read_image_as_pil(self.image)
+                image = np.array(pil_image) if self.load_images_as_numpy else self.image
+                filepath = self.image if isinstance(self.image, str) else "image.png"
+            elif self.image_folder_dir:
+                filepath = next(self._image_paths)
+                pil_image = read_image_as_pil(filepath)
+                image = np.array(pil_image) if self.load_images_as_numpy else filepath
+
+            image_width, image_height = pil_image.size
+            if self.target_image_format == "bgr" and self.load_images_as_numpy:
+                image = image[:, :, ::-1]
+
+            sample = {
+                "image": image,
+                "image_id": self._current_image_id,
+                "offset_amount": [0, 0],
+                "full_shape": [image_height, image_width],
+                "filepath": filepath,
+            }
+            self._image_queue.append(sample)
+
+        if self.include_slices:
+            if self.image:
+                sliced_image_result = self._slice_new_image(self.image)
+                filepath = self.image if isinstance(self.image, str) else "image.png"
+            elif self.image_folder_dir:
+                filepath = next(self._image_paths)
+                pil_image = read_image_as_pil(filepath)
+                sliced_image_result = self._slice_new_image(pil_image)
+
+            for sliced_image in sliced_image_result.sliced_images:
+                if self.target_image_format == "bgr":
+                    image = image[:, :, ::-1]
+                sample = {
+                    "image": sliced_image.image,
+                    "image_id": self._current_image_id,
+                    "offset_amount": sliced_image.starting_pixel,
+                    "full_shape": [sliced_image_result.original_image_height, sliced_image_result.original_image_width],
+                    "filepath": filepath,
+                }
+                self._image_queue.append(sample)
+
+        self._current_image_id += 1
+
+    def _get_next_image(self):
+        if len(self._image_queue) == 0:
+            self._populate_image_queue()
+        return self._image_queue.pop(0)
+
+    def __iter__(self):
+        return self._get_next_image()
