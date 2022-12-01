@@ -31,8 +31,6 @@ class Yolov5DetectionModel(DetectionModel):
         except Exception as e:
             raise TypeError("model_path is not a valid yolov5 model path: ", e)
 
-        self.yolov5_version_is_greater_than_6_2 = check_package_minimum_version("yolov5", "6.2.0")
-
     def set_model(self, model: Any):
         """
         Sets the underlying YOLOv5 model.
@@ -92,7 +90,7 @@ class Yolov5DetectionModel(DetectionModel):
 
     @property
     def category_names(self):
-        if self.yolov5_version_is_greater_than_6_2:
+        if check_package_minimum_version("yolov5", "6.2.0"):
             return list(self.model.names.values())
         else:
             return self.model.names
