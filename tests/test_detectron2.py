@@ -240,7 +240,7 @@ if "1.10.2" in torch_version:
             object_prediction_list = prediction_result.object_prediction_list
 
             # compare
-            self.assertEqual(len(object_prediction_list), 18)
+            self.assertEqual(len(object_prediction_list), 19)
             num_person = 0
             for object_prediction in object_prediction_list:
                 if object_prediction.category.name == "person":
