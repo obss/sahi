@@ -146,7 +146,7 @@ if "1.10.2" in torch_version:
                     raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
         def test_get_prediction_detectron2(self):
-            from sahi.model import Detectron2DetectionModel
+            from sahi.models.detectron2 import Detectron2DetectionModel
             from sahi.predict import get_prediction
             from sahi.utils.detectron2 import Detectron2TestConstants
 
@@ -195,7 +195,7 @@ if "1.10.2" in torch_version:
             self.assertEqual(num_car, 16)
 
         def test_get_sliced_prediction_detectron2(self):
-            from sahi.model import Detectron2DetectionModel
+            from sahi.models.detectron2 import Detectron2DetectionModel
             from sahi.predict import get_sliced_prediction
             from sahi.utils.detectron2 import Detectron2TestConstants
 
