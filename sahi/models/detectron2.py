@@ -37,7 +37,7 @@ class Detectron2DetectionModel(DetectionModel):
             cfg.MODEL.WEIGHTS = self.model_path
 
         # set model device
-        cfg.MODEL.DEVICE = self.device
+        cfg.MODEL.DEVICE = self.device.type
         # set input image size
         if self.image_size is not None:
             cfg.INPUT.MIN_SIZE_TEST = self.image_size

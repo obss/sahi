@@ -85,13 +85,13 @@ def check_package_minimum_version(package_name: str, minimum_version: str):
     return True
 
 
-def ensure_package_minimum_version(package_name: str, minimum_version: str):
+def ensure_package_minimum_version(package_name: str, minimum_version: str, verbose=False):
     """
     Raise error if module version is not compatible.
     """
     from packaging import version
 
-    _is_available, _version = get_package_info(package_name)
+    _is_available, _version = get_package_info(package_name, verbose=verbose)
     if _is_available:
         if _version == "unknown":
             logger.warning(
