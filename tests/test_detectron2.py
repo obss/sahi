@@ -14,7 +14,8 @@ IMAGE_SIZE = 320
 
 # note that detectron2 binaries are available only for linux
 
-if get_package_info("torch", verbose=False)[1] == "1.10.2":
+torch_version = get_package_info("torch", verbose=False)[1]
+if "1.10.2" in torch_version:
 
     class TestDetectron2DetectionModel(unittest.TestCase):
         def test_load_model(self):
