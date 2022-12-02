@@ -6,11 +6,27 @@ import unittest
 import numpy as np
 
 from sahi.utils.cv import read_image
-from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_yolox_tiny_model
+from sahi.utils.file import download_from_url
+from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
+
+
+MMDET_YOLOX_TINY_MODEL_URL = (
+    "https://huggingface.co/fcakyon/mmdet-yolox-tiny/resolve/main/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
+)
+MMDET_YOLOX_TINY_MODEL_PATH = "tests/data/models/mmdet-yolox-tiny/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
+MMDET_YOLOX_TINY_CONFIG_URL = "https://huggingface.co/fcakyon/mmdet-yolox-tiny/raw/main/yolox_tiny_8x8_300e_coco.py"
+MMDET_YOLOX_TINY_CONFIG_PATH = "tests/data/models/mmdet-yolox-tiny/yolox_tiny_8x8_300e_coco.py"
+IMAGE_PATH = "tests/data/small-vehicles1.jpeg"
+
+
+def download_mmdet_yolox_tiny_model():
+
+    download_from_url(MMDET_YOLOX_TINY_MODEL_URL, MMDET_YOLOX_TINY_MODEL_PATH)
+    download_from_url(MMDET_YOLOX_TINY_CONFIG_URL, MMDET_YOLOX_TINY_CONFIG_PATH)
 
 
 class TestMmdetDetectionModel(unittest.TestCase):
@@ -47,8 +63,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
-        image = read_image(image_path)
+        image = read_image(IMAGE_PATH)
 
         # perform inference
         mmdet_detection_model.perform_inference(image)
@@ -75,8 +90,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
         download_mmdet_yolox_tiny_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
-            config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
+            model_path=MMDET_YOLOX_TINY_MODEL_PATH,
+            config_path=MMDET_YOLOX_TINY_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -85,8 +100,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
-        image = read_image(image_path)
+
+        image = read_image(IMAGE_PATH)
 
         # perform inference
         mmdet_detection_model.perform_inference(image)
@@ -122,8 +137,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
-        image = read_image(image_path)
+        image = read_image(IMAGE_PATH)
 
         # perform inference
         mmdet_detection_model.perform_inference(image)
@@ -156,8 +170,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
         download_mmdet_yolox_tiny_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
-            config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
+            model_path=MMDET_YOLOX_TINY_MODEL_PATH,
+            config_path=MMDET_YOLOX_TINY_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -166,8 +180,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
-        image = read_image(image_path)
+        image = read_image(IMAGE_PATH)
 
         # perform inference
         mmdet_detection_model.perform_inference(image)
@@ -195,8 +208,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
         mmdet_detection_model = AutoDetectionModel.from_pretrained(
             model_type="mmdet",
-            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
-            config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
+            model_path=MMDET_YOLOX_TINY_MODEL_PATH,
+            config_path=MMDET_YOLOX_TINY_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             category_remapping=None,
             load_at_init=True,
@@ -204,8 +217,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         )
 
         # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
-        image = read_image(image_path)
+        image = read_image(IMAGE_PATH)
 
         # perform inference
         mmdet_detection_model.perform_inference(image)
