@@ -4,6 +4,8 @@
 
 import os
 
+import numpy as np
+
 from sahi.utils.import_utils import is_available
 
 if is_available("torch"):
@@ -28,7 +30,7 @@ def to_float_tensor(img):
     """
 
     img = img.transpose((2, 0, 1))
-    img = torch.from_numpy(img).float()
+    img = torch.from_numpy(np.array(img)).float()
     if img.max() > 1:
         img /= 255
 
