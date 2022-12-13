@@ -142,6 +142,7 @@ coco_dict, coco_path = slice_coco(
 
 ```python
 from sahi.utils.coco import Coco
+from sahi.utils.file import save_json
 
 # specify coco dataset path
 coco_path = "coco.json"
