@@ -1,7 +1,7 @@
 opencv-python>=4.2.0.32
 shapely>=1.8.0
 tqdm>=4.48.2
-pillow>=8.2.0
+pillow==6.2.2
 pybboxes==0.1.5; python_version < '3.8'
 pybboxes==0.1.5; python_version >= '3.8'
 pyyaml
