@@ -10,7 +10,7 @@ import re
 import urllib.request
 import zipfile
 from pathlib import Path
-
+from typing import Optional
 import numpy as np
 
 
@@ -27,7 +27,7 @@ def unzip(file_path: str, dest_dir: str):
         zf.extractall(dest_dir)
 
 
-def save_json(data, save_path):
+def save_json(data, save_path, indent: Optional[int] = 4):
     """
     Saves json formatted data (given as "data") as save_path
     Example inputs:
@@ -39,7 +39,7 @@ def save_json(data, save_path):
 
     # export as json
     with open(save_path, "w", encoding="utf-8") as outfile:
-        json.dump(data, outfile, separators=(",", ":"), cls=NumpyEncoder)
+        json.dump(data, outfile, separators=(",", ":"), cls=NumpyEncoder, indent=indent)
 
 
 # type check when save json files
