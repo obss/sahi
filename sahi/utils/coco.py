@@ -1535,7 +1535,7 @@ def export_yolov5_images_and_txts_from_coco_object(output_dir, coco, ignore_nega
 
 
 def export_single_yolov5_image_and_corresponding_txt(
-    coco_image, coco_image_dir, output_dir, ignore_negative_samples=False
+    coco_image, coco_image_dir, output_dir, ignore_negative_samples=False, shutil_copy=False
 ):
     """
     Generates yolov5 formatted image symlink and annotation txt file.
@@ -1578,7 +1578,12 @@ def export_single_yolov5_image_and_corresponding_txt(
             yolo_image_path = str(parent_dir / (filename + filesuffix))
             name_increment += 1
         # create a symbolic link pointing to coco_image_path named yolo_image_path
-        os.symlink(coco_image_path, yolo_image_path)
+        if shutil_copy:
+            import shutil
+
+            shutil.copy(coco_image_path, yolo_image_path)
+        else:
+            os.symlink(coco_image_path, yolo_image_path)
         # calculate annotation normalization ratios
         width = coco_image.width
         height = coco_image.height
