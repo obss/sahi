@@ -28,12 +28,13 @@ def unzip(file_path: str, dest_dir: str):
         zf.extractall(dest_dir)
 
 
-def save_json(data, save_path, indent: Optional[int] = 4):
+def save_json(data, save_path, indent: Optional[int] = None):
     """
     Saves json formatted data (given as "data") as save_path
     Example inputs:
         data: {"image_id": 5}
         save_path: "dirname/coco.json"
+        indent: Train json files with indent=None, val json files with indent=4
     """
     # create dir if not present
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
