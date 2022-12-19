@@ -191,7 +191,7 @@ class TestSlicing(unittest.TestCase):
         self.assertEqual(type(shifted_bboxes), torch.Tensor)
 
     def test_shift_masks(self):
-        masks = np.zeros((3, 30, 30), dtype=np.bool)
+        masks = np.zeros((3, 30, 30), dtype=bool)
         shift_x = 10
         shift_y = 20
         full_shape = [720, 1280]
