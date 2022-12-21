@@ -101,7 +101,7 @@ jobs:
         run: >
           pip install pycocotools==2.0.6
 
-      - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
+      - name: Unittest for SAHI+YOLOV5/MMDET/HuggingFace on all platforms
         run: |
           python -m unittest
 
