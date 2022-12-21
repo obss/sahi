@@ -94,8 +94,9 @@ jobs:
         run: >
           pip install yolov5==6.2.3
 
-      - name: Install Detectron2(0.6)
+      - name: Install Detectron2(0.6) https://github.com/facebookresearch/detectron2/issues/4715
         run: >
+          pip install 'git+https://github.com/facebookresearch/fvcore.git@d39b53de2c1e363e2ceb27d321d403b4bdb2b7a7'
           python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch1.10/index.html
 
       - name: Install Transformers(4.24.0)
