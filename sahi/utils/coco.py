@@ -2340,14 +2340,14 @@ def export_coco_as_yolov5(
 
     # create yolov5 data yaml
     data = {
-        "train": str(train_dir),
-        "val": str(val_dir),
+        "train": str(train_dir).replace("\\", "/"),
+        "val": str(val_dir).replace("\\", "/"),
         "nc": len(train_coco.category_mapping),
         "names": list(train_coco.category_mapping.values()),
     }
     yaml_path = str(Path(output_dir) / "data.yml")
     with open(yaml_path, "w") as outfile:
-        yaml.dump(data, outfile, default_flow_style=None)
+        yaml.dump(data, outfile, default_flow_style=False)
 
     return yaml_path
 
