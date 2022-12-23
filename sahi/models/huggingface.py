@@ -16,8 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class HuggingfaceDetectionModel(DetectionModel):
-    import torch
-
     def __init__(
         self,
         model_path: Optional[str] = None,
