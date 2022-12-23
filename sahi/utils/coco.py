@@ -2340,8 +2340,8 @@ def export_coco_as_yolov5(
 
     # create yolov5 data yaml
     data = {
-        "train": str(train_dir).replace('\\', '/'),
-        "val": str(val_dir).replace('\\', '/'),
+        "train": str(train_dir).replace("\\", "/"),
+        "val": str(val_dir).replace("\\", "/"),
         "nc": len(train_coco.category_mapping),
         "names": list(train_coco.category_mapping.values()),
     }
