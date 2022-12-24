@@ -39,9 +39,7 @@ if sys.version_info >= (3, 7):
             huggingface_model = AutoModelForObjectDetection.from_pretrained(
                 HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH
             )
-            huggingface_processor = AutoProcessor.from_pretrained(
-                HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH
-            )
+            huggingface_processor = AutoProcessor.from_pretrained(HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH)
 
             huggingface_detection_model = HuggingfaceDetectionModel(
                 model=huggingface_model,
