@@ -120,10 +120,16 @@ class HuggingfaceDetectionModel(DetectionModel):
             self._image_shapes = [image.shape]
         self._original_predictions = outputs
 
-    def get_valid_predictions(
-        self, logits: torch.Tensor, pred_boxes: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        import torch
+    def get_valid_predictions(self, logits, pred_boxes) -> Tuple:
+        """
+        Args:
+            logits: torch.Tensor
+            pred_boxes: torch.Tensor
+        Returns:
+            scores: torch.Tensor
+            cat_ids: torch.Tensor
+            boxes: torch.Tensor
+        """
 
         probs = logits.softmax(-1)
         scores = probs.max(-1).values
