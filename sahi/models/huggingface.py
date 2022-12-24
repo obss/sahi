@@ -130,6 +130,7 @@ class HuggingfaceDetectionModel(DetectionModel):
             cat_ids: torch.Tensor
             boxes: torch.Tensor
         """
+        import torch
 
         probs = logits.softmax(-1)
         scores = probs.max(-1).values
