@@ -76,6 +76,7 @@ jobs:
           python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch1.10/index.html
 
       - name: Install Transformers(4.25.1)
+        run: >
           pip install transformers==4.25.1
 
       - name: Install pycocotools(2.0.6)
