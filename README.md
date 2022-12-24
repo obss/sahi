@@ -112,7 +112,7 @@ conda install -c conda-forge shapely
 - Install your desired version of pytorch and torchvision (cuda 11.3 for detectron2, cuda 11.7 for rest):
 
 ```console
-conda install pytorch=1.10.2 torchvision=0.9.1 cudatoolkit=11.3 -c pytorch
+conda install pytorch=1.10.2 torchvision=0.11.3 cudatoolkit=11.3 -c pytorch
 ```
 
 ```console
