@@ -72,30 +72,30 @@ jobs:
         run: >
           pip install -r requirements.txt
 
-      - name: Install PyTorch(1.12.1) and TorchVision(0.13.1) on Linux and Windows
+      - name: Install PyTorch(1.13.1) and TorchVision(0.14.1) on Linux and Windows
         if: >
           matrix.operating-system == 'ubuntu-latest' ||
           matrix.operating-system == 'windows-latest'
         run: >
-          pip install torch==1.12.1+cpu torchvision==0.13.1+cpu
+          pip install torch==1.13.1+cpu torchvision==0.14.1+cpu
           -f https://download.pytorch.org/whl/torch_stable.html
 
       - name: Install PyTorch on MacOS
         if: matrix.operating-system == 'macos-latest'
-        run: pip install torch==1.12.1 torchvision==0.13.1
+        run: pip install torch==1.13.1 torchvision==0.14.1
 
       - name: Install MMDetection(2.26.0) with MMCV(1.7.0)
         run: >
-          pip install mmcv-full==1.7.0 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.12.0/index.html
+          pip install mmcv-full==1.7.0 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.13.0/index.html
           pip install mmdet==2.26.0
 
-      - name: Install YOLOv5(7.0.3)
+      - name: Install YOLOv5(7.0.4)
         run: >
-          pip install yolov5==7.0.3
+          pip install yolov5==7.0.4
 
-      - name: Install Transformers(4.24.0)
+      - name: Install Transformers(4.25.1)
         run: >
-          pip install transformers==4.24.0
+          pip install transformers==4.25.1
 
       - name: Install pycocotools(2.0.6)
         run: >

@@ -109,22 +109,26 @@ pip install sahi
 conda install -c conda-forge shapely
 ```
 
-- Install your desired version of pytorch and torchvision:
+- Install your desired version of pytorch and torchvision (cuda 11.3 for detectron2, cuda 11.7 for rest):
 
 ```console
-conda install pytorch=1.12.1 torchvision=0.13.1 cudatoolkit=11.3 -c pytorch
+conda install pytorch=1.10.2 torchvision=0.11.3 cudatoolkit=11.3 -c pytorch
+```
+
+```console
+conda install pytorch=1.13.1 torchvision=0.14.1 pytorch-cuda=11.7 -c pytorch -c nvidia
 ```
   
 - Install your desired detection framework (yolov5):
 
 ```console
-pip install yolov5==6.2.3
+pip install yolov5==7.0.4
 ```
 
 - Install your desired detection framework (mmdet):
 
 ```console
-pip install mmcv-full==1.7.0 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
+pip install mmcv-full==1.7.0 -f https://download.openmmlab.com/mmcv/dist/cu117/torch1.13.0/index.html
 ```
 
 ```console
