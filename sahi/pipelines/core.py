@@ -341,20 +341,6 @@ class PredictionResult:
 
         return self
 
-    def register_batch_info(
-        self,
-        image_id: int,
-        offset_amount: List[int],
-        full_shape: List[int],
-        filepath: str,
-        image: Union[np.ndarray, str, None] = None,
-    ):
-        self.image_id = image_id
-        self.offset_amount = offset_amount
-        self.full_shape = full_shape
-        self.image = image
-        self.filepath = filepath
-
     def export_visuals(
         self,
         export_dir: str,

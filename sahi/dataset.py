@@ -162,12 +162,21 @@ class ImageDataset(IterableDataset):
         image = np.array(pil_image) if self.load_images_as_numpy else self.image
         filepath = self.image if isinstance(self.image, str) else "image.png"
 
+        # calculate number of samples for this image
+        num_image_samples = 0
+        if self.include_original:
+            num_image_samples += 1
+        if self.include_slices:
+            sliced_image_result = self._slice_image(image)
+            num_image_samples += len(sliced_image_result)
+
         if self.include_original:
             image_width, image_height = pil_image.size
             self._samples.append(
                 {
                     "image": image,
                     "image_id": self._current_image_id,
+                    "num_image_samples": num_image_samples,
                     "offset_amount": [0, 0],
                     "slice_bbox": None,
                     "full_shape": [image_height, image_width],
@@ -176,12 +185,12 @@ class ImageDataset(IterableDataset):
             )
 
         if self.include_slices:
-            sliced_image_result = self._slice_image(image)
             for sliced_image in sliced_image_result.sliced_images:
                 self._samples.append(
                     {
                         "image": sliced_image.image,
                         "image_id": self._current_image_id,
+                        "num_image_samples": num_image_samples,
                         "offset_amount": sliced_image.starting_pixel,
                         "slice_bbox": None,
                         "full_shape": [
@@ -199,12 +208,20 @@ class ImageDataset(IterableDataset):
             pil_image = read_image_as_pil(image_path)
             image_width, image_height = pil_image.size
 
+            # calculate number of samples for this image
+            num_image_samples = 0
             if self.include_original:
+                num_image_samples += 1
+            if self.include_slices:
+                slice_bboxes = self._get_slice_bboxes(image_height=image_height, image_width=image_width)
+                num_image_samples += len(slice_bboxes)
 
+            if self.include_original:
                 self._samples.append(
                     {
                         "image": None,
                         "image_id": self._current_image_id,
+                        "num_image_samples": num_image_samples,
                         "offset_amount": [0, 0],
                         "slice_bbox": None,
                         "full_shape": [image_height, image_width],
@@ -213,12 +230,12 @@ class ImageDataset(IterableDataset):
                 )
 
             if self.include_slices:
-                slice_bboxes = self._get_slice_bboxes(image_height=image_height, image_width=image_width)
                 for slice_bbox in slice_bboxes:
                     self._samples.append(
                         {
                             "image": None,
                             "image_id": self._current_image_id,
+                            "num_image_samples": num_image_samples,
                             "offset_amount": [slice_bbox[0], slice_bbox[1]],
                             "slice_bbox": slice_bbox,
                             "full_shape": [image_height, image_width],

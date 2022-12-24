@@ -56,7 +56,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         self,
         model_path: Optional[str] = None,
         model: Optional[Any] = None,
-        feature_extractor: Optional[Any] = None,
+        processor: Optional[Any] = None,
         config_path: Optional[str] = None,
         device: Optional[str] = None,
         mask_threshold: float = 0.5,
@@ -66,7 +66,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         image_size: int = None,
     ):
 
-        self._feature_extractor = feature_extractor
+        self._processor = processor
         self._image_shapes = []
         super().__init__(
             model_path,
@@ -85,8 +85,8 @@ class HuggingfaceDetectionModel(DetectionModel):
         ensure_package_minimum_version("transformers", "4.24.0")
 
     @property
-    def feature_extractor(self):
-        return self._feature_extractor
+    def processor(self):
+        return self._processor
 
     @property
     def num_categories(self) -> int:
@@ -96,32 +96,28 @@ class HuggingfaceDetectionModel(DetectionModel):
         return self.model.config.num_labels
 
     def load_model(self):
-
-        from transformers import AutoFeatureExtractor, AutoModelForObjectDetection
+        from transformers import AutoModelForObjectDetection, AutoProcessor
 
         model = AutoModelForObjectDetection.from_pretrained(self.model_path)
         if self.image_size is not None:
-            feature_extractor = AutoFeatureExtractor.from_pretrained(
-                self.model_path, size=self.image_size, do_resize=True
+            processor = AutoProcessor.from_pretrained(
+                self.model_path, size={"shortest_edge": self.image_size, "longest_edge": None}, do_resize=True
             )
         else:
-            feature_extractor = AutoFeatureExtractor.from_pretrained(self.model_path)
-        self.set_model(model, feature_extractor)
+            processor = AutoProcessor.from_pretrained(self.model_path)
+        self.set_model(model, processor)
 
-    def set_model(self, model: Any, feature_extractor: Any = None):
-        feature_extractor = feature_extractor or self.feature_extractor
-        if feature_extractor is None:
-            raise ValueError(f"'feature_extractor' is required to be set, got {feature_extractor}.")
-        elif (
-            "ObjectDetection" not in model.__class__.__name__
-            or "FeatureExtractor" not in feature_extractor.__class__.__name__
-        ):
+    def set_model(self, model: Any, processor: Any = None):
+        processor = processor or self.processor
+        if processor is None:
+            raise ValueError(f"'processor' is required to be set, got {processor}.")
+        elif "ObjectDetection" not in model.__class__.__name__ or "ImageProcessor" not in processor.__class__.__name__:
             raise ValueError(
-                "Given 'model' is not an ObjectDetectionModel or 'feature_extractor' is not a valid FeatureExtractor."
+                "Given 'model' is not an ObjectDetectionModel or 'processor' is not a valid ImageProcessor."
             )
         self.model = model
         self.model.to(self.device)
-        self._feature_extractor = feature_extractor
+        self._processor = processor
         self.category_mapping = self.model.config.id2label
 
     def _get_valid_predictions(
@@ -172,7 +168,7 @@ class HuggingfaceDetectionModel(DetectionModel):
 
         # peform forward pass
         with torch.no_grad():
-            inputs = self.feature_extractor(images=copy.deepcopy(images), return_tensors="pt")
+            inputs = self.processor(images=copy.deepcopy(images), return_tensors="pt")
             inputs["pixel_values"] = inputs.pixel_values.to(self.device)
             if hasattr(inputs, "pixel_mask"):
                 inputs["pixel_mask"] = inputs.pixel_mask.to(self.device)
@@ -196,7 +192,7 @@ class HuggingfaceDetectionModel(DetectionModel):
             )
             prediction_result = PredictionResult(
                 bboxes=bboxes,
-                label_id_to_name=self.label_id_to_name,
+                label_id_to_name=self.model.config.id2label,
             )
             prediction_results.append(prediction_result)
 
