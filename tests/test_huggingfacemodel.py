@@ -32,20 +32,20 @@ if sys.version_info >= (3, 7):
             self.assertNotEqual(huggingface_detection_model.model, None)
 
         def test_set_model(self):
-            from transformers import AutoFeatureExtractor, AutoModelForObjectDetection
+            from transformers import AutoModelForObjectDetection, AutoProcessor
 
             from sahi.models.huggingface import HuggingfaceDetectionModel
 
             huggingface_model = AutoModelForObjectDetection.from_pretrained(
                 HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH
             )
-            huggingface_feature_extractor = AutoFeatureExtractor.from_pretrained(
+            huggingface_processor = AutoProcessor.from_pretrained(
                 HuggingfaceTestConstants.YOLOS_TINY_MODEL_PATH
             )
 
             huggingface_detection_model = HuggingfaceDetectionModel(
                 model=huggingface_model,
-                feature_extractor=huggingface_feature_extractor,
+                processor=huggingface_processor,
                 confidence_threshold=CONFIDENCE_THRESHOLD,
                 device=MODEL_DEVICE,
                 category_remapping=None,
