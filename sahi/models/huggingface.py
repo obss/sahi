@@ -16,8 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class HuggingfaceDetectionModel(DetectionModel):
-    import torch
-
     def __init__(
         self,
         model_path: Optional[str] = None,
@@ -122,9 +120,16 @@ class HuggingfaceDetectionModel(DetectionModel):
             self._image_shapes = [image.shape]
         self._original_predictions = outputs
 
-    def get_valid_predictions(
-        self, logits: torch.Tensor, pred_boxes: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def get_valid_predictions(self, logits, pred_boxes) -> Tuple:
+        """
+        Args:
+            logits: torch.Tensor
+            pred_boxes: torch.Tensor
+        Returns:
+            scores: torch.Tensor
+            cat_ids: torch.Tensor
+            boxes: torch.Tensor
+        """
         import torch
 
         probs = logits.softmax(-1)
