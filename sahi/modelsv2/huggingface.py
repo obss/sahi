@@ -82,7 +82,7 @@ class HuggingfaceDetectionModel(DetectionModel):
 
     def check_dependencies(self):
         check_requirements(["torch", "transformers"])
-        ensure_package_minimum_version("transformers", "4.24.0")
+        ensure_package_minimum_version("transformers", "4.25.1")
 
     @property
     def processor(self):

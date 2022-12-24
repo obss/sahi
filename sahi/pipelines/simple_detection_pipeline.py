@@ -1,6 +1,9 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2022.
 
+import time
+from collections import defaultdict
+from multiprocessing import Process, Queue
 from typing import List, Union
 
 import numpy as np
@@ -8,10 +11,77 @@ from PIL import Image
 from torch.utils.data import DataLoader
 
 from sahi.dataset import ImageDataset, collate_fn
+from sahi.models.mmdet import MmdetDetectionModel  # todo: update to sahi.modelsv2
 from sahi.modelsv2.base import DetectionModel
-from sahi.modelsv2.mmdet import MmdetDetectionModel
 from sahi.pipelines.core import PredictionResult
 from sahi.pipelines.merge import merge_prediction_results
+
+
+def merge_prediction_results(merge_queue, result_queue, max_counter):
+    image_id_to_predictions_results = defaultdict(list)
+    prediction_results = []
+    object_predictions = []
+    counter = 0
+    while counter < (max_counter - 1):
+        print(counter, max_counter - 1)
+        try:
+            # Try to get next element from queue
+            args = merge_queue.get()
+            new_image_id = args["image_id"]
+            sliced_object_predictions = args["object_predictions_per_image"]
+            image_path = args["image_path"]
+            confidence_threshold = args["confidence_threshold"]
+            postprocess = args["postprocess"]
+
+            if new_image_id != image_id:
+                # postprocess matching predictions
+                if postprocess is not None:
+                    object_predictions = postprocess(object_predictions)
+
+                prediction_result = PredictionResult(
+                    image=image_path,
+                    object_predictions=object_predictions,
+                    durations_in_seconds=None,
+                )
+                prediction_results.append(prediction_result)
+                object_predictions = []
+            image_id = new_image_id
+
+            # filter out predictions with lower score
+            sliced_object_predictions = [
+                object_prediction
+                for object_prediction in sliced_object_predictions
+                if object_prediction.score.value > confidence_threshold
+            ]
+
+            # append slice predictions
+            object_predictions.extend(sliced_object_predictions)
+            print("len_object_predictions: ", len(object_predictions))
+            print("len_prediction_results: ", len(prediction_results))
+
+            counter += 1
+        except:
+            # Wait if queue is empty
+            time.sleep(0.01)  # queue is either empty or no update
+
+    result_queue.put(prediction_results)
+
+
+def worker_init_fn(_):
+    """
+    This function is used to initialize the worker processes in the DataLoader.
+    """
+    import torch
+
+    worker_info = torch.utils.data.get_worker_info()
+
+    dataset = worker_info.dataset
+    worker_id = worker_info.id
+
+    data_slice = slice(worker_id, len(dataset._samples) + 1, worker_info.num_workers)
+
+    dataset._samples = dataset._samples[data_slice]
+    return None
 
 
 def simple_detection_pipeline(
@@ -43,25 +113,40 @@ def simple_detection_pipeline(
         target_image_format=target_image_format,
     )
 
-    # TODO: add support for num_workers > 0 using worker_init_fn https://medium.com/speechmatics/how-to-build-a-streaming-dataloader-with-pytorch-a66dd891d9dd
-
     dataloader = DataLoader(
-        image_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, collate_fn=collate_fn
+        image_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        collate_fn=collate_fn,
+        worker_init_fn=worker_init_fn,
     )
+
+    merge_prediction_results_queue = Queue()
+    result_queue = Queue()
+    p = Process(
+        target=merge_prediction_results, args=(merge_prediction_results_queue, result_queue, len(image_dataset))
+    )
+    p.start()
 
     prediction_results: List[PredictionResult] = []
 
     for batch in dataloader:
         batch_prediction_results: List[PredictionResult] = detection_model.predict(batch["images"])
         for ind, prediction_result in enumerate(batch_prediction_results):
-            prediction_result.register_batch_info(
-                image_id=batch["image_ids"][ind],
-                offset_amount=batch["offset_amounts"][ind],
-                full_shape=batch["full_shapes"][ind],
-                image=batch["images"][ind] if image else None,
-                filepath=batch["filepaths"][ind],
-            )
-        prediction_results.extend(batch_prediction_results)
+            prediction_result.image_id = batch["image_ids"][ind]
+            prediction_result.offset_amount = batch["offset_amounts"][ind]
+            prediction_result.full_shape = batch["full_shapes"][ind]
+            prediction_result.filepath = batch["filepaths"][ind]
+            if include_slices:
+                merge_prediction_results_queue.put(
+                    {
+                        "image_id": batch["image_ids"][ind],
+                        "offset_amount": batch["offset_amounts"][ind],
+                        "full_shape": batch["full_shapes"][ind],
+                        "filepath": batch["filepaths"][ind],
+                    }
+                )
 
     if include_slices:
         prediction_results = merge_prediction_results(
@@ -97,7 +182,7 @@ if __name__ == "__main__":
         postprocess_type="batched_nms",
         postprocess_iou_threshold=0.4,
         batch_size=4,
-        num_workers=0,
+        num_workers=2,
         verbose=1,
     )
 
