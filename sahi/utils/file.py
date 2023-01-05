@@ -236,3 +236,10 @@ def download_from_url(from_url: str, to_path: str):
             from_url,
             to_path,
         )
+
+
+def is_colab():
+    import sys
+
+    # Is environment a Google Colab instance?
+    return "google.colab" in sys.modules
