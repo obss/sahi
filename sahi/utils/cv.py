@@ -344,11 +344,12 @@ def visualize_prediction(
 
     # add masks to image if present
     if masks is not None:
-        # deepcopy mask so that original is not altered
-        mask = copy.deepcopy(masks[i])
-        # draw mask
-        rgb_mask = apply_color_mask(np.squeeze(mask), color)
-        image = cv2.addWeighted(image, 1, rgb_mask, 0.6, 0)
+        for mask in masks:
+            # deepcopy mask so that original is not altered
+            mask = copy.deepcopy(mask)
+            # draw mask
+            rgb_mask = apply_color_mask(np.squeeze(mask), color)
+            image = cv2.addWeighted(image, 1, rgb_mask, 0.6, 0)
 
     # add bboxes to image if present
     for i in range(len(boxes)):
