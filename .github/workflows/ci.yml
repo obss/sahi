@@ -89,9 +89,9 @@ jobs:
           pip install mmcv-full==1.7.0 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.13.0/index.html
           pip install mmdet==2.26.0
 
-      - name: Install YOLOv5(7.0.4)
+      - name: Install YOLOv5(7.0.8)
         run: >
-          pip install yolov5==7.0.4
+          pip install yolov5==7.0.8
 
       - name: Install Transformers(4.25.1)
         run: >
