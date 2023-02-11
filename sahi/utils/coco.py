@@ -994,6 +994,8 @@ class Coco:
         remapping_dict: Optional[Dict] = None,
         ignore_negative_samples: bool = False,
         clip_bboxes_to_img_dims: bool = False,
+        use_threads: bool = False,
+        num_threads: int = 10,
     ):
         """
         Creates coco object from COCO formatted dict or COCO dataset file path.
@@ -1010,6 +1012,10 @@ class Coco:
                 If True ignores images without annotations in all operations.
             clip_bboxes_to_img_dims: bool = False
                 Limits bounding boxes to image dimensions.
+            use_threads: bool = False
+                Use threads when processing the json image list, defaults to False
+            num_threads: int = 10
+                Slice the image list to given number of chunks, defaults to 10
 
         Properties:
             images: list of CocoImage
@@ -1077,22 +1083,51 @@ class Coco:
                     coco_image.add_annotation(coco_annotation)
                 _coco.add_image(coco_image)    
 
-        num_chunks = 10
-        chunk_size = dict_size / num_chunks
+        chunk_size = dict_size / num_threads
 
-        for i in range(num_chunks):
-            start = i* chunk_size
-            finish = start + chunk_size
-            if finish > dict_size:
-                finish = dict_size
-            t = Thread(target=fill_image_id_set, args=(start, finish, coco_dict["images"], 
-                                                       image_id_set, image_id_to_annotation_list, coco, lock))
-            t.start()
+        if use_threads is True:
+            for i in range(num_threads):
+                start = i* chunk_size
+                finish = start + chunk_size
+                if finish > dict_size:
+                    finish = dict_size
+                t = Thread(target=fill_image_id_set, args=(start, finish, coco_dict["images"], 
+                                                        image_id_set, image_id_to_annotation_list, coco, lock))
+                t.start()
 
-        main_thread = threading.currentThread()
-        for t in threading.enumerate():
-            if t is not main_thread:
-                t.join()
+            main_thread = threading.currentThread()
+            for t in threading.enumerate():
+                if t is not main_thread:
+                    t.join()
+
+        else:
+            for coco_image_dict in tqdm(coco_dict["images"], "Loading coco annotations"):
+                coco_image = CocoImage.from_coco_image_dict(coco_image_dict)
+                image_id = coco_image_dict["id"]
+                # https://github.com/obss/sahi/issues/98
+                if image_id in image_id_set:
+                    print(f"duplicate image_id: {image_id}, will be ignored.")
+                    continue
+                else:
+                    image_id_set.add(image_id)
+                # select annotations of the image
+                annotation_list = image_id_to_annotation_list[image_id]
+                for coco_annotation_dict in annotation_list:
+                    # apply category remapping if remapping_dict is provided
+                    if coco.remapping_dict is not None:
+                        # apply category remapping (id:id)
+                        category_id = coco.remapping_dict[coco_annotation_dict["category_id"]]
+                        # update category id
+                        coco_annotation_dict["category_id"] = category_id
+                    else:
+                        category_id = coco_annotation_dict["category_id"]
+                    # get category name (id:name)
+                    category_name = category_mapping[category_id]
+                    coco_annotation = CocoAnnotation.from_coco_annotation_dict(
+                        category_name=category_name, annotation_dict=coco_annotation_dict
+                    )
+                    coco_image.add_annotation(coco_annotation)
+                coco.add_image(coco_image)
 
         if clip_bboxes_to_img_dims:
             coco = coco.get_coco_with_clipped_bboxes()
