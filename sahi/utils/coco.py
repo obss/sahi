@@ -1062,7 +1062,7 @@ class Coco:
                     continue
                 else:
                     lock.acquire()
-                    imageidset.add(image_id)
+                    _image_id_set.add(image_id)
                     lock.release()
 
                 # select annotations of the image
