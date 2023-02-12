@@ -5,12 +5,12 @@
 import copy
 import logging
 import os
+import threading
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from multiprocessing import Pool
-import threading
-from threading import Thread, Lock
 from pathlib import Path
+from threading import Lock, Thread
 from typing import Dict, List, Optional, Set, Union
 
 import numpy as np
@@ -1051,8 +1051,9 @@ class Coco:
         lock = Lock()
 
         def fill_image_id_set(start, finish, image_list, _image_id_set, _image_id_to_annotation_list, _coco, lock):
-            for coco_image_dict in tqdm(image_list[start:finish], 
-                                        f"Loading coco annotations between {start} and {finish}"):
+            for coco_image_dict in tqdm(
+                image_list[start:finish], f"Loading coco annotations between {start} and {finish}"
+            ):
                 coco_image = CocoImage.from_coco_image_dict(coco_image_dict)
                 image_id = coco_image_dict["id"]
                 # https://github.com/obss/sahi/issues/98
@@ -1081,18 +1082,20 @@ class Coco:
                         category_name=category_name, annotation_dict=coco_annotation_dict
                     )
                     coco_image.add_annotation(coco_annotation)
-                _coco.add_image(coco_image)    
+                _coco.add_image(coco_image)
 
         chunk_size = dict_size / num_threads
 
         if use_threads is True:
             for i in range(num_threads):
-                start = i* chunk_size
+                start = i * chunk_size
                 finish = start + chunk_size
                 if finish > dict_size:
                     finish = dict_size
-                t = Thread(target=fill_image_id_set, args=(start, finish, coco_dict["images"], 
-                                                        image_id_set, image_id_to_annotation_list, coco, lock))
+                t = Thread(
+                    target=fill_image_id_set,
+                    args=(start, finish, coco_dict["images"], image_id_set, image_id_to_annotation_list, coco, lock),
+                )
                 t.start()
 
             main_thread = threading.currentThread()
