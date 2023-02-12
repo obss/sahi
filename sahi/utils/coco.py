@@ -1066,7 +1066,7 @@ class Coco:
                     lock.release()
 
                 # select annotations of the image
-                annotation_list = _img_id_to_annotation_list[image_id]
+                annotation_list = _image_id_to_annotation_list[image_id]
                 for coco_annotation_dict in annotation_list:
                     # apply category remapping if remapping_dict is provided
                     if _coco.remapping_dict is not None:
