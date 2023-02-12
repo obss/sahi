@@ -11,6 +11,7 @@ def main(
     project: str = "runs/coco2yolov5",
     name: str = "exp",
     seed: str = 1,
+    disable_symlink=False,
 ):
     """
     Args:
@@ -20,6 +21,7 @@ def main(
         project (str): save results to project/name
         name (str): save results to project/name"
         seed (int): fix the seed for reproducibility
+        disable_symlink (bool): required in google colab env
     """
 
     # increment run
@@ -34,6 +36,7 @@ def main(
         output_dir=str(save_dir),
         train_split_rate=train_split,
         numpy_seed=seed,
+        disable_symlink=disable_symlink,
     )
 
     print(f"COCO to YOLOv5 conversion results are successfully exported to {save_dir}")
