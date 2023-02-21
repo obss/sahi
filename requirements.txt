@@ -8,3 +8,4 @@ fire
 terminaltables
 requests
 click==8.0.4
+ultralytics
