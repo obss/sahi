@@ -1,9 +1,10 @@
 # OBSS SAHI Tool
 # Code written by AnNT, 2023.
 
-import numpy as np
 import logging
 from typing import Any, Dict, List, Optional
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +12,7 @@ from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.import_utils import check_requirements
+
 
 class Yolov8DetectionModel(DetectionModel):
     def check_dependencies(self) -> None:
@@ -48,7 +50,7 @@ class Yolov8DetectionModel(DetectionModel):
         if not self.category_mapping:
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
-    
+
     def perform_inference(self, image: np.ndarray):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
@@ -56,33 +58,35 @@ class Yolov8DetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-        
+
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
-        prediction_result = self.model(image, verbose = False)
-        prediction_result = [result.boxes.boxes[result.boxes.boxes[:, 4] >= self.confidence_threshold] for result in prediction_result]
+        prediction_result = self.model(image, verbose=False)
+        prediction_result = [
+            result.boxes.boxes[result.boxes.boxes[:, 4] >= self.confidence_threshold] for result in prediction_result
+        ]
 
         self._original_predictions = prediction_result
-    
+
     @property
     def category_names(self):
         return self.model.names.values()
-    
+
     @property
     def num_categories(self):
         """
         Returns number of categories
         """
         return len(self.model.names)
-    
+
     @property
     def has_mask(self):
         """
         Returns if model output contains segmentation mask
         """
         return False  # fix when yolov5 supports segmentation models
-    
+
     def _create_object_prediction_list_from_original_predictions(
         self,
         shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
