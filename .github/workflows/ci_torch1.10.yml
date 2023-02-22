@@ -110,7 +110,7 @@ jobs:
 
       - name: Install ultralytics
         run: >
-          pip install ultralytics
+          pip install ultralytics==8.0.4
 
       - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
         run: |
