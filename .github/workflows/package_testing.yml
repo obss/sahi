@@ -85,7 +85,7 @@ jobs:
 
       - name: Install ultralytics
         run: >
-          pip install ultralytics==8.0.4
+          pip install ultralytics==8.0.43
 
       - name: Install latest SAHI package
         run: >
