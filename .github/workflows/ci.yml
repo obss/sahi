@@ -101,6 +101,10 @@ jobs:
         run: >
           pip install pycocotools==2.0.6
 
+      - name: Install ultralytics
+        run: >
+          pip install ultralytics==8.0.43
+
       - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
         run: |
           python -m unittest
