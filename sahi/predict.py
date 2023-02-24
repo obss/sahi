@@ -310,7 +310,7 @@ def bbox_sort(a, b, thresh):
     return bbox_a[1] - bbox_b[1]
 
 
-def agg_prediction(thresh, result: PredictionResult):
+def agg_prediction(result: PredictionResult, thresh):
     coord_list = []
     res = result.to_coco_annotations()
     for ann in res:
