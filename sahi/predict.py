@@ -12,9 +12,10 @@ from sahi.utils.import_utils import is_available
 if is_available("torch"):
     import torch
 
+from functools import cmp_to_key
+
 import numpy as np
 from tqdm import tqdm
-from functools import cmp_to_key
 
 from sahi.auto_model import AutoDetectionModel
 from sahi.models.base import DetectionModel
@@ -291,14 +292,14 @@ def get_sliced_prediction(
 
 
 def bbox_sort(a, b, thresh):
-    '''
+    """
     a, b  - function receives two bounding bboxes
 
     thresh - the threshold takes into account how far two bounding bboxes differ in
     Y where thresh is the threshold we set for the
     minimum allowable difference in height between adjacent bboxes
     and sorts them by the X coordinate
-    '''
+    """
 
     bbox_a = a
     bbox_b = b
@@ -309,11 +310,11 @@ def bbox_sort(a, b, thresh):
     return bbox_a[1] - bbox_b[1]
 
 
-def agg_prediction(result: PredictionResult = None):
+def agg_prediction(thresh, result: PredictionResult):
     coord_list = []
     res = result.to_coco_annotations()
     for ann in res:
-        current_bbox = ann['bbox']
+        current_bbox = ann["bbox"]
         x = current_bbox[0]
         y = current_bbox[1]
         w = current_bbox[2]
@@ -322,9 +323,10 @@ def agg_prediction(result: PredictionResult = None):
         coord_list.append((x, y, w, h))
     cnts = sorted(coord_list, key=cmp_to_key(lambda a, b: bbox_sort(a, b, thresh)))
     for pred in range(len(res) - 1):
-        res[pred]['image_id'] = cnts.index(tuple(res[pred]['bbox']))
+        res[pred]["image_id"] = cnts.index(tuple(res[pred]["bbox"]))
 
     return res
+
 
 def predict(
     detection_model: DetectionModel = None,
