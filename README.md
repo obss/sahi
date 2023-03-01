@@ -44,7 +44,7 @@ Object detection and instance segmentation are by far the most important fields 
 
 ## <div align="center">Quick Start Examples</div>
 
-[📜 List of publications that cite SAHI (currently 30+)](https://scholar.google.com/scholar?hl=en&as_sdt=2005&sciodt=0,5&cites=14065474760484865747&scipsc=&q=&scisbd=1)
+[📜 List of publications that cite SAHI (currently 40+)](https://scholar.google.com/scholar?hl=en&as_sdt=2005&sciodt=0,5&cites=14065474760484865747&scipsc=&q=&scisbd=1)
 
 [🏆 List of competition winners that used SAHI](https://github.com/obss/sahi/discussions/688)
 
