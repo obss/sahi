@@ -40,10 +40,6 @@ class Yolov8DetectionModel(DetectionModel):
                 A YOLOv8 model
         """
 
-        # if model.__class__.__module__ not in ["yolov5.models.common", "models.common"]:
-        #     raise Exception(f"Not a yolov5 model: {type(model)}")
-
-        # model.conf = self.confidence_threshold
         self.model = model
 
         # set category_mapping
