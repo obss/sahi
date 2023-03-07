@@ -40,10 +40,6 @@ class Yolov8DetectionModel(DetectionModel):
                 A YOLOv8 model
         """
 
-        # if model.__class__.__module__ not in ["yolov5.models.common", "models.common"]:
-        #     raise Exception(f"Not a yolov5 model: {type(model)}")
-
-        # model.conf = self.confidence_threshold
         self.model = model
 
         # set category_mapping
@@ -62,7 +58,7 @@ class Yolov8DetectionModel(DetectionModel):
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
-        prediction_result = self.model(image, verbose=False)
+        prediction_result = self.model(image[:, :, ::-1], verbose=False)  # YOLOv8 expects numpy arrays to have BGR
         prediction_result = [
             result.boxes.boxes[result.boxes.boxes[:, 4] >= self.confidence_threshold] for result in prediction_result
         ]

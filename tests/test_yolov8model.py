@@ -10,7 +10,7 @@ from sahi.utils.yolov8 import Yolov8TestConstants, download_yolov8n_model, downl
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3
-IMAGE_SIZE = 320
+IMAGE_SIZE = 640
 
 
 class TestYolov8DetectionModel(unittest.TestCase):
@@ -30,7 +30,6 @@ class TestYolov8DetectionModel(unittest.TestCase):
         self.assertNotEqual(yolov8_detection_model.model, None)
 
     def test_set_model(self):
-
         from ultralytics import YOLO
 
         from sahi.models.yolov8 import Yolov8DetectionModel
@@ -109,6 +108,10 @@ class TestYolov8DetectionModel(unittest.TestCase):
         image_path = "tests/data/small-vehicles1.jpeg"
         image = read_image(image_path)
 
+        # get raw predictions for reference
+        original_results = yolov8_detection_model.model.predict(image_path, conf=CONFIDENCE_THRESHOLD)[0].boxes
+        num_results = len(original_results)
+
         # perform inference
         yolov8_detection_model.perform_inference(image)
 
@@ -117,21 +120,22 @@ class TestYolov8DetectionModel(unittest.TestCase):
         object_prediction_list = yolov8_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 11)
-        self.assertEqual(object_prediction_list[0].category.id, 2)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
-        desired_bbox = [448, 309, 49, 33]
-        predicted_bbox = object_prediction_list[0].bbox.to_xywh()
-        margin = 2
-        for ind, point in enumerate(predicted_bbox):
-            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
-        self.assertEqual(object_prediction_list[2].category.id, 2)
-        self.assertEqual(object_prediction_list[2].category.name, "car")
-        desired_bbox = [835, 307, 37, 37]
-        predicted_bbox = object_prediction_list[2].bbox.to_xywh()
-        for ind, point in enumerate(predicted_bbox):
-            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
+        self.assertEqual(len(object_prediction_list), num_results)
 
+        # loop through predictions and check that they are equal
+        for i in range(num_results):
+            desired_bbox = [
+                original_results[i].xyxy[0][0],
+                original_results[i].xyxy[0][1],
+                original_results[i].xywh[0][2],
+                original_results[i].xywh[0][3],
+            ]
+            desired_cat_id = int(original_results[i].cls[0])
+            self.assertEqual(object_prediction_list[i].category.id, desired_cat_id)
+            predicted_bbox = object_prediction_list[i].bbox.to_xywh()
+            margin = 2
+            for ind, point in enumerate(predicted_bbox):
+                assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
         for object_prediction in object_prediction_list:
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
