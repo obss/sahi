@@ -360,6 +360,8 @@ def predict(
     visual_bbox_thickness: int = None,
     visual_text_size: float = None,
     visual_text_thickness: int = None,
+    visual_hide_labels: bool = False,
+    visual_hide_conf: bool = False,
     visual_export_format: str = "png",
     verbose: int = 1,
     return_dict: bool = False,
@@ -437,6 +439,8 @@ def predict(
         visual_bbox_thickness: int
         visual_text_size: float
         visual_text_thickness: int
+        visual_hide_labels: bool
+        visual_hide_conf: bool
         visual_export_format: str
             Can be specified as 'jpg' or 'png'
         verbose: int
@@ -607,6 +611,8 @@ def predict(
                     text_size=visual_text_size,
                     text_th=visual_text_thickness,
                     color=color,
+                    hide_labels=visual_hide_labels,
+                    hide_conf=visual_hide_conf,
                     output_dir=None,
                     file_name=None,
                     export_format=None,
@@ -619,6 +625,8 @@ def predict(
                     text_size=visual_text_size,
                     text_th=visual_text_thickness,
                     color=color,
+                    hide_labels=visual_hide_labels,
+                    hide_conf=visual_hide_conf,
                     output_dir=output_dir,
                     file_name=filename_without_extension,
                     export_format=visual_export_format,
@@ -649,6 +657,8 @@ def predict(
                 rect_th=visual_bbox_thickness,
                 text_size=visual_text_size,
                 text_th=visual_text_thickness,
+                hide_labels=visual_hide_labels,
+                hide_conf=visual_hide_conf,
                 output_dir=output_dir if not source_is_video else None,
                 file_name=filename_without_extension,
                 export_format=visual_export_format,

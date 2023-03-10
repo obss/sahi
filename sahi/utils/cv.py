@@ -320,6 +320,7 @@ def visualize_prediction(
     text_size: float = None,
     text_th: float = None,
     color: tuple = None,
+    hide_labels: bool = False,
     output_dir: Optional[str] = None,
     file_name: Optional[str] = "prediction_visual",
 ):
@@ -370,22 +371,24 @@ def visualize_prediction(
             color=color,
             thickness=rect_th,
         )
-        # arange bounding box text location
-        label = f"{class_}"
-        w, h = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]  # label width, height
-        outside = p1[1] - h - 3 >= 0  # label fits outside box
-        p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
-        # add bounding box text
-        cv2.rectangle(image, p1, p2, color, -1, cv2.LINE_AA)  # filled
-        cv2.putText(
-            image,
-            label,
-            (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
-            0,
-            text_size,
-            (255, 255, 255),
-            thickness=text_th,
-        )
+
+        if not hide_labels:
+            # arange bounding box text location
+            label = f"{class_}"
+            w, h = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]  # label width, height
+            outside = p1[1] - h - 3 >= 0  # label fits outside box
+            p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
+            # add bounding box text
+            cv2.rectangle(image, p1, p2, color, -1, cv2.LINE_AA)  # filled
+            cv2.putText(
+                image,
+                label,
+                (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
+                0,
+                text_size,
+                (255, 255, 255),
+                thickness=text_th,
+            )
     if output_dir:
         # create output folder if not present
         Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -404,6 +407,8 @@ def visualize_object_predictions(
     text_size: float = None,
     text_th: float = None,
     color: tuple = None,
+    hide_labels: bool = False,
+    hide_conf: bool = False,
     output_dir: Optional[str] = None,
     file_name: str = "prediction_visual",
     export_format: str = "png",
@@ -417,6 +422,8 @@ def visualize_object_predictions(
         text_size: size of the category name over box
         text_th: text thickness
         color: annotation color in the form: (0, 255, 0)
+        hide_labels: hide labels
+        hide_conf: hide confidence
         output_dir: directory for resulting visualization to be exported
         file_name: exported file will be saved as: output_dir+file_name+".png"
         export_format: can be specified as 'jpg' or 'png'
@@ -473,22 +480,28 @@ def visualize_object_predictions(
             color=color,
             thickness=rect_th,
         )
-        # arange bounding box text location
-        label = f"{category_name} {score:.2f}"
-        w, h = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]  # label width, height
-        outside = p1[1] - h - 3 >= 0  # label fits outside box
-        p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
-        # add bounding box text
-        cv2.rectangle(image, p1, p2, color, -1, cv2.LINE_AA)  # filled
-        cv2.putText(
-            image,
-            label,
-            (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
-            0,
-            text_size,
-            (255, 255, 255),
-            thickness=text_th,
-        )
+
+        if not hide_labels:
+            # arange bounding box text location
+            label = f"{category_name}"
+
+            if not hide_conf:
+                label += f" {score:.2f}"
+
+            w, h = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]  # label width, height
+            outside = p1[1] - h - 3 >= 0  # label fits outside box
+            p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
+            # add bounding box text
+            cv2.rectangle(image, p1, p2, color, -1, cv2.LINE_AA)  # filled
+            cv2.putText(
+                image,
+                label,
+                (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
+                0,
+                text_size,
+                (255, 255, 255),
+                thickness=text_th,
+            )
 
     # export if output_dir is present
     if output_dir is not None:
