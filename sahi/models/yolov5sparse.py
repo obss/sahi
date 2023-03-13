@@ -27,8 +27,7 @@ class Yolov5SparseDetectionModel(DetectionModel):
         from deepsparse import Pipeline
 
         try:
-            model_stub = "zoo:cv/detection/yolov5-l/pytorch/ultralytics/coco/pruned-aggressive_98"
-            model = Pipeline.create(task="yolo", model_path=model_stub,)
+            model = Pipeline.create(task="yolo", model_path=self.model_path)
             self.set_model(model)
         except Exception as e:
             raise TypeError("Could not load the model: ", e)
