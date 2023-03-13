@@ -96,14 +96,14 @@ class Yolov5SparseDetectionModel(DetectionModel):
         object_prediction_list_per_image = []
         object_prediction_list = []
         # process predictions
-        for prediction in original_predictions.boxes:
-            x1 = prediction[0]
-            y1 = prediction[1]
-            x2 = prediction[2]
-            y2 = prediction[3]
+        for i, prediction in enumerate(original_predictions):
+            x1 = prediction.boxes[0]
+            y1 = prediction.boxes[1]
+            x2 = prediction.boxes[2]
+            y2 = prediction.boxes[3]
             bbox = [x1, y1, x2, y2]
-            score = prediction[4]
-            category_id = int(prediction[5])
+            score = 0
+            category_id = int(prediction.labels[i])
             category_name = self.category_mapping[str(category_id)]
 
             # fix negative box coords
