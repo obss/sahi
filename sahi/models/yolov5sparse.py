@@ -3,9 +3,9 @@
 
 import logging
 from typing import Any, Dict, List, Optional
-from decimal import Decimal
 
 import numpy as np
+from decimal import Decimal
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
@@ -15,7 +15,7 @@ from sahi.utils.import_utils import check_package_minimum_version, check_require
 logger = logging.getLogger(__name__)
 
 
-class Yolov5SparseDetectionModel(DetectionModel):
+class Yolov5DetectionModel(DetectionModel):
     def check_dependencies(self) -> None:
         check_requirements(["deepsparse", "sparseml"])
 
@@ -40,6 +40,7 @@ class Yolov5SparseDetectionModel(DetectionModel):
             model: Any
                 A YOLOv5 model
         """
+
         self.model = model
 
         # set category_mapping
@@ -59,10 +60,9 @@ class Yolov5SparseDetectionModel(DetectionModel):
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
         if self.image_size is not None:
-            prediction_result = self.model(images=[image], iou_thres=0.6, conf_thres=0.001)
-
+            prediction_result = self.model(image, size=self.image_size)
         else:
-            prediction_result = self.model(images=[image], iou_thres=0.6, conf_thres=0.001)
+            prediction_result = self.model(image)
 
         self._original_predictions = prediction_result
 
@@ -75,7 +75,10 @@ class Yolov5SparseDetectionModel(DetectionModel):
 
     @property
     def category_names(self):
-        return ['person','bicycle','car','motorcycle','airplane','bus','train','truck','boat','traffic light','fire hydrant','stop sign', 'parking meter','bench','bird','cat','dog','horse','sheep','cow','elephant','bear','zebra','giraffe' 'backpack','umbrella','handbag','tie','suitcase','frisbee','skis','snowboard','sports ball','kite','baseball bat','baseball glove','skateboard','surfboard','tennis racket','bottle','wine glass','cup','fork','knife','spoon','bowl','banana','apple','sandwich','orange','broccoli','carrot','hot dog','pizza','donut','cake','chair','couch','potted plant','bed','dining table','toilet','tv','laptop','mouse','remote','keyboard','cell phone','microwave','oven','toaster','sink','refrigerator','book','clock','vase','scissors','teddy bear','hair drier','toothbrush']
+        if check_package_minimum_version("yolov5", "6.2.0"):
+            return list(self.model.names.values())
+        else:
+            return self.model.names
 
     def _create_object_prediction_list_from_original_predictions(
         self,
@@ -94,39 +97,51 @@ class Yolov5SparseDetectionModel(DetectionModel):
                 List[[height, width],[height, width],...]
         """
         original_predictions = self._original_predictions
+
+        # compatilibty for sahi v0.8.15
+        shift_amount_list = fix_shift_amount_list(shift_amount_list)
+        full_shape_list = fix_full_shape_list(full_shape_list)
+
+        # handle all predictions
         object_prediction_list_per_image = []
-        object_prediction_list = []
-        # process predictions
-        for i, prediction in enumerate(original_predictions):
-            x1 = prediction.boxes[i][0]
-            y1 = prediction.boxes[i][1]
-            x2 = prediction.boxes[i][2]
-            y2 = prediction.boxes[i][3]
-            bbox = [x1, y1, x2, y2]
-            score = prediction.scores[i]
-            category_id = int(Decimal(prediction.labels[i]))
-            category_name = self.category_mapping[str(category_id)]
+        for image_ind, image_predictions_in_xyxy_format in enumerate(original_predictions.boxes):
+            shift_amount = shift_amount_list[image_ind]
+            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+            object_prediction_list = []
 
-            # fix negative box coords
-            bbox[0] = max(0, bbox[0])
-            bbox[1] = max(0, bbox[1])
-            bbox[2] = max(0, bbox[2])
-            bbox[3] = max(0, bbox[3])
+            # process predictions
+            for i, prediction in enumerate(original_predictions):
+                x1 = prediction.boxes[i][0]
+                y1 = prediction.boxes[i][1]
+                x2 = prediction.boxes[i][2]
+                y2 = prediction.boxes[i][3]
+                bbox = [x1, y1, x2, y2]
+                score = prediction.scores[i]
+                category_id = int(Decimal(prediction.labels[i]))
+                category_name = self.category_mapping[str(category_id)]
 
+                # fix out of image box coords
+                if full_shape is not None:
+                    bbox[0] = min(full_shape[1], bbox[0])
+                    bbox[1] = min(full_shape[0], bbox[1])
+                    bbox[2] = min(full_shape[1], bbox[2])
+                    bbox[3] = min(full_shape[0], bbox[3])
 
-            # ignore invalid predictions
-            if not (bbox[0] < bbox[2]) or not (bbox[1] < bbox[3]):
-                logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
-                continue
+                # ignore invalid predictions
+                if not (bbox[0] < bbox[2]) or not (bbox[1] < bbox[3]):
+                    logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
+                    continue
 
-            object_prediction = ObjectPrediction(
-                bbox=bbox,
-                category_id=category_id,
-                score=score,
-                bool_mask=None,
-                category_name=category_name,
-            )
-            object_prediction_list.append(object_prediction)
-        object_prediction_list_per_image.append(object_prediction_list)
+                object_prediction = ObjectPrediction(
+                    bbox=bbox,
+                    category_id=category_id,
+                    score=score,
+                    bool_mask=None,
+                    category_name=category_name,
+                    shift_amount=shift_amount,
+                    full_shape=full_shape,
+                )
+                object_prediction_list.append(object_prediction)
+            object_prediction_list_per_image.append(object_prediction_list)
 
-        self._object_prediction_list_per_image = object_prediction_list_per_image
+        self._object_prediction_list_per_image = 
