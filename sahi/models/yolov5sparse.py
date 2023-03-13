@@ -5,8 +5,6 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-from decimal import Decimal
-
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
@@ -76,25 +74,20 @@ class Yolov5SparseDetectionModel(DetectionModel):
     def category_names(self):
         return ['person','bicycle','car','motorcycle','airplane','bus','train','truck','boat','traffic light','fire hydrant','stop sign', 'parking meter','bench','bird','cat','dog','horse','sheep','cow','elephant','bear','zebra','giraffe' 'backpack','umbrella','handbag','tie','suitcase','frisbee','skis','snowboard','sports ball','kite','baseball bat','baseball glove','skateboard','surfboard','tennis racket','bottle','wine glass','cup','fork','knife','spoon','bowl','banana','apple','sandwich','orange','broccoli','carrot','hot dog','pizza','donut','cake','chair','couch','potted plant','bed','dining table','toilet','tv','laptop','mouse','remote','keyboard','cell phone','microwave','oven','toaster','sink','refrigerator','book','clock','vase','scissors','teddy bear','hair drier','toothbrush']
 
+    def _create_object_prediction_list_from_original_predictions(self, shift_amount_list: Optional[List[List[int]]] = [[0, 0]],full_shape_list: Optional[List[List[int]]] = None,):
+        """
+                self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+                self._object_prediction_list_per_image.
+                Args:
+                    shift_amount_list: list of list
+                        To shift the box and mask predictions from sliced image to full sized image, should
+                        be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
+                    full_shape_list: list of list
+                        Size of the full image after shifting, should be in the form of
+                        List[[height, width],[height, width],...]
+                """
 
-  def _create_object_prediction_list_from_original_predictions(
-        self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
-    ):
-        """
-        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list_per_image.
-        Args:
-            shift_amount_list: list of list
-                To shift the box and mask predictions from sliced image to full sized image, should
-                be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
-            full_shape_list: list of list
-                Size of the full image after shifting, should be in the form of
-                List[[height, width],[height, width],...]
-        """
         original_predictions = self._original_predictions
-
         # compatilibty for sahi v0.8.15
         shift_amount_list = fix_shift_amount_list(shift_amount_list)
         full_shape_list = fix_full_shape_list(full_shape_list)
@@ -136,4 +129,3 @@ class Yolov5SparseDetectionModel(DetectionModel):
             object_prediction_list_per_image.append(object_prediction_list)
 
         self._object_prediction_list_per_image = object_prediction_list_per_image
-
