@@ -98,10 +98,10 @@ class Yolov5SparseDetectionModel(DetectionModel):
         object_prediction_list = []
         # process predictions
         for i, prediction in enumerate(original_predictions):
-            x1 = prediction.boxes[0]
-            y1 = prediction.boxes[1]
-            x2 = prediction.boxes[2]
-            y2 = prediction.boxes[3]
+            x1 = prediction.boxes[i][0]
+            y1 = prediction.boxes[i][1]
+            x2 = prediction.boxes[i][2]
+            y2 = prediction.boxes[i][3]
             bbox = [x1, y1, x2, y2]
             score = 0
             category_id = int(Decimal(prediction.labels[i]))
