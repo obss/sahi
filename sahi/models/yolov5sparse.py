@@ -144,4 +144,4 @@ class Yolov5DetectionModel(DetectionModel):
                 object_prediction_list.append(object_prediction)
             object_prediction_list_per_image.append(object_prediction_list)
 
-        self._object_prediction_list_per_image = 
+        self._object_prediction_list_per_image = object_prediction_list_per_image
