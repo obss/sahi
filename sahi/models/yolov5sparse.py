@@ -103,7 +103,7 @@ class Yolov5SparseDetectionModel(DetectionModel):
             x2 = prediction.boxes[i][2]
             y2 = prediction.boxes[i][3]
             bbox = [x1, y1, x2, y2]
-            score = prediction.scores[i])
+            score = prediction.scores[i]
             category_id = int(Decimal(prediction.labels[i]))
             category_name = self.category_mapping[str(category_id)]
 
