@@ -61,7 +61,7 @@ class Yolov5SparseDetectionModel(DetectionModel):
             prediction_result = self.model(images=[image], iou_thres=0.6, conf_thres=0.001)
 
         else:
-            prediction_result = self.model(image)
+            prediction_result = self.model(images=[image], iou_thres=0.6, conf_thres=0.001)
 
         self._original_predictions = prediction_result
 
