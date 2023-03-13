@@ -77,7 +77,7 @@ class Yolov5SparseDetectionModel(DetectionModel):
         return ['person','bicycle','car','motorcycle','airplane','bus','train','truck','boat','traffic light','fire hydrant','stop sign', 'parking meter','bench','bird','cat','dog','horse','sheep','cow','elephant','bear','zebra','giraffe' 'backpack','umbrella','handbag','tie','suitcase','frisbee','skis','snowboard','sports ball','kite','baseball bat','baseball glove','skateboard','surfboard','tennis racket','bottle','wine glass','cup','fork','knife','spoon','bowl','banana','apple','sandwich','orange','broccoli','carrot','hot dog','pizza','donut','cake','chair','couch','potted plant','bed','dining table','toilet','tv','laptop','mouse','remote','keyboard','cell phone','microwave','oven','toaster','sink','refrigerator','book','clock','vase','scissors','teddy bear','hair drier','toothbrush']
 
 
-    def _create_object_prediction_list_from_original_predictions(
+  def _create_object_prediction_list_from_original_predictions(
         self,
         shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
         full_shape_list: Optional[List[List[int]]] = None,
@@ -101,20 +101,14 @@ class Yolov5SparseDetectionModel(DetectionModel):
 
         # handle all predictions
         object_prediction_list_per_image = []
-        for image_ind, image_predictions_in_xyxy_format in enumerate(original_predictions.boxes):
+        for image_ind, (prediction_bboxes, prediction_scores, prediction_categories) in enumerate(original_predictions):
             shift_amount = shift_amount_list[image_ind]
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
             object_prediction_list = []
 
             # process predictions
-            for i, prediction in enumerate(original_predictions):
-                x1 = prediction.boxes[i][0]
-                y1 = prediction.boxes[i][1]
-                x2 = prediction.boxes[i][2]
-                y2 = prediction.boxes[i][3]
-                bbox = [x1, y1, x2, y2]
-                score = prediction.scores[i]
-                category_id = int(Decimal(prediction.labels[i]))
+            for bbox, score, category_id in zip(prediction_bboxes, prediction_scores, prediction_categories):
+                category_id = int(float(category_id))
                 category_name = self.category_mapping[str(category_id)]
 
                 # fix out of image box coords
@@ -142,3 +136,4 @@ class Yolov5SparseDetectionModel(DetectionModel):
             object_prediction_list_per_image.append(object_prediction_list)
 
         self._object_prediction_list_per_image = object_prediction_list_per_image
+
