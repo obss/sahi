@@ -107,11 +107,11 @@ class Yolov5SparseDetectionModel(DetectionModel):
             category_id = int(Decimal(prediction.labels[i]))
             category_name = self.category_mapping[str(category_id)]
 
-            # fix negative box coords
-            bbox[0] = max(0, bbox[0])
-            bbox[1] = max(0, bbox[1])
-            bbox[2] = max(0, bbox[2])
-            bbox[3] = max(0, bbox[3])
+#             # fix negative box coords
+#             bbox[0] = max(0, bbox[0])
+#             bbox[1] = max(0, bbox[1])
+#             bbox[2] = max(0, bbox[2])
+#             bbox[3] = max(0, bbox[3])
 
 
             # ignore invalid predictions
