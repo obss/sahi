@@ -15,7 +15,7 @@ from sahi.utils.import_utils import check_package_minimum_version, check_require
 logger = logging.getLogger(__name__)
 
 
-class Yolov5DetectionModel(DetectionModel):
+class Yolov5SparseDetectionModel(DetectionModel):
     def check_dependencies(self) -> None:
         check_requirements(["deepsparse", "sparseml"])
 
