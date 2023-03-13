@@ -59,9 +59,9 @@ class Yolov5SparseDetectionModel(DetectionModel):
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
         if self.image_size is not None:
-            prediction_result = self.model(images=[image], iou_thres=0.6, conf_thres=0.001)
+            prediction_result = self.model(images=[image], iou_thres=0.5, conf_thres=self.confidence_threshold)
         else:
-            prediction_result = self.model(images=[image], iou_thres=0.6, conf_thres=0.001)
+            prediction_result = self.model(images=[image], iou_thres=0.5, conf_thres=self.confidence_threshold)
 
         self._original_predictions = prediction_result
 
