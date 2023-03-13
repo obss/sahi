@@ -3,6 +3,7 @@
 
 import logging
 from typing import Any, Dict, List, Optional
+from decimal import Decimal
 
 import numpy as np
 
@@ -103,7 +104,7 @@ class Yolov5SparseDetectionModel(DetectionModel):
             y2 = prediction.boxes[3]
             bbox = [x1, y1, x2, y2]
             score = 0
-            category_id = int(prediction.labels[i])
+            category_id = int(Decimal(prediction.labels[i]))
             category_name = self.category_mapping[str(category_id)]
 
             # fix negative box coords
