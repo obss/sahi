@@ -29,7 +29,7 @@ class TestSparseYolov5DetectionModel(unittest.TestCase):
             load_at_init=True,
         )
 
-        self.assertNotEqual(yolov5_detection_model.engine_type, None)
+        self.assertNotEqual(yolov5_detection_model.model, None)
 
     def test_set_model(self):
         from deepsparse import Pipeline
@@ -46,7 +46,7 @@ class TestSparseYolov5DetectionModel(unittest.TestCase):
             load_at_init=True,
         )
 
-        self.assertNotEqual(yolov5_detection_model.engine_type, None)
+        self.assertNotEqual(yolov5_detection_model.model, None)
 
     def test_perform_inference(self):
         from deepsparse import Pipeline
