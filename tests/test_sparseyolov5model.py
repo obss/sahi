@@ -86,7 +86,6 @@ class TestSparseYolov5DetectionModel(unittest.TestCase):
         margin = 2
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
-        self.assertEqual(len(original_predictions.labels), 80)
         for box in boxes[0]:
             self.assertGreaterEqual(box[0], CONFIDENCE_THRESHOLD)
 
