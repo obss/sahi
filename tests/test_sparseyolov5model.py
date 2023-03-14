@@ -19,7 +19,7 @@ class TestSparseYolov5DetectionModel(unittest.TestCase):
 
         from sahi.models.yolov5sparse import Yolov5SparseDetectionModel
 
-        yolo_model = Pipeline.create(task="yolo", model_path=Yolov5TestConstants.YOLOV_MODEL_UR)
+        yolo_model = Pipeline.create(task="yolo", model_path=Yolov5TestConstants.YOLOV_MODEL_URL)
 
         yolov5_detection_model = Yolov5SparseDetectionModel(
             model=yolo_model,
@@ -36,7 +36,7 @@ class TestSparseYolov5DetectionModel(unittest.TestCase):
 
         from sahi.models.yolov5sparse import Yolov5SparseDetectionModel
 
-        yolo_model = Pipeline.create(task="yolo", model_path=Yolov5TestConstants.YOLOV_MODEL_UR)
+        yolo_model = Pipeline.create(task="yolo", model_path=Yolov5TestConstants.YOLOV_MODEL_URL)
 
         yolov5_detection_model = Yolov5SparseDetectionModel(
             model=yolo_model,
@@ -54,7 +54,7 @@ class TestSparseYolov5DetectionModel(unittest.TestCase):
         from sahi.models.yolov5sparse import Yolov5SparseDetectionModel
 
         # init model
-        yolo_model = Pipeline.create(task="yolo", model_path=Yolov5TestConstants.YOLOV_MODEL_UR)
+        yolo_model = Pipeline.create(task="yolo", model_path=Yolov5TestConstants.YOLOV_MODEL_URL)
 
         yolov5_detection_model = Yolov5SparseDetectionModel(
             model=yolo_model,
@@ -97,7 +97,7 @@ class TestSparseYolov5DetectionModel(unittest.TestCase):
         from sahi.models.yolov5sparse import Yolov5SparseDetectionModel
 
         # init model
-        yolo_model = Pipeline.create(task="yolo", model_path=Yolov5TestConstants.YOLOV_MODEL_UR)
+        yolo_model = Pipeline.create(task="yolo", model_path=Yolov5TestConstants.YOLOV_MODEL_URL)
 
         yolov5_detection_model = Yolov5SparseDetectionModel(
             model=yolo_model,
