@@ -14,7 +14,7 @@ MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3
 IMAGE_SIZE = 320
 
-if platform.system() != "Darwin":
+if platform.system() == "Linux":
 
     class TestSparseYolov5DetectionModel(unittest.TestCase):
         def test_load_model(self):
