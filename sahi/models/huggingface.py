@@ -30,7 +30,6 @@ class HuggingfaceDetectionModel(DetectionModel):
         load_at_init: bool = True,
         image_size: int = None,
     ):
-
         self._processor = processor
         self._image_shapes = []
         super().__init__(
@@ -66,7 +65,6 @@ class HuggingfaceDetectionModel(DetectionModel):
         return self.model.config.num_labels
 
     def load_model(self):
-
         from transformers import AutoModelForObjectDetection, AutoProcessor
 
         model = AutoModelForObjectDetection.from_pretrained(self.model_path)

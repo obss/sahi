@@ -16,7 +16,6 @@ class Yolov8TestConstants:
 
 
 def download_yolov8n_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = Yolov8TestConstants.YOLOV8N_MODEL_PATH
 
@@ -30,7 +29,6 @@ def download_yolov8n_model(destination_path: Optional[str] = None):
 
 
 def download_yolov8s_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = Yolov8TestConstants.YOLOV8S_MODEL_PATH
 
