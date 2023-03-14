@@ -15,10 +15,14 @@ IMAGE_SIZE = 320
 
 class TestSparseYolov5DetectionModel(unittest.TestCase):
     def test_load_model(self):
+        from deepsparse import Pipeline
+
         from sahi.models.yolov5sparse import Yolov5SparseDetectionModel
 
+        yolo_model = Pipeline.create(task="yolo", model_path=Yolov5TestConstants.YOLOV_MODEL_UR)
+
         yolov5_detection_model = Yolov5SparseDetectionModel(
-            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
+            model=yolo_model,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
