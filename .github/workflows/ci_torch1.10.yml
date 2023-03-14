@@ -73,6 +73,10 @@ jobs:
         run: >
           pip install -r requirements.txt
 
+      - name: Install deepsparse
+        run: >
+          pip install deepsparse
+
       - name: Install PyTorch(1.10.2) and TorchVision(0.11.3) on Linux and Windows
         if: >
           matrix.operating-system == 'ubuntu-latest' ||
