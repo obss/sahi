@@ -2,9 +2,10 @@
 # Code written by Fatih C Akyon, 2020.
 
 import unittest
+from decimal import Decimal
 
 import numpy as np
-from decimal import Decimal
+
 from sahi.utils.cv import read_image
 from sahi.utils.sparseyolov5 import Yolov5TestConstants
 
@@ -50,6 +51,7 @@ class TestSparseYolov5DetectionModel(unittest.TestCase):
 
     def test_perform_inference(self):
         from deepsparse import Pipeline
+
         from sahi.models.yolov5sparse import Yolov5SparseDetectionModel
 
         # init model
