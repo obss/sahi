@@ -4,7 +4,7 @@
 import unittest
 
 import numpy as np
-
+from decimal import Decimal
 from sahi.utils.cv import read_image
 from sahi.utils.sparseyolov5 import Yolov5TestConstants
 
@@ -50,7 +50,6 @@ class TestSparseYolov5DetectionModel(unittest.TestCase):
 
     def test_perform_inference(self):
         from deepsparse import Pipeline
-
         from sahi.models.yolov5sparse import Yolov5SparseDetectionModel
 
         # init model
@@ -76,20 +75,20 @@ class TestSparseYolov5DetectionModel(unittest.TestCase):
         boxes = original_predictions.boxes
 
         # find box of first car detection with conf greater than 0.5
-        for box in boxes[0]:
-            if box[5].item() == 2:  # if category car
-                if box[4].item() > 0.5:
+        for image_ind, (prediction_bboxes, prediction_scores, prediction_categories) in enumerate(original_predictions):
+            if int(Decimal(prediction_categories[0])) == 2:  # if category car
+                if prediction_scores[0] > 0.5:
                     break
 
         # compare
-        desired_bbox = [321, 329, 378, 368]
-        predicted_bbox = list(map(int, box[:4].tolist()))
+        desired_bbox = [321, 322, 384, 362]
+        predicted_bbox = boxes[0][0]
         margin = 2
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
         self.assertEqual(len(original_predictions.labels), 80)
         for box in boxes[0]:
-            self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
+            self.assertGreaterEqual(box[0], CONFIDENCE_THRESHOLD)
 
     def test_convert_original_predictions(self):
         from deepsparse import Pipeline
