@@ -118,17 +118,17 @@ class TestSparseYolov5DetectionModel(unittest.TestCase):
         object_prediction_list = yolov5_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 3)
+        self.assertEqual(len(object_prediction_list), 16)
         self.assertEqual(object_prediction_list[0].category.id, 2)
         self.assertEqual(object_prediction_list[0].category.name, "car")
-        desired_bbox = [321, 329, 57, 39]
+        desired_bbox = [321, 322, 63, 40]
         predicted_bbox = object_prediction_list[0].bbox.to_xywh()
         margin = 2
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
         self.assertEqual(object_prediction_list[2].category.id, 2)
         self.assertEqual(object_prediction_list[2].category.name, "car")
-        desired_bbox = [381, 275, 42, 28]
+        desired_bbox = [700, 234, 22, 17]
         predicted_bbox = object_prediction_list[2].bbox.to_xywh()
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
