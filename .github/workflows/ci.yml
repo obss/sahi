@@ -27,6 +27,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - uses: actions/checkout@v3
+        with:
+          repository: "neuralmagic/deepsparse"
+          path: "deepsparse"
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
