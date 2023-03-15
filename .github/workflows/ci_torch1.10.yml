@@ -27,6 +27,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          repository: "neuralmagic/deepsparse"
+          path: "deepsparse"
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -73,9 +77,6 @@ jobs:
         run: >
           pip install -r requirements.txt
 
-      - name: Install deepsparse
-        run: >
-          pip install deepsparse
 
       - name: Install PyTorch(1.10.2) and TorchVision(0.11.3) on Linux and Windows
         if: >
