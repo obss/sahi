@@ -27,11 +27,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: actions/checkout@v3
-        with:
-          repository: "neuralmagic/deepsparse"
-          path: "deepsparse"
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -97,6 +92,10 @@ jobs:
       - name: Install YOLOv5(7.0.9)
         run: >
           pip install yolov5==7.0.9
+
+      - name: Install DeepSparse
+        run: >
+          pip install deepsparse
 
       - name: Install Transformers(4.25.1)
         run: >
