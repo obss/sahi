@@ -1,5 +1,7 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
+# Using YOLOv5 sparse models from Neural Magic using DeepSparse
+# https://neuralmagic.com/deepsparse
 
 import logging
 from typing import Any, Dict, List, Optional
