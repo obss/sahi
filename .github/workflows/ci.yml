@@ -93,6 +93,10 @@ jobs:
         run: >
           pip install yolov5==7.0.9
 
+      - name: Install DeepSparse
+        run: >
+          pip install deepsparse
+
       - name: Install Transformers(4.25.1)
         run: >
           pip install transformers==4.25.1
