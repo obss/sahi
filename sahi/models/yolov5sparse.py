@@ -28,7 +28,7 @@ class Yolov5SparseDetectionModel(DetectionModel):
         from deepsparse import Pipeline
 
         try:
-            model = Pipeline.create(task="yolo", model_path=self.model_path)
+            model = Pipeline.create(task="yolo", model_path=self.model_path, image_size=self.image_size)
             self.set_model(model)
         except Exception as e:
             raise TypeError("Could not load the model: ", e)
