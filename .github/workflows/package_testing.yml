@@ -71,6 +71,10 @@ jobs:
         run: >
           pip install yolov5==7.0.9
           
+      - name: Install DeepSparse
+        run: >
+          pip install deepsparse
+          
       - name: Install Detectron2(0.6)
         run: >
           python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch1.10/index.html
