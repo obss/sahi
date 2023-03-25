@@ -310,11 +310,11 @@ def bbox_sort(a, b, thresh):
     return bbox_a[1] - bbox_b[1]
 
 
-def agg_prediction(result: PredictionResult, thresh):
+def agg_prediction(thresh, result):
     coord_list = []
-    res = result.to_coco_annotations()
+    res = result.object_prediction_list
     for ann in res:
-        current_bbox = ann["bbox"]
+        current_bbox = ann.bbox.to_xywh()
         x = current_bbox[0]
         y = current_bbox[1]
         w = current_bbox[2]
@@ -323,7 +323,7 @@ def agg_prediction(result: PredictionResult, thresh):
         coord_list.append((x, y, w, h))
     cnts = sorted(coord_list, key=cmp_to_key(lambda a, b: bbox_sort(a, b, thresh)))
     for pred in range(len(res) - 1):
-        res[pred]["image_id"] = cnts.index(tuple(res[pred]["bbox"]))
+        res[pred].category.id = cnts.index(tuple(res[pred].bbox.to_xywh()))
 
     return res
 
@@ -349,6 +349,7 @@ def predict(
     postprocess_match_metric: str = "IOS",
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
+    use_bbox_agg_thrsh: int = None,
     novisual: bool = False,
     view_video: bool = False,
     frame_skip_interval: int = 0,
@@ -418,6 +419,8 @@ def predict(
             postprocessed after sliced prediction.
         postprocess_class_agnostic: bool
             If True, postprocess will ignore category ids.
+        use_bbox_agg_thrsh: int
+            If if a numeric parameter is given, then the agg_prediction function is used to sort bboxes
         novisual: bool
             Dont export predicted video/image visuals.
         view_video: bool
@@ -554,6 +557,8 @@ def predict(
                 verbose=1 if verbose else 0,
             )
             object_prediction_list = prediction_result.object_prediction_list
+            if use_bbox_agg_thrsh is not None:
+                object_prediction_list = agg_prediction(use_bbox_agg_thrsh, prediction_result)
             durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
         else:
             # get standard prediction
