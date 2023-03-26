@@ -310,7 +310,7 @@ def bbox_sort(a, b, thresh):
     return bbox_a[1] - bbox_b[1]
 
 
-def agg_prediction(thresh, result):
+def agg_prediction(thresh, result: PredictionResult):
     coord_list = []
     res = result.object_prediction_list
     for ann in res:
