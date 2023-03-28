@@ -411,7 +411,7 @@ def predict(
             Default to ``0.2``.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
-            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'GRREDYNMM'.
+            Options are 'NMM', 'GREEDYNMM', 'LSNMS' or 'NMS'. Default is 'GRREDYNMM'.
         postprocess_match_metric: str
             Metric to be used during object prediction matching after sliced prediction.
             'IOU' for intersection over union, 'IOS' for intersection over smaller area.
