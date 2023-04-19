@@ -114,6 +114,7 @@ class Detectron2DetectionModel(DetectionModel):
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
+
         original_predictions = self._original_predictions
 
         # compatilibty for sahi v0.8.15
@@ -122,55 +123,56 @@ class Detectron2DetectionModel(DetectionModel):
         if full_shape_list is not None and isinstance(full_shape_list[0], int):
             full_shape_list = [full_shape_list]
 
-        # parse boxes, masks, scores, category_ids from predictions
-        boxes = original_predictions["instances"].pred_boxes.tensor.tolist()
-        scores = original_predictions["instances"].scores.tolist()
-        category_ids = original_predictions["instances"].pred_classes.tolist()
-
-        # check if predictions contain mask
-        try:
-            masks = original_predictions["instances"].pred_masks.tolist()
-        except AttributeError:
-            masks = None
-
-        # create object_prediction_list
-        object_prediction_list_per_image = []
-        object_prediction_list = []
-
         # detectron2 DefaultPredictor supports single image
         shift_amount = shift_amount_list[0]
         full_shape = None if full_shape_list is None else full_shape_list[0]
 
-        for ind in range(len(boxes)):
-            score = scores[ind]
-            if score < self.confidence_threshold:
-                continue
+        # parse boxes, masks, scores, category_ids from predictions
+        boxes = original_predictions["instances"].pred_boxes.tensor
+        scores = original_predictions["instances"].scores
+        category_ids = original_predictions["instances"].pred_classes
 
-            category_id = category_ids[ind]
+        # check if predictions contain mask
+        try:
+            masks = original_predictions["instances"].pred_masks
+        except AttributeError:
+            masks = None
 
-            if masks is None:
-                bbox = boxes[ind]
-                mask = None
-            else:
-                mask = np.array(masks[ind])
+        # filter predictions with low confidence
+        high_confidence_mask = scores >= self.confidence_threshold
+        boxes = boxes[high_confidence_mask]
+        scores = scores[high_confidence_mask]
+        category_ids = category_ids[high_confidence_mask]
+        if masks is not None:
+            masks = masks[high_confidence_mask]
 
-                # check if mask is valid
-                # https://github.com/obss/sahi/issues/389
-                if get_bbox_from_bool_mask(mask) is None:
-                    continue
-                else:
-                    bbox = None
-
-            object_prediction = ObjectPrediction(
-                bbox=bbox,
-                bool_mask=mask,
-                category_id=category_id,
-                category_name=self.category_mapping[str(category_id)],
-                shift_amount=shift_amount,
-                score=score,
-                full_shape=full_shape,
-            )
-            object_prediction_list.append(object_prediction)
+        if masks is not None:
+            object_prediction_list = [
+                ObjectPrediction(
+                    bbox=box.tolist() if mask is None else None,
+                    bool_mask=np.array(mask) if mask is not None else None,
+                    category_id=category_id.item(),
+                    category_name=self.category_mapping[str(category_id.item())],
+                    shift_amount=shift_amount,
+                    score=score.item(),
+                    full_shape=full_shape,
+                )
+                for box, score, category_id, mask in zip(boxes, scores, category_ids, masks)
+                if mask is None or get_bbox_from_bool_mask(np.array(mask)) is not None
+            ]
+        else:
+            object_prediction_list = [
+                ObjectPrediction(
+                    bbox=box.tolist(),
+                    bool_mask=None,
+                    category_id=category_id.item(),
+                    category_name=self.category_mapping[str(category_id.item())],
+                    shift_amount=shift_amount,
+                    score=score.item(),
+                    full_shape=full_shape,
+                )
+                for box, score, category_id in zip(boxes, scores, category_ids)
+            ]
 
         # detectron2 DefaultPredictor supports single image
         object_prediction_list_per_image = [object_prediction_list]
