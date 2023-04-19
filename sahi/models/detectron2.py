@@ -150,7 +150,7 @@ class Detectron2DetectionModel(DetectionModel):
             object_prediction_list = [
                 ObjectPrediction(
                     bbox=box.tolist() if mask is None else None,
-                    bool_mask=np.array(mask) if mask is not None else None,
+                    bool_mask=mask.detach().cpu().numpy() if mask is not None else None,
                     category_id=category_id.item(),
                     category_name=self.category_mapping[str(category_id.item())],
                     shift_amount=shift_amount,
@@ -158,7 +158,7 @@ class Detectron2DetectionModel(DetectionModel):
                     full_shape=full_shape,
                 )
                 for box, score, category_id, mask in zip(boxes, scores, category_ids, masks)
-                if mask is None or get_bbox_from_bool_mask(np.array(mask)) is not None
+                if mask is None or get_bbox_from_bool_mask(mask.detach().cpu().numpy()) is not None
             ]
         else:
             object_prediction_list = [
