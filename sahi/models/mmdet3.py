@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pycocotools
+from mmdet.apis.det_inferencer import DetInferencer
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
@@ -13,6 +14,31 @@ from sahi.utils.cv import get_bbox_from_bool_mask
 from sahi.utils.import_utils import check_requirements
 
 logger = logging.getLogger(__name__)
+
+
+class DetInferencerWrapper(DetInferencer):
+    def __call__(self, images: List[np.ndarray], batch_size: int = 1) -> dict:
+        """
+        Emulate DetInferencer(images) without progressbar
+        Args:
+            images: list of np.ndarray
+                A list of numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+            batch_size: int
+                Inference batch size. Defaults to 1.
+        """
+        inputs = self.preprocess(images, batch_size=batch_size)
+        results_dict = {'predictions': [], 'visualization': []}
+        for _, data in inputs:
+            preds = self.forward(data)
+            results = self.postprocess(
+                preds,
+                visualization=None,
+                return_datasample=False,
+                print_result=False,
+                no_save_pred=True,
+                pred_out_dir=None)
+            results_dict['predictions'].extend(results['predictions'])
+        return results_dict
 
 
 class Mmdet3DetectionModel(DetectionModel):
@@ -44,10 +70,9 @@ class Mmdet3DetectionModel(DetectionModel):
         """
         Detection model is initialized and set to self.model.
         """
-        from mmdet.apis.det_inferencer import DetInferencer
 
         # create model
-        model = DetInferencer(self.config_path, self.model_path, device=self.device, scope=self.scope)
+        model = DetInferencerWrapper(self.config_path, self.model_path, device=self.device, scope=self.scope)
 
         # update model image size
         if self.image_size is not None:
