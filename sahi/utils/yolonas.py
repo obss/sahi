@@ -42,6 +42,7 @@ def download_yolonas_m_model(destination_path: Optional[str] = None):
             destination_path,
         )
 
+
 def download_yolonas_l_model(destination_path: Optional[str] = None):
 
     if destination_path is None:
