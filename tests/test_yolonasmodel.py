@@ -3,8 +3,6 @@
 
 import unittest
 
-from super_gradients.training.processing.processing import get_pretrained_processing_params
-
 from sahi.utils.cv import read_image
 from sahi.utils.yolonas import YoloNasTestConstants, download_yolonas_s_model
 

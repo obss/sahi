@@ -5,7 +5,6 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-from super_gradients.training.processing.processing import get_pretrained_processing_params
 from yaml import safe_load
 
 from sahi.models.base import DetectionModel
@@ -58,7 +57,6 @@ class YoloNasDetectionModel(DetectionModel):
         """
         Detection model is initialized and set to self.model.
         """
-
         from super_gradients.training import models
 
         try:
@@ -79,6 +77,7 @@ class YoloNasDetectionModel(DetectionModel):
             model: Any
                 A YoloNas model
         """
+        from super_gradients.training.processing.processing import get_pretrained_processing_params
 
         if model.__class__.__module__.split(".")[-1] != "yolo_nas_variants":
             raise Exception(f"Not a YoloNas model: {type(model)}")
