@@ -118,7 +118,7 @@ jobs:
           
       - name: Install super-gradients
         run: >
-          pip install super-gradients
+          pip install super-gradients==3.1.1
 
       - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
         run: |
