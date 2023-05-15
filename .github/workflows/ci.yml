@@ -64,7 +64,7 @@ jobs:
           pip install -e .[dev]
           # stop the build if there are Python syntax errors or undefined names
           python -m scripts.run_code_style check
-          
+
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --exit-zero --max-complexity=10 --max-line-length=127
 
@@ -107,7 +107,7 @@ jobs:
 
       - name: Install ultralytics
         run: >
-          pip install ultralytics==8.0.43
+          pip install ultralytics==8.0.99
 
       - name: Install super-gradients
         run: >
