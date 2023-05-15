@@ -60,7 +60,7 @@ class Yolov8DetectionModel(DetectionModel):
             raise ValueError("Model is not loaded, load it by calling .load_model()")
         prediction_result = self.model(image[:, :, ::-1], verbose=False)  # YOLOv8 expects numpy arrays to have BGR
         prediction_result = [
-            result.boxes.boxes[result.boxes.boxes[:, 4] >= self.confidence_threshold] for result in prediction_result
+            result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result
         ]
 
         self._original_predictions = prediction_result
