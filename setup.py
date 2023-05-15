@@ -36,9 +36,9 @@ setuptools.setup(
     python_requires=">=3.6",
     install_requires=get_requirements(),
     extras_require={
-        "tests": ["mmdet==2.25.1", "pycocotools==2.0.5"],
+        "tests": ["mmdet==2.28.1", "pycocotools==2.0.6"],
         "dev": [
-            "black==21.7b0",
+            "black==22.3.0",
             "flake8==3.9.2",
             "importlib-metadata>=1.1.0,<4.3;python_version<'3.8'",
             "isort==5.9.2",
@@ -51,7 +51,6 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
