@@ -5,8 +5,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-import pycocotools
-from mmdet.apis.det_inferencer import DetInferencer
+
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
@@ -15,34 +14,40 @@ from sahi.utils.import_utils import check_requirements
 
 logger = logging.getLogger(__name__)
 
+try:
+    from mmdet.apis.det_inferencer import DetInferencer
 
-class DetInferencerWrapper(DetInferencer):
-    def __call__(self, images: List[np.ndarray], batch_size: int = 1) -> dict:
-        """
-        Emulate DetInferencer(images) without progressbar
-        Args:
-            images: list of np.ndarray
-                A list of numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
-            batch_size: int
-                Inference batch size. Defaults to 1.
-        """
-        inputs = self.preprocess(images, batch_size=batch_size)
-        results_dict = {'predictions': [], 'visualization': []}
-        for _, data in inputs:
-            preds = self.forward(data)
-            results = self.postprocess(
-                preds,
-                visualization=None,
-                return_datasample=False,
-                print_result=False,
-                no_save_pred=True,
-                pred_out_dir=None)
-            results_dict['predictions'].extend(results['predictions'])
-        return results_dict
+    class DetInferencerWrapper(DetInferencer):
+        def __call__(self, images: List[np.ndarray], batch_size: int = 1) -> dict:
+            """
+            Emulate DetInferencer(images) without progressbar
+            Args:
+                images: list of np.ndarray
+                    A list of numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+                batch_size: int
+                    Inference batch size. Defaults to 1.
+            """
+            inputs = self.preprocess(images, batch_size=batch_size)
+            results_dict = {"predictions": [], "visualization": []}
+            for _, data in inputs:
+                preds = self.forward(data)
+                results = self.postprocess(
+                    preds,
+                    visualization=None,
+                    return_datasample=False,
+                    print_result=False,
+                    no_save_pred=True,
+                    pred_out_dir=None,
+                )
+                results_dict["predictions"].extend(results["predictions"])
+            return results_dict
+
+
+except ImportError as ex:
+    raise ImportError("Failed to import `DetInferencer`. Please confirm you have installed 'mmdet>=3.0.0'") from ex
 
 
 class Mmdet3DetectionModel(DetectionModel):
-
     def __init__(
         self,
         model_path: Optional[str] = None,
@@ -59,8 +64,16 @@ class Mmdet3DetectionModel(DetectionModel):
     ):
         self.scope = scope
         super().__init__(
-            model_path, model, config_path, device, mask_threshold, confidence_threshold, category_mapping, category_remapping,
-            load_at_init, image_size
+            model_path,
+            model,
+            config_path,
+            device,
+            mask_threshold,
+            confidence_threshold,
+            category_mapping,
+            category_remapping,
+            load_at_init,
+            image_size,
         )
 
     def check_dependencies(self):
@@ -119,7 +132,7 @@ class Mmdet3DetectionModel(DetectionModel):
             image = [image]
         prediction_result = self.model(image)
 
-        self._original_predictions = prediction_result['predictions']
+        self._original_predictions = prediction_result["predictions"]
 
     @property
     def num_categories(self):
@@ -138,7 +151,7 @@ class Mmdet3DetectionModel(DetectionModel):
 
     @property
     def category_names(self):
-        classes = self.model.model.dataset_meta['classes']
+        classes = self.model.model.dataset_meta["classes"]
         if type(classes) == str:
             # https://github.com/open-mmlab/mmdetection/pull/4973
             return (classes,)
@@ -161,6 +174,14 @@ class Mmdet3DetectionModel(DetectionModel):
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
+
+        try:
+            from pycocotools import mask as mask_utils
+
+            can_decode_rle = True
+        except ImportError:
+            can_decode_rle = False
+
         original_predictions = self._original_predictions
         category_mapping = self.category_mapping
 
@@ -174,11 +195,11 @@ class Mmdet3DetectionModel(DetectionModel):
             shift_amount = shift_amount_list[image_ind]
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
 
-            boxes = original_prediction['bboxes']
-            scores = original_prediction['scores']
-            labels = original_prediction['labels']
+            boxes = original_prediction["bboxes"]
+            scores = original_prediction["scores"]
+            labels = original_prediction["labels"]
             if self.has_mask:
-                masks = original_prediction['masks']
+                masks = original_prediction["masks"]
 
             object_prediction_list = []
 
@@ -200,7 +221,12 @@ class Mmdet3DetectionModel(DetectionModel):
                 # parse prediction mask
                 if self.has_mask:
                     if "counts" in mask:
-                        bool_mask = pycocotools.mask.decode(mask)
+                        if can_decode_rle:
+                            bool_mask = mask_utils.decode(mask)
+                        else:
+                            raise ValueError(
+                                "Can not decode rle mask. Please install pycocotools. ex: 'pip install pycocotools'"
+                            )
                     else:
                         bool_mask = mask
 
