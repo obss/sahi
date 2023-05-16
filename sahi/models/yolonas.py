@@ -1,45 +1,93 @@
 # OBSS SAHI Tool
-# Code written by AnNT, 2023.
+# Code written by Fatih C Akyon, 2020.
 
 import logging
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-
-logger = logging.getLogger(__name__)
+from yaml import safe_load
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.import_utils import check_requirements
 
+logger = logging.getLogger(__name__)
 
-class Yolov8DetectionModel(DetectionModel):
+
+class YoloNasDetectionModel(DetectionModel):
+    def __init__(
+        self,
+        model_name: str,
+        model_path: Optional[str] = None,
+        class_names_yaml_path: Optional[List[str]] = None,
+        **kwargs,
+    ):
+        if model_name is not None and not isinstance(model_name, str):
+            raise TypeError(
+                f"model_name should be a string, got {model_name} with type of '{model_name.__class__.__name__}'"
+            )
+        if model_name not in ["yolo_nas_s", "yolo_nas_m", "yolo_nas_l"]:
+            raise ValueError(f"Unsupported model type {model_name}")
+        if not model_path:  # use pretrained models downloaded from Deci-AI remote client
+            self.pretrained_weights = "coco"
+            self.class_names = None
+            self.num_classes = None
+        else:  # use local / custom trained models
+            self.pretrained_weights = None
+            if not class_names_yaml_path:
+                raise ValueError(
+                    "'class_names_yaml_path' should be provided for the models that have custom class mapping"
+                )
+            with open(class_names_yaml_path, "r") as fs:
+                yaml_content = safe_load(fs)
+                if not isinstance(yaml_content, list):
+                    raise ValueError(
+                        "Invalid yaml file format, make sure your class names are given in list format in yaml"
+                    )
+                self.class_names = yaml_content
+            self.num_classes = len(self.class_names)
+        self.model_name = model_name
+        super().__init__(model_path=model_path, **kwargs)
+
     def check_dependencies(self) -> None:
-        check_requirements(["ultralytics"])
+        check_requirements(["torch", "super_gradients"])
 
     def load_model(self):
         """
         Detection model is initialized and set to self.model.
         """
-
-        from ultralytics import YOLO
+        from super_gradients.training import models
 
         try:
-            model = YOLO(self.model_path)
-            model.to(self.device)
+            model = models.get(
+                model_name=self.model_name,
+                checkpoint_path=self.model_path,
+                pretrained_weights=self.pretrained_weights,
+                num_classes=self.num_classes,
+            ).to(device=self.device)
             self.set_model(model)
         except Exception as e:
-            raise TypeError("model_path is not a valid yolov8 model path: ", e)
+            raise TypeError("Load model failed. Provided model weights and model_name might be mismatching. ", e)
 
     def set_model(self, model: Any):
         """
-        Sets the underlying YOLOv8 model.
+        Sets the underlying YoloNas model.
         Args:
             model: Any
-                A YOLOv8 model
+                A YoloNas model
         """
+        from super_gradients.training.processing.processing import get_pretrained_processing_params
 
+        if model.__class__.__module__.split(".")[-1] != "yolo_nas_variants":
+            raise Exception(f"Not a YoloNas model: {type(model)}")
+
+        # set default processing params for yolo_nas model
+        processing_params = get_pretrained_processing_params(model_name=self.model_name, pretrained_weights="coco")
+        processing_params["conf"] = self.confidence_threshold
+        if self.class_names:  # override class names for custom trained models
+            processing_params["class_names"] = self.class_names
+        model.set_dataset_processing_params(**processing_params)
         self.model = model
 
         # set category_mapping
@@ -58,30 +106,26 @@ class Yolov8DetectionModel(DetectionModel):
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
-        prediction_result = self.model(image[:, :, ::-1], verbose=False)  # YOLOv8 expects numpy arrays to have BGR
-        prediction_result = [
-            result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result
-        ]
-
+        prediction_result = list(self.model.predict(image))
         self._original_predictions = prediction_result
-
-    @property
-    def category_names(self):
-        return self.model.names.values()
 
     @property
     def num_categories(self):
         """
         Returns number of categories
         """
-        return len(self.model.names)
+        return len(self.model._class_names)
 
     @property
     def has_mask(self):
         """
         Returns if model output contains segmentation mask
         """
-        return False  # fix when yolov5 supports segmentation models
+        return False
+
+    @property
+    def category_names(self):
+        return self.model._class_names
 
     def _create_object_prediction_list_from_original_predictions(
         self,
@@ -107,22 +151,15 @@ class Yolov8DetectionModel(DetectionModel):
 
         # handle all predictions
         object_prediction_list_per_image = []
-        for image_ind, image_predictions_in_xyxy_format in enumerate(original_predictions):
+        for image_ind, image_predictions in enumerate(original_predictions):
             shift_amount = shift_amount_list[image_ind]
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
             object_prediction_list = []
-
             # process predictions
-            for prediction in image_predictions_in_xyxy_format.cpu().detach().numpy():
-                x1 = prediction[0]
-                y1 = prediction[1]
-                x2 = prediction[2]
-                y2 = prediction[3]
-                bbox = [x1, y1, x2, y2]
-                score = prediction[4]
-                category_id = int(prediction[5])
-                category_name = self.category_mapping[str(category_id)]
-
+            preds = image_predictions.prediction
+            for bbox_xyxy, score, category_id in zip(preds.bboxes_xyxy, preds.confidence, preds.labels):
+                bbox = bbox_xyxy
+                category_name = self.category_mapping[str(int(category_id))]
                 # fix negative box coords
                 bbox[0] = max(0, bbox[0])
                 bbox[1] = max(0, bbox[1])
@@ -143,7 +180,7 @@ class Yolov8DetectionModel(DetectionModel):
 
                 object_prediction = ObjectPrediction(
                     bbox=bbox,
-                    category_id=category_id,
+                    category_id=int(category_id),
                     score=score,
                     bool_mask=None,
                     category_name=category_name,

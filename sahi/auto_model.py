@@ -11,6 +11,7 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "huggingface": "HuggingfaceDetectionModel",
     "torchvision": "TorchVisionDetectionModel",
     "yolov5sparse": "Yolov5SparseDetectionModel",
+    "yolonas": "YoloNasDetectionModel",
 }
 
 
