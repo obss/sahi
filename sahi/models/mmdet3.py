@@ -14,6 +14,7 @@ from sahi.utils.import_utils import check_requirements
 
 logger = logging.getLogger(__name__)
 
+
 try:
     from mmdet.apis.det_inferencer import DetInferencer
 
@@ -42,9 +43,10 @@ try:
                 results_dict["predictions"].extend(results["predictions"])
             return results_dict
 
+    IMPORT_MMDET_V3 = True
 
-except ImportError as ex:
-    raise ImportError("Failed to import `DetInferencer`. Please confirm you have installed 'mmdet>=3.0.0'") from ex
+except ImportError:
+    IMPORT_MMDET_V3 = False
 
 
 class Mmdet3DetectionModel(DetectionModel):
@@ -62,6 +64,10 @@ class Mmdet3DetectionModel(DetectionModel):
         image_size: int = None,
         scope: str = "mmdet",
     ):
+
+        if not IMPORT_MMDET_V3:
+            raise ImportError("Failed to import `DetInferencer`. Please confirm you have installed 'mmdet>=3.0.0'")
+
         self.scope = scope
         super().__init__(
             model_path,
