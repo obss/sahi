@@ -5,6 +5,7 @@ import unittest
 
 import numpy as np
 import pycocotools
+
 from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
 
@@ -27,10 +28,10 @@ def get_dummy_predictions(image_shape, mask_type=None):
     bbox2 = [100, 100, 200, 150]  # xywh: 100, 100, 100, 50
     mask1 = np.zeros((h, w), dtype=bool)
     x0, y0, x1, y1 = bbox1
-    mask1[y0:y1 + 1, x0:x1 + 1] = True
+    mask1[y0 : y1 + 1, x0 : x1 + 1] = True
     mask2 = np.zeros((h, w), dtype=bool)
     x0, y0, x1, y1 = bbox2
-    mask2[y0:y1 + 1, x0:x1 + 1] = True
+    mask2[y0 : y1 + 1, x0 : x1 + 1] = True
 
     bin_masks = [mask1, mask2]
     rle_masks = [pycocotools.mask.encode(np.asfortranarray(m)) for m in [mask1, mask2]]
@@ -50,7 +51,6 @@ def get_dummy_predictions(image_shape, mask_type=None):
 
 
 class TestMmdet3DetectionModel(unittest.TestCase):
-
     def test_load_model(self):
         from sahi.models.mmdet3 import Mmdet3DetectionModel
 
@@ -111,7 +111,6 @@ class TestMmdet3DetectionModel(unittest.TestCase):
 
         # bbox has 4 coordinates
         self.assertTrue(len(pred["bboxes"][0]) == 4)
-
 
     def test_convert_original_predictions_with_mask_output(self):
         from sahi.models.mmdet3 import Mmdet3DetectionModel
