@@ -4,10 +4,16 @@
 import unittest
 
 import numpy as np
-import pycocotools
 
 from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
+
+try:
+    import mmdet
+    mmdet_major_version = int(mmdet.__version__.split(".")[0])
+except:
+    mmdet_major_version = -1  # not installed
+
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -23,6 +29,8 @@ IMAGE_PATH = "tests/data/small-vehicles1.jpeg"
 
 
 def get_dummy_predictions(image_shape, mask_type=None):
+    import pycocotools
+
     h, w = image_shape[:2]
     bbox1 = [10, 20, 30, 40]  # xywh: 10, 20, 10, 20
     bbox2 = [100, 100, 200, 150]  # xywh: 100, 100, 100, 50
@@ -50,6 +58,7 @@ def get_dummy_predictions(image_shape, mask_type=None):
     return preds
 
 
+@unittest.skipIf(mmdet_major_version < 3, "mmdet v3 is not supported")
 class TestMmdet3DetectionModel(unittest.TestCase):
     def test_load_model(self):
         from sahi.models.mmdet3 import Mmdet3DetectionModel

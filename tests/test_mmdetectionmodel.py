@@ -9,6 +9,13 @@ from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
 from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model
 
+try:
+    import mmdet
+    mmdet_major_version = int(mmdet.__version__.split(".")[0])
+except:
+    mmdet_major_version = -1  # not installed
+
+
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
@@ -29,6 +36,7 @@ def download_mmdet_yolox_tiny_model():
     download_from_url(MMDET_YOLOX_TINY_CONFIG_URL, MMDET_YOLOX_TINY_CONFIG_PATH)
 
 
+@unittest.skipIf(mmdet_major_version != 2, "mmdet v2 is not supported")
 class TestMmdetDetectionModel(unittest.TestCase):
     def test_load_model(self):
         from sahi.models.mmdet import MmdetDetectionModel
