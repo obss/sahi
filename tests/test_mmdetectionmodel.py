@@ -11,6 +11,7 @@ from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcn
 
 try:
     import mmdet
+
     mmdet_major_version = int(mmdet.__version__.split(".")[0])
 except:
     mmdet_major_version = -1  # not installed

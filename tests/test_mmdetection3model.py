@@ -10,6 +10,7 @@ from sahi.utils.file import download_from_url
 
 try:
     import mmdet
+
     mmdet_major_version = int(mmdet.__version__.split(".")[0])
 except:
     mmdet_major_version = -1  # not installed
