@@ -59,11 +59,17 @@ class Yolov8DetectionModel(DetectionModel):
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
         prediction_result = self.model(image[:, :, ::-1], verbose=False)  # YOLOv8 expects numpy arrays to have BGR
-        prediction_result = (
-            [result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result], 
-            [result.masks.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result]
-        )
-
+        
+        if self.has_mask:
+            prediction_result = (
+                [result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result], 
+                [result.masks.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result]
+            )
+        else:
+            prediction_result = (
+                [result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result], 
+                [None for _ in prediction_result]
+            )
         self._original_predictions = prediction_result
 
     @property
@@ -82,10 +88,7 @@ class Yolov8DetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        if self.model.overrides['task'] == 'segment':
-            return True
-        else:
-            return False  # fix when yolov5 supports segmentation models
+        return self.model.overrides['task'] == 'segment'
 
     def _create_object_prediction_list_from_original_predictions(
         self,
