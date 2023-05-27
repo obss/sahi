@@ -59,9 +59,10 @@ class Yolov8DetectionModel(DetectionModel):
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
         prediction_result = self.model(image[:, :, ::-1], verbose=False)  # YOLOv8 expects numpy arrays to have BGR
-        prediction_result = [
-            result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result
-        ]
+        prediction_result = (
+            [result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result], 
+            [result.masks.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result]
+        )
 
         self._original_predictions = prediction_result
 
@@ -81,7 +82,10 @@ class Yolov8DetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        return False  # fix when yolov5 supports segmentation models
+        if model.overrides['task'] == 'segment':
+            return True
+        else:
+            return False  # fix when yolov5 supports segmentation models
 
     def _create_object_prediction_list_from_original_predictions(
         self,
@@ -107,13 +111,13 @@ class Yolov8DetectionModel(DetectionModel):
 
         # handle all predictions
         object_prediction_list_per_image = []
-        for image_ind, image_predictions_in_xyxy_format in enumerate(original_predictions):
+        for image_ind, (image_predictions_in_xyxy_format, image_predictions_masks) in enumerate(original_predictions):
             shift_amount = shift_amount_list[image_ind]
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
             object_prediction_list = []
 
             # process predictions
-            for prediction in image_predictions_in_xyxy_format.cpu().detach().numpy():
+            for (prediction, bool_mask) in (image_predictions_in_xyxy_format.cpu().detach().numpy(), image_predictions_masks):
                 x1 = prediction[0]
                 y1 = prediction[1]
                 x2 = prediction[2]
@@ -122,6 +126,16 @@ class Yolov8DetectionModel(DetectionModel):
                 score = prediction[4]
                 category_id = int(prediction[5])
                 category_name = self.category_mapping[str(category_id)]
+                
+                # parse prediction mask
+                if self.has_mask:
+                    bool_mask = bool_mask.cpu().detach().numpy()
+                    # check if mask is valid
+                    # https://github.com/obss/sahi/discussions/696
+                    if get_bbox_from_bool_mask(bool_mask) is None:
+                        continue
+                    else:
+                        bool_mask = None
 
                 # fix negative box coords
                 bbox[0] = max(0, bbox[0])
@@ -145,7 +159,7 @@ class Yolov8DetectionModel(DetectionModel):
                     bbox=bbox,
                     category_id=category_id,
                     score=score,
-                    bool_mask=None,
+                    bool_mask=bool_mask,
                     category_name=category_name,
                     shift_amount=shift_amount,
                     full_shape=full_shape,
