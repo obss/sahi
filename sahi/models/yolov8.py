@@ -82,7 +82,7 @@ class Yolov8DetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        if model.overrides['task'] == 'segment':
+        if self.model.overrides['task'] == 'segment':
             return True
         else:
             return False  # fix when yolov5 supports segmentation models
