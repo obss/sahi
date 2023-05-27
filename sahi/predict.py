@@ -367,6 +367,7 @@ def predict(
     verbose: int = 1,
     return_dict: bool = False,
     force_postprocess_type: bool = False,
+    **kwargs,
 ):
     """
     Performs prediction for all present images in given folder.
@@ -515,6 +516,7 @@ def predict(
             category_remapping=model_category_remapping,
             load_at_init=False,
             image_size=image_size,
+            **kwargs,
         )
         detection_model.load_model()
     time_end = time.time() - time_start
