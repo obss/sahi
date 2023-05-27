@@ -1,6 +1,9 @@
 # OBSS SAHI Tool
 # Code written by AnNT, 2023.
 
+import torch
+import cv2
+
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -12,6 +15,7 @@ from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.import_utils import check_requirements
+from sahi.utils.cv import get_bbox_from_bool_mask
 
 
 class Yolov8DetectionModel(DetectionModel):
@@ -61,16 +65,21 @@ class Yolov8DetectionModel(DetectionModel):
         prediction_result = self.model(image[:, :, ::-1], verbose=False)  # YOLOv8 expects numpy arrays to have BGR
         
         if self.has_mask:
-            prediction_result = (
-                [result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result], 
-                [result.masks.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result]
-            )
+            
+            prediction_result = [
+                (
+                    result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold], 
+                    result.masks.data[result.boxes.data[:, 4] >= self.confidence_threshold]
+                )  if result.masks else (torch.tensor([]), torch.tensor([])) for result in prediction_result]
         else:
-            prediction_result = (
-                [result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result], 
-                [None for _ in prediction_result]
-            )
+            prediction_result = [
+                (
+                    result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold], 
+                    torch.tensor([])
+                )  for result in prediction_result]
+
         self._original_predictions = prediction_result
+        self._original_shape = image.shape
 
     @property
     def category_names(self):
@@ -88,6 +97,7 @@ class Yolov8DetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
+        # return True
         return self.model.overrides['task'] == 'segment'
 
     def _create_object_prediction_list_from_original_predictions(
@@ -114,13 +124,17 @@ class Yolov8DetectionModel(DetectionModel):
 
         # handle all predictions
         object_prediction_list_per_image = []
-        for image_ind, (image_predictions_in_xyxy_format, image_predictions_masks) in enumerate(original_predictions):
+        for image_ind, image_predictions in enumerate(original_predictions):
+            
+            image_predictions_in_xyxy_format = image_predictions[0]
+            image_predictions_masks =  image_predictions[1]
+            
             shift_amount = shift_amount_list[image_ind]
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
             object_prediction_list = []
 
             # process predictions
-            for (prediction, bool_mask) in (image_predictions_in_xyxy_format.cpu().detach().numpy(), image_predictions_masks):
+            for prediction, bool_mask in zip(image_predictions_in_xyxy_format.cpu().detach().numpy(), image_predictions_masks.cpu().detach().numpy()):
                 x1 = prediction[0]
                 y1 = prediction[1]
                 x2 = prediction[2]
@@ -131,14 +145,16 @@ class Yolov8DetectionModel(DetectionModel):
                 category_name = self.category_mapping[str(category_id)]
                 
                 # parse prediction mask
-                if self.has_mask:
-                    bool_mask = bool_mask.cpu().detach().numpy()
+                if not self.has_mask:
+                    # bool_mask = bool_mask
                     # check if mask is valid
                     # https://github.com/obss/sahi/discussions/696
-                    if get_bbox_from_bool_mask(bool_mask) is None:
-                        continue
-                    else:
-                        bool_mask = None
+                    # if get_bbox_from_bool_mask(bool_mask) is None:
+                    #     continue
+                    # else:
+                    bool_mask = None
+                else:
+                    bool_mask = cv2.resize(bool_mask, (self._original_shape[1], self._original_shape[0]))
 
                 # fix negative box coords
                 bbox[0] = max(0, bbox[0])
