@@ -2,11 +2,13 @@
 # Code written by Fatih C Akyon, 2020.
 
 import unittest
+import unittest.mock
 
 import numpy as np
 
 from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
+from sahi.utils.mmdet import MmdetTestConstants
 
 try:
     import mmdet
@@ -23,7 +25,7 @@ IMAGE_SIZE = 320
 WITH_MASK_CONFIG_PATH = "tests/data/mmdet3/configs/cascade_rcnn/cascade-mask-rcnn_r50_fpn_1x_coco.py"
 WITH_MASK_MODEL_URL = "https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
 
-WITHOUT_MASK_CONFIG_PATH = "tests/data/mmdet3/configs/yolox/yolox_tiny_8xb8-300e_coco.py"
+WITHOUT_MASK_CONFIG_PATH = MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH
 WITHOUT_MASK_MODEL_URL = "https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_tiny_8x8_300e_coco/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
 
 IMAGE_PATH = "tests/data/small-vehicles1.jpeg"

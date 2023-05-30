@@ -29,6 +29,9 @@ class MmdetTestConstants:
     MMDET_RETINANET_CONFIG_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py"
     MMDET_YOLOX_TINY_CONFIG_PATH = "tests/data/models/mmdet_yolox/yolox_tiny_8x8_300e_coco.py"
 
+    MMDET3_YOLOX_TINY_MODEL_PATH = MMDET_YOLOX_TINY_MODEL_PATH
+    MMDET3_YOLOX_TINY_CONFIG_PATH = "tests/data/mmdet3/configs/yolox/yolox_tiny_8xb8-300e_coco.py"
+
 
 def download_mmdet_cascade_mask_rcnn_model(destination_path: Optional[str] = None):
 
