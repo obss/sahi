@@ -26,11 +26,7 @@ class MmdetDetectionModel(DetectionModel):
         from mmdet.apis import init_detector
 
         # create model
-        model = init_detector(
-            config=self.config_path,
-            checkpoint=self.model_path,
-            device=self.device,
-        )
+        model = init_detector(config=self.config_path, checkpoint=self.model_path, device=self.device,)
 
         # update model image size
         if self.image_size is not None:
