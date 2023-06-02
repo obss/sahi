@@ -27,8 +27,7 @@ def download_yolov8n_model(destination_path: Optional[str] = None):
 
     if not path.exists(destination_path):
         urllib.request.urlretrieve(
-            Yolov8TestConstants.YOLOV8N_MODEL_URL,
-            destination_path,
+            Yolov8TestConstants.YOLOV8N_MODEL_URL, destination_path,
         )
 
 
@@ -41,9 +40,9 @@ def download_yolov8s_model(destination_path: Optional[str] = None):
 
     if not path.exists(destination_path):
         urllib.request.urlretrieve(
-            Yolov8TestConstants.YOLOV8S_MODEL_URL,
-            destination_path,
+            Yolov8TestConstants.YOLOV8S_MODEL_URL, destination_path,
         )
+
 
 def download_yolov8m_model(destination_path: Optional[str] = None):
 
@@ -54,9 +53,9 @@ def download_yolov8m_model(destination_path: Optional[str] = None):
 
     if not path.exists(destination_path):
         urllib.request.urlretrieve(
-            Yolov8TestConstants.YOLOV8M_MODEL_URL,
-            destination_path,
+            Yolov8TestConstants.YOLOV8M_MODEL_URL, destination_path,
         )
+
 
 def download_yolov8l_model(destination_path: Optional[str] = None):
 
@@ -67,6 +66,5 @@ def download_yolov8l_model(destination_path: Optional[str] = None):
 
     if not path.exists(destination_path):
         urllib.request.urlretrieve(
-            Yolov8TestConstants.YOLOV8L_MODEL_URL,
-            destination_path,
+            Yolov8TestConstants.YOLOV8L_MODEL_URL, destination_path,
         )
