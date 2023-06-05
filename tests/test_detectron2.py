@@ -15,7 +15,7 @@ IMAGE_SIZE = 320
 # note that detectron2 binaries are available only for linux
 
 torch_version = get_package_info("torch", verbose=False)[1]
-if "1.10." in torch_version:
+if "1.10." in torch_version or "2." in torch_version:
 
     class TestDetectron2DetectionModel(unittest.TestCase):
         def test_load_model(self):
@@ -117,12 +117,11 @@ if "1.10." in torch_version:
             # prepare image
             image_path = "tests/data/small-vehicles1.jpeg"
             image = read_image(image_path)
-
             # perform inference
             detectron2_detection_model.perform_inference(image)
 
             # convert predictions to ObjectPrediction list
-            detectron2_detection_model.convert_original_predictions()
+            detectron2_detection_model.convert_original_predictions(full_shape=(image.shape[0], image.shape[1]))
             object_prediction_list = detectron2_detection_model.object_prediction_list
 
             # compare
