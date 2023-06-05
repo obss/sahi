@@ -98,7 +98,8 @@ def get_prediction(
     time_start = time.time()
     # works only with 1 batch
     detection_model.convert_original_predictions(
-        shift_amount=shift_amount, full_shape=full_shape,
+        shift_amount=shift_amount,
+        full_shape=full_shape,
     )
     object_prediction_list: List[ObjectPrediction] = detection_model.object_prediction_list
 
@@ -111,7 +112,9 @@ def get_prediction(
 
     if verbose == 1:
         print(
-            "Prediction performed in", durations_in_seconds["prediction"], "seconds.",
+            "Prediction performed in",
+            durations_in_seconds["prediction"],
+            "seconds.",
         )
 
     return PredictionResult(
@@ -239,7 +242,10 @@ def get_sliced_prediction(
             image=image_list[0],
             detection_model=detection_model,
             shift_amount=shift_amount_list[0],
-            full_shape=[slice_image_result.original_image_height, slice_image_result.original_image_width,],
+            full_shape=[
+                slice_image_result.original_image_height,
+                slice_image_result.original_image_width,
+            ],
         )
         # convert sliced predictions to full predictions
         for object_prediction in prediction_result.object_prediction_list:
@@ -253,7 +259,11 @@ def get_sliced_prediction(
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
         prediction_result = get_prediction(
-            image=image, detection_model=detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None,
+            image=image,
+            detection_model=detection_model,
+            shift_amount=[0, 0],
+            full_shape=None,
+            postprocess=None,
         )
         object_prediction_list.extend(prediction_result.object_prediction_list)
 
@@ -266,10 +276,14 @@ def get_sliced_prediction(
 
     if verbose == 2:
         print(
-            "Slicing performed in", durations_in_seconds["slice"], "seconds.",
+            "Slicing performed in",
+            durations_in_seconds["slice"],
+            "seconds.",
         )
         print(
-            "Prediction performed in", durations_in_seconds["prediction"], "seconds.",
+            "Prediction performed in",
+            durations_in_seconds["prediction"],
+            "seconds.",
         )
 
     return PredictionResult(
@@ -472,7 +486,11 @@ def predict(
         image_iterator = [str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images]
         coco_json = []
     elif os.path.isdir(source):
-        image_iterator = list_files(directory=source, contains=IMAGE_EXTENSIONS, verbose=verbose,)
+        image_iterator = list_files(
+            directory=source,
+            contains=IMAGE_EXTENSIONS,
+            verbose=verbose,
+        )
     elif Path(source).suffix in VIDEO_EXTENSIONS:
         source_is_video = True
         read_video_frame, output_video_writer, video_file_name, num_frames = get_video_reader(
@@ -669,17 +687,25 @@ def predict(
     # print prediction duration
     if verbose == 2:
         print(
-            "Model loaded in", durations_in_seconds["model_load"], "seconds.",
+            "Model loaded in",
+            durations_in_seconds["model_load"],
+            "seconds.",
         )
         print(
-            "Slicing performed in", durations_in_seconds["slice"], "seconds.",
+            "Slicing performed in",
+            durations_in_seconds["slice"],
+            "seconds.",
         )
         print(
-            "Prediction performed in", durations_in_seconds["prediction"], "seconds.",
+            "Prediction performed in",
+            durations_in_seconds["prediction"],
+            "seconds.",
         )
         if not novisual:
             print(
-                "Exporting performed in", durations_in_seconds["export_files"], "seconds.",
+                "Exporting performed in",
+                durations_in_seconds["export_files"],
+                "seconds.",
             )
 
     if return_dict:
@@ -839,13 +865,19 @@ def predict_fiftyone(
     # print prediction duration
     if verbose == 1:
         print(
-            "Model loaded in", durations_in_seconds["model_load"], "seconds.",
+            "Model loaded in",
+            durations_in_seconds["model_load"],
+            "seconds.",
         )
         print(
-            "Slicing performed in", durations_in_seconds["slice"], "seconds.",
+            "Slicing performed in",
+            durations_in_seconds["slice"],
+            "seconds.",
         )
         print(
-            "Prediction performed in", durations_in_seconds["prediction"], "seconds.",
+            "Prediction performed in",
+            durations_in_seconds["prediction"],
+            "seconds.",
         )
 
     # visualize results
@@ -853,7 +885,11 @@ def predict_fiftyone(
     session.dataset = dataset
     # Evaluate the predictions
     results = dataset.evaluate_detections(
-        model_type, gt_field="ground_truth", eval_key="eval", iou=postprocess_match_threshold, compute_mAP=True,
+        model_type,
+        gt_field="ground_truth",
+        eval_key="eval",
+        iou=postprocess_match_threshold,
+        compute_mAP=True,
     )
     # Get the 10 most common classes in the dataset
     counts = dataset.count_values("ground_truth.detections.label")

@@ -53,7 +53,11 @@ def _makeplot(rs, ps, outDir, class_name, iou_type):
         for k in range(len(types)):
             ax.plot(rs, ps_curve[k + 1], color=[0, 0, 0], linewidth=0.5)
             ax.fill_between(
-                rs, ps_curve[k], ps_curve[k + 1], color=COLOR_PALETTE[k], label=str(f"[{aps[k]:.3f}]" + types[k]),
+                rs,
+                ps_curve[k],
+                ps_curve[k + 1],
+                color=COLOR_PALETTE[k],
+                label=str(f"[{aps[k]:.3f}]" + types[k]),
             )
         plt.xlabel("recall")
         plt.ylabel("precision")
@@ -244,8 +248,8 @@ def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None,
     cocoEval.params.useCats = 1
     if areas:
         cocoEval.params.areaRng = [
-            [0 ** 2, areas[2]],
-            [0 ** 2, areas[0]],
+            [0**2, areas[2]],
+            [0**2, areas[0]],
             [areas[0], areas[1]],
             [areas[1], areas[2]],
         ]
@@ -267,8 +271,8 @@ def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None,
     cocoEval.params.useCats = 1
     if areas:
         cocoEval.params.areaRng = [
-            [0 ** 2, areas[2]],
-            [0 ** 2, areas[0]],
+            [0**2, areas[2]],
+            [0**2, areas[0]],
             [areas[0], areas[1]],
             [areas[1], areas[2]],
         ]
@@ -324,8 +328,8 @@ def _analyse_results(
         cocoEval.params.maxDets = [max_detections]
         if areas is not None:
             cocoEval.params.areaRng = [
-                [0 ** 2, areas[2]],
-                [0 ** 2, areas[0]],
+                [0**2, areas[2]],
+                [0**2, areas[0]],
                 [areas[0], areas[1]],
                 [areas[1], areas[2]],
             ]
@@ -356,7 +360,6 @@ def _analyse_results(
 
         classname_to_export_path_list = {}
         for k, catId in enumerate(present_cat_ids):
-
             nm = cocoGt.loadCats(catId)[0]
             print(f'--------------saving {k + 1}-{nm["name"]}---------------')
             analyze_result = analyze_results[k]

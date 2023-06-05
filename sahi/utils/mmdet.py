@@ -31,7 +31,6 @@ class MmdetTestConstants:
 
 
 def download_mmdet_cascade_mask_rcnn_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH
 
@@ -41,7 +40,6 @@ def download_mmdet_cascade_mask_rcnn_model(destination_path: Optional[str] = Non
 
 
 def download_mmdet_retinanet_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_RETINANET_MODEL_PATH
 
@@ -51,7 +49,6 @@ def download_mmdet_retinanet_model(destination_path: Optional[str] = None):
 
 
 def download_mmdet_yolox_tiny_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH
 
@@ -119,7 +116,8 @@ def download_mmdet_config(
 
         # download main config file
         urllib.request.urlretrieve(
-            main_config_url, main_config_path,
+            main_config_url,
+            main_config_path,
         )
 
         # read main config file
@@ -144,7 +142,8 @@ def download_mmdet_config(
 
             # download secondary config files
             urllib.request.urlretrieve(
-                config_url, str(config_path),
+                config_url,
+                str(config_path),
             )
 
             # read secondary config file
@@ -171,7 +170,8 @@ def download_mmdet_config(
                     config_path.parent.mkdir(parents=True, exist_ok=True)
                     # download secondary config files
                     urllib.request.urlretrieve(
-                        config_url, str(config_path),
+                        config_url,
+                        str(config_path),
                     )
 
         # dump final config as single file

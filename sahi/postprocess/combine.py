@@ -41,7 +41,9 @@ def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_thre
 
 
 def nms(
-    predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5,
+    predictions: torch.tensor,
+    match_metric: str = "IOU",
+    match_threshold: float = 0.5,
 ):
     """
     Apply non-maximum suppression to avoid detecting too many
@@ -146,7 +148,9 @@ def nms(
 
 
 def batched_greedy_nmm(
-    object_predictions_as_tensor: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5,
+    object_predictions_as_tensor: torch.tensor,
+    match_metric: str = "IOU",
+    match_threshold: float = 0.5,
 ):
     """
     Apply greedy version of non-maximum merging per category to avoid detecting
@@ -175,7 +179,9 @@ def batched_greedy_nmm(
 
 
 def greedy_nmm(
-    object_predictions_as_tensor: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5,
+    object_predictions_as_tensor: torch.tensor,
+    match_metric: str = "IOU",
+    match_threshold: float = 0.5,
 ):
     """
     Apply greedy version of non-maximum merging to avoid detecting too many
@@ -296,7 +302,9 @@ def greedy_nmm(
 
 
 def batched_nmm(
-    object_predictions_as_tensor: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5,
+    object_predictions_as_tensor: torch.tensor,
+    match_metric: str = "IOU",
+    match_threshold: float = 0.5,
 ):
     """
     Apply non-maximum merging per category to avoid detecting too many
@@ -325,7 +333,9 @@ def batched_nmm(
 
 
 def nmm(
-    object_predictions_as_tensor: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5,
+    object_predictions_as_tensor: torch.tensor,
+    match_metric: str = "IOU",
+    match_threshold: float = 0.5,
 ):
     """
     Apply non-maximum merging to avoid detecting too many
@@ -445,7 +455,10 @@ class PostprocessPredictions:
     """Utilities for calculating IOU/IOS based match for given ObjectPredictions"""
 
     def __init__(
-        self, match_threshold: float = 0.5, match_metric: str = "IOU", class_agnostic: bool = True,
+        self,
+        match_threshold: float = 0.5,
+        match_metric: str = "IOU",
+        class_agnostic: bool = True,
     ):
         self.match_threshold = match_threshold
         self.class_agnostic = class_agnostic
@@ -459,7 +472,8 @@ class PostprocessPredictions:
 
 class NMSPostprocess(PostprocessPredictions):
     def __call__(
-        self, object_predictions: List[ObjectPrediction],
+        self,
+        object_predictions: List[ObjectPrediction],
     ):
         object_prediction_list = ObjectPredictionList(object_predictions)
         object_predictions_as_torch = object_prediction_list.totensor()
@@ -481,17 +495,22 @@ class NMSPostprocess(PostprocessPredictions):
 
 class NMMPostprocess(PostprocessPredictions):
     def __call__(
-        self, object_predictions: List[ObjectPrediction],
+        self,
+        object_predictions: List[ObjectPrediction],
     ):
         object_prediction_list = ObjectPredictionList(object_predictions)
         object_predictions_as_torch = object_prediction_list.totensor()
         if self.class_agnostic:
             keep_to_merge_list = nmm(
-                object_predictions_as_torch, match_threshold=self.match_threshold, match_metric=self.match_metric,
+                object_predictions_as_torch,
+                match_threshold=self.match_threshold,
+                match_metric=self.match_metric,
             )
         else:
             keep_to_merge_list = batched_nmm(
-                object_predictions_as_torch, match_threshold=self.match_threshold, match_metric=self.match_metric,
+                object_predictions_as_torch,
+                match_threshold=self.match_threshold,
+                match_metric=self.match_metric,
             )
 
         selected_object_predictions = []
@@ -513,17 +532,22 @@ class NMMPostprocess(PostprocessPredictions):
 
 class GreedyNMMPostprocess(PostprocessPredictions):
     def __call__(
-        self, object_predictions: List[ObjectPrediction],
+        self,
+        object_predictions: List[ObjectPrediction],
     ):
         object_prediction_list = ObjectPredictionList(object_predictions)
         object_predictions_as_torch = object_prediction_list.totensor()
         if self.class_agnostic:
             keep_to_merge_list = greedy_nmm(
-                object_predictions_as_torch, match_threshold=self.match_threshold, match_metric=self.match_metric,
+                object_predictions_as_torch,
+                match_threshold=self.match_threshold,
+                match_metric=self.match_metric,
             )
         else:
             keep_to_merge_list = batched_greedy_nmm(
-                object_predictions_as_torch, match_threshold=self.match_threshold, match_metric=self.match_metric,
+                object_predictions_as_torch,
+                match_threshold=self.match_threshold,
+                match_metric=self.match_metric,
             )
 
         selected_object_predictions = []
@@ -546,7 +570,8 @@ class GreedyNMMPostprocess(PostprocessPredictions):
 class LSNMSPostprocess(PostprocessPredictions):
     # https://github.com/remydubois/lsnms/blob/10b8165893db5bfea4a7cb23e268a502b35883cf/lsnms/nms.py#L62
     def __call__(
-        self, object_predictions: List[ObjectPrediction],
+        self,
+        object_predictions: List[ObjectPrediction],
     ):
         try:
             from lsnms import nms
