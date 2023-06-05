@@ -167,7 +167,7 @@ class MmdetDetectionModel(DetectionModel):
                         # https://github.com/obss/sahi/discussions/696
                         if get_bbox_from_bool_mask(bool_mask) is None:
                             continue
-                        segmentation = get_coco_segmentation_from_bool_mask
+                        segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
                     else:
                         segmentation = None
 
