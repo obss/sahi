@@ -8,6 +8,7 @@ import numpy as np
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
+from sahi.utils.cv import get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
 
 logger = logging.getLogger(__name__)
@@ -176,13 +177,13 @@ class TorchVisionDetectionModel(DetectionModel):
             for ind in range(len(boxes)):
 
                 if masks is not None:
-                    mask = np.array(masks[ind])
+                    mask = get_coco_segmentation_from_bool_mask(np.array(masks[ind]))
                 else:
                     mask = None
 
                 object_prediction = ObjectPrediction(
                     bbox=boxes[ind],
-                    bool_mask=mask,
+                    segmentation=mask,
                     category_id=int(category_ids[ind]),
                     category_name=self.category_mapping[str(int(category_ids[ind]))],
                     shift_amount=shift_amount,

@@ -8,18 +8,11 @@ import numpy as np
 
 from sahi.utils.coco import CocoAnnotation, CocoPrediction
 from sahi.utils.cv import (
-    get_bbox_from_bool_mask,
+    get_bbox_from_coco_segmentation,
     get_bool_mask_from_coco_segmentation,
     get_coco_segmentation_from_bool_mask,
 )
 from sahi.utils.shapely import ShapelyAnnotation
-
-try:
-    from pycocotools import mask as mask_utils
-
-    use_rle = True
-except ImportError:
-    use_rle = False
 
 
 class BoundingBox:
@@ -156,14 +149,13 @@ class Mask:
         """
         bool_mask = mask > mask_threshold
         return cls(
-            bool_mask=bool_mask,
+            segmentation=get_coco_segmentation_from_bool_mask(bool_mask),
             shift_amount=shift_amount,
             full_shape=full_shape,
         )
 
-    @classmethod
-    def from_coco_segmentation(
-        cls,
+    def __init__(
+        self,
         segmentation,
         full_shape=None,
         shift_amount: list = [0, 0],
@@ -187,39 +179,6 @@ class Mask:
         # confirm full_shape is given
         if full_shape is None:
             raise ValueError("full_shape must be provided")
-        bool_mask = get_bool_mask_from_coco_segmentation(segmentation, height=full_shape[0], width=full_shape[1])
-        return cls(
-            bool_mask=bool_mask,
-            shift_amount=shift_amount,
-            full_shape=full_shape,
-        )
-
-    def __init__(
-        self,
-        bool_mask=None,
-        full_shape=None,
-        shift_amount: list = [0, 0],
-    ):
-        """
-        Args:
-            bool_mask: np.ndarray with bool elements
-                2D mask of object, should have a shape of height*width
-            full_shape: List
-                Size of the full image, should be in the form of [height, width]
-            shift_amount: List
-                To shift the box and mask predictions from sliced image to full
-                sized image, should be in the form of [shift_x, shift_y]
-        """
-
-        if len(bool_mask) > 0:
-            has_bool_mask = True
-        else:
-            has_bool_mask = False
-
-        if has_bool_mask:
-            self._mask = self.encode_bool_mask(bool_mask)
-        else:
-            self._mask = None
 
         self.shift_x = shift_amount[0]
         self.shift_y = shift_amount[1]
@@ -234,21 +193,36 @@ class Mask:
             self.full_shape_height = None
             self.full_shape_width = None
 
-    def encode_bool_mask(self, bool_mask):
-        _mask = bool_mask
-        if use_rle:
-            _mask = mask_utils.encode(np.asfortranarray(bool_mask.astype(np.uint8)))
-        return _mask
+        self.segmentation = segmentation
 
-    def decode_bool_mask(self, bool_mask):
-        _mask = bool_mask
-        if use_rle:
-            _mask = mask_utils.decode(bool_mask).astype(bool)
-        return _mask
+    @classmethod
+    def from_bool_mask(
+        cls,
+        bool_mask=None,
+        full_shape=None,
+        shift_amount: list = [0, 0],
+    ):
+        """
+        Args:
+            bool_mask: np.ndarray with bool elements
+                2D mask of object, should have a shape of height*width
+            full_shape: List
+                Size of the full image, should be in the form of [height, width]
+            shift_amount: List
+                To shift the box and mask predictions from sliced image to full
+                sized image, should be in the form of [shift_x, shift_y]
+        """
+        return cls(
+            segmentation=get_coco_segmentation_from_bool_mask(bool_mask),
+            shift_amount=shift_amount,
+            full_shape=full_shape,
+        )
 
     @property
     def bool_mask(self):
-        return self.decode_bool_mask(self._mask)
+        return get_bool_mask_from_coco_segmentation(
+            self.segmentation, width=self.full_shape[1], height=self.full_shape[0]
+        )
 
     @property
     def shape(self):
@@ -275,45 +249,16 @@ class Mask:
         # Confirm full_shape is specified
         if (self.full_shape_height is None) or (self.full_shape_width is None):
             raise ValueError("full_shape is None")
-        # init full mask
-        mask_fullsized = np.full(
-            (
-                self.full_shape_height,
-                self.full_shape_width,
-            ),
-            0,
-            dtype="float32",
-        )
-
-        # arrange starting ending indexes
-        starting_pixel = [self.shift_x, self.shift_y]
-        ending_pixel = [
-            min(starting_pixel[0] + self.bool_mask.shape[1], self.full_shape_width),
-            min(starting_pixel[1] + self.bool_mask.shape[0], self.full_shape_height),
-        ]
-
-        # convert sliced mask to full mask
-        mask_fullsized[starting_pixel[1] : ending_pixel[1], starting_pixel[0] : ending_pixel[0]] = self.bool_mask[
-            : ending_pixel[1] - starting_pixel[1], : ending_pixel[0] - starting_pixel[0]
-        ]
-
+        shifted_segmentation = []
+        for s in self.segmentation:
+            xs = [min(self.shift_x + s[i], self.full_shape_width) for i in range(0, len(s) - 1, 2)]
+            ys = [min(self.shift_y + s[i], self.full_shape_height) for i in range(1, len(s), 2)]
+            shifted_segmentation.append([j for i in zip(xs, ys) for j in i])
         return Mask(
-            mask_fullsized,
+            segmentation=shifted_segmentation,
             shift_amount=[0, 0],
             full_shape=self.full_shape,
         )
-
-    def to_coco_segmentation(self):
-        """
-        Returns boolean mask as coco segmentation:
-        [
-            [x1, y1, x2, y2, x3, y3, ...],
-            [x1, y1, x2, y2, x3, y3, ...],
-            ...
-        ]
-        """
-        coco_segmentation = get_coco_segmentation_from_bool_mask(self.bool_mask)
-        return coco_segmentation
 
 
 class ObjectAnnotation:
@@ -346,9 +291,10 @@ class ObjectAnnotation:
                 To shift the box and mask predictions from sliced image to full
                 sized image, should be in the form of [shift_x, shift_y]
         """
+        segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
         return cls(
             category_id=category_id,
-            bool_mask=bool_mask,
+            segmentation=segmentation,
             category_name=category_name,
             shift_amount=shift_amount,
             full_shape=full_shape,
@@ -388,10 +334,9 @@ class ObjectAnnotation:
                 To shift the box and mask predictions from sliced image to full
                 sized image, should be in the form of [shift_x, shift_y]
         """
-        bool_mask = get_bool_mask_from_coco_segmentation(segmentation, width=full_shape[1], height=full_shape[0])
         return cls(
             category_id=category_id,
-            bool_mask=bool_mask,
+            segmentation=segmentation,
             category_name=category_name,
             shift_amount=shift_amount,
             full_shape=full_shape,
@@ -539,7 +484,7 @@ class ObjectAnnotation:
     def __init__(
         self,
         bbox: Optional[List[int]] = None,
-        bool_mask: Optional[np.ndarray] = None,
+        segmentation: Optional[np.ndarray] = None,
         category_id: Optional[int] = None,
         category_name: Optional[str] = None,
         shift_amount: Optional[List[int]] = [0, 0],
@@ -549,8 +494,12 @@ class ObjectAnnotation:
         Args:
             bbox: List
                 [minx, miny, maxx, maxy]
-            bool_mask: np.ndarray with bool elements
-                2D mask of object, should have a shape of height*width
+            segmentation: List[List]
+                [
+                    [x1, y1, x2, y2, x3, y3, ...],
+                    [x1, y1, x2, y2, x3, y3, ...],
+                    ...
+                ]
             category_id: int
                 ID of the object category
             category_name: str
@@ -564,21 +513,21 @@ class ObjectAnnotation:
         """
         if not isinstance(category_id, int):
             raise ValueError("category_id must be an integer")
-        if (bbox is None) and (bool_mask is None):
-            raise ValueError("you must provide a bbox or bool_mask")
+        if (bbox is None) and (segmentation is None):
+            raise ValueError("you must provide a bbox or segmentation")
 
-        if bool_mask is not None:
+        if segmentation is not None:
             self.mask = Mask(
-                bool_mask=bool_mask,
+                segmentation=segmentation,
                 shift_amount=shift_amount,
                 full_shape=full_shape,
             )
-            bbox_from_bool_mask = get_bbox_from_bool_mask(bool_mask)
+            bbox_from_segmentation = get_bbox_from_coco_segmentation(segmentation)
             # https://github.com/obss/sahi/issues/235
-            if bbox_from_bool_mask is not None:
-                bbox = bbox_from_bool_mask
+            if bbox_from_segmentation is not None:
+                bbox = bbox_from_segmentation
             else:
-                raise ValueError("Invalid boolean mask.")
+                raise ValueError("Invalid segmentation mask.")
         else:
             self.mask = None
 
@@ -613,7 +562,7 @@ class ObjectAnnotation:
         """
         if self.mask:
             coco_annotation = CocoAnnotation.from_coco_segmentation(
-                segmentation=self.mask.to_coco_segmentation(),
+                segmentation=self.mask.segmentation(),
                 category_id=self.category.id,
                 category_name=self.category.name,
             )
@@ -631,7 +580,7 @@ class ObjectAnnotation:
         """
         if self.mask:
             coco_prediction = CocoPrediction.from_coco_segmentation(
-                segmentation=self.mask.to_coco_segmentation(),
+                segmentation=self.mask.segmentation(),
                 category_id=self.category.id,
                 category_name=self.category.name,
                 score=1,
@@ -651,7 +600,7 @@ class ObjectAnnotation:
         """
         if self.mask:
             shapely_annotation = ShapelyAnnotation.from_coco_segmentation(
-                segmentation=self.mask.to_coco_segmentation(),
+                segmentation=self.mask.segmentation(),
             )
         else:
             shapely_annotation = ShapelyAnnotation.from_coco_bbox(
@@ -695,13 +644,14 @@ class ObjectAnnotation:
 
     def get_shifted_object_annotation(self):
         if self.mask:
+            shifted_mask = self.mask.get_shifted_mask()
             return ObjectAnnotation(
                 bbox=self.bbox.get_shifted_box().to_xyxy(),
                 category_id=self.category.id,
-                bool_mask=self.mask.get_shifted_mask().bool_mask,
+                segmentation=shifted_mask.segmentation,
                 category_name=self.category.name,
                 shift_amount=[0, 0],
-                full_shape=self.mask.get_shifted_mask().full_shape,
+                full_shape=shifted_mask.full_shape,
             )
         else:
             return ObjectAnnotation(

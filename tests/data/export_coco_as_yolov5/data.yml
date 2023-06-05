@@ -1,0 +1,7 @@
+names:
+- human
+- car
+- big_vehicle
+nc: 3
+train: /mnt/d/Users/E1005164/sahi/tests/data/export_coco_as_yolov5/train
+val: /mnt/d/Users/E1005164/sahi/tests/data/export_coco_as_yolov5/val

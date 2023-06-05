@@ -9,7 +9,7 @@ import numpy as np
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.cv import get_bbox_from_bool_mask
+from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
 
 logger = logging.getLogger(__name__)
@@ -167,8 +167,9 @@ class MmdetDetectionModel(DetectionModel):
                         # https://github.com/obss/sahi/discussions/696
                         if get_bbox_from_bool_mask(bool_mask) is None:
                             continue
+                        segmentation = get_coco_segmentation_from_bool_mask
                     else:
-                        bool_mask = None
+                        segmentation = None
 
                     # fix negative box coords
                     bbox[0] = max(0, bbox[0])
@@ -192,7 +193,7 @@ class MmdetDetectionModel(DetectionModel):
                         bbox=bbox,
                         category_id=category_id,
                         score=score,
-                        bool_mask=bool_mask,
+                        segmentation=segmentation,
                         category_name=category_name,
                         shift_amount=shift_amount,
                         full_shape=full_shape,

@@ -695,7 +695,7 @@ def shift_masks(masks: np.ndarray, offset: Sequence[int], full_shape: Sequence[i
 
     shifted_masks = []
     for mask in masks:
-        mask = Mask(bool_mask=mask, shift_amount=offset, full_shape=full_shape)
+        mask = Mask(segmentation=mask, shift_amount=offset, full_shape=full_shape)
         mask = mask.get_shifted_mask()
         shifted_masks.append(mask.bool_mask)
 
