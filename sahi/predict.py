@@ -196,7 +196,6 @@ def get_sliced_prediction(
 
     # currently only 1 batch supported
     num_batch = 1
-
     # create slices from full image
     time_start = time.time()
     slice_image_result = slice_image(
@@ -209,6 +208,7 @@ def get_sliced_prediction(
         overlap_width_ratio=overlap_width_ratio,
         auto_slice_resolution=auto_slice_resolution,
     )
+
     num_slices = len(slice_image_result)
     time_end = time.time() - time_start
     durations_in_seconds["slice"] = time_end
@@ -266,7 +266,10 @@ def get_sliced_prediction(
             image=image,
             detection_model=detection_model,
             shift_amount=[0, 0],
-            full_shape=None,
+            full_shape=[
+                slice_image_result.original_image_height,
+                slice_image_result.original_image_width,
+            ],
             postprocess=None,
         )
         object_prediction_list.extend(prediction_result.object_prediction_list)

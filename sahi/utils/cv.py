@@ -138,7 +138,6 @@ def read_image(image_path: str):
     # return image
     return image
 
-
 def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool = False):
     """
     Loads an image as PIL.Image.Image.
@@ -571,6 +570,24 @@ def get_bbox_from_bool_mask(bool_mask):
     if width == 0 or height == 0:
         return None
 
+    return [xmin, ymin, xmax, ymax]
+
+
+def get_bbox_from_coco_segmentation(coco_segmentation):
+    """
+    Generate voc box ([xmin, ymin, xmax, ymax]) from given coco segmentation
+    """
+    xs = []
+    ys = []
+    for segm in coco_segmentation:
+        xs.extend(segm[::2])
+        ys.extend(segm[1::2])
+    if len(xs) == 0 or len(ys) == 0:
+        return None
+    xmin = min(xs)
+    xmax = max(xs)
+    ymin = min(ys)
+    ymax = max(ys)
     return [xmin, ymin, xmax, ymax]
 
 

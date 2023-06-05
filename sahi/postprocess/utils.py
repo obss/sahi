@@ -3,9 +3,12 @@ from typing import List, Union
 
 import numpy as np
 import torch
+from shapely.geometry import MultiPolygon, Polygon
 
 from sahi.annotation import BoundingBox, Category, Mask
 from sahi.prediction import ObjectPrediction
+from sahi.utils.cv import get_coco_segmentation_from_bool_mask
+from sahi.utils.shapely import ShapelyAnnotation, get_shapely_multipolygon
 
 
 class ObjectPredictionList(Sequence):
@@ -160,9 +163,17 @@ def has_match(
 def get_merged_mask(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Mask:
     mask1 = pred1.mask
     mask2 = pred2.mask
-    union_mask = np.logical_or(mask1.bool_mask, mask2.bool_mask)
+
+    poly1 = get_shapely_multipolygon(mask1.segmentation).buffer(0)
+    poly2 = get_shapely_multipolygon(mask2.segmentation).buffer(0)
+    union_poly = poly1.union(poly2)
+    if not hasattr(union_poly, "geoms"):
+        union_poly = MultiPolygon([union_poly])
+    else:
+        union_poly = MultiPolygon([g.buffer(0) for g in union_poly.geoms if isinstance(g, Polygon)])
+    union = ShapelyAnnotation(multipolygon=union_poly).to_coco_segmentation()
     return Mask(
-        bool_mask=union_mask,
+        segmentation=union,
         full_shape=mask1.full_shape,
         shift_amount=mask1.shift_amount,
     )
@@ -200,17 +211,17 @@ def merge_object_prediction_pair(
     merged_category: Category = get_merged_category(pred1, pred2)
     if pred1.mask and pred2.mask:
         merged_mask: Mask = get_merged_mask(pred1, pred2)
-        bool_mask = merged_mask.bool_mask
+        segmentation = merged_mask.segmentation
         full_shape = merged_mask.full_shape
     else:
-        bool_mask = None
+        segmentation = None
         full_shape = None
     return ObjectPrediction(
         bbox=merged_bbox.to_xyxy(),
         score=merged_score,
         category_id=merged_category.id,
         category_name=merged_category.name,
-        bool_mask=bool_mask,
+        segmentation=segmentation,
         shift_amount=shift_amount,
         full_shape=full_shape,
     )
