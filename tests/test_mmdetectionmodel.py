@@ -7,25 +7,12 @@ import numpy as np
 
 from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
-from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model
+from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_yolox_tiny_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
-
-
-MMDET_YOLOX_TINY_MODEL_URL = (
-    "https://huggingface.co/fcakyon/mmdet-yolox-tiny/resolve/main/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
-)
-MMDET_YOLOX_TINY_MODEL_PATH = "tests/data/models/mmdet-yolox-tiny/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
-MMDET_YOLOX_TINY_CONFIG_URL = "https://huggingface.co/fcakyon/mmdet-yolox-tiny/raw/main/yolox_tiny_8x8_300e_coco.py"
-MMDET_YOLOX_TINY_CONFIG_PATH = "tests/data/models/mmdet-yolox-tiny/yolox_tiny_8x8_300e_coco.py"
 IMAGE_PATH = "tests/data/small-vehicles1.jpeg"
-
-
-def download_mmdet_yolox_tiny_model():
-    download_from_url(MMDET_YOLOX_TINY_MODEL_URL, MMDET_YOLOX_TINY_MODEL_PATH)
-    download_from_url(MMDET_YOLOX_TINY_CONFIG_URL, MMDET_YOLOX_TINY_CONFIG_PATH)
 
 
 class TestMmdetDetectionModel(unittest.TestCase):
@@ -68,19 +55,28 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model.perform_inference(image)
         original_predictions = mmdet_detection_model.original_predictions
 
-        boxes = original_predictions[0][0]
-        masks = original_predictions[0][1]
+        # check actual prediction structures
+        pred = original_predictions[0]
+        self.assertTrue("bboxes" in pred)
+        self.assertTrue("masks" in pred)
+        self.assertTrue("scores" in pred)
+        self.assertTrue("labels" in pred)
+
+        # all annotations have the same length
+        n_preds = len(pred["bboxes"])
+        self.assertTrue(len(pred["bboxes"]) == n_preds)
+        self.assertTrue(len(pred["masks"]) == n_preds)
+        self.assertTrue(len(pred["labels"]) == n_preds)
+        self.assertTrue(len(pred["scores"]) == n_preds)
+
+        boxes = np.array(pred["bboxes"])
+        scores = np.array(pred["scores"])
 
         # ensure all prediction scores are greater then 0.5
-        for box in boxes[0]:
-            if len(box) == 5:
-                if box[4] > 0.5:
-                    break
+        idx = np.where(scores >= 0.5)[0]
 
         # compare
-        self.assertEqual(box[:4].astype("int").tolist(), [377, 273, 410, 314])
-        self.assertEqual(len(boxes), 80)
-        self.assertEqual(len(masks), 80)
+        self.assertTrue([446, 304, 490, 346] in boxes[idx].astype(int))
 
     def test_perform_inference_without_mask_output(self):
         from sahi.models.mmdet import MmdetDetectionModel
@@ -89,8 +85,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
         download_mmdet_yolox_tiny_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MMDET_YOLOX_TINY_MODEL_PATH,
-            config_path=MMDET_YOLOX_TINY_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -106,18 +102,20 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model.perform_inference(image)
         original_predictions = mmdet_detection_model.original_predictions
 
-        boxes = original_predictions[0]
+        pred = original_predictions[0]
+        n_preds = len(pred["bboxes"])
+        self.assertTrue(len(pred["bboxes"]) == n_preds)
+        self.assertTrue(len(pred["labels"]) == n_preds)
+        self.assertTrue(len(pred["scores"]) == n_preds)
+        boxes = np.array(pred["bboxes"])
+        labels = np.array(pred["labels"])
+        scores = np.array(pred["scores"])
 
         # find box of first car detection with conf greater than 0.5
-        for box in boxes[2]:
-            print(len(box))
-            if len(box) == 5:
-                if box[4] > 0.5:
-                    break
+        idx = np.where((scores >= 0.5) & (labels == 2))[0][0]
 
         # compare
-        self.assertEqual(box[:4].astype("int").tolist(), [320, 323, 380, 365])
-        self.assertEqual(len(boxes), 80)
+        self.assertEqual(boxes[idx].astype(int).tolist(), [320, 323, 380, 365])
 
     def test_convert_original_predictions_with_mask_output(self):
         from sahi.models.mmdet import MmdetDetectionModel
@@ -169,8 +167,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
         download_mmdet_yolox_tiny_model()
 
         mmdet_detection_model = MmdetDetectionModel(
-            model_path=MMDET_YOLOX_TINY_MODEL_PATH,
-            config_path=MMDET_YOLOX_TINY_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_CASCADEMASKRCNN_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -189,13 +187,17 @@ class TestMmdetDetectionModel(unittest.TestCase):
         object_predictions = mmdet_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_predictions), 2)
+        self.assertEqual(len(object_predictions), 3)
         self.assertEqual(object_predictions[0].category.id, 2)
         self.assertEqual(object_predictions[0].category.name, "car")
-        np.testing.assert_almost_equal(object_predictions[0].bbox.to_xywh(), [320.28, 323.55, 60.60, 41.91], decimal=1)
+        np.testing.assert_almost_equal(object_predictions[0].bbox.to_xywh(), [448, 308, 41, 36], decimal=1)
         self.assertEqual(object_predictions[1].category.id, 2)
         self.assertEqual(object_predictions[1].category.name, "car")
-        np.testing.assert_almost_equal(object_predictions[1].bbox.to_xywh(), [448.45, 310.97, 44.49, 30.86], decimal=1)
+        np.testing.assert_almost_equal(object_predictions[1].bbox.to_xywh(), [320, 327, 58, 36], decimal=1)
+        self.assertEqual(object_predictions[2].category.id, 2)
+        self.assertEqual(object_predictions[2].category.name, "car")
+        np.testing.assert_almost_equal(object_predictions[2].bbox.to_xywh(), [381, 280, 33, 30], decimal=1)
+
         for object_prediction in object_predictions:
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
@@ -207,8 +209,8 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
         mmdet_detection_model = AutoDetectionModel.from_pretrained(
             model_type="mmdet",
-            model_path=MMDET_YOLOX_TINY_MODEL_PATH,
-            config_path=MMDET_YOLOX_TINY_CONFIG_PATH,
+            model_path=MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_YOLOX_TINY_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             category_remapping=None,
             load_at_init=True,
@@ -222,18 +224,20 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model.perform_inference(image)
         original_predictions = mmdet_detection_model.original_predictions
 
-        boxes = original_predictions[0]
+        pred = original_predictions[0]
+        n_preds = len(pred["bboxes"])
+        self.assertTrue(len(pred["bboxes"]) == n_preds)
+        self.assertTrue(len(pred["labels"]) == n_preds)
+        self.assertTrue(len(pred["scores"]) == n_preds)
+        boxes = np.array(pred["bboxes"])
+        labels = np.array(pred["labels"])
+        scores = np.array(pred["scores"])
 
         # find box of first car detection with conf greater than 0.5
-        for box in boxes[2]:
-            print(len(box))
-            if len(box) == 5:
-                if box[4] > 0.5:
-                    break
+        idx = np.where((scores >= 0.5) & (labels == 2))[0][0]
 
         # compare
-        self.assertEqual(box[:4].astype("int").tolist(), [320, 323, 380, 365])
-        self.assertEqual(len(boxes), 80)
+        self.assertEqual(boxes[idx].astype(int).tolist(), [320, 323, 380, 365])
 
 
 if __name__ == "__main__":
