@@ -23,8 +23,8 @@
   <br>
     <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov5.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
     <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img src="https://raw.githubusercontent.com/obss/sahi/main/resources/hf_spaces_badge.svg" alt="HuggingFace Spaces"></a>
-    
-    
+
+​    
 </div>
 </div>
 
@@ -55,6 +55,8 @@ Object detection and instance segmentation are by far the most important fields 
 - [Official paper](https://ieeexplore.ieee.org/document/9897990) (ICIP 2022 oral) (NEW)
 
 - [Pretrained weights and ICIP 2022 paper files](https://github.com/fcakyon/small-object-detection-benchmark)
+
+- [Exploring SAHI: Slicing AidedInference for Small Object Detection](https://learnopencv.com/slicing-aided-hyper-inference/) (2023) (NEW)
 
 - [Video inference support is live](https://github.com/obss/sahi/discussions/626)
 
@@ -118,7 +120,7 @@ conda install pytorch=1.10.2 torchvision=0.11.3 cudatoolkit=11.3 -c pytorch
 ```console
 conda install pytorch=1.13.1 torchvision=0.14.1 pytorch-cuda=11.7 -c pytorch -c nvidia
 ```
-  
+
 - Install your desired detection framework (yolov5):
 
 ```console
@@ -241,7 +243,7 @@ python -m scripts.run_code_style format
 <a align="left" href="https://github.com/kadirnar" target="_blank">Kadir Nar</a>
 
 <a align="left" href="https://github.com/madenburak" target="_blank">Burak Maden</a>
-  
+
 <a align="left" href="https://github.com/PushpakBhoge" target="_blank">Pushpak Bhoge</a>
 
 <a align="left" href="https://github.com/mcvarer" target="_blank">M. Can V.</a>
@@ -249,11 +251,11 @@ python -m scripts.run_code_style format
 <a align="left" href="https://github.com/ChristofferEdlund" target="_blank">Christoffer Edlund</a>
 
 <a align="left" href="https://github.com/ishworii" target="_blank">Ishwor</a>
-  
+
 <a align="left" href="https://github.com/mecevit" target="_blank">Mehmet Ecevit</a>
 
 <a align="left" href="https://github.com/ssahinnkadir" target="_blank">Kadir Sahin</a>
-  
+
 <a align="left" href="https://github.com/weypro" target="_blank">Wey</a>
 
 <a align="left" href="https://github.com/youngjae-avikus" target="_blank">Youngjae</a>
