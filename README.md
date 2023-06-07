@@ -56,7 +56,7 @@ Object detection and instance segmentation are by far the most important fields 
 
 - [Pretrained weights and ICIP 2022 paper files](https://github.com/fcakyon/small-object-detection-benchmark)
 
-- [Exploring SAHI: Slicing AidedInference for Small Object Detection](https://learnopencv.com/slicing-aided-hyper-inference/) (2023) (NEW)
+- ['Exploring SAHI' Research Article from 'learnopencv.com'](https://learnopencv.com/slicing-aided-hyper-inference/) (2023) (NEW)
 
 - [Video inference support is live](https://github.com/obss/sahi/discussions/626)
 
