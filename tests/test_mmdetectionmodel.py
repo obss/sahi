@@ -24,7 +24,6 @@ IMAGE_PATH = "tests/data/small-vehicles1.jpeg"
 
 
 def download_mmdet_yolox_tiny_model():
-
     download_from_url(MMDET_YOLOX_TINY_MODEL_URL, MMDET_YOLOX_TINY_MODEL_PATH)
     download_from_url(MMDET_YOLOX_TINY_CONFIG_URL, MMDET_YOLOX_TINY_CONFIG_PATH)
 

@@ -31,7 +31,6 @@ class MmdetTestConstants:
 
 
 def download_mmdet_cascade_mask_rcnn_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH
 
@@ -41,7 +40,6 @@ def download_mmdet_cascade_mask_rcnn_model(destination_path: Optional[str] = Non
 
 
 def download_mmdet_retinanet_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_RETINANET_MODEL_PATH
 
@@ -51,7 +49,6 @@ def download_mmdet_retinanet_model(destination_path: Optional[str] = None):
 
 
 def download_mmdet_yolox_tiny_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH
 
