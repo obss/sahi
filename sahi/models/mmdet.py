@@ -79,7 +79,8 @@ try:
             resize_idx = self._get_transform_idx(pipeline_cfg, "Resize")
             if resize_idx == -1:
                 raise ValueError("Resize is not found in the test pipeline")
-            pipeline_cfg[resize_idx]["scale"] = (self.image_size, self.image_size)
+            if self.image_size is not None:
+                pipeline_cfg[resize_idx]["scale"] = (self.image_size, self.image_size)
             return Compose(pipeline_cfg)
 
     IMPORT_MMDET_V3 = True
