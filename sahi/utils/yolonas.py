@@ -16,7 +16,6 @@ class YoloNasTestConstants:
 
 
 def download_yolonas_s_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = YoloNasTestConstants.YOLONAS_S_MODEL_PATH
 
@@ -30,7 +29,6 @@ def download_yolonas_s_model(destination_path: Optional[str] = None):
 
 
 def download_yolonas_m_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = YoloNasTestConstants.YOLONAS_M_MODEL_PATH
 
@@ -44,7 +42,6 @@ def download_yolonas_m_model(destination_path: Optional[str] = None):
 
 
 def download_yolonas_l_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = YoloNasTestConstants.YOLONAS_L_MODEL_PATH
 

@@ -360,7 +360,6 @@ def _analyse_results(
 
         classname_to_export_path_list = {}
         for k, catId in enumerate(present_cat_ids):
-
             nm = cocoGt.loadCats(catId)[0]
             print(f'--------------saving {k + 1}-{nm["name"]}---------------')
             analyze_result = analyze_results[k]

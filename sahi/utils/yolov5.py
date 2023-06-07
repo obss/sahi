@@ -16,7 +16,6 @@ class Yolov5TestConstants:
 
 
 def download_yolov5n_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = Yolov5TestConstants.YOLOV5N_MODEL_PATH
 
@@ -30,7 +29,6 @@ def download_yolov5n_model(destination_path: Optional[str] = None):
 
 
 def download_yolov5s6_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = Yolov5TestConstants.YOLOV5S6_MODEL_PATH
 
