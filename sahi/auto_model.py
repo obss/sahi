@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional
 from sahi.utils.file import import_model_class
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
+    "yolov8Vino": "Yolov8DetectionVinoModel",
     "yolov8": "Yolov8DetectionModel",
     "mmdet": "MmdetDetectionModel",
     "yolov5": "Yolov5DetectionModel",
@@ -59,9 +60,10 @@ class AutoDetectionModel:
         Raises:
             ImportError: If given {model_type} framework is not installed
         """
-
+    
         model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
         DetectionModel = import_model_class(model_type, model_class_name)
+        # print("DetectionModel",DetectionModel, flush=True)
 
         return DetectionModel(
             model_path=model_path,
