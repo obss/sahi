@@ -9,6 +9,7 @@ from sahi.utils.import_utils import is_available
 from sahi.utils.torch import select_device as select_torch_device
 
 
+
 class DetectionModel:
     def __init__(
         self,
@@ -49,6 +50,8 @@ class DetectionModel:
         self.config_path = config_path
         self.model = None
         self.device = device
+        if ".xml" == self.model_path[-4:]:
+            self.device = "CPU"
         self.mask_threshold = mask_threshold
         self.confidence_threshold = confidence_threshold
         self.category_mapping = category_mapping
@@ -57,7 +60,8 @@ class DetectionModel:
         self._original_predictions = None
         self._object_prediction_list_per_image = None
 
-        self.set_device()
+        if not ".xml" == self.model_path[-4:]:
+            self.set_device()
 
         # automatically load model if load_at_init is True
         if load_at_init:
