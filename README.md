@@ -266,4 +266,6 @@ python -m scripts.run_code_style format
 
 <a align="left" href="https://github.com/aynursusuz" target="_blank">Aynur Susuz</a>
 
+<a align="left" href="https://github.com/pranavdurai10" target="_blank">Pranav Durai</a>
+
 </div>
