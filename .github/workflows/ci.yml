@@ -87,7 +87,7 @@ jobs:
       - name: Install MMDetection(3.0.0) with MMCV(2.0.0)
         run: >
           pip install mmengine==0.7.3
-          pip install mmcv==2.0.0 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.10.0/index.html
+          pip install mmcv==2.0.0 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.13.0/index.html
           pip install mmdet==3.0.0
 
       - name: Install YOLOv5(7.0.9)
