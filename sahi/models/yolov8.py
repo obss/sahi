@@ -69,8 +69,8 @@ class Yolov8DetectionModel(DetectionModel):
             if not prediction_result[0].masks:
                 prediction_result[0].masks = Masks(torch.tensor([], device=self.model.device), prediction_result[0].boxes.orig_shape)
 
-            prediction_result_ = [(result.boxes.data[result.boxes.data[:, 4] >= 0.5], 
-                                  result.masks.data[result.boxes.data[:, 4] >= 0.5]) 
+            prediction_result_ = [(result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold], 
+                                  result.masks.data[result.boxes.data[:, 4] >= self.confidence_threshold]) 
                                   for result in prediction_result]
 
         else:
