@@ -21,10 +21,23 @@ def download_yolov8n_onnx_model(destination_path: Optional[str] = None, image_si
     from ultralytics import YOLO
 
     model = YOLO(model_path)
-    model.export(format="onnx")#, imgsz=image_size)
+    model.export(format="onnx")  # , imgsz=image_size)
 
 
-def non_max_supression(boxes, scores, iou_threshold):
+def non_max_supression(boxes: np.ndarray, scores: np.ndarray, iou_threshold: float) -> np.ndarray:
+    """Perform non-max supression.
+
+    Args:
+        boxes: np.ndarray
+            Predicted bounding boxes, shape (num_of_boxes, 4)
+        scores: np.ndarray
+            Confidence for predicted bounding boxes, shape (num_of_boxes).
+        iou_threshold: float
+            Maximum allowed overlap between bounding boxes.
+
+    Returns:
+        np.ndarray: Filtered bounding boxes
+    """
     # Sort by score
     sorted_indices = np.argsort(scores)[::-1]
 
@@ -46,7 +59,18 @@ def non_max_supression(boxes, scores, iou_threshold):
     return keep_boxes
 
 
-def compute_iou(box, boxes):
+def compute_iou(box: np.ndarray, boxes: np.ndarray) -> float:
+    """Compute the IOU between a selected box and other boxes.
+
+    Args:
+        box: np.ndarray
+            Selected box, shape (4)
+        boxes: np.ndarray
+            Other boxes used for computing IOU, shape (num_of_boxes, 4).
+
+    Returns:
+        float: intersection over union
+    """
     # Compute xmin, ymin, xmax, ymax for both boxes
     xmin = np.maximum(box[0], boxes[:, 0])
     ymin = np.maximum(box[1], boxes[:, 1])
@@ -67,8 +91,16 @@ def compute_iou(box, boxes):
     return iou
 
 
-def xywh2xyxy(x):
-    # Convert bounding box (x, y, w, h) to bounding box (x1, y1, x2, y2)
+def xywh2xyxy(x: np.ndarray) -> np.ndarray:
+    """Convert bounding box (x, y, w, h) to bounding box (x1, y1, x2, y2)
+
+    Args:
+        x: np.ndarray
+            Input bboxes, shape (num_of_boxes, 4).
+
+    Returns:
+        np.ndarray: (num_of_boxes, 4)
+    """
     y = np.copy(x)
     y[..., 0] = x[..., 0] - x[..., 2] / 2
     y[..., 1] = x[..., 1] - x[..., 3] / 2

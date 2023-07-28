@@ -24,9 +24,10 @@ class ONNXDetectionModel(DetectionModel):
     def check_dependencies(self) -> None:
         check_requirements(["onnxruntime"])
 
-    def load_model(self, **kwargs):
-        """
-        Detection model is initialized and set to self.model.
+    def load_model(self, **kwargs) -> None:
+        """Detection model is initialized and set to self.model.
+
+        Options for onnxruntime sessions can be passed as keyword arguments.
         """
 
         import onnxruntime
@@ -49,7 +50,7 @@ class ONNXDetectionModel(DetectionModel):
         except Exception as e:
             raise TypeError("model_path is not a valid onnx model path: ", e)
 
-    def set_model(self, model: Any):
+    def set_model(self, model: Any) -> None:
         """
         Sets the underlying ONNX model.
 
@@ -80,7 +81,9 @@ class ONNXDetectionModel(DetectionModel):
 
         return image_tensor
 
-    def _post_process(self, outputs: np.ndarray, input_shape, image_shape):
+    def _post_process(
+        self, outputs: np.ndarray, input_shape: Tuple[int, int], image_shape: Tuple[int, int]
+    ) -> List[torch.Tensor]:
         image_h, image_w = image_shape
         input_w, input_h = input_shape
 
