@@ -2,10 +2,11 @@
 # Code written by Michael García, 2023.
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 import cv2
 import numpy as np
 import torch
+
 logger = logging.getLogger(__name__)
 
 from sahi.models.base import DetectionModel
@@ -34,6 +35,7 @@ def nms(boxes, scores, iou_threshold):
         sorted_indices = sorted_indices[keep_indices + 1]
 
     return keep_boxes
+
 
 def compute_iou(box, boxes):
     # Compute xmin, ymin, xmax, ymax for both boxes
@@ -67,6 +69,10 @@ def xywh2xyxy(x):
 
 
 class ONNXDetectionModel(DetectionModel):
+    def __init__(self, *args, iou_threshold: float = 0.7, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.iou_threshold = iou_threshold
+
     def check_dependencies(self) -> None:
         check_requirements(["onnxruntime"])
 
@@ -78,21 +84,22 @@ class ONNXDetectionModel(DetectionModel):
         import onnxruntime
 
         try:
-            EP_list = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+            EP_list = ["CUDAExecutionProvider", "CPUExecutionProvider"]
             opt_session = onnxruntime.SessionOptions()
             opt_session.enable_mem_pattern = False
             opt_session.enable_cpu_mem_arena = True
             opt_session.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_DISABLE_ALL
             ort_session = onnxruntime.InferenceSession(self.model_path, providers=EP_list)
-            
+
             self.set_model(ort_session)
-            
+
         except Exception as e:
             raise TypeError("model_path is not a valid onnx model path: ", e)
 
     def set_model(self, model: Any):
         """
         Sets the underlying ONNX model.
+
         Args:
             model: Any
                 A ONNX model
@@ -102,7 +109,94 @@ class ONNXDetectionModel(DetectionModel):
 
         # set category_mapping
         if not self.category_mapping:
-              raise TypeError("Class mapping values are required")
+            raise TypeError("Class mapping values are required")
+
+    def _pad_and_resize_image(
+        self, image: np.ndarray, new_shape: Tuple[int, int] = (640, 640), color: Tuple[int, int, int] = (125, 125, 125)
+    ) -> np.ndarray:
+        """Resize and pad image with color if necessary, maintaining aspect ratio
+
+        Args:
+            image: numpy.ndarray
+                Image to pad and resize.
+            new_shape: tuple(int, int)
+                Width, height
+            color: tuple(int, int, int)
+                B, G, R
+        """
+        img_h, img_w = image.shape[:2]
+        new_w, new_h = new_shape
+        # rescale down
+        scale = min(new_w / img_w, new_h / img_h)
+
+        # get new sacled widths and heights
+        scale_new_w, scale_new_h = int(round(img_w * scale)), int(round(img_h * scale))
+
+        resized_img = cv2.resize(image, (scale_new_w, scale_new_h))
+
+        # calculate deltas for padding
+        dw = max(new_w - scale_new_w, 0)
+        dh = max(new_h - scale_new_h, 0)
+
+        # center image with padding on top/bottom or left/right
+        top, bottom = dh // 2, dh - (dh // 2)
+        left, right = dw // 2, dw - (dw // 2)
+        pad_resized_img = cv2.copyMakeBorder(resized_img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)
+
+        return pad_resized_img
+
+    def _preprocess_image(self, image: np.ndarray, input_shape: Tuple[int, int]) -> np.ndarray:
+        """Prepapre image for ineference.
+
+        Args:
+            image: np.ndarray
+                Input image
+        """
+        input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
+        input_image = cv2.resize(image, input_shape)
+
+        input_image = input_image / 255.0
+        input_image = input_image.transpose(2, 0, 1)
+        image_tensor = input_image[np.newaxis, :, :, :].astype(np.float32)
+
+        return image_tensor
+
+    def _post_process(self, outputs: np.ndarray, input_shape, image_shape):
+        image_h, image_w = image_shape
+        input_w, input_h = input_shape
+
+        predictions = np.squeeze(outputs).T
+
+        # Filter out object confidence scores below threshold
+        scores = np.max(predictions[:, 4:], axis=1)
+        predictions = predictions[scores > self.confidence_threshold, :]
+        scores = scores[scores > self.confidence_threshold]
+        class_ids = np.argmax(predictions[:, 4:], axis=1)
+
+        boxes = predictions[:, :4]
+
+        # Scale boxes to original dimensions
+        input_shape = np.array([input_w, input_h, input_w, input_h])
+        boxes = np.divide(boxes, input_shape, dtype=np.float32)
+        boxes *= np.array([image_w, image_h, image_w, image_h])
+        boxes = boxes.astype(np.int32)
+
+        # Convert from xywh two xyxy
+        boxes = xywh2xyxy(boxes).round().astype(np.int32)
+
+        indices = nms(boxes, scores, self.iou_threshold)
+
+        # Format the results
+        prediction_result = []
+        for (bbox, score, label) in zip(boxes[indices], scores[indices], class_ids[indices]):
+            bbox = bbox.tolist()
+            cls_id = int(label)
+            prediction_result.append([bbox[0], bbox[1], bbox[2], bbox[3], score, cls_id])
+
+        # prediction_result = [torch.tensor(prediction_result)]
+        prediction_result = [prediction_result]
+
+        return prediction_result
 
     def perform_inference(self, image: np.ndarray):
         """
@@ -115,73 +209,41 @@ class ONNXDetectionModel(DetectionModel):
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
-            
-        
+
+        # Get input/output names shapes
         model_inputs = self.model.get_inputs()
-        input_names = [model_inputs[i].name for i in range(len(model_inputs))]
-        input_shape = model_inputs[0].shape
         model_output = self.model.get_outputs()
+
+        input_names = [model_inputs[i].name for i in range(len(model_inputs))]
         output_names = [model_output[i].name for i in range(len(model_output))]
 
-        image_height, image_width = image.shape[:2]
+        input_shape = model_inputs[0].shape[2:]  # w, h
+        image_shape = image.shape[:2]  # h, w
 
-        input_height, input_width = input_shape[2:]
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        resized = cv2.resize(image_rgb, (input_width, input_height))
+        # input_h, input_w = input_shape[2:]
+        # image_h, image_w = image.shape[:2]
 
-        # Scale input pixel value to 0 to 1
-        input_image = resized / 255.0
-        input_image = input_image.transpose(2,0,1)
-        input_tensor = input_image[np.newaxis, :, :, :].astype(np.float32)
-        outputs = self.model.run(output_names, {input_names[0]: input_tensor})[0]
+        # Prepare image
+        # image = self._pad_and_resize_image(image, input_shape)
+        image_tensor = self._preprocess_image(image)
 
-        predictions = np.squeeze(outputs).T
-                
-        scores = np.max(predictions[:, 4:], axis=1)
-        predictions = predictions[scores > self.confidence_threshold, :]
-        scores = scores[scores > self.confidence_threshold]
-        class_ids = np.argmax(predictions[:, 4:], axis=1)
+        # Inference
+        outputs = self.model.run(output_names, {input_names[0]: image_tensor})[0]
 
-        boxes = predictions[:, :4]
-
-        #rescale box
-        input_shape = np.array([input_width, input_height, input_width, input_height])
-        boxes = np.divide(boxes, input_shape, dtype=np.float32)
-        boxes *= np.array([image_width, image_height, image_width, image_height])
-        boxes = boxes.astype(np.int32)
-
-        indices = nms(boxes, scores, self.confidence_threshold)
-        boxes[indices], scores[indices], class_ids[indices]
-
-        prediction_result = []
-        outputs = []
-
-        for (bbox, score, label) in zip(xywh2xyxy(boxes[indices]), scores[indices], class_ids[indices]):
-            bbox = bbox.round().astype(np.int32).tolist()
-            cls_id = int(label)
-
-            prediction_result.append([bbox[0], bbox[1], bbox[2], bbox[3], score, cls_id])
-        
-        prediction_result = [torch.from_numpy(np.array(prediction_result))]
-        self._original_predictions = prediction_result
+        # Post-process
+        prediction_results = self._post_process(outputs, input_shape, image_shape)
+        self._original_predictions = prediction_results
 
     @property
     def category_names(self):
-        return self.classes
+        return list(self.category_mapping.values())
 
     @property
     def num_categories(self):
         """
         Returns number of categories
         """
-        return len(self.model.names)
-
-    @property
-    def has_mask(self):
-        """
-        Returns if model output contains segmentation mask
-        """
-        return False  # fix when yolov5 supports segmentation models
+        return len(self.category_mapping)
 
     def _create_object_prediction_list_from_original_predictions(
         self,
