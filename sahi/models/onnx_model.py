@@ -33,7 +33,7 @@ class ONNXDetectionModel(DetectionModel):
         import onnxruntime
 
         try:
-            if self.device == "cpu":
+            if self.device == torch.device("cpu"):
                 EP_list = ["CPUExecutionProvider"]
             else:
                 EP_list = ["CUDAExecutionProvider"]
@@ -63,7 +63,7 @@ class ONNXDetectionModel(DetectionModel):
 
         # set category_mapping
         if not self.category_mapping:
-            raise TypeError("Class mapping values are required")
+            raise TypeError("Category mapping values are required")
 
     def _preprocess_image(self, image: np.ndarray, input_shape: Tuple[int, int]) -> np.ndarray:
         """Prepapre image for inference by resizing, normalizing and changing dimensions.
