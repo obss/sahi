@@ -18,6 +18,11 @@ from sahi.utils.onnx_model import xywh2xyxy, non_max_supression
 
 class ONNXDetectionModel(DetectionModel):
     def __init__(self, *args, iou_threshold: float = 0.7, **kwargs):
+        """
+        Args:
+            iou_threshold: float
+                IOU threshold for non-max supression, defaults to 0.7.
+        """
         super().__init__(*args, **kwargs)
         self.iou_threshold = iou_threshold
 
