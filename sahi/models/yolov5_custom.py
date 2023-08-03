@@ -26,7 +26,7 @@ class CustomYolov5DetectionModel(DetectionModel):
         import torch
 
         try:
-            model = torch.hub.load("yolov5", "custom", path=self.model_path, source="local")
+            model = torch.hub.load("yolov5", "custom", path=self.model_path, source="local") # Import local custom yolov5 model 
             self.set_model(model)
         except Exception as e:
             raise TypeError("model_path is not a valid yolov5 model path: ", e)
