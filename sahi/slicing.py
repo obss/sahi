@@ -361,10 +361,6 @@ def slice_image(
         bry = slice_bbox[3]
         image_pil_slice = image_pil_arr[tly:bry, tlx:brx]
 
-        # process annotations if coco_annotations is given
-        if coco_annotation_list is not None:
-            sliced_coco_annotation_list = process_coco_annotations(coco_annotation_list, slice_bbox, min_area_ratio)
-
         # set image file suffixes
         slice_suffixes = "_".join(map(str, slice_bbox))
         if out_ext:
@@ -383,9 +379,9 @@ def slice_image(
         coco_image = CocoImage(file_name=slice_file_name, height=slice_height, width=slice_width)
 
         # append coco annotations (if present) to coco image
-        if coco_annotation_list:
-            for coco_annotation in sliced_coco_annotation_list:
-                coco_image.add_annotation(coco_annotation)
+        if coco_annotation_list is not None:
+            for sliced_coco_annotation in process_coco_annotations(coco_annotation_list, slice_bbox, min_area_ratio):
+                coco_image.add_annotation(sliced_coco_annotation)
 
         # create sliced image and append to sliced_image_result
         sliced_image = SlicedImage(
