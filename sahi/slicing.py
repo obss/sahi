@@ -261,7 +261,7 @@ class SliceImageResult:
 
 def slice_image(
     image: Union[str, Image.Image],
-    coco_annotation_list: Optional[CocoAnnotation] = None,
+    coco_annotation_list: Optional[List[CocoAnnotation]] = None,
     output_file_name: Optional[str] = None,
     output_dir: Optional[str] = None,
     slice_height: Optional[int] = None,
