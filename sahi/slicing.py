@@ -6,7 +6,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from PIL import Image
@@ -31,8 +31,8 @@ MAX_WORKERS = 20
 def get_slice_bboxes(
     image_height: int,
     image_width: int,
-    slice_height: int = None,
-    slice_width: int = None,
+    slice_height: Optional[int] = None,
+    slice_width: Optional[int] = None,
     auto_slice_resolution: bool = True,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
@@ -44,8 +44,8 @@ def get_slice_bboxes(
     Args:
         image_height (int): Height of the original image.
         image_width (int): Width of the original image.
-        slice_height (int): Height of each slice. Default 512.
-        slice_width (int): Width of each slice. Default 512.
+        slice_height (int | None): Height of each slice. Default None.
+        slice_width (int | None): Width of each slice. Default None.
         overlap_height_ratio(float): Fractional overlap in height of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
@@ -557,7 +557,9 @@ def calc_aspect_ratio_orientation(width: int, height: int) -> str:
         return "square"
 
 
-def calc_slice_and_overlap_params(resolution: str, height: int, width: int, orientation: str) -> List:
+def calc_slice_and_overlap_params(
+    resolution: str, height: int, width: int, orientation: str
+) -> Tuple[int, int, int, int]:
     """
     This function calculate according to image resolution slice and overlap params.
     Args:
@@ -596,10 +598,10 @@ def calc_slice_and_overlap_params(resolution: str, height: int, width: int, orie
     x_overlap = int(slice_width * overlap_width_ratio)
     y_overlap = int(slice_height * overlap_height_ratio)
 
-    return x_overlap, y_overlap, slice_width, slice_height  # noqa
+    return x_overlap, y_overlap, slice_width, slice_height
 
 
-def get_resolution_selector(res: str, height: int, width: int):
+def get_resolution_selector(res: str, height: int, width: int) -> Tuple[int, int, int, int]:
     """
 
     Args:
@@ -618,7 +620,7 @@ def get_resolution_selector(res: str, height: int, width: int):
     return x_overlap, y_overlap, slice_width, slice_height
 
 
-def get_auto_slice_params(height: int, width: int):
+def get_auto_slice_params(height: int, width: int) -> Tuple[int, int, int, int]:
     """
     According to Image HxW calculate overlap sliding window and buffer params
     factor is the power value of 2 closest to the image resolution.
