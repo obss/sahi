@@ -165,16 +165,16 @@ class SlicedImage:
 class SliceImageResult:
     def __init__(self, original_image_size: List[int], image_dir: Optional[str] = None):
         """
-        sliced_image_list: list of SlicedImage
         image_dir: str
             Directory of the sliced image exports.
         original_image_size: list of int
             Size of the unsliced original image in [height, width]
         """
-        self._sliced_image_list: List[SlicedImage] = []
         self.original_image_height = original_image_size[0]
         self.original_image_width = original_image_size[1]
         self.image_dir = image_dir
+
+        self._sliced_image_list: List[SlicedImage] = []
 
     def add_sliced_image(self, sliced_image: SlicedImage):
         if not isinstance(sliced_image, SlicedImage):
