@@ -120,7 +120,9 @@ def annotation_inside_slice(annotation: Dict, slice_bbox: List[int]) -> bool:
     return True
 
 
-def process_coco_annotations(coco_annotation_list: List[CocoAnnotation], slice_bbox: List[int], min_area_ratio) -> bool:
+def process_coco_annotations(
+    coco_annotation_list: List[CocoAnnotation], slice_bbox: List[int], min_area_ratio
+) -> List[CocoAnnotation]:
     """Slices and filters given list of CocoAnnotation objects with given
     'slice_bbox' and 'min_area_ratio'.
 
