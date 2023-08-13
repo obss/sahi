@@ -163,7 +163,7 @@ class SlicedImage:
 
 
 class SliceImageResult:
-    def __init__(self, original_image_size=None, image_dir: Optional[str] = None):
+    def __init__(self, original_image_size: List[int], image_dir: Optional[str] = None):
         """
         sliced_image_list: list of SlicedImage
         image_dir: str
