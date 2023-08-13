@@ -264,10 +264,10 @@ def slice_image(
     coco_annotation_list: Optional[CocoAnnotation] = None,
     output_file_name: Optional[str] = None,
     output_dir: Optional[str] = None,
-    slice_height: int = None,
-    slice_width: int = None,
-    overlap_height_ratio: float = None,
-    overlap_width_ratio: float = None,
+    slice_height: Optional[int] = None,
+    slice_width: Optional[int] = None,
+    overlap_height_ratio: float = 0.2,
+    overlap_width_ratio: float = 0.2,
     auto_slice_resolution: bool = True,
     min_area_ratio: float = 0.1,
     out_ext: Optional[str] = None,
@@ -282,8 +282,8 @@ def slice_image(
         output_file_name (str, optional): Root name of output files (coordinates will
             be appended to this)
         output_dir (str, optional): Output directory
-        slice_height (int): Height of each slice. Default 512.
-        slice_width (int): Width of each slice. Default 512.
+        slice_height (int | None): Height of each slice. Default None.
+        slice_width (int | None): Width of each slice. Default None.
         overlap_height_ratio (float): Fractional overlap in height of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
