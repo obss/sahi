@@ -280,12 +280,12 @@ def slice_image(
 
     Args:
         image (str or PIL.Image): File path of image or Pillow Image to be sliced.
-        coco_annotation_list (CocoAnnotation): List of CocoAnnotation objects.
+        coco_annotation_list (List[CocoAnnotation], optional): List of CocoAnnotation objects.
         output_file_name (str, optional): Root name of output files (coordinates will
             be appended to this)
         output_dir (str, optional): Output directory
-        slice_height (int | None): Height of each slice. Default None.
-        slice_width (int | None): Width of each slice. Default None.
+        slice_height (int, optional): Height of each slice. Default None.
+        slice_width (int, optional): Width of each slice. Default None.
         overlap_height_ratio (float): Fractional overlap in height of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
