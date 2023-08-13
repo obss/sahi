@@ -44,8 +44,8 @@ def get_slice_bboxes(
     Args:
         image_height (int): Height of the original image.
         image_width (int): Width of the original image.
-        slice_height (int | None): Height of each slice. Default None.
-        slice_width (int | None): Width of each slice. Default None.
+        slice_height (int, optional): Height of each slice. Default None.
+        slice_width (int, optional): Width of each slice. Default None.
         overlap_height_ratio(float): Fractional overlap in height of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
