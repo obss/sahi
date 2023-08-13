@@ -367,11 +367,10 @@ def slice_image(
         slice_suffixes = "_".join(map(str, slice_bbox))
         if out_ext:
             suffix = out_ext
+        elif hasattr(image_pil, "filename"):
+            suffix = Path(getattr(image_pil, "filename")).suffix
         else:
-            try:
-                suffix = Path(image_pil.filename).suffix
-            except AttributeError:
-                suffix = ".jpg"
+            suffix = ".jpg"
 
         # set image file name and path
         slice_file_name = f"{output_file_name}_{slice_suffixes}{suffix}"
