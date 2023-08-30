@@ -30,7 +30,7 @@ class ONNXDetectionModel(DetectionModel):
     def check_dependencies(self) -> None:
         check_requirements(["onnxruntime"])
 
-    def load_model(self, ort_session_kwargs: Dict[Any, Any]) -> None:
+    def load_model(self, ort_session_kwargs: Optional[Dict[Any, Any]] = None) -> None:
         """Detection model is initialized and set to self.model.
 
         Options for onnxruntime sessions can be passed as keyword arguments.
