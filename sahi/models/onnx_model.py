@@ -3,6 +3,7 @@
 
 import logging
 from typing import Any, Dict, List, Optional, Tuple
+
 import cv2
 import numpy as np
 import torch
@@ -13,7 +14,7 @@ from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.import_utils import check_requirements
-from sahi.utils.onnx_model import xywh2xyxy, non_max_supression
+from sahi.utils.onnx_model import non_max_supression, xywh2xyxy
 
 
 class ONNXDetectionModel(DetectionModel):
