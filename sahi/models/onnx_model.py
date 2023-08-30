@@ -30,7 +30,7 @@ class ONNXDetectionModel(DetectionModel):
     def check_dependencies(self) -> None:
         check_requirements(["onnxruntime"])
 
-    def load_model(self, **kwargs) -> None:
+    def load_model(self, ort_session_kwargs: Dict[Any, Any]) -> None:
         """Detection model is initialized and set to self.model.
 
         Options for onnxruntime sessions can be passed as keyword arguments.
@@ -46,7 +46,7 @@ class ONNXDetectionModel(DetectionModel):
 
             options = onnxruntime.SessionOptions()
 
-            for key, value in kwargs.items():
+            for key, value in ort_session_kwargs.items():
                 setattr(options, key, value)
 
             ort_session = onnxruntime.InferenceSession(self.model_path, sess_options=options, providers=EP_list)
@@ -93,7 +93,7 @@ class ONNXDetectionModel(DetectionModel):
         image_h, image_w = image_shape
         input_w, input_h = input_shape
 
-        predictions = np.squeeze(outputs).T
+        predictions = np.squeeze(outputs[0]).T
 
         # Filter out object confidence scores below threshold
         scores = np.max(predictions[:, 4:], axis=1)
@@ -153,7 +153,7 @@ class ONNXDetectionModel(DetectionModel):
         image_tensor = self._preprocess_image(image, input_shape)
 
         # Inference
-        outputs = self.model.run(output_names, {input_names[0]: image_tensor})[0]
+        outputs = self.model.run(output_names, {input_names[0]: image_tensor})
 
         # Post-process
         prediction_results = self._post_process(outputs, input_shape, image_shape)
