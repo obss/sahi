@@ -76,10 +76,9 @@ class ONNXDetectionModel(DetectionModel):
 
         Args:
             image: np.ndarray
-                Input image with color channel order BGR.
+                Input image with color channel order RGB.
         """
         input_image = cv2.resize(image, input_shape)
-        input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
 
         input_image = input_image / 255.0
         input_image = input_image.transpose(2, 0, 1)
