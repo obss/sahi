@@ -1,4 +1,3 @@
-
 import urllib.request
 from os import path
 from pathlib import Path
@@ -24,6 +23,7 @@ def download_rtdetrl_model(destination_path: Optional[str] = None):
             Yolov8TestConstants.RTDETRX_MODEL_URL,
             destination_path,
         )
+
 
 def download_rtdetrx_model(destination_path: Optional[str] = None):
     if destination_path is None:

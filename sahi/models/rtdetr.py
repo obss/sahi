@@ -9,10 +9,11 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 from sahi.models.base import DetectionModel
+from sahi.models.yolov8 import Yolov8DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.import_utils import check_requirements
-from sahi.models.yolov8 import Yolov8DetectionModel
+
 
 class RTDetrDetectionModel(Yolov8DetectionModel):
     def check_dependencies(self) -> None:
