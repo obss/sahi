@@ -27,7 +27,6 @@ class Yolov8DetectionModel(DetectionModel):
 
         try:
             model = YOLO(self.model_path)
-            model.to(self.device)
             self.set_model(model)
         except Exception as e:
             raise TypeError("model_path is not a valid yolov8 model path: ", e)
@@ -58,7 +57,7 @@ class Yolov8DetectionModel(DetectionModel):
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
-        prediction_result = self.model(image[:, :, ::-1], verbose=False)  # YOLOv8 expects numpy arrays to have BGR
+        prediction_result = self.model(image[:, :, ::-1], verbose=False, device=self.device)  # YOLOv8 expects numpy arrays to have BGR
         prediction_result = [
             result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result
         ]
