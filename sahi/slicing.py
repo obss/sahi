@@ -295,7 +295,7 @@ def slice_image(
         min_area_ratio (float): If the cropped annotation area to original annotation
             ratio is smaller than this value, the annotation is filtered out. Default 0.1.
         out_ext (str, optional): Extension of saved images. Default is the
-            original suffix.
+            original suffix for lossless image formats and png for lossy formats ('.jpg','.jpeg').
         verbose (bool, optional): Switch to print relevant values to screen.
             Default 'False'.
 
