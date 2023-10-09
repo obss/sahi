@@ -251,7 +251,6 @@ def get_video_reader(
             cv2.imshow("Prediction of {}".format(str(video_file_name)), cv2.WINDOW_AUTOSIZE)
 
             while video_capture.isOpened:
-
                 frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
                 video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + frame_skip_interval)
 

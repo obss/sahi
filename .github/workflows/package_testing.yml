@@ -70,11 +70,11 @@ jobs:
       - name: Install YOLOv5(7.0.9)
         run: >
           pip install yolov5==7.0.9
-          
+
       - name: Install DeepSparse
         run: >
           pip install deepsparse
-          
+
       - name: Install Detectron2(0.6)
         run: >
           python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch1.10/index.html
@@ -89,7 +89,11 @@ jobs:
 
       - name: Install ultralytics
         run: >
-          pip install ultralytics==8.0.43
+          pip install ultralytics==8.0.99
+
+      - name: Install super-gradients
+        run: >
+          pip install super-gradients==3.1.2
 
       - name: Install latest SAHI package
         run: >
