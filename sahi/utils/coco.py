@@ -14,6 +14,8 @@ from threading import Lock, Thread
 from typing import Dict, List, Optional, Set, Union
 
 import numpy as np
+from shapely import MultiPolygon
+from shapely.validation import make_valid
 from tqdm import tqdm
 
 from sahi.utils.file import is_colab, load_json, save_json
@@ -223,6 +225,12 @@ class CocoAnnotation:
 
     def get_sliced_coco_annotation(self, slice_bbox: List[int]):
         shapely_polygon = box(slice_bbox[0], slice_bbox[1], slice_bbox[2], slice_bbox[3])
+        samp = self._shapely_annotation.multipolygon
+        if not samp.is_valid:
+            valid = make_valid(samp)
+            if not isinstance(valid, MultiPolygon):
+                valid = MultiPolygon([valid])
+            self._shapely_annotation.multipolygon = valid
         intersection_shapely_annotation = self._shapely_annotation.get_intersection(shapely_polygon)
         return CocoAnnotation.from_shapely_annotation(
             intersection_shapely_annotation,
