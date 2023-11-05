@@ -14,7 +14,9 @@ from PIL import Image
 
 from sahi.utils.file import Path
 
-IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".tiff", ".bmp"]
+IMAGE_EXTENSIONS_LOSSY = [".jpg", ".jpeg"]
+IMAGE_EXTENSIONS_LOSSLESS = [".png", ".tiff", ".bmp"]
+IMAGE_EXTENSIONS = IMAGE_EXTENSIONS_LOSSY + IMAGE_EXTENSIONS_LOSSLESS
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".flv", ".avi", ".ts", ".mpg", ".mov", "wmv"]
 
 
