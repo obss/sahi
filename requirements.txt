@@ -1,4 +1,4 @@
-opencv-python>=4.2.0.32
+opencv-python<=4.8
 shapely>=1.8.0
 tqdm>=4.48.2
 pillow>=8.2.0
@@ -7,4 +7,4 @@ pyyaml
 fire
 terminaltables
 requests
-click==8.0.4
+click
