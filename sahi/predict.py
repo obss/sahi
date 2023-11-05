@@ -12,6 +12,8 @@ from sahi.utils.import_utils import is_available
 if is_available("torch"):
     import torch
 
+from functools import cmp_to_key
+
 import numpy as np
 from tqdm import tqdm
 
@@ -289,6 +291,43 @@ def get_sliced_prediction(
     )
 
 
+def bbox_sort(a, b, thresh):
+    """
+    a, b  - function receives two bounding bboxes
+
+    thresh - the threshold takes into account how far two bounding bboxes differ in
+    Y where thresh is the threshold we set for the
+    minimum allowable difference in height between adjacent bboxes
+    and sorts them by the X coordinate
+    """
+
+    bbox_a = a
+    bbox_b = b
+
+    if abs(bbox_a[1] - bbox_b[1]) <= thresh:
+        return bbox_a[0] - bbox_b[0]
+
+    return bbox_a[1] - bbox_b[1]
+
+
+def agg_prediction(result: PredictionResult, thresh):
+    coord_list = []
+    res = result.to_coco_annotations()
+    for ann in res:
+        current_bbox = ann["bbox"]
+        x = current_bbox[0]
+        y = current_bbox[1]
+        w = current_bbox[2]
+        h = current_bbox[3]
+
+        coord_list.append((x, y, w, h))
+    cnts = sorted(coord_list, key=cmp_to_key(lambda a, b: bbox_sort(a, b, thresh)))
+    for pred in range(len(res) - 1):
+        res[pred]["image_id"] = cnts.index(tuple(res[pred]["bbox"]))
+
+    return res
+
+
 def predict(
     detection_model: DetectionModel = None,
     model_type: str = "mmdet",
@@ -321,10 +360,13 @@ def predict(
     visual_bbox_thickness: int = None,
     visual_text_size: float = None,
     visual_text_thickness: int = None,
+    visual_hide_labels: bool = False,
+    visual_hide_conf: bool = False,
     visual_export_format: str = "png",
     verbose: int = 1,
     return_dict: bool = False,
     force_postprocess_type: bool = False,
+    **kwargs,
 ):
     """
     Performs prediction for all present images in given folder.
@@ -370,7 +412,7 @@ def predict(
             Default to ``0.2``.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
-            Options are 'NMM', 'GRREDYNMM' or 'NMS'. Default is 'GRREDYNMM'.
+            Options are 'NMM', 'GREEDYNMM', 'LSNMS' or 'NMS'. Default is 'GRREDYNMM'.
         postprocess_match_metric: str
             Metric to be used during object prediction matching after sliced prediction.
             'IOU' for intersection over union, 'IOS' for intersection over smaller area.
@@ -398,6 +440,8 @@ def predict(
         visual_bbox_thickness: int
         visual_text_size: float
         visual_text_thickness: int
+        visual_hide_labels: bool
+        visual_hide_conf: bool
         visual_export_format: str
             Can be specified as 'jpg' or 'png'
         verbose: int
@@ -469,6 +513,7 @@ def predict(
             category_remapping=model_category_remapping,
             load_at_init=False,
             image_size=image_size,
+            **kwargs,
         )
         detection_model.load_model()
     time_end = time.time() - time_start
@@ -568,6 +613,8 @@ def predict(
                     text_size=visual_text_size,
                     text_th=visual_text_thickness,
                     color=color,
+                    hide_labels=visual_hide_labels,
+                    hide_conf=visual_hide_conf,
                     output_dir=None,
                     file_name=None,
                     export_format=None,
@@ -580,6 +627,8 @@ def predict(
                     text_size=visual_text_size,
                     text_th=visual_text_thickness,
                     color=color,
+                    hide_labels=visual_hide_labels,
+                    hide_conf=visual_hide_conf,
                     output_dir=output_dir,
                     file_name=filename_without_extension,
                     export_format=visual_export_format,
@@ -610,6 +659,8 @@ def predict(
                 rect_th=visual_bbox_thickness,
                 text_size=visual_text_size,
                 text_th=visual_text_thickness,
+                hide_labels=visual_hide_labels,
+                hide_conf=visual_hide_conf,
                 output_dir=output_dir if not source_is_video else None,
                 file_name=filename_without_extension,
                 export_format=visual_export_format,

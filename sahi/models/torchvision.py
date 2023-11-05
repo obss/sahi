@@ -174,7 +174,6 @@ class TorchVisionDetectionModel(DetectionModel):
             full_shape = None if full_shape_list is None else full_shape_list[0]
 
             for ind in range(len(boxes)):
-
                 if masks is not None:
                     mask = np.array(masks[ind])
                 else:

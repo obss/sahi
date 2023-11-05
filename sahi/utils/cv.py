@@ -14,7 +14,9 @@ from PIL import Image
 
 from sahi.utils.file import Path
 
-IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".tiff", ".bmp"]
+IMAGE_EXTENSIONS_LOSSY = [".jpg", ".jpeg"]
+IMAGE_EXTENSIONS_LOSSLESS = [".png", ".tiff", ".bmp"]
+IMAGE_EXTENSIONS = IMAGE_EXTENSIONS_LOSSY + IMAGE_EXTENSIONS_LOSSLESS
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".flv", ".avi", ".ts", ".mpg", ".mov", "wmv"]
 
 
@@ -250,7 +252,6 @@ def get_video_reader(
             cv2.imshow("Prediction of {}".format(str(video_file_name)), cv2.WINDOW_AUTOSIZE)
 
             while video_capture.isOpened:
-
                 frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
                 video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + frame_skip_interval)
 
@@ -320,6 +321,7 @@ def visualize_prediction(
     text_size: float = None,
     text_th: float = None,
     color: tuple = None,
+    hide_labels: bool = False,
     output_dir: Optional[str] = None,
     file_name: Optional[str] = "prediction_visual",
 ):
@@ -341,7 +343,17 @@ def visualize_prediction(
     text_th = text_th or max(rect_th - 1, 1)
     # set text_size for category names
     text_size = text_size or rect_th / 3
-    # add bbox and mask to image if present
+
+    # add masks to image if present
+    if masks is not None:
+        for mask in masks:
+            # deepcopy mask so that original is not altered
+            mask = copy.deepcopy(mask)
+            # draw mask
+            rgb_mask = apply_color_mask(np.squeeze(mask), color)
+            image = cv2.addWeighted(image, 1, rgb_mask, 0.6, 0)
+
+    # add bboxes to image if present
     for i in range(len(boxes)):
         # deepcopy boxso that original is not altered
         box = copy.deepcopy(boxes[i])
@@ -350,13 +362,6 @@ def visualize_prediction(
         # set color
         if colors is not None:
             color = colors(class_)
-        # visualize masks if present
-        if masks is not None:
-            # deepcopy mask so that original is not altered
-            mask = copy.deepcopy(masks[i])
-            # draw mask
-            rgb_mask = apply_color_mask(np.squeeze(mask), color)
-            image = cv2.addWeighted(image, 1, rgb_mask, 0.7, 0)
         # set bbox points
         p1, p2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))
         # visualize boxes
@@ -367,22 +372,24 @@ def visualize_prediction(
             color=color,
             thickness=rect_th,
         )
-        # arange bounding box text location
-        label = f"{class_}"
-        w, h = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]  # label width, height
-        outside = p1[1] - h - 3 >= 0  # label fits outside box
-        p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
-        # add bounding box text
-        cv2.rectangle(image, p1, p2, color, -1, cv2.LINE_AA)  # filled
-        cv2.putText(
-            image,
-            label,
-            (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
-            0,
-            text_size,
-            (255, 255, 255),
-            thickness=text_th,
-        )
+
+        if not hide_labels:
+            # arange bounding box text location
+            label = f"{class_}"
+            w, h = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]  # label width, height
+            outside = p1[1] - h - 3 >= 0  # label fits outside box
+            p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
+            # add bounding box text
+            cv2.rectangle(image, p1, p2, color, -1, cv2.LINE_AA)  # filled
+            cv2.putText(
+                image,
+                label,
+                (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
+                0,
+                text_size,
+                (255, 255, 255),
+                thickness=text_th,
+            )
     if output_dir:
         # create output folder if not present
         Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -401,6 +408,8 @@ def visualize_object_predictions(
     text_size: float = None,
     text_th: float = None,
     color: tuple = None,
+    hide_labels: bool = False,
+    hide_conf: bool = False,
     output_dir: Optional[str] = None,
     file_name: str = "prediction_visual",
     export_format: str = "png",
@@ -414,6 +423,8 @@ def visualize_object_predictions(
         text_size: size of the category name over box
         text_th: text thickness
         color: annotation color in the form: (0, 255, 0)
+        hide_labels: hide labels
+        hide_conf: hide confidence
         output_dir: directory for resulting visualization to be exported
         file_name: exported file will be saved as: output_dir+file_name+".png"
         export_format: can be specified as 'jpg' or 'png'
@@ -427,12 +438,28 @@ def visualize_object_predictions(
     else:
         colors = None
     # set rect_th for boxes
-    rect_th = rect_th or max(round(sum(image.shape) / 2 * 0.001), 1)
+    rect_th = rect_th or max(round(sum(image.shape) / 2 * 0.003), 2)
     # set text_th for category names
     text_th = text_th or max(rect_th - 1, 1)
     # set text_size for category names
     text_size = text_size or rect_th / 3
-    # add bbox and mask to image if present
+
+    # add masks to image if present
+    for object_prediction in object_prediction_list:
+        # deepcopy object_prediction_list so that original is not altered
+        object_prediction = object_prediction.deepcopy()
+        # visualize masks if present
+        if object_prediction.mask is not None:
+            # deepcopy mask so that original is not altered
+            mask = object_prediction.mask.bool_mask
+            # set color
+            if colors is not None:
+                color = colors(object_prediction.category.id)
+            # draw mask
+            rgb_mask = apply_color_mask(mask, color)
+            image = cv2.addWeighted(image, 1, rgb_mask, 0.6, 0)
+
+    # add bboxes to image if present
     for object_prediction in object_prediction_list:
         # deepcopy object_prediction_list so that original is not altered
         object_prediction = object_prediction.deepcopy()
@@ -444,13 +471,6 @@ def visualize_object_predictions(
         # set color
         if colors is not None:
             color = colors(object_prediction.category.id)
-        # visualize masks if present
-        if object_prediction.mask is not None:
-            # deepcopy mask so that original is not altered
-            mask = object_prediction.mask.bool_mask
-            # draw mask
-            rgb_mask = apply_color_mask(mask, color)
-            image = cv2.addWeighted(image, 1, rgb_mask, 0.4, 0)
         # set bbox points
         p1, p2 = (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]))
         # visualize boxes
@@ -461,22 +481,28 @@ def visualize_object_predictions(
             color=color,
             thickness=rect_th,
         )
-        # arange bounding box text location
-        label = f"{category_name} {score:.2f}"
-        w, h = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]  # label width, height
-        outside = p1[1] - h - 3 >= 0  # label fits outside box
-        p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
-        # add bounding box text
-        cv2.rectangle(image, p1, p2, color, -1, cv2.LINE_AA)  # filled
-        cv2.putText(
-            image,
-            label,
-            (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
-            0,
-            text_size,
-            (255, 255, 255),
-            thickness=text_th,
-        )
+
+        if not hide_labels:
+            # arange bounding box text location
+            label = f"{category_name}"
+
+            if not hide_conf:
+                label += f" {score:.2f}"
+
+            w, h = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]  # label width, height
+            outside = p1[1] - h - 3 >= 0  # label fits outside box
+            p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
+            # add bounding box text
+            cv2.rectangle(image, p1, p2, color, -1, cv2.LINE_AA)  # filled
+            cv2.putText(
+                image,
+                label,
+                (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
+                0,
+                text_size,
+                (255, 255, 255),
+                thickness=text_th,
+            )
 
     # export if output_dir is present
     if output_dir is not None:

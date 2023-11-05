@@ -165,7 +165,13 @@ class PredictionResult:
         self.durations_in_seconds = durations_in_seconds
 
     def export_visuals(
-        self, export_dir: str, text_size: float = None, rect_th: int = None, file_name: str = "prediction_visual"
+        self,
+        export_dir: str,
+        text_size: float = None,
+        rect_th: int = None,
+        hide_labels: bool = False,
+        hide_conf: bool = False,
+        file_name: str = "prediction_visual",
     ):
         """
 
@@ -173,6 +179,8 @@ class PredictionResult:
             export_dir: directory for resulting visualization to be exported
             text_size: size of the category name over box
             rect_th: rectangle thickness
+            hide_labels: hide labels
+            hide_conf: hide confidence
             file_name: saving name
         Returns:
 
@@ -185,6 +193,8 @@ class PredictionResult:
             text_size=text_size,
             text_th=None,
             color=None,
+            hide_labels=hide_labels,
+            hide_conf=hide_conf,
             output_dir=export_dir,
             file_name=file_name,
             export_format="png",
