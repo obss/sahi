@@ -55,12 +55,12 @@ jobs:
           matrix.operating-system == 'ubuntu-latest' ||
           matrix.operating-system == 'windows-latest'
         run: >
-          pip install torch==1.10.2+cpu torchvision==0.11.3+cpu
+          pip install torch==1.13.1+cpu torchvision==0.14.1+cpu
           -f https://download.pytorch.org/whl/torch_stable.html
 
-      - name: Install PyTorch(1.10.1) and TorchVision(0.11.2) on MacOS
+      - name: Install PyTorch on MacOS
         if: matrix.operating-system == 'macos-latest'
-        run: pip install torch==1.10.1 torchvision==0.11.2
+        run: pip install torch==1.13.1 torchvision==0.14.1
 
       - name: Install MMDetection(3.0.0) with MMCV(2.0.0)
         run: >
