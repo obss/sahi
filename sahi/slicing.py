@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 from sahi.annotation import BoundingBox, Mask
 from sahi.utils.coco import Coco, CocoAnnotation, CocoImage, create_coco_dict
-from sahi.utils.cv import read_image_as_pil
+from sahi.utils.cv import IMAGE_EXTENSIONS_LOSSLESS, IMAGE_EXTENSIONS_LOSSY, read_image_as_pil
 from sahi.utils.file import load_json, save_json
 
 logger = logging.getLogger(__name__)
@@ -295,7 +295,7 @@ def slice_image(
         min_area_ratio (float): If the cropped annotation area to original annotation
             ratio is smaller than this value, the annotation is filtered out. Default 0.1.
         out_ext (str, optional): Extension of saved images. Default is the
-            original suffix.
+            original suffix for lossless image formats and png for lossy formats ('.jpg','.jpeg').
         verbose (bool, optional): Switch to print relevant values to screen.
             Default 'False'.
 
@@ -317,7 +317,7 @@ def slice_image(
         image_pil = read_image_as_pil(image)
         slice_file_path = str(Path(output_dir) / slice_file_name)
         # export sliced image
-        image_pil.save(slice_file_path)
+        image_pil.save(slice_file_path, quality="keep")
         image_pil.close()  # to fix https://github.com/obss/sahi/issues/565
         verboselog("sliced image path: " + slice_file_path)
 
@@ -371,8 +371,12 @@ def slice_image(
         else:
             try:
                 suffix = Path(image_pil.filename).suffix
+                if suffix in IMAGE_EXTENSIONS_LOSSY:
+                    suffix = ".png"
+                elif suffix in IMAGE_EXTENSIONS_LOSSLESS:
+                    suffix = Path(image_pil.filename).suffix
             except AttributeError:
-                suffix = ".jpg"
+                suffix = ".png"
 
         # set image file name and path
         slice_file_name = f"{output_file_name}_{slice_suffixes}{suffix}"
