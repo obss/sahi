@@ -465,7 +465,7 @@ def slice_coco(
     sliced_coco_images: List = []
 
     # iterate over images and slice
-    for coco_image in tqdm(coco.images):
+    for idx, coco_image in enumerate(tqdm(coco.images)):
         # get image path
         image_path: str = os.path.join(image_dir, coco_image.file_name)
         # get annotation json list corresponding to selected coco image
@@ -474,7 +474,7 @@ def slice_coco(
             slice_image_result = slice_image(
                 image=image_path,
                 coco_annotation_list=coco_image.annotations,
-                output_file_name=Path(coco_image.file_name).stem,
+                output_file_name=f"{Path(coco_image.file_name).stem}_{idx}",
                 output_dir=output_dir,
                 slice_height=slice_height,
                 slice_width=slice_width,
