@@ -4,17 +4,17 @@
 import logging
 from typing import Any, Dict, List, Optional
 
+import cv2
 import numpy as np
 import torch
-import cv2
 
 logger = logging.getLogger(__name__)
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.import_utils import check_requirements
 from sahi.utils.cv import get_bbox_from_bool_mask
+from sahi.utils.import_utils import check_requirements
 
 
 class Yolov8DetectionModel(DetectionModel):
@@ -57,7 +57,7 @@ class Yolov8DetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-        
+
         from ultralytics.yolo.engine.results import Masks
 
         # Confirm model is loaded
@@ -67,11 +67,17 @@ class Yolov8DetectionModel(DetectionModel):
         if self.has_mask:
 
             if not prediction_result[0].masks:
-                prediction_result[0].masks = Masks(torch.tensor([], device=self.model.device), prediction_result[0].boxes.orig_shape)
+                prediction_result[0].masks = Masks(
+                    torch.tensor([], device=self.model.device), prediction_result[0].boxes.orig_shape
+                )
 
-            prediction_result_ = [(result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold], 
-                                  result.masks.data[result.boxes.data[:, 4] >= self.confidence_threshold]) 
-                                  for result in prediction_result]
+            prediction_result_ = [
+                (
+                    result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold],
+                    result.masks.data[result.boxes.data[:, 4] >= self.confidence_threshold],
+                )
+                for result in prediction_result
+            ]
 
         else:
             prediction_result_ = []
@@ -101,7 +107,7 @@ class Yolov8DetectionModel(DetectionModel):
         Returns if model output contains segmentation mask
         """
         # return True
-        return self.model.overrides['task'] == 'segment'
+        return self.model.overrides["task"] == "segment"
 
     def _create_object_prediction_list_from_original_predictions(
         self,
@@ -130,14 +136,16 @@ class Yolov8DetectionModel(DetectionModel):
         for image_ind, image_predictions in enumerate(original_predictions):
 
             image_predictions_in_xyxy_format = image_predictions[0]
-            image_predictions_masks =  image_predictions[1]
+            image_predictions_masks = image_predictions[1]
 
             shift_amount = shift_amount_list[image_ind]
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
             object_prediction_list = []
 
             # process predictions
-            for prediction, bool_mask in zip(image_predictions_in_xyxy_format.cpu().detach().numpy(), image_predictions_masks.cpu().detach().numpy()):
+            for prediction, bool_mask in zip(
+                image_predictions_in_xyxy_format.cpu().detach().numpy(), image_predictions_masks.cpu().detach().numpy()
+            ):
                 x1 = prediction[0]
                 y1 = prediction[1]
                 x2 = prediction[2]

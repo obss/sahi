@@ -100,6 +100,7 @@ def download_yolov8x_model(destination_path: Optional[str] = None):
             destination_path,
         )
 
+
 def download_yolov8n_seg_model(destination_path: Optional[str] = None):
 
     if destination_path is None:
@@ -112,6 +113,7 @@ def download_yolov8n_seg_model(destination_path: Optional[str] = None):
             Yolov8TestConstants.YOLOV8N_SEG_MODEL_URL,
             destination_path,
         )
+
 
 def download_yolov8s_seg_model(destination_path: Optional[str] = None):
 
@@ -126,6 +128,7 @@ def download_yolov8s_seg_model(destination_path: Optional[str] = None):
             destination_path,
         )
 
+
 def download_yolov8m_seg_model(destination_path: Optional[str] = None):
 
     if destination_path is None:
@@ -139,6 +142,7 @@ def download_yolov8m_seg_model(destination_path: Optional[str] = None):
             destination_path,
         )
 
+
 def download_yolov8l_seg_model(destination_path: Optional[str] = None):
 
     if destination_path is None:
@@ -151,6 +155,7 @@ def download_yolov8l_seg_model(destination_path: Optional[str] = None):
             Yolov8TestConstants.YOLOV8L_SEG_MODEL_URL,
             destination_path,
         )
+
 
 def download_yolov8x_seg_model(destination_path: Optional[str] = None):
 
