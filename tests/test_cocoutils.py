@@ -453,7 +453,6 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(len(imageid2annotationlist_mapping), 2)
 
         def check_image_id(image_id):
-
             image_ids = [annotationlist["image_id"] for annotationlist in imageid2annotationlist_mapping[image_id]]
             self.assertEqual(image_ids, [image_id] * len(image_ids))
 

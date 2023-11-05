@@ -18,20 +18,19 @@ def mmdet_version_as_integer():
 class MmdetTestConstants:
     MMDET_CASCADEMASKRCNN_MODEL_URL = "http://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
     MMDET_CASCADEMASKRCNN_MODEL_PATH = (
-        "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
+        "tests/data/models/mmdet/cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
     )
     MMDET_RETINANET_MODEL_URL = "http://download.openmmlab.com/mmdetection/v2.0/retinanet/retinanet_r50_fpn_2x_coco/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
-    MMDET_RETINANET_MODEL_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
+    MMDET_RETINANET_MODEL_PATH = "tests/data/models/mmdet/retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
     MMDET_YOLOX_TINY_MODEL_URL = "https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_tiny_8x8_300e_coco/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
-    MMDET_YOLOX_TINY_MODEL_PATH = "tests/data/models/mmdet_yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
+    MMDET_YOLOX_TINY_MODEL_PATH = "tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
 
-    MMDET_CASCADEMASKRCNN_CONFIG_PATH = "tests/data/models/mmdet_cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco.py"
-    MMDET_RETINANET_CONFIG_PATH = "tests/data/models/mmdet_retinanet/retinanet_r50_fpn_1x_coco.py"
-    MMDET_YOLOX_TINY_CONFIG_PATH = "tests/data/models/mmdet_yolox/yolox_tiny_8x8_300e_coco.py"
+    MMDET_CASCADEMASKRCNN_CONFIG_PATH = "tests/data/models/mmdet/cascade_mask_rcnn/cascade-mask-rcnn_r50_fpn_1x_coco.py"
+    MMDET_RETINANET_CONFIG_PATH = "tests/data/models/mmdet/retinanet/retinanet_r50_fpn_1x_coco.py"
+    MMDET_YOLOX_TINY_CONFIG_PATH = "tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py"
 
 
 def download_mmdet_cascade_mask_rcnn_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH
 
@@ -41,7 +40,6 @@ def download_mmdet_cascade_mask_rcnn_model(destination_path: Optional[str] = Non
 
 
 def download_mmdet_retinanet_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_RETINANET_MODEL_PATH
 
@@ -51,7 +49,6 @@ def download_mmdet_retinanet_model(destination_path: Optional[str] = None):
 
 
 def download_mmdet_yolox_tiny_model(destination_path: Optional[str] = None):
-
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH
 
@@ -178,7 +175,7 @@ def download_mmdet_config(
                     )
 
         # dump final config as single file
-        from mmcv import Config
+        from mmengine import Config
 
         config = Config.fromfile(main_config_path)
         config.dump(final_config_path)
