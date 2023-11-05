@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: [3.7, 3.8, 3.9, '3.10']
+        python-version: [3.8, 3.9, '3.10']
       fail-fast: false
 
     steps:
@@ -112,7 +112,7 @@ jobs:
 
       - name: Install super-gradients
         run: >
-          pip install super-gradients==3.1.2
+          pip install super-gradients==3.2.2
 
       - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
         run: |
