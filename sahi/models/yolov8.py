@@ -58,7 +58,7 @@ class Yolov8DetectionModel(DetectionModel):
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
 
-        from ultralytics.yolo.engine.results import Masks
+        from ultralytics.engine.results import Masks
 
         # Confirm model is loaded
         if self.model is None:
