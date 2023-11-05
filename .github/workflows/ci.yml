@@ -90,9 +90,9 @@ jobs:
           pip install mmcv==2.0.0 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.13.0/index.html
           pip install mmdet==3.0.0
 
-      - name: Install YOLOv5(7.0.9)
+      - name: Install YOLOv5(7.0.13)
         run: >
-          pip install yolov5==7.0.9
+          pip install yolov5==7.0.13
 
       - name: Install DeepSparse
         run: >
