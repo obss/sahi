@@ -17,7 +17,7 @@ from sahi.utils.import_utils import check_requirements
 from sahi.utils.onnx_model import non_max_supression, xywh2xyxy
 
 
-class ONNXDetectionModel(DetectionModel):
+class Yolov8OnnxDetectionModel(DetectionModel):
     def __init__(self, *args, iou_threshold: float = 0.7, **kwargs):
         """
         Args:
