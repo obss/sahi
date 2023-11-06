@@ -16,7 +16,7 @@ IMAGE_SIZE = 640
 
 class TestYolov8OnnxDetectionModel(unittest.TestCase):
     def test_load_model(self):
-        from sahi.models.onnx_model import ONNXDetectionModel
+        from sahi.models.yolov8onnx import Yolov8OnnxDetectionModel
 
         download_yolov8n_onnx_model()
 
