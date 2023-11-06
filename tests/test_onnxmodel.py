@@ -14,7 +14,7 @@ IOU_THRESHOLD = 0.7
 IMAGE_SIZE = 640
 
 
-class TestONNXDetectionModel(unittest.TestCase):
+class TestYolov8OnnxDetectionModel(unittest.TestCase):
     def test_load_model(self):
         from sahi.models.onnx_model import ONNXDetectionModel
 
