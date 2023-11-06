@@ -63,7 +63,16 @@ class Yolov8DetectionModel(DetectionModel):
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
-        prediction_result = self.model(image[:, :, ::-1], verbose=False)  # YOLOv8 expects numpy arrays to have BGR
+
+        if self.image_size is not None:  # ADDED IMAGE SIZE OPTION FOR YOLOV8 MODELS:
+            prediction_result = self.model(
+                image[:, :, ::-1], imgsz=self.image_size, verbose=False, device=self.device
+            )  # YOLOv8 expects numpy arrays to have BGR
+        else:
+            prediction_result = self.model(
+                image[:, :, ::-1], verbose=False, device=self.device
+            )  # YOLOv8 expects numpy arrays to have BGR
+
         if self.has_mask:
 
             if not prediction_result[0].masks:
