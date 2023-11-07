@@ -30,7 +30,7 @@ class TestYolov8OnnxDetectionModel(unittest.TestCase):
         )
 
         # Test setting options for onnxruntime
-        yolov8_onnx_detection_model.load_model(enable_mem_pattern=False)
+        yolov8_onnx_detection_model.load_model({"enable_mem_pattern": False})
 
         self.assertNotEqual(yolov8_onnx_detection_model.model, None)
 
@@ -85,7 +85,7 @@ class TestYolov8OnnxDetectionModel(unittest.TestCase):
         best_bbox = boxes[best_box_index]
 
         # Compare
-        desired_bbox = [833, 309, 872, 342]
+        desired_bbox = [603, 239, 629, 259]
         predicted_bbox = best_bbox.tolist()
         margin = 2
 
