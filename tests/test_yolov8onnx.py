@@ -6,7 +6,7 @@ import unittest
 import cv2
 import numpy as np
 
-from sahi.utils.onnx_model import Yolov8ONNXTestConstants, download_yolov8n_onnx_model
+from sahi.utils.yolov8onnx import Yolov8ONNXTestConstants, download_yolov8n_onnx_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3
@@ -20,7 +20,7 @@ class TestYolov8OnnxDetectionModel(unittest.TestCase):
 
         download_yolov8n_onnx_model()
 
-        yolov8_onnx_detection_model = ONNXDetectionModel(
+        yolov8_onnx_detection_model = Yolov8OnnxDetectionModel(
             model_path=Yolov8ONNXTestConstants.YOLOV8N_ONNX_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             iou_threshold=IOU_THRESHOLD,
@@ -37,13 +37,13 @@ class TestYolov8OnnxDetectionModel(unittest.TestCase):
     def test_set_model(self):
         import onnxruntime
 
-        from sahi.models.onnx_model import ONNXDetectionModel
+        from sahi.models.yolov8onnx import Yolov8OnnxDetectionModel
 
         download_yolov8n_onnx_model()
 
         yolo_model = onnxruntime.InferenceSession(Yolov8ONNXTestConstants.YOLOV8N_ONNX_MODEL_PATH)
 
-        yolov8_onnx_detection_model = ONNXDetectionModel(
+        yolov8_onnx_detection_model = Yolov8OnnxDetectionModel(
             model=yolo_model,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             iou_threshold=IOU_THRESHOLD,
@@ -55,12 +55,12 @@ class TestYolov8OnnxDetectionModel(unittest.TestCase):
         self.assertNotEqual(yolov8_onnx_detection_model.model, None)
 
     def test_perform_inference(self):
-        from sahi.models.onnx_model import ONNXDetectionModel
+        from sahi.models.yolov8onnx import Yolov8OnnxDetectionModel
 
         # Init model
         download_yolov8n_onnx_model()
 
-        yolov8_onnx_detection_model = ONNXDetectionModel(
+        yolov8_onnx_detection_model = Yolov8OnnxDetectionModel(
             model_path=Yolov8ONNXTestConstants.YOLOV8N_ONNX_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             iou_threshold=IOU_THRESHOLD,
