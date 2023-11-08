@@ -1,21 +1,22 @@
 import numpy as np
 import cv2
 import torch
-from openvino.runtime import Core
-from openvino.runtime import Core, AsyncInferQueue
+
 import logging
 from typing import Any, List, Optional, Tuple
 import time
 logger = logging.getLogger(__name__)
 
-from ultralytics.yolo.utils.ops import non_max_suppression, scale_boxes
+
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.import_utils import check_requirements
+# from openvino.runtime import Core, AsyncInferQueue
+# from ultralytics.utils.ops import non_max_suppression, scale_boxes
 
 
-class Yolov8DetectionVinoModel(DetectionModel):
+class Yolov8OpenvinoDetectionModel(DetectionModel):
 
     # def __init__(self):
     #     self.output = None
@@ -24,6 +25,12 @@ class Yolov8DetectionVinoModel(DetectionModel):
         check_requirements(["ultralytics"])
 
     def load_model(self):
+        
+        from openvino.runtime import Core, AsyncInferQueue
+        from ultralytics.utils.ops import non_max_suppression, scale_boxes
+
+        self.non_max_suppression = non_max_suppression
+        self.scale_boxes = scale_boxes
         """
         OpenVino IR model is initialized and set to self.model.
         """
@@ -31,7 +38,7 @@ class Yolov8DetectionVinoModel(DetectionModel):
             core = Core()
             ov_model = core.read_model(self.model_path)
             self.cls = ov_model.rt_info
-            model = core.compile_model(ov_model, self.device)
+            model = core.compile_model(ov_model, "CPU")
             self.infer_queue = AsyncInferQueue(model, 2)
             self.infer_queue.set_callback(self.callback)
             self.set_model(model)
@@ -68,7 +75,7 @@ class Yolov8DetectionVinoModel(DetectionModel):
 
         input_hw = self.input_tensor.shape[2:]
 
-        prediction_result = non_max_suppression(
+        prediction_result = self.non_max_suppression(
             torch.from_numpy(result),
             conf_thres = self.confidence_threshold
         )
@@ -76,7 +83,7 @@ class Yolov8DetectionVinoModel(DetectionModel):
         #Scale the detected bboxes
         for i, pred in enumerate(prediction_result):
             shape = self.orig_image.shape      
-            pred[:, :4] = scale_boxes(input_hw, pred[:, :4], shape).round()
+            pred[:, :4] = self.scale_boxes(input_hw, pred[:, :4], shape).round()
 
         if self.output == None:
             self.output = prediction_result
@@ -219,5 +226,4 @@ class Yolov8DetectionVinoModel(DetectionModel):
             object_prediction_list_per_image.append(object_prediction_list)
         # print(object_prediction_list_per_image)
         self._object_prediction_list_per_image = object_prediction_list_per_image
-
 
