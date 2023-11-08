@@ -22,7 +22,7 @@ class Yolov8OpenvinoDetectionModel(DetectionModel):
     #     self.output = None
 
     def check_dependencies(self) -> None:
-        check_requirements(["ultralytics"])
+        check_requirements(["ultralytics","openvino"])
 
     def load_model(self):
         
