@@ -13,8 +13,11 @@ class Yolov8TestConstants:
     YOLOV8M_MODEL_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt"
     YOLOV8M_MODEL_PATH = "tests/data/models/yolov8/yolov8m.pt"
 
-    YOLOV8M_MODEL_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8l.pt"
-    YOLOV8M_MODEL_PATH = "tests/data/models/yolov8/yolov8l.pt"
+    YOLOV8L_MODEL_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8l.pt"
+    YOLOV8L_MODEL_PATH = "tests/data/models/yolov8/yolov8l.pt"
+
+    YOLOV8X_MODEL_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8x.pt"
+    YOLOV8X_MODEL_PATH = "tests/data/models/yolov8/yolov8x.pt"
 
     YOLOV8M_MODEL_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8x.pt"
     YOLOV8M_MODEL_PATH = "tests/data/models/yolov8/yolov8x.pt"
@@ -122,4 +125,4 @@ def download_yolov8s_openvino_model(yolov8s_model_path: Optional[str] = None):
             det_model.export(format="openvino", dynamic=True, half=False)
         except Exception as e:
             raise TypeError("model_path is not a valid yolov8 model path: ", e)
-    
+

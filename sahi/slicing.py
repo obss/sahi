@@ -6,7 +6,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from PIL import Image
@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 from sahi.annotation import BoundingBox, Mask
 from sahi.utils.coco import Coco, CocoAnnotation, CocoImage, create_coco_dict
-from sahi.utils.cv import read_image_as_pil
+from sahi.utils.cv import IMAGE_EXTENSIONS_LOSSLESS, IMAGE_EXTENSIONS_LOSSY, read_image_as_pil
 from sahi.utils.file import load_json, save_json
 
 logger = logging.getLogger(__name__)
@@ -31,8 +31,8 @@ MAX_WORKERS = 20
 def get_slice_bboxes(
     image_height: int,
     image_width: int,
-    slice_height: int = None,
-    slice_width: int = None,
+    slice_height: Optional[int] = None,
+    slice_width: Optional[int] = None,
     auto_slice_resolution: bool = True,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
@@ -44,8 +44,8 @@ def get_slice_bboxes(
     Args:
         image_height (int): Height of the original image.
         image_width (int): Width of the original image.
-        slice_height (int): Height of each slice. Default 512.
-        slice_width (int): Width of each slice. Default 512.
+        slice_height (int, optional): Height of each slice. Default None.
+        slice_width (int, optional): Width of each slice. Default None.
         overlap_height_ratio(float): Fractional overlap in height of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
@@ -120,7 +120,9 @@ def annotation_inside_slice(annotation: Dict, slice_bbox: List[int]) -> bool:
     return True
 
 
-def process_coco_annotations(coco_annotation_list: List[CocoAnnotation], slice_bbox: List[int], min_area_ratio) -> bool:
+def process_coco_annotations(
+    coco_annotation_list: List[CocoAnnotation], slice_bbox: List[int], min_area_ratio
+) -> List[CocoAnnotation]:
     """Slices and filters given list of CocoAnnotation objects with given
     'slice_bbox' and 'min_area_ratio'.
 
@@ -161,18 +163,18 @@ class SlicedImage:
 
 
 class SliceImageResult:
-    def __init__(self, original_image_size=None, image_dir: str = None):
+    def __init__(self, original_image_size: List[int], image_dir: Optional[str] = None):
         """
-        sliced_image_list: list of SlicedImage
         image_dir: str
             Directory of the sliced image exports.
         original_image_size: list of int
             Size of the unsliced original image in [height, width]
         """
-        self._sliced_image_list: List[SlicedImage] = []
         self.original_image_height = original_image_size[0]
         self.original_image_width = original_image_size[1]
         self.image_dir = image_dir
+
+        self._sliced_image_list: List[SlicedImage] = []
 
     def add_sliced_image(self, sliced_image: SlicedImage):
         if not isinstance(sliced_image, SlicedImage):
@@ -261,13 +263,13 @@ class SliceImageResult:
 
 def slice_image(
     image: Union[str, Image.Image],
-    coco_annotation_list: Optional[CocoAnnotation] = None,
+    coco_annotation_list: Optional[List[CocoAnnotation]] = None,
     output_file_name: Optional[str] = None,
     output_dir: Optional[str] = None,
-    slice_height: int = None,
-    slice_width: int = None,
-    overlap_height_ratio: float = None,
-    overlap_width_ratio: float = None,
+    slice_height: Optional[int] = None,
+    slice_width: Optional[int] = None,
+    overlap_height_ratio: float = 0.2,
+    overlap_width_ratio: float = 0.2,
     auto_slice_resolution: bool = True,
     min_area_ratio: float = 0.1,
     out_ext: Optional[str] = None,
@@ -278,12 +280,12 @@ def slice_image(
 
     Args:
         image (str or PIL.Image): File path of image or Pillow Image to be sliced.
-        coco_annotation_list (CocoAnnotation): List of CocoAnnotation objects.
+        coco_annotation_list (List[CocoAnnotation], optional): List of CocoAnnotation objects.
         output_file_name (str, optional): Root name of output files (coordinates will
             be appended to this)
         output_dir (str, optional): Output directory
-        slice_height (int): Height of each slice. Default 512.
-        slice_width (int): Width of each slice. Default 512.
+        slice_height (int, optional): Height of each slice. Default None.
+        slice_width (int, optional): Width of each slice. Default None.
         overlap_height_ratio (float): Fractional overlap in height of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
@@ -295,7 +297,7 @@ def slice_image(
         min_area_ratio (float): If the cropped annotation area to original annotation
             ratio is smaller than this value, the annotation is filtered out. Default 0.1.
         out_ext (str, optional): Extension of saved images. Default is the
-            original suffix.
+            original suffix for lossless image formats and png for lossy formats ('.jpg','.jpeg').
         verbose (bool, optional): Switch to print relevant values to screen.
             Default 'False'.
 
@@ -317,7 +319,7 @@ def slice_image(
         image_pil = read_image_as_pil(image)
         slice_file_path = str(Path(output_dir) / slice_file_name)
         # export sliced image
-        image_pil.save(slice_file_path)
+        image_pil.save(slice_file_path, quality="keep")
         image_pil.close()  # to fix https://github.com/obss/sahi/issues/565
         verboselog("sliced image path: " + slice_file_path)
 
@@ -342,7 +344,6 @@ def slice_image(
         overlap_width_ratio=overlap_width_ratio,
     )
 
-    t0 = time.time()
     n_ims = 0
 
     # init images and annotations lists
@@ -360,19 +361,18 @@ def slice_image(
         bry = slice_bbox[3]
         image_pil_slice = image_pil_arr[tly:bry, tlx:brx]
 
-        # process annotations if coco_annotations is given
-        if coco_annotation_list is not None:
-            sliced_coco_annotation_list = process_coco_annotations(coco_annotation_list, slice_bbox, min_area_ratio)
-
         # set image file suffixes
         slice_suffixes = "_".join(map(str, slice_bbox))
         if out_ext:
             suffix = out_ext
-        else:
-            try:
+        elif hasattr(image_pil, "filename"):
+            suffix = Path(getattr(image_pil, "filename")).suffix
+            if suffix in IMAGE_EXTENSIONS_LOSSY:
+                suffix = ".png"
+            elif suffix in IMAGE_EXTENSIONS_LOSSLESS:
                 suffix = Path(image_pil.filename).suffix
-            except AttributeError:
-                suffix = ".jpg"
+        else:
+            suffix = ".png"
 
         # set image file name and path
         slice_file_name = f"{output_file_name}_{slice_suffixes}{suffix}"
@@ -383,9 +383,9 @@ def slice_image(
         coco_image = CocoImage(file_name=slice_file_name, height=slice_height, width=slice_width)
 
         # append coco annotations (if present) to coco image
-        if coco_annotation_list:
-            for coco_annotation in sliced_coco_annotation_list:
-                coco_image.add_annotation(coco_annotation)
+        if coco_annotation_list is not None:
+            for sliced_coco_annotation in process_coco_annotations(coco_annotation_list, slice_bbox, min_area_ratio):
+                coco_image.add_annotation(sliced_coco_annotation)
 
         # create sliced image and append to sliced_image_result
         sliced_image = SlicedImage(
@@ -465,7 +465,7 @@ def slice_coco(
     sliced_coco_images: List = []
 
     # iterate over images and slice
-    for coco_image in tqdm(coco.images):
+    for idx, coco_image in enumerate(tqdm(coco.images)):
         # get image path
         image_path: str = os.path.join(image_dir, coco_image.file_name)
         # get annotation json list corresponding to selected coco image
@@ -474,7 +474,7 @@ def slice_coco(
             slice_image_result = slice_image(
                 image=image_path,
                 coco_annotation_list=coco_image.annotations,
-                output_file_name=Path(coco_image.file_name).stem,
+                output_file_name=f"{Path(coco_image.file_name).stem}_{idx}",
                 output_dir=output_dir,
                 slice_height=slice_height,
                 slice_width=slice_width,
@@ -557,7 +557,9 @@ def calc_aspect_ratio_orientation(width: int, height: int) -> str:
         return "square"
 
 
-def calc_slice_and_overlap_params(resolution: str, height: int, width: int, orientation: str) -> List:
+def calc_slice_and_overlap_params(
+    resolution: str, height: int, width: int, orientation: str
+) -> Tuple[int, int, int, int]:
     """
     This function calculate according to image resolution slice and overlap params.
     Args:
@@ -596,10 +598,10 @@ def calc_slice_and_overlap_params(resolution: str, height: int, width: int, orie
     x_overlap = int(slice_width * overlap_width_ratio)
     y_overlap = int(slice_height * overlap_height_ratio)
 
-    return x_overlap, y_overlap, slice_width, slice_height  # noqa
+    return x_overlap, y_overlap, slice_width, slice_height
 
 
-def get_resolution_selector(res: str, height: int, width: int):
+def get_resolution_selector(res: str, height: int, width: int) -> Tuple[int, int, int, int]:
     """
 
     Args:
@@ -618,7 +620,7 @@ def get_resolution_selector(res: str, height: int, width: int):
     return x_overlap, y_overlap, slice_width, slice_height
 
 
-def get_auto_slice_params(height: int, width: int):
+def get_auto_slice_params(height: int, width: int) -> Tuple[int, int, int, int]:
     """
     According to Image HxW calculate overlap sliding window and buffer params
     factor is the power value of 2 closest to the image resolution.
