@@ -14,9 +14,10 @@ from threading import Lock, Thread
 from typing import Dict, List, Optional, Set, Union
 
 import numpy as np
-from tqdm import tqdm
+from shapely import MultiPolygon
 from shapely.validation import make_valid
-from shapely import MultiPolygon, GeometryCollection
+from tqdm import tqdm
+
 from sahi.utils.file import is_colab, load_json, save_json
 from sahi.utils.shapely import ShapelyAnnotation, box, get_shapely_multipolygon
 
@@ -2372,7 +2373,6 @@ def export_coco_as_yolov5(
     output_dir: str,
     train_coco: Coco = None,
     val_coco: Coco = None,
-    test_coco: Coco = None,
     train_split_rate: float = 0.9,
     numpy_seed=0,
     disable_symlink=False,
@@ -2427,10 +2427,10 @@ def export_coco_as_yolov5(
 
     # create train val image dirs
     train_dir = Path(os.path.abspath(output_dir)) / "train/"
-    train_dir.mkdir(parents=True, exist_ok=False)  # create dir
+    train_dir.mkdir(parents=True, exist_ok=True)  # create dir
     val_dir = Path(os.path.abspath(output_dir)) / "val/"
-    val_dir.mkdir(parents=True, exist_ok=False)  # create dir
-    
+    val_dir.mkdir(parents=True, exist_ok=True)  # create dir
+
     # create image symlinks and annotation txts
     export_yolov5_images_and_txts_from_coco_object(
         output_dir=train_dir,
@@ -2446,6 +2446,7 @@ def export_coco_as_yolov5(
         mp=False,
         disable_symlink=disable_symlink,
     )
+
     # create yolov5 data yaml
     data = {
         "train": str(train_dir).replace("\\", "/"),
@@ -2453,22 +2454,9 @@ def export_coco_as_yolov5(
         "nc": len(train_coco.category_mapping),
         "names": list(train_coco.category_mapping.values()),
     }
-    
-    if test_coco:
-        test_dir = Path(os.path.abspath(output_dir)) / "test/"
-        test_dir.mkdir(parents=True, exist_ok=False)  # create dir
-        export_yolov5_images_and_txts_from_coco_object(
-            output_dir=test_dir,
-            coco=test_coco,
-            ignore_negative_samples=test_coco.ignore_negative_samples,
-            mp=False,
-            disable_symlink=disable_symlink,
-        )
-        data["test"] = str(test_dir).replace("\\", "/")
-        
     yaml_path = str(Path(output_dir) / "data.yml")
     with open(yaml_path, "w") as outfile:
-        yaml.dump(data, outfile, default_flow_style=False, allow_unicode=True)
+        yaml.dump(data, outfile, default_flow_style=False)
 
     return yaml_path
 
