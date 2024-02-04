@@ -14,7 +14,7 @@ from threading import Lock, Thread
 from typing import Dict, List, Optional, Set, Union
 
 import numpy as np
-from shapely import MultiPolygon
+from shapely import GeometryCollection, MultiPolygon
 from shapely.validation import make_valid
 from tqdm import tqdm
 
@@ -228,6 +228,8 @@ class CocoAnnotation:
         samp = self._shapely_annotation.multipolygon
         if not samp.is_valid:
             valid = make_valid(samp)
+            if isinstance(valid, GeometryCollection):
+                valid = valid.convex_hull
             if not isinstance(valid, MultiPolygon):
                 valid = MultiPolygon([valid])
             self._shapely_annotation.multipolygon = valid
