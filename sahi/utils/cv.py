@@ -175,7 +175,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
                 raise TypeError(f"image with shape: {image_sk.shape[3]} is not supported.")
     elif isinstance(image, np.ndarray):
         if image.shape[0] < 5:  # image in CHW
-            image = image[:, :, ::-1]
+            image = image.transpose(1, 2, 0)
         image_pil = Image.fromarray(image)
     else:
         raise TypeError("read image with 'pillow' using 'Image.open()'")
