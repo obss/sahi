@@ -24,7 +24,10 @@ class MmdetTestConstants:
     MMDET_RETINANET_MODEL_PATH = "tests/data/models/mmdet/retinanet/retinanet_r50_fpn_2x_coco_20200131-fdb43119.pth"
     MMDET_YOLOX_TINY_MODEL_URL = "https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_tiny_8x8_300e_coco/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
     MMDET_YOLOX_TINY_MODEL_PATH = "tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth"
+    MMDET_GLIP_TINY_MODEL_URL = "https://download.openmmlab.com/mmdetection/v3.0/glip/glip_tiny_a_mmdet-b3654169.pth"
+    MMDET_GLIP_TINY_MODEL_PATH = "tests/data/models/mmdet/glip/glip_tiny_a_mmdet-b3654169.pth"
 
+    MMDET_GLIP_TINY_CONFIG_PATH = "tests/data/models/mmdet/glip/glip_atss_swin-t_a_fpn_dyhead_pretrain_obj365.py"
     MMDET_CASCADEMASKRCNN_CONFIG_PATH = "tests/data/models/mmdet/cascade_mask_rcnn/cascade-mask-rcnn_r50_fpn_1x_coco.py"
     MMDET_RETINANET_CONFIG_PATH = "tests/data/models/mmdet/retinanet/retinanet_r50_fpn_1x_coco.py"
     MMDET_YOLOX_TINY_CONFIG_PATH = "tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py"
@@ -55,6 +58,15 @@ def download_mmdet_yolox_tiny_model(destination_path: Optional[str] = None):
     Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
 
     download_from_url(MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_URL, destination_path)
+
+
+def download_mmdet_GLIP_tiny_model(destination_path: Optional[str] = None):
+    if destination_path is None:
+        destination_path = MmdetTestConstants.MMDET_GLIP_TINY_MODEL_PATH
+
+    Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
+
+    download_from_url(MmdetTestConstants.MMDET_GLIP_TINY_MODEL_URL, destination_path)
 
 
 def download_mmdet_config(
