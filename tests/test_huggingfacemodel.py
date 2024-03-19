@@ -121,7 +121,7 @@ if sys.version_info >= (3, 7):
             huggingface_detection_model.perform_inference(image)
 
             # convert predictions to ObjectPrediction list
-            huggingface_detection_model.convert_original_predictions()
+            huggingface_detection_model.convert_original_predictions(full_shape=(image.shape[0], image.shape[1]))
             object_prediction_list = huggingface_detection_model.object_prediction_list
 
             # compare

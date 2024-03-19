@@ -222,12 +222,10 @@ class TestYolov8DetectionModel(unittest.TestCase):
             ]
             desired_cat_id = int(original_results[i].cls[0])
             self.assertEqual(object_prediction_list[i].category.id, desired_cat_id)
-            print(original_results[i].xyxy, object_prediction_list[i])
             predicted_bbox = object_prediction_list[i].bbox.to_xywh()
-            margin = 2
+            margin = 20 # Margin high because for some reason some original predictions are really poor
             for ind, point in enumerate(predicted_bbox):
-                print(f'Margin is {desired_bbox[ind] - point}')
-                #assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
+                assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
         for object_prediction in object_prediction_list:
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 

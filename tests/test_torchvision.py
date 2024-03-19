@@ -162,7 +162,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         torchvision_detection_model.perform_inference(image)
 
         # convert predictions to ObjectPrediction list
-        torchvision_detection_model.convert_original_predictions()
+        torchvision_detection_model.convert_original_predictions(full_shape=(image.shape[0], image.shape[1]))
         object_prediction_list = torchvision_detection_model.object_prediction_list
 
         # compare
