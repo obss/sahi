@@ -16,6 +16,7 @@ IMAGE_SIZE = 320
 
 torch_version = get_package_info("torch", verbose=False)[1]
 if "1.10." in torch_version:
+
     class TestDetectron2DetectionModel(unittest.TestCase):
         def test_load_model(self):
             detector2_detection_model = Detectron2DetectionModel(
@@ -118,7 +119,7 @@ if "1.10." in torch_version:
             image = read_image(image_path)
             # perform inference
             detectron2_detection_model.perform_inference(image)
-            # convert predictions to ObjectPrediction list 
+            # convert predictions to ObjectPrediction list
             detectron2_detection_model.convert_original_predictions(full_shape=(image.shape[0], image.shape[1]))
             object_prediction_list = detectron2_detection_model.object_prediction_list
 

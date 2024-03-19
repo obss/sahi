@@ -4,9 +4,9 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-import torch
 import cv2
 import numpy as np
+import torch
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,6 @@ class Yolov8DetectionModel(DetectionModel):
                 image[:, :, ::-1], verbose=False, device=self.device
             )  # YOLOv8 expects numpy arrays to have BGR
 
-
         if self.has_mask:
             if not prediction_result[0].masks:
                 prediction_result[0].masks = Masks(
@@ -88,7 +87,7 @@ class Yolov8DetectionModel(DetectionModel):
 
         else:
             prediction_result_ = [
-            result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result
+                result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result
             ]
 
         self._original_predictions = prediction_result_
@@ -141,8 +140,11 @@ class Yolov8DetectionModel(DetectionModel):
             object_prediction_list = []
             if self.has_mask:
                 image_predictions_in_xyxy_format = image_predictions[0]
-                image_predictions_masks =  image_predictions[1]
-                for prediction, bool_mask in zip(image_predictions_in_xyxy_format.cpu().detach().numpy(), image_predictions_masks.cpu().detach().numpy()):
+                image_predictions_masks = image_predictions[1]
+                for prediction, bool_mask in zip(
+                    image_predictions_in_xyxy_format.cpu().detach().numpy(),
+                    image_predictions_masks.cpu().detach().numpy(),
+                ):
                     x1 = prediction[0]
                     y1 = prediction[1]
                     x2 = prediction[2]
@@ -151,10 +153,13 @@ class Yolov8DetectionModel(DetectionModel):
                     score = prediction[4]
                     category_id = int(prediction[5])
                     category_name = self.category_mapping[str(category_id)]
-                    
-                    bool_mask = cv2.resize(bool_mask.astype(np.uint8), (self._original_shape[1], self._original_shape[0]))
+
+                    bool_mask = cv2.resize(
+                        bool_mask.astype(np.uint8), (self._original_shape[1], self._original_shape[0])
+                    )
                     segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
-                    if len(segmentation) == 0: continue
+                    if len(segmentation) == 0:
+                        continue
                     # fix negative box coords
                     bbox[0] = max(0, bbox[0])
                     bbox[1] = max(0, bbox[1])
@@ -183,7 +188,7 @@ class Yolov8DetectionModel(DetectionModel):
                     )
                     object_prediction_list.append(object_prediction)
                 object_prediction_list_per_image.append(object_prediction_list)
-            else: # Only bounding boxes
+            else:  # Only bounding boxes
                 # process predictions
                 image_predictions_in_xyxy_format = image_predictions
                 for prediction in image_predictions_in_xyxy_format.cpu().detach().numpy():

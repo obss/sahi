@@ -161,7 +161,7 @@ class TestYolov8DetectionModel(unittest.TestCase):
         yolov8_detection_model.perform_inference(image)
         original_predictions = yolov8_detection_model.original_predictions
         boxes = [p[0] for p in original_predictions]
-        masks = [p[1] for p in original_predictions]        
+        masks = [p[1] for p in original_predictions]
 
         # find box of first car detection with conf greater than 0.5
         for box in boxes[0]:
@@ -223,11 +223,12 @@ class TestYolov8DetectionModel(unittest.TestCase):
             desired_cat_id = int(original_results[i].cls[0])
             self.assertEqual(object_prediction_list[i].category.id, desired_cat_id)
             predicted_bbox = object_prediction_list[i].bbox.to_xywh()
-            margin = 20 # Margin high because for some reason some original predictions are really poor
+            margin = 20  # Margin high because for some reason some original predictions are really poor
             for ind, point in enumerate(predicted_bbox):
                 assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
         for object_prediction in object_prediction_list:
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
+
 
 if __name__ == "__main__":
     unittest.main()

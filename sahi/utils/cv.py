@@ -138,6 +138,7 @@ def read_image(image_path: str):
     # return image
     return image
 
+
 def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool = False):
     """
     Loads an image as PIL.Image.Image.
