@@ -116,7 +116,6 @@ if "1.10." in torch_version:
             # prepare image
             image_path = "tests/data/small-vehicles1.jpeg"
             image = read_image(image_path)
-
             # perform inference
             detectron2_detection_model.perform_inference(image)
             # convert predictions to ObjectPrediction list 
