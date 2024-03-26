@@ -1,0 +1,4 @@
+names: [human, car, big_vehicle]
+nc: 3
+train: /mnt/d/Users/E1005164/sahi/tests/data/coco2yolo/train
+val: /mnt/d/Users/E1005164/sahi/tests/data/coco2yolo/val

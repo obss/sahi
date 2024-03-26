@@ -10,6 +10,7 @@ from yaml import safe_load
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
+from sahi.utils.cv import get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
 
 logger = logging.getLogger(__name__)
@@ -182,7 +183,7 @@ class YoloNasDetectionModel(DetectionModel):
                     bbox=bbox,
                     category_id=int(category_id),
                     score=score,
-                    bool_mask=None,
+                    segmentation=None,
                     category_name=category_name,
                     shift_amount=shift_amount,
                     full_shape=full_shape,
