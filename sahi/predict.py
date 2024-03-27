@@ -231,7 +231,7 @@ def get_sliced_prediction(
     # create prediction input
     num_group = int(num_slices / num_batch)
     if verbose == 1 or verbose == 2:
-        tqdm.write(f"Performing prediction on {num_slices} number of slices.")
+        tqdm.write(f"Performing prediction on {num_slices} slices.")
     object_prediction_list = []
     # perform sliced prediction
     for group_ind in range(num_group):
