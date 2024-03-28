@@ -7,12 +7,18 @@ import numpy as np
 
 from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
-from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_yolox_tiny_model
+from sahi.utils.mmdet import (
+    MmdetTestConstants,
+    download_mmdet_cascade_mask_rcnn_model,
+    download_mmdet_GLIP_tiny_model,
+    download_mmdet_yolox_tiny_model,
+)
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
 IMAGE_PATH = "tests/data/small-vehicles1.jpeg"
+CLASS_NAME = "car"
 
 
 class TestMmdetDetectionModel(unittest.TestCase):
@@ -238,6 +244,84 @@ class TestMmdetDetectionModel(unittest.TestCase):
 
         # compare
         self.assertEqual(boxes[idx].astype(int).tolist(), [320, 323, 380, 365])
+
+    def test_perform_inference_with_text_prompt(self):
+        from sahi.models.mmdet import MmdetDetectionModel
+
+        # init model
+        download_mmdet_GLIP_tiny_model()
+
+        mmdet_detection_model = MmdetDetectionModel(
+            model_path=MmdetTestConstants.MMDET_GLIP_TINY_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_GLIP_TINY_CONFIG_PATH,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            device=MODEL_DEVICE,
+            category_remapping=None,
+            load_at_init=True,
+            image_size=IMAGE_SIZE,
+            text=CLASS_NAME,
+        )
+
+        # prepare image
+
+        image = read_image(IMAGE_PATH)
+
+        # perform inference
+        mmdet_detection_model.perform_inference(image)
+        original_predictions = mmdet_detection_model.original_predictions
+
+        pred = original_predictions[0]
+        n_preds = len(pred["bboxes"])
+        self.assertTrue(len(pred["bboxes"]) == n_preds)
+        self.assertTrue(len(pred["labels"]) == n_preds)
+        self.assertTrue(len(pred["scores"]) == n_preds)
+        boxes = np.array(pred["bboxes"])
+        labels = np.array(pred["labels"])
+        scores = np.array(pred["scores"])
+
+        # find box of first car detection with conf greater than 0.5
+        idx = np.where((scores >= 0.5) & (labels == 0))[0][0]
+
+        # compare
+        self.assertEqual(boxes[idx].astype(int).tolist(), [322, 324, 380, 361])
+
+    def test_perform_inference_without_text_prompt(self):
+        from sahi.models.mmdet import MmdetDetectionModel
+
+        # init model
+        download_mmdet_GLIP_tiny_model()
+
+        mmdet_detection_model = MmdetDetectionModel(
+            model_path=MmdetTestConstants.MMDET_GLIP_TINY_MODEL_PATH,
+            config_path=MmdetTestConstants.MMDET_GLIP_TINY_CONFIG_PATH,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            device=MODEL_DEVICE,
+            category_remapping=None,
+            load_at_init=True,
+            image_size=IMAGE_SIZE,
+        )
+
+        # prepare image
+        image = read_image(IMAGE_PATH)
+
+        # perform inference
+        mmdet_detection_model.perform_inference(image)
+        original_predictions = mmdet_detection_model.original_predictions
+
+        pred = original_predictions[0]
+        n_preds = len(pred["bboxes"])
+        self.assertTrue(len(pred["bboxes"]) == n_preds)
+        self.assertTrue(len(pred["labels"]) == n_preds)
+        self.assertTrue(len(pred["scores"]) == n_preds)
+        boxes = np.array(pred["bboxes"])
+        labels = np.array(pred["labels"])
+        scores = np.array(pred["scores"])
+
+        # find box of first car detection with conf greater than 0.5
+        idx = np.where((scores >= 0.5) & (labels == 2))[0][0]
+
+        # compare
+        self.assertEqual(boxes[idx].astype(int).tolist(), [322, 324, 380, 361])
 
 
 if __name__ == "__main__":
