@@ -453,7 +453,9 @@ def visualize_prediction(
         if not hide_labels:
             # arange bounding box text location
             label = f"{class_}"
-            box_width, box_height = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]  # label width, height
+            box_width, box_height = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[
+                0
+            ]  # label width, height
             outside = point1[1] - box_height - 3 >= 0  # label fits outside box
             point2 = point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3
             # add bounding box text
@@ -494,7 +496,7 @@ def visualize_object_predictions(
     """
     Visualizes prediction category names, bounding boxes over the source image
     and exports it to output folder.
-    
+
     Args:
         object_prediction_list: a list of prediction.ObjectPrediction
         rect_th: rectangle thickness
@@ -567,7 +569,9 @@ def visualize_object_predictions(
             if not hide_conf:
                 label += f" {score:.2f}"
 
-            box_width, box_height = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]  # label width, height
+            box_width, box_height = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[
+                0
+            ]  # label width, height
             outside = point1[1] - box_height - 3 >= 0  # label fits outside box
             point2 = point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3
             # add bounding box text
@@ -622,12 +626,12 @@ def get_coco_segmentation_from_bool_mask(bool_mask):
 def get_bool_mask_from_coco_segmentation(coco_segmentation: List[List[float]], width: int, height: int) -> np.ndarray:
     """
     Convert coco segmentation to 2D boolean mask of given height and width
-    
+
     Parameters:
     - coco_segmentation: list of points representing the coco segmentation
     - width: width of the boolean mask
     - height: height of the boolean mask
-    
+
     Returns:
     - bool_mask: 2D boolean mask of size (height, width)
     """
@@ -692,10 +696,10 @@ def exif_transpose(image: Image.Image) -> Image.Image:
     """
     Transpose a PIL image accordingly if it has an EXIF Orientation tag.
     Inplace version of https://github.com/python-pillow/Pillow/blob/master/src/PIL/ImageOps.py exif_transpose()
-    
+
     Args:
         image (Image.Image): The image to transpose.
-        
+
     Returns:
         Image.Image: The transposed image.
     """
