@@ -277,6 +277,20 @@ python -m scripts.run_code_style format
 
 <a align="left" href="https://github.com/tureckova" target="_blank">Alzbeta Tureckova</a>
 
+<a align="left" href="https://github.com/s-aiueo32" target="_blank">So Uchida</a>
+
+<a align="left" href="https://github.com/developer0hye" target="_blank">Yonghye Kwon</a>
+
+<a align="left" href="https://github.com/aphilas" target="_blank">Neville</a>
+
+<a align="left" href="https://github.com/mayrajeo" target="_blank">Janne Mäyrä</a>
+
+<a align="left" href="https://github.com/mayrajeo" target="_blank">Janne Mäyrä</a>
+
+<a align="left" href="https://github.com/ilkermanap" target="_blank">Ilker Manap</a>
+
+<a align="left" href="https://github.com/nguyenthean" target="_blank">Nguyễn Thế An</a>
+
 <a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
 
 <a align="left" href="https://github.com/aynursusuz" target="_blank">Aynur Susuz</a>
