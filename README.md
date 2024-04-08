@@ -305,7 +305,7 @@ python -m scripts.run_code_style format
 
 <a align="left" href="https://github.com/williamlung" target="_blank">William Lung</a>
 
-<a align="left" href="https://github.com/williamlung" target="_blank">William Lung</a>
+<a align="left" href="https://github.com/amoghdhaliwal" target="_blank">Amogh Dhaliwal</a>
 
 </div>
 
