@@ -44,7 +44,7 @@ Object detection and instance segmentation are by far the most important applica
 
 ## <div align="center">Quick Start Examples</div>
 
-[📜 List of publications that cite SAHI (currently 100+)](https://scholar.google.com/scholar?hl=en&as_sdt=2005&sciodt=0,5&cites=14065474760484865747&scipsc=&q=&scisbd=1)
+[📜 List of publications that cite SAHI (currently 150+)](https://scholar.google.com/scholar?hl=en&as_sdt=2005&sciodt=0,5&cites=14065474760484865747&scipsc=&q=&scisbd=1)
 
 [🏆 List of competition winners that used SAHI](https://github.com/obss/sahi/discussions/688)
 
@@ -52,7 +52,7 @@ Object detection and instance segmentation are by far the most important applica
 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
 
-- [Official paper](https://ieeexplore.ieee.org/document/9897990) (ICIP 2022 oral) (NEW)
+- [Official paper](https://ieeexplore.ieee.org/document/9897990) (ICIP 2022 oral)
 
 - [Pretrained weights and ICIP 2022 paper files](https://github.com/fcakyon/small-object-detection-benchmark)
 
@@ -82,9 +82,13 @@ Object detection and instance segmentation are by far the most important applica
 
 - `Detectron2` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_detectron2.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-detectron2"></a>
 
+- `TorchVision` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_torchvision.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-torchvision"></a>
+
 - `HuggingFace` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_huggingface.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-huggingface"></a> (NEW)
 
-- `TorchVision` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_torchvision.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-torchvision"></a> (NEW)
+- `DeepSparse` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_sparse_yolov5.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-deepsparse"></a> (NEW)
+
+- `SuperGradients/YOLONAS` + `SAHI`: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolonas.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-yolonas"></a> (NEW) 
 
 <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img width="600" src="https://user-images.githubusercontent.com/34196005/144092739-c1d9bade-a128-4346-947f-424ce00e5c4f.gif" alt="sahi-yolox"></a> 
 
@@ -129,6 +133,12 @@ conda install pytorch=1.13.1 torchvision=0.14.1 pytorch-cuda=11.7 -c pytorch -c 
 pip install yolov5==7.0.13
 ```
 
+- Install your desired detection framework (ultralytics):
+
+```console
+pip install ultralytics==8.0.207
+```
+
 - Install your desired detection framework (mmdet):
 
 ```console
@@ -146,6 +156,12 @@ pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113
 
 ```console
 pip install transformers timm
+```
+
+- Install your desired detection framework (super-gradients):
+
+```console
+pip install super-gradients==3.3.1
 ```
 
 </details>
