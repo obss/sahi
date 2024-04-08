@@ -217,18 +217,11 @@ def greedy_nmm(
     # according to their confidence scores
     order = scores.argsort()
 
-    # initialise an empty list for
-    # filtered prediction boxes
-    keep = []
-
     while len(order) > 0:
         # extract the index of the
         # prediction with highest score
         # we call this prediction S
         idx = order[-1]
-
-        # push S in filtered predictions list
-        keep.append(idx.tolist())
 
         # remove S from P
         order = order[:-1]
