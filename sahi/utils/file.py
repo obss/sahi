@@ -166,6 +166,16 @@ def get_base_filename(path: str):
 
 
 def get_file_extension(path: str):
+    """
+    Get the file extension from a given file path.
+
+    Args:
+        path (str): The file path.
+
+    Returns:
+        str: The file extension.
+
+    """
     filename, file_extension = os.path.splitext(path)
     return file_extension
 
@@ -214,20 +224,49 @@ def import_model_class(model_type, class_name):
     return class_
 
 
-def increment_path(path, exist_ok=True, sep=""):
-    # Increment path, i.e. runs/exp --> runs/exp{sep}0, runs/exp{sep}1 etc.
+def increment_path(path: str, exist_ok: bool = True, sep: str = "") -> str:
+    """
+    Increment path, i.e. runs/exp --> runs/exp{sep}0, runs/exp{sep}1 etc.
+
+    Args:
+        path: str
+            The base path to increment.
+        exist_ok: bool
+            If True, return the path as is if it already exists. If False, increment the path.
+        sep: str
+            The separator to use between the base path and the increment number.
+
+    Returns:
+        str: The incremented path.
+
+    Example:
+        >>> increment_path("runs/exp", sep="_")
+        'runs/exp_0'
+        >>> increment_path("runs/exp_0", sep="_")
+        'runs/exp_1'
+    """
     path = Path(path)  # os-agnostic
     if (path.exists() and exist_ok) or (not path.exists()):
         return str(path)
     else:
         dirs = glob.glob(f"{path}{sep}*")  # similar paths
         matches = [re.search(rf"%s{sep}(\d+)" % path.stem, d) for d in dirs]
-        i = [int(m.groups()[0]) for m in matches if m]  # indices
-        n = max(i) + 1 if i else 2  # increment number
+        indices = [int(m.groups()[0]) for m in matches if m]  # indices
+        n = max(indices) + 1 if indices else 2  # increment number
         return f"{path}{sep}{n}"  # update path
 
 
 def download_from_url(from_url: str, to_path: str):
+    """
+    Downloads a file from the given URL and saves it to the specified path.
+
+    Args:
+        from_url (str): The URL of the file to download.
+        to_path (str): The path where the downloaded file should be saved.
+
+    Returns:
+        None
+    """
     Path(to_path).parent.mkdir(parents=True, exist_ok=True)
 
     if not os.path.exists(to_path):
@@ -238,7 +277,12 @@ def download_from_url(from_url: str, to_path: str):
 
 
 def is_colab():
+    """
+    Check if the current environment is a Google Colab instance.
+
+    Returns:
+        bool: True if the environment is a Google Colab instance, False otherwise.
+    """
     import sys
 
-    # Is environment a Google Colab instance?
     return "google.colab" in sys.modules
