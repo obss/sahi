@@ -285,7 +285,7 @@ python -m scripts.run_code_style format
 
 <a align="left" href="https://github.com/mayrajeo" target="_blank">Janne Mäyrä</a>
 
-<a align="left" href="https://github.com/mayrajeo" target="_blank">Janne Mäyrä</a>
+<a align="left" href="https://github.com/christofferedlund" target="_blank">Christoffer Edlund</a>
 
 <a align="left" href="https://github.com/ilkermanap" target="_blank">Ilker Manap</a>
 
