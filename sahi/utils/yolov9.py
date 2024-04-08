@@ -12,7 +12,6 @@ class Yolov9TestConstants:
     YOLOV9E_MODEL_PATH = "tests/data/models/yolov9/yolov9e.pt"
 
 
-
 def download_yolov9c_model(destination_path: Optional[str] = None):
     if destination_path is None:
         destination_path = Yolov9TestConstants.YOLOV9C_MODEL_PATH
@@ -24,6 +23,7 @@ def download_yolov9c_model(destination_path: Optional[str] = None):
             Yolov9TestConstants.YOLOV9C_MODEL_URL,
             destination_path,
         )
+
 
 def download_yolov9e_model(destination_path: Optional[str] = None):
     if destination_path is None:
