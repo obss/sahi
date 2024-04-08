@@ -299,5 +299,13 @@ python -m scripts.run_code_style format
 
 <a align="left" href="https://github.com/lakshaymehra" target="_blank">Lakshay Mehra</a>
 
+<a align="left" href="https://github.com/karl-joan" target="_blank">Karl-Joan Alesma</a>
+
+<a align="left" href="https://github.com/jacobmarks" target="_blank">Jacob Marks</a>
+
+<a align="left" href="https://github.com/williamlung" target="_blank">William Lung</a>
+
+<a align="left" href="https://github.com/williamlung" target="_blank">William Lung</a>
+
 </div>
 
