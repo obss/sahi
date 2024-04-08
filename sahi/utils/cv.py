@@ -44,7 +44,7 @@ class Colors:
             "FF95C8",
             "FF37C7",
         )
-        self.palette = [self.hex2rgb("#" + c) for c in hex]
+        self.palette = [self.hex_to_rgb("#" + c) for c in hex]
         self.n = len(self.palette)
 
     def __call__(self, ind, bgr: bool = False):
