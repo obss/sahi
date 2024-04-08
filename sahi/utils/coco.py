@@ -130,7 +130,7 @@ class CocoAnnotation:
             annotation_dict: dict
                 COCO formatted annotation dict (with fields "bbox", "segmentation", "category_id")
         """
-        if annotation_dict.__contains__("segmentation") and not isinstance(annotation_dict["segmentation"], list):
+        if annotation_dict.__contains__("segmentation") and isinstance(annotation_dict["segmentation"], dict):
             has_rle_segmentation = True
             logger.warning(
                 f"Segmentation annotation for id {annotation_dict['id']} is skipped since RLE segmentation format is not supported."
