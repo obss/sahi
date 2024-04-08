@@ -277,6 +277,20 @@ python -m scripts.run_code_style format
 
 <a align="left" href="https://github.com/tureckova" target="_blank">Alzbeta Tureckova</a>
 
+<a align="left" href="https://github.com/s-aiueo32" target="_blank">So Uchida</a>
+
+<a align="left" href="https://github.com/developer0hye" target="_blank">Yonghye Kwon</a>
+
+<a align="left" href="https://github.com/aphilas" target="_blank">Neville</a>
+
+<a align="left" href="https://github.com/mayrajeo" target="_blank">Janne Mäyrä</a>
+
+<a align="left" href="https://github.com/christofferedlund" target="_blank">Christoffer Edlund</a>
+
+<a align="left" href="https://github.com/ilkermanap" target="_blank">Ilker Manap</a>
+
+<a align="left" href="https://github.com/nguyenthean" target="_blank">Nguyễn Thế An</a>
+
 <a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
 
 <a align="left" href="https://github.com/aynursusuz" target="_blank">Aynur Susuz</a>
@@ -284,6 +298,14 @@ python -m scripts.run_code_style format
 <a align="left" href="https://github.com/pranavdurai10" target="_blank">Pranav Durai</a>
 
 <a align="left" href="https://github.com/lakshaymehra" target="_blank">Lakshay Mehra</a>
+
+<a align="left" href="https://github.com/karl-joan" target="_blank">Karl-Joan Alesma</a>
+
+<a align="left" href="https://github.com/jacobmarks" target="_blank">Jacob Marks</a>
+
+<a align="left" href="https://github.com/williamlung" target="_blank">William Lung</a>
+
+<a align="left" href="https://github.com/amoghdhaliwal" target="_blank">Amogh Dhaliwal</a>
 
 </div>
 
