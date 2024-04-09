@@ -34,9 +34,11 @@ try:
             palette: str = "none",
             image_size: Optional[int] = None,
             text: str = None,
+            custom_entities: bool = False
         ) -> None:
             self.image_size = image_size
             self.text = text
+            self.custom_entities = custom_entities
             super().__init__(model, weights, device, scope, palette)
 
         def __call__(self, images: List[np.ndarray], batch_size: int = 1) -> dict:
@@ -54,7 +56,8 @@ try:
                 # text promps for GLIP + GDino
                 if hasattr(self, "text_prompts"):
                     for datasamples in data["data_samples"]:
-                        datasamples.set_metainfo({"text": self.text_prompts})
+                        datasamples.set_metainfo({"text": self.text_prompts,
+                                                  "custom_entities": self.custom_entities})
                 preds = self.forward(data)
                 results = self.postprocess(
                     preds,
@@ -119,7 +122,9 @@ class MmdetDetectionModel(DetectionModel):
         load_at_init: bool = True,
         image_size: int = None,
         scope: str = "mmdet",
+        #For GLIP + GDino
         text: str = None,
+        custom_entities: bool = False,
     ):
 
         if not IMPORT_MMDET_V3:
@@ -128,6 +133,7 @@ class MmdetDetectionModel(DetectionModel):
         self.scope = scope
         self.image_size = image_size
         self.text = text
+        self.custom_entities = custom_entities
         super().__init__(
             model_path,
             model,
@@ -157,6 +163,7 @@ class MmdetDetectionModel(DetectionModel):
             scope=self.scope,
             image_size=self.image_size,
             text=self.text,
+            custom_entities=self.custom_entities,
         )
 
         self.set_model(model)

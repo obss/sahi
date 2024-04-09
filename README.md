@@ -143,7 +143,7 @@ pip install ultralytics==8.0.207
 
 ```console
 pip install mim
-mim install mmdet==3.0.0
+mim install mmdet==3.3.0
 ```
 
 - Install your desired detection framework (detectron2):
