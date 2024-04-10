@@ -59,25 +59,15 @@ class Yolov8DetectionModel(DetectionModel):
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
 
-        kwargs = {
-            "cfg": self.config_path,
-            "verbose": False,
-            "conf": self.confidence_threshold,
-            "device": self.device
-        }
+        kwargs = {"cfg": self.config_path, "verbose": False, "conf": self.confidence_threshold, "device": self.device}
 
         if self.image_size is not None:
-            kwargs = {
-                "imgsz": self.image_size,
-                **kwargs
-            }
+            kwargs = {"imgsz": self.image_size, **kwargs}
 
         prediction_result = self.model(image[:, :, ::-1], **kwargs)  # YOLOv8 expects numpy arrays to have BGR
 
         # We do not filter results again as confidence threshold is already applied above
-        prediction_result = [
-            result.boxes.data for result in prediction_result
-        ]
+        prediction_result = [result.boxes.data for result in prediction_result]
 
         self._original_predictions = prediction_result
 
