@@ -3,6 +3,7 @@
 *.pkl
 *.pth
 *.pt
+*.onnx
 weights*
 .vscode
 .idea
