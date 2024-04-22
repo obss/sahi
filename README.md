@@ -44,7 +44,7 @@ Object detection and instance segmentation are by far the most important applica
 
 ## <div align="center">Quick Start Examples</div>
 
-[📜 List of publications that cite SAHI (currently 100+)](https://scholar.google.com/scholar?hl=en&as_sdt=2005&sciodt=0,5&cites=14065474760484865747&scipsc=&q=&scisbd=1)
+[📜 List of publications that cite SAHI (currently 150+)](https://scholar.google.com/scholar?hl=en&as_sdt=2005&sciodt=0,5&cites=14065474760484865747&scipsc=&q=&scisbd=1)
 
 [🏆 List of competition winners that used SAHI](https://github.com/obss/sahi/discussions/688)
 
@@ -52,9 +52,11 @@ Object detection and instance segmentation are by far the most important applica
 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
 
-- [Official paper](https://ieeexplore.ieee.org/document/9897990) (ICIP 2022 oral) (NEW)
+- [Official paper](https://ieeexplore.ieee.org/document/9897990) (ICIP 2022 oral)
 
 - [Pretrained weights and ICIP 2022 paper files](https://github.com/fcakyon/small-object-detection-benchmark)
+
+- [Visualizing and Evaluating SAHI predictions with FiftyOne](https://voxel51.com/blog/how-to-detect-small-objects/) (2024) (NEW)
 
 - ['Exploring SAHI' Research Article from 'learnopencv.com'](https://learnopencv.com/slicing-aided-hyper-inference/) (2023) (NEW)
 
@@ -82,9 +84,13 @@ Object detection and instance segmentation are by far the most important applica
 
 - `Detectron2` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_detectron2.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-detectron2"></a>
 
+- `TorchVision` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_torchvision.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-torchvision"></a>
+
 - `HuggingFace` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_huggingface.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-huggingface"></a> (NEW)
 
-- `TorchVision` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_torchvision.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-torchvision"></a> (NEW)
+- `DeepSparse` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_sparse_yolov5.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-deepsparse"></a> (NEW)
+
+- `SuperGradients/YOLONAS` + `SAHI`: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolonas.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-yolonas"></a> (NEW) 
 
 <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img width="600" src="https://user-images.githubusercontent.com/34196005/144092739-c1d9bade-a128-4346-947f-424ce00e5c4f.gif" alt="sahi-yolox"></a> 
 
@@ -129,6 +135,12 @@ conda install pytorch=1.13.1 torchvision=0.14.1 pytorch-cuda=11.7 -c pytorch -c 
 pip install yolov5==7.0.13
 ```
 
+- Install your desired detection framework (ultralytics):
+
+```console
+pip install ultralytics==8.0.207
+```
+
 - Install your desired detection framework (mmdet):
 
 ```console
@@ -146,6 +158,12 @@ pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113
 
 ```console
 pip install transformers timm
+```
+
+- Install your desired detection framework (super-gradients):
+
+```console
+pip install super-gradients==3.3.1
 ```
 
 </details>
@@ -261,6 +279,20 @@ python -m scripts.run_code_style format
 
 <a align="left" href="https://github.com/tureckova" target="_blank">Alzbeta Tureckova</a>
 
+<a align="left" href="https://github.com/s-aiueo32" target="_blank">So Uchida</a>
+
+<a align="left" href="https://github.com/developer0hye" target="_blank">Yonghye Kwon</a>
+
+<a align="left" href="https://github.com/aphilas" target="_blank">Neville</a>
+
+<a align="left" href="https://github.com/mayrajeo" target="_blank">Janne Mäyrä</a>
+
+<a align="left" href="https://github.com/christofferedlund" target="_blank">Christoffer Edlund</a>
+
+<a align="left" href="https://github.com/ilkermanap" target="_blank">Ilker Manap</a>
+
+<a align="left" href="https://github.com/nguyenthean" target="_blank">Nguyễn Thế An</a>
+
 <a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
 
 <a align="left" href="https://github.com/aynursusuz" target="_blank">Aynur Susuz</a>
@@ -268,6 +300,14 @@ python -m scripts.run_code_style format
 <a align="left" href="https://github.com/pranavdurai10" target="_blank">Pranav Durai</a>
 
 <a align="left" href="https://github.com/lakshaymehra" target="_blank">Lakshay Mehra</a>
+
+<a align="left" href="https://github.com/karl-joan" target="_blank">Karl-Joan Alesma</a>
+
+<a align="left" href="https://github.com/jacobmarks" target="_blank">Jacob Marks</a>
+
+<a align="left" href="https://github.com/williamlung" target="_blank">William Lung</a>
+
+<a align="left" href="https://github.com/amoghdhaliwal" target="_blank">Amogh Dhaliwal</a>
 
 </div>
 
