@@ -103,7 +103,12 @@ def annotation_inside_slice(annotation: Dict, slice_bbox: List[int]) -> bool:
     Returns:
         (bool): True if any annotation coordinate lies inside slice.
     """
-    left, top, width, height = annotation["bbox"]
+    bbox = annotation["bbox"]
+    if len(bbox) == 0:
+        # if the bbox is empty, skips.
+        return False
+    else:
+        left, top, width, height = bbox    
 
     right = left + width
     bottom = top + height
