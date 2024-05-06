@@ -34,7 +34,7 @@ try:
             palette: str = "none",
             image_size: Optional[int] = None,
             text: str = None,
-            custom_entities: bool = False
+            custom_entities: bool = False,
         ) -> None:
             self.image_size = image_size
             self.text = text
@@ -56,8 +56,7 @@ try:
                 # text promps for GLIP + GDino
                 if hasattr(self, "text_prompts"):
                     for datasamples in data["data_samples"]:
-                        datasamples.set_metainfo({"text": self.text_prompts,
-                                                  "custom_entities": self.custom_entities})
+                        datasamples.set_metainfo({"text": self.text_prompts, "custom_entities": self.custom_entities})
                 preds = self.forward(data)
                 results = self.postprocess(
                     preds,
@@ -122,7 +121,7 @@ class MmdetDetectionModel(DetectionModel):
         load_at_init: bool = True,
         image_size: int = None,
         scope: str = "mmdet",
-        #For GLIP + GDino
+        # For GLIP + GDino
         text: str = None,
         custom_entities: bool = False,
     ):
