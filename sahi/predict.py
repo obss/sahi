@@ -126,7 +126,7 @@ def get_sliced_prediction(
     image,
     detection_model=None,
     output_file_name=None,  # ADDED OUTPUT FILE NAME TO (OPTIONALLY) SAVE SLICES
-    interim_dir="slices/",  # ADDED INTERIM DIRECTORY TO (OPTIONALLY) SAVE SLICES
+    interim_dir=None,  # ADDED INTERIM DIRECTORY TO (OPTIONALLY) SAVE SLICES
     slice_height: int = None,
     slice_width: int = None,
     overlap_height_ratio: float = 0.2,
