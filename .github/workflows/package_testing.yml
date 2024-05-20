@@ -66,6 +66,7 @@ jobs:
         run: |
           pip install openmim
           mim install mmdet==3.3.0
+          pip install nltk
 
       - name: Install YOLOv5(7.0.13)
         run: >
