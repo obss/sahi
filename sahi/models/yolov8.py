@@ -134,9 +134,7 @@ class Yolov8DetectionModel(DetectionModel):
 
                     orig_width = self._original_shape[1]
                     orig_height = self._original_shape[0]
-                    bool_mask = cv2.resize(
-                        bool_mask.astype(np.uint8), (orig_width, orig_height)
-                    )
+                    bool_mask = cv2.resize(bool_mask.astype(np.uint8), (orig_width, orig_height))
                     segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
                     if len(segmentation) == 0:
                         continue
