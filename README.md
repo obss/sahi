@@ -30,7 +30,7 @@
 
 ## <div align="center">Overview</div>
 
-Object detection and instance segmentation are by far the most important fields of applications in Computer Vision. However, detection of small objects and inference on large images are still major issues in practical usage. Here comes the SAHI to help developers overcome these real-world problems with many vision utilities.
+Object detection and instance segmentation are by far the most important applications in Computer Vision. However, the detection of small objects and inference on large images still need to be improved in practical usage. Here comes the SAHI to help developers overcome these real-world problems with many vision utilities.
 
 | Command  | Description  |
 |---|---|
@@ -39,12 +39,12 @@ Object detection and instance segmentation are by far the most important fields 
 | [coco slice](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-slice-command-usage)  | automatically slice COCO annotation and image files |
 | [coco fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-fiftyone-command-usage)  | explore multiple prediction results on your COCO dataset with [fiftyone ui](https://github.com/voxel51/fiftyone) ordered by number of misdetections |
 | [coco evaluate](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-evaluate-command-usage)  | evaluate classwise COCO AP and AR for given predictions and ground truth |
-| [coco analyse](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-analyse-command-usage)  | calcualate and export many error analysis plots |
+| [coco analyse](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-analyse-command-usage)  | calculate and export many error analysis plots |
 | [coco yolov5](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-yolov5-command-usage)  | automatically convert any COCO dataset to [yolov5](https://github.com/ultralytics/yolov5) format |
 
 ## <div align="center">Quick Start Examples</div>
 
-[📜 List of publications that cite SAHI (currently 40+)](https://scholar.google.com/scholar?hl=en&as_sdt=2005&sciodt=0,5&cites=14065474760484865747&scipsc=&q=&scisbd=1)
+[📜 List of publications that cite SAHI (currently 150+)](https://scholar.google.com/scholar?hl=en&as_sdt=2005&sciodt=0,5&cites=14065474760484865747&scipsc=&q=&scisbd=1)
 
 [🏆 List of competition winners that used SAHI](https://github.com/obss/sahi/discussions/688)
 
@@ -52,13 +52,15 @@ Object detection and instance segmentation are by far the most important fields 
 
 - [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
 
-- [Official paper](https://ieeexplore.ieee.org/document/9897990) (ICIP 2022 oral) (NEW)
+- [Official paper](https://ieeexplore.ieee.org/document/9897990) (ICIP 2022 oral)
 
 - [Pretrained weights and ICIP 2022 paper files](https://github.com/fcakyon/small-object-detection-benchmark)
 
-- ['Exploring SAHI' Research Article from 'learnopencv.com'](https://learnopencv.com/slicing-aided-hyper-inference/) (2023) (NEW)
+- [Visualizing and Evaluating SAHI predictions with FiftyOne](https://voxel51.com/blog/how-to-detect-small-objects/) (2024) (NEW)
 
-- ['VIDEO TUTORIAL: Slicing Aided Hyper Inference for Small Object Detection - SAHI'](https://www.youtube.com/watch?v=UuOjJKxn-M8&t=270s) (2023) (NEW)
+- ['Exploring SAHI' Research Article from 'learnopencv.com'](https://learnopencv.com/slicing-aided-hyper-inference/)
+
+- ['VIDEO TUTORIAL: Slicing Aided Hyper Inference for Small Object Detection - SAHI'](https://www.youtube.com/watch?v=UuOjJKxn-M8&t=270s) (RECOMMENDED)
 
 - [Video inference support is live](https://github.com/obss/sahi/discussions/626)
 
@@ -66,9 +68,9 @@ Object detection and instance segmentation are by far the most important fields 
 
 - [Satellite object detection](https://blog.ml6.eu/how-to-detect-small-objects-in-very-large-images-70234bab0f98)
 
-- [Error analysis plots & evaluation](https://github.com/obss/sahi/discussions/622) (NEW)
+- [Error analysis plots & evaluation](https://github.com/obss/sahi/discussions/622) (RECOMMENDED)
 
-- [Interactive result visualization and inspection](https://github.com/obss/sahi/discussions/624) (NEW)
+- [Interactive result visualization and inspection](https://github.com/obss/sahi/discussions/624) (RECOMMENDED)
 
 - [COCO dataset conversion](https://medium.com/codable/convert-any-dataset-to-coco-object-detection-format-with-sahi-95349e1fe2b7)
 
@@ -76,15 +78,24 @@ Object detection and instance segmentation are by far the most important fields 
 
 - `YOLOX` + `SAHI` demo: <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img src="https://raw.githubusercontent.com/obss/sahi/main/resources/hf_spaces_badge.svg" alt="sahi-yolox"></a> (RECOMMENDED)
 
+- `RT-DETR` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_rtdetr.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-rtdetr"></a> (NEW)
+
+- `YOLOv8` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov8.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-yolov8"></a> (NEW)
+
+- `SuperGradients/YOLONAS` + `SAHI`: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolonas.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-yolonas"></a> (NEW)
+
+- `DeepSparse` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_sparse_yolov5.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-deepsparse"></a>
+
+- `HuggingFace` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_huggingface.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-huggingface"></a>
+
 - `YOLOv5` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov5.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-yolov5"></a>
 
 - `MMDetection` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_mmdetection.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-mmdetection"></a>
 
 - `Detectron2` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_detectron2.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-detectron2"></a>
 
-- `HuggingFace` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_huggingface.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-huggingface"></a> (NEW)
+- `TorchVision` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_torchvision.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-torchvision"></a>
 
-- `TorchVision` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_torchvision.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-torchvision"></a> (NEW)
 
 <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img width="600" src="https://user-images.githubusercontent.com/34196005/144092739-c1d9bade-a128-4346-947f-424ce00e5c4f.gif" alt="sahi-yolox"></a> 
 
@@ -126,17 +137,20 @@ conda install pytorch=1.13.1 torchvision=0.14.1 pytorch-cuda=11.7 -c pytorch -c 
 - Install your desired detection framework (yolov5):
 
 ```console
-pip install yolov5==7.0.4
+pip install yolov5==7.0.13
+```
+
+- Install your desired detection framework (ultralytics):
+
+```console
+pip install ultralytics==8.0.207
 ```
 
 - Install your desired detection framework (mmdet):
 
 ```console
-pip install mmcv-full==1.7.0 -f https://download.openmmlab.com/mmcv/dist/cu117/torch1.13.0/index.html
-```
-
-```console
-pip install mmdet==2.26.0
+pip install mim
+mim install mmdet==3.0.0
 ```
 
 - Install your desired detection framework (detectron2):
@@ -149,6 +163,12 @@ pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113
 
 ```console
 pip install transformers timm
+```
+
+- Install your desired detection framework (super-gradients):
+
+```console
+pip install super-gradients==3.3.1
 ```
 
 </details>
@@ -264,10 +284,35 @@ python -m scripts.run_code_style format
 
 <a align="left" href="https://github.com/tureckova" target="_blank">Alzbeta Tureckova</a>
 
+<a align="left" href="https://github.com/s-aiueo32" target="_blank">So Uchida</a>
+
+<a align="left" href="https://github.com/developer0hye" target="_blank">Yonghye Kwon</a>
+
+<a align="left" href="https://github.com/aphilas" target="_blank">Neville</a>
+
+<a align="left" href="https://github.com/mayrajeo" target="_blank">Janne Mäyrä</a>
+
+<a align="left" href="https://github.com/christofferedlund" target="_blank">Christoffer Edlund</a>
+
+<a align="left" href="https://github.com/ilkermanap" target="_blank">Ilker Manap</a>
+
+<a align="left" href="https://github.com/nguyenthean" target="_blank">Nguyễn Thế An</a>
+
 <a align="left" href="https://github.com/weiji14" target="_blank">Wei Ji</a>
 
 <a align="left" href="https://github.com/aynursusuz" target="_blank">Aynur Susuz</a>
 
 <a align="left" href="https://github.com/pranavdurai10" target="_blank">Pranav Durai</a>
 
+<a align="left" href="https://github.com/lakshaymehra" target="_blank">Lakshay Mehra</a>
+
+<a align="left" href="https://github.com/karl-joan" target="_blank">Karl-Joan Alesma</a>
+
+<a align="left" href="https://github.com/jacobmarks" target="_blank">Jacob Marks</a>
+
+<a align="left" href="https://github.com/williamlung" target="_blank">William Lung</a>
+
+<a align="left" href="https://github.com/amoghdhaliwal" target="_blank">Amogh Dhaliwal</a>
+
 </div>
+
