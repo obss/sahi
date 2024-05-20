@@ -69,10 +69,10 @@ class TestRTDetrDetectionModel(unittest.TestCase):
         rtdetr_detection_model.perform_inference(image)
         original_predictions = rtdetr_detection_model.original_predictions
 
-        boxes = original_predictions
+        boxes = original_predictions[0].boxes.data
 
         # find box of first car detection with conf greater than 0.5
-        for box in boxes[0]:
+        for box in boxes:
             if box[5].item() == 2:  # if category car
                 if box[4].item() > 0.5:
                     break
@@ -84,7 +84,7 @@ class TestRTDetrDetectionModel(unittest.TestCase):
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
         self.assertEqual(len(rtdetr_detection_model.category_names), 80)
-        for box in boxes[0]:
+        for box in boxes:
             self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
 
     def test_convert_original_predictions(self):
