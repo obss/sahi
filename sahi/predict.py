@@ -125,8 +125,6 @@ def get_prediction(
 def get_sliced_prediction(
     image,
     detection_model=None,
-    output_file_name=None,  # ADDED OUTPUT FILE NAME TO (OPTIONALLY) SAVE SLICES
-    interim_dir="slices/",  # ADDED INTERIM DIRECTORY TO (OPTIONALLY) SAVE SLICES
     slice_height: int = None,
     slice_width: int = None,
     overlap_height_ratio: float = 0.2,
@@ -139,6 +137,8 @@ def get_sliced_prediction(
     verbose: int = 1,
     merge_buffer_length: int = None,
     auto_slice_resolution: bool = True,
+    slice_export_prefix: str = None,
+    slice_dir: str = None,
 ) -> PredictionResult:
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -184,6 +184,10 @@ def get_sliced_prediction(
         auto_slice_resolution: bool
             if slice parameters (slice_height, slice_width) are not given,
             it enables automatically calculate these params from image resolution and orientation.
+        slice_export_prefix: str
+            Prefix for the exported slices. Defaults to None.
+        slice_dir: str
+            Directory to save the slices. Defaults to None.
 
     Returns:
         A Dict with fields:
@@ -201,8 +205,8 @@ def get_sliced_prediction(
     time_start = time.time()
     slice_image_result = slice_image(
         image=image,
-        output_file_name=output_file_name,  # ADDED OUTPUT FILE NAME TO (OPTIONALLY) SAVE SLICES
-        output_dir=interim_dir,  # ADDED INTERIM DIRECTORY TO (OPTIONALLY) SAVE SLICES
+        output_file_name=slice_export_prefix,
+        output_dir=slice_dir,
         slice_height=slice_height,
         slice_width=slice_width,
         overlap_height_ratio=overlap_height_ratio,
