@@ -319,7 +319,7 @@ def slice_image(
         image_pil = read_image_as_pil(image)
         slice_file_path = str(Path(output_dir) / slice_file_name)
         # export sliced image
-        image_pil.save(slice_file_path, quality="keep")
+        image_pil.save(slice_file_path)
         image_pil.close()  # to fix https://github.com/obss/sahi/issues/565
         verboselog("sliced image path: " + slice_file_path)
 
