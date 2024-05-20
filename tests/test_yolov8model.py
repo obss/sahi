@@ -160,11 +160,11 @@ class TestYolov8DetectionModel(unittest.TestCase):
         # perform inference
         yolov8_detection_model.perform_inference(image)
         original_predictions = yolov8_detection_model.original_predictions
-        boxes = [p[0] for p in original_predictions]
-        masks = [p[1] for p in original_predictions]
+        boxes = original_predictions[0].boxes.data
+        masks = original_predictions[0].masks.data
 
         # find box of first car detection with conf greater than 0.5
-        for box in boxes[0]:
+        for box in boxes:
             if box[5].item() == 2:  # if category car
                 if box[4].item() > 0.5:
                     break
@@ -176,8 +176,10 @@ class TestYolov8DetectionModel(unittest.TestCase):
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
         self.assertEqual(len(yolov8_detection_model.category_names), 80)
-        for box in boxes[0]:
+        for box in boxes:
             self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
+        self.assertEqual(masks.shape, (12, 352, 640))
+        self.assertEqual(masks.shape[0], len(boxes))
 
     def test_convert_original_predictions_with_mask_output(self):
         from sahi.models.yolov8 import Yolov8DetectionModel

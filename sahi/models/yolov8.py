@@ -57,7 +57,7 @@ class Yolov8DetectionModel(DetectionModel):
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
 
-        from ultralytics.engine.results import Masks
+        from ultralytics.engine.results import Results
 
         # Confirm model is loaded
         if self.model is None:
@@ -70,29 +70,7 @@ class Yolov8DetectionModel(DetectionModel):
 
         prediction_result = self.model(image[:, :, ::-1], **kwargs)  # YOLOv8 expects numpy arrays to have BGR
 
-        # We do not filter results again as confidence threshold is already applied above
-        prediction_result = [result.boxes.data for result in prediction_result]
-
-        if self.has_mask:
-            if not prediction_result[0].masks:
-                prediction_result[0].masks = Masks(
-                    torch.tensor([], device=self.model.device), prediction_result[0].boxes.orig_shape
-                )
-
-            prediction_result_ = [
-                (
-                    result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold],
-                    result.masks.data[result.boxes.data[:, 4] >= self.confidence_threshold],
-                )
-                for result in prediction_result
-            ]
-
-        else:
-            prediction_result_ = [
-                result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result
-            ]
-
-        self._original_predictions = prediction_result_
+        self._original_predictions: Results = prediction_result
         self._original_shape = image.shape
 
     @property
@@ -141,11 +119,9 @@ class Yolov8DetectionModel(DetectionModel):
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
             object_prediction_list = []
             if self.has_mask:
-                image_predictions_in_xyxy_format = image_predictions[0]
-                image_predictions_masks = image_predictions[1]
                 for prediction, bool_mask in zip(
-                    image_predictions_in_xyxy_format.cpu().detach().numpy(),
-                    image_predictions_masks.cpu().detach().numpy(),
+                    image_predictions.boxes.data.cpu().detach().numpy(),
+                    image_predictions.masks.data.cpu().detach().numpy(),
                 ):
                     x1 = prediction[0]
                     y1 = prediction[1]
@@ -156,8 +132,10 @@ class Yolov8DetectionModel(DetectionModel):
                     category_id = int(prediction[5])
                     category_name = self.category_mapping[str(category_id)]
 
+                    orig_width = self._original_shape[1]
+                    orig_height = self._original_shape[0]
                     bool_mask = cv2.resize(
-                        bool_mask.astype(np.uint8), (self._original_shape[1], self._original_shape[0])
+                        bool_mask.astype(np.uint8), (orig_width, orig_height)
                     )
                     segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
                     if len(segmentation) == 0:
@@ -192,8 +170,7 @@ class Yolov8DetectionModel(DetectionModel):
                 object_prediction_list_per_image.append(object_prediction_list)
             else:  # Only bounding boxes
                 # process predictions
-                image_predictions_in_xyxy_format = image_predictions
-                for prediction in image_predictions_in_xyxy_format.cpu().detach().numpy():
+                for prediction in image_predictions.boxes.data.cpu().detach().numpy():
                     x1 = prediction[0]
                     y1 = prediction[1]
                     x2 = prediction[2]
