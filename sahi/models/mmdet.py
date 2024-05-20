@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 try:
-
     check_requirements(["torch", "mmdet", "mmcv", "mmengine"])
 
     from mmdet.apis.det_inferencer import DetInferencer
@@ -125,7 +124,6 @@ class MmdetDetectionModel(DetectionModel):
         text: str = None,
         custom_entities: bool = False,
     ):
-
         if not IMPORT_MMDET_V3:
             raise ImportError("Failed to import `DetInferencer`. Please confirm you have installed 'mmdet>=3.0.0'")
 

@@ -338,7 +338,7 @@ def get_video_reader(
                 if not ret:
                     print("\n=========================== Video Ended ===========================")
                     break
-                yield Image.fromarray(frame)
+                yield Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
         else:
             while video_capture.isOpened:
@@ -349,7 +349,7 @@ def get_video_reader(
                 if not ret:
                     print("\n=========================== Video Ended ===========================")
                     break
-                yield Image.fromarray(frame)
+                yield Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
     if export_visual:
         # get video properties and create VideoWriter object
