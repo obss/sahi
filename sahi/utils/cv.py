@@ -338,7 +338,7 @@ def get_video_reader(
                 if not ret:
                     print("\n=========================== Video Ended ===========================")
                     break
-                yield Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                yield Image.fromarray(frame)
 
         else:
             while video_capture.isOpened:
@@ -349,7 +349,7 @@ def get_video_reader(
                 if not ret:
                     print("\n=========================== Video Ended ===========================")
                     break
-                yield Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                yield Image.fromarray(frame)
 
     if export_visual:
         # get video properties and create VideoWriter object
@@ -667,6 +667,24 @@ def get_bbox_from_bool_mask(bool_mask: np.ndarray) -> Optional[List[int]]:
     if width == 0 or height == 0:
         return None
 
+    return [xmin, ymin, xmax, ymax]
+
+
+def get_bbox_from_coco_segmentation(coco_segmentation):
+    """
+    Generate voc box ([xmin, ymin, xmax, ymax]) from given coco segmentation
+    """
+    xs = []
+    ys = []
+    for segm in coco_segmentation:
+        xs.extend(segm[::2])
+        ys.extend(segm[1::2])
+    if len(xs) == 0 or len(ys) == 0:
+        return None
+    xmin = min(xs)
+    xmax = max(xs)
+    ymin = min(ys)
+    ymax = max(ys)
     return [xmin, ymin, xmax, ymax]
 
 
