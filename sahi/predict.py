@@ -674,7 +674,7 @@ def predict(
                 export_format=visual_export_format,
             )
             if not novisual and source_is_video:  # export video
-                output_video_writer.write(result["image"])
+                output_video_writer.write(cv2.cvtColor(result["image"], cv2.COLOR_RGB2BGR))
 
         # render video inference
         if view_video:
