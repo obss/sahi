@@ -62,9 +62,9 @@ jobs:
         if: matrix.operating-system == 'macos-latest'
         run: pip install torch==1.13.1 torchvision==0.14.1
 
-      - name: Install MMDetection(3.3.0) with OpenMIM(0.3.9)
+      - name: Install MMDetection(3.3.0) with OpenMIM(0.3.8)
         run: >
-          pip install openmim==0.3.9
+          pip install openmim==0.3.8
           mim install mmdet==3.3.0
 
       - name: Install YOLOv5(7.0.13)
