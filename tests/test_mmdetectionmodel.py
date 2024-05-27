@@ -246,8 +246,12 @@ class TestMmdetDetectionModel(unittest.TestCase):
         self.assertEqual(boxes[idx].astype(int).tolist(), [320, 323, 380, 365])
 
     def test_perform_inference_with_text_prompt(self):
+        import nltk
+
         from sahi.models.mmdet import MmdetDetectionModel
 
+        nltk.download("punkt")
+        nltk.download("averaged_perceptron_tagger")
         # init model
         download_mmdet_GLIP_tiny_model()
 
