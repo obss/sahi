@@ -16,12 +16,66 @@ logger = logging.getLogger(__name__)
 
 
 try:
-    check_requirements(["torch", "mmdet", "mmcv", "mmengine"])
+    check_requirements(["torch", "mmdet", "mmcv", "mmengine", "mmdeploy"])
 
+    import torch
+    from mmdeploy.apis.utils import build_task_processor
+    from mmdeploy.utils import get_input_shape, load_config
     from mmdet.apis.det_inferencer import DetInferencer
     from mmdet.utils import ConfigType
     from mmengine.dataset import Compose
     from mmengine.infer.infer import ModelType
+
+    class DetTrtInferencerWrapper:
+        def __init__(self, deploy_cfg: str, model_cfg: str, engine_file: str, device: Optional[str] = None) -> None:
+            """
+            Emulate DetInferencer(images) for TensorRT model
+            Args:
+                deploy_cfg: str
+                    Deployment cfg file, for example, detection_tensorrt-fp16_static-640x640.py.
+                model_cfg: str
+                    Model cfg file, for example, rtmdet_l_8xb32-300e_coco.py
+                engine_file: str
+                    Serialized TensorRT file, i.e end2end.engine
+            """
+            deploy_cfg, model_cfg = load_config(
+                deploy_cfg,
+                model_cfg,
+            )
+            self.task_processor = build_task_processor(model_cfg, deploy_cfg, device)
+            self.model = self.task_processor.build_backend_model(
+                [engine_file], self.task_processor.update_data_preprocessor
+            )
+            self.input_shape = get_input_shape(deploy_cfg)
+            self.output_names = set(self.model.output_names)
+
+        def __call__(self, images: List[np.ndarray], batch_size: int = 1) -> dict:
+            """
+            Emulate DetInferencerWrapper(images) for TensorRT model
+            Args:
+                images: list of np.ndarray
+                    A list of numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+                batch_size: int
+                    Inference batch size. Defaults to 1.
+            """
+
+            def _tensor_to_list(tensor):
+                return tensor.tolist() if tensor.numel() > 0 else []
+
+            results_dict = {"predictions": [], "visualization": []}
+            for image in images:
+                model_inputs, _ = self.task_processor.create_input(image, self.input_shape)
+                with torch.no_grad():
+                    results = self.model.test_step(model_inputs)[0]
+                    predictions = [
+                        {
+                            "scores": _tensor_to_list(results.pred_instances.scores.cpu()),
+                            "labels": _tensor_to_list(results.pred_instances.labels.cpu()),
+                            "bboxes": _tensor_to_list(results.pred_instances.bboxes.cpu()),
+                        }
+                    ]
+                    results_dict["predictions"].extend(predictions)
+            return results_dict
 
     class DetInferencerWrapper(DetInferencer):
         def __init__(
@@ -94,6 +148,7 @@ class MmdetDetectionModel(DetectionModel):
         model_path: Optional[str] = None,
         model: Optional[Any] = None,
         config_path: Optional[str] = None,
+        deploy_config_path: Optional[str] = None,
         device: Optional[str] = None,
         mask_threshold: float = 0.5,
         confidence_threshold: float = 0.3,
@@ -108,11 +163,14 @@ class MmdetDetectionModel(DetectionModel):
 
         self.scope = scope
         self.image_size = image_size
+        # Check if tensorrt deploy cfg is defined
+        self.trt = deploy_config_path is not None
 
         super().__init__(
             model_path,
             model,
             config_path,
+            deploy_config_path,
             device,
             mask_threshold,
             confidence_threshold,
@@ -129,11 +187,15 @@ class MmdetDetectionModel(DetectionModel):
         """
         Detection model is initialized and set to self.model.
         """
-
         # create model
-        model = DetInferencerWrapper(
-            self.config_path, self.model_path, device=self.device, scope=self.scope, image_size=self.image_size
-        )
+        if self.trt:
+            model = DetTrtInferencerWrapper(
+                self.deploy_config_path, self.config_path, self.model_path, device=self.device.type
+            )
+        else:
+            model = DetInferencerWrapper(
+                self.config_path, self.model_path, device=self.device, scope=self.scope, image_size=self.image_size
+            )
 
         self.set_model(model)
 
@@ -147,6 +209,9 @@ class MmdetDetectionModel(DetectionModel):
 
         # set self.model
         self.model = model
+
+        if self.trt and not self.category_mapping:
+            raise ValueError("TensorRT model needs category_mapping defined and passed to the constructor")
 
         # set category_mapping
         if not self.category_mapping:
@@ -190,7 +255,10 @@ class MmdetDetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        has_mask = self.model.model.with_mask
+        if self.trt:
+            has_mask = "masks" in self.model.output_names
+        else:
+            has_mask = self.model.model.with_mask
         return has_mask
 
     @property
