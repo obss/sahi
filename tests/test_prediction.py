@@ -1,8 +1,4 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
 import unittest
-from unittest.mock import MagicMock
 
 import numpy as np
 

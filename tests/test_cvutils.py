@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
 import unittest
 from unittest.mock import patch
 
@@ -40,9 +37,6 @@ class TestCvUtils(unittest.TestCase):
         # mock_cv2.assert_called_once_with(fake_image)
         mock_imread.assert_called_once_with(fake_image)
         np.testing.assert_array_equal(result, fake_image_rbg_val)
-
-    def test_read_image_as_pil(self):
-        pass
 
     def test_apply_color_mask(self):
         image = np.array([[0, 1]], dtype=np.uint8)
