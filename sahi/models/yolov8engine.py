@@ -10,6 +10,20 @@ from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.import_utils import check_requirements
 
+# Must be passed a config_path to a json with the below fields. 
+# Fields must be obtained from base PyTorch model before quantization.
+# {
+#     "task": "segment", # or 'detect'
+#     "names": [
+#         "dog",
+#         "cat",
+#     ],
+#     "imgsz": [
+#         640,
+#         640
+#     ],
+#     "half": true
+# }
 
 class Yolov8EngineDetectionModel(DetectionModel):
     def __init__(self):
