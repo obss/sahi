@@ -14,7 +14,7 @@ from threading import Lock, Thread
 from typing import Dict, List, Optional, Set, Union
 
 import numpy as np
-from shapely import MultiPolygon, Polygon, GeometryCollection
+from shapely import GeometryCollection, MultiPolygon, Polygon
 from shapely.validation import make_valid
 from tqdm import tqdm
 
@@ -227,8 +227,10 @@ class CocoAnnotation:
 
         def filter_polygons(geometry):
             """
-            This function checks if the geometry is a Polygon or MultiPolygon and filters accordingly.
-            It returns a MultiPolygon made only from Polygon components.
+            Filters out and returns only Polygon or MultiPolygon components of a geometry.
+            If geometry is a Polygon, it converts it into a MultiPolygon.
+            If it's a GeometryCollection, it filters to create a MultiPolygon from any Polygons in the collection.
+            Returns an empty MultiPolygon if no Polygon or MultiPolygon components are found.
             """
             if isinstance(geometry, Polygon):
                 return MultiPolygon([geometry])
@@ -236,17 +238,14 @@ class CocoAnnotation:
                 return geometry
             elif isinstance(geometry, GeometryCollection):
                 polygons = [geom for geom in geometry.geoms if isinstance(geom, Polygon)]
-                if polygons:
-                    return MultiPolygon(polygons)
-            return MultiPolygon()  # Return an empty MultiPolygon if no Polygon geometries are found
+                return MultiPolygon(polygons) if polygons else MultiPolygon()
+            return MultiPolygon()
 
         shapely_polygon = box(slice_bbox[0], slice_bbox[1], slice_bbox[2], slice_bbox[3])
         samp = self._shapely_annotation.multipolygon
         if not samp.is_valid:
             valid = make_valid(samp)
             valid = filter_polygons(valid)
-            # if not isinstance(valid, MultiPolygon):
-            #     valid = MultiPolygon([valid])
             self._shapely_annotation.multipolygon = valid
         intersection_shapely_annotation = self._shapely_annotation.get_intersection(shapely_polygon)
         return CocoAnnotation.from_shapely_annotation(
