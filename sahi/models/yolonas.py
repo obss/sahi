@@ -182,7 +182,7 @@ class YoloNasDetectionModel(DetectionModel):
                     bbox=bbox,
                     category_id=int(category_id),
                     score=score,
-                    bool_mask=None,
+                    segmentation=None,
                     category_name=category_name,
                     shift_amount=shift_amount,
                     full_shape=full_shape,
