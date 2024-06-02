@@ -224,7 +224,6 @@ class CocoAnnotation:
         self._shapely_annotation = shapely_annotation
 
     def get_sliced_coco_annotation(self, slice_bbox: List[int]):
-
         def filter_polygons(geometry):
             """
             Filters out and returns only Polygon or MultiPolygon components of a geometry.
