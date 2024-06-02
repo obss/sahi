@@ -173,6 +173,8 @@ class Yolov8OnnxDetectionModel(DetectionModel):
     def has_mask(self):
         """
         Returns if model output contains segmentation mask
+
+        Not yet supported
         """
         return False
 
@@ -238,7 +240,7 @@ class Yolov8OnnxDetectionModel(DetectionModel):
                     bbox=bbox,
                     category_id=category_id,
                     score=score,
-                    bool_mask=None,
+                    segmentation=None,
                     category_name=category_name,
                     shift_amount=shift_amount,
                     full_shape=full_shape,

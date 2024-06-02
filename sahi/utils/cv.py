@@ -670,6 +670,24 @@ def get_bbox_from_bool_mask(bool_mask: np.ndarray) -> Optional[List[int]]:
     return [xmin, ymin, xmax, ymax]
 
 
+def get_bbox_from_coco_segmentation(coco_segmentation):
+    """
+    Generate voc box ([xmin, ymin, xmax, ymax]) from given coco segmentation
+    """
+    xs = []
+    ys = []
+    for segm in coco_segmentation:
+        xs.extend(segm[::2])
+        ys.extend(segm[1::2])
+    if len(xs) == 0 or len(ys) == 0:
+        return None
+    xmin = min(xs)
+    xmax = max(xs)
+    ymin = min(ys)
+    ymax = max(ys)
+    return [xmin, ymin, xmax, ymax]
+
+
 def normalize_numpy_image(image: np.ndarray):
     """
     Normalizes numpy image
