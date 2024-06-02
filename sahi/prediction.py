@@ -45,13 +45,13 @@ class ObjectPrediction(ObjectAnnotation):
         bbox: Optional[List[int]] = None,
         category_id: Optional[int] = None,
         category_name: Optional[str] = None,
-        bool_mask: Optional[np.ndarray] = None,
+        segmentation: Optional[List[List[float]]] = None,
         score: Optional[float] = 0,
         shift_amount: Optional[List[int]] = [0, 0],
         full_shape: Optional[List[int]] = None,
     ):
         """
-        Creates ObjectPrediction from bbox, score, category_id, category_name, bool_mask.
+        Creates ObjectPrediction from bbox, score, category_id, category_name, segmentation.
 
         Arguments:
             bbox: list
@@ -62,8 +62,12 @@ class ObjectPrediction(ObjectAnnotation):
                 ID of the object category
             category_name: str
                 Name of the object category
-            bool_mask: np.ndarray
-                2D boolean mask array. Should be None if model doesn't output segmentation mask.
+            segmentation: List[List]
+                [
+                    [x1, y1, x2, y2, x3, y3, ...],
+                    [x1, y1, x2, y2, x3, y3, ...],
+                    ...
+                ]
             shift_amount: list
                 To shift the box and mask predictions from sliced image
                 to full sized image, should be in the form of [shift_x, shift_y]
@@ -75,7 +79,7 @@ class ObjectPrediction(ObjectAnnotation):
         super().__init__(
             bbox=bbox,
             category_id=category_id,
-            bool_mask=bool_mask,
+            segmentation=segmentation,
             category_name=category_name,
             shift_amount=shift_amount,
             full_shape=full_shape,
@@ -88,21 +92,22 @@ class ObjectPrediction(ObjectAnnotation):
         Used for mapping sliced predictions over full image.
         """
         if self.mask:
+            shifted_mask = self.mask.get_shifted_mask()
             return ObjectPrediction(
                 bbox=self.bbox.get_shifted_box().to_xyxy(),
                 category_id=self.category.id,
                 score=self.score.value,
-                bool_mask=self.mask.get_shifted_mask().bool_mask,
+                segmentation=shifted_mask.segmentation,
                 category_name=self.category.name,
                 shift_amount=[0, 0],
-                full_shape=self.mask.get_shifted_mask().full_shape,
+                full_shape=shifted_mask.full_shape,
             )
         else:
             return ObjectPrediction(
                 bbox=self.bbox.get_shifted_box().to_xyxy(),
                 category_id=self.category.id,
                 score=self.score.value,
-                bool_mask=None,
+                segmentation=None,
                 category_name=self.category.name,
                 shift_amount=[0, 0],
                 full_shape=None,
@@ -114,7 +119,7 @@ class ObjectPrediction(ObjectAnnotation):
         """
         if self.mask:
             coco_prediction = CocoPrediction.from_coco_segmentation(
-                segmentation=self.mask.to_coco_segmentation(),
+                segmentation=self.mask.segmentation,
                 category_id=self.category.id,
                 category_name=self.category.name,
                 score=self.score.value,
