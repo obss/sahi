@@ -16,15 +16,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Restore Ubuntu cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.operating-system == 'ubuntu-latest'
         with:
           path: ~/.cache/pip
@@ -32,7 +32,7 @@ jobs:
           restore-keys: ${{ matrix.os }}-${{ matrix.python-version }}-
 
       - name: Restore MacOS cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.operating-system == 'macos-latest'
         with:
           path: ~/Library/Caches/pip
@@ -40,7 +40,7 @@ jobs:
           restore-keys: ${{ matrix.os }}-${{ matrix.python-version }}-
 
       - name: Restore Windows cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: matrix.operating-system == 'windows-latest'
         with:
           path: ~\AppData\Local\pip\Cache
