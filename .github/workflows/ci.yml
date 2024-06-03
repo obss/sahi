@@ -94,6 +94,7 @@ jobs:
       - name: Install MMDeploy(1.3.1)
         run: >
           mim install mmdeploy==1.3.1
+
           mim install mmdeploy-runtime==1.3.1
 
       - name: Install YOLOv5(7.0.13)
