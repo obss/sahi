@@ -191,8 +191,9 @@ class MmdetDetectionModel(DetectionModel):
         Returns if model output contains segmentation mask
         """
         # has_mask = self.model.model.with_mask
-        dataloader = self.model.cfg["train_dataloader"]["dataset"]["dataset"]["pipeline"]
-        return any(isinstance(item, dict) and item.get("with_mask", False) for item in dataloader)
+        train_pipeline = self.model.cfg["train_dataloader"]['dataset']['pipeline']
+        has_mask = any(isinstance(item, dict) and any('mask' in key for key in item.keys()) for item in train_pipeline)
+        return has_mask
 
     @property
     def category_names(self):
