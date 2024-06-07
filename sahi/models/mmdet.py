@@ -255,10 +255,11 @@ class MmdetDetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        if self.trt:
-            has_mask = "masks" in self.model.output_names
-        else:
-            has_mask = self.model.model.with_mask
+
+        # has_mask = self.model.model.with_mask
+        train_pipeline = self.model.cfg["train_dataloader"]["dataset"]["pipeline"]
+        has_mask = any(isinstance(item, dict) and any("mask" in key for key in item.keys()) for item in train_pipeline)
+
         return has_mask
 
     @property
