@@ -24,9 +24,17 @@
     <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov5.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
     <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img src="https://raw.githubusercontent.com/obss/sahi/main/resources/hf_spaces_badge.svg" alt="HuggingFace Spaces"></a>
 
-​    
+    
 </div>
 </div>
+
+## Changes in this fork
+1. Add support for batched inference on slices
+2. Add support for TensorRT for Ultralytics-based/originally YOLOv8 models (exported using Ultralytics)
+3. Add support for YOLOv6 (requires [yolov6](https://github.com/meituan/YOLOv6) repo on sys.path)
+
+This fork is modified by [@aliencaocao](https://github.com/aliencaocao) and [@HoWingYip](https://github.com/HoWingYip)
+
 
 ## <div align="center">Overview</div>
 

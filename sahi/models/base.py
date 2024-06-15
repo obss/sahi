@@ -22,6 +22,8 @@ class DetectionModel:
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
         image_size: int = None,
+        standard_pred_image_size: int = None,
+        **kwargs,
     ):
         """
         Init object detection/instance segmentation model.
@@ -54,6 +56,7 @@ class DetectionModel:
         self.category_mapping = category_mapping
         self.category_remapping = category_remapping
         self.image_size = image_size
+        self.standard_pred_image_size = standard_pred_image_size
         self._original_predictions = None
         self._object_prediction_list_per_image = None
 
@@ -64,7 +67,7 @@ class DetectionModel:
             if model:
                 self.set_model(model)
             else:
-                self.load_model()
+                self.load_model(**kwargs)
 
     def check_dependencies(self) -> None:
         """
@@ -72,7 +75,7 @@ class DetectionModel:
         """
         pass
 
-    def load_model(self):
+    def load_model(self, **kwargs):
         """
         This function should be implemented in a way that detection model
         should be initialized and set to self.model.
@@ -153,7 +156,7 @@ class DetectionModel:
 
     def convert_original_predictions(
         self,
-        shift_amount: Optional[List[int]] = [0, 0],
+        shift_amount: Optional[List] = [0, 0],
         full_shape: Optional[List[int]] = None,
     ):
         """
@@ -174,7 +177,7 @@ class DetectionModel:
 
     @property
     def object_prediction_list(self):
-        return self._object_prediction_list_per_image[0]
+        return [obj_pred for lista in self._object_prediction_list_per_image for obj_pred in lista]
 
     @property
     def object_prediction_list_per_image(self):
