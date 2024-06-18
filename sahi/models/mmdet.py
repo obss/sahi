@@ -42,6 +42,7 @@ try:
                 deploy_cfg,
                 model_cfg,
             )
+            self.cfg = model_cfg
             self.task_processor = build_task_processor(model_cfg, deploy_cfg, device)
             self.model = self.task_processor.build_backend_model(
                 [engine_file], self.task_processor.update_data_preprocessor
@@ -255,8 +256,6 @@ class MmdetDetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-
-        # has_mask = self.model.model.with_mask
         train_pipeline = self.model.cfg["train_dataloader"]["dataset"]["pipeline"]
         has_mask = any(isinstance(item, dict) and any("mask" in key for key in item.keys()) for item in train_pipeline)
 
