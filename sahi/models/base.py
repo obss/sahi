@@ -15,7 +15,6 @@ class DetectionModel:
         model_path: Optional[str] = None,
         model: Optional[Any] = None,
         config_path: Optional[str] = None,
-        deploy_config_path: Optional[str] = None,
         device: Optional[str] = None,
         mask_threshold: float = 0.5,
         confidence_threshold: float = 0.3,
@@ -23,6 +22,7 @@ class DetectionModel:
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
         image_size: int = None,
+        deploy_config_path: Optional[str] = None,
     ):
         """
         Init object detection/instance segmentation model.

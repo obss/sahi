@@ -171,7 +171,6 @@ class MmdetDetectionModel(DetectionModel):
             model_path,
             model,
             config_path,
-            deploy_config_path,
             device,
             mask_threshold,
             confidence_threshold,
@@ -179,6 +178,7 @@ class MmdetDetectionModel(DetectionModel):
             category_remapping,
             load_at_init,
             image_size,
+            deploy_config_path,
         )
 
     def check_dependencies(self):
