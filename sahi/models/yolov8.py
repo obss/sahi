@@ -92,7 +92,7 @@ class Yolov8DetectionModel(DetectionModel):
             prediction_result = [result.boxes.data for result in prediction_result]
 
         self._original_predictions = prediction_result
-        if isinstance(image, list):
+        if isinstance(image, list): # For batched inference
             self._original_shape = image[0].shape
         else:
             self._original_shape = image.shape
