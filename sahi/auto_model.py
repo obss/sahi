@@ -13,6 +13,7 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "yolov5sparse": "Yolov5SparseDetectionModel",
     "yolonas": "YoloNasDetectionModel",
     "yolov8onnx": "Yolov8OnnxDetectionModel",
+    "yolov9": "Yolov9DetectionModel",
 }
 
 
