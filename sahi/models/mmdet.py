@@ -9,14 +9,13 @@ import numpy as np
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.cv import get_bbox_from_bool_mask
+from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
 
 logger = logging.getLogger(__name__)
 
 
 try:
-
     check_requirements(["torch", "mmdet", "mmcv", "mmengine"])
 
     from mmdet.apis.det_inferencer import DetInferencer
@@ -104,7 +103,6 @@ class MmdetDetectionModel(DetectionModel):
         image_size: int = None,
         scope: str = "mmdet",
     ):
-
         if not IMPORT_MMDET_V3:
             raise ImportError("Failed to import `DetInferencer`. Please confirm you have installed 'mmdet>=3.0.0'")
 
@@ -192,7 +190,9 @@ class MmdetDetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        has_mask = self.model.model.with_mask
+        # has_mask = self.model.model.with_mask
+        train_pipeline = self.model.cfg["train_dataloader"]["dataset"]["pipeline"]
+        has_mask = any(isinstance(item, dict) and any("mask" in key for key in item.keys()) for item in train_pipeline)
         return has_mask
 
     @property
@@ -220,14 +220,12 @@ class MmdetDetectionModel(DetectionModel):
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
-
         try:
             from pycocotools import mask as mask_utils
 
             can_decode_rle = True
         except ImportError:
             can_decode_rle = False
-
         original_predictions = self._original_predictions
         category_mapping = self.category_mapping
 
@@ -275,13 +273,13 @@ class MmdetDetectionModel(DetectionModel):
                             )
                     else:
                         bool_mask = mask
-
                     # check if mask is valid
                     # https://github.com/obss/sahi/discussions/696
                     if get_bbox_from_bool_mask(bool_mask) is None:
                         continue
+                    segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
                 else:
-                    bool_mask = None
+                    segmentation = None
 
                 # fix negative box coords
                 bbox[0] = max(0, bbox[0])
@@ -305,7 +303,7 @@ class MmdetDetectionModel(DetectionModel):
                     bbox=bbox,
                     category_id=category_id,
                     score=score,
-                    bool_mask=bool_mask,
+                    segmentation=segmentation,
                     category_name=category_name,
                     shift_amount=shift_amount,
                     full_shape=full_shape,
