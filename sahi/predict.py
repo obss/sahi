@@ -61,15 +61,16 @@ def get_prediction(
     full_shape=None,
     postprocess: Optional[PostprocessPredictions] = None,
     verbose: int = 0,
+    num_batch: int = 1
 ) -> PredictionResult:
     """
     Function for performing prediction for given image using given detection_model.
 
     Arguments:
-        image: str or np.ndarray
+        image: str or np.ndarray or list[np.ndarray]
             Location of image or numpy image matrix to slice
         detection_model: model.DetectionMode
-        shift_amount: List
+        shift_amount: List or list[list[int]]
             To shift the box and mask predictions from sliced image to full
             sized image, should be in the form of [shift_x, shift_y]
         full_shape: List
@@ -87,12 +88,18 @@ def get_prediction(
     durations_in_seconds = dict()
 
     # read image as pil
-    image_as_pil = read_image_as_pil(image)
-    # get prediction
-    time_start = time.time()
-    detection_model.perform_inference(np.ascontiguousarray(image_as_pil))
+    if num_batch == 1:
+        image_as_pil = read_image_as_pil(image[0])
+        # get prediction
+        time_start = time.time()
+        detection_model.perform_inference(np.ascontiguousarray(image_as_pil), num_batch=num_batch)
+    else:
+        images_as_pil = [np.ascontiguousarray(read_image_as_pil(img)) for img in image]
+        time_start = time.time()
+        detection_model.perform_inference(images_as_pil, num_batch=num_batch)
     time_end = time.time() - time_start
     durations_in_seconds["prediction"] = time_end
+
 
     # process prediction
     time_start = time.time()
@@ -118,7 +125,7 @@ def get_prediction(
         )
 
     return PredictionResult(
-        image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
+        image=image[0], object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
     )
 
 
@@ -139,6 +146,7 @@ def get_sliced_prediction(
     auto_slice_resolution: bool = True,
     slice_export_prefix: str = None,
     slice_dir: str = None,
+    batch: int = 1
 ) -> PredictionResult:
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -188,6 +196,8 @@ def get_sliced_prediction(
             Prefix for the exported slices. Defaults to None.
         slice_dir: str
             Directory to save the slices. Defaults to None.
+        batch: int
+            Number of slices per batch. Only works with yolov8
 
     Returns:
         A Dict with fields:
@@ -198,8 +208,7 @@ def get_sliced_prediction(
     # for profiling
     durations_in_seconds = dict()
 
-    # currently only 1 batch supported
-    num_batch = 1
+    num_batch = batch
     # create slices from full image
     time_start = time.time()
     slice_image_result = slice_image(
@@ -247,27 +256,34 @@ def get_sliced_prediction(
             shift_amount_list.append(slice_image_result.starting_pixels[group_ind * num_batch + image_ind])
         # perform batch prediction
         prediction_result = get_prediction(
-            image=image_list[0],
+            image=image_list[0:num_batch],
             detection_model=detection_model,
-            shift_amount=shift_amount_list[0],
+            shift_amount=shift_amount_list[0:num_batch],
             full_shape=[
                 slice_image_result.original_image_height,
                 slice_image_result.original_image_width,
+
             ],
+            num_batch=num_batch,
         )
         # convert sliced predictions to full predictions
-        for object_prediction in prediction_result.object_prediction_list:
-            if object_prediction:  # if not empty
-                object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+        for object_prediction_list_per_slice in prediction_result.object_prediction_list:
+            if isinstance(object_prediction_list_per_slice, list):  # needed for yolov6
+                for object_prediction in object_prediction_list_per_slice:
+                    if object_prediction:  # if not empty
+                        object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+            else:
+                if object_prediction_list_per_slice:  # if not empty
+                    object_prediction_list.append(object_prediction_list_per_slice.get_shifted_object_prediction())
 
         # merge matching predictions during sliced prediction
-        if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
-            object_prediction_list = postprocess(object_prediction_list)
+        # if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
+        #     object_prediction_list = postprocess(object_prediction_list)
 
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
         prediction_result = get_prediction(
-            image=image,
+            image=[image],
             detection_model=detection_model,
             shift_amount=[0, 0],
             full_shape=[
@@ -276,7 +292,7 @@ def get_sliced_prediction(
             ],
             postprocess=None,
         )
-        object_prediction_list.extend(prediction_result.object_prediction_list)
+        object_prediction_list.extend(prediction_result.object_prediction_list if len(prediction_result.object_prediction_list) > 1 else prediction_result.object_prediction_list[0])
 
     # merge matching predictions
     if len(object_prediction_list) > 1:
@@ -377,6 +393,7 @@ def predict(
     verbose: int = 1,
     return_dict: bool = False,
     force_postprocess_type: bool = False,
+    batch: int = 1,
     **kwargs,
 ):
     """
@@ -569,6 +586,7 @@ def predict(
                 postprocess_match_threshold=postprocess_match_threshold,
                 postprocess_class_agnostic=postprocess_class_agnostic,
                 verbose=1 if verbose else 0,
+                batch=batch
             )
             object_prediction_list = prediction_result.object_prediction_list
             durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
