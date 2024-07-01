@@ -7,7 +7,6 @@ import random
 import time
 from typing import List, Optional, Union
 
-import torch
 import torchvision.transforms as T
 import cv2
 import numpy as np
@@ -186,12 +185,12 @@ def read_image(image_path: str):
     return image
 
 
-def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool = False):
+def read_image_as_pil(image: Union[Image.Image, str, np.ndarray, list], exif_fix: bool = False):
     """
     Loads an image as PIL.Image.Image.
 
     Args:
-        image (Union[Image.Image, str, np.ndarray, torch.Tensor, list]): The image to be loaded. It can be an image path or URL (str),
+        image (Union[Image.Image, str, np.ndarray, list]): The image to be loaded. It can be an image path or URL (str),
             a numpy image (np.ndarray), or a PIL.Image object.
         exif_fix (bool, optional): Whether to apply an EXIF fix to the image. Defaults to False.
 
@@ -229,14 +228,6 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
         if image.shape[0] < 5:  # image in CHW
             image = image[:, :, ::-1]
         image_pil = Image.fromarray(image)
-
-    elif isinstance(image, torch.Tensor):
-        pil_images = []
-        transform = T.ToPILImage()
-        for i in range(image.size(0)):  # image in BCHW
-            img_tensor = image[i]
-            image_pil = transform(img_tensor)
-            pil_images.append(image_pil)
     elif isinstance(image, list):
         pil_images = []
         for i in range(len(image)):
