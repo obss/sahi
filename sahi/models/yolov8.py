@@ -51,7 +51,7 @@ class Yolov8DetectionModel(DetectionModel):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
-            image: np.ndarray
+            image: np.ndarray or list of np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
 
@@ -65,14 +65,14 @@ class Yolov8DetectionModel(DetectionModel):
             )  # YOLOv8 expects numpy arrays to have BGR
         else:
             prediction_result = self.model(
-                image[:, :, ::-1], verbose=False, device=self.device
+                image, verbose=False, device=self.device
             )  # YOLOv8 expects numpy arrays to have BGR
-
         prediction_result = [
             result.boxes.data[result.boxes.data[:, 4] >= self.confidence_threshold] for result in prediction_result
         ]
 
         self._original_predictions = prediction_result
+        self._original_shape = image[0].shape if isinstance(image, list) else image.shape
 
     @property
     def category_names(self):
@@ -118,7 +118,11 @@ class Yolov8DetectionModel(DetectionModel):
         object_prediction_list_per_image = []
         for image_ind, image_predictions_in_xyxy_format in enumerate(original_predictions):
             shift_amount = shift_amount_list[image_ind]
-            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+            full_shape = (
+                None
+                if full_shape_list is None
+                else (full_shape_list[0] if len(full_shape_list) == 1 else full_shape_list[image_ind])
+            )
             object_prediction_list = []
 
             # process predictions
