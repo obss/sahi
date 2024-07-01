@@ -92,7 +92,10 @@ class Yolov8DetectionModel(DetectionModel):
             prediction_result = [result.boxes.data for result in prediction_result]
 
         self._original_predictions = prediction_result
-        self._original_shape = image.shape
+        if isinstance(image, list):
+            self._original_shape = image[0].shape
+        else:
+            self._original_shape = image.shape
 
     @property
     def category_names(self):

@@ -30,7 +30,7 @@ from sahi.postprocess.combine import (
     PostprocessPredictions,
 )
 from sahi.prediction import ObjectPrediction, PredictionResult
-from sahi.slicing import slice_image, SliceImageResult, SlicedImage, SliceImageResultBatch
+from sahi.slicing import slice_image, SliceImageResult, SlicedImage
 from sahi.utils.coco import Coco, CocoImage
 from sahi.utils.cv import (
     IMAGE_EXTENSIONS,
