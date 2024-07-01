@@ -3,7 +3,6 @@
 
 import logging
 import os
-import sys
 import time
 from typing import List, Optional
 
@@ -14,10 +13,9 @@ if is_available("torch"):
     import torch
 
 from functools import cmp_to_key
-from matplotlib import pyplot as plt
 
 import numpy as np
-from math import ceil, floor
+from math import ceil
 from tqdm import tqdm
 
 from sahi.auto_model import AutoDetectionModel
