@@ -20,10 +20,14 @@ def get_shapely_box(x: int, y: int, width: int, height: int) -> Polygon:
     return shapely_box
 
 
+
+
+
 def get_shapely_multipolygon(coco_segmentation: List[List]) -> MultiPolygon:
     """
     Accepts coco style polygon coords and converts it to valid shapely multipolygon object
     """
+
     def filter_polygons(geometry):
         """
         Filters out and returns only Polygon or MultiPolygon components of a geometry.
@@ -39,17 +43,17 @@ def get_shapely_multipolygon(coco_segmentation: List[List]) -> MultiPolygon:
             polygons = [geom for geom in geometry.geoms if isinstance(geom, Polygon)]
             return MultiPolygon(polygons) if polygons else MultiPolygon()
         return MultiPolygon()
-    
+
     polygon_list = []
     for coco_polygon in coco_segmentation:
         point_list = list(zip(coco_polygon[0::2], coco_polygon[1::2]))
         shapely_polygon = Polygon(point_list)
         polygon_list.append(shapely_polygon)
     shapely_multipolygon = MultiPolygon(polygon_list)
-    
+
     if not shapely_multipolygon.is_valid:
         shapely_multipolygon = filter_polygons(make_valid(shapely_multipolygon))
-    
+
     return shapely_multipolygon
 
 
