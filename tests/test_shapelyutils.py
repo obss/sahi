@@ -3,7 +3,12 @@
 
 import unittest
 
-from sahi.utils.shapely import MultiPolygon, ShapelyAnnotation, get_shapely_box, get_shapely_multipolygon
+from sahi.utils.shapely import (
+    MultiPolygon,
+    ShapelyAnnotation,
+    get_shapely_box,
+    get_shapely_multipolygon,
+)
 
 
 class TestShapelyUtils(unittest.TestCase):
@@ -11,7 +16,9 @@ class TestShapelyUtils(unittest.TestCase):
         x, y, width, height = 1, 1, 256, 256
         shapely_box = get_shapely_box(x, y, width, height)
 
-        self.assertListEqual(shapely_box.exterior.coords.xy[0].tolist(), [257.0, 257.0, 1.0, 1.0, 257.0])
+        self.assertListEqual(
+            shapely_box.exterior.coords.xy[0].tolist(), [257.0, 257.0, 1.0, 1.0, 257.0]
+        )
         self.assertEqual(shapely_box.area, 65536)
         self.assertTupleEqual(shapely_box.bounds, (1, 1, 257, 257))
 
@@ -26,7 +33,6 @@ class TestShapelyUtils(unittest.TestCase):
         self.assertEqual(shapely_multipolygon.area, 41177.5)
         self.assertTupleEqual(shapely_multipolygon.bounds, (1, 1, 325, 200))
 
-
     def test_get_shapely_multipolygon_naughty(self):
         # self-intersection case
         coco_segmentation = [
@@ -35,7 +41,6 @@ class TestShapelyUtils(unittest.TestCase):
         shapely_multipolygon = get_shapely_multipolygon(coco_segmentation)
         self.assertTrue(shapely_multipolygon.is_valid)
 
-        
     def test_shapely_annotation(self):
         # init shapely_annotation from coco segmentation
         segmentation = [[1, 1, 325, 125.2, 250, 200, 5, 200]]
@@ -84,7 +89,9 @@ class TestShapelyUtils(unittest.TestCase):
 
         # init shapely_annotation from coco bbox
         coco_bbox = [1, 1, 100, 100]
-        shapely_polygon = get_shapely_box(x=coco_bbox[0], y=coco_bbox[1], width=coco_bbox[2], height=coco_bbox[3])
+        shapely_polygon = get_shapely_box(
+            x=coco_bbox[0], y=coco_bbox[1], width=coco_bbox[2], height=coco_bbox[3]
+        )
         shapely_annotation = ShapelyAnnotation.from_coco_bbox(coco_bbox)
 
         # test conversion methods
@@ -134,7 +141,9 @@ class TestShapelyUtils(unittest.TestCase):
         coco_segmentation = [[1, 1, 325, 125, 250, 200, 5, 200]]
         shapely_annotation = ShapelyAnnotation.from_coco_segmentation(coco_segmentation)
 
-        intersection_shapely_annotation = shapely_annotation.get_intersection(shapely_box)
+        intersection_shapely_annotation = shapely_annotation.get_intersection(
+            shapely_box
+        )
 
         test_list = intersection_shapely_annotation.to_list()[0]
         true_list = [(0, 0), (4, 199), (249, 199), (256, 192), (256, 97), (0, 0)]
@@ -171,7 +180,9 @@ class TestShapelyUtils(unittest.TestCase):
         coco_segmentation = [[1, 1, 325, 125, 250, 200, 5, 200]]
         shapely_annotation = ShapelyAnnotation.from_coco_segmentation(coco_segmentation)
 
-        intersection_shapely_annotation = shapely_annotation.get_intersection(shapely_box)
+        intersection_shapely_annotation = shapely_annotation.get_intersection(
+            shapely_box
+        )
 
         self.assertEqual(intersection_shapely_annotation.area, 0)
 

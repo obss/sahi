@@ -32,7 +32,8 @@ def get_shapely_multipolygon(coco_segmentation: List[List]) -> MultiPolygon:
         """
         Filters out and returns only Polygon or MultiPolygon components of a geometry.
         If geometry is a Polygon, it converts it into a MultiPolygon.
-        If it's a GeometryCollection, it filters to create a MultiPolygon from any Polygons in the collection.
+        If it's a GeometryCollection, it filters 
+        to create a MultiPolygon from any Polygons in the collection.
         Returns an empty MultiPolygon if no Polygon or MultiPolygon components are found.
         """
         if isinstance(geometry, Polygon):
