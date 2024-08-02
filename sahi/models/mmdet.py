@@ -192,7 +192,10 @@ class MmdetDetectionModel(DetectionModel):
         """
         # has_mask = self.model.model.with_mask
         train_pipeline = self.model.cfg["train_dataloader"]["dataset"]["pipeline"]
-        has_mask = any(isinstance(item, dict) and any('mask' in key and value is True for key, value in item.items()) for item in train_pipeline)
+        has_mask = any(
+            isinstance(item, dict) and any("mask" in key and value is True for key, value in item.items())
+            for item in train_pipeline
+        )
         return has_mask
 
     @property
