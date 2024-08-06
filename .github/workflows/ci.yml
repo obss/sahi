@@ -85,7 +85,7 @@ jobs:
         run: pip install torch==1.13.1 torchvision==0.14.1
 
       - name: Install MMDetection(3.0.0) with MMCV(2.0.0)
-        run: >
+        run: |
           pip install mmengine==0.7.3
           pip install mmcv==2.0.0 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.13.0/index.html
           pip install mmdet==3.0.0
