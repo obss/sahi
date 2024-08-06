@@ -97,9 +97,7 @@ class ShapelyAnnotation:
         slice_bbox (List[int]): [x_min, y_min, x_max, y_max] Is used
             to calculate sliced coco coordinates.
         """
-        shapely_polygon = get_shapely_box(
-            x=bbox[0], y=bbox[1], width=bbox[2], height=bbox[3]
-        )
+        shapely_polygon = get_shapely_box(x=bbox[0], y=bbox[1], width=bbox[2], height=bbox[3])
         shapely_multipolygon = MultiPolygon([shapely_polygon])
         return cls(multipolygon=shapely_multipolygon, slice_bbox=slice_bbox)
 
@@ -183,9 +181,7 @@ class ShapelyAnnotation:
             if coco_polygon[:2] == coco_polygon[-2:]:
                 del coco_polygon[-2:]
             # append coco_polygon to coco_segmentation
-            coco_polygon = (
-                [point for point in coco_polygon] if coco_polygon else coco_polygon
-            )
+            coco_polygon = [point for point in coco_polygon] if coco_polygon else coco_polygon
             coco_segmentation.append(coco_polygon)
         return coco_segmentation
 
@@ -208,10 +204,7 @@ class ShapelyAnnotation:
                     miny = self.slice_bbox[1]
                     x_coords = [x_coord - minx for x_coord in x_coords]
                     y_coords = [y_coord - miny for y_coord in y_coords]
-                opencv_contour = [
-                    [[int(x_coords[ind]), int(y_coords[ind])]]
-                    for ind in range(len(x_coords))
-                ]
+                opencv_contour = [[[int(x_coords[ind]), int(y_coords[ind])]] for ind in range(len(x_coords))]
             else:
                 opencv_contour: List = []
             # append opencv_contour to opencv_contours
@@ -325,8 +318,6 @@ class ShapelyAnnotation:
         else:
             intersection_multipolygon = MultiPolygon([])
         # create shapely annotation from intersection multipolygon
-        intersection_shapely_annotation = ShapelyAnnotation(
-            intersection_multipolygon, slice_bbox
-        )
+        intersection_shapely_annotation = ShapelyAnnotation(intersection_multipolygon, slice_bbox)
 
         return intersection_shapely_annotation
