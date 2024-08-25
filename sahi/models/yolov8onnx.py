@@ -149,7 +149,7 @@ class Yolov8OnnxDetectionModel(DetectionModel):
         image_shape = image.shape[:2]  # h, w
 
         # Prepare image
-        image_tensor = self._preprocess_image(image, input_shape)
+        image_tensor = (self._preprocess_image(image, input_shape) * 255).astype(np.uint8)
 
         # Inference
         outputs = self.model.run(output_names, {input_names[0]: image_tensor})
