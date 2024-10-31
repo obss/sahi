@@ -26,6 +26,12 @@ class TestShapelyUtils(unittest.TestCase):
         self.assertEqual(shapely_multipolygon.area, 41177.5)
         self.assertTupleEqual(shapely_multipolygon.bounds, (1, 1, 325, 200))
 
+    def test_get_shapely_multipolygon_naughty(self):
+        # self-intersection case
+        coco_segmentation = [[3559.0, 2046.86, 3.49, 2060.0, 3540.9, 3249.7, 2060.0, 3239.61, 2052.87]]
+        shapely_multipolygon = get_shapely_multipolygon(coco_segmentation)
+        self.assertTrue(shapely_multipolygon.is_valid)
+
     def test_shapely_annotation(self):
         # init shapely_annotation from coco segmentation
         segmentation = [[1, 1, 325, 125.2, 250, 200, 5, 200]]
