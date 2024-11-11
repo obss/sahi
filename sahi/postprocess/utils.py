@@ -167,7 +167,14 @@ def get_merged_mask(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Mask:
     # buffer(0) is a quickhack to fix invalid polygons most of the time
     poly1 = get_shapely_multipolygon(mask1.segmentation).buffer(0)
     poly2 = get_shapely_multipolygon(mask2.segmentation).buffer(0)
-    union_poly = poly1.union(poly2)
+
+    if poly1.is_empty:
+        union_poly = poly2
+    elif poly2.is_empty:
+        union_poly = poly1
+    else:
+        union_poly = poly1.union(poly2)
+
     if not hasattr(union_poly, "geoms"):
         union_poly = MultiPolygon([union_poly])
     else:
