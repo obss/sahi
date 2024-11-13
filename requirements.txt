@@ -1,4 +1,4 @@
-opencv-python<=4.9.0.80
+opencv-python==4.10.0.84
 shapely>=1.8.0
 tqdm>=4.48.2
 pillow>=8.2.0
