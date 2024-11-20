@@ -46,7 +46,7 @@ class LangSamDetectionModel(DetectionModel):
             raise ValueError("Model is not loaded, load it by calling .load_model()")
 
         image_pil = Image.fromarray(image)
-        prediction_result = self.model.predict([image_pil], ["fish."])
+        prediction_result = self.model.predict([image_pil], ["small fish"])
 
         self._original_predictions = prediction_result
 
