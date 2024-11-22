@@ -88,10 +88,6 @@ jobs:
         run: >
           pip install ultralytics==8.0.207
 
-      - name: Install super-gradients(3.3.1)
-        run: >
-          pip install super-gradients==3.3.1
-
       - name: Install latest SAHI package
         run: >
           pip install --upgrade --force-reinstall sahi
