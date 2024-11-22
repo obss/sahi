@@ -149,9 +149,9 @@ class Detectron2DetectionModel(DetectionModel):
             object_prediction_list = [
                 ObjectPrediction(
                     bbox=box.tolist() if mask is None else None,
-                    segmentation=get_coco_segmentation_from_bool_mask(mask.detach().cpu().numpy())
-                    if mask is not None
-                    else None,
+                    segmentation=(
+                        get_coco_segmentation_from_bool_mask(mask.detach().cpu().numpy()) if mask is not None else None
+                    ),
                     category_id=category_id.item(),
                     category_name=self.category_mapping[str(category_id.item())],
                     shift_amount=shift_amount,
