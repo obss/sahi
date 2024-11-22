@@ -251,7 +251,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         from sahi.models.mmdet import MmdetDetectionModel
 
         nltk.download("punkt_tab")
-        nltk.download("averaged_perceptron_tagger")
+        nltk.download("averaged_perceptron_tagger_eng")
         # init model
         download_mmdet_GLIP_tiny_model()
 
