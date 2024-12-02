@@ -1,5 +1,5 @@
 opencv-python<=4.9.0.80
-shapely>=1.8.0
+shapely>=2.0.0
 tqdm>=4.48.2
 pillow>=8.2.0
 pybboxes==0.1.6
