@@ -2,7 +2,7 @@
 # Code written by AnNT, 2023.
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 import cv2
 import numpy as np
@@ -17,7 +17,7 @@ from sahi.utils.cv import get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
 
 
-class Yolov8DetectionModel(DetectionModel):
+class UltralyticsDetectionModel(DetectionModel):
     def check_dependencies(self) -> None:
         check_requirements(["ultralytics"])
 
@@ -33,14 +33,14 @@ class Yolov8DetectionModel(DetectionModel):
             model.to(self.device)
             self.set_model(model)
         except Exception as e:
-            raise TypeError("model_path is not a valid yolov8 model path: ", e)
+            raise TypeError("model_path is not a valid Ultralytics model path: ", e)
 
     def set_model(self, model: Any):
         """
-        Sets the underlying YOLOv8 model.
+        Sets the underlying Ultralytics model.
         Args:
             model: Any
-                A YOLOv8 model
+                A Ultralytics model
         """
 
         self.model = model

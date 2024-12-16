@@ -3,8 +3,6 @@
 
 import unittest
 
-import numpy as np
-
 from sahi.utils.cv import read_image
 from sahi.utils.yolov8 import Yolov8TestConstants, download_yolov8n_model, download_yolov8n_seg_model
 
@@ -15,11 +13,11 @@ IMAGE_SIZE = 640
 
 class TestYolov8DetectionModel(unittest.TestCase):
     def test_load_model(self):
-        from sahi.models.yolov8 import Yolov8DetectionModel
+        from sahi.models.ultralytics import UltralyticsDetectionModel
 
         download_yolov8n_model()
 
-        yolov8_detection_model = Yolov8DetectionModel(
+        yolov8_detection_model = UltralyticsDetectionModel(
             model_path=Yolov8TestConstants.YOLOV8N_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
@@ -32,13 +30,13 @@ class TestYolov8DetectionModel(unittest.TestCase):
     def test_set_model(self):
         from ultralytics import YOLO
 
-        from sahi.models.yolov8 import Yolov8DetectionModel
+        from sahi.models.ultralytics import UltralyticsDetectionModel
 
         download_yolov8n_model()
 
         yolo_model = YOLO(Yolov8TestConstants.YOLOV8N_MODEL_PATH)
 
-        yolov8_detection_model = Yolov8DetectionModel(
+        yolov8_detection_model = UltralyticsDetectionModel(
             model=yolo_model,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
@@ -49,12 +47,12 @@ class TestYolov8DetectionModel(unittest.TestCase):
         self.assertNotEqual(yolov8_detection_model.model, None)
 
     def test_perform_inference(self):
-        from sahi.models.yolov8 import Yolov8DetectionModel
+        from sahi.models.ultralytics import UltralyticsDetectionModel
 
         # init model
         download_yolov8n_model()
 
-        yolov8_detection_model = Yolov8DetectionModel(
+        yolov8_detection_model = UltralyticsDetectionModel(
             model_path=Yolov8TestConstants.YOLOV8N_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
@@ -90,12 +88,12 @@ class TestYolov8DetectionModel(unittest.TestCase):
             self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
 
     def test_convert_original_predictions(self):
-        from sahi.models.yolov8 import Yolov8DetectionModel
+        from sahi.models.ultralytics import UltralyticsDetectionModel
 
         # init model
         download_yolov8n_model()
 
-        yolov8_detection_model = Yolov8DetectionModel(
+        yolov8_detection_model = UltralyticsDetectionModel(
             model_path=Yolov8TestConstants.YOLOV8N_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
@@ -140,12 +138,12 @@ class TestYolov8DetectionModel(unittest.TestCase):
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
     def test_perform_inference_with_mask_output(self):
-        from sahi.models.yolov8 import Yolov8DetectionModel
+        from sahi.models.ultralytics import UltralyticsDetectionModel
 
         # init model
         download_yolov8n_seg_model()
 
-        yolov8_detection_model = Yolov8DetectionModel(
+        yolov8_detection_model = UltralyticsDetectionModel(
             model_path=Yolov8TestConstants.YOLOV8N_SEG_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
@@ -182,12 +180,12 @@ class TestYolov8DetectionModel(unittest.TestCase):
         self.assertEqual(masks.shape[0], len(boxes))
 
     def test_convert_original_predictions_with_mask_output(self):
-        from sahi.models.yolov8 import Yolov8DetectionModel
+        from sahi.models.ultralytics import UltralyticsDetectionModel
 
         # init model
         download_yolov8n_seg_model()
 
-        yolov8_detection_model = Yolov8DetectionModel(
+        yolov8_detection_model = UltralyticsDetectionModel(
             model_path=Yolov8TestConstants.YOLOV8N_SEG_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
