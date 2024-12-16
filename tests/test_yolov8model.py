@@ -4,7 +4,7 @@
 import unittest
 
 from sahi.utils.cv import read_image
-from sahi.utils.yolov8 import Yolov8TestConstants, download_yolov8n_model, download_yolov8n_seg_model
+from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolov8n_model, download_yolov8n_seg_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3
@@ -18,7 +18,7 @@ class TestYolov8DetectionModel(unittest.TestCase):
         download_yolov8n_model()
 
         yolov8_detection_model = UltralyticsDetectionModel(
-            model_path=Yolov8TestConstants.YOLOV8N_MODEL_PATH,
+            model_path=UltralyticsTestConstants.YOLOV8N_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -34,7 +34,7 @@ class TestYolov8DetectionModel(unittest.TestCase):
 
         download_yolov8n_model()
 
-        yolo_model = YOLO(Yolov8TestConstants.YOLOV8N_MODEL_PATH)
+        yolo_model = YOLO(UltralyticsTestConstants.YOLOV8N_MODEL_PATH)
 
         yolov8_detection_model = UltralyticsDetectionModel(
             model=yolo_model,
@@ -53,7 +53,7 @@ class TestYolov8DetectionModel(unittest.TestCase):
         download_yolov8n_model()
 
         yolov8_detection_model = UltralyticsDetectionModel(
-            model_path=Yolov8TestConstants.YOLOV8N_MODEL_PATH,
+            model_path=UltralyticsTestConstants.YOLOV8N_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -94,7 +94,7 @@ class TestYolov8DetectionModel(unittest.TestCase):
         download_yolov8n_model()
 
         yolov8_detection_model = UltralyticsDetectionModel(
-            model_path=Yolov8TestConstants.YOLOV8N_MODEL_PATH,
+            model_path=UltralyticsTestConstants.YOLOV8N_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -144,7 +144,7 @@ class TestYolov8DetectionModel(unittest.TestCase):
         download_yolov8n_seg_model()
 
         yolov8_detection_model = UltralyticsDetectionModel(
-            model_path=Yolov8TestConstants.YOLOV8N_SEG_MODEL_PATH,
+            model_path=UltralyticsTestConstants.YOLOV8N_SEG_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -186,7 +186,7 @@ class TestYolov8DetectionModel(unittest.TestCase):
         download_yolov8n_seg_model()
 
         yolov8_detection_model = UltralyticsDetectionModel(
-            model_path=Yolov8TestConstants.YOLOV8N_SEG_MODEL_PATH,
+            model_path=UltralyticsTestConstants.YOLOV8N_SEG_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,

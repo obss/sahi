@@ -141,7 +141,7 @@ pip install yolov5==7.0.13
 - Install your desired detection framework (ultralytics):
 
 ```console
-pip install ultralytics==8.0.207
+pip install ultralytics==8.3.50
 ```
 
 - Install your desired detection framework (mmdet):
