@@ -1,1 +1,1 @@
-from . import base, detectron2, huggingface, mmdet, torchvision, yolov5, yolov8onnx
+from . import base, detectron2, huggingface, mmdet, torchvision, ultralytics, yolov5, yolov8onnx
