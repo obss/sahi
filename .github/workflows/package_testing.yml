@@ -92,7 +92,7 @@ jobs:
         run: >
           pip install --upgrade --force-reinstall sahi
 
-      - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
+      - name: Unittest for SAHI+YOLO11/RTDETR/MMDET/HuggingFace/Torchvision on all platforms
         run: |
           python -m unittest
 

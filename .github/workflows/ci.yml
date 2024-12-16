@@ -110,7 +110,7 @@ jobs:
         run: >
           pip install ultralytics==8.3.50
 
-      - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
+      - name: Unittest for SAHI+YOLO11/RTDETR/MMDET/HuggingFace/Torchvision on all platforms
         run: |
           python -m unittest
 
