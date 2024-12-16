@@ -4,7 +4,14 @@
 import unittest
 
 from sahi.utils.cv import read_image
-from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolov8n_model, download_yolov8n_seg_model, download_yolo11n_model, download_yolo11n_seg_model, download_yolo11n_obb_model
+from sahi.utils.ultralytics import (
+    UltralyticsTestConstants,
+    download_yolo11n_model,
+    download_yolo11n_obb_model,
+    download_yolo11n_seg_model,
+    download_yolov8n_model,
+    download_yolov8n_seg_model,
+)
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3
@@ -26,7 +33,7 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
         )
 
         self.assertNotEqual(detection_model.model, None)
-        self.assertTrue(hasattr(detection_model.model, 'task'))
+        self.assertTrue(hasattr(detection_model.model, "task"))
         self.assertEqual(detection_model.model.task, "detect")
 
     def test_load_yolo11_model(self):
@@ -43,7 +50,7 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
         )
 
         self.assertNotEqual(detection_model.model, None)
-        self.assertTrue(hasattr(detection_model.model, 'task'))
+        self.assertTrue(hasattr(detection_model.model, "task"))
         self.assertEqual(detection_model.model.task, "detect")
 
     def test_perform_inference_yolov8(self):
