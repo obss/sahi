@@ -365,7 +365,7 @@ def predict(
     frame_skip_interval: int = 0,
     export_pickle: bool = False,
     export_crop: bool = False,
-    dataset_json_path: bool = None,
+    dataset_json_path: str = None,
     project: str = "runs/predict",
     name: str = "exp",
     visual_bbox_thickness: int = None,
