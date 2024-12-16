@@ -4,6 +4,7 @@
 import unittest
 
 from sahi.utils.cv import read_image
+from sahi.utils.file import download_from_url
 from sahi.utils.ultralytics import (
     UltralyticsTestConstants,
     download_yolo11n_model,
@@ -167,25 +168,53 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=True,
-            image_size=1024,
+            image_size=640,
         )
 
         # Verify model task
+        self.assertTrue(detection_model.is_obb)
         self.assertEqual(detection_model.model.task, "obb")
 
         # prepare image and run inference
-        image_path = "tests/data/small-vehicles1.jpeg"
+        image_url = "https://ultralytics.com/images/boats.jpg"
+        image_path = "tests/data/boats.jpg"
+        download_from_url(image_url, to_path=image_path)
         image = read_image(image_path)
         detection_model.perform_inference(image)
 
         # Verify OBB predictions
         original_predictions = detection_model.original_predictions
-        boxes = original_predictions[0].data
+        boxes = original_predictions[0][0]  # Original box data
+        obb_points = original_predictions[0][1]  # OBB points in xyxyxyxy format
 
         self.assertGreater(len(boxes), 0)
-        self.assertEqual(boxes.shape[1], 6)  # x,y,w,h,conf,cls for OBB format
-        for box in boxes:
-            self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
+        # Check box format: x1,y1,x2,y2,conf,cls
+        self.assertEqual(boxes.shape[1], 6)
+        # Check OBB points format
+        self.assertEqual(obb_points.shape[1:], (4, 2))  # (N, 4, 2) format
+
+        # Convert predictions and verify
+        detection_model.convert_original_predictions()
+        object_prediction_list = detection_model.object_prediction_list
+
+        # Verify converted predictions
+        self.assertEqual(len(object_prediction_list), len(boxes))
+        for object_prediction in object_prediction_list:
+            # Verify confidence threshold
+            self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
+
+            coco_segmentation = object_prediction.mask.segmentation
+            # Verify segmentation exists (converted from OBB)
+            self.assertIsNotNone(coco_segmentation)
+            # Verify segmentation is a list of points
+            self.assertTrue(isinstance(coco_segmentation, list))
+            self.assertGreater(len(coco_segmentation), 0)
+            # Verify each segment is a valid closed polygon
+            for segment in coco_segmentation:
+                self.assertEqual(len(segment), 10)  # 4 points + 1 closing point (x,y coordinates)
+                # Verify polygon is closed (first point equals last point)
+                self.assertEqual(segment[0], segment[-2])  # x coordinate
+                self.assertEqual(segment[1], segment[-1])  # y coordinate
 
 
 if __name__ == "__main__":

@@ -1,13 +1,14 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
 from sahi.utils.import_utils import is_available
 from sahi.utils.torch import select_device as select_torch_device
 
+from sahi.prediction import ObjectPrediction
 
 class DetectionModel:
     def __init__(
@@ -173,7 +174,7 @@ class DetectionModel:
             self._apply_category_remapping()
 
     @property
-    def object_prediction_list(self):
+    def object_prediction_list(self) -> List[ObjectPrediction]:
         return self._object_prediction_list_per_image[0]
 
     @property
