@@ -691,7 +691,7 @@ def get_bbox_from_coco_segmentation(coco_segmentation):
 def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> List[List[float]]:
     """
     Convert OBB (Oriented Bounding Box) points to COCO polygon format.
-    
+
     Args:
         obb_points: np.ndarray
             OBB points tensor from ultralytics.engine.results.OBB
@@ -702,13 +702,13 @@ def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> List[List[f
     """
     # Convert from (4,2) to [x1,y1,x2,y2,x3,y3,x4,y4] format
     points = obb_points.reshape(-1).tolist()
-    
+
     # Create polygon from points and close it by repeating first point
     polygons = []
     # Add first point to end to close polygon
     closed_polygon = points + [points[0], points[1]]
     polygons.append(closed_polygon)
-    
+
     return polygons
 
 

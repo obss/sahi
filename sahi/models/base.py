@@ -5,10 +5,10 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
+from sahi.prediction import ObjectPrediction
 from sahi.utils.import_utils import is_available
 from sahi.utils.torch import select_device as select_torch_device
 
-from sahi.prediction import ObjectPrediction
 
 class DetectionModel:
     def __init__(

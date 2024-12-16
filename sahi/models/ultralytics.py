@@ -89,13 +89,18 @@ class UltralyticsDetectionModel(DetectionModel):
             prediction_result = [
                 (
                     # Get OBB data: xyxy, conf, cls
-                    torch.cat([
-                        result.obb.xyxy,  # box coordinates
-                        result.obb.conf.unsqueeze(-1),  # confidence scores
-                        result.obb.cls.unsqueeze(-1),  # class ids
-                    ], dim=1) if result.obb is not None else torch.empty((0, 6), device=self.model.device),
+                    torch.cat(
+                        [
+                            result.obb.xyxy,  # box coordinates
+                            result.obb.conf.unsqueeze(-1),  # confidence scores
+                            result.obb.cls.unsqueeze(-1),  # class ids
+                        ],
+                        dim=1,
+                    )
+                    if result.obb is not None
+                    else torch.empty((0, 6), device=self.model.device),
                     # Get OBB points in (N, 4, 2) format
-                    result.obb.xyxyxyxy if result.obb is not None else torch.empty((0, 4, 2), device=self.model.device)
+                    result.obb.xyxyxyxy if result.obb is not None else torch.empty((0, 4, 2), device=self.model.device),
                 )
                 for result in prediction_result
             ]
@@ -197,8 +202,7 @@ class UltralyticsDetectionModel(DetectionModel):
                         bool_mask = masks_or_points[pred_ind]
                         # Resize mask to original image size
                         bool_mask = cv2.resize(
-                            bool_mask.astype(np.uint8), 
-                            (self._original_shape[1], self._original_shape[0])
+                            bool_mask.astype(np.uint8), (self._original_shape[1], self._original_shape[0])
                         )
                         segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
                     else:  # is_obb
