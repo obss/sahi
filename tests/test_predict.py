@@ -318,11 +318,7 @@ class TestPredict(unittest.TestCase):
 
         # get full sized prediction
         prediction_result = get_prediction(
-            image=image, 
-            detection_model=yolo11_detection_model, 
-            shift_amount=[0, 0], 
-            full_shape=None, 
-            postprocess=None
+            image=image, detection_model=yolo11_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
         )
         object_prediction_list = prediction_result.object_prediction_list
 
@@ -410,8 +406,8 @@ class TestPredict(unittest.TestCase):
     def test_coco_json_prediction(self):
         from sahi.predict import predict
         from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
-        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
         from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
+        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
         # init model
         download_mmdet_yolox_tiny_model()
