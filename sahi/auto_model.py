@@ -16,6 +16,7 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
 
 ULTRALYTICS_MODEL_NAMES = ["yolov8", "yolov11", "yolo11", "ultralytics"]
 
+
 class AutoDetectionModel:
     @staticmethod
     def from_pretrained(
