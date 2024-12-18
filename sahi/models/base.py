@@ -23,14 +23,17 @@ class DetectionModel:
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
         image_size: int = None,
+        deploy_config_path: Optional[str] = None,
     ):
         """
         Init object detection/instance segmentation model.
         Args:
             model_path: str
-                Path for the instance segmentation model weight
+                Path for the instance segmentation model weight, .engine file if it's tensorrt
             config_path: str
                 Path for the mmdetection instance segmentation model config file
+            deploy_config_path: str
+                Path for the mmdetection detection/instance segmentation deployment config file
             device: str
                 Torch device, "cpu" or "cuda"
             mask_threshold: float
@@ -48,6 +51,7 @@ class DetectionModel:
         """
         self.model_path = model_path
         self.config_path = config_path
+        self.deploy_config_path = deploy_config_path
         self.model = None
         self.device = device
         self.mask_threshold = mask_threshold
