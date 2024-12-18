@@ -53,6 +53,13 @@ LOW_MODEL_CONFIDENCE = 0.1
 
 logger = logging.getLogger(__name__)
 
+def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id):
+    return [
+        obj_pred for obj_pred in object_prediction_list
+        if obj_pred.category.name not in (exclude_classes_by_name or [])
+        and obj_pred.category.id not in (exclude_classes_by_id or [])
+    ]
+
 
 def get_prediction(
     image,
@@ -61,6 +68,8 @@ def get_prediction(
     full_shape=None,
     postprocess: Optional[PostprocessPredictions] = None,
     verbose: int = 0,
+    exclude_classes_by_name: Optional[List[str]] = None,
+    exclude_classes_by_id: Optional[List[int]] = None,
 ) -> PredictionResult:
     """
     Function for performing prediction for given image using given detection_model.
@@ -102,6 +111,11 @@ def get_prediction(
         full_shape=full_shape,
     )
     object_prediction_list: List[ObjectPrediction] = detection_model.object_prediction_list
+    object_prediction_list = filter_predictions(
+        object_prediction_list,
+        exclude_classes_by_name,
+        exclude_classes_by_id
+    )
 
     # postprocess matching predictions
     if postprocess is not None:
@@ -139,6 +153,8 @@ def get_sliced_prediction(
     auto_slice_resolution: bool = True,
     slice_export_prefix: str = None,
     slice_dir: str = None,
+    exclude_classes_by_name: Optional[List[str]] = None,
+    exclude_classes_by_id: Optional[List[int]] = None,
 ) -> PredictionResult:
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -254,6 +270,8 @@ def get_sliced_prediction(
                 slice_image_result.original_image_height,
                 slice_image_result.original_image_width,
             ],
+            exclude_classes_by_name=exclude_classes_by_name,
+            exclude_classes_by_id=exclude_classes_by_id,
         )
         # convert sliced predictions to full predictions
         for object_prediction in prediction_result.object_prediction_list:
@@ -275,6 +293,8 @@ def get_sliced_prediction(
                 slice_image_result.original_image_width,
             ],
             postprocess=None,
+            exclude_classes_by_name=exclude_classes_by_name,
+            exclude_classes_by_id=exclude_classes_by_id,
         )
         object_prediction_list.extend(prediction_result.object_prediction_list)
 
@@ -377,6 +397,8 @@ def predict(
     verbose: int = 1,
     return_dict: bool = False,
     force_postprocess_type: bool = False,
+    exclude_classes_by_name: Optional[List[str]] = None,
+    exclude_classes_by_id: Optional[List[int]] = None,
     **kwargs,
 ):
     """
@@ -569,6 +591,8 @@ def predict(
                 postprocess_match_threshold=postprocess_match_threshold,
                 postprocess_class_agnostic=postprocess_class_agnostic,
                 verbose=1 if verbose else 0,
+                exclude_classes_by_name=exclude_classes_by_name,
+                exclude_classes_by_id=exclude_classes_by_id,
             )
             object_prediction_list = prediction_result.object_prediction_list
             durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
@@ -581,6 +605,8 @@ def predict(
                 full_shape=None,
                 postprocess=None,
                 verbose=0,
+                exclude_classes_by_name=exclude_classes_by_name,
+                exclude_classes_by_id=exclude_classes_by_id,
             )
             object_prediction_list = prediction_result.object_prediction_list
 
@@ -745,6 +771,8 @@ def predict_fiftyone(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
+    exclude_classes_by_name: Optional[List[str]] = None,
+    exclude_classes_by_id: Optional[List[int]] = None,
 ):
     """
     Performs prediction for all present images in given folder.
@@ -855,6 +883,8 @@ def predict_fiftyone(
                     postprocess_match_metric=postprocess_match_metric,
                     postprocess_class_agnostic=postprocess_class_agnostic,
                     verbose=verbose,
+                    exclude_classes_by_name=exclude_classes_by_name,
+                    exclude_classes_by_id=exclude_classes_by_id,
                 )
                 durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
             else:
@@ -866,6 +896,8 @@ def predict_fiftyone(
                     full_shape=None,
                     postprocess=None,
                     verbose=0,
+                    exclude_classes_by_name=exclude_classes_by_name,
+                    exclude_classes_by_id=exclude_classes_by_id,
                 )
                 durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
 
