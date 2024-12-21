@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 from sahi.utils.file import import_model_class
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
-    "yolov8": "Yolov8DetectionModel",
+    "ultralytics": "UltralyticsDetectionModel",
     "rtdetr": "RTDetrDetectionModel",
     "mmdet": "MmdetDetectionModel",
     "yolov5": "Yolov5DetectionModel",
@@ -13,6 +13,8 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "yolov5sparse": "Yolov5SparseDetectionModel",
     "yolov8onnx": "Yolov8OnnxDetectionModel",
 }
+
+ULTRALYTICS_MODEL_NAMES = ["yolov8", "yolov11", "yolo11", "ultralytics"]
 
 
 class AutoDetectionModel:
@@ -60,7 +62,8 @@ class AutoDetectionModel:
         Raises:
             ImportError: If given {model_type} framework is not installed
         """
-
+        if model_type in ULTRALYTICS_MODEL_NAMES:
+            model_type = "ultralytics"
         model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
         DetectionModel = import_model_class(model_type, model_class_name)
 

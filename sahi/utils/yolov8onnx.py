@@ -3,7 +3,7 @@ from typing import Optional
 
 import numpy as np
 
-from sahi.utils.yolov8 import download_yolov8n_model
+from sahi.utils.ultralytics import download_yolov8n_model
 
 
 class Yolov8ONNXTestConstants:
