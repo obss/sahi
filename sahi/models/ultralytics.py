@@ -67,9 +67,11 @@ class UltralyticsDetectionModel(DetectionModel):
 
         if self.image_size is not None:
             kwargs = {"imgsz": self.image_size, **kwargs}
+        if type(image) is list:
 
-        prediction_result = self.model(image[:, :, ::-1], **kwargs)  # YOLOv8 expects numpy arrays to have BGR
-
+            prediction_result = self.model(image, **kwargs)  # YOLOv8 expects numpy arrays to have BGR
+        else :
+            prediction_result = self.model(image[:, :, ::-1], **kwargs)
         if self.has_mask:
             if not prediction_result[0].masks:
                 prediction_result[0].masks = Masks(
@@ -109,7 +111,10 @@ class UltralyticsDetectionModel(DetectionModel):
             prediction_result = [result.boxes.data for result in prediction_result]
 
         self._original_predictions = prediction_result
-        self._original_shape = image.shape
+        if type(image) == list:
+            self._original_shape = image[0].shape
+        else:
+            self._original_shape = image.shape
 
     @property
     def category_names(self):
