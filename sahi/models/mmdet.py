@@ -32,8 +32,12 @@ try:
             scope: Optional[str] = "mmdet",
             palette: str = "none",
             image_size: Optional[int] = None,
+            text: str = None,
+            custom_entities: bool = False,
         ) -> None:
             self.image_size = image_size
+            self.text = text
+            self.custom_entities = custom_entities
             super().__init__(model, weights, device, scope, palette)
 
         def __call__(self, images: List[np.ndarray], batch_size: int = 1) -> dict:
@@ -48,6 +52,10 @@ try:
             inputs = self.preprocess(images, batch_size=batch_size)
             results_dict = {"predictions": [], "visualization": []}
             for _, data in inputs:
+                # text promps for GLIP + GDino
+                if hasattr(self, "text_prompts"):
+                    for datasamples in data["data_samples"]:
+                        datasamples.set_metainfo({"text": self.text_prompts, "custom_entities": self.custom_entities})
                 preds = self.forward(data)
                 results = self.postprocess(
                     preds,
@@ -69,13 +77,23 @@ try:
                 pipeline_cfg[-1]["meta_keys"] = tuple(
                     meta_key for meta_key in pipeline_cfg[-1]["meta_keys"] if meta_key != "img_id"
                 )
+                # Set text inputs for GLIP + GDino
+                if "text" in pipeline_cfg[-1]["meta_keys"]:
+                    if self.text is not None:
+                        self.text_prompts = self.text
+                        self.model.dataset_meta["classes"] = self.text.split(" . ")
+                    else:
+                        # Default text prompt uses class names
+                        self.text_prompts = tuple(self.model.dataset_meta["classes"])
 
             load_img_idx = self._get_transform_idx(pipeline_cfg, "LoadImageFromFile")
             if load_img_idx == -1:
                 raise ValueError("LoadImageFromFile is not found in the test pipeline")
             pipeline_cfg[load_img_idx]["type"] = "mmdet.InferencerLoader"
 
-            resize_idx = self._get_transform_idx(pipeline_cfg, "Resize")
+            resize_idx = max(
+                self._get_transform_idx(pipeline_cfg, "Resize"), self._get_transform_idx(pipeline_cfg, "FixScaleResize")
+            )
             if resize_idx == -1:
                 raise ValueError("Resize is not found in the test pipeline")
             if self.image_size is not None:
@@ -102,13 +120,17 @@ class MmdetDetectionModel(DetectionModel):
         load_at_init: bool = True,
         image_size: int = None,
         scope: str = "mmdet",
+        # For GLIP + GDino
+        text: str = None,
+        custom_entities: bool = False,
     ):
         if not IMPORT_MMDET_V3:
             raise ImportError("Failed to import `DetInferencer`. Please confirm you have installed 'mmdet>=3.0.0'")
 
         self.scope = scope
         self.image_size = image_size
-
+        self.text = text
+        self.custom_entities = custom_entities
         super().__init__(
             model_path,
             model,
@@ -132,7 +154,13 @@ class MmdetDetectionModel(DetectionModel):
 
         # create model
         model = DetInferencerWrapper(
-            self.config_path, self.model_path, device=self.device, scope=self.scope, image_size=self.image_size
+            self.config_path,
+            self.model_path,
+            device=self.device,
+            scope=self.scope,
+            image_size=self.image_size,
+            text=self.text,
+            custom_entities=self.custom_entities,
         )
 
         self.set_model(model)
