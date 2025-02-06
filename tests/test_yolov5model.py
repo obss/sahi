@@ -3,10 +3,8 @@
 
 import unittest
 
-import numpy as np
-
 from sahi.utils.cv import read_image
-from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model, download_yolov5s6_model
+from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3

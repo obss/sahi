@@ -1,4 +1,5 @@
 import copy
+import importlib.util
 import os
 from multiprocessing import Pool
 from pathlib import Path
@@ -221,7 +222,7 @@ def _make_gt_area_histogram_plot(cocoEval, outDir):
 
 def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None, max_detections=None, COCOeval=None):
     nm = cocoGt.loadCats(catId)[0]
-    print(f'--------------analyzing {k + 1}-{nm["name"]}---------------')
+    print(f"--------------analyzing {k + 1}-{nm['name']}---------------")
     ps_ = {}
     dt = copy.deepcopy(cocoDt)
     nm = cocoGt.loadCats(catId)[0]
@@ -361,7 +362,7 @@ def _analyse_results(
         classname_to_export_path_list = {}
         for k, catId in enumerate(present_cat_ids):
             nm = cocoGt.loadCats(catId)[0]
-            print(f'--------------saving {k + 1}-{nm["name"]}---------------')
+            print(f"--------------saving {k + 1}-{nm['name']}---------------")
             analyze_result = analyze_results[k]
             if k != analyze_result[0]:
                 raise ValueError(f"k {k} != analyze_result[0] {analyze_result[0]}")
@@ -439,13 +440,11 @@ def analyse(
         from pycocotools.cocoeval import COCOeval
     except ModuleNotFoundError:
         raise ModuleNotFoundError(
-            'Please run "pip install -U pycocotools" ' "to install pycocotools first for coco evaluation."
+            'Please run "pip install -U pycocotools" to install pycocotools first for coco evaluation.'
         )
-    try:
-        import matplotlib.pyplot as plt
-    except ModuleNotFoundError:
+    if not importlib.util.find_spec("matplotlib.pyplot"):
         raise ModuleNotFoundError(
-            'Please run "pip install -U matplotlib" ' "to install matplotlib first for visualization."
+            'Please run "pip install -U matplotlib" to install matplotlib first for visualization.'
         )
 
     result = _analyse_results(

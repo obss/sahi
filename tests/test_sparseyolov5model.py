@@ -5,8 +5,6 @@ import platform
 import unittest
 from decimal import Decimal
 
-import numpy as np
-
 from sahi.utils.cv import read_image
 from sahi.utils.sparseyolov5 import Yolov5TestConstants
 

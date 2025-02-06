@@ -11,7 +11,6 @@ from sahi.utils.ultralytics import (
     download_yolo11n_obb_model,
     download_yolo11n_seg_model,
     download_yolov8n_model,
-    download_yolov8n_seg_model,
 )
 
 MODEL_DEVICE = "cpu"

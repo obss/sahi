@@ -587,7 +587,6 @@ class TestCocoUtils(unittest.TestCase):
 
     def test_get_subsampled_coco(self):
         from sahi.utils.coco import Coco
-        from sahi.utils.file import load_json
 
         coco_path = "tests/data/coco_utils/visdrone2019-det-train-first50image.json"
         image_dir = "tests/data/coco_utils/"
@@ -642,7 +641,6 @@ class TestCocoUtils(unittest.TestCase):
 
     def test_get_upsampled_coco(self):
         from sahi.utils.coco import Coco
-        from sahi.utils.file import load_json
 
         coco_path = "tests/data/coco_utils/visdrone2019-det-train-first50image.json"
         image_dir = "tests/data/coco_utils/"
@@ -822,9 +820,9 @@ class TestCocoUtils(unittest.TestCase):
         export_coco_as_yolov5(output_dir=output_dir, train_coco=coco, val_coco=coco, numpy_seed=0)
 
     def test_cocovid(self):
-        from sahi.utils.coco import CocoVid
-
+        # from sahi.utils.coco import CocoVid
         # TODO
+        pass
 
     def test_bbox_clipping(self):
         from sahi.utils.coco import Coco, CocoAnnotation, CocoCategory, CocoImage

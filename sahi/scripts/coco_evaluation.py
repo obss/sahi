@@ -1,6 +1,5 @@
 import itertools
 import json
-import warnings
 from collections import OrderedDict
 from pathlib import Path
 from typing import List, Union

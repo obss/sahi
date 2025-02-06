@@ -10,7 +10,7 @@ from sahi.utils.import_utils import is_available
 
 # https://github.com/obss/sahi/issues/526
 if is_available("torch"):
-    import torch
+    import torch  # noqa: F401
 
 from functools import cmp_to_key
 

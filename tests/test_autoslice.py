@@ -4,7 +4,6 @@
 
 import unittest
 
-import numpy as np
 from PIL import Image
 
 from sahi.slicing import slice_coco, slice_image

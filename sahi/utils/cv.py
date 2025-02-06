@@ -2,6 +2,7 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
+import logging
 import os
 import random
 import time
@@ -13,6 +14,8 @@ import requests
 from PIL import Image
 
 from sahi.utils.file import Path
+
+logger = logging.getLogger("__name__")
 
 IMAGE_EXTENSIONS_LOSSY = [".jpg", ".jpeg"]
 IMAGE_EXTENSIONS_LOSSLESS = [".png", ".tiff", ".bmp"]
@@ -129,7 +132,7 @@ def convert_image_to(read_path, extension: str = "jpg", grayscale: bool = False)
         grayscale (bool, optional): Whether to convert the image to grayscale. Defaults to False.
     """
     image = cv2.imread(read_path)
-    pre, ext = os.path.splitext(read_path)
+    pre, _ = os.path.splitext(read_path)
     if grayscale:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         pre = pre + "_gray"
@@ -155,12 +158,13 @@ def read_large_image(image_path: str):
         # convert to rgb (cv2 reads in bgr)
         img_cv2 = cv2.imread(image_path, 1)
         image0 = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
-    except:
+    except Exception as e:
+        logger.debug(f"OpenCV failed reading image with error {e}, trying skimage instead")
         try:
             import skimage.io
         except ImportError:
             raise ImportError(
-                'Please run "pip install -U scikit-image" ' "to install scikit-image first for large image handling."
+                'Please run "pip install -U scikit-image" to install scikit-image first for large image handling.'
             )
         image0 = skimage.io.imread(image_path, as_grey=False).astype(np.uint8)  # [::-1]
         use_cv2 = False
@@ -209,7 +213,8 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
             ).convert("RGB")
             if exif_fix:
                 image_pil = exif_transpose(image_pil)
-        except:  # handle large/tiff image reading
+        except Exception as e:  # handle large/tiff image reading
+            logger.debug(f"OpenCV failed reading image with error {e}, trying skimage instead")
             try:
                 import skimage.io
             except ImportError:

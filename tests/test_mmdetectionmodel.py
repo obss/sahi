@@ -6,7 +6,6 @@ import unittest
 import numpy as np
 
 from sahi.utils.cv import read_image
-from sahi.utils.file import download_from_url
 from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_yolox_tiny_model
 
 MODEL_DEVICE = "cpu"
