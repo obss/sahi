@@ -2,13 +2,11 @@
 # Code written by Karl-Joan Alesma and Michael García, 2023.
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import cv2
 import numpy as np
 import torch
-
-logger = logging.getLogger(__name__)
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
@@ -16,13 +14,15 @@ from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.import_utils import check_requirements
 from sahi.utils.yolov8onnx import non_max_supression, xywh2xyxy
 
+logger = logging.getLogger(__name__)
+
 
 class Yolov8OnnxDetectionModel(DetectionModel):
     def __init__(self, *args, iou_threshold: float = 0.7, **kwargs):
         """
         Args:
             iou_threshold: float
-                IOU threshold for non-max supression, defaults to 0.7.
+                IOU threshold for non-max suppression, defaults to 0.7.
         """
         super().__init__(*args, **kwargs)
         self.iou_threshold = iou_threshold
