@@ -295,7 +295,7 @@ def greedy_nmm(
 
 
 def batched_nmm(
-    object_predictions_as_tensor: torch.tensor.Tensor,
+    object_predictions_as_tensor: torch.Tensor,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ):
@@ -326,7 +326,7 @@ def batched_nmm(
 
 
 def nmm(
-    object_predictions_as_tensor: torch.tensor.Tensor,
+    object_predictions_as_tensor: torch.Tensor,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ):
@@ -459,7 +459,7 @@ class PostprocessPredictions:
 
         check_requirements(["torch"])
 
-    def __call__(self):
+    def __call__(self, predictions: List[ObjectPrediction]):
         raise NotImplementedError()
 
 

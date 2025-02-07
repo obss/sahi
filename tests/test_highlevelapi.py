@@ -104,10 +104,10 @@ class TestHighLevelApi(unittest.TestCase):
         from sahi import DetectionModel
 
         MODEL_PATH = "model_path"
-        IAMGE_SIZE = 640
-        detection_model = DetectionModel(model_path="model_path", image_size=IAMGE_SIZE, load_at_init=False)
+        IMAGE_SIZE = 640
+        detection_model = DetectionModel(model_path="model_path", image_size=IMAGE_SIZE, load_at_init=False)
         self.assertEqual(detection_model.model_path, MODEL_PATH)
-        self.assertEqual(detection_model.image_size, IAMGE_SIZE)
+        self.assertEqual(detection_model.image_size, IMAGE_SIZE)
 
 
 if __name__ == "__main__":

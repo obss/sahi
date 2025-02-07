@@ -3,10 +3,12 @@ import importlib.util
 import os
 from multiprocessing import Pool
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Union
 
 import fire
 import numpy as np
+from pycocotools.coco import COCO
+from pycocotools.cocoeval import COCOeval
 
 COLOR_PALETTE = np.vstack(
     [
@@ -21,7 +23,7 @@ COLOR_PALETTE = np.vstack(
 )
 
 
-def _makeplot(rs, ps, outDir, class_name, iou_type):
+def _makeplot(rs, ps, outDir: Union[str, Path], class_name: str, iou_type: str) -> List[str]:
     import matplotlib.pyplot as plt
 
     export_path_list = []
@@ -94,7 +96,7 @@ def _autolabel(ax, rects, is_percent=True):
         )
 
 
-def _makebarplot(rs, ps, outDir, class_name, iou_type):
+def _makebarplot(_, ps, outDir, class_name, iou_type):
     import matplotlib.pyplot as plt
 
     areaNames = ["allarea", "small", "medium", "large"]
@@ -173,7 +175,7 @@ def _make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
     width = 0.60  # the width of the bars
     figure_title = "number of annotations per area group"
 
-    rects = ax.bar(x, areaRngLbl2Number.values(), width)
+    rects = ax.bar(x, list(areaRngLbl2Number.values()), width)
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel("Number of annotations")
@@ -220,7 +222,9 @@ def _make_gt_area_histogram_plot(cocoEval, outDir):
     return export_path
 
 
-def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None, max_detections=None, COCOeval=None):
+def _analyze_individual_category(
+    k, cocoDt, cocoGt, catId, iou_type, areas=None, max_detections=None, COCOeval: type = COCOeval
+):
     nm = cocoGt.loadCats(catId)[0]
     print(f"--------------analyzing {k + 1}-{nm['name']}---------------")
     ps_ = {}
@@ -292,8 +296,8 @@ def _analyse_results(
     extraplots=None,
     areas=None,
     max_detections=500,
-    COCO=None,
-    COCOeval=None,
+    COCO: type = COCO,
+    COCOeval: type = COCOeval,
 ):
     for res_type in res_types:
         if res_type not in ["bbox", "segm"]:
@@ -417,7 +421,7 @@ def _analyse_results(
 def analyse(
     dataset_json_path: str,
     result_json_path: str,
-    out_dir: str = None,
+    out_dir: Optional[str] = None,
     type: str = "bbox",
     no_extraplots: bool = False,
     areas: List[int] = [1024, 9216, 10000000000],

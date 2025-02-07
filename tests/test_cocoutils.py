@@ -348,6 +348,7 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(len(result["train_coco"].json["annotations"]), 5)
         self.assertEqual(result["train_coco"].json["images"][0]["height"], 682)
         self.assertEqual(result["train_coco"].image_dir, image_dir)
+        assert result["train_coco"].stats
         self.assertEqual(result["train_coco"].stats["num_images"], len(result["train_coco"].images))
         self.assertEqual(
             result["train_coco"].stats["num_annotations"],
@@ -358,6 +359,7 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(len(result["val_coco"].json["annotations"]), 7)
         self.assertEqual(result["val_coco"].json["images"][0]["height"], 1365)
         self.assertEqual(result["val_coco"].image_dir, image_dir)
+        assert result["val_coco"].stats
         self.assertEqual(result["val_coco"].stats["num_images"], len(result["val_coco"].images))
         self.assertEqual(
             result["val_coco"].stats["num_annotations"],

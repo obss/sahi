@@ -1,22 +1,23 @@
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional, Union
 
 import numpy as np
 
 from sahi.utils.ultralytics import download_yolov8n_model
 
 
+# TODO: This class has no purpose
 class Yolov8ONNXTestConstants:
     YOLOV8N_ONNX_MODEL_PATH = "tests/data/models/yolov8/yolov8n.onnx"
 
 
-def download_yolov8n_onnx_model(destination_path: Optional[str] = None, image_size: Optional[int] = 640):
-    if destination_path is None:
-        destination_path = Yolov8ONNXTestConstants.YOLOV8N_ONNX_MODEL_PATH
-
+def download_yolov8n_onnx_model(
+    destination_path: Union[str, Path] = Yolov8ONNXTestConstants.YOLOV8N_ONNX_MODEL_PATH,
+    image_size: Optional[int] = 640,
+):
     destination_path = Path(destination_path)
     model_path = destination_path.parent / (destination_path.stem + ".pt")
-    download_yolov8n_model(model_path)
+    download_yolov8n_model(str(model_path))
 
     from ultralytics import YOLO
 
@@ -24,8 +25,8 @@ def download_yolov8n_onnx_model(destination_path: Optional[str] = None, image_si
     model.export(format="onnx")  # , imgsz=image_size)
 
 
-def non_max_supression(boxes: np.ndarray, scores: np.ndarray, iou_threshold: float) -> np.ndarray:
-    """Perform non-max supression.
+def non_max_suppression(boxes: np.ndarray, scores: np.ndarray, iou_threshold: float) -> List[int]:
+    """Perform non-max suppression.
 
     Args:
         boxes: np.ndarray
@@ -36,7 +37,7 @@ def non_max_supression(boxes: np.ndarray, scores: np.ndarray, iou_threshold: flo
             Maximum allowed overlap between bounding boxes.
 
     Returns:
-        np.ndarray: Filtered bounding boxes
+        list of box_ids of the kept bounding boxes
     """
     # Sort by score
     sorted_indices = np.argsort(scores)[::-1]

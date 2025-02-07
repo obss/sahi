@@ -608,9 +608,7 @@ class ObjectAnnotation:
         try:
             import imantics
         except ImportError:
-            raise ImportError(
-                'Please run "pip install -U imantics" ' "to install imantics first for imantics conversion."
-            )
+            raise ImportError('Please run "pip install -U imantics" to install imantics first for imantics conversion.')
 
         imantics_category = imantics.Category(id=self.category.id, name=self.category.name)
         if self.mask is not None:

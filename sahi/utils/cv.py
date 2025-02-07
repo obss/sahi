@@ -6,7 +6,7 @@ import logging
 import os
 import random
 import time
-from typing import List, Optional, Union
+from typing import Any, Generator, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
@@ -261,7 +261,7 @@ def select_random_color():
     return colors[random.randrange(0, 10)]
 
 
-def apply_color_mask(image: np.ndarray, color: tuple):
+def apply_color_mask(image: np.ndarray, color: Tuple[int, int, int]):
     """
     Applies color mask to given input image.
 
@@ -287,7 +287,7 @@ def get_video_reader(
     frame_skip_interval: int,
     export_visual: bool = False,
     view_visual: bool = False,
-):
+) -> Tuple[Generator[Image.Image, None, None], Optional[cv2.VideoWriter], str, int]:
     """
     Creates OpenCV video capture object from given video file path.
 
@@ -313,9 +313,12 @@ def get_video_reader(
         num_frames /= frame_skip_interval + 1
         num_frames = int(num_frames)
 
-    def read_video_frame(video_capture, frame_skip_interval):
+    def read_video_frame(video_capture, frame_skip_interval) -> Generator[Image.Image, None, None]:
         if view_visual:
-            cv2.imshow("Prediction of {}".format(str(video_file_name)), cv2.WINDOW_AUTOSIZE)
+            window_name = "Prediction of {}".format(str(video_file_name))
+            cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
+            default_image = np.zeros((480, 640, 3), dtype=np.uint8)
+            cv2.imshow(window_name, default_image)
 
             while video_capture.isOpened:
                 frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
@@ -383,10 +386,10 @@ def visualize_prediction(
     boxes: List[List],
     classes: List[str],
     masks: Optional[List[np.ndarray]] = None,
-    rect_th: float = None,
-    text_size: float = None,
-    text_th: float = None,
-    color: tuple = None,
+    rect_th: Optional[int] = None,
+    text_size: Optional[float] = None,
+    text_th: Optional[int] = None,
+    color: Optional[tuple] = None,
     hide_labels: bool = False,
     output_dir: Optional[str] = None,
     file_name: Optional[str] = "prediction_visual",
@@ -400,9 +403,9 @@ def visualize_prediction(
         boxes (List[List]): List of bounding boxes coordinates.
         classes (List[str]): List of class labels corresponding to each bounding box.
         masks (Optional[List[np.ndarray]], optional): List of masks corresponding to each bounding box. Defaults to None.
-        rect_th (float, optional): Thickness of the bounding box rectangle. Defaults to None.
+        rect_th (int, optional): Thickness of the bounding box rectangle. Defaults to None.
         text_size (float, optional): Size of the text for class labels. Defaults to None.
-        text_th (float, optional): Thickness of the text for class labels. Defaults to None.
+        text_th (int, optional): Thickness of the text for class labels. Defaults to None.
         color (tuple, optional): Color of the bounding box and text. Defaults to None.
         hide_labels (bool, optional): Whether to hide the class labels. Defaults to False.
         output_dir (Optional[str], optional): Output directory to save the visualization. Defaults to None.
@@ -427,7 +430,9 @@ def visualize_prediction(
     text_size = text_size or rect_th / 3
 
     # add masks to image if present
-    if masks is not None:
+    if masks is not None and color is None:
+        logger.error("Cannot add mask, no color tuple given")
+    elif masks is not None and color is not None:
         for mask in masks:
             # deepcopy mask so that original is not altered
             mask = copy.deepcopy(mask)
@@ -443,7 +448,13 @@ def visualize_prediction(
 
         # set color
         if colors is not None:
-            color = colors(class_)
+            mycolor = colors(class_)
+        elif color is not None:
+            mycolor = color
+        else:
+            logger.error("color cannot be defined")
+            continue
+
         # set bbox points
         point1, point2 = [int(box[0]), int(box[1])], [int(box[2]), int(box[3])]
         # visualize boxes
@@ -451,7 +462,7 @@ def visualize_prediction(
             image,
             point1,
             point2,
-            color=color,
+            color=mycolor,
             thickness=rect_th,
         )
 
@@ -464,7 +475,7 @@ def visualize_prediction(
             outside = point1[1] - box_height - 3 >= 0  # label fits outside box
             point2 = point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3
             # add bounding box text
-            cv2.rectangle(image, point1, point2, color, -1, cv2.LINE_AA)  # filled
+            cv2.rectangle(image, point1, point2, color or (0, 0, 0), -1, cv2.LINE_AA)  # filled
             cv2.putText(
                 image,
                 label,
@@ -478,7 +489,7 @@ def visualize_prediction(
         # create output folder if not present
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
-        save_path = os.path.join(output_dir, file_name + ".png")
+        save_path = os.path.join(output_dir, (file_name or "unknown") + ".png")
         cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
     elapsed_time = time.time() - elapsed_time
@@ -486,17 +497,17 @@ def visualize_prediction(
 
 
 def visualize_object_predictions(
-    image: np.array,
+    image: np.ndarray,
     object_prediction_list,
-    rect_th: int = None,
-    text_size: float = None,
-    text_th: float = None,
-    color: tuple = None,
+    rect_th: Optional[int] = None,
+    text_size: Optional[float] = None,
+    text_th: Optional[int] = None,
+    color: Optional[tuple] = None,
     hide_labels: bool = False,
     hide_conf: bool = False,
     output_dir: Optional[str] = None,
-    file_name: str = "prediction_visual",
-    export_format: str = "png",
+    file_name: Optional[str] = "prediction_visual",
+    export_format: Optional[str] = "png",
 ):
     """
     Visualizes prediction category names, bounding boxes over the source image
@@ -541,7 +552,7 @@ def visualize_object_predictions(
             if colors is not None:
                 color = colors(object_prediction.category.id)
             # draw mask
-            rgb_mask = apply_color_mask(mask, color)
+            rgb_mask = apply_color_mask(mask, color or (0, 0, 0))
             image = cv2.addWeighted(image, 1, rgb_mask, 0.6, 0)
 
     # add bboxes to image if present
@@ -563,7 +574,7 @@ def visualize_object_predictions(
             image,
             point1,
             point2,
-            color=color,
+            color=color or (0, 0, 0),
             thickness=rect_th,
         )
 
@@ -580,7 +591,7 @@ def visualize_object_predictions(
             outside = point1[1] - box_height - 3 >= 0  # label fits outside box
             point2 = point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3
             # add bounding box text
-            cv2.rectangle(image, point1, point2, color, -1, cv2.LINE_AA)  # filled
+            cv2.rectangle(image, point1, point2, color or (0, 0, 0), -1, cv2.LINE_AA)  # filled
             cv2.putText(
                 image,
                 label,

@@ -2,7 +2,7 @@ import itertools
 import json
 from collections import OrderedDict
 from pathlib import Path
-from typing import List, Union
+from typing import List, Literal, Optional, Union
 
 import fire
 import numpy as np
@@ -57,22 +57,23 @@ def _cocoeval_summarize(
 
 
 def evaluate_core(
-    dataset_path,
-    result_path,
+    dataset_path: str,
+    result_path: str,
+    COCO: type,
+    COCOeval: type,
     metric: str = "bbox",
     classwise: bool = False,
     max_detections: int = 500,
     iou_thrs=None,
     metric_items=None,
-    out_dir: str = None,
+    out_dir: Union[str, Path, None] = None,
     areas: List[int] = [1024, 9216, 10000000000],
-    COCO=None,
-    COCOeval=None,
 ):
     """Evaluation in COCO protocol.
     Args:
         dataset_path (str): COCO dataset json path.
         result_path (str): COCO result json path.
+        COCO, COCOeval: Pass COCO and COCOeval class after safely imported
         metric (str | list[str]): Metrics to be evaluated. Options are
             'bbox', 'segm', 'proposal'.
         classwise (bool): Whether to evaluating the AP for each class.
@@ -281,14 +282,14 @@ def evaluate_core(
                     catName=nm["name"],
                     nameStrLen=max_cat_name_len,
                 )
-                results_per_category.append((f'{metric}_{nm["name"]}_mAP', f"{float(ap):0.3f}"))
-                results_per_category.append((f'{metric}_{nm["name"]}_mAP_s', f"{float(ap_s):0.3f}"))
-                results_per_category.append((f'{metric}_{nm["name"]}_mAP_m', f"{float(ap_m):0.3f}"))
-                results_per_category.append((f'{metric}_{nm["name"]}_mAP_l', f"{float(ap_l):0.3f}"))
-                results_per_category.append((f'{metric}_{nm["name"]}_mAP50', f"{float(ap50):0.3f}"))
-                results_per_category.append((f'{metric}_{nm["name"]}_mAP50_s', f"{float(ap50_s):0.3f}"))
-                results_per_category.append((f'{metric}_{nm["name"]}_mAP50_m', f"{float(ap50_m):0.3f}"))
-                results_per_category.append((f'{metric}_{nm["name"]}_mAP50_l', f"{float(ap50_l):0.3f}"))
+                results_per_category.append((f"{metric}_{nm['name']}_mAP", f"{float(ap):0.3f}"))
+                results_per_category.append((f"{metric}_{nm['name']}_mAP_s", f"{float(ap_s):0.3f}"))
+                results_per_category.append((f"{metric}_{nm['name']}_mAP_m", f"{float(ap_m):0.3f}"))
+                results_per_category.append((f"{metric}_{nm['name']}_mAP_l", f"{float(ap_l):0.3f}"))
+                results_per_category.append((f"{metric}_{nm['name']}_mAP50", f"{float(ap50):0.3f}"))
+                results_per_category.append((f"{metric}_{nm['name']}_mAP50_s", f"{float(ap50_s):0.3f}"))
+                results_per_category.append((f"{metric}_{nm['name']}_mAP50_m", f"{float(ap50_m):0.3f}"))
+                results_per_category.append((f"{metric}_{nm['name']}_mAP50_l", f"{float(ap50_l):0.3f}"))
 
             num_columns = min(6, len(results_per_category) * 2)
             results_flatten = list(itertools.chain(*results_per_category))
@@ -329,11 +330,11 @@ def evaluate_core(
 def evaluate(
     dataset_json_path: str,
     result_json_path: str,
-    out_dir: str = None,
-    type: str = "bbox",
+    out_dir: Optional[str] = None,
+    type: Literal["bbox", "segm"] = "bbox",
     classwise: bool = False,
     max_detections: int = 500,
-    iou_thrs: Union[List[float], float] = None,
+    iou_thrs: Union[List[float], float, None] = None,
     areas: List[int] = [1024, 9216, 10000000000],
     return_dict: bool = False,
 ):
@@ -354,17 +355,17 @@ def evaluate(
         from pycocotools.cocoeval import COCOeval
     except ModuleNotFoundError:
         raise ModuleNotFoundError(
-            'Please run "pip install -U pycocotools" ' "to install pycocotools first for coco evaluation."
+            'Please run "pip install -U pycocotools" to install pycocotools first for coco evaluation.'
         )
 
     # perform coco eval
     result = evaluate_core(
-        dataset_json_path,
-        result_json_path,
-        type,
-        classwise,
-        max_detections,
-        iou_thrs,
+        dataset_path=dataset_json_path,
+        result_path=result_json_path,
+        metric=type,
+        classwise=classwise,
+        max_detections=max_detections,
+        iou_thrs=iou_thrs,
         out_dir=out_dir,
         areas=areas,
         COCO=COCO,

@@ -12,7 +12,7 @@ from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.import_utils import check_requirements
-from sahi.utils.yolov8onnx import non_max_supression, xywh2xyxy
+from sahi.utils.yolov8onnx import non_max_suppression, xywh2xyxy
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ class Yolov8OnnxDetectionModel(DetectionModel):
         boxes = xywh2xyxy(boxes).round().astype(np.int32)
 
         # Perform non-max supressions
-        indices = non_max_supression(boxes, scores, self.iou_threshold)
+        indices = non_max_suppression(boxes, scores, self.iou_threshold)
 
         # Format the results
         prediction_result = []

@@ -14,6 +14,7 @@ IMAGE_SIZE = 320
 
 # note that detectron2 binaries are available only for linux
 
+# TODO: This test is currently not running as torch version is pinned to 1.13
 torch_version = get_package_info("torch", verbose=False)[1]
 if "1.10." in torch_version:
 

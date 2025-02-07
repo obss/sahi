@@ -1,13 +1,13 @@
 import fire
 
-from sahi import __version__ as sahi_version
-from sahi.predict import predict, predict_fiftyone
-from sahi.scripts.coco2fiftyone import main as coco2fiftyone
-from sahi.scripts.coco2yolov5 import main as coco2yolov5
-from sahi.scripts.coco_error_analysis import analyse
-from sahi.scripts.coco_evaluation import evaluate
-from sahi.scripts.slice_coco import slice
-from sahi.utils.import_utils import print_enviroment_info
+from . import __version__ as sahi_version
+from .predict import predict, predict_fiftyone
+from .scripts.coco2fiftyone import main as coco2fiftyone
+from .scripts.coco2yolov5 import main as coco2yolov5
+from .scripts.coco_error_analysis import analyse
+from .scripts.coco_evaluation import evaluate
+from .scripts.slice_coco import slice
+from .utils.import_utils import print_environment_info
 
 coco_app = {
     "evaluate": evaluate,
@@ -22,7 +22,7 @@ sahi_app = {
     "predict-fiftyone": predict_fiftyone,
     "coco": coco_app,
     "version": sahi_version,
-    "env": print_enviroment_info,
+    "env": print_environment_info,
 }
 
 

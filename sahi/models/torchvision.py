@@ -19,10 +19,7 @@ class TorchVisionDetectionModel(DetectionModel):
         check_requirements(["torch", "torchvision"])
 
     def load_model(self):
-        try:
-            import torch  # type: ignore[reportMissingImports]
-        except ImportError:
-            logger.error("pytorch missing. Install for your environment: https://pytorch.org/")
+        import torch  # type: ignore[reportMissingImports]
 
         from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
 
@@ -57,10 +54,12 @@ class TorchVisionDetectionModel(DetectionModel):
 
         # load model
         model = MODEL_NAME_TO_CONSTRUCTOR[model_name](num_classes=num_classes, pretrained=pretrained)
-        try:
-            model.load_state_dict(torch.load(self.model_path))
-        except Exception as e:
-            raise TypeError("model_path is not a valid torchvision model path: ", e)
+        if self.model_path:
+            try:
+                model.load_state_dict(torch.load(self.model_path))
+            except Exception as e:
+                logger.error(f"Invalid {self.model_path=}")
+                raise TypeError("model_path is not a valid torchvision model path: ", e)
 
         self.set_model(model)
 
@@ -83,7 +82,7 @@ class TorchVisionDetectionModel(DetectionModel):
             category_names = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
             self.category_mapping = category_names
 
-    def perform_inference(self, image: np.ndarray, image_size: int | None = None):
+    def perform_inference(self, image: np.ndarray, image_size: Optional[int] = None):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:

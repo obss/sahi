@@ -1,13 +1,17 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
+import sys
 import unittest
 
 import numpy as np
+import pytest
 
+from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_yolox_tiny_model
 
+pytestmark = pytest.mark.skipif(sys.version_info[:2] > (3, 11), reason="Requires Python 3.11 or lower")
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
@@ -182,8 +186,12 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model.perform_inference(image)
 
         # convert predictions to ObjectPrediction list
-        mmdet_detection_model.convert_original_predictions(full_shape=(image.shape[0], image.shape[1]))
+        mmdet_detection_model.convert_original_predictions(full_shape=[image.shape[0], image.shape[1]])
         object_predictions = mmdet_detection_model.object_prediction_list
+        assert isinstance(object_predictions, list)
+        assert isinstance(object_predictions[0], ObjectPrediction)
+        assert isinstance(object_predictions[1], ObjectPrediction)
+        assert isinstance(object_predictions[2], ObjectPrediction)
 
         # compare
         self.assertEqual(len(object_predictions), 3)
@@ -198,6 +206,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         np.testing.assert_almost_equal(object_predictions[2].bbox.to_xywh(), [381, 280, 33, 30], decimal=1)
 
         for object_prediction in object_predictions:
+            assert isinstance(object_prediction, ObjectPrediction)
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
     def test_perform_inference_without_mask_output_with_automodel(self):
@@ -222,6 +231,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         # perform inference
         mmdet_detection_model.perform_inference(image)
         original_predictions = mmdet_detection_model.original_predictions
+        assert original_predictions
 
         pred = original_predictions[0]
         n_preds = len(pred["bboxes"])

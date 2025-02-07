@@ -7,6 +7,7 @@ import logging
 import os
 import random
 import threading
+import warnings
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from multiprocessing import Pool
@@ -316,7 +317,8 @@ class CocoAnnotation:
         }
 
     def serialize(self):
-        print(".serialize() is deprectaed, use .json instead")
+        warnings.warn("Use json property instead of serialize method", DeprecationWarning, stacklevel=2)
+        return self.json
 
     def __repr__(self):
         return f"""CocoAnnotation<
@@ -468,7 +470,7 @@ class CocoPrediction(CocoAnnotation):
         }
 
     def serialize(self):
-        print(".serialize() is deprectaed, use .json instead")
+        warnings.warn("Use json property instead of serialize method", DeprecationWarning, stacklevel=2)
 
     def __repr__(self):
         return f"""CocoPrediction<
@@ -1124,7 +1126,7 @@ class Coco:
                 # select annotations of the image
                 annotation_list = image_id_to_annotation_list[image_id]
                 # TODO: coco_annotation_dict is of type CocoAnnotation according to how image_id_to_annotation_list
-                # was created. Either image_id_to_annotation_list is not defined corretly or the following
+                # was created. Either image_id_to_annotation_list is not defined correctly or the following
                 # loop is wrong as it expects a dict.
                 for coco_annotation_dict in annotation_list:
                     # apply category remapping if remapping_dict is provided
@@ -1302,7 +1304,14 @@ class Coco:
             "val_coco": val_coco,
         }
 
-    def export_as_yolov5(self, output_dir, train_split_rate=1, numpy_seed=0, mp=False, disable_symlink=False):
+    def export_as_yolov5(
+        self,
+        output_dir: Union[str, Path],
+        train_split_rate: float = 1.0,
+        numpy_seed: int = 0,
+        mp: bool = False,
+        disable_symlink: bool = False,
+    ):
         """
         Exports current COCO dataset in ultralytics/yolov5 format.
         Creates train val folders with image symlinks and txt files and a data yaml file.
@@ -2151,7 +2160,7 @@ class DatasetClassCounts:
     total_images: int
 
     def frequencies(self):
-        """calculates the frequenct of images that contain each category"""
+        """calculates the frequency of images that contain each category"""
         return {cid: count / self.total_images for cid, count in self.counts.items()}
 
     def __add__(self, o):

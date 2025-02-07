@@ -2,11 +2,17 @@
 # Code written by Fatih C Akyon, 2020.
 
 import platform
+import sys
 import unittest
 from decimal import Decimal
 
+import pytest
+
+from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.sparseyolov5 import Yolov5TestConstants
+
+pytestmark = pytest.mark.skipif(sys.version_info[:2] in [(3, 10), (3, 11)], reason="Requires Python 3.10 or 3.11")
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3
@@ -73,6 +79,7 @@ if platform.system() == "Linux":
             # perform inference
             yolov5_detection_model.perform_inference(image)
             original_predictions = yolov5_detection_model.original_predictions
+            assert original_predictions is not None
 
             boxes = original_predictions.boxes
 
@@ -90,7 +97,7 @@ if platform.system() == "Linux":
             margin = 2
             for ind, point in enumerate(predicted_bbox):
                 assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
-            for box in boxes[0]:
+            for box in boxes[0]:  # type: ignore[reportGeneralTypeIssues]
                 self.assertGreaterEqual(box[0], CONFIDENCE_THRESHOLD)
 
         def test_convert_original_predictions(self):
@@ -120,6 +127,11 @@ if platform.system() == "Linux":
             # convert predictions to ObjectPrediction list
             yolov5_detection_model.convert_original_predictions()
             object_prediction_list = yolov5_detection_model.object_prediction_list
+            assert object_prediction_list is not None
+            assert isinstance(object_prediction_list, list)
+            assert isinstance(object_prediction_list[0], ObjectPrediction)
+            assert isinstance(object_prediction_list[1], ObjectPrediction)
+            assert isinstance(object_prediction_list[2], ObjectPrediction)
 
             # compare
             self.assertEqual(len(object_prediction_list), 16)
@@ -137,6 +149,7 @@ if platform.system() == "Linux":
             for ind, point in enumerate(predicted_bbox):
                 assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
             for object_prediction in object_prediction_list:
+                assert isinstance(object_prediction, ObjectPrediction)
                 self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
 

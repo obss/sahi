@@ -1,13 +1,16 @@
 # OBSS SAHI Tool
 # Code written by Karl-Joan Alesma, 2023
 
+import sys
 import unittest
 
 import cv2
 import numpy as np
+import pytest
 
 from sahi.utils.yolov8onnx import Yolov8ONNXTestConstants, download_yolov8n_onnx_model
 
+pytestmark = pytest.mark.skipif(sys.version_info[:2] < (3, 10), reason="Requires Python 3.10 or up")
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3
 IOU_THRESHOLD = 0.7

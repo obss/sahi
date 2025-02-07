@@ -72,7 +72,7 @@ def main(
         # Show samples with most false positives
         session.view = eval_view.sort_by(f"{first_coco_result_name}_eval_fp", reverse=True)
 
-        print("SAHI has successfully launched a Fiftyone app " f"at http://localhost:{fo.config.default_app_port}")
+        print(f"SAHI has successfully launched a Fiftyone app at http://localhost:{fo.config.default_app_port}")
     while 1:
         time.sleep(3)
 
