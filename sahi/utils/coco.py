@@ -1266,7 +1266,8 @@ class Coco:
         Args:
             train_split_rate: float
             numpy_seed: int
-                To fix the numpy seed.
+                random seed. Actually, this doesn't use numpy, but the random package
+                from the standard library, but it is called numpy for compatibility.
 
         Returns:
             result : dict
@@ -1275,12 +1276,10 @@ class Coco:
                     "val_coco": "",
                 }
         """
-        # fix numpy numpy seed
-        np.random.seed(numpy_seed)
-
         # divide images
         num_images = len(self.images)
         shuffled_images = copy.deepcopy(self.images)
+        random.seed(numpy_seed)
         random.shuffle(shuffled_images)
         num_train = int(num_images * train_split_rate)
         train_images = shuffled_images[:num_train]

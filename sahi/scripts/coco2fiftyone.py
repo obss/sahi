@@ -48,7 +48,7 @@ def main(
             add_coco_labels(dataset, result_name, coco_result, coco_id_field="gt_coco_id")
 
     # visualize results
-    session = fo.launch_app()
+    session = fo.launch_app()  # type: ignore[reportArgumentType]
     session.dataset = dataset
 
     # order by false positives if any coco result is given

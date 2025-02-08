@@ -6,7 +6,7 @@ import logging
 import os
 import random
 import time
-from typing import Any, Generator, List, Optional, Tuple, Union
+from typing import Generator, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
@@ -209,7 +209,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
         # read image if str image path is provided
         try:
             image_pil = Image.open(
-                requests.get(image, stream=True).raw if str(image).startswith("http") else image
+                requests.get(image, stream=True).raw if str(image).startswith("http") else image  # type: ignore
             ).convert("RGB")
             if exif_fix:
                 image_pil = exif_transpose(image_pil)
@@ -233,7 +233,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
             image = image[:, :, ::-1]
         image_pil = Image.fromarray(image)
     else:
-        raise TypeError("read image with 'pillow' using 'Image.open()'")
+        raise TypeError("read image with 'pillow' using 'Image.open()'")  # type: ignore[reportUnreachable]
     return image_pil
 
 
@@ -373,7 +373,7 @@ def get_video_reader(
         w = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         size = (w, h)
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore[reportAttributeAccessIssue]
         video_writer = cv2.VideoWriter(os.path.join(save_dir, video_file_name), fourcc, fps, size)
     else:
         video_writer = None
@@ -607,7 +607,7 @@ def visualize_object_predictions(
         # export image with predictions
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
-        save_path = str(Path(output_dir) / (file_name + "." + export_format))
+        save_path = str(Path(output_dir) / ((file_name or "") + "." + (export_format or "")))
         cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
     elapsed_time = time.time() - elapsed_time
@@ -626,7 +626,7 @@ def get_coco_segmentation_from_bool_mask(bool_mask):
     # Generate polygons from mask
     mask = np.squeeze(bool_mask)
     mask = mask.astype(np.uint8)
-    mask = cv2.copyMakeBorder(mask, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=0)
+    mask = cv2.copyMakeBorder(mask, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=(0, 0, 0))
     polygons = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE, offset=(-1, -1))
     polygons = polygons[0] if len(polygons) == 2 else polygons[1]
     # Convert polygon to coco segmentation
@@ -654,7 +654,7 @@ def get_bool_mask_from_coco_segmentation(coco_segmentation: List[List[float]], w
     size = [height, width]
     points = [np.array(point).reshape(-1, 2).round().astype(int) for point in coco_segmentation]
     bool_mask = np.zeros(size)
-    bool_mask = cv2.fillPoly(bool_mask, points, 1)
+    bool_mask = cv2.fillPoly(bool_mask, points, (1.0,))
     bool_mask.astype(bool)
     return bool_mask
 
@@ -746,8 +746,8 @@ def ipython_display(image: np.ndarray):
 
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     _, ret = cv2.imencode(".png", image)
-    i = IPython.display.Image(data=ret)
-    IPython.display.display(i)
+    i = IPython.display.Image(data=ret)  # type: ignore
+    IPython.display.display(i)  # type: ignore
 
 
 def exif_transpose(image: Image.Image) -> Image.Image:
@@ -765,13 +765,13 @@ def exif_transpose(image: Image.Image) -> Image.Image:
     orientation = exif.get(0x0112, 1)  # default 1
     if orientation > 1:
         method = {
-            2: Image.FLIP_LEFT_RIGHT,
-            3: Image.ROTATE_180,
-            4: Image.FLIP_TOP_BOTTOM,
-            5: Image.TRANSPOSE,
-            6: Image.ROTATE_270,
-            7: Image.TRANSVERSE,
-            8: Image.ROTATE_90,
+            2: Image.Transpose.FLIP_LEFT_RIGHT,
+            3: Image.Transpose.ROTATE_180,
+            4: Image.Transpose.FLIP_TOP_BOTTOM,
+            5: Image.Transpose.TRANSPOSE,
+            6: Image.Transpose.ROTATE_270,
+            7: Image.Transpose.TRANSVERSE,
+            8: Image.Transpose.ROTATE_90,
         }.get(orientation)
         if method is not None:
             image = image.transpose(method)

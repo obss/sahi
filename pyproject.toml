@@ -38,38 +38,42 @@ homepage = "https://github.com/obss/sahi"
 [project.scripts]
 sahi = "sahi.cli:app"
 
-[project.optional-dependencies]
-ci = [
-  # "torch>=1.13.1;python_version<'3.12'",
-  "torch>=1.13.0;python_version<='3.11'",
-  "torch==2.3.0;python_version>'3.11'",
-  "torchvision>=0.14.1",
-  "mmengine==0.7.3;python_version<'3.12'",
-  "mmcv==2.0.0;python_version<'3.12'",
-  "mmdet==3.0.0;python_version<'3.12'",
-  # "yolov5>=7.0.13",
-  "transformers>=4.35.0",
-  "pycocotools>=2.0.7",
-  "ultralytics>=8.3.50",
-  "scikit-image",
-  "fiftyone",
-  "onnx;python_version>='3.10'",
-  "onnxruntime;python_version>='3.10'",
-  # deepsparse depends on onnxruntime and is only available with 3.10 and 3.11
-  "deepsparse;python_version>='3.10' and python_version<'3.12'",
-]
-
 [tool.uv]
 find-links = [
   "https://download.openmmlab.com/mmcv/dist/cpu/torch1.13.0/index.html",
 ]
+default-groups = ["dev", "ci"]
 
-dev-dependencies = [
+[dependency-groups]
+dev = [
   "pytest",
   "ruff",
   "pre-commit>=2.0",
   "jupyterlab==3.0.14",
   "matplotlib-stubs>=0.2.0",
+  "pipdeptree>=2.24.0",
+]
+ci = [
+  # pytorch should be present for all python versions
+  "torch==1.13.1;python_version<'3.11' and sys_platform=='linux' and platform_machine=='x86_64'",
+  "torch>1.13.1;python_version>='3.11' and sys_platform=='linux' and platform_machine=='x86_64'",
+  "torchvision>=0.14.1;sys_platform=='linux' and platform_machine=='x86_64'",
+  # mmcv is available for python < 3.11
+  "mmengine==0.7.3;python_version<'3.11'",
+  "mmcv==2.0.0;python_version<'3.11'",
+  "mmdet==3.0.0;python_version<'3.11'",
+  # onnx is available for python >=3.10
+  "onnx;python_version>='3.10'",
+  "onnxruntime;python_version>='3.10'",
+  # deepsparse depends on onnxruntime and is only available with 3.10 and 3.11
+  "deepsparse;python_version>='3.10' and python_version<'3.12'",
+  # These are available everywhere
+  "yolov5>=7.0.13;sys_platform=='linux' and platform_machine=='x86_64'",
+  "transformers>=4.35.0",
+  "pycocotools>=2.0.7",
+  "ultralytics>=8.3.50;sys_platform=='linux' and platform_machine=='x86_64'",
+  "scikit-image",
+  "fiftyone",
 ]
 
 [[tool.uv.index]]
@@ -78,8 +82,8 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [tool.uv.sources]
-torch = { index = "pytorch-cpu", extra = "ci" }
-torchvision = { index = "pytorch-cpu", extra = "ci" }
+torch = { index = "pytorch-cpu", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" }
+torchvision = { index = "pytorch-cpu", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" }
 
 [build-system]
 requires = ["hatchling"]
@@ -93,3 +97,6 @@ exclude = ["**/__init__.py", ".git", "__pycache__", "*.ipynb"]
 minversion = "6.0"
 addopts = ["--import-mode=importlib", "--no-header"]
 pythonpath = ["."]
+
+[tool.typos.default]
+extend-ignore-identifiers-re = ["fo"]

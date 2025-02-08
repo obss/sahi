@@ -2,7 +2,7 @@
 # Code written by Fatih C Akyon, 2020.
 
 import logging
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -12,9 +12,6 @@ from sahi.utils.torch import select_device as select_torch_device
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar("T")
-ListOrListofList = Union[List[List[T]], List[T]]
-
 
 class DetectionModel:
     def __init__(
@@ -22,7 +19,7 @@ class DetectionModel:
         model_path: Optional[str] = None,
         model: Optional[Any] = None,
         config_path: Optional[str] = None,
-        device: Optional[str] = "cpu",
+        device: str = "cpu",
         mask_threshold: float = 0.5,
         confidence_threshold: float = 0.3,
         category_mapping: Optional[Dict] = None,
@@ -37,8 +34,7 @@ class DetectionModel:
                 Path for the instance segmentation model weight
             config_path: str
                 Path for the mmdetection instance segmentation model config file
-            device: str
-                Torch device, "cpu" or "cuda"
+            device: Torch device, "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.
             mask_threshold: float
                 Value to threshold mask pixels, should be between 0 and 1
             confidence_threshold: float
@@ -55,7 +51,6 @@ class DetectionModel:
         self.model_path = model_path
         self.config_path = config_path
         self.model = None
-        self.device: Optional[str] = device
         self.mask_threshold = mask_threshold
         self.confidence_threshold = confidence_threshold
         self.category_mapping = category_mapping
@@ -63,7 +58,6 @@ class DetectionModel:
         self.image_size = image_size
         self._original_predictions = None
         self._object_prediction_list_per_image = None
-
         self.set_device()
 
         # automatically load model if load_at_init is True
@@ -96,13 +90,14 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
-    def set_device(self):
+    def set_device(self, device: str = "cpu"):
+        """Sets the device pytorch should use for the model
+
+        Args:
+            device: Torch device, "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.
         """
-        Sets the device for the model.
-        """
-        if is_available("torch") and self.device is not None:
-            # TODO: This reassigns self.device not to be a string any more, but the
-            self.device = select_torch_device(self.device)
+        if is_available("torch"):
+            self.device = select_torch_device(device)
         else:
             raise NotImplementedError(f"Could not set device {self.device}")
 
@@ -128,8 +123,8 @@ class DetectionModel:
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: Optional[ListOrListofList] = [[0, 0]],
-        full_shape_list: Optional[ListOrListofList] = None,
+        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
         This function should be implemented in a way that self._original_predictions should
@@ -166,8 +161,8 @@ class DetectionModel:
 
     def convert_original_predictions(
         self,
-        shift_amount: Optional[ListOrListofList] = [0, 0],
-        full_shape: Optional[ListOrListofList] = None,
+        shift_amount: Optional[List[List[int]]] = [[0, 0]],
+        full_shape: Optional[List[List[int]]] = None,
     ):
         """
         Converts original predictions of the detection model to a list of
@@ -186,7 +181,7 @@ class DetectionModel:
             self._apply_category_remapping()
 
     @property
-    def object_prediction_list(self) -> ListOrListofList[ObjectPrediction]:
+    def object_prediction_list(self) -> List[List[ObjectPrediction]]:
         if self._object_prediction_list_per_image is None:
             return []
         if len(self._object_prediction_list_per_image) == 0:

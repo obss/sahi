@@ -4,6 +4,7 @@
 import unittest
 
 from sahi.models.detectron2 import Detectron2DetectionModel
+from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.detectron2 import Detectron2TestConstants
 from sahi.utils.import_utils import get_package_info
@@ -48,13 +49,14 @@ if "1.10." in torch_version:
             # perform inference
             detectron2_detection_model.perform_inference(image)
             original_predictions = detectron2_detection_model.original_predictions
+            assert original_predictions
 
             boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
             scores = original_predictions["instances"].scores.cpu().numpy()
             category_ids = original_predictions["instances"].pred_classes.cpu().numpy()
 
             # find box of first car detection with conf greater than 0.5
-            for ind, box in enumerate(boxes):
+            for ind, _ in enumerate(boxes):
                 if category_ids[ind] == 2 and scores[ind] > 0.5:
                     break
 
@@ -83,6 +85,10 @@ if "1.10." in torch_version:
             # convert predictions to ObjectPrediction list
             detectron2_detection_model.convert_original_predictions()
             object_prediction_list = detectron2_detection_model.object_prediction_list
+            assert object_prediction_list
+            assert isinstance(object_prediction_list[0], ObjectPrediction)
+            assert isinstance(object_prediction_list[5], ObjectPrediction)
+            assert isinstance(object_prediction_list[2], ObjectPrediction)
 
             # compare
             self.assertEqual(len(object_prediction_list), 16)
@@ -121,8 +127,11 @@ if "1.10." in torch_version:
             # perform inference
             detectron2_detection_model.perform_inference(image)
             # convert predictions to ObjectPrediction list
-            detectron2_detection_model.convert_original_predictions(full_shape=(image.shape[0], image.shape[1]))
+            detectron2_detection_model.convert_original_predictions(full_shape=[image.shape[0], image.shape[1]])
             object_prediction_list = detectron2_detection_model.object_prediction_list
+            assert object_prediction_list
+            assert isinstance(object_prediction_list[0], ObjectPrediction)
+            assert isinstance(object_prediction_list[5], ObjectPrediction)
 
             # compare
             self.assertEqual(len(object_prediction_list), 13)

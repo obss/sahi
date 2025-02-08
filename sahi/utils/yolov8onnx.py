@@ -6,7 +6,7 @@ import numpy as np
 from sahi.utils.ultralytics import download_yolov8n_model
 
 
-# TODO: This class has no purpose
+# TODO: This class has no purpose, replace by just the constant
 class Yolov8ONNXTestConstants:
     YOLOV8N_ONNX_MODEL_PATH = "tests/data/models/yolov8/yolov8n.onnx"
 

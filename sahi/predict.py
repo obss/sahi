@@ -7,7 +7,6 @@ import time
 from typing import Generator, List, Optional, Union
 
 from PIL import Image
-from transformers.pipelines import image_to_image
 
 from sahi.utils.import_utils import is_available
 
@@ -737,7 +736,7 @@ def predict_fiftyone(
     model_path: Optional[str] = None,
     model_config_path: Optional[str] = None,
     model_confidence_threshold: float = 0.25,
-    model_device: Optional[str] = None,
+    model_device: str = "cpu",
     model_category_mapping: Optional[dict] = None,
     model_category_remapping: Optional[dict] = None,
     dataset_json_path: str = "",
@@ -901,7 +900,7 @@ def predict_fiftyone(
         )
 
     # visualize results
-    session = fo.launch_app()
+    session = fo.launch_app()  # type: ignore[reportArgumentType]
     session.dataset = dataset
     # Evaluate the predictions
     results = dataset.evaluate_detections(

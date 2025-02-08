@@ -12,7 +12,7 @@ from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.sparseyolov5 import Yolov5TestConstants
 
-pytestmark = pytest.mark.skipif(sys.version_info[:2] in [(3, 10), (3, 11)], reason="Requires Python 3.10 or 3.11")
+pytestmark = pytest.mark.skipif(sys.version_info[:2] not in [(3, 10), (3, 11)], reason="Requires Python 3.10 or 3.11")
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3

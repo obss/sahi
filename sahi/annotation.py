@@ -2,6 +2,7 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
+import logging
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -14,12 +15,15 @@ from sahi.utils.cv import (
 )
 from sahi.utils.shapely import ShapelyAnnotation
 
+logger = logging.getLogger(__name__)
+
 
 class BoundingBox:
     """
     Bounding box of the annotation.
     """
 
+    # TODO: Better use tuple not lists for data that has a defined length and should no mutate a lot
     def __init__(self, box: List[float], shift_amount: List[int] = [0, 0]):
         """
         Args:
@@ -176,20 +180,13 @@ class Mask:
                 To shift the box and mask predictions from sliced image to full
                 sized image, should be in the form of [shift_x, shift_y]
         """
-        # confirm full_shape is given
         if full_shape is None:
-            raise ValueError("full_shape must be provided")
+            raise ValueError("full_shape must be provided")  # type: ignore[reportUnreachable]
 
         self.shift_x = shift_amount[0]
         self.shift_y = shift_amount[1]
-
-        if full_shape:
-            self.full_shape_height = full_shape[0]
-            self.full_shape_width = full_shape[1]
-        else:
-            self.full_shape_height = None
-            self.full_shape_width = None
-
+        self.full_shape_height = full_shape[0]
+        self.full_shape_width = full_shape[1]
         self.segmentation = segmentation
 
     @classmethod
@@ -216,20 +213,20 @@ class Mask:
         )
 
     @property
-    def bool_mask(self):
+    def bool_mask(self) -> np.ndarray:
         return get_bool_mask_from_coco_segmentation(
             self.segmentation, width=self.full_shape[1], height=self.full_shape[0]
         )
 
     @property
-    def shape(self):
+    def shape(self) -> List[int]:
         """
         Returns mask shape as [height, width]
         """
         return [self.bool_mask.shape[0], self.bool_mask.shape[1]]
 
     @property
-    def full_shape(self):
+    def full_shape(self) -> List[int]:
         """
         Returns full mask shape after shifting as [height, width]
         """
@@ -242,7 +239,7 @@ class Mask:
         """
         return [self.shift_x, self.shift_y]
 
-    def get_shifted_mask(self):
+    def get_shifted_mask(self) -> "Mask":
         # Confirm full_shape is specified
         if (self.full_shape_height is None) or (self.full_shape_width is None):
             raise ValueError("full_shape is None")
@@ -382,7 +379,7 @@ class ObjectAnnotation:
         cls,
         annotation_dict: Dict,
         full_shape: List[int],
-        category_name: str = None,
+        category_name: Optional[str] = None,
         shift_amount: Optional[List[int]] = [0, 0],
     ):
         """

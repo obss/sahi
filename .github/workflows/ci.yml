@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-        # python-version: ["3.12"]
+        # python-version: ["3.10"]
     steps:
       - uses: actions/checkout@v4
       # opencv is needed, because otherwise the following error occurs
@@ -32,6 +32,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
+      - name: Restore Ubuntu cache
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: ${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml')}}
+      - name: Test with python ${{ matrix.python-version }}
+        run: uv run pytest
       - name: Cache apt packages
         uses: actions/cache@v4
         with:
@@ -41,32 +48,25 @@ jobs:
       - name: Install libgl
         # run: apt-get update && apt-get install -y python3-opencv
         run: apt-get update && apt-get install -y libgl1
-      - name: Restore Ubuntu cache
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: ${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml')}}
-      - name: Test with python ${{ matrix.python-version }}
-        run: |
-          uv sync --extra ci -U 
-          # uv run --extra ci pytest
-          uv run --extra ci --frozen python --version
       - name: Test SAHI CLI
         run: |
-          # help
-          uv run sahi --help
-          # predict mmdet
-          uv run sahi predict --source tests/data/ --novisual --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
-          uv run sahi predict --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
-          uv run sahi predict --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
-          # predict yolov5
-          uv run sahi predict --no_sliced_prediction --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
-          uv run sahi predict --model_type yolov5 --source tests/data/ --novisual --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
-          uv run sahi predict --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
-          uv run sahi predict --model_type yolov5 --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
+          source .venv/bin/activate
+          set -e
+          sahi predict --no_sliced_prediction --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
+          sahi predict --model_type yolov5 --source tests/data/ --novisual --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
+          sahi predict --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
+          sahi predict --model_type yolov5 --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
           # coco yolov5
-          uv run sahi coco yolov5 --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json --train_split 0.9
+          sahi coco yolov5 --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json --train_split 0.9
           # coco evaluate
-          uv run sahi coco evaluate --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json
+          sahi coco evaluate --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json
           # coco analyse
-          uv run sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
+          sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
+      - name: Test SAHI CLI with MMCV
+        if: matrix.python-version == '3.8' or matrix.python-version == '3.9' or matrix.python-version == '3.10'
+        run: |
+          source .venv/bin/activate
+          set -e
+          sahi predict --source tests/data/ --novisual --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
+          sahi predict --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
+          sahi predict --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320

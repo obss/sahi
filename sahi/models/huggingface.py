@@ -22,7 +22,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         model: Optional[Any] = None,
         processor: Optional[Any] = None,
         config_path: Optional[str] = None,
-        device: Optional[str] = None,
+        device: str = "cpu",
         mask_threshold: float = 0.5,
         confidence_threshold: float = 0.3,
         category_mapping: Optional[Dict] = None,
@@ -99,7 +99,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         import torch
 
         # Confirm model is loaded
-        if self.model is None:
+        if self.model is None or self.processor is None:
             raise RuntimeError("Model is not loaded, load it by calling .load_model()")
 
         with torch.no_grad():
@@ -156,7 +156,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         """
         original_predictions = self._original_predictions
 
-        # compatilibty for sahi v0.8.15
+        # compatibility for sahi v0.8.15
         shift_amount_list = fix_shift_amount_list(shift_amount_list)
         full_shape_list = fix_full_shape_list(full_shape_list)
 
