@@ -17,37 +17,30 @@ on:
   workflow_dispatch: # allow running sync via github ui button
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-        # python-version: ["3.10"]
     steps:
       - uses: actions/checkout@v4
-      # opencv is needed, because otherwise the following error occurs
-      # Docs for the uv github action: https://github.com/astral-sh/setup-uv
-      - name: Install the latest version of uv and set the python version
+      - name: Setup uv python package manager
         uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
-      - name: Restore Ubuntu cache
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: ${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml')}}
-      - name: Test with python ${{ matrix.python-version }}
-        run: uv run pytest
+          prune-cache: false
+      # For python 3.8 and 3.9, it does no suffice to install opencv-python-headless
+      # https://itsmycode.com/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directory/
       - name: Cache apt packages
         uses: actions/cache@v4
         with:
           path: /var/cache/apt
           key: apt-cache
-      # https://itsmycode.com/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directory/
       - name: Install libgl
-        # run: apt-get update && apt-get install -y python3-opencv
         run: apt-get update && apt-get install -y libgl1
+      - name: Test with python ${{ matrix.python-version }}
+        run: uv run pytest
       - name: Test SAHI CLI
         run: |
           source .venv/bin/activate
@@ -63,7 +56,7 @@ jobs:
           # coco analyse
           sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
       - name: Test SAHI CLI with MMCV
-        if: matrix.python-version == '3.8' or matrix.python-version == '3.9' or matrix.python-version == '3.10'
+        if: matrix.python-version == '3.8' || matrix.python-version == '3.9' || matrix.python-version == '3.10'
         run: |
           source .venv/bin/activate
           set -e
