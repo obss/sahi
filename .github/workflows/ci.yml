@@ -32,13 +32,17 @@ jobs:
           prune-cache: false
       # For python 3.8 and 3.9, it does no suffice to install opencv-python-headless
       # https://itsmycode.com/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directory/
-      - name: Cache apt packages
-        uses: actions/cache@v4
+      - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          path: /var/cache/apt
-          key: apt-cache
-      - name: Install libgl
-        run: apt-get update && apt-get install -y libgl1
+          packages: libgl1
+          version: 1.0
+      # - name: Cache apt packages
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: /var/cache/apt
+      #     key: apt-cache
+      # - name: Install libgl
+      #   run: apt-get update && apt-get install -y libgl1
       - name: Test with python ${{ matrix.python-version }}
         run: uv run pytest
       - name: Test SAHI CLI
