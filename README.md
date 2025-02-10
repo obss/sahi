@@ -195,9 +195,6 @@ Find detailed info at [Interactive Result Visualization and Inspection](https://
 
 Find detailed info on COCO utilities (yolov5 conversion, slicing, subsampling, filtering, merging, splitting) at [coco.md](docs/coco.md).
 
-<!-- TODO: The 'mot' link is missing -->
-<!-- Find detailed info on MOT utilities (ground truth dataset creation, exporting tracker metrics in mot challenge format) at [mot.md](docs/mot.md). -->
-
 ## <div align="center">Citation</div>
 
 If you use this package in your work, please cite it as:

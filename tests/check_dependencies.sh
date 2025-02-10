@@ -19,7 +19,6 @@ COMMANDS=(
   "uv run python -c 'from mmdet.apis.det_inferencer import DetInferencer'"
   "uv run python -c 'import torch'"
   "uv run python -c 'import ultralytics'"
-  "uv run python -c 'import onnx'"
   "uv run python -c 'import deepsparse'"
   "tests/check_commandline.sh"
   # "uv run pytest -x"
@@ -30,8 +29,7 @@ CONTEXTS=(
   "mmdet/mmcv with Python < 3.11"
   "torch, should work for all python versions"
   "ultralytics, should work for all python versions"
-  "onnx, available for Python >= 3.10"
-  "deepsparse, depends on onnxruntime, for Python 3.10-3.11"
+  "deepsparse, depends on onnxruntime, for Python <3.12"
   "command line"
   # "pytest"
 )

@@ -1,13 +1,13 @@
 [project]
 name = "sahi"
-version = "0.11.20"
+version = "0.11.21"
 readme = "README.md"
 description = "A vision library for performing sliced inference on large images/small objects"
 requires-python = ">=3.8"
 license = "MIT"
 license-files = ["./LICENSE"]
 dependencies = [
-  "opencv-python",
+  "opencv-python<=4.10.0.84",
   "shapely>=2.0.0",
   "tqdm>=4.48.2",
   "pillow>=8.2.0",
@@ -55,23 +55,21 @@ dev = [
 ]
 ci = [
   # pytorch should be present for all python versions
-  "torch==1.13.1;python_version<'3.11' and sys_platform=='linux' and platform_machine=='x86_64'",
-  "torch>1.13.1;python_version>='3.11' and sys_platform=='linux' and platform_machine=='x86_64'",
-  "torchvision>=0.14.1;sys_platform=='linux' and platform_machine=='x86_64'",
+  "torch==1.13.1;python_version<'3.11'",
+  "torch>1.13.1;python_version>='3.11'",
+  "torchvision>=0.14.1",
   # mmcv is available for python < 3.11
   "mmengine==0.7.3;python_version<'3.11'",
   "mmcv==2.0.0;python_version<'3.11'",
   "mmdet==3.0.0;python_version<'3.11'",
-  # onnx is available for python >=3.10
-  "onnx;python_version>='3.10'",
-  "onnxruntime;python_version>='3.10'",
-  # deepsparse depends on onnxruntime and is only available with 3.10 and 3.11
-  "deepsparse;python_version>='3.10' and python_version<'3.12'",
-  # These are available everywhere
-  "yolov5>=7.0.13;sys_platform=='linux' and platform_machine=='x86_64'",
+  # deepsparse is only available for python<3.12
+  "onnxruntime<1.20",
+  "deepsparse;python_version<'3.12'",
+  # These are available for all 
+  "yolov5>=7.0.13",
   "transformers>=4.35.0",
   "pycocotools>=2.0.7",
-  "ultralytics>=8.3.50;sys_platform=='linux' and platform_machine=='x86_64'",
+  "ultralytics>=8.3.50",
   "scikit-image",
   "fiftyone",
 ]
@@ -82,8 +80,8 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [tool.uv.sources]
-torch = { index = "pytorch-cpu", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" }
-torchvision = { index = "pytorch-cpu", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" }
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
 
 [build-system]
 requires = ["hatchling"]
