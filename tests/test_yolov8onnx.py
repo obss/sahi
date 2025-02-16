@@ -1,16 +1,13 @@
 # OBSS SAHI Tool
 # Code written by Karl-Joan Alesma, 2023
 
-import sys
 import unittest
 
 import cv2
 import numpy as np
-import pytest
 
 from sahi.utils.yolov8onnx import Yolov8ONNXTestConstants, download_yolov8n_onnx_model
 
-pytestmark = pytest.mark.skipif(sys.version_info[:2] < (3, 10), reason="Requires Python 3.10 or up")
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3
 IOU_THRESHOLD = 0.7
@@ -80,6 +77,7 @@ class TestYolov8OnnxDetectionModel(unittest.TestCase):
         # Perform inference
         yolov8_onnx_detection_model.perform_inference(image)
         original_predictions = yolov8_onnx_detection_model.original_predictions
+        assert original_predictions
 
         boxes = original_predictions[0]
 
@@ -95,7 +93,7 @@ class TestYolov8OnnxDetectionModel(unittest.TestCase):
         for ind, point in enumerate(predicted_bbox[:4]):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
 
-        for box in boxes[0]:
+        for box in boxes[0]:  # pyright: ignore [reportGeneralTypeIssues]
             self.assertGreaterEqual(predicted_bbox[4], CONFIDENCE_THRESHOLD)
 
 

@@ -97,9 +97,7 @@ if sys.version_info >= (3, 7):
                     return_values=True,
                 )
             )
-            # NOTE: Maybe the model changed on huggingface. Previously, this was
-            # [639, 198, 663, 218]
-            desired_bbox = [782, 210, 801, 225]
+            desired_bbox = [639, 198, 663, 218]
             predicted_bbox = list(map(int, box[:4]))
             logger.debug(predicted_bbox)
             margin = 2
@@ -108,7 +106,6 @@ if sys.version_info >= (3, 7):
             for score in scores:
                 self.assertGreaterEqual(score.item(), CONFIDENCE_THRESHOLD)
 
-        @pytest.mark.skip("desired outcomes have changed")
         def test_convert_original_predictions(self):
             from sahi.models.huggingface import HuggingfaceDetectionModel
 
@@ -155,7 +152,6 @@ if sys.version_info >= (3, 7):
                 assert isinstance(object_prediction, ObjectPrediction)
                 self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
-        @pytest.mark.skip("desired outcomes have changed")
         def test_get_prediction_huggingface(self):
             from sahi.models.huggingface import HuggingfaceDetectionModel
             from sahi.predict import get_prediction
@@ -199,7 +195,6 @@ if sys.version_info >= (3, 7):
             self.assertEqual(num_truck, 1)
             self.assertEqual(num_car, 27)
 
-        @pytest.mark.skip("desired outcomes have changed")
         def test_get_prediction_automodel_huggingface(self):
             from sahi.auto_model import AutoDetectionModel
             from sahi.predict import get_prediction
