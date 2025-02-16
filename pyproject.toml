@@ -49,22 +49,24 @@ dev = [
   "pytest",
   "ruff",
   "pre-commit>=2.0",
-  "jupyterlab==3.0.14",
+  "jupyterlab>=3.0.14",
   "matplotlib-stubs>=0.2.0",
-  "pipdeptree>=2.24.0",
 ]
 ci = [
   # pytorch should be present for all python versions
   "torch==1.13.1;python_version<'3.11'",
-  "torch>1.13.1;python_version>='3.11'",
-  "torchvision>=0.14.1",
+  "torch==2.6.0+cpu;python_version>='3.11'",
+  "torchvision>=0.14.1;python_version<'3.11'",
+  "torchvision==0.21.0+cpu;python_version>='3.11'",
   # mmcv is available for python < 3.11
   "mmengine==0.7.3;python_version<'3.11'",
   "mmcv==2.0.0;python_version<'3.11'",
   "mmdet==3.0.0;python_version<'3.11'",
   # deepsparse is only available for python<3.12
-  "onnxruntime<1.20",
   "deepsparse;python_version<'3.12'",
+  "onnxruntime<1.20;python_version<'3.12'",
+  "onnx>1.16;python_version>='3.12'",
+  "onnxruntime;python_version>='3.12'",
   # These are available for all 
   "yolov5>=7.0.13",
   "transformers>=4.35.0",
@@ -80,8 +82,8 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [tool.uv.sources]
-torch = { index = "pytorch-cpu" }
-torchvision = { index = "pytorch-cpu" }
+torch = [{ index = "pytorch-cpu" }]
+torchvision = [{ index = "pytorch-cpu" }]
 
 [build-system]
 requires = ["hatchling"]

@@ -21,7 +21,7 @@ COMMANDS=(
   "uv run python -c 'import ultralytics'"
   "uv run python -c 'import deepsparse'"
   "tests/check_commandline.sh"
-  # "uv run pytest -x"
+  "uv run pytest -x"
 )
 
 # Corresponding to the commands, the expected behaviour
@@ -31,7 +31,7 @@ CONTEXTS=(
   "ultralytics, should work for all python versions"
   "deepsparse, depends on onnxruntime, for Python <3.12"
   "command line"
-  # "pytest"
+  "pytest"
 )
 
 GREEN='\033[0;32m'
@@ -45,15 +45,15 @@ declare -A RESULTS
 for version in "${PYTHON_VERSIONS[@]}"; do
   echo "Checking Python $version..."
   uv python pin "$version"
-  # uv sync --extra ci -U
-  uv sync --extra ci
+  uv sync -U
+  # uv sync
 
   # Loop over each command
   for cmd in "${COMMANDS[@]}"; do
     echo -n "Checking $cmd..."
     # Check if the command runs without errors
     if eval "$cmd"; then
-      RESULTS["$version $cmd"]="${GREEN}✅ import okay${NC}"
+      RESULTS["$version $cmd"]="${GREEN}✅ okay${NC}"
     else
       RESULTS["$version $cmd"]="${RED}❌ not working${NC}"
     fi
