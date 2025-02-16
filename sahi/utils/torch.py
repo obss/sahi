@@ -14,7 +14,7 @@ try:
 
     has_torch_cuda = torch.cuda.is_available()
     try:
-        has_torch_mps: bool = torch.backends.mps.is_available()  # type: ignore[reportAttributeAccessIssue]
+        has_torch_mps: bool = torch.backends.mps.is_available()  # pyright: ignore[reportAttributeAccessIssue]
     except Exception:
         has_torch_mps = False
     has_torch = True

@@ -900,7 +900,7 @@ def predict_fiftyone(
         )
 
     # visualize results
-    session = fo.launch_app()  # type: ignore[reportArgumentType]
+    session = fo.launch_app()  # pyright: ignore[reportArgumentType]
     session.dataset = dataset
     # Evaluate the predictions
     results = dataset.evaluate_detections(

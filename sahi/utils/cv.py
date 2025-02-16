@@ -233,7 +233,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
             image = image[:, :, ::-1]
         image_pil = Image.fromarray(image)
     else:
-        raise TypeError("read image with 'pillow' using 'Image.open()'")  # type: ignore[reportUnreachable]
+        raise TypeError("read image with 'pillow' using 'Image.open()'")  # pyright: ignore[reportUnreachable]
     return image_pil
 
 
@@ -373,7 +373,7 @@ def get_video_reader(
         w = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         size = (w, h)
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore[reportAttributeAccessIssue]
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # pyright: ignore[reportAttributeAccessIssue]
         video_writer = cv2.VideoWriter(os.path.join(save_dir, video_file_name), fourcc, fps, size)
     else:
         video_writer = None

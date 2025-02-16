@@ -97,7 +97,7 @@ if platform.system() == "Linux":
             margin = 2
             for ind, point in enumerate(predicted_bbox):
                 assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
-            for box in boxes[0]:  # type: ignore[reportGeneralTypeIssues]
+            for box in boxes[0]:  # pyright: ignore[reportGeneralTypeIssues]
                 self.assertGreaterEqual(box[0], CONFIDENCE_THRESHOLD)
 
         def test_convert_original_predictions(self):

@@ -181,7 +181,7 @@ class Mask:
                 sized image, should be in the form of [shift_x, shift_y]
         """
         if full_shape is None:
-            raise ValueError("full_shape must be provided")  # type: ignore[reportUnreachable]
+            raise ValueError("full_shape must be provided")  # pyright: ignore[reportUnreachable]
 
         self.shift_x = shift_amount[0]
         self.shift_y = shift_amount[1]

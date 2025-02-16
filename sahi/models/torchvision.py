@@ -19,7 +19,7 @@ class TorchVisionDetectionModel(DetectionModel):
         check_requirements(["torch", "torchvision"])
 
     def load_model(self):
-        import torch  # type: ignore[reportMissingImports]
+        import torch  # pyright: ignore[reportMissingImports]
 
         from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
 
