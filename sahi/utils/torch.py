@@ -3,7 +3,7 @@
 
 
 import os
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 from PIL.Image import Image
@@ -57,13 +57,14 @@ def torch_to_numpy(img: Any) -> np.ndarray:
     return img.transpose((1, 2, 0))
 
 
-def select_device(device: str) -> device:
+def select_device(device: Optional[str] = None) -> device:
     """
     Selects torch device
 
     Args:
-        device: str
-            "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.
+        device: "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.
+                When no device string is given, the order of preference
+                to try is: cuda:0 > mps > cpu
 
     Returns:
         torch.device

@@ -344,7 +344,7 @@ def agg_prediction(result: PredictionResult, thresh):
 
 def predict(
     detection_model: Optional[DetectionModel] = None,
-    model_type: str = "mmdet",
+    model_type: str = "ultralytics",
     model_path: Optional[str] = None,
     model_config_path: Optional[str] = None,
     model_confidence_threshold: float = 0.25,
@@ -501,11 +501,7 @@ def predict(
         image_iterator = [str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images]
         coco_json = []
     elif source and os.path.isdir(source):
-        image_iterator = list_files(
-            directory=source,
-            contains=IMAGE_EXTENSIONS,
-            verbose=verbose,
-        )
+        image_iterator = list_files(directory=source, contains=IMAGE_EXTENSIONS, verbose=verbose)
     elif source and Path(source).suffix in VIDEO_EXTENSIONS:
         source_is_video = True
         read_video_frame, output_video_writer, video_file_name, num_frames = get_video_reader(
@@ -526,7 +522,7 @@ def predict(
             model_path=model_path,
             config_path=model_config_path,
             confidence_threshold=model_confidence_threshold,
-            device=model_device or "cpu",
+            device=model_device,
             category_mapping=model_category_mapping,
             category_remapping=model_category_remapping,
             load_at_init=False,
@@ -546,9 +542,11 @@ def predict(
         tqdm(image_iterator, f"Performing inference on {input_type_str}", total=num_frames)
     ):
         # Source is an image: Iterating over Image objects
-        if isinstance(image_path, Image.Image):
+        if source and source_is_video:
             video_name = Path(source).stem
             relative_filepath = video_name + "_frame_" + str(ind)
+        elif isinstance(image_path, Image.Image):
+            raise RuntimeError("Source is not a video, but image is still an Image object ")
         elif source and os.path.isdir(source):  # preserve source folder structure in export
             relative_filepath = str(Path(image_path)).split(str(Path(source)))[-1]
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
@@ -684,7 +682,9 @@ def predict(
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
             )
-            if not novisual and source_is_video and output_video_writer:  # export video
+            if not novisual and source_is_video:  # export video
+                if output_video_writer is None:
+                    raise RuntimeError("Output video writer could not be created")
                 output_video_writer.write(cv2.cvtColor(result["image"], cv2.COLOR_RGB2BGR))
 
         # render video inference
@@ -736,7 +736,7 @@ def predict_fiftyone(
     model_path: Optional[str] = None,
     model_config_path: Optional[str] = None,
     model_confidence_threshold: float = 0.25,
-    model_device: str = "cpu",
+    model_device: Optional[str] = None,
     model_category_mapping: Optional[dict] = None,
     model_category_remapping: Optional[dict] = None,
     dataset_json_path: str = "",

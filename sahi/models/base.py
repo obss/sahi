@@ -7,8 +7,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 
 from sahi.prediction import ObjectPrediction
-from sahi.utils.import_utils import is_available
-from sahi.utils.torch import select_device as select_torch_device
+from sahi.utils.torch import empty_cuda_cache, has_torch, select_device
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +18,7 @@ class DetectionModel:
         model_path: Optional[str] = None,
         model: Optional[Any] = None,
         config_path: Optional[str] = None,
-        device: str = "cpu",
+        device: Optional[str] = None,
         mask_threshold: float = 0.5,
         confidence_threshold: float = 0.3,
         category_mapping: Optional[Dict] = None,
@@ -90,14 +89,14 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
-    def set_device(self, device: str = "cpu"):
+    def set_device(self, device: Optional[str] = None):
         """Sets the device pytorch should use for the model
 
         Args:
             device: Torch device, "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.
         """
-        if is_available("torch"):
-            self.device = select_torch_device(device)
+        if has_torch:
+            self.device = select_device(device)
         else:
             raise NotImplementedError(f"Could not set device {self.device}")
 
@@ -106,10 +105,7 @@ class DetectionModel:
         Unloads the model from CPU/GPU.
         """
         self.model = None
-        if is_available("torch"):
-            from sahi.utils.torch import empty_cuda_cache
-
-            empty_cuda_cache()
+        empty_cuda_cache()
 
     def perform_inference(self, image: np.ndarray):
         """

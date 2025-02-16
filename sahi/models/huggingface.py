@@ -22,7 +22,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         model: Optional[Any] = None,
         processor: Optional[Any] = None,
         config_path: Optional[str] = None,
-        device: str = "cpu",
+        device: Optional[str] = None,
         mask_threshold: float = 0.5,
         confidence_threshold: float = 0.3,
         category_mapping: Optional[Dict] = None,
