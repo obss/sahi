@@ -14,6 +14,9 @@ on:
       - "**.ipynb"
       - "**.cff"
 
+  schedule:
+    - cron: "0 0 * * *" # Runs at 00:00 UTC every day
+
   workflow_dispatch: # allow running sync via github ui button
 
 jobs:
@@ -40,8 +43,20 @@ jobs:
           key: apt-cache
       - name: Install libgl
         run: sudo apt-get update && sudo apt-get install -y libgl1
+      - name: Setup dependencies
+        run: uv sync
+      - name: Install sahi from PyPI
+        if: github.event_name == 'schedule'
+        run: |
+          rm -fr sahi
+          uv pip install --force-reinstall sahi
+          uv pip show sahi
+          source .venv/bin/activate
+          python -c "import sahi; print(sahi.__version__)"
       - name: Test with python ${{ matrix.python-version }}
-        run: uv run pytest --capture=no
+        run: |
+          source .venv/bin/activate
+          pytest --capture=no
       - name: Test SAHI CLI
         run: |
           source .venv/bin/activate

@@ -6,7 +6,6 @@ import sys
 import unittest
 
 import pybboxes.functional as pbf
-import pytest
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
