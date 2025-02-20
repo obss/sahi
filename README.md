@@ -251,6 +251,8 @@ All you need to do is, create a new .py file under [sahi/models/](https://github
 
 <a align="left" href="https://github.com/kadirnar" target="_blank">Kadir Nar</a>
 
+<a align="left" href="https://github.com/Dronakurl" target="_blank">Dronakurl</a>
+
 <a align="left" href="https://github.com/madenburak" target="_blank">Burak Maden</a>
 
 <a align="left" href="https://github.com/PushpakBhoge" target="_blank">Pushpak Bhoge</a>
