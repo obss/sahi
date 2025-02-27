@@ -6,6 +6,7 @@ import unittest
 
 import numpy as np
 
+from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.torchvision import TorchVisionTestConstants
 
@@ -81,6 +82,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         # perform inference
         torchvision_detection_model.perform_inference(image)
         original_predictions = torchvision_detection_model.original_predictions
+        assert original_predictions is not None
+        assert isinstance(original_predictions, list)
+        assert len(original_predictions) > 0
 
         from sahi.utils.torchvision import COCO_CLASSES
 
@@ -133,6 +137,8 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         # convert predictions to ObjectPrediction list
         torchvision_detection_model.convert_original_predictions()
         object_prediction_list = torchvision_detection_model.object_prediction_list
+        assert isinstance(object_prediction_list, list)
+        assert isinstance(object_prediction_list[0], ObjectPrediction)
 
         # compare
         self.assertEqual(len(object_prediction_list), 7)
@@ -164,6 +170,8 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         # convert predictions to ObjectPrediction list
         torchvision_detection_model.convert_original_predictions()
         object_prediction_list = torchvision_detection_model.object_prediction_list
+        assert isinstance(object_prediction_list, list)
+        assert isinstance(object_prediction_list[0], ObjectPrediction)
 
         # compare
         self.assertEqual(len(object_prediction_list), 7)

@@ -4,7 +4,6 @@
 
 import unittest
 
-import numpy as np
 from PIL import Image
 
 from sahi.slicing import slice_coco, slice_image
@@ -42,7 +41,7 @@ class TestAutoSlicing(unittest.TestCase):
 
         image_cv = read_image(image_path)
         slice_image_result = slice_image(
-            image=image_cv,
+            image=Image.fromarray(image_cv),
             coco_annotation_list=coco.images[0].annotations,
             output_file_name=output_file_name,
             output_dir=output_dir,
@@ -98,6 +97,7 @@ class TestAutoSlicing(unittest.TestCase):
             out_ext=".png",
             verbose=False,
         )
+        assert isinstance(coco_dict, dict)
 
         self.assertEqual(len(coco_dict["images"]), 8)
         self.assertEqual(coco_dict["images"][1]["height"], 512)
@@ -129,6 +129,7 @@ class TestAutoSlicing(unittest.TestCase):
             out_ext=".png",
             verbose=False,
         )
+        assert isinstance(coco_dict, dict)
 
         self.assertEqual(len(coco_dict["images"]), 20)
         self.assertEqual(coco_dict["images"][1]["height"], 512)

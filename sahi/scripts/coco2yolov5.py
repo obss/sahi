@@ -1,3 +1,5 @@
+from typing import Union
+
 import fire
 
 from sahi.utils.coco import Coco
@@ -7,17 +9,17 @@ from sahi.utils.file import Path, increment_path
 def main(
     image_dir: str,
     dataset_json_path: str,
-    train_split: str = 0.9,
+    train_split: Union[int, float] = 0.9,
     project: str = "runs/coco2yolov5",
     name: str = "exp",
-    seed: str = 1,
+    seed: int = 1,
     disable_symlink=False,
 ):
     """
     Args:
         images_dir (str): directory for coco images
         dataset_json_path (str): file path for the coco json file to be converted
-        train_split (str): set the training split ratio
+        train_split (float or int): set the training split ratio
         project (str): save results to project/name
         name (str): save results to project/name"
         seed (int): fix the seed for reproducibility

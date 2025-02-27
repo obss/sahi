@@ -77,6 +77,7 @@ class TestYolov8OnnxDetectionModel(unittest.TestCase):
         # Perform inference
         yolov8_onnx_detection_model.perform_inference(image)
         original_predictions = yolov8_onnx_detection_model.original_predictions
+        assert original_predictions
 
         boxes = original_predictions[0]
 
@@ -92,7 +93,7 @@ class TestYolov8OnnxDetectionModel(unittest.TestCase):
         for ind, point in enumerate(predicted_bbox[:4]):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
 
-        for box in boxes[0]:
+        for box in boxes[0]:  # pyright: ignore [reportGeneralTypeIssues]
             self.assertGreaterEqual(predicted_bbox[4], CONFIDENCE_THRESHOLD)
 
 
