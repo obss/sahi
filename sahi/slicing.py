@@ -4,7 +4,6 @@
 import concurrent.futures
 import logging
 import os
-import time
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
@@ -36,6 +35,7 @@ def get_slice_bboxes(
     auto_slice_resolution: bool = True,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
+    inference_org_image: bool = False
 ) -> List[List[int]]:
     """Slices `image_pil` in crops.
     Corner values of each slice will be generated using the `slice_height`,
@@ -54,6 +54,7 @@ def get_slice_bboxes(
             overlap of 20 pixels). Default 0.2.
         auto_slice_resolution (bool): if not set slice parameters such as slice_height and slice_width,
             it enables automatically calculate these params from image resolution and orientation.
+        inference_org_image (bool): 如果为True, 则在裁剪列表的最后将原图加入
 
     Returns:
         List[List[int]]: List of 4 corner coordinates for each N slices.
@@ -89,7 +90,11 @@ def get_slice_bboxes(
                 slice_bboxes.append([x_min, y_min, x_max, y_max])
             x_min = x_max - x_overlap
         y_min = y_max - y_overlap
-    return slice_bboxes
+
+    if inference_org_image:
+        return slice_bboxes + [[0, 0, image_width, image_height]]
+    else:
+        return slice_bboxes
 
 
 def annotation_inside_slice(annotation: Dict, slice_bbox: List[int]) -> bool:
@@ -237,10 +242,10 @@ class SliceImageResult:
     def __getitem__(self, i):
         def _prepare_ith_dict(i):
             return {
-                "image": self.images[i],
-                "coco_image": self.coco_images[i],
+                "image"         : self.images[i],
+                "coco_image"    : self.coco_images[i],
                 "starting_pixel": self.starting_pixels[i],
-                "filename": self.filenames[i],
+                "filename"      : self.filenames[i],
             }
 
         if isinstance(i, np.ndarray):
@@ -274,6 +279,7 @@ def slice_image(
     min_area_ratio: float = 0.1,
     out_ext: Optional[str] = None,
     verbose: bool = False,
+    inference_org_image: bool = False
 ) -> SliceImageResult:
     """Slice a large image into smaller windows. If output_file_name is given export
     sliced images.
@@ -300,6 +306,7 @@ def slice_image(
             original suffix for lossless image formats and png for lossy formats ('.jpg','.jpeg').
         verbose (bool, optional): Switch to print relevant values to screen.
             Default 'False'.
+        inference_org_image (bool): If True, the original image is used for inference. Default False.
 
     Returns:
         sliced_image_result: SliceImageResult:
@@ -342,6 +349,7 @@ def slice_image(
         slice_width=slice_width,
         overlap_height_ratio=overlap_height_ratio,
         overlap_width_ratio=overlap_width_ratio,
+        inference_org_image=inference_org_image
     )
 
     n_ims = 0
