@@ -35,7 +35,7 @@ def validate_and_exit(expected_out_status=0, **kwargs):
                 click.secho(f"{component} failed.", fg="red")
                 fail_count += 1
 
-        print_console_centered(f"{len(kwargs)-fail_count} success, {fail_count} failure")
+        print_console_centered(f"{len(kwargs) - fail_count} success, {fail_count} failure")
         click.secho("\nTo fix formatting issues:", fg="yellow")
         click.secho("1. Install development dependencies:", fg="cyan")
         click.secho('   pip install -e ."[dev]"', fg="green")

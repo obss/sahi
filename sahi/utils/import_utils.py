@@ -36,7 +36,7 @@ def get_package_info(package_name: str, verbose: bool = True):
     return _is_available, _version
 
 
-def print_enviroment_info():
+def print_environment_info():
     _torch_available, _torch_version = get_package_info("torch")
     _torchvision_available, _torchvision_version = get_package_info("torchvision")
     _tensorflow_available, _tensorflow_version = get_package_info("tensorflow")

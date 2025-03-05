@@ -4,13 +4,16 @@
 import logging
 import os
 import time
-from typing import List, Optional
+from typing import Generator, List, Optional, Union
+
+from PIL import Image
 
 from sahi.utils.import_utils import is_available
 
+# TODO: This does nothing for this module. The issue named here does not exist
 # https://github.com/obss/sahi/issues/526
 if is_available("torch"):
-    import torch
+    import torch  # noqa: F401
 
 from functools import cmp_to_key
 
@@ -143,8 +146,8 @@ def get_prediction(
 def get_sliced_prediction(
     image,
     detection_model=None,
-    slice_height: int = None,
-    slice_width: int = None,
+    slice_height: Optional[int] = None,
+    slice_width: Optional[int] = None,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     perform_standard_pred: bool = True,
@@ -153,10 +156,10 @@ def get_sliced_prediction(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
-    merge_buffer_length: int = None,
+    merge_buffer_length: Optional[int] = None,
     auto_slice_resolution: bool = True,
-    slice_export_prefix: str = None,
-    slice_dir: str = None,
+    slice_export_prefix: Optional[str] = None,
+    slice_dir: Optional[str] = None,
     exclude_classes_by_name: Optional[List[str]] = None,
     exclude_classes_by_id: Optional[List[int]] = None,
 ) -> PredictionResult:
@@ -370,18 +373,18 @@ def agg_prediction(result: PredictionResult, thresh):
 
 
 def predict(
-    detection_model: DetectionModel = None,
-    model_type: str = "mmdet",
-    model_path: str = None,
-    model_config_path: str = None,
+    detection_model: Optional[DetectionModel] = None,
+    model_type: str = "ultralytics",
+    model_path: Optional[str] = None,
+    model_config_path: Optional[str] = None,
     model_confidence_threshold: float = 0.25,
-    model_device: str = None,
-    model_category_mapping: dict = None,
-    model_category_remapping: dict = None,
-    source: str = None,
+    model_device: Optional[str] = None,
+    model_category_mapping: Optional[dict] = None,
+    model_category_remapping: Optional[dict] = None,
+    source: Optional[str] = None,
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
-    image_size: int = None,
+    image_size: Optional[int] = None,
     slice_height: int = 512,
     slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
@@ -395,12 +398,12 @@ def predict(
     frame_skip_interval: int = 0,
     export_pickle: bool = False,
     export_crop: bool = False,
-    dataset_json_path: str = None,
+    dataset_json_path: Optional[str] = None,
     project: str = "runs/predict",
     name: str = "exp",
-    visual_bbox_thickness: int = None,
-    visual_text_size: float = None,
-    visual_text_thickness: int = None,
+    visual_bbox_thickness: Optional[int] = None,
+    visual_text_size: Optional[float] = None,
+    visual_text_thickness: Optional[int] = None,
     visual_hide_labels: bool = False,
     visual_hide_conf: bool = False,
     visual_export_format: str = "png",
@@ -530,24 +533,24 @@ def predict(
     # TODO: rewrite this as iterator class as in https://github.com/ultralytics/yolov5/blob/d059d1da03aee9a3c0059895aa4c7c14b7f25a9e/utils/datasets.py#L178
     source_is_video = False
     num_frames = None
-    if dataset_json_path:
+    image_iterator: Union[list[str], Generator[Image.Image, None, None]]
+    if dataset_json_path and source:
         coco: Coco = Coco.from_coco_dict_or_path(dataset_json_path)
         image_iterator = [str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images]
         coco_json = []
-    elif os.path.isdir(source):
-        image_iterator = list_files(
-            directory=source,
-            contains=IMAGE_EXTENSIONS,
-            verbose=verbose,
-        )
-    elif Path(source).suffix in VIDEO_EXTENSIONS:
+    elif source and os.path.isdir(source):
+        image_iterator = list_files(directory=source, contains=IMAGE_EXTENSIONS, verbose=verbose)
+    elif source and Path(source).suffix in VIDEO_EXTENSIONS:
         source_is_video = True
         read_video_frame, output_video_writer, video_file_name, num_frames = get_video_reader(
-            source, save_dir, frame_skip_interval, not novisual, view_video
+            source, str(save_dir), frame_skip_interval, not novisual, view_video
         )
         image_iterator = read_video_frame
-    else:
+    elif source:
         image_iterator = [source]
+    else:
+        logger.error("No valid input given to predict function")
+        return
 
     # init model instance
     time_start = time.time()
@@ -576,11 +579,13 @@ def predict(
     for ind, image_path in enumerate(
         tqdm(image_iterator, f"Performing inference on {input_type_str}", total=num_frames)
     ):
-        # get filename
-        if source_is_video:
+        # Source is an image: Iterating over Image objects
+        if source and source_is_video:
             video_name = Path(source).stem
             relative_filepath = video_name + "_frame_" + str(ind)
-        elif os.path.isdir(source):  # preserve source folder structure in export
+        elif isinstance(image_path, Image.Image):
+            raise RuntimeError("Source is not a video, but image is still an Image object ")
+        elif source and os.path.isdir(source):  # preserve source folder structure in export
             relative_filepath = str(Path(image_path)).split(str(Path(source)))[-1]
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
         else:  # no process if source is single file
@@ -611,7 +616,8 @@ def predict(
                 exclude_classes_by_id=exclude_classes_by_id,
             )
             object_prediction_list = prediction_result.object_prediction_list
-            durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
+            if prediction_result.durations_in_seconds:
+                durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
         else:
             # get standard prediction
             prediction_result = get_prediction(
@@ -719,6 +725,8 @@ def predict(
                 export_format=visual_export_format,
             )
             if not novisual and source_is_video:  # export video
+                if output_video_writer is None:
+                    raise RuntimeError("Output video writer could not be created")
                 output_video_writer.write(cv2.cvtColor(result["image"], cv2.COLOR_RGB2BGR))
 
         # render video inference
@@ -767,17 +775,17 @@ def predict(
 
 def predict_fiftyone(
     model_type: str = "mmdet",
-    model_path: str = None,
-    model_config_path: str = None,
+    model_path: Optional[str] = None,
+    model_config_path: Optional[str] = None,
     model_confidence_threshold: float = 0.25,
-    model_device: str = None,
-    model_category_mapping: dict = None,
-    model_category_remapping: dict = None,
-    dataset_json_path: str = None,
-    image_dir: str = None,
+    model_device: Optional[str] = None,
+    model_category_mapping: Optional[dict] = None,
+    model_category_remapping: Optional[dict] = None,
+    dataset_json_path: str = "",
+    image_dir: str = "",
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
-    image_size: int = None,
+    image_size: Optional[int] = None,
     slice_height: int = 256,
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
@@ -946,7 +954,7 @@ def predict_fiftyone(
         )
 
     # visualize results
-    session = fo.launch_app()
+    session = fo.launch_app()  # pyright: ignore[reportArgumentType]
     session.dataset = dataset
     # Evaluate the predictions
     results = dataset.evaluate_detections(
