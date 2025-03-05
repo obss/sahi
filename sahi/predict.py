@@ -5,6 +5,7 @@ import logging
 import os
 import time
 from typing import Generator, List, Optional, Union
+import math
 
 from PIL import Image
 
