@@ -97,8 +97,7 @@ def get_prediction(
             List[str]: set of classes to exclude using its/their class label name/s
         exclude_classes_by_id: Optional[List[int]]
             None: if no classes are excluded
-            List[str]: set of classes to exclude using one or more IDs
-
+            List[int]: set of classes to exclude using one or more IDs
     Returns:
         A dict with fields:
             object_prediction_list: a list of ObjectPrediction
