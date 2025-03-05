@@ -216,8 +216,7 @@ def get_sliced_prediction(
             List[str]: set of classes to exclude using its/their class label name/s
         exclude_classes_by_id: Optional[List[int]]
             None: if no classes are excluded
-            List[str]: set of classes to exclude using one or more IDs
-
+            List[int]: set of classes to exclude using one or more IDs
     Returns:
         A Dict with fields:
             object_prediction_list: a list of sahi.prediction.ObjectPrediction
@@ -503,7 +502,7 @@ def predict(
             List[str]: set of classes to exclude using its/their class label name/s
         exclude_classes_by_id: Optional[List[int]]
             None: if no classes are excluded
-            List[str]: set of classes to exclude using one or more IDs
+            List[int]: set of classes to exclude using one or more IDs
     """
     # assert prediction type
     if no_standard_prediction and no_sliced_prediction:
@@ -860,7 +859,7 @@ def predict_fiftyone(
             List[str]: set of classes to exclude using its/their class label name/s
         exclude_classes_by_id: Optional[List[int]]
             None: if no classes are excluded
-            List[str]: set of classes to exclude using one or more IDs
+            List[int]: set of classes to exclude using one or more IDs
     """
     check_requirements(["fiftyone"])
 
