@@ -17,7 +17,7 @@
     <br>
     <a href="https://badge.fury.io/py/sahi"><img src="https://badge.fury.io/py/sahi.svg" alt="pypi version"></a>
     <a href="https://anaconda.org/conda-forge/sahi"><img src="https://anaconda.org/conda-forge/sahi/badges/version.svg" alt="conda version"></a>
-    <a href="https://github.com/obss/sahi/actions/workflows/package_testing.yml"><img src="https://github.com/obss/sahi/actions/workflows/package_testing.yml/badge.svg" alt="package testing"></a>
+    <a href="https://github.com/obss/sahi/actions/workflows/ci.yml"><img src="https://github.com/obss/sahi/actions/workflows/ci.yml/badge.svg" alt="Continious Integration"></a>
   <br>
     <a href="https://ieeexplore.ieee.org/document/9897990"><img src="https://img.shields.io/badge/DOI-10.1109%2FICIP46576.2022.9897990-orange.svg" alt="ci"></a>
   <br>
