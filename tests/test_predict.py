@@ -3,9 +3,11 @@
 
 import os
 import shutil
+import sys
 import unittest
 
 import numpy as np
+import pytest
 
 from sahi.utils.cv import read_image
 from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
@@ -19,14 +21,12 @@ class TestPredict(unittest.TestCase):
     def test_prediction_score(self):
         from sahi.prediction import PredictionScore
 
-        prediction_score = PredictionScore(np.array(0.6))
+        prediction_score = PredictionScore(np.array(0.6))  # type: ignore
         self.assertEqual(type(prediction_score.value), float)
         self.assertEqual(prediction_score.is_greater_than_threshold(0.5), True)
         self.assertEqual(prediction_score.is_greater_than_threshold(0.7), False)
 
-    def test_object_prediction(self):
-        from sahi.prediction import ObjectPrediction
-
+    @pytest.mark.skipif(sys.version_info[:2] > (3, 10), reason="Requires Python 3.10 or lower")
     def test_get_prediction_mmdet(self):
         from sahi.models.mmdet import MmdetDetectionModel
         from sahi.predict import get_prediction
@@ -166,6 +166,7 @@ class TestPredict(unittest.TestCase):
                 num_car += 1
         self.assertEqual(num_car, 2)
 
+    @pytest.mark.skipif(sys.version_info[:2] > (3, 10), reason="Requires Python 3.10 or lower")
     def test_get_sliced_prediction_mmdet(self):
         from sahi.models.mmdet import MmdetDetectionModel
         from sahi.predict import get_sliced_prediction
@@ -403,11 +404,10 @@ class TestPredict(unittest.TestCase):
                 num_car += 1
         self.assertGreater(num_car, 0)
 
-    def test_coco_json_prediction(self):
+    @pytest.mark.skipif(sys.version_info[:2] > (3, 10), reason="Requires Python 3.10 or lower")
+    def test_mmdet_yolox_tiny_prediction(self):
         from sahi.predict import predict
         from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
-        from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
-        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
         # init model
         download_mmdet_yolox_tiny_model()
@@ -453,8 +453,17 @@ class TestPredict(unittest.TestCase):
             verbose=1,
         )
 
+    def test_yolov5_prediction(self):
+        from sahi.predict import predict
+        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
+
         # init model
         download_yolov5n_model()
+
+        postprocess_type = "GREEDYNMM"
+        match_metric = "IOS"
+        match_threshold = 0.5
+        class_agnostic = True
 
         # prepare paths
         dataset_json_path = "tests/data/coco_utils/terrain_all_coco.json"
@@ -492,8 +501,17 @@ class TestPredict(unittest.TestCase):
             verbose=1,
         )
 
+    def test_ultralytics_yolo11n_prediction(self):
+        from sahi.predict import predict
+        from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
+
         # init model
         download_yolo11n_model()
+
+        postprocess_type = "GREEDYNMM"
+        match_metric = "IOS"
+        match_threshold = 0.5
+        class_agnostic = True
 
         # prepare paths
         dataset_json_path = "tests/data/coco_utils/terrain_all_coco.json"

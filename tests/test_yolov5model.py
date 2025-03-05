@@ -3,10 +3,9 @@
 
 import unittest
 
-import numpy as np
-
+from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
-from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model, download_yolov5s6_model
+from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3
@@ -70,11 +69,12 @@ class TestYolov5DetectionModel(unittest.TestCase):
         # perform inference
         yolov5_detection_model.perform_inference(image)
         original_predictions = yolov5_detection_model.original_predictions
+        assert original_predictions is not None
 
         boxes = original_predictions.xyxy
 
         # find box of first car detection with conf greater than 0.5
-        for box in boxes[0]:
+        for box in boxes[0]:  # type: ignore
             if box[5].item() == 2:  # if category car
                 if box[4].item() > 0.5:
                     break
@@ -86,7 +86,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
         self.assertEqual(len(original_predictions.names), 80)
-        for box in boxes[0]:
+        for box in boxes[0]:  # type: ignore
             self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
 
     def test_convert_original_predictions(self):
@@ -114,6 +114,9 @@ class TestYolov5DetectionModel(unittest.TestCase):
         # convert predictions to ObjectPrediction list
         yolov5_detection_model.convert_original_predictions()
         object_prediction_list = yolov5_detection_model.object_prediction_list
+        assert object_prediction_list
+        assert isinstance(object_prediction_list[0], ObjectPrediction)
+        assert isinstance(object_prediction_list[2], ObjectPrediction)
 
         # compare
         self.assertEqual(len(object_prediction_list), 3)
@@ -132,6 +135,7 @@ class TestYolov5DetectionModel(unittest.TestCase):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
 
         for object_prediction in object_prediction_list:
+            assert isinstance(object_prediction, ObjectPrediction)
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
 

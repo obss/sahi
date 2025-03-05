@@ -1,6 +1,103 @@
-[tool.black]
-line-length = 120
+[project]
+name = "sahi"
+version = "0.11.21"
+readme = "README.md"
+description = "A vision library for performing sliced inference on large images/small objects"
+requires-python = ">=3.8"
+license = "MIT"
+license-files = ["./LICENSE"]
+dependencies = [
+  "opencv-python<=4.10.0.84",
+  "shapely>=2.0.0",
+  "tqdm>=4.48.2",
+  "pillow>=8.2.0",
+  "pybboxes==0.1.6",
+  "pyyaml",
+  "fire",
+  "terminaltables",
+  "requests",
+  "click",
+]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
 
-[tool.isort]
-line_length = 120
-profile = "black"
+[project.urls]
+homepage = "https://github.com/obss/sahi"
+
+[project.scripts]
+sahi = "sahi.cli:app"
+
+[tool.uv]
+find-links = [
+  "https://download.openmmlab.com/mmcv/dist/cpu/torch1.13.0/index.html",
+]
+default-groups = ["dev", "ci"]
+
+[dependency-groups]
+dev = [
+  "pytest",
+  "ruff",
+  "pre-commit>=2.0",
+  "jupyterlab>=3.0.14",
+  "matplotlib-stubs>=0.2.0",
+]
+ci = [
+  # pytorch should be present for all python versions
+  "torch==1.13.1;python_version<'3.11'",
+  "torch==2.6.0+cpu;python_version>='3.11'",
+  "torchvision>=0.14.1;python_version<'3.11'",
+  "torchvision==0.21.0+cpu;python_version>='3.11'",
+  # mmcv is available for python < 3.11
+  "mmengine==0.7.3;python_version<'3.11'",
+  "mmcv==2.0.0;python_version<'3.11'",
+  "mmdet==3.0.0;python_version<'3.11'",
+  # deepsparse is only available for python<3.12
+  "deepsparse;python_version<'3.12'",
+  "onnxruntime<1.20;python_version<'3.12'",
+  "onnx>1.16;python_version>='3.12'",
+  "onnxruntime;python_version>='3.12'",
+  # These are available for all 
+  "yolov5>=7.0.13",
+  # NOTE: Higher versions of transformers give different inference results of huggingface model
+  "transformers==4.35.0",
+  "pycocotools>=2.0.7",
+  "ultralytics>=8.3.50",
+  "scikit-image",
+  "fiftyone",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+torchvision = [{ index = "pytorch-cpu" }]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 120
+exclude = ["**/__init__.py", ".git", "__pycache__", "*.ipynb"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = ["--import-mode=importlib", "--no-header"]
+pythonpath = ["."]
+
+[tool.typos.default]
+extend-ignore-identifiers-re = ["fo"]
