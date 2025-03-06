@@ -242,7 +242,7 @@ def get_sliced_prediction(
         overlap_width_ratio=overlap_width_ratio,
         auto_slice_resolution=auto_slice_resolution,
     )
-    from sahi.models.ultralytics import UltralyticsDetectionModel 
+    from sahi.models.ultralytics import UltralyticsDetectionModel
 
     num_slices = len(slice_image_result)
     time_end = time.time() - time_start

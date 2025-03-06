@@ -567,9 +567,14 @@ def visualize_object_predictions(
                     lowest_point = points[points[:, :, 1].argmax()][0]
                     box_width, box_height = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]
                     outside = lowest_point[1] - box_height - 3 >= 0
-                    text_bg_point1 = (lowest_point[0], lowest_point[1] - box_height - 3 if outside else lowest_point[1] + 3)
+                    text_bg_point1 = (
+                        lowest_point[0],
+                        lowest_point[1] - box_height - 3 if outside else lowest_point[1] + 3,
+                    )
                     text_bg_point2 = (lowest_point[0] + box_width, lowest_point[1])
-                    cv2.rectangle(image, text_bg_point1, text_bg_point2, color or (0, 0, 0), thickness=-1, lineType=cv2.LINE_AA)
+                    cv2.rectangle(
+                        image, text_bg_point1, text_bg_point2, color or (0, 0, 0), thickness=-1, lineType=cv2.LINE_AA
+                    )
                     cv2.putText(
                         image,
                         label,
@@ -733,7 +738,7 @@ def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> List[List[f
             [[x1, y1, x2, y2, x3, y3, x4, y4], [...], ...]
     """
     # Convert from (4,2) to [x1,y1,x2,y2,x3,y3,x4,y4] format
-    points = obb_points.reshape(-1).tolist() # 
+    points = obb_points.reshape(-1).tolist()
 
     # Create polygon from points and close it by repeating first point
     polygons = []
