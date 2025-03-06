@@ -10,7 +10,6 @@ import pybboxes.functional as pbf
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.cv import get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements, ensure_package_minimum_version
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         category_mapping: Optional[Dict] = None,
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
-        image_size: int = None,
+        image_size: Optional[int] = None,
     ):
         self._processor = processor
         self._image_shapes = []
@@ -100,7 +99,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         import torch
 
         # Confirm model is loaded
-        if self.model is None:
+        if self.model is None or self.processor is None:
             raise RuntimeError("Model is not loaded, load it by calling .load_model()")
 
         with torch.no_grad():
@@ -157,7 +156,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         """
         original_predictions = self._original_predictions
 
-        # compatilibty for sahi v0.8.15
+        # compatibility for sahi v0.8.15
         shift_amount_list = fix_shift_amount_list(shift_amount_list)
         full_shape_list = fix_full_shape_list(full_shape_list)
 

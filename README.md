@@ -17,14 +17,13 @@
     <br>
     <a href="https://badge.fury.io/py/sahi"><img src="https://badge.fury.io/py/sahi.svg" alt="pypi version"></a>
     <a href="https://anaconda.org/conda-forge/sahi"><img src="https://anaconda.org/conda-forge/sahi/badges/version.svg" alt="conda version"></a>
-    <a href="https://github.com/obss/sahi/actions/workflows/package_testing.yml"><img src="https://github.com/obss/sahi/actions/workflows/package_testing.yml/badge.svg" alt="package testing"></a>
+    <a href="https://github.com/obss/sahi/actions/workflows/ci.yml"><img src="https://github.com/obss/sahi/actions/workflows/ci.yml/badge.svg" alt="Continious Integration"></a>
   <br>
     <a href="https://ieeexplore.ieee.org/document/9897990"><img src="https://img.shields.io/badge/DOI-10.1109%2FICIP46576.2022.9897990-orange.svg" alt="ci"></a>
   <br>
     <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov5.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
     <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img src="https://raw.githubusercontent.com/obss/sahi/main/resources/hf_spaces_badge.svg" alt="HuggingFace Spaces"></a>
 
-​    
 </div>
 </div>
 
@@ -76,11 +75,13 @@ Object detection and instance segmentation are by far the most important applica
 
 - [Slicing operation notebook](demo/slicing.ipynb)
 
-- `YOLOX` + `SAHI` demo: <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img src="https://raw.githubusercontent.com/obss/sahi/main/resources/hf_spaces_badge.svg" alt="sahi-yolox"></a> (RECOMMENDED)
+- `YOLOX` + `SAHI` demo: <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img src="https://raw.githubusercontent.com/obss/sahi/main/resources/hf_spaces_badge.svg" alt="sahi-yolox"></a>
+
+- `YOLO11` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_ultralytics.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-yolov8"></a> (NEW)
 
 - `RT-DETR` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_rtdetr.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-rtdetr"></a> (NEW)
 
-- `YOLOv8` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov8.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-yolov8"></a>
+- `YOLOv8` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_ultralytics.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-yolov8"></a>
 
 - `DeepSparse` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_sparse_yolov5.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-deepsparse"></a>
 
@@ -94,16 +95,13 @@ Object detection and instance segmentation are by far the most important applica
 
 - `TorchVision` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_torchvision.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-torchvision"></a>
 
-
-<a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img width="600" src="https://user-images.githubusercontent.com/34196005/144092739-c1d9bade-a128-4346-947f-424ce00e5c4f.gif" alt="sahi-yolox"></a> 
-
+<a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img width="600" src="https://user-images.githubusercontent.com/34196005/144092739-c1d9bade-a128-4346-947f-424ce00e5c4f.gif" alt="sahi-yolox"></a>
 
 </details>
 
 ### Installation
 
 <img width="700" alt="sahi-installation" src="https://user-images.githubusercontent.com/34196005/149311602-b44e6fe1-f496-40f2-a7ae-5ea1f66e1550.gif">
-
 
 <details closed>
 <summary>
@@ -141,7 +139,7 @@ pip install yolov5==7.0.13
 - Install your desired detection framework (ultralytics):
 
 ```console
-pip install ultralytics==8.0.207
+pip install ultralytics==8.3.50
 ```
 
 - Install your desired detection framework (mmdet):
@@ -197,13 +195,11 @@ Find detailed info at [Interactive Result Visualization and Inspection](https://
 
 Find detailed info on COCO utilities (yolov5 conversion, slicing, subsampling, filtering, merging, splitting) at [coco.md](docs/coco.md).
 
-Find detailed info on MOT utilities (ground truth dataset creation, exporting tracker metrics in mot challenge format) at [mot.md](docs/mot.md).
-
 ## <div align="center">Citation</div>
 
 If you use this package in your work, please cite it as:
 
-```
+```bibtex
 @article{akyon2022sahi,
   title={Slicing Aided Hyper Inference and Fine-tuning for Small Object Detection},
   author={Akyon, Fatih Cagatay and Altinuc, Sinan Onur and Temizel, Alptekin},
@@ -214,7 +210,7 @@ If you use this package in your work, please cite it as:
 }
 ```
 
-```
+```bibtex
 @software{obss2021sahi,
   author       = {Akyon, Fatih Cagatay and Cengiz, Cemil and Altinuc, Sinan Onur and Cavusoglu, Devrim and Sahin, Kadir and Eryuksel, Ogulcan},
   title        = {{SAHI: A lightweight vision library for performing large scale object detection and instance segmentation}},
@@ -228,23 +224,16 @@ If you use this package in your work, please cite it as:
 
 ## <div align="center">Contributing</div>
 
-`sahi` library currently supports all [YOLOv5 models](https://github.com/ultralytics/yolov5/releases), [MMDetection models](https://github.com/open-mmlab/mmdetection/blob/master/docs/en/model_zoo.md), [Detectron2 models](https://github.com/facebookresearch/detectron2/blob/main/MODEL_ZOO.md), and [HuggingFace object detection models](https://huggingface.co/models?pipeline_tag=object-detection&sort=downloads). Moreover, it is easy to add new frameworks.
+### Add new frameworks
 
-All you need to do is, create a new .py file under [sahi/models/](https://github.com/obss/sahi/tree/main/sahi/models) folder and create a new class in that .py file that implements [DetectionModel class](https://github.com/obss/sahi/blob/7e48bdb6afda26f977b763abdd7d8c9c170636bd/sahi/models/base.py#L12). You can take the [MMDetection wrapper](https://github.com/obss/sahi/blob/7e48bdb6afda26f977b763abdd7d8c9c170636bd/sahi/models/mmdet.py#L18) or [YOLOv5 wrapper](https://github.com/obss/sahi/blob/7e48bdb6afda26f977b763abdd7d8c9c170636bd/sahi/models/yolov5.py#L17) as a reference.
+`sahi` library currently supports all [Ultralytics (YOLOv8/v10/v11/RTDETR) models](https://github.com/ultralytics/ultralytics), [MMDetection models](https://github.com/open-mmlab/mmdetection/blob/master/docs/en/model_zoo.md), [Detectron2 models](https://github.com/facebookresearch/detectron2/blob/main/MODEL_ZOO.md), and [HuggingFace object detection models](https://huggingface.co/models?pipeline_tag=object-detection&sort=downloads). Moreover, it is easy to add new frameworks.
 
-Before opening a PR:
+All you need to do is, create a new .py file under [sahi/models/](https://github.com/obss/sahi/tree/main/sahi/models) folder and create a new class in that .py file that implements [DetectionModel class](https://github.com/obss/sahi/blob/aaeb57c39780a5a32c4de2848e54df9a874df58b/sahi/models/base.py#L12). You can take the [MMDetection wrapper](https://github.com/obss/sahi/blob/aaeb57c39780a5a32c4de2848e54df9a874df58b/sahi/models/mmdet.py#L91) or [YOLOv5 wrapper](https://github.com/obss/sahi/blob/7e48bdb6afda26f977b763abdd7d8c9c170636bd/sahi/models/yolov5.py#L17) as a reference.
 
-- Install required development packages:
+### Open a Pull Request
 
-```bash
-pip install -e ."[dev]"
-```
-
-- Reformat with black and isort:
-
-```bash
-python -m scripts.run_code_style format
-```
+- Install the [uv package manager](https://docs.astral.sh/uv/) on your system.
+- Install [pre-commit](https://pre-commit.com/) hooks with `uv run pre-commit install`.
 
 ## <div align="center">Contributors</div>
 
@@ -261,6 +250,8 @@ python -m scripts.run_code_style format
 <a align="left" href="https://github.com/oulcan" target="_blank">Ogulcan Eryuksel</a>
 
 <a align="left" href="https://github.com/kadirnar" target="_blank">Kadir Nar</a>
+
+<a align="left" href="https://github.com/Dronakurl" target="_blank">Dronakurl</a>
 
 <a align="left" href="https://github.com/madenburak" target="_blank">Burak Maden</a>
 
@@ -313,4 +304,3 @@ python -m scripts.run_code_style format
 <a align="left" href="https://github.com/amoghdhaliwal" target="_blank">Amogh Dhaliwal</a>
 
 </div>
-

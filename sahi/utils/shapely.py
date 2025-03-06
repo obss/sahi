@@ -1,7 +1,7 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
-from typing import List
+from typing import List, Optional, Union
 
 from shapely.geometry import CAP_STYLE, JOIN_STYLE, GeometryCollection, MultiPolygon, Polygon, box
 from shapely.validation import make_valid
@@ -89,7 +89,7 @@ class ShapelyAnnotation:
         return cls(multipolygon=shapely_multipolygon, slice_bbox=slice_bbox)
 
     @classmethod
-    def from_coco_bbox(cls, bbox: List[int], slice_bbox: List[int] = None):
+    def from_coco_bbox(cls, bbox: List[int], slice_bbox: Optional[List[int]] = None):
         """
         Init ShapelyAnnotation from coco bbox.
 
@@ -172,7 +172,7 @@ class ShapelyAnnotation:
                     x_coords = [x_coord - minx for x_coord in x_coords]
                     y_coords = [y_coord - miny for y_coord in y_coords]
                 # convert intersection to coco style segmentation annotation
-                coco_polygon = [None] * len(x_coords) * 2
+                coco_polygon: list[Union[None, int]] = [None] * (len(x_coords) * 2)
                 coco_polygon[0::2] = [int(coord) for coord in x_coords]
                 coco_polygon[1::2] = [int(coord) for coord in y_coords]
             else:

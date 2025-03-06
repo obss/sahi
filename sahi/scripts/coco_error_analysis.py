@@ -1,11 +1,30 @@
 import copy
+import logging
 import os
 from multiprocessing import Pool
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Union
 
 import fire
 import numpy as np
+
+logger = logging.getLogger(__name__)
+
+try:
+    from pycocotools.coco import COCO
+    from pycocotools.cocoeval import COCOeval
+
+    has_pycocotools = True
+except ImportError:
+    has_pycocotools = False
+
+try:
+    import matplotlib.pyplot as plt
+
+    has_matplotlib = True
+except ImportError:
+    has_matplotlib = False
+
 
 COLOR_PALETTE = np.vstack(
     [
@@ -20,9 +39,7 @@ COLOR_PALETTE = np.vstack(
 )
 
 
-def _makeplot(rs, ps, outDir, class_name, iou_type):
-    import matplotlib.pyplot as plt
-
+def _makeplot(rs, ps, outDir: Union[str, Path], class_name: str, iou_type: str) -> List[str]:
     export_path_list = []
 
     areaNames = ["allarea", "small", "medium", "large"]
@@ -93,9 +110,7 @@ def _autolabel(ax, rects, is_percent=True):
         )
 
 
-def _makebarplot(rs, ps, outDir, class_name, iou_type):
-    import matplotlib.pyplot as plt
-
+def _makebarplot(_, ps, outDir, class_name, iou_type):
     areaNames = ["allarea", "small", "medium", "large"]
     types = ["C75", "C50", "Loc", "Sim", "Oth", "BG", "FN"]
     fig, ax = plt.subplots()
@@ -159,8 +174,6 @@ def _get_gt_area_group_numbers(cocoEval):
 
 
 def _make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
-    import matplotlib.pyplot as plt
-
     areaRngLbl2Number = _get_gt_area_group_numbers(cocoEval)
     areaRngLbl = areaRngLbl2Number.keys()
     if verbose:
@@ -172,7 +185,7 @@ def _make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
     width = 0.60  # the width of the bars
     figure_title = "number of annotations per area group"
 
-    rects = ax.bar(x, areaRngLbl2Number.values(), width)
+    rects = ax.bar(x, list(areaRngLbl2Number.values()), width)
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel("Number of annotations")
@@ -193,8 +206,6 @@ def _make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
 
 
 def _make_gt_area_histogram_plot(cocoEval, outDir):
-    import matplotlib.pyplot as plt
-
     n_bins = 100
     areas = [ann["area"] for ann in cocoEval.cocoGt.anns.values()]
 
@@ -219,9 +230,9 @@ def _make_gt_area_histogram_plot(cocoEval, outDir):
     return export_path
 
 
-def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None, max_detections=None, COCOeval=None):
+def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None, max_detections: int = 500):
     nm = cocoGt.loadCats(catId)[0]
-    print(f'--------------analyzing {k + 1}-{nm["name"]}---------------')
+    print(f"--------------analyzing {k + 1}-{nm['name']}---------------")
     ps_ = {}
     dt = copy.deepcopy(cocoDt)
     nm = cocoGt.loadCats(catId)[0]
@@ -291,15 +302,13 @@ def _analyse_results(
     extraplots=None,
     areas=None,
     max_detections=500,
-    COCO=None,
-    COCOeval=None,
 ):
     for res_type in res_types:
         if res_type not in ["bbox", "segm"]:
             raise ValueError(f"res_type {res_type} is not supported")
     if areas is not None:
         if len(areas) != 3:
-            raise ValueError("3 integers should be specified as areas,representing 3 area regions")
+            raise ValueError("3 integers should be specified as areas, representing 3 area regions")
 
     if out_dir is None:
         out_dir = Path(res_file).parent
@@ -353,15 +362,14 @@ def _analyse_results(
         recThrs = cocoEval.params.recThrs
         with Pool(processes=48) as pool:
             args = [
-                (k, cocoDt, cocoGt, catId, iou_type, areas, max_detections, COCOeval)
-                for k, catId in enumerate(present_cat_ids)
+                (k, cocoDt, cocoGt, catId, iou_type, areas, max_detections) for k, catId in enumerate(present_cat_ids)
             ]
             analyze_results = pool.starmap(_analyze_individual_category, args)
 
         classname_to_export_path_list = {}
         for k, catId in enumerate(present_cat_ids):
             nm = cocoGt.loadCats(catId)[0]
-            print(f'--------------saving {k + 1}-{nm["name"]}---------------')
+            print(f"--------------saving {k + 1}-{nm['name']}---------------")
             analyze_result = analyze_results[k]
             if k != analyze_result[0]:
                 raise ValueError(f"k {k} != analyze_result[0] {analyze_result[0]}")
@@ -416,13 +424,13 @@ def _analyse_results(
 def analyse(
     dataset_json_path: str,
     result_json_path: str,
-    out_dir: str = None,
+    out_dir: Optional[str] = None,
     type: str = "bbox",
     no_extraplots: bool = False,
     areas: List[int] = [1024, 9216, 10000000000],
     max_detections: int = 500,
     return_dict: bool = False,
-):
+) -> Optional[dict]:
     """
     Args:
         dataset_json_path (str): file path for the coco dataset json file
@@ -434,19 +442,12 @@ def analyse(
         max_detections (int): Maximum number of detections to consider for AP alculation. Default: 500
         return_dict (bool): If True, returns a dict export paths.
     """
-    try:
-        from pycocotools.coco import COCO
-        from pycocotools.cocoeval import COCOeval
-    except ModuleNotFoundError:
-        raise ModuleNotFoundError(
-            'Please run "pip install -U pycocotools" ' "to install pycocotools first for coco evaluation."
-        )
-    try:
-        import matplotlib.pyplot as plt
-    except ModuleNotFoundError:
-        raise ModuleNotFoundError(
-            'Please run "pip install -U matplotlib" ' "to install matplotlib first for visualization."
-        )
+    if not has_matplotlib:
+        logger.error("Please run 'uv pip install -U matplotlib' first for visualization.")
+        raise ModuleNotFoundError("matplotlib not installed")
+    if not has_pycocotools:
+        logger.error("Please run 'uv pip install -U pycocotools' first for Coco analysis.")
+        raise ModuleNotFoundError("pycocotools not installed")
 
     result = _analyse_results(
         result_json_path,
@@ -456,8 +457,6 @@ def analyse(
         extraplots=not no_extraplots,
         areas=areas,
         max_detections=max_detections,
-        COCO=COCO,
-        COCOeval=COCOeval,
     )
     if return_dict:
         return result
