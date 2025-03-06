@@ -540,67 +540,87 @@ def visualize_object_predictions(
     # set text_size for category names
     text_size = text_size or rect_th / 3
 
-    # add masks to image if present
+    # add masks or obb polygons to image if present
     for object_prediction in object_prediction_list:
         # deepcopy object_prediction_list so that original is not altered
         object_prediction = object_prediction.deepcopy()
-        # visualize masks if present
-        if object_prediction.mask is not None:
-            # deepcopy mask so that original is not altered
-            mask = object_prediction.mask.bool_mask
-            # set color
-            if colors is not None:
-                color = colors(object_prediction.category.id)
-            # draw mask
-            rgb_mask = apply_color_mask(mask, color or (0, 0, 0))
-            image = cv2.addWeighted(image, 1, rgb_mask, 0.6, 0)
-
-    # add bboxes to image if present
-    for object_prediction in object_prediction_list:
-        # deepcopy object_prediction_list so that original is not altered
-        object_prediction = object_prediction.deepcopy()
-
-        bbox = object_prediction.bbox.to_xyxy()
-        category_name = object_prediction.category.name
-        score = object_prediction.score.value
-
+        # arange label to be displayed
+        label = f"{object_prediction.category.name}"
+        if not hide_conf:
+            label += f" {object_prediction.score.value:.2f}"
         # set color
         if colors is not None:
             color = colors(object_prediction.category.id)
-        # set bbox points
-        point1, point2 = (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]))
-        # visualize boxes
-        cv2.rectangle(
-            image,
-            point1,
-            point2,
-            color=color or (0, 0, 0),
-            thickness=rect_th,
-        )
+        # visualize masks or obb polygons if present
+        has_mask = object_prediction.mask is not None
+        is_obb_pred = False
+        if has_mask:
+            segmentation = object_prediction.mask.segmentation
+            if len(segmentation) == 1 and len(segmentation[0]) == 8:
+                is_obb_pred = True
 
-        if not hide_labels:
-            # arange bounding box text location
-            label = f"{category_name}"
+            if is_obb_pred:
+                points = np.array(segmentation).reshape((-1, 1, 2)).astype(np.int32)
+                cv2.polylines(image, [points], isClosed=True, color=color or (0, 0, 0), thickness=rect_th)
 
-            if not hide_conf:
-                label += f" {score:.2f}"
+                if not hide_labels:
+                    lowest_point = points[points[:, :, 1].argmax()][0]
+                    box_width, box_height = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]
+                    outside = lowest_point[1] - box_height - 3 >= 0
+                    text_bg_point1 = (
+                        lowest_point[0],
+                        lowest_point[1] - box_height - 3 if outside else lowest_point[1] + 3,
+                    )
+                    text_bg_point2 = (lowest_point[0] + box_width, lowest_point[1])
+                    cv2.rectangle(
+                        image, text_bg_point1, text_bg_point2, color or (0, 0, 0), thickness=-1, lineType=cv2.LINE_AA
+                    )
+                    cv2.putText(
+                        image,
+                        label,
+                        (lowest_point[0], lowest_point[1] - 2 if outside else lowest_point[1] + box_height + 2),
+                        0,
+                        text_size,
+                        (255, 255, 255),
+                        thickness=text_th,
+                    )
+            else:
+                # draw mask
+                rgb_mask = apply_color_mask(object_prediction.mask.bool_mask, color or (0, 0, 0))
+                image = cv2.addWeighted(image, 1, rgb_mask, 0.6, 0)
 
-            box_width, box_height = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[
-                0
-            ]  # label width, height
-            outside = point1[1] - box_height - 3 >= 0  # label fits outside box
-            point2 = point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3
-            # add bounding box text
-            cv2.rectangle(image, point1, point2, color or (0, 0, 0), -1, cv2.LINE_AA)  # filled
-            cv2.putText(
+        # add bboxes to image if is_obb_pred=False
+        if not is_obb_pred:
+            bbox = object_prediction.bbox.to_xyxy()
+
+            # set bbox points
+            point1, point2 = (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]))
+            # visualize boxes
+            cv2.rectangle(
                 image,
-                label,
-                (point1[0], point1[1] - 2 if outside else point1[1] + box_height + 2),
-                0,
-                text_size,
-                (255, 255, 255),
-                thickness=text_th,
+                point1,
+                point2,
+                color=color or (0, 0, 0),
+                thickness=rect_th,
             )
+
+            if not hide_labels:
+                box_width, box_height = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[
+                    0
+                ]  # label width, height
+                outside = point1[1] - box_height - 3 >= 0  # label fits outside box
+                point2 = point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3
+                # add bounding box text
+                cv2.rectangle(image, point1, point2, color or (0, 0, 0), -1, cv2.LINE_AA)  # filled
+                cv2.putText(
+                    image,
+                    label,
+                    (point1[0], point1[1] - 2 if outside else point1[1] + box_height + 2),
+                    0,
+                    text_size,
+                    (255, 255, 255),
+                    thickness=text_th,
+                )
 
     # export if output_dir is present
     if output_dir is not None:
@@ -614,7 +634,7 @@ def visualize_object_predictions(
     return {"image": image, "elapsed_time": elapsed_time}
 
 
-def get_coco_segmentation_from_bool_mask(bool_mask):
+def get_coco_segmentation_from_bool_mask(bool_mask: np.ndarray) -> List[List[float]]:
     """
     Convert boolean mask to coco segmentation format
     [
@@ -712,9 +732,10 @@ def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> List[List[f
         obb_points: np.ndarray
             OBB points tensor from ultralytics.engine.results.OBB
             Shape: (4, 2) containing 4 points with (x,y) coordinates each
+
     Returns:
         List[List[float]]: Polygon points in COCO format
-            [[x1, y1, x2, y2, x3, y3, x4, y4, x1, y1], [...], ...]
+            [[x1, y1, x2, y2, x3, y3, x4, y4], [...], ...]
     """
     # Convert from (4,2) to [x1,y1,x2,y2,x3,y3,x4,y4] format
     points = obb_points.reshape(-1).tolist()
