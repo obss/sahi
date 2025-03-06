@@ -1,9 +1,10 @@
 from typing import Any, Dict, Optional
 
+from sahi.models.base import DetectionModel
 from sahi.utils.file import import_model_class
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
-    "yolov8": "Yolov8DetectionModel",
+    "ultralytics": "UltralyticsDetectionModel",
     "rtdetr": "RTDetrDetectionModel",
     "mmdet": "MmdetDetectionModel",
     "yolov5": "Yolov5DetectionModel",
@@ -11,10 +12,11 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "huggingface": "HuggingfaceDetectionModel",
     "torchvision": "TorchVisionDetectionModel",
     "yolov5sparse": "Yolov5SparseDetectionModel",
-    "yolonas": "YoloNasDetectionModel",
     "yolov8onnx": "Yolov8OnnxDetectionModel",
     "yolov9": "Yolov9DetectionModel",
 }
+
+ULTRALYTICS_MODEL_NAMES = ["yolov8", "yolov11", "yolo11", "ultralytics"]
 
 
 class AutoDetectionModel:
@@ -30,9 +32,9 @@ class AutoDetectionModel:
         category_mapping: Optional[Dict] = None,
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
-        image_size: int = None,
+        image_size: Optional[int] = None,
         **kwargs,
-    ):
+    ) -> DetectionModel:
         """
         Loads a DetectionModel from given path.
 
@@ -54,7 +56,7 @@ class AutoDetectionModel:
             category_remapping: dict: str to int
                 Remap category ids based on category names, after performing inference e.g. {"car": 3}
             load_at_init: bool
-                If True, automatically loads the model at initalization
+                If True, automatically loads the model at initialization
             image_size: int
                 Inference input size.
         Returns:
@@ -62,7 +64,8 @@ class AutoDetectionModel:
         Raises:
             ImportError: If given {model_type} framework is not installed
         """
-
+        if model_type in ULTRALYTICS_MODEL_NAMES:
+            model_type = "ultralytics"
         model_class_name = MODEL_TYPE_TO_MODEL_CLASS_NAME[model_type]
         DetectionModel = import_model_class(model_type, model_class_name)
 

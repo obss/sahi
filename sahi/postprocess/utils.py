@@ -7,7 +7,6 @@ from shapely.geometry import MultiPolygon, Polygon
 
 from sahi.annotation import BoundingBox, Category, Mask
 from sahi.prediction import ObjectPrediction
-from sahi.utils.cv import get_coco_segmentation_from_bool_mask
 from sahi.utils.shapely import ShapelyAnnotation, get_shapely_multipolygon
 
 
