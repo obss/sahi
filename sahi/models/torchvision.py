@@ -178,13 +178,13 @@ class TorchVisionDetectionModel(DetectionModel):
 
             for ind in range(len(boxes)):
                 if masks is not None:
-                    mask = get_coco_segmentation_from_bool_mask(np.array(masks[ind]))
+                    segmentation = get_coco_segmentation_from_bool_mask(np.array(masks[ind]))
                 else:
-                    mask = None
+                    segmentation = None
 
                 object_prediction = ObjectPrediction(
                     bbox=boxes[ind],
-                    segmentation=mask,
+                    segmentation=segmentation,
                     category_id=int(category_ids[ind]),
                     category_name=self.category_mapping[str(int(category_ids[ind]))],
                     shift_amount=shift_amount,
