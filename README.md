@@ -97,8 +97,6 @@ Object detection and instance segmentation are by far the most important applica
 
 - `MMDetection` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_mmdetection.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-mmdetection"></a>
 
-- `Detectron2` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_detectron2.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-detectron2"></a>
-
 - `TorchVision` + `SAHI` walkthrough: <a href="https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_torchvision.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="sahi-torchvision"></a>
 
 <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img width="600" src="https://user-images.githubusercontent.com/34196005/144092739-c1d9bade-a128-4346-947f-424ce00e5c4f.gif" alt="sahi-yolox"></a>
@@ -126,51 +124,41 @@ pip install sahi
 conda install -c conda-forge shapely
 ```
 
-- Install your desired version of pytorch and torchvision (cuda 11.3 for detectron2, cuda 11.7 for rest):
+- Install your desired version of pytorch and torchvision:
 
 ```console
-conda install pytorch=1.10.2 torchvision=0.11.3 cudatoolkit=11.3 -c pytorch
+pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu126
 ```
 
+(torch 2.1.2 is required for mmdet support):
+
 ```console
-conda install pytorch=1.13.1 torchvision=0.14.1 pytorch-cuda=11.7 -c pytorch -c nvidia
+pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu121
 ```
 
 - Install your desired detection framework (yolov5):
 
 ```console
-pip install yolov5==7.0.13
+pip install yolov5==7.0.14
 ```
 
 - Install your desired detection framework (ultralytics):
 
 ```console
-pip install ultralytics==8.3.50
+pip install ultralytics==8.3.86
 ```
 
 - Install your desired detection framework (mmdet):
 
 ```console
 pip install mim
-mim install mmdet==3.0.0
-```
-
-- Install your desired detection framework (detectron2):
-
-```console
-pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113/torch1.10/index.html
+mim install mmdet==3.3.0
 ```
 
 - Install your desired detection framework (huggingface):
 
 ```console
 pip install transformers timm
-```
-
-- Install your desired detection framework (super-gradients):
-
-```console
-pip install super-gradients==3.3.1
 ```
 
 </details>
