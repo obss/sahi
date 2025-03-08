@@ -41,7 +41,7 @@ sahi = "sahi.cli:app"
 
 [tool.uv]
 find-links = [
-  "https://download.openmmlab.com/mmcv/dist/cpu/torch2.3.0/index.html"
+  "https://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html"
 ]
 default-groups = ["dev", "ci"]
 
@@ -55,8 +55,11 @@ dev = [
 ]
 ci = [
   # pytorch should be present for all python versions
-  "torch==2.3.1+cpu",
-  "torchvision==0.18.1+cpu",
+  "torch==2.6.0+cpu;python_version>='3.12'",
+  "torchvision==0.21.0+cpu;python_version>='3.12'",
+  # mmdet is supported for python < 3.12
+  "torch==2.1.2+cpu;python_version<'3.12'",
+  "torchvision==0.16.2+cpu;python_version<'3.12'",
   "mmengine;python_version<'3.12'",
   "mmcv==2.1.0;python_version<'3.12'",
   "mmdet==3.3.0;python_version<'3.12'",
