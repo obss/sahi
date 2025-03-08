@@ -11,7 +11,7 @@ from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_yolox_tiny_model
 
-pytestmark = pytest.mark.skipif(sys.version_info[:2] > (3, 10), reason="Requires Python 3.10 or lower")
+#pytestmark = pytest.mark.skipif(sys.version_info[:2] > (3, 10), reason="Requires Python 3.10 or lower")
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
