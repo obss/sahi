@@ -1357,9 +1357,7 @@ class Coco:
         try:
             import yaml
         except ImportError:
-            raise ImportError(
-                'Please run "pip install -U pyyaml" to install yaml first for yolo formatted exporting.'
-            )
+            raise ImportError('Please run "pip install -U pyyaml" to install yaml first for yolo formatted exporting.')
 
         # set split_mode
         if 0 < train_split_rate and train_split_rate < 1:
@@ -2401,7 +2399,7 @@ def remove_invalid_coco_results(
     return fixed_result_list
 
 
-def export_coco_as_yolov5(    
+def export_coco_as_yolov5(
     output_dir: str,
     train_coco: Optional[Coco] = None,
     val_coco: Optional[Coco] = None,
@@ -2518,6 +2516,7 @@ def export_coco_as_yolo(
         yaml.dump(data, outfile, default_flow_style=False)
 
     return yaml_path
+
 
 def export_coco_as_yolov5_via_yml(
     yml_path: str, output_dir: str, train_split_rate: float = 0.9, numpy_seed=0, disable_symlink=False
