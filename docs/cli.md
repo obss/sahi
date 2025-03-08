@@ -164,3 +164,13 @@ All scripts can be downloaded from [scripts directory](https://github.com/obss/s
 ```bash
 python script_name.py
 ```
+
+# Additional Resources
+Looking to dive deeper? Here are some helpful resources:
+
+- For a detailed walkthrough of prediction parameters and visualization, check out our [prediction utilities documentation](predict.md)
+- To understand slicing operations in depth, explore our [slicing utilities guide](slicing.md)
+- For hands-on examples with COCO format operations, see our [COCO utilities documentation](coco.md)
+- Want to see these CLI commands in action? Try our interactive notebooks in the [demo directory](../demo/)
+
+These resources provide comprehensive examples and explanations to help you make the most of SAHI's command-line interface.

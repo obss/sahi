@@ -97,3 +97,62 @@ result = get_sliced_prediction(
 )
 
 ```
+
+- Visualization parameters and export formats:
+
+```python
+from sahi.predict import get_prediction
+from sahi import AutoDetectionModel
+from PIL import Image
+
+# init a model
+detection_model = AutoDetectionModel.from_pretrained(...)
+
+# get prediction result
+result = get_prediction(
+    image,
+    detection_model,
+)
+
+# Export with custom visualization parameters
+result.export_visuals(
+    export_dir="outputs/",
+    text_size=1.0,  # Size of the class label text
+    rect_th=2,      # Thickness of bounding box lines
+    text_th=2,      # Thickness of the text
+    hide_labels=False,  # Set True to hide class labels
+    hide_conf=False,    # Set True to hide confidence scores
+    color=(255, 0, 0),  # Custom color in RGB format (red in this example)
+    file_name="custom_visualization",
+    export_format="jpg"  # Supports 'jpg' and 'png'
+)
+
+# Export as COCO format annotations
+coco_annotations = result.to_coco_annotations()
+# Example output: [{'image_id': None, 'bbox': [x, y, width, height], 'category_id': 0, 'area': width*height, ...}]
+
+# Export as COCO predictions (includes confidence scores)
+coco_predictions = result.to_coco_predictions(image_id=1)
+# Example output: [{'image_id': 1, 'bbox': [x, y, width, height], 'score': 0.98, 'category_id': 0, ...}]
+
+# Export as imantics format
+imantics_annotations = result.to_imantics_annotations()
+# For use with imantics library: https://github.com/jsbroks/imantics
+
+# Export for FiftyOne visualization
+fiftyone_detections = result.to_fiftyone_detections()
+# For use with FiftyOne: https://github.com/voxel51/fiftyone
+```
+
+# Interactive Demos and Examples
+Want to see these prediction utilities in action? We have several interactive notebooks that demonstrate different model integrations:
+
+- For YOLOv8/YOLO11/YOLO12 models, explore our [Ultralytics integration notebook](../demo/inference_for_ultralytics.ipynb)
+- For YOLOv5 models, check out our [YOLOv5 integration notebook](../demo/inference_for_yolov5.ipynb)
+- For MMDetection models, try our [MMDetection integration notebook](../demo/inference_for_mmdetection.ipynb)
+- For HuggingFace models, see our [HuggingFace integration notebook](../demo/inference_for_huggingface.ipynb)
+- For TorchVision models, explore our [TorchVision integration notebook](../demo/inference_for_torchvision.ipynb)
+- For RT-DETR models, check out our [RT-DETR integration notebook](../demo/inference_for_rtdetr.ipynb)
+- For optimized inference with DeepSparse, see our [DeepSparse integration notebook](../demo/inference_for_sparse_yolov5.ipynb)
+
+These notebooks provide hands-on examples and allow you to experiment with different parameters and settings.

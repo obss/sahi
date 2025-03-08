@@ -436,3 +436,13 @@ coco = coco.get_coco_with_clipped_bboxes()
 save_json(coco.json, "coco.json")
 ```
 </details>
+
+# Interactive Examples and Additional Resources
+
+Want to see these COCO utilities in action? Here are some helpful resources:
+
+- For hands-on examples of COCO dataset slicing, check out our [slicing demo notebook](../demo/slicing.ipynb)
+- To learn about prediction and visualization with COCO datasets, explore our model-specific notebooks in the [demo directory](../demo/)
+- For command-line operations with COCO datasets, refer to our [CLI documentation](cli.md)
+
+These resources provide practical examples and detailed explanations to help you work effectively with COCO datasets using SAHI.
