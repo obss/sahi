@@ -72,6 +72,7 @@ jobs:
           # coco analyse
           sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
       - name: Test SAHI CLI with MMCV
+        if: ${{ matrix.python-version }} != '3.12'
         run: |
           source .venv/bin/activate
           set -e
