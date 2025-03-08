@@ -141,13 +141,13 @@ pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorc
 - Install your desired detection framework (yolov5):
 
 ```console
-pip install yolov5==7.0.14
+pip install yolov5==7.0.14 sahi==0.11.21
 ```
 
 - Install your desired detection framework (ultralytics):
 
 ```console
-pip install ultralytics==8.3.86
+pip install ultralytics>=8.3.86
 ```
 
 - Install your desired detection framework (mmdet):
@@ -160,7 +160,7 @@ mim install mmdet==3.3.0
 - Install your desired detection framework (huggingface):
 
 ```console
-pip install transformers timm
+pip install transformers>=4.42.0 timm
 ```
 
 </details>
