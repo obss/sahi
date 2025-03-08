@@ -104,7 +104,7 @@ class MmdetDetectionModel(DetectionModel):
         scope: str = "mmdet",
     ):
         if not IMPORT_MMDET_V3:
-            raise ImportError("Failed to import `DetInferencer`. Please confirm you have installed 'mmdet>=3.0.0'")
+            raise ImportError("Failed to import `DetInferencer`. Please confirm you have installed 'mmdet==3.3.0 mmcv==2.1.0'")
 
         self.scope = scope
         self.image_size = image_size
