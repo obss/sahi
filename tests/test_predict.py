@@ -10,8 +10,7 @@ import numpy as np
 import pytest
 
 from sahi.utils.cv import read_image
-from sahi.utils.ultralytics import (UltralyticsTestConstants,
-                                    download_yolo11n_model)
+from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -31,8 +30,7 @@ class TestPredict(unittest.TestCase):
     def test_get_prediction_mmdet(self):
         from sahi.models.mmdet import MmdetDetectionModel
         from sahi.predict import get_prediction
-        from sahi.utils.mmdet import (MmdetTestConstants,
-                                      download_mmdet_yolox_tiny_model)
+        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
 
         # init model
         download_mmdet_yolox_tiny_model()
@@ -78,8 +76,7 @@ class TestPredict(unittest.TestCase):
     def test_get_prediction_automodel_yolo11(self):
         from sahi.auto_model import AutoDetectionModel
         from sahi.predict import get_prediction
-        from sahi.utils.ultralytics import (UltralyticsTestConstants,
-                                            download_yolo11n_model)
+        from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
 
         # init model
         download_yolo11n_model()
@@ -127,8 +124,7 @@ class TestPredict(unittest.TestCase):
     def test_get_sliced_prediction_mmdet(self):
         from sahi.models.mmdet import MmdetDetectionModel
         from sahi.predict import get_sliced_prediction
-        from sahi.utils.mmdet import (MmdetTestConstants,
-                                      download_mmdet_yolox_tiny_model)
+        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
 
         # init model
         download_mmdet_yolox_tiny_model()
@@ -301,8 +297,7 @@ class TestPredict(unittest.TestCase):
     @pytest.mark.skipif(sys.version_info[:2] > (3, 10), reason="Requires Python 3.10 or lower")
     def test_mmdet_yolox_tiny_prediction(self):
         from sahi.predict import predict
-        from sahi.utils.mmdet import (MmdetTestConstants,
-                                      download_mmdet_yolox_tiny_model)
+        from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
 
         # init model
         download_mmdet_yolox_tiny_model()
@@ -350,8 +345,7 @@ class TestPredict(unittest.TestCase):
 
     def test_ultralytics_yolo11n_prediction(self):
         from sahi.predict import predict
-        from sahi.utils.ultralytics import (UltralyticsTestConstants,
-                                            download_yolo11n_model)
+        from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
 
         # init model
         download_yolo11n_model()
