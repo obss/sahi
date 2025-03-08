@@ -61,10 +61,10 @@ jobs:
         run: |
           source .venv/bin/activate
           set -e
-          sahi predict --no_sliced_prediction --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
-          sahi predict --model_type yolov5 --source tests/data/ --novisual --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
-          sahi predict --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
-          sahi predict --model_type yolov5 --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
+          sahi predict --no_sliced_prediction --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+          sahi predict --model_type ultralytics --source tests/data/ --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+          sahi predict --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+          sahi predict --model_type ultralytics --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
           # coco yolov5
           sahi coco yolov5 --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json --train_split 0.9
           # coco evaluate

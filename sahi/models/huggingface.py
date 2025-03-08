@@ -29,9 +29,11 @@ class HuggingfaceDetectionModel(DetectionModel):
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
         image_size: Optional[int] = None,
+        token: Optional[str] = None,
     ):
         self._processor = processor
         self._image_shapes = []
+        self._token = token
         super().__init__(
             model_path,
             model,
@@ -47,7 +49,7 @@ class HuggingfaceDetectionModel(DetectionModel):
 
     def check_dependencies(self):
         check_requirements(["torch", "transformers"])
-        ensure_package_minimum_version("transformers", "4.25.1")
+        ensure_package_minimum_version("transformers", "4.42.0")
 
     @property
     def processor(self):
@@ -67,13 +69,18 @@ class HuggingfaceDetectionModel(DetectionModel):
     def load_model(self):
         from transformers import AutoModelForObjectDetection, AutoProcessor
 
-        model = AutoModelForObjectDetection.from_pretrained(self.model_path)
+        model = AutoModelForObjectDetection.from_pretrained(self.model_path, token=self._token)
         if self.image_size is not None:
+            if model.base_model_prefix == "rt_detr_v2":
+                size = {"height": self.image_size, "width": self.image_size}
+            else:
+                size = {"shortest_edge": self.image_size, "longest_edge": None}
+            # use_fast=True raises error: AttributeError: 'SizeDict' object has no attribute 'keys'
             processor = AutoProcessor.from_pretrained(
-                self.model_path, size={"shortest_edge": self.image_size, "longest_edge": None}, do_resize=True
+                self.model_path, size=size, do_resize=True, use_fast=False, token=self._token
             )
         else:
-            processor = AutoProcessor.from_pretrained(self.model_path)
+            processor = AutoProcessor.from_pretrained(self.model_path, use_fast=False, token=self._token)
         self.set_model(model, processor)
 
     def set_model(self, model: Any, processor: Any = None):
