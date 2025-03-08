@@ -2,6 +2,7 @@
 # Code written by Fatih C Akyon and Devrim Cavusoglu, 2022.
 
 import logging
+import os
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -69,7 +70,8 @@ class HuggingfaceDetectionModel(DetectionModel):
     def load_model(self):
         from transformers import AutoModelForObjectDetection, AutoProcessor
 
-        model = AutoModelForObjectDetection.from_pretrained(self.model_path, token=self._token)
+        hf_token = os.getenv("HF_TOKEN", self._token)
+        model = AutoModelForObjectDetection.from_pretrained(self.model_path, token=hf_token)
         if self.image_size is not None:
             if model.base_model_prefix == "rt_detr_v2":
                 size = {"height": self.image_size, "width": self.image_size}
@@ -77,10 +79,10 @@ class HuggingfaceDetectionModel(DetectionModel):
                 size = {"shortest_edge": self.image_size, "longest_edge": None}
             # use_fast=True raises error: AttributeError: 'SizeDict' object has no attribute 'keys'
             processor = AutoProcessor.from_pretrained(
-                self.model_path, size=size, do_resize=True, use_fast=False, token=self._token
+                self.model_path, size=size, do_resize=True, use_fast=False, token=hf_token
             )
         else:
-            processor = AutoProcessor.from_pretrained(self.model_path, use_fast=False, token=self._token)
+            processor = AutoProcessor.from_pretrained(self.model_path, use_fast=False, token=hf_token)
         self.set_model(model, processor)
 
     def set_model(self, model: Any, processor: Any = None):
