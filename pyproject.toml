@@ -28,6 +28,7 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -40,7 +41,7 @@ sahi = "sahi.cli:app"
 
 [tool.uv]
 find-links = [
-  "https://download.openmmlab.com/mmcv/dist/cpu/torch1.13.0/index.html",
+  "https://download.openmmlab.com/mmcv/dist/cpu/torch2.3.1/index.html"
 ]
 default-groups = ["dev", "ci"]
 
@@ -54,14 +55,11 @@ dev = [
 ]
 ci = [
   # pytorch should be present for all python versions
-  "torch==1.13.1;python_version<'3.11'",
-  "torch==2.6.0+cpu;python_version>='3.11'",
-  "torchvision>=0.14.1;python_version<'3.11'",
-  "torchvision==0.21.0+cpu;python_version>='3.11'",
-  # mmcv is available for python < 3.11
-  "mmengine==0.7.3;python_version<'3.11'",
-  "mmcv==2.0.0;python_version<'3.11'",
-  "mmdet==3.0.0;python_version<'3.11'",
+  "torch==2.3.1+cpu",
+  "torchvision==0.18.1+cpu",
+  "mmengine",
+  "mmcv>=2.2.0",
+  "mmdet>=3.3.0",
   # deepsparse is only available for python<3.12
   "deepsparse;python_version<'3.12'",
   "onnxruntime<1.20;python_version<'3.12'",
