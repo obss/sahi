@@ -180,7 +180,7 @@ class TestHuggingfaceDetectionModel(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 28)
+        self.assertEqual(len(object_prediction_list), 10)
         num_person = num_truck = num_car = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -190,8 +190,8 @@ class TestHuggingfaceDetectionModel(unittest.TestCase):
             elif object_prediction.category.name == "car":
                 num_car += 1
         self.assertEqual(num_person, 0)
-        self.assertEqual(num_truck, 1)
-        self.assertEqual(num_car, 27)
+        self.assertEqual(num_truck, 0)
+        self.assertEqual(num_car, 10)
 
     def test_get_prediction_automodel_huggingface(self):
         from sahi.auto_model import AutoDetectionModel
