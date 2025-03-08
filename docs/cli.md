@@ -11,16 +11,16 @@ will perform sliced inference on default parameters and export the prediction vi
 - It also supports video input:
 
 ```bash
->>sahi predict --model_path yolov5s.pt --model_type yolov5 --source video.mp4
-``` 
+>>sahi predict --model_path yolo11s.pt --model_type ultralytics --source video.mp4
+```
 
 You can also view video render during video inference with `--view_video`:
 
 ```bash
->>sahi predict --model_path yolov5s.pt --model_type yolov5 --source video.mp4 --view_video
-``` 
+>>sahi predict --model_path yolo11s.pt --model_type ultralytics --source video.mp4 --view_video
+```
 
-- To `forward 100 frames`, on opened window press key `D `
+- To `forward 100 frames`, on opened window press key `D`
 - To `revert 100 frames`, on opened window press key `A`
 - To `forward 20 frames`, on opened window press key `G`
 - To `revert 20 frames`, on opened window press key `F`
@@ -34,7 +34,7 @@ You can specify additional sliced prediction parameters as:
 >>sahi predict --slice_width 512 --slice_height 512 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --model_confidence_threshold 0.25 --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
 ```
 
-- Specify detection framework as `--model_type mmdet` for MMDetection or `--model_type yolov5` for YOLOv5, to match with your model weight
+- Specify detection framework as `--model_type mmdet` for MMDetection or `--model_type ultralytics` for Ultralytics, to match with your model weight file
 
 - Specify postprocess type as `--postprocess_type GREEDYNMM` or `--postprocess_type NMS` to be applied over sliced predictions
 
@@ -88,15 +88,15 @@ Specify slice overlap ratio for height/width size as `--overlap_ratio 0.2`.
 
 If you want to ignore images with annotations set it add `--ignore_negative_samples` argument.
 
-## `coco yolov5` command usage:
+## `coco yolo` command usage:
 
 (In Windows be sure to open anaconda cmd prompt/windows cmd `as admin` to be able to create symlinks properly.)
 
 ```bash
->>sahi coco yolov5 --image_dir dir/to/images --dataset_json_path dataset.json  --train_split 0.9
+>>sahi coco yolo --image_dir dir/to/images --dataset_json_path dataset.json  --train_split 0.9
 ```
 
-will convert given coco dataset to yolov5 format and export to runs/coco2yolov5/exp folder.
+will convert given coco dataset to yolo format and export to runs/coco2yolo/exp folder.
 
 ## `coco evaluate` command usage:
 
@@ -116,7 +116,7 @@ If you want to specify max detections, set it as `--proposal_nums "[10 100 500]"
 
 If you want to specify a psecific IOU threshold, set it as `--iou_thrs 0.5`. Default includes `0.50:0.95` and `0.5` scores.
 
-If you want to specify export directory, set it as `--out_dir output/folder/directory `.
+If you want to specify export directory, set it as `--out_dir output/folder/directory`.
 
 ## `coco analyse` command usage:
 
@@ -140,14 +140,11 @@ Print related package versions in the current env as:
 
 ```bash
 >>sahi env
-06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   torch version 1.11.0 is available.
-06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   torchvision version 0.12.0 is available.
-06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   yolov5 version 6.1.3 is available.
-06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   mmdet version 2.25.0 is available.
-06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   mmcv version 1.5.3 is available.
-06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   detectron2 version 0.6+cpu is available.
-06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   transformers version 4.20.0 is available.
-06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   timm version 0.4.12 is available.
+06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   torch version 2.1.2 is available.
+06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   torchvision version 0.16.2 is available.
+06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   ultralytics version 8.3.86 is available.
+06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   transformers version 4.49.0 is available.
+06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   timm version 0.9.1 is available.
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   fiftyone version 0.14.2 is available.
 ```
 
@@ -157,7 +154,7 @@ Print your SAHI verison as:
 
 ```bash
 >>sahi version
-0.10.0
+0.11.22
 ```
 
 ## Custom scripts

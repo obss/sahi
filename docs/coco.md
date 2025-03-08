@@ -48,6 +48,7 @@ coco_image.add_annotation(
   )
 )
 ```
+
 - add predictions to coco image:
 
 ```python
@@ -88,6 +89,7 @@ from sahi.utils.file import save_json
 
 save_json(coco_json, "coco_dataset.json")
 ```
+
 - you can also export prediction array in coco prediction format and save it as json :
 
 ```python
@@ -96,6 +98,7 @@ from sahi.utils.file import save_json
 predictions_array = coco.prediction_array
 save_json = save_json(predictions_array, "coco_predictions.json")
 ```
+
 - this prediction array can be used to get standard coco metrics for the predictions using official pycocotool api :
 
 ```python
@@ -111,8 +114,6 @@ coco_evaluator.evaluate()
 coco_evaluator.accumulate()
 coco_evaluator.summarize()
 ```
-
-
 
 </details>
 
@@ -133,6 +134,7 @@ coco_dict, coco_path = slice_coco(
     overlap_width_ratio=0.2,
 )
 ```
+
 </details>
 
 <details closed>
@@ -159,6 +161,7 @@ result = coco.split_coco_as_train_val(
 save_json(result["train_coco"].json, "train_split.json")
 save_json(result["val_coco"].json, "val_split.json")
 ```
+
 </details>
 
 <details closed>
@@ -184,6 +187,7 @@ coco.update_categories(desired_name2id)
 # export updated/filtered COCO dataset
 save_json(coco.json, "updated_coco.json")
 ```
+
 </details>
 
 <details closed>
@@ -212,6 +216,7 @@ area_filtered_coco = coco.get_area_filtered_coco(intervals_per_category=interval
 # export filtered COCO dataset
 save_json(area_filtered_coco.json, "area_filtered_coco.json")
 ```
+
 </details>
 
 <details closed>
@@ -222,10 +227,11 @@ save_json(area_filtered_coco.json, "area_filtered_coco.json")
 ```python
 from sahi.utils.coco import Coco
 
-# set ignore_negative_samples as False if you want images without annotations present in json and yolov5 exports
+# set ignore_negative_samples as False if you want images without annotations present in json and YOLO exports
 coco = Coco.from_coco_dict_or_path("coco.json", ignore_negative_samples=False)
 
 ```
+
 </details>
 
 <details closed>
@@ -247,11 +253,12 @@ coco_1.merge(coco_2)
 # export merged COCO dataset
 save_json(coco_1.json, "merged_coco.json")
 ```
+
 </details>
 
 <details closed>
 <summary>
-<big><b>Convert COCO dataset to ultralytics/yolov5 format:</b></big>
+<big><b>Convert COCO dataset to ultralytics/YOLO format:</b></big>
 </summary>
 
 ```python
@@ -260,35 +267,35 @@ from sahi.utils.coco import Coco
 # init Coco object
 coco = Coco.from_coco_dict_or_path("coco.json", image_dir="coco_images/")
 
-# export converted YoloV5 formatted dataset into given output_dir with a 85% train/15% val split
-coco.export_as_yolov5(
+# export converted YOLO formatted dataset into given output_dir with a 85% train/15% val split
+coco.export_as_yolo(
   output_dir="output/folder/dir",
   train_split_rate=0.85
 )
-
 ```
+
 </details>
 
 <details closed>
 <summary>
-<big><b>Convert train/val COCO dataset to ultralytics/yolov5 format:</b></big>
+<big><b>Convert train/val COCO dataset to ultralytics/YOLO format:</b></big>
 </summary>
 
 ```python
-from sahi.utils.coco import Coco, export_coco_as_yolov5
+from sahi.utils.coco import Coco, export_coco_as_yolo
 
 # init Coco object
 train_coco = Coco.from_coco_dict_or_path("train_coco.json", image_dir="coco_images/")
 val_coco = Coco.from_coco_dict_or_path("val_coco.json", image_dir="coco_images/")
 
-# export converted YoloV5 formatted dataset into given output_dir with given train/val split
-data_yml_path = export_coco_as_yolov5(
+# export converted YOLO formatted dataset into given output_dir with given train/val split
+data_yml_path = export_coco_as_yolo(
   output_dir="output/folder/dir",
   train_coco=train_coco,
   val_coco=val_coco
 )
-
 ```
+
 </details>
 
 <details closed>

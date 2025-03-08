@@ -8,7 +8,7 @@ from sahi import AutoDetectionModel
 
 # init any model
 detection_model = AutoDetectionModel.from_pretrained(model_type='mmdet',...) # for MMDetection models
-detection_model = AutoDetectionModel.from_pretrained(model_type='yolov5',...) # for YOLOv5 models
+detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',...) # for YOLOv8/YOLO11/YOLO12 models
 detection_model = AutoDetectionModel.from_pretrained(model_type='huggingface',...) # for HuggingFace detection models
 detection_model = AutoDetectionModel.from_pretrained(model_type='torchvision',...) # for Torchvision detection models
 
@@ -52,9 +52,9 @@ detection_model = AutoDetectionModel.from_pretrained(...)
 
 # get batch predict result
 result = predict(
-    model_type=..., # one of 'yolov5', 'mmdet', 'detectron2'
+    model_type=..., # one of 'ultralytics', 'mmdet', 'huggingface'
     model_path=..., # path to model weight file
-    model_config_path=..., # for detectron2 and mmdet models
+    model_config_path=..., # for mmdet models
     model_confidence_threshold=0.5,
     model_device='cpu', # or 'cuda:0'
     source=..., # image or folder path

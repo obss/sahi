@@ -10,7 +10,7 @@ def main(
     image_dir: str,
     dataset_json_path: str,
     train_split: Union[int, float] = 0.9,
-    project: str = "runs/coco2yolov5",
+    project: str = "runs/coco2yolo",
     name: str = "exp",
     seed: int = 1,
     disable_symlink=False,
@@ -33,15 +33,15 @@ def main(
         coco_dict_or_path=dataset_json_path,
         image_dir=image_dir,
     )
-    # export as yolov5
-    coco.export_as_yolov5(
+    # export as YOLO
+    coco.export_as_yolo(
         output_dir=str(save_dir),
         train_split_rate=train_split,
         numpy_seed=seed,
         disable_symlink=disable_symlink,
     )
 
-    print(f"COCO to YOLOv5 conversion results are successfully exported to {save_dir}")
+    print(f"COCO to YOLO conversion results are successfully exported to {save_dir}")
 
 
 if __name__ == "__main__":
