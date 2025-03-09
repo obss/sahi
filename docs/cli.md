@@ -120,7 +120,7 @@ If you want to specify export directory, set it as `--out_dir output/folder/dire
 
 ## `coco analyse` command usage:
 
-You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-command-usage) command can be used to create that.
+You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage) command can be used to create that.
 
 ```bash
 >>sahi coco analyse --dataset_json_path dataset.json --result_json_path result.json --out_dir output/directory
@@ -159,13 +159,14 @@ Print your SAHI verison as:
 
 ## Custom scripts
 
-All scripts can be downloaded from [scripts directory](https://github.com/obss/sahi/main/cli/sahi/scripts) and modified by your needs. After installing `sahi` by pip, all scripts can be called from any directory as:
+All scripts can be downloaded from [scripts directory](https://github.com/obss/sahi/main/sahi/scripts) and modified by your needs. After installing `sahi` by pip, all scripts can be called from any directory as:
 
 ```bash
 python script_name.py
 ```
 
 # Additional Resources
+
 Looking to dive deeper? Here are some helpful resources:
 
 - For a detailed walkthrough of prediction parameters and visualization, check out our [prediction utilities documentation](predict.md)
