@@ -38,7 +38,10 @@ def get_shapely_multipolygon(coco_segmentation: List[List]) -> MultiPolygon:
         elif isinstance(geometry, MultiPolygon):
             return geometry
         elif isinstance(geometry, GeometryCollection):
-            polygons = [geom for geom in geometry.geoms if isinstance(geom, Polygon)]
+            polygons = [
+                geom.geoms if isinstance(geom, MultiPolygon) else geom
+                for geom in geometry.geoms if isinstance(geom, (Polygon, MultiPolygon))
+            ]
             return MultiPolygon(polygons) if polygons else MultiPolygon()
         return MultiPolygon()
 
