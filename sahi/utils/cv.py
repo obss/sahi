@@ -18,7 +18,7 @@ from sahi.utils.file import Path
 logger = logging.getLogger("__name__")
 
 IMAGE_EXTENSIONS_LOSSY = [".jpg", ".jpeg"]
-IMAGE_EXTENSIONS_LOSSLESS = [".png", ".tiff", ".bmp"]
+IMAGE_EXTENSIONS_LOSSLESS = [".png", ".tif", ".tiff", ".bmp"]
 IMAGE_EXTENSIONS = IMAGE_EXTENSIONS_LOSSY + IMAGE_EXTENSIONS_LOSSLESS
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".flv", ".avi", ".ts", ".mpg", ".mov", "wmv"]
 
