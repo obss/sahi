@@ -1312,7 +1312,31 @@ class Coco:
         disable_symlink: bool = False,
     ):
         """
-        Exports current COCO dataset in ultralytics/yolov5 format.
+        Deprecated. Please use export_as_yolo instead.
+        Calls export_as_yolo with the same arguments.
+        """
+        warnings.warn(
+            "export_as_yolov5 is deprecated. Please use export_as_yolo instead.",
+            DeprecationWarning,
+        )
+        self.export_as_yolo(
+            output_dir=output_dir,
+            train_split_rate=train_split_rate,
+            numpy_seed=numpy_seed,
+            mp=mp,
+            disable_symlink=disable_symlink,
+        )
+
+    def export_as_yolo(
+        self,
+        output_dir: Union[str, Path],
+        train_split_rate: float = 1.0,
+        numpy_seed: int = 0,
+        mp: bool = False,
+        disable_symlink: bool = False,
+    ):
+        """
+        Exports current COCO dataset in ultralytics/yolo format.
         Creates train val folders with image symlinks and txt files and a data yaml file.
 
         Args:
@@ -1333,9 +1357,7 @@ class Coco:
         try:
             import yaml
         except ImportError:
-            raise ImportError(
-                'Please run "pip install -U pyyaml" to install yaml first for yolov5 formatted exporting.'
-            )
+            raise ImportError('Please run "pip install -U pyyaml" to install yaml first for yolo formatted exporting.')
 
         # set split_mode
         if 0 < train_split_rate and train_split_rate < 1:
@@ -1374,7 +1396,7 @@ class Coco:
 
         # create image symlinks and annotation txts
         if split_mode in ["TRAINVAL", "TRAIN"]:
-            export_yolov5_images_and_txts_from_coco_object(
+            export_yolo_images_and_txts_from_coco_object(
                 output_dir=train_dir,
                 coco=train_coco,
                 ignore_negative_samples=self.ignore_negative_samples,
@@ -1382,7 +1404,7 @@ class Coco:
                 disable_symlink=disable_symlink,
             )
         if split_mode in ["TRAINVAL", "VAL"]:
-            export_yolov5_images_and_txts_from_coco_object(
+            export_yolo_images_and_txts_from_coco_object(
                 output_dir=val_dir,
                 coco=val_coco,
                 ignore_negative_samples=self.ignore_negative_samples,
@@ -1591,7 +1613,7 @@ class Coco:
         return coco
 
 
-def export_yolov5_images_and_txts_from_coco_object(
+def export_yolo_images_and_txts_from_coco_object(
     output_dir, coco, ignore_negative_samples=False, mp=False, disable_symlink=False
 ):
     """
@@ -1610,7 +1632,7 @@ def export_yolov5_images_and_txts_from_coco_object(
         disable_symlink: bool
             If True, symlinks are not created. Instead images are copied.
     """
-    logger.info("generating image symlinks and annotation files for yolov5...")
+    logger.info("generating image symlinks and annotation files for yolo...")
     # symlink is not supported in colab
     if is_colab() and not disable_symlink:
         logger.warning("symlink is not supported in colab, disabling it...")
@@ -1622,21 +1644,21 @@ def export_yolov5_images_and_txts_from_coco_object(
                 for coco_image in coco.images
             ]
             pool.starmap(
-                export_single_yolov5_image_and_corresponding_txt,
+                export_single_yolo_image_and_corresponding_txt,
                 tqdm(args, total=len(args)),
             )
     else:
         for coco_image in tqdm(coco.images):
-            export_single_yolov5_image_and_corresponding_txt(
+            export_single_yolo_image_and_corresponding_txt(
                 coco_image, coco.image_dir, output_dir, ignore_negative_samples, disable_symlink
             )
 
 
-def export_single_yolov5_image_and_corresponding_txt(
+def export_single_yolo_image_and_corresponding_txt(
     coco_image, coco_image_dir, output_dir, ignore_negative_samples=False, disable_symlink=False
 ):
     """
-    Generates yolov5 formatted image symlink and annotation txt file.
+    Generates YOLO formatted image symlink and annotation txt file.
 
     Args:
         coco_image: sahi.utils.coco.CocoImage
@@ -1670,7 +1692,7 @@ def export_single_yolov5_image_and_corresponding_txt(
         coco_image_path = os.path.abspath(coco_image.file_name)
     else:
         if coco_image_dir is None:
-            raise ValueError("You have to specify image_dir of Coco object for yolov5 conversion.")
+            raise ValueError("You have to specify image_dir of Coco object for yolo conversion.")
 
         coco_image_path = os.path.abspath(str(Path(coco_image_dir) / coco_image.file_name))
 
@@ -2386,7 +2408,33 @@ def export_coco_as_yolov5(
     disable_symlink=False,
 ):
     """
-    Exports current COCO dataset in ultralytics/yolov5 format.
+    Deprecated. Please use export_coco_as_yolo instead.
+    Calls export_coco_as_yolo with the same arguments.
+    """
+    warnings.warn(
+        "export_coco_as_yolov5 is deprecated. Please use export_coco_as_yolo instead.",
+        DeprecationWarning,
+    )
+    export_coco_as_yolo(
+        output_dir=output_dir,
+        train_coco=train_coco,
+        val_coco=val_coco,
+        train_split_rate=train_split_rate,
+        numpy_seed=numpy_seed,
+        disable_symlink=disable_symlink,
+    )
+
+
+def export_coco_as_yolo(
+    output_dir: str,
+    train_coco: Optional[Coco] = None,
+    val_coco: Optional[Coco] = None,
+    train_split_rate: float = 0.9,
+    numpy_seed=0,
+    disable_symlink=False,
+):
+    """
+    Exports current COCO dataset in ultralytics/YOLO format.
     Creates train val folders with image symlinks and txt files and a data yaml file.
 
     Args:
@@ -2405,12 +2453,12 @@ def export_coco_as_yolov5(
 
     Returns:
         yaml_path: str
-            Path for the exported yolov5 data.yml
+            Path for the exported YOLO data.yml
     """
     try:
         import yaml
     except ImportError:
-        raise ImportError('Please run "pip install -U pyyaml" to install yaml first for yolov5 formatted exporting.')
+        raise ImportError('Please run "pip install -U pyyaml" to install yaml first for YOLO formatted exporting.')
 
     # set split_mode
     if train_coco and not val_coco:
@@ -2440,7 +2488,7 @@ def export_coco_as_yolov5(
     val_dir.mkdir(parents=True, exist_ok=True)  # create dir
 
     # create image symlinks and annotation txts
-    export_yolov5_images_and_txts_from_coco_object(
+    export_yolo_images_and_txts_from_coco_object(
         output_dir=train_dir,
         coco=train_coco,
         ignore_negative_samples=train_coco.ignore_negative_samples,
@@ -2448,7 +2496,7 @@ def export_coco_as_yolov5(
         disable_symlink=disable_symlink,
     )
     assert val_coco, "Validation Coco object not set"
-    export_yolov5_images_and_txts_from_coco_object(
+    export_yolo_images_and_txts_from_coco_object(
         output_dir=val_dir,
         coco=val_coco,
         ignore_negative_samples=val_coco.ignore_negative_samples,
@@ -2474,7 +2522,27 @@ def export_coco_as_yolov5_via_yml(
     yml_path: str, output_dir: str, train_split_rate: float = 0.9, numpy_seed=0, disable_symlink=False
 ):
     """
-    Exports current COCO dataset in ultralytics/yolov5 format.
+    Deprecated. Please use export_coco_as_yolo_via_yml instead.
+    Calls export_coco_as_yolo_via_yml with the same arguments.
+    """
+    warnings.warn(
+        "export_coco_as_yolov5_via_yml is deprecated. Please use export_coco_as_yolo_via_yml instead.",
+        DeprecationWarning,
+    )
+    export_coco_as_yolo_via_yml(
+        yml_path=yml_path,
+        output_dir=output_dir,
+        train_split_rate=train_split_rate,
+        numpy_seed=numpy_seed,
+        disable_symlink=disable_symlink,
+    )
+
+
+def export_coco_as_yolo_via_yml(
+    yml_path: str, output_dir: str, train_split_rate: float = 0.9, numpy_seed=0, disable_symlink=False
+):
+    """
+    Exports current COCO dataset in ultralytics/YOLO format.
     Creates train val folders with image symlinks and txt files and a data yaml file.
     Uses a yml file as input.
 
@@ -2496,12 +2564,12 @@ def export_coco_as_yolov5_via_yml(
 
     Returns:
         yaml_path: str
-            Path for the exported yolov5 data.yml
+            Path for the exported YOLO data.yml
     """
     try:
         import yaml
     except ImportError:
-        raise ImportError('Please run "pip install -U pyyaml" to install yaml first for yolov5 formatted exporting.')
+        raise ImportError('Please run "pip install -U pyyaml" to install yaml first for YOLO formatted exporting.')
 
     with open(yml_path, "r") as stream:
         config_dict = yaml.safe_load(stream)
@@ -2522,7 +2590,7 @@ def export_coco_as_yolov5_via_yml(
     else:
         val_coco = None
 
-    yaml_path = export_coco_as_yolov5(
+    yaml_path = export_coco_as_yolo(
         output_dir=output_dir,
         train_coco=train_coco,
         val_coco=val_coco,

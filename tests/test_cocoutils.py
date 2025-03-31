@@ -351,7 +351,7 @@ class TestCocoUtils(unittest.TestCase):
         if os.path.isdir(output_dir):
             shutil.rmtree(output_dir, ignore_errors=True)
         coco = Coco.from_coco_dict_or_path(coco_dict_path, image_dir=image_dir)
-        coco.export_as_yolov5(output_dir=output_dir, train_split_rate=0.5, numpy_seed=0)
+        coco.export_as_yolo(output_dir=output_dir, train_split_rate=0.5, numpy_seed=0)
 
     def test_update_categories(self):
         coco_path = "tests/data/coco_utils/terrain2_coco.json"
@@ -672,7 +672,7 @@ class TestCocoUtils(unittest.TestCase):
         self.assertEqual(area_filtered_coco.stats["num_annotations"], len(area_filtered_coco.json["annotations"]))
 
     def test_export_coco_as_yolov5(self):
-        from sahi.utils.coco import Coco, export_coco_as_yolov5
+        from sahi.utils.coco import Coco, export_coco_as_yolo
 
         coco_dict_path = "tests/data/coco_utils/combined_coco.json"
         image_dir = "tests/data/coco_utils/"
@@ -680,7 +680,7 @@ class TestCocoUtils(unittest.TestCase):
         if os.path.isdir(output_dir):
             shutil.rmtree(output_dir, ignore_errors=True)
         coco = Coco.from_coco_dict_or_path(coco_dict_path, image_dir=image_dir)
-        export_coco_as_yolov5(output_dir=output_dir, train_coco=coco, val_coco=coco, numpy_seed=0)
+        export_coco_as_yolo(output_dir=output_dir, train_coco=coco, val_coco=coco, numpy_seed=0)
 
     def test_cocovid(self):
         # from sahi.utils.coco import CocoVid
