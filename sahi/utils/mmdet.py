@@ -174,8 +174,8 @@ def download_mmdet_config(
                         str(config_path),
                     )
 
-        # dump final config as single file
         from mmengine import Config
+        # dump final config as single file
 
         config = Config.fromfile(main_config_path)
         config.dump(final_config_path)

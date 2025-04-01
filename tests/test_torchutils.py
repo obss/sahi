@@ -12,7 +12,6 @@ class TestTorchUtils(unittest.TestCase):
             self.assertIsNone(empty_cuda_cache())
 
     def test_to_float_tensor(self):
-
         img = to_float_tensor(np.random.randint(0, 256, (10, 10, 3), dtype=np.uint8))
         self.assertEqual(img.shape, (3, 10, 10))
 

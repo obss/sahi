@@ -2,7 +2,7 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 from PIL import Image
@@ -46,7 +46,7 @@ class ObjectPrediction(ObjectAnnotation):
         category_id: Optional[int] = None,
         category_name: Optional[str] = None,
         segmentation: Optional[List[List[float]]] = None,
-        score: Optional[float] = 0,
+        score: float = 0.0,
         shift_amount: Optional[List[int]] = [0, 0],
         full_shape: Optional[List[int]] = None,
     ):
@@ -162,7 +162,7 @@ class PredictionResult:
         self,
         object_prediction_list: List[ObjectPrediction],
         image: Union[Image.Image, str, np.ndarray],
-        durations_in_seconds: Optional[Dict] = None,
+        durations_in_seconds: Dict[str, Any] = dict(),
     ):
         self.image: Image.Image = read_image_as_pil(image)
         self.image_width, self.image_height = self.image.size
@@ -172,8 +172,8 @@ class PredictionResult:
     def export_visuals(
         self,
         export_dir: str,
-        text_size: float = None,
-        rect_th: int = None,
+        text_size: Optional[float] = None,
+        rect_th: Optional[int] = None,
         hide_labels: bool = False,
         hide_conf: bool = False,
         file_name: str = "prediction_visual",
@@ -227,7 +227,7 @@ class PredictionResult:
         try:
             import fiftyone as fo
         except ImportError:
-            raise ImportError('Please run "pip install -U fiftyone" to install fiftyone first for fiftyone conversion.')
+            raise ImportError('Please run "uv pip install -U fiftyone" to install fiftyone for conversion.')
 
         fiftyone_detection_list: List[fo.Detection] = []
         for object_prediction in self.object_prediction_list:

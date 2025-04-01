@@ -1,4 +1,4 @@
-__version__ = "0.11.20"
+__version__ = "0.11.22"
 
 from sahi.annotation import BoundingBox, Category, Mask
 from sahi.auto_model import AutoDetectionModel

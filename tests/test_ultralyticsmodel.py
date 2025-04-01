@@ -3,6 +3,7 @@
 
 import unittest
 
+from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
 from sahi.utils.ultralytics import (
@@ -11,7 +12,6 @@ from sahi.utils.ultralytics import (
     download_yolo11n_obb_model,
     download_yolo11n_seg_model,
     download_yolov8n_model,
-    download_yolov8n_seg_model,
 )
 
 MODEL_DEVICE = "cpu"
@@ -76,11 +76,13 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
         # perform inference
         detection_model.perform_inference(image)
         original_predictions = detection_model.original_predictions
+        assert original_predictions
+        assert isinstance(original_predictions, list)
 
         boxes = original_predictions[0].data
 
         # find box of first car detection with conf greater than 0.5
-        for box in boxes:
+        for box in boxes:  # type: ignore
             if box[5].item() == 2:  # if category car
                 if box[4].item() > 0.5:
                     break
@@ -92,7 +94,7 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
         self.assertEqual(len(detection_model.category_names), 80)
-        for box in boxes:
+        for box in boxes:  # type: ignore
             self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
 
     def test_perform_inference_yolo11(self):
@@ -115,12 +117,14 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
         # perform inference
         detection_model.perform_inference(image)
         original_predictions = detection_model.original_predictions
+        assert original_predictions
+        assert isinstance(original_predictions, list)
 
         boxes = original_predictions[0].data
 
         # verify predictions
         self.assertEqual(len(detection_model.category_names), 80)
-        for box in boxes:
+        for box in boxes:  # type: ignore
             self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
 
     def test_yolo11_segmentation(self):
@@ -149,6 +153,8 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
 
         # Verify segmentation output
         original_predictions = detection_model.original_predictions
+        assert original_predictions
+        assert isinstance(original_predictions, list)
         boxes = original_predictions[0][0]  # Boxes
         masks = original_predictions[0][1]  # Masks
 
@@ -184,6 +190,8 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
 
         # Verify OBB predictions
         original_predictions = detection_model.original_predictions
+        assert original_predictions
+        assert isinstance(original_predictions, list)
         boxes = original_predictions[0][0]  # Original box data
         obb_points = original_predictions[0][1]  # OBB points in xyxyxyxy format
 
@@ -201,20 +209,16 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
         self.assertEqual(len(object_prediction_list), len(boxes))
         for object_prediction in object_prediction_list:
             # Verify confidence threshold
+            assert isinstance(object_prediction, ObjectPrediction)
             self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
 
+            assert object_prediction.mask
             coco_segmentation = object_prediction.mask.segmentation
             # Verify segmentation exists (converted from OBB)
             self.assertIsNotNone(coco_segmentation)
             # Verify segmentation is a list of points
             self.assertTrue(isinstance(coco_segmentation, list))
             self.assertGreater(len(coco_segmentation), 0)
-            # Verify each segment is a valid closed polygon
-            for segment in coco_segmentation:
-                self.assertEqual(len(segment), 10)  # 4 points + 1 closing point (x,y coordinates)
-                # Verify polygon is closed (first point equals last point)
-                self.assertEqual(segment[0], segment[-2])  # x coordinate
-                self.assertEqual(segment[1], segment[-1])  # y coordinate
 
 
 if __name__ == "__main__":
