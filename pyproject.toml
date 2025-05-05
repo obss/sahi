@@ -41,7 +41,7 @@ sahi = "sahi.cli:app"
 
 [tool.uv]
 find-links = [
-  "https://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html"
+  "https://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
 ]
 default-groups = ["dev", "ci"]
 
