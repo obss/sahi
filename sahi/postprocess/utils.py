@@ -114,7 +114,7 @@ def repair_multipolygon(
 
 
 def coco_segmentation_to_shapely(
-    segmentation: Union[list, list[list]]
+    segmentation: Union[List, List[List]]
 ):
     """
     Fix segment data in COCO format
