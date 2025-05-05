@@ -150,7 +150,7 @@ Print related package versions in the current env as:
 
 ## `version` command usage:
 
-Print your SAHI verison as:
+Print your SAHI version as:
 
 ```bash
 >>sahi version
@@ -159,7 +159,7 @@ Print your SAHI verison as:
 
 ## Custom scripts
 
-All scripts can be downloaded from [scripts directory](https://github.com/obss/sahi/main/sahi/scripts) and modified by your needs. After installing `sahi` by pip, all scripts can be called from any directory as:
+All scripts can be downloaded from [scripts directory](https://github.com/obss/sahi/tree/main/scripts) and modified by your needs. After installing `sahi` by pip, all scripts can be called from any directory as:
 
 ```bash
 python script_name.py
