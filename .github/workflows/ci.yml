@@ -43,8 +43,17 @@ jobs:
           key: apt-cache
       - name: Install libgl
         run: sudo apt-get update && sudo apt-get install -y libgl1
-      - name: Setup dependencies
-        run: uv sync
+      - name: Debug uv sync
+        run: |
+          set -e
+          uv sync -v
+      - name: Verify .venv Activation
+        run: |
+          if [ ! -d ".venv" ]; then
+            echo ".venv directory not found"
+            exit 1
+          fi
+          source .venv/bin/activate
       - name: Install sahi from PyPI
         if: github.event_name == 'schedule'
         run: |
