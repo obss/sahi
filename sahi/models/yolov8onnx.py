@@ -42,7 +42,7 @@ class Yolov8OnnxDetectionModel(DetectionModel):
             if self.device == torch.device("cpu"):
                 EP_list = ["CPUExecutionProvider"]
             else:
-                EP_list = ["CUDAExecutionProvider"]
+                EP_list = ["TensorrtExecutionProvider", "CUDAExecutionProvider"]
 
             options = onnxruntime.SessionOptions()
 
