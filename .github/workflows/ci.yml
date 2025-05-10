@@ -59,7 +59,7 @@ jobs:
         run: |
           rm -fr sahi
           uv pip install --force-reinstall sahi
-          uv pip install numpy<2
+          uv pip install "numpy<2"
           uv pip show sahi
           source .venv/bin/activate
           python -c "import sahi; print(sahi.__version__)"
