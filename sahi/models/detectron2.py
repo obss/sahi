@@ -28,11 +28,13 @@ class Detectron2DetectionModel(DetectionModel):
 
         try:  # try to load from model zoo
             config_file = model_zoo.get_config_file(self.config_path)
+            cfg.set_new_allowed(True)
             cfg.merge_from_file(config_file)
             cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(self.config_path)
         except Exception as e:  # try to load from local
             print(e)
             if self.config_path is not None:
+                cfg.set_new_allowed(True)
                 cfg.merge_from_file(self.config_path)
             cfg.MODEL.WEIGHTS = self.model_path
 
