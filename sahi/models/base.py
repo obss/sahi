@@ -57,7 +57,7 @@ class DetectionModel:
         self.image_size = image_size
         self._original_predictions = None
         self._object_prediction_list_per_image = None
-        self.set_device()
+        self.set_device(device)
 
         # automatically load model if load_at_init is True
         if load_at_init:
