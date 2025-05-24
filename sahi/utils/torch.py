@@ -72,7 +72,7 @@ def select_device(device: Optional[str] = None) -> device:
 
     Inspired by https://github.com/ultralytics/yolov5/blob/6371de8879e7ad7ec5283e8b95cc6dd85d6a5e72/utils/torch_utils.py#L107
     """
-    if device == "cuda" or device == None:
+    if device == "cuda" or device is None:
         device = "cuda:0"
     device = str(device).strip().lower().replace("cuda:", "").replace("none", "")  # to string, 'cuda:0' to '0'
     cpu = device == "cpu"
