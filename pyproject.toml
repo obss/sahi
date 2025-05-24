@@ -1,6 +1,6 @@
 [project]
 name = "sahi"
-version = "0.11.22"
+version = "0.11.23"
 readme = "README.md"
 description = "A vision library for performing sliced inference on large images/small objects"
 requires-python = ">=3.8"
