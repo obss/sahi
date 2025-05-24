@@ -36,7 +36,7 @@ fiftyone_detections = result.to_fiftyone_detections()
 - Explore detection results in Fiftyone UI:
 
 ```bash
-sahi coco fifityone --image_dir dir/to/images --dataset_json_path dataset.json cocoresult1.json cocoresult2.json
+sahi coco fiftyone --image_dir dir/to/images --dataset_json_path dataset.json cocoresult1.json cocoresult2.json
 ```
 
 will open a FiftyOne app that visualizes the given dataset and 2 detection results.

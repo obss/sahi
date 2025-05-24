@@ -102,7 +102,7 @@ save_json = save_json(predictions_array, "coco_predictions.json")
 - this prediction array can be used to get standard coco metrics for the predictions using official pycocotool api :
 
 ```python
-# note:- pycocotools need to be installed seperately 
+# note:- pycocotools need to be installed separately 
 from pycocotools.cocoeval import COCOeval
 from pycocotools.coco import COCO
 
@@ -206,7 +206,7 @@ coco = Coco.from_coco_dict_or_path("coco.json")
 area_filtered_coco = coco.get_area_filtered_coco(min=50)
 # filter out images that contain annotations with smaller area than 50 and larger area than 10000
 area_filtered_coco = coco.get_area_filtered_coco(min=50, max=10000)
-# filter out images with seperate area intervals per category
+# filter out images with separate area intervals per category
 intervals_per_category = {
   "human": {"min": 20, "max": 10000},
   "vehicle": {"min": 50, "max": 15000},

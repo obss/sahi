@@ -50,7 +50,7 @@ You can specify additional sliced prediction parameters as:
 
 - By default, scripts apply both standard and sliced prediction (multi-stage inference). If you don't want to perform sliced prediction add `--no_sliced_prediction` argument. If you don't want to perform standard prediction add `--no_standard_prediction` argument.
 
-- If you want to perform prediction using a COCO annotation file, provide COCO json path as add `--dataset_json_path dataset.json` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_evaluation command to calculate COCO evaluation results or coco_error_analysis command to calculate detailed COCO error plots.
+- If you want to perform prediction using a COCO annotation file, provide COCO json path as `--dataset_json_path dataset.json` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_evaluation command to calculate COCO evaluation results or coco_error_analysis command to calculate detailed COCO error plots.
 
 ## `predict-fiftyone` command usage:
 
@@ -114,9 +114,9 @@ If you want to also calculate classwise scores add `--classwise` argument.
 
 If you want to specify max detections, set it as `--proposal_nums "[10 100 500]"`.
 
-If you want to specify a psecific IOU threshold, set it as `--iou_thrs 0.5`. Default includes `0.50:0.95` and `0.5` scores.
+If you want to specify a specific IOU threshold, set it as `--iou_thrs 0.5`. Default includes `0.50:0.95` and `0.5` scores.
 
-If you want to specify export directory, set it as `--out_dir output/folder/directory`.
+If you want to specify an export directory, set it as `--out_dir output/folder/directory`.
 
 ## `coco analyse` command usage:
 
@@ -150,7 +150,7 @@ Print related package versions in the current env as:
 
 ## `version` command usage:
 
-Print your SAHI verison as:
+Print your SAHI version as:
 
 ```bash
 >>sahi version
@@ -159,7 +159,7 @@ Print your SAHI verison as:
 
 ## Custom scripts
 
-All scripts can be downloaded from [scripts directory](https://github.com/obss/sahi/main/sahi/scripts) and modified by your needs. After installing `sahi` by pip, all scripts can be called from any directory as:
+All scripts can be downloaded from [scripts directory](https://github.com/obss/sahi/tree/main/scripts) and modified by your needs. After installing `sahi` by pip, all scripts can be called from any directory as:
 
 ```bash
 python script_name.py
