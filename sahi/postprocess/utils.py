@@ -122,9 +122,9 @@ def coco_segmentation_to_shapely(
     :param segmentation: segment data in COCO format
     :return:
     """
-    if isinstance(segmentation, list) and all([not isinstance(seg, list) for seg in segmentation]):
+    if isinstance(segmentation, List) and all([not isinstance(seg, List) for seg in segmentation]):
         segmentation = [segmentation]
-    elif isinstance(segmentation, list) and all([isinstance(seg, list) for seg in segmentation]):
+    elif isinstance(segmentation, List) and all([isinstance(seg, List) for seg in segmentation]):
         pass
     else:
         raise ValueError("segmentation must be list or list[list]")
