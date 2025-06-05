@@ -163,6 +163,12 @@ mim install mmdet==3.3.0
 pip install transformers>=4.42.0 timm
 ```
 
+- Install your desired detection framework (roboflow):
+
+```console
+pip install inference>=0.50.3 rfdetr>=1.1.0
+```
+
 </details>
 
 ### Framework Agnostic Sliced/Standard Prediction
