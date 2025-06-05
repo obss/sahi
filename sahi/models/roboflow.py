@@ -30,10 +30,23 @@ class RoboflowDetectionModel(DetectionModel):
         Initialize the RoboflowDetectionModel with the given parameters.
 
         Args:
-            model_path (str): Path to the pre-trained Roboflow model weights.
-            device (str): Device to run the model on, e.g., 'cuda' or 'cpu'.
-            confidence_threshold (float): Confidence threshold for predictions.
-            mask_threshold (float): Threshold for mask predictions.
+            model_path: str
+                Path for the instance segmentation model weight
+            config_path: str
+                Path for the mmdetection instance segmentation model config file
+            device: Torch device, "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.
+            mask_threshold: float
+                Value to threshold mask pixels, should be between 0 and 1
+            confidence_threshold: float
+                All predictions with score < confidence_threshold will be discarded
+            category_mapping: dict: str to str
+                Mapping from category id (str) to category name (str) e.g. {"1": "pedestrian"}
+            category_remapping: dict: str to int
+                Remap category ids based on category names, after performing inference e.g. {"car": 3}
+            load_at_init: bool
+                If True, automatically loads the model at initialization
+            image_size: int
+                Inference input size.
         """
         self._use_universe = model and isinstance(model, str)
         self._model = model
@@ -105,7 +118,7 @@ class RoboflowDetectionModel(DetectionModel):
                 model_params = dict(
                     resolution=int(self.image_size) if self.image_size else 560,
                     device=self._device,
-                    num_classes=len(self.category_mapping) if self.category_mapping else 91,
+                    num_classes=len(self.category_mapping.keys()) if self.category_mapping else None,
                 )
                 if model_path:
                     model_params["pretrain_weights"] = model_path
@@ -131,8 +144,10 @@ class RoboflowDetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted.
         """
-        predictions = self.model.infer(image, confidence=self.confidence_threshold)
-        self._original_predictions = predictions
+        if self._use_universe:
+            self._original_predictions = self.model.infer(image, confidence=self.confidence_threshold)
+        else:
+            self._original_predictions = [self.model.predict(image, confidence=self.confidence_threshold)]
 
     def _create_object_prediction_list_from_original_predictions(
         self,
@@ -151,47 +166,77 @@ class RoboflowDetectionModel(DetectionModel):
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
-        from inference.core.entities.responses.inference import (
-            ObjectDetectionInferenceResponse as InferenceObjectDetectionInferenceResponse,
-        )
-        from inference.core.entities.responses.inference import (
-            ObjectDetectionPrediction as InferenceObjectDetectionPrediction,
-        )
-
-        original_reponses: List[InferenceObjectDetectionInferenceResponse] = self._original_predictions
-
         # compatibility for sahi v0.8.15
         shift_amount_list = fix_shift_amount_list(shift_amount_list)
         full_shape_list = fix_full_shape_list(full_shape_list)
-        full_shape_list = full_shape_list or [None] * len(original_reponses)
-
-        assert len(original_reponses) == len(shift_amount_list) == len(full_shape_list), (
-            "Length mismatch between original responses, shift amounts, and full shapes."
-        )
 
         object_prediction_list: List[ObjectPrediction] = []
-        for original_reponse, shift_amount, full_shape in zip(
-            original_reponses,
-            shift_amount_list,
-            full_shape_list,
-        ):
-            for prediction in original_reponse.predictions:
-                prediction: InferenceObjectDetectionPrediction
-                bbox = [
-                    prediction.x - prediction.width / 2,
-                    prediction.y - prediction.height / 2,
-                    prediction.x + prediction.width / 2,
-                    prediction.y + prediction.height / 2,
-                ]
-                object_prediction = ObjectPrediction(
-                    bbox=bbox,
-                    category_id=prediction.class_id,
-                    category_name=prediction.class_name,
-                    score=prediction.confidence,
-                    shift_amount=shift_amount,
-                    full_shape=full_shape,
-                )
-                object_prediction_list.append(object_prediction)
+
+        if self._use_universe:
+            from inference.core.entities.responses.inference import (
+                ObjectDetectionInferenceResponse as InferenceObjectDetectionInferenceResponse,
+            )
+            from inference.core.entities.responses.inference import (
+                ObjectDetectionPrediction as InferenceObjectDetectionPrediction,
+            )
+
+            original_reponses: List[InferenceObjectDetectionInferenceResponse] = self._original_predictions
+
+            assert len(original_reponses) == len(shift_amount_list) == len(full_shape_list), (
+                "Length mismatch between original responses, shift amounts, and full shapes."
+            )
+
+            for original_reponse, shift_amount, full_shape in zip(
+                original_reponses,
+                shift_amount_list,
+                full_shape_list,
+            ):
+                for prediction in original_reponse.predictions:
+                    prediction: InferenceObjectDetectionPrediction
+                    bbox = [
+                        prediction.x - prediction.width / 2,
+                        prediction.y - prediction.height / 2,
+                        prediction.x + prediction.width / 2,
+                        prediction.y + prediction.height / 2,
+                    ]
+                    object_prediction = ObjectPrediction(
+                        bbox=bbox,
+                        category_id=prediction.class_id,
+                        category_name=prediction.class_name,
+                        score=prediction.confidence,
+                        shift_amount=shift_amount,
+                        full_shape=full_shape,
+                    )
+                    object_prediction_list.append(object_prediction)
+
+        else:
+            from supervision.detection.core import Detections
+
+            original_detections: List[Detections] = self._original_predictions
+
+            assert len(original_detections) == len(shift_amount_list) == len(full_shape_list), (
+                "Length mismatch between original responses, shift amounts, and full shapes."
+            )
+
+            for original_detection, shift_amount, full_shape in zip(
+                original_detections,
+                shift_amount_list,
+                full_shape_list,
+            ):
+                for xyxy, confidence, class_id in zip(
+                    original_detection.xyxy,
+                    original_detection.confidence,
+                    original_detection.class_id,
+                ):
+                    object_prediction = ObjectPrediction(
+                        bbox=xyxy,
+                        category_id=int(class_id),
+                        category_name=self.category_mapping.get(int(class_id), None),
+                        score=float(confidence),
+                        shift_amount=shift_amount,
+                        full_shape=full_shape,
+                    )
+                    object_prediction_list.append(object_prediction)
 
         object_prediction_list_per_image = [object_prediction_list]
         self._object_prediction_list_per_image = object_prediction_list_per_image
