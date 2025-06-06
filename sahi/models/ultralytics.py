@@ -7,12 +7,12 @@ from typing import Any, List, Optional
 import cv2
 import numpy as np
 import torch
-
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
+from ultralytics.engine.results import Masks
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ class UltralyticsDetectionModel(DetectionModel):
                     )
                     if result.obb is not None
                     else torch.empty((0, 6), device=self.model.device),
-                    # Get OBB points in (N, 4, 2) format
+                        # Get OBB points in (N, 4, 2) format
                     result.obb.xyxyxyxy if result.obb is not None else torch.empty((0, 4, 2), device=self.model.device),
                 )
                 for result in prediction_result
@@ -138,7 +138,7 @@ class UltralyticsDetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        shift_amount_list=None,
         full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
@@ -152,6 +152,8 @@ class UltralyticsDetectionModel(DetectionModel):
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
+        if shift_amount_list is None:
+            shift_amount_list = [[0, 0]]
         original_predictions = self._original_predictions
 
         # compatibility for sahi v0.8.15
@@ -168,8 +170,10 @@ class UltralyticsDetectionModel(DetectionModel):
 
             # Extract boxes and optional masks/obb
             if self.has_mask or self.is_obb:
-                boxes = image_predictions[0].cpu().detach().numpy()
-                masks_or_points = image_predictions[1].cpu().detach().numpy()
+                boxes = image_predictions.boxes.data.cpu().detach().numpy()
+                if image_predictions.masks is None:
+                    image_predictions.masks = Masks(torch.tensor([], device=self.model.device), image_predictions.boxes.orig_shape)
+                masks_or_points = image_predictions.masks.data.cpu().detach().numpy()
             else:
                 boxes = image_predictions.data.cpu().detach().numpy()
                 masks_or_points = None
@@ -201,9 +205,8 @@ class UltralyticsDetectionModel(DetectionModel):
                     if self.has_mask:
                         bool_mask = masks_or_points[pred_ind]
                         # Resize mask to original image size
-                        bool_mask = cv2.resize(
-                            bool_mask.astype(np.uint8), (self._original_shape[1], self._original_shape[0])
-                        )
+                        resize_h, resize_w = original_predictions[image_ind].orig_shape
+                        bool_mask = cv2.resize(bool_mask.astype(np.uint8), (resize_w, resize_h))
                         segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
                     else:  # is_obb
                         obb_points = masks_or_points[pred_ind]  # Get OBB points for this prediction
