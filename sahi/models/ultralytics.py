@@ -214,8 +214,10 @@ class UltralyticsDetectionModel(DetectionModel):
                             # 逆 letter_box
                             target_h, target_w = bool_mask.shape
                             (new_height, new_width, ratio), (pad_left, pad_top, pad_right, pad_bottom) = self.get_letter_args((orig_w, orig_h), (target_w, target_h))
+
+                            bool_mask = cv2.resize(bool_mask.astype(np.uint8), (orig_w, orig_h))
+                            segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
                             print()
-                            pass
                     else:  # is_obb
                         obb_points = masks_or_points[pred_ind]  # Get OBB points for this prediction
                         segmentation = [obb_points.reshape(-1).tolist()]
