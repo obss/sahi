@@ -205,9 +205,17 @@ class UltralyticsDetectionModel(DetectionModel):
                     if self.has_mask:
                         bool_mask = masks_or_points[pred_ind]
                         # Resize mask to original image size
-                        resize_h, resize_w = original_predictions[image_ind].orig_shape
-                        bool_mask = cv2.resize(bool_mask.astype(np.uint8), (resize_w, resize_h))
-                        segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
+                        orig_h, orig_w = original_predictions[image_ind].orig_shape
+
+                        if (orig_h, orig_w) == bool_mask.shape:
+                            bool_mask = cv2.resize(bool_mask.astype(np.uint8), (orig_w, orig_h))
+                            segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
+                        else:
+                            # 逆 letter_box
+                            target_h, target_w = bool_mask.shape
+                            (new_height, new_width, ratio), (pad_left, pad_top, pad_right, pad_bottom) = self.get_letter_args((orig_w, orig_h), (target_w, target_h))
+                            print()
+                            pass
                     else:  # is_obb
                         obb_points = masks_or_points[pred_ind]  # Get OBB points for this prediction
                         segmentation = [obb_points.reshape(-1).tolist()]
@@ -230,3 +238,32 @@ class UltralyticsDetectionModel(DetectionModel):
             object_prediction_list_per_image.append(object_prediction_list)
 
         self._object_prediction_list_per_image = object_prediction_list_per_image
+
+    @staticmethod
+    def get_letter_args(
+        orig_size: tuple[int, int],
+        target_size: tuple[int, int] = (640, 640),
+    ) -> tuple[tuple[int, int, float], tuple[int, int, int, int]]:
+        """
+        获取 resize尺寸 和 pad尺寸
+
+        :param orig_size: 原始图像尺寸 w, h
+        :param target_size: 目标尺寸 w, h
+        :return: resize尺寸和缩放比例(r_h, r_w, ratio) 和 pad尺寸(p_left, p_top, p_right, p_bottom)
+        """
+        # 获取原始图像尺寸
+        orig_height, orig_width = orig_size
+        target_height, target_width = target_size
+
+        # 计算缩放比例, 保持宽高比
+        ratio = min(target_width / orig_width, target_height / orig_height)
+        new_width = int(orig_width * ratio)
+        new_height = int(orig_height * ratio)
+
+        # 计算需要填充的像素
+        pad_left = (target_width - new_width) // 2
+        pad_top = (target_height - new_height) // 2
+        pad_right = target_width - new_width - pad_left
+        pad_bottom = target_height - new_height - pad_top
+
+        return (new_height, new_width, ratio), (pad_left, pad_top, pad_right, pad_bottom)
