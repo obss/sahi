@@ -207,7 +207,7 @@ class UltralyticsDetectionModel(DetectionModel):
                         # Resize mask to original image size
                         orig_h, orig_w = original_predictions[image_ind].orig_shape
 
-                        if [orig_h, orig_w] == full_shape_list[-1]:
+                        if list(original_predictions[-1].orig_shape) == full_shape_list[-1]:
                             # 逆 letter_box
                             target_h, target_w = bool_mask.shape
                             (_, _, _), (pad_left, pad_top, pad_right, pad_bottom) = self.get_letter_args((orig_w, orig_h), (target_w, target_h))
