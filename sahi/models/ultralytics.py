@@ -7,13 +7,12 @@ from typing import Any, List, Optional
 import cv2
 import numpy as np
 import torch
-from ultralytics.engine.results import Masks
-
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
+from ultralytics.engine.results import Masks
 
 logger = logging.getLogger(__name__)
 
@@ -208,17 +207,12 @@ class UltralyticsDetectionModel(DetectionModel):
                         # Resize mask to original image size
                         orig_h, orig_w = original_predictions[image_ind].orig_shape
 
-                        ####################################################################################
                         # BUG: sahi新版本中,如果对原图进行推理, 则需要进行letterbox处理
-                        # if list(original_predictions[-1].orig_shape) == full_shape_list[-1]:
-                        # 逆 letter_box
-                        target_h, target_w = bool_mask.shape
-                        (_, _, _), (pad_left, pad_top, pad_right, pad_bottom) = self.get_letter_args(
-                            (orig_h, orig_w),
-                            (target_h, target_w),
-                        )
-                        bool_mask = bool_mask[pad_top:target_h - pad_bottom, pad_left:target_w - pad_right]
-                        ####################################################################################
+                        if list(original_predictions[-1].orig_shape) == full_shape_list[-1]:
+                            # 逆 letter_box
+                            target_h, target_w = bool_mask.shape
+                            (_, _, _), (pad_left, pad_top, pad_right, pad_bottom) = self.get_letter_args((orig_h, orig_w), (target_h, target_w))
+                            bool_mask = bool_mask[pad_top:target_h - pad_bottom, pad_left:target_w - pad_right]
 
                         bool_mask = cv2.resize(bool_mask.astype(np.uint8), (orig_w, orig_h))
                         segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
