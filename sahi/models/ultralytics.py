@@ -175,7 +175,7 @@ class UltralyticsDetectionModel(DetectionModel):
                     image_predictions.masks = Masks(torch.tensor([], device=self.model.device), image_predictions.boxes.orig_shape)
                 masks_or_points = image_predictions.masks.data.cpu().detach().numpy()
             else:
-                boxes = image_predictions.data.cpu().detach().numpy()
+                boxes = image_predictions.boxes.data.cpu().detach().numpy()
                 masks_or_points = None
 
             # Process each prediction
