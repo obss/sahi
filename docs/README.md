@@ -56,7 +56,6 @@ All documentation files are complemented by interactive Jupyter notebooks in the
 - `inference_for_huggingface.ipynb` - HuggingFace models integration
 - `inference_for_torchvision.ipynb` - TorchVision models integration
 - `inference_for_rtdetr.ipynb` - RT-DETR integration
-- `inference_for_sparse_yolov5.ipynb` - DeepSparse optimized inference
 
 ## Getting Started
 
