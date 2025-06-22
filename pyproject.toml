@@ -53,6 +53,8 @@ dev = [
   "jupyterlab>=3.0.14",
 ]
 ci = [
+  # Constrain numpy version only for older torch/torchvision that require numpy<2
+  "numpy<2.0;python_version<'3.12'",
   # pytorch should be present for all python versions
   # CPU versions for Linux/Windows CI
   "torch==2.6.0+cpu;python_version>='3.12' and platform_system!='Darwin'",
@@ -71,8 +73,10 @@ ci = [
   "onnxruntime<1.20;python_version<'3.12'",
   "onnx>1.16;python_version>='3.12'",
   "onnxruntime;python_version>='3.12'",
-  # transformers is supported for python>=3.9
+  # transformers and rfdetr is supported for python>=3.9
   "transformers>=4.49.0;python_version>='3.9'",
+  "inference>=0.50.3;python_version>='3.9'",
+  "rfdetr>=1.1.0;python_version>='3.9'",
   # These are available for all python versions
   "pycocotools>=2.0.7",
   "ultralytics>=8.3.86",
