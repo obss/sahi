@@ -75,7 +75,7 @@ ci = [
   # transformers and rfdetr is supported for python>=3.9
   "transformers>=4.49.0;python_version>='3.9'",
   "inference>=0.50.3;python_version>='3.9'",
-  "rfdetr>=1.1.0;python_version>='3.9'"
+  "rfdetr>=1.1.0;python_version>='3.9'",
   # These are available for all python versions
   "pycocotools>=2.0.7",
   "ultralytics>=8.3.86",
