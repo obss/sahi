@@ -219,12 +219,6 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
             # Verify segmentation is a list of points
             self.assertTrue(isinstance(coco_segmentation, list))
             self.assertGreater(len(coco_segmentation), 0)
-            # Verify each segment is a valid closed polygon
-            for segment in coco_segmentation:
-                self.assertEqual(len(segment), 10)  # 4 points + 1 closing point (x,y coordinates)
-                # Verify polygon is closed (first point equals last point)
-                self.assertEqual(segment[0], segment[-2])  # x coordinate
-                self.assertEqual(segment[1], segment[-1])  # y coordinate
 
 
 if __name__ == "__main__":

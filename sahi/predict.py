@@ -115,6 +115,9 @@ def get_prediction(
     time_end = time.time() - time_start
     durations_in_seconds["prediction"] = time_end
 
+    if full_shape is None:
+        full_shape = [image_as_pil.height, image_as_pil.width]
+
     # process prediction
     time_start = time.time()
     # works only with 1 batch
@@ -241,19 +244,21 @@ def get_sliced_prediction(
         overlap_width_ratio=overlap_width_ratio,
         auto_slice_resolution=auto_slice_resolution,
     )
+    from sahi.models.ultralytics import UltralyticsDetectionModel
 
     num_slices = len(slice_image_result)
     time_end = time.time() - time_start
     durations_in_seconds["slice"] = time_end
+
+    if isinstance(detection_model, UltralyticsDetectionModel) and detection_model.is_obb:
+        # Only NMS is supported for OBB model outputs
+        postprocess_type = "NMS"
 
     # init match postprocess instance
     if postprocess_type not in POSTPROCESS_NAME_TO_CLASS.keys():
         raise ValueError(
             f"postprocess_type should be one of {list(POSTPROCESS_NAME_TO_CLASS.keys())} but given as {postprocess_type}"
         )
-    elif postprocess_type == "UNIONMERGE":
-        # deprecated in v0.9.3
-        raise ValueError("'UNIONMERGE' postprocess_type is deprecated, use 'GREEDYNMM' instead.")
     postprocess_constructor = POSTPROCESS_NAME_TO_CLASS[postprocess_type]
     postprocess = postprocess_constructor(
         match_threshold=postprocess_match_threshold,

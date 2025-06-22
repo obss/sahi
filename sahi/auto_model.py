@@ -11,7 +11,6 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "detectron2": "Detectron2DetectionModel",
     "huggingface": "HuggingfaceDetectionModel",
     "torchvision": "TorchVisionDetectionModel",
-    "yolov5sparse": "Yolov5SparseDetectionModel",
     "yolov8onnx": "Yolov8OnnxDetectionModel",
 }
 
@@ -39,7 +38,7 @@ class AutoDetectionModel:
 
         Args:
             model_type: str
-                Name of the detection framework (example: "yolov5", "mmdet", "detectron2")
+                Name of the detection framework (example: "ultralytics", "huggingface", "torchvision")
             model_path: str
                 Path of the detection model (ex. 'model.pt')
             config_path: str
@@ -58,8 +57,10 @@ class AutoDetectionModel:
                 If True, automatically loads the model at initialization
             image_size: int
                 Inference input size.
+
         Returns:
             Returns an instance of a DetectionModel
+
         Raises:
             ImportError: If given {model_type} framework is not installed
         """

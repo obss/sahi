@@ -11,7 +11,7 @@ import torch
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.cv import get_coco_segmentation_from_bool_mask, get_coco_segmentation_from_obb_points
+from sahi.utils.cv import get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
 
 logger = logging.getLogger(__name__)
@@ -212,7 +212,7 @@ class UltralyticsDetectionModel(DetectionModel):
                         segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
                     else:  # is_obb
                         obb_points = masks_or_points[pred_ind]  # Get OBB points for this prediction
-                        segmentation = get_coco_segmentation_from_obb_points(obb_points)
+                        segmentation = [obb_points.reshape(-1).tolist()]
 
                     if len(segmentation) == 0:
                         continue
