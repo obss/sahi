@@ -51,7 +51,6 @@ dev = [
   "ruff",
   "pre-commit>=2.0",
   "jupyterlab>=3.0.14",
-  "matplotlib-stubs>=0.2.0",
 ]
 ci = [
   # pytorch should be present for all python versions
