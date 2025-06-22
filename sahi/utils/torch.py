@@ -7,12 +7,12 @@ from typing import Any, Optional, Union
 
 import numpy as np
 from PIL.Image import Image
-from torch import Tensor, device
+
 import re
 
 try:
     import torch
-
+    from torch import Tensor, device
     has_torch_cuda = torch.cuda.is_available()
     try:
         has_torch_mps: bool = torch.backends.mps.is_available()  # pyright: ignore[reportAttributeAccessIssue]
