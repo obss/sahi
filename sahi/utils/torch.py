@@ -8,6 +8,8 @@ from typing import Any, Optional, Union
 import numpy as np
 from PIL.Image import Image
 
+import re
+
 try:
     import torch
     from torch import Tensor, device
@@ -70,7 +72,7 @@ def select_device(device: Optional[str] = None) -> device:
 
     Inspired by https://github.com/ultralytics/yolov5/blob/6371de8879e7ad7ec5283e8b95cc6dd85d6a5e72/utils/torch_utils.py#L107
     """
-    if device == "cuda":
+    if device == "cuda" or device is None:
         device = "cuda:0"
     device = str(device).strip().lower().replace("cuda:", "").replace("none", "")  # to string, 'cuda:0' to '0'
     cpu = device == "cpu"
@@ -80,8 +82,11 @@ def select_device(device: Optional[str] = None) -> device:
     elif device:  # non-cpu device requested
         os.environ["CUDA_VISIBLE_DEVICES"] = device  # set environment variable - must be before assert is_available()
 
-    if not cpu and not mps and has_torch_cuda:  # prefer GPU if available
-        arg = "cuda:0"
+    cuda_id_pattern = r'^(0|[1-9]\d*)$'
+    valid_cuda_id = bool(re.fullmatch(cuda_id_pattern, device))
+
+    if not cpu and not mps and has_torch_cuda and valid_cuda_id:  # prefer GPU if available
+        arg = "cuda:" + (device if int(device) < torch.cuda.device_count() else "0")
     elif mps and getattr(torch, "has_mps", False) and has_torch_mps:  # prefer MPS if available
         arg = "mps"
     else:  # revert to CPU
