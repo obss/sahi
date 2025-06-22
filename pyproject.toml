@@ -53,6 +53,8 @@ dev = [
   "jupyterlab>=3.0.14",
 ]
 ci = [
+  # Constrain numpy for Python <3.12 due to torch 2.1.2 compatibility
+  "numpy<2.0;python_version<'3.12'",
   # pytorch should be present for all python versions
   # CPU versions for Linux/Windows CI
   "torch==2.6.0+cpu;python_version>='3.12' and platform_system!='Darwin'",
