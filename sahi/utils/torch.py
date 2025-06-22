@@ -13,6 +13,7 @@ import re
 try:
     import torch
     from torch import Tensor, device
+
     has_torch_cuda = torch.cuda.is_available()
     try:
         has_torch_mps: bool = torch.backends.mps.is_available()  # pyright: ignore[reportAttributeAccessIssue]
@@ -82,7 +83,7 @@ def select_device(device: Optional[str] = None) -> device:
     elif device:  # non-cpu device requested
         os.environ["CUDA_VISIBLE_DEVICES"] = device  # set environment variable - must be before assert is_available()
 
-    cuda_id_pattern = r'^(0|[1-9]\d*)$'
+    cuda_id_pattern = r"^(0|[1-9]\d*)$"
     valid_cuda_id = bool(re.fullmatch(cuda_id_pattern, device))
 
     if not cpu and not mps and has_torch_cuda and valid_cuda_id:  # prefer GPU if available
