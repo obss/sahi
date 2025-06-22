@@ -4,6 +4,7 @@ import os
 from multiprocessing import Pool
 from pathlib import Path
 from typing import List, Optional, Union
+import json
 
 import fire
 import numpy as np
@@ -324,12 +325,13 @@ def _analyse_results(
     # Load annotation file and add empty 'info' field if missing
     with open(ann_file) as f:
         ann_dict = json.load(f)
-    if 'info' not in ann_dict:
-        ann_dict['info'] = {}
+    if "info" not in ann_dict:
+        ann_dict["info"] = {}
 
     # Create temporary file with updated annotations
     import tempfile
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp_file:
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp_file:
         json.dump(ann_dict, tmp_file)
         temp_ann_file = tmp_file.name
 
@@ -375,7 +377,8 @@ def _analyse_results(
             recThrs = cocoEval.params.recThrs
             with Pool(processes=48) as pool:
                 args = [
-                    (k, cocoDt, cocoGt, catId, iou_type, areas, max_detections) for k, catId in enumerate(present_cat_ids)
+                    (k, cocoDt, cocoGt, catId, iou_type, areas, max_detections)
+                    for k, catId in enumerate(present_cat_ids)
                 ]
                 analyze_results = pool.starmap(_analyze_individual_category, args)
 

@@ -3,6 +3,7 @@ import json
 from collections import OrderedDict
 from pathlib import Path
 from typing import List, Literal, Optional, Union
+import os
 
 import fire
 import numpy as np
@@ -118,12 +119,13 @@ def evaluate_core(
     # Load dataset json and add empty 'info' field if missing
     with open(dataset_path) as f:
         dataset_dict = json.load(f)
-    if 'info' not in dataset_dict:
-        dataset_dict['info'] = {}
+    if "info" not in dataset_dict:
+        dataset_dict["info"] = {}
 
     # Create temporary file with updated dataset
     import tempfile
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp_file:
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp_file:
         json.dump(dataset_dict, tmp_file)
         temp_dataset_path = tmp_file.name
 
