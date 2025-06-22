@@ -1,6 +1,5 @@
 import time
 from pathlib import Path
-from typing import List
 
 import fire
 
@@ -49,7 +48,7 @@ def main(
             add_coco_labels(dataset, result_name, coco_result, coco_id_field="gt_coco_id")
 
     # visualize results
-    session = fo.launch_app()
+    session = fo.launch_app()  # pyright: ignore[reportArgumentType]
     session.dataset = dataset
 
     # order by false positives if any coco result is given
@@ -73,7 +72,7 @@ def main(
         # Show samples with most false positives
         session.view = eval_view.sort_by(f"{first_coco_result_name}_eval_fp", reverse=True)
 
-        print("SAHI has successfully launched a Fiftyone app " f"at http://localhost:{fo.config.default_app_port}")
+        print(f"SAHI has successfully launched a Fiftyone app at http://localhost:{fo.config.default_app_port}")
     while 1:
         time.sleep(3)
 

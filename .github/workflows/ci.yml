@@ -1,143 +1,91 @@
-name: CI (PyTorch 1.12.1, TorchVision 0.13.1)
+name: CI with uv
 on:
   push:
     branches: [main]
     paths-ignore:
-      - '**.md'
-      - '**.ipynb'
-      - '**.cff'
+      - "**.md"
+      - "**.ipynb"
+      - "**.cff"
 
   pull_request:
     branches: [main]
     paths-ignore:
-      - '**.md'
-      - '**.ipynb'
-      - '**.cff'
+      - "**.md"
+      - "**.ipynb"
+      - "**.cff"
+
+  schedule:
+    - cron: "0 0 * * *" # Runs at 00:00 UTC every day
+
+  workflow_dispatch: # allow running sync via github ui button
 
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        operating-system: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: [3.8, 3.9, '3.10']
-      fail-fast: false
-
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - name: Setup uv python package manager
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Restore Ubuntu cache
+          enable-cache: true
+          prune-cache: false
+      # For python 3.8 and 3.9, it does no suffice to install opencv-python-headless
+      # https://itsmycode.com/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directory/
+      - name: Cache apt packages
         uses: actions/cache@v4
-        if: matrix.operating-system == 'ubuntu-latest'
+        if: ${{ env.ACT }}
         with:
-          path: ~/.cache/pip
-          key: ${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/setup.py')}}
-          restore-keys: ${{ matrix.os }}-${{ matrix.python-version }}-
-
-      - name: Restore MacOS cache
-        uses: actions/cache@v4
-        if: matrix.operating-system == 'macos-latest'
-        with:
-          path: ~/Library/Caches/pip
-          key: ${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/setup.py')}}
-          restore-keys: ${{ matrix.os }}-${{ matrix.python-version }}-
-
-      - name: Restore Windows cache
-        uses: actions/cache@v4
-        if: matrix.operating-system == 'windows-latest'
-        with:
-          path: ~\AppData\Local\pip\Cache
-          key: ${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/setup.py')}}
-          restore-keys: ${{ matrix.os }}-${{ matrix.python-version }}-
-
-      - name: Update pip
-        run: python -m pip install --upgrade pip
-
-      - name: Lint with flake8, black and isort
+          path: /var/cache/apt
+          key: apt-cache
+      - name: Install libgl
+        run: sudo apt-get update && sudo apt-get install -y libgl1
+      - name: Debug uv sync
         run: |
-          pip install -e .[dev]
-          # stop the build if there are Python syntax errors or undefined names
-          python -m scripts.run_code_style check
-
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --exit-zero --max-complexity=10 --max-line-length=127
-
-      - name: Install core dependencies
-        run: >
-          pip install -r requirements.txt
-
-      - name: Install PyTorch(1.13.1) and TorchVision(0.14.1) on Linux and Windows
-        if: >
-          matrix.operating-system == 'ubuntu-latest' ||
-          matrix.operating-system == 'windows-latest'
-        run: >
-          pip install torch==1.13.1+cpu torchvision==0.14.1+cpu
-          -f https://download.pytorch.org/whl/torch_stable.html
-
-      - name: Install PyTorch on MacOS
-        if: matrix.operating-system == 'macos-latest'
-        run: pip install torch==1.13.1 torchvision==0.14.1
-
-      - name: Install MMDetection(3.0.0) with MMCV(2.0.0)
-        run: >
-          pip install mmengine==0.7.3
-          pip install mmcv==2.0.0 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.13.0/index.html
-          pip install mmdet==3.0.0
-
-      - name: Install YOLOv5(7.0.13)
-        run: >
-          pip install yolov5==7.0.13
-
-      - name: Install DeepSparse
-        run: >
-          pip install deepsparse
-
-      - name: Install Transformers(4.35.0)
-        run: >
-          pip install transformers==4.35.0
-
-      - name: Install pycocotools(2.0.7)
-        run: >
-          pip install pycocotools==2.0.7
-
-      - name: Install ultralytics(8.0.207)
-        run: >
-          pip install ultralytics==8.0.207
-
-      - name: Install super-gradients(3.3.1)
-        run: >
-          pip install super-gradients==3.3.1
-
-      - name: Unittest for SAHI+YOLOV5/MMDET/Detectron2 on all platforms
+          set -e
+          uv sync -v
+      - name: Verify .venv Activation
         run: |
-          python -m unittest
-
-      - name: Install SAHI package from local setup.py
-        run: >
-          pip install -e .
-
+          if [ ! -d ".venv" ]; then
+            echo ".venv directory not found"
+            exit 1
+          fi
+          source .venv/bin/activate
+      - name: Install sahi from PyPI
+        if: github.event_name == 'schedule'
+        run: |
+          rm -fr sahi
+          uv pip install --force-reinstall sahi
+          uv pip install "numpy<2"
+          uv pip show sahi
+          source .venv/bin/activate
+          python -c "import sahi; print(sahi.__version__)"
+      - name: Test with python ${{ matrix.python-version }}
+        run: |
+          source .venv/bin/activate
+          pytest --capture=no
       - name: Test SAHI CLI
         run: |
-          # help
-          sahi --help
-          # predict mmdet
-          sahi predict --source tests/data/ --novisual --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
-          sahi predict --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
-          sahi predict --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
-          # predict yolov5
-          sahi predict --no_sliced_prediction --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
-          sahi predict --model_type yolov5 --source tests/data/ --novisual --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
-          sahi predict --model_type yolov5 --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
-          sahi predict --model_type yolov5 --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/yolov5/yolov5s6.pt --image_size 320
+          source .venv/bin/activate
+          set -e
+          sahi predict --no_sliced_prediction --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+          sahi predict --model_type ultralytics --source tests/data/ --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+          sahi predict --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+          sahi predict --model_type ultralytics --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
           # coco yolov5
           sahi coco yolov5 --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json --train_split 0.9
           # coco evaluate
           sahi coco evaluate --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json
           # coco analyse
           sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
+      - name: Test SAHI CLI with MMCV
+        if: matrix.python-version != '3.12'
+        run: |
+          source .venv/bin/activate
+          set -e
+          sahi predict --model_type mmdet --source tests/data/ --novisual --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
+          sahi predict --model_type mmdet --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
+          sahi predict --model_type mmdet --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320

@@ -8,7 +8,7 @@ class TestHighLevelApi(unittest.TestCase):
     def test_bounding_box(self):
         from sahi import BoundingBox
 
-        bbox_minmax = [30, 30, 100, 150]
+        bbox_minmax = [30.0, 30.0, 100.0, 150.0]
         shift_amount = [50, 40]
 
         bbox = BoundingBox(bbox_minmax, shift_amount=[0, 0])
@@ -34,7 +34,7 @@ class TestHighLevelApi(unittest.TestCase):
     def test_mask(self):
         from sahi import Mask
 
-        coco_segmentation = [[1, 1, 325, 125, 250, 200, 5, 200]]
+        coco_segmentation = [[1.0, 1.0, 325.0, 125.0, 250.0, 200.0, 5.0, 200.0]]
         full_shape_height, full_shape_width = 500, 600
         full_shape = [full_shape_height, full_shape_width]
 
@@ -104,10 +104,10 @@ class TestHighLevelApi(unittest.TestCase):
         from sahi import DetectionModel
 
         MODEL_PATH = "model_path"
-        IAMGE_SIZE = 640
-        detection_model = DetectionModel(model_path="model_path", image_size=IAMGE_SIZE, load_at_init=False)
+        IMAGE_SIZE = 640
+        detection_model = DetectionModel(model_path="model_path", image_size=IMAGE_SIZE, load_at_init=False)
         self.assertEqual(detection_model.model_path, MODEL_PATH)
-        self.assertEqual(detection_model.image_size, IAMGE_SIZE)
+        self.assertEqual(detection_model.image_size, IMAGE_SIZE)
 
 
 if __name__ == "__main__":

@@ -1,14 +1,17 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
+import logging
 import unittest
+
+logger = logging.getLogger(__name__)
 
 
 class TestAnnotation(unittest.TestCase):
     def test_bounding_box(self):
         from sahi.annotation import BoundingBox
 
-        bbox_minmax = [30, 30, 100, 150]
+        bbox_minmax = [30.0, 30.0, 100.0, 150.0]
         shift_amount = [50, 40]
 
         bbox = BoundingBox(bbox_minmax, shift_amount=[0, 0])
@@ -34,7 +37,7 @@ class TestAnnotation(unittest.TestCase):
     def test_mask(self):
         from sahi.annotation import Mask
 
-        coco_segmentation = [[1, 1, 325, 125, 250, 200, 5, 200]]
+        coco_segmentation = [[1.0, 1.0, 325.0, 125.0, 250.0, 200.0, 5.0, 200.0]]
         full_shape_height, full_shape_width = 500, 600
         full_shape = [full_shape_height, full_shape_width]
 
@@ -42,6 +45,7 @@ class TestAnnotation(unittest.TestCase):
 
         self.assertEqual(mask.full_shape_height, full_shape_height)
         self.assertEqual(mask.full_shape_width, full_shape_width)
+        logger.debug(f"{type(mask.bool_mask[11, 2])=} {mask.bool_mask[11, 2]=}")
         self.assertEqual(mask.bool_mask[11, 2], True)
 
     def test_object_annotation(self):

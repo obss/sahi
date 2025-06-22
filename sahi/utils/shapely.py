@@ -1,9 +1,10 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
-from typing import List
+from typing import List, Optional, Union
 
-from shapely.geometry import CAP_STYLE, JOIN_STYLE, MultiPolygon, Polygon, box
+from shapely.geometry import CAP_STYLE, JOIN_STYLE, GeometryCollection, MultiPolygon, Polygon, box
+from shapely.validation import make_valid
 
 
 def get_shapely_box(x: int, y: int, width: int, height: int) -> Polygon:
@@ -21,14 +22,35 @@ def get_shapely_box(x: int, y: int, width: int, height: int) -> Polygon:
 
 def get_shapely_multipolygon(coco_segmentation: List[List]) -> MultiPolygon:
     """
-    Accepts coco style polygon coords and converts it to shapely multipolygon object
+    Accepts coco style polygon coords and converts it to valid shapely multipolygon object
     """
+
+    def filter_polygons(geometry):
+        """
+        Filters out and returns only Polygon or MultiPolygon components of a geometry.
+        If geometry is a Polygon, it converts it into a MultiPolygon.
+        If it's a GeometryCollection, it filters
+        to create a MultiPolygon from any Polygons in the collection.
+        Returns an empty MultiPolygon if no Polygon or MultiPolygon components are found.
+        """
+        if isinstance(geometry, Polygon):
+            return MultiPolygon([geometry])
+        elif isinstance(geometry, MultiPolygon):
+            return geometry
+        elif isinstance(geometry, GeometryCollection):
+            polygons = [geom for geom in geometry.geoms if isinstance(geom, Polygon)]
+            return MultiPolygon(polygons) if polygons else MultiPolygon()
+        return MultiPolygon()
+
     polygon_list = []
     for coco_polygon in coco_segmentation:
         point_list = list(zip(coco_polygon[0::2], coco_polygon[1::2]))
         shapely_polygon = Polygon(point_list)
         polygon_list.append(shapely_polygon)
     shapely_multipolygon = MultiPolygon(polygon_list)
+
+    if not shapely_multipolygon.is_valid:
+        shapely_multipolygon = filter_polygons(make_valid(shapely_multipolygon))
 
     return shapely_multipolygon
 
@@ -67,7 +89,7 @@ class ShapelyAnnotation:
         return cls(multipolygon=shapely_multipolygon, slice_bbox=slice_bbox)
 
     @classmethod
-    def from_coco_bbox(cls, bbox: List[int], slice_bbox: List[int] = None):
+    def from_coco_bbox(cls, bbox: List[int], slice_bbox: Optional[List[int]] = None):
         """
         Init ShapelyAnnotation from coco bbox.
 
@@ -150,7 +172,7 @@ class ShapelyAnnotation:
                     x_coords = [x_coord - minx for x_coord in x_coords]
                     y_coords = [y_coord - miny for y_coord in y_coords]
                 # convert intersection to coco style segmentation annotation
-                coco_polygon = [None] * len(x_coords) * 2
+                coco_polygon: list[Union[None, int]] = [None] * (len(x_coords) * 2)
                 coco_polygon[0::2] = [int(coord) for coord in x_coords]
                 coco_polygon[1::2] = [int(coord) for coord in y_coords]
             else:

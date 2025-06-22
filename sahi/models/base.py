@@ -1,12 +1,15 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+import logging
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from sahi.utils.import_utils import is_available
-from sahi.utils.torch import select_device as select_torch_device
+from sahi.prediction import ObjectPrediction
+from sahi.utils.torch import empty_cuda_cache, has_torch, select_device
+
+logger = logging.getLogger(__name__)
 
 
 class DetectionModel:
@@ -21,7 +24,7 @@ class DetectionModel:
         category_mapping: Optional[Dict] = None,
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
-        image_size: int = None,
+        image_size: Optional[int] = None,
     ):
         """
         Init object detection/instance segmentation model.
@@ -30,8 +33,7 @@ class DetectionModel:
                 Path for the instance segmentation model weight
             config_path: str
                 Path for the mmdetection instance segmentation model config file
-            device: str
-                Torch device, "cpu" or "cuda"
+            device: Torch device, "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.
             mask_threshold: float
                 Value to threshold mask pixels, should be between 0 and 1
             confidence_threshold: float
@@ -41,14 +43,13 @@ class DetectionModel:
             category_remapping: dict: str to int
                 Remap category ids based on category names, after performing inference e.g. {"car": 3}
             load_at_init: bool
-                If True, automatically loads the model at initalization
+                If True, automatically loads the model at initialization
             image_size: int
                 Inference input size.
         """
         self.model_path = model_path
         self.config_path = config_path
         self.model = None
-        self.device = device
         self.mask_threshold = mask_threshold
         self.confidence_threshold = confidence_threshold
         self.category_mapping = category_mapping
@@ -56,7 +57,6 @@ class DetectionModel:
         self.image_size = image_size
         self._original_predictions = None
         self._object_prediction_list_per_image = None
-
         self.set_device()
 
         # automatically load model if load_at_init is True
@@ -89,24 +89,23 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
-    def set_device(self):
+    def set_device(self, device: Optional[str] = None):
+        """Sets the device pytorch should use for the model
+
+        Args:
+            device: Torch device, "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.
         """
-        Sets the device for the model.
-        """
-        if is_available("torch"):
-            self.device = select_torch_device(self.device)
+        if has_torch:
+            self.device = select_device(device)
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(f"Could not set device {self.device}")
 
     def unload_model(self):
         """
         Unloads the model from CPU/GPU.
         """
         self.model = None
-        if is_available("torch"):
-            from sahi.utils.torch import empty_cuda_cache
-
-            empty_cuda_cache()
+        empty_cuda_cache()
 
     def perform_inference(self, image: np.ndarray):
         """
@@ -145,7 +144,12 @@ class DetectionModel:
         if self.category_remapping is None:
             raise ValueError("self.category_remapping cannot be None")
         # remap categories
-        for object_prediction_list in self._object_prediction_list_per_image:
+        if not isinstance(self._object_prediction_list_per_image, list):
+            logger.error(
+                f"Unknown type for self._object_prediction_list_per_image: {type(self._object_prediction_list_per_image)}"
+            )
+            return
+        for object_prediction_list in self._object_prediction_list_per_image:  # type: ignore
             for object_prediction in object_prediction_list:
                 old_category_id_str = str(object_prediction.category.id)
                 new_category_id_int = self.category_remapping[old_category_id_str]
@@ -153,8 +157,8 @@ class DetectionModel:
 
     def convert_original_predictions(
         self,
-        shift_amount: Optional[List[int]] = [0, 0],
-        full_shape: Optional[List[int]] = None,
+        shift_amount: Optional[List[List[int]]] = [[0, 0]],
+        full_shape: Optional[List[List[int]]] = None,
     ):
         """
         Converts original predictions of the detection model to a list of
@@ -173,12 +177,16 @@ class DetectionModel:
             self._apply_category_remapping()
 
     @property
-    def object_prediction_list(self):
+    def object_prediction_list(self) -> List[List[ObjectPrediction]]:
+        if self._object_prediction_list_per_image is None:
+            return []
+        if len(self._object_prediction_list_per_image) == 0:
+            return []
         return self._object_prediction_list_per_image[0]
 
     @property
-    def object_prediction_list_per_image(self):
-        return self._object_prediction_list_per_image
+    def object_prediction_list_per_image(self) -> List[List[ObjectPrediction]]:
+        return self._object_prediction_list_per_image or []
 
     @property
     def original_predictions(self):

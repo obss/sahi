@@ -100,11 +100,13 @@ class MmdetDetectionModel(DetectionModel):
         category_mapping: Optional[Dict] = None,
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
-        image_size: int = None,
+        image_size: Optional[int] = None,
         scope: str = "mmdet",
     ):
         if not IMPORT_MMDET_V3:
-            raise ImportError("Failed to import `DetInferencer`. Please confirm you have installed 'mmdet>=3.0.0'")
+            raise ImportError(
+                "Failed to import `DetInferencer`. Please confirm you have installed 'mmdet==3.3.0 mmcv==2.1.0'"
+            )
 
         self.scope = scope
         self.image_size = image_size
@@ -173,8 +175,8 @@ class MmdetDetectionModel(DetectionModel):
             image = image[:, :, ::-1]
         # compatibility with sahi v0.8.15
         if not isinstance(image, list):
-            image = [image]
-        prediction_result = self.model(image)
+            image_list = [image]
+        prediction_result = self.model(image_list)
 
         self._original_predictions = prediction_result["predictions"]
 
@@ -188,15 +190,36 @@ class MmdetDetectionModel(DetectionModel):
     @property
     def has_mask(self):
         """
-        Returns if model output contains segmentation mask
+        Returns if model output contains segmentation mask.
+        Considers both single dataset and ConcatDataset scenarios.
         """
-        has_mask = self.model.model.with_mask
-        return has_mask
+
+        def check_pipeline_for_mask(pipeline):
+            return any(
+                isinstance(item, dict) and any("mask" in key and value is True for key, value in item.items())
+                for item in pipeline
+            )
+
+        # Access the dataset from the configuration
+        dataset_config = self.model.cfg["train_dataloader"]["dataset"]
+
+        if dataset_config["type"] == "ConcatDataset":
+            # If using ConcatDataset, check each dataset individually
+            datasets = dataset_config["datasets"]
+            for dataset in datasets:
+                if check_pipeline_for_mask(dataset["pipeline"]):
+                    return True
+        else:
+            # Otherwise, assume a single dataset with its own pipeline
+            if check_pipeline_for_mask(dataset_config["pipeline"]):
+                return True
+
+        return False
 
     @property
     def category_names(self):
         classes = self.model.model.dataset_meta["classes"]
-        if type(classes) == str:
+        if isinstance(classes, str):
             # https://github.com/open-mmlab/mmdetection/pull/4973
             return (classes,)
         else:

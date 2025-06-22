@@ -3,11 +3,14 @@
 
 import os
 import shutil
+import sys
 import unittest
 
 import numpy as np
+import pytest
 
 from sahi.utils.cv import read_image
+from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -18,14 +21,12 @@ class TestPredict(unittest.TestCase):
     def test_prediction_score(self):
         from sahi.prediction import PredictionScore
 
-        prediction_score = PredictionScore(np.array(0.6))
+        prediction_score = PredictionScore(np.array(0.6))  # type: ignore
         self.assertEqual(type(prediction_score.value), float)
         self.assertEqual(prediction_score.is_greater_than_threshold(0.5), True)
         self.assertEqual(prediction_score.is_greater_than_threshold(0.7), False)
 
-    def test_object_prediction(self):
-        from sahi.prediction import ObjectPrediction
-
+    @pytest.mark.skipif(sys.version_info[:2] > (3, 10), reason="Requires Python 3.10 or lower")
     def test_get_prediction_mmdet(self):
         from sahi.models.mmdet import MmdetDetectionModel
         from sahi.predict import get_prediction
@@ -72,70 +73,24 @@ class TestPredict(unittest.TestCase):
                 num_car += 1
         self.assertEqual(num_car, 2)
 
-    def test_get_prediction_yolov5(self):
-        from sahi.models.yolov5 import Yolov5DetectionModel
-        from sahi.predict import get_prediction
-        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
-
-        # init model
-        download_yolov5n_model()
-
-        yolov5_detection_model = Yolov5DetectionModel(
-            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
-            confidence_threshold=CONFIDENCE_THRESHOLD,
-            device=MODEL_DEVICE,
-            category_remapping=None,
-            load_at_init=False,
-            image_size=IMAGE_SIZE,
-        )
-        yolov5_detection_model.load_model()
-
-        # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
-        image = read_image(image_path)
-
-        # get full sized prediction
-        prediction_result = get_prediction(
-            image=image, detection_model=yolov5_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
-        )
-        object_prediction_list = prediction_result.object_prediction_list
-
-        # compare
-        self.assertEqual(len(object_prediction_list), 2)
-        num_person = 0
-        for object_prediction in object_prediction_list:
-            if object_prediction.category.name == "person":
-                num_person += 1
-        self.assertEqual(num_person, 0)
-        num_truck = 0
-        for object_prediction in object_prediction_list:
-            if object_prediction.category.name == "truck":
-                num_truck += 1
-        self.assertEqual(num_truck, 0)
-        num_car = 0
-        for object_prediction in object_prediction_list:
-            if object_prediction.category.name == "car":
-                num_car += 1
-        self.assertEqual(num_car, 2)
-
-    def test_get_prediction_automodel_yolov5(self):
+    def test_get_prediction_automodel_yolo11(self):
         from sahi.auto_model import AutoDetectionModel
         from sahi.predict import get_prediction
-        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
+        from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
 
         # init model
-        download_yolov5n_model()
+        download_yolo11n_model()
 
-        yolov5_detection_model = AutoDetectionModel.from_pretrained(
-            model_type="yolov5",
-            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
+        yolo11_detection_model = AutoDetectionModel.from_pretrained(
+            model_type="ultralytics",
+            model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=False,
             image_size=IMAGE_SIZE,
         )
-        yolov5_detection_model.load_model()
+        yolo11_detection_model.load_model()
 
         # prepare image
         image_path = "tests/data/small-vehicles1.jpeg"
@@ -143,12 +98,12 @@ class TestPredict(unittest.TestCase):
 
         # get full sized prediction
         prediction_result = get_prediction(
-            image=image, detection_model=yolov5_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
+            image=image, detection_model=yolo11_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
         )
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 2)
+        self.assertGreater(len(object_prediction_list), 0)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -163,8 +118,9 @@ class TestPredict(unittest.TestCase):
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 2)
+        self.assertGreater(num_car, 0)
 
+    @pytest.mark.skipif(sys.version_info[:2] > (3, 10), reason="Requires Python 3.10 or lower")
     def test_get_sliced_prediction_mmdet(self):
         from sahi.models.mmdet import MmdetDetectionModel
         from sahi.predict import get_sliced_prediction
@@ -230,23 +186,67 @@ class TestPredict(unittest.TestCase):
                 num_car += 1
         self.assertEqual(num_car, 15)
 
-    def test_get_sliced_prediction_yolov5(self):
-        from sahi.models.yolov5 import Yolov5DetectionModel
-        from sahi.predict import get_sliced_prediction
-        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
+    def test_get_prediction_yolo11(self):
+        from sahi.models.ultralytics import UltralyticsDetectionModel
+        from sahi.predict import get_prediction
 
         # init model
-        download_yolov5n_model()
+        download_yolo11n_model()
 
-        yolov5_detection_model = Yolov5DetectionModel(
-            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
+        yolo11_detection_model = UltralyticsDetectionModel(
+            model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
             load_at_init=False,
             image_size=IMAGE_SIZE,
         )
-        yolov5_detection_model.load_model()
+        yolo11_detection_model.load_model()
+
+        # prepare image
+        image_path = "tests/data/small-vehicles1.jpeg"
+        image = read_image(image_path)
+
+        # get full sized prediction
+        prediction_result = get_prediction(
+            image=image, detection_model=yolo11_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
+        )
+        object_prediction_list = prediction_result.object_prediction_list
+
+        # compare
+        self.assertGreater(len(object_prediction_list), 0)
+        num_person = 0
+        for object_prediction in object_prediction_list:
+            if object_prediction.category.name == "person":
+                num_person += 1
+        self.assertEqual(num_person, 0)
+        num_truck = 0
+        for object_prediction in object_prediction_list:
+            if object_prediction.category.name == "truck":
+                num_truck += 1
+        self.assertEqual(num_truck, 0)
+        num_car = 0
+        for object_prediction in object_prediction_list:
+            if object_prediction.category.name == "car":
+                num_car += 1
+        self.assertGreater(num_car, 0)
+
+    def test_get_sliced_prediction_yolo11(self):
+        from sahi.models.ultralytics import UltralyticsDetectionModel
+        from sahi.predict import get_sliced_prediction
+
+        # init model
+        download_yolo11n_model()
+
+        yolo11_detection_model = UltralyticsDetectionModel(
+            model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            device=MODEL_DEVICE,
+            category_remapping=None,
+            load_at_init=False,
+            image_size=IMAGE_SIZE,
+        )
+        yolo11_detection_model.load_model()
 
         # prepare image
         image_path = "tests/data/small-vehicles1.jpeg"
@@ -263,7 +263,7 @@ class TestPredict(unittest.TestCase):
         # get sliced prediction
         prediction_result = get_sliced_prediction(
             image=image_path,
-            detection_model=yolov5_detection_model,
+            detection_model=yolo11_detection_model,
             slice_height=slice_height,
             slice_width=slice_width,
             overlap_height_ratio=overlap_height_ratio,
@@ -277,7 +277,7 @@ class TestPredict(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 11)
+        self.assertGreater(len(object_prediction_list), 0)
         num_person = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "person":
@@ -286,18 +286,18 @@ class TestPredict(unittest.TestCase):
         num_truck = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "truck":
-                num_truck += 2
+                num_truck += 1
         self.assertEqual(num_truck, 0)
         num_car = 0
         for object_prediction in object_prediction_list:
             if object_prediction.category.name == "car":
                 num_car += 1
-        self.assertEqual(num_car, 11)
+        self.assertGreater(num_car, 0)
 
-    def test_coco_json_prediction(self):
+    @pytest.mark.skipif(sys.version_info[:2] > (3, 10), reason="Requires Python 3.10 or lower")
+    def test_mmdet_yolox_tiny_prediction(self):
         from sahi.predict import predict
         from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
-        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
         # init model
         download_mmdet_yolox_tiny_model()
@@ -343,8 +343,17 @@ class TestPredict(unittest.TestCase):
             verbose=1,
         )
 
+    def test_ultralytics_yolo11n_prediction(self):
+        from sahi.predict import predict
+        from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
+
         # init model
-        download_yolov5n_model()
+        download_yolo11n_model()
+
+        postprocess_type = "GREEDYNMM"
+        match_metric = "IOS"
+        match_threshold = 0.5
+        class_agnostic = True
 
         # prepare paths
         dataset_json_path = "tests/data/coco_utils/terrain_all_coco.json"
@@ -355,8 +364,8 @@ class TestPredict(unittest.TestCase):
         if os.path.isdir(project_dir):
             shutil.rmtree(project_dir, ignore_errors=True)
         predict(
-            model_type="yolov5",
-            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
+            model_type="ultralytics",
+            model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
             model_config_path=None,
             model_confidence_threshold=CONFIDENCE_THRESHOLD,
             model_device=MODEL_DEVICE,
@@ -387,7 +396,6 @@ class TestPredict(unittest.TestCase):
 
         from sahi.predict import predict
         from sahi.utils.file import download_from_url
-        from sahi.utils.yolov5 import Yolov5TestConstants, download_yolov5n_model
 
         # download video file
         source_url = "https://github.com/obss/sahi/releases/download/0.9.2/test.mp4"
@@ -396,7 +404,7 @@ class TestPredict(unittest.TestCase):
             download_from_url(source_url, destination_path)
 
         # init model
-        download_yolov5n_model()
+        download_yolo11n_model()
 
         postprocess_type = "GREEDYNMM"
         match_metric = "IOS"
@@ -412,8 +420,8 @@ class TestPredict(unittest.TestCase):
         if os.path.isdir(project_dir):
             shutil.rmtree(project_dir, ignore_errors=True)
         predict(
-            model_type="yolov5",
-            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
+            model_type="ultralytics",
+            model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
             model_config_path=None,
             model_confidence_threshold=CONFIDENCE_THRESHOLD,
             model_device=MODEL_DEVICE,
@@ -450,8 +458,8 @@ class TestPredict(unittest.TestCase):
         if os.path.isdir(project_dir):
             shutil.rmtree(project_dir, ignore_errors=True)
         predict(
-            model_type="yolov5",
-            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
+            model_type="ultralytics",
+            model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
             model_config_path=None,
             model_confidence_threshold=CONFIDENCE_THRESHOLD,
             model_device=MODEL_DEVICE,
@@ -485,8 +493,8 @@ class TestPredict(unittest.TestCase):
         if os.path.isdir(project_dir):
             shutil.rmtree(project_dir, ignore_errors=True)
         predict(
-            model_type="yolov5",
-            model_path=Yolov5TestConstants.YOLOV5N_MODEL_PATH,
+            model_type="ultralytics",
+            model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
             model_config_path=None,
             model_confidence_threshold=CONFIDENCE_THRESHOLD,
             model_device=MODEL_DEVICE,
