@@ -63,8 +63,6 @@ ci = [
   "mmengine;python_version<'3.12'",
   "mmcv==2.1.0;python_version<'3.12'",
   "mmdet==3.3.0;python_version<'3.12'",
-  # deepsparse is only available for python<3.12
-  "deepsparse;python_version<'3.12'",
   "onnxruntime<1.20;python_version<'3.12'",
   "onnx>1.16;python_version>='3.12'",
   "onnxruntime;python_version>='3.12'",
