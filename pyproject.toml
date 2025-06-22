@@ -55,16 +55,20 @@ dev = [
 ]
 ci = [
   # pytorch should be present for all python versions
-  "torch==2.6.0+cpu;python_version>='3.12'",
-  "torchvision==0.21.0+cpu;python_version>='3.12'",
-  "torch==2.1.2+cpu;python_version<'3.12'",
-  "torchvision==0.16.2+cpu;python_version<'3.12'",
+  # CPU versions for Linux/Windows CI
+  "torch==2.6.0+cpu;python_version>='3.12' and platform_system!='Darwin'",
+  "torchvision==0.21.0+cpu;python_version>='3.12' and platform_system!='Darwin'",
+  "torch==2.1.2+cpu;python_version<'3.12' and platform_system!='Darwin'",
+  "torchvision==0.16.2+cpu;python_version<'3.12' and platform_system!='Darwin'",
+  # Regular versions for macOS
+  "torch==2.6.0;python_version>='3.12' and platform_system=='Darwin'",
+  "torchvision==0.21.0;python_version>='3.12' and platform_system=='Darwin'",
+  "torch==2.1.2;python_version<'3.12' and platform_system=='Darwin'",
+  "torchvision==0.16.2;python_version<'3.12' and platform_system=='Darwin'",
   # mmdet is supported for python<3.12
   "mmengine;python_version<'3.12'",
   "mmcv==2.1.0;python_version<'3.12'",
   "mmdet==3.3.0;python_version<'3.12'",
-  # deepsparse is only available for python<3.12
-  "deepsparse;python_version<'3.12'",
   "onnxruntime<1.20;python_version<'3.12'",
   "onnx>1.16;python_version>='3.12'",
   "onnxruntime;python_version>='3.12'",
