@@ -163,7 +163,7 @@ def get_sliced_prediction(
     auto_slice_resolution: bool = True,
     slice_export_prefix: Optional[str] = None,
     slice_dir: Optional[str] = None,
-    num_batch: int = 1
+    num_batch: int = 1,
     exclude_classes_by_name: Optional[List[str]] = None,
     exclude_classes_by_id: Optional[List[int]] = None,
 ) -> PredictionResult:
