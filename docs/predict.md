@@ -153,6 +153,5 @@ Want to see these prediction utilities in action? We have several interactive no
 - For HuggingFace models, see our [HuggingFace integration notebook](../demo/inference_for_huggingface.ipynb)
 - For TorchVision models, explore our [TorchVision integration notebook](../demo/inference_for_torchvision.ipynb)
 - For RT-DETR models, check out our [RT-DETR integration notebook](../demo/inference_for_rtdetr.ipynb)
-- For optimized inference with DeepSparse, see our [DeepSparse integration notebook](../demo/inference_for_sparse_yolov5.ipynb)
 
 These notebooks provide hands-on examples and allow you to experiment with different parameters and settings.
