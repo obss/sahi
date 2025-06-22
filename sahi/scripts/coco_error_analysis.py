@@ -321,101 +321,118 @@ def _analyse_results(
 
     result_type_to_export_paths = {}
 
-    cocoGt = COCO(ann_file)
-    cocoDt = cocoGt.loadRes(res_file)
-    imgIds = cocoGt.getImgIds()
-    for res_type in res_types:
-        res_out_dir = out_dir + "/" + res_type + "/"
-        res_directory = os.path.dirname(res_out_dir)
-        if not os.path.exists(res_directory):
-            print(f"-------------create {res_out_dir}-----------------")
-            os.makedirs(res_directory)
-        iou_type = res_type
-        cocoEval = COCOeval(copy.deepcopy(cocoGt), copy.deepcopy(cocoDt), iou_type)
-        cocoEval.params.imgIds = imgIds
-        cocoEval.params.iouThrs = [0.75, 0.5, 0.1]
-        cocoEval.params.maxDets = [max_detections]
-        if areas is not None:
-            cocoEval.params.areaRng = [
-                [0**2, areas[2]],
-                [0**2, areas[0]],
-                [areas[0], areas[1]],
-                [areas[1], areas[2]],
-            ]
-        cocoEval.evaluate()
-        cocoEval.accumulate()
+    # Load annotation file and add empty 'info' field if missing
+    with open(ann_file) as f:
+        ann_dict = json.load(f)
+    if 'info' not in ann_dict:
+        ann_dict['info'] = {}
 
-        present_cat_ids = []
-        catIds = cocoGt.getCatIds()
-        for k, catId in enumerate(catIds):
-            image_ids = cocoGt.getImgIds(catIds=[catId])
-            if len(image_ids) != 0:
-                present_cat_ids.append(catId)
-        matrix_shape = list(cocoEval.eval["precision"].shape)
-        matrix_shape[2] = len(present_cat_ids)
-        ps = np.zeros(matrix_shape)
+    # Create temporary file with updated annotations
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp_file:
+        json.dump(ann_dict, tmp_file)
+        temp_ann_file = tmp_file.name
 
-        for k, catId in enumerate(present_cat_ids):
-            ps[:, :, k, :, :] = cocoEval.eval["precision"][:, :, catId, :, :]
-        ps = np.vstack([ps, np.zeros((4, *ps.shape[1:]))])
+    try:
+        cocoGt = COCO(temp_ann_file)
+        cocoDt = cocoGt.loadRes(res_file)
+        imgIds = cocoGt.getImgIds()
+        for res_type in res_types:
+            res_out_dir = out_dir + "/" + res_type + "/"
+            res_directory = os.path.dirname(res_out_dir)
+            if not os.path.exists(res_directory):
+                print(f"-------------create {res_out_dir}-----------------")
+                os.makedirs(res_directory)
+            iou_type = res_type
+            cocoEval = COCOeval(copy.deepcopy(cocoGt), copy.deepcopy(cocoDt), iou_type)
+            cocoEval.params.imgIds = imgIds
+            cocoEval.params.iouThrs = [0.75, 0.5, 0.1]
+            cocoEval.params.maxDets = [max_detections]
+            if areas is not None:
+                cocoEval.params.areaRng = [
+                    [0**2, areas[2]],
+                    [0**2, areas[0]],
+                    [areas[0], areas[1]],
+                    [areas[1], areas[2]],
+                ]
+            cocoEval.evaluate()
+            cocoEval.accumulate()
 
-        recThrs = cocoEval.params.recThrs
-        with Pool(processes=48) as pool:
-            args = [
-                (k, cocoDt, cocoGt, catId, iou_type, areas, max_detections) for k, catId in enumerate(present_cat_ids)
-            ]
-            analyze_results = pool.starmap(_analyze_individual_category, args)
+            present_cat_ids = []
+            catIds = cocoGt.getCatIds()
+            for k, catId in enumerate(catIds):
+                image_ids = cocoGt.getImgIds(catIds=[catId])
+                if len(image_ids) != 0:
+                    present_cat_ids.append(catId)
+            matrix_shape = list(cocoEval.eval["precision"].shape)
+            matrix_shape[2] = len(present_cat_ids)
+            ps = np.zeros(matrix_shape)
 
-        classname_to_export_path_list = {}
-        for k, catId in enumerate(present_cat_ids):
-            nm = cocoGt.loadCats(catId)[0]
-            print(f"--------------saving {k + 1}-{nm['name']}---------------")
-            analyze_result = analyze_results[k]
-            if k != analyze_result[0]:
-                raise ValueError(f"k {k} != analyze_result[0] {analyze_result[0]}")
-            ps_supercategory = analyze_result[1]["ps_supercategory"]
-            ps_allcategory = analyze_result[1]["ps_allcategory"]
-            # compute precision but ignore superclass confusion
-            ps[3, :, k, :, :] = ps_supercategory
-            # compute precision but ignore any class confusion
-            ps[4, :, k, :, :] = ps_allcategory
-            # fill in background and false negative errors and plot
-            ps[5, :, k, :, :][ps[4, :, k, :, :] == -1] = -1
-            ps[5, :, k, :, :][ps[4, :, k, :, :] > 0] = 1
-            ps[6, :, k, :, :] = 1.0
+            for k, catId in enumerate(present_cat_ids):
+                ps[:, :, k, :, :] = cocoEval.eval["precision"][:, :, catId, :, :]
+            ps = np.vstack([ps, np.zeros((4, *ps.shape[1:]))])
 
-            normalized_class_name = nm["name"].replace("/", "_").replace(os.sep, "_")
+            recThrs = cocoEval.params.recThrs
+            with Pool(processes=48) as pool:
+                args = [
+                    (k, cocoDt, cocoGt, catId, iou_type, areas, max_detections) for k, catId in enumerate(present_cat_ids)
+                ]
+                analyze_results = pool.starmap(_analyze_individual_category, args)
 
-            curve_export_path_list = _makeplot(recThrs, ps[:, :, k], res_out_dir, normalized_class_name, iou_type)
+            classname_to_export_path_list = {}
+            for k, catId in enumerate(present_cat_ids):
+                nm = cocoGt.loadCats(catId)[0]
+                print(f"--------------saving {k + 1}-{nm['name']}---------------")
+                analyze_result = analyze_results[k]
+                if k != analyze_result[0]:
+                    raise ValueError(f"k {k} != analyze_result[0] {analyze_result[0]}")
+                ps_supercategory = analyze_result[1]["ps_supercategory"]
+                ps_allcategory = analyze_result[1]["ps_allcategory"]
+                # compute precision but ignore superclass confusion
+                ps[3, :, k, :, :] = ps_supercategory
+                # compute precision but ignore any class confusion
+                ps[4, :, k, :, :] = ps_allcategory
+                # fill in background and false negative errors and plot
+                ps[5, :, k, :, :][ps[4, :, k, :, :] == -1] = -1
+                ps[5, :, k, :, :][ps[4, :, k, :, :] > 0] = 1
+                ps[6, :, k, :, :] = 1.0
 
+                normalized_class_name = nm["name"].replace("/", "_").replace(os.sep, "_")
+
+                curve_export_path_list = _makeplot(recThrs, ps[:, :, k], res_out_dir, normalized_class_name, iou_type)
+
+                if extraplots:
+                    bar_plot_path = _makebarplot(recThrs, ps[:, :, k], res_out_dir, normalized_class_name, iou_type)
+                else:
+                    bar_plot_path = None
+                classname_to_export_path_list[nm["name"]] = {
+                    "curves": curve_export_path_list,
+                    "bar_plot": bar_plot_path,
+                }
+
+            curve_export_path_list = _makeplot(recThrs, ps, res_out_dir, "allclass", iou_type)
             if extraplots:
-                bar_plot_path = _makebarplot(recThrs, ps[:, :, k], res_out_dir, normalized_class_name, iou_type)
+                bar_plot_path = _makebarplot(recThrs, ps, res_out_dir, "allclass", iou_type)
+                gt_area_group_numbers_plot_path = _make_gt_area_group_numbers_plot(
+                    cocoEval=cocoEval, outDir=res_out_dir, verbose=True
+                )
+                gt_area_histogram_plot_path = _make_gt_area_histogram_plot(cocoEval=cocoEval, outDir=res_out_dir)
             else:
-                bar_plot_path = None
-            classname_to_export_path_list[nm["name"]] = {
-                "curves": curve_export_path_list,
-                "bar_plot": bar_plot_path,
+                bar_plot_path, gt_area_group_numbers_plot_path, gt_area_histogram_plot_path = None, None, None
+
+            result_type_to_export_paths[res_type] = {
+                "classwise": classname_to_export_path_list,
+                "overall": {
+                    "bar_plot": bar_plot_path,
+                    "curves": curve_export_path_list,
+                    "gt_area_group_numbers": gt_area_group_numbers_plot_path,
+                    "gt_area_histogram": gt_area_histogram_plot_path,
+                },
             }
+    finally:
+        # Clean up temporary file
+        os.unlink(temp_ann_file)
 
-        curve_export_path_list = _makeplot(recThrs, ps, res_out_dir, "allclass", iou_type)
-        if extraplots:
-            bar_plot_path = _makebarplot(recThrs, ps, res_out_dir, "allclass", iou_type)
-            gt_area_group_numbers_plot_path = _make_gt_area_group_numbers_plot(
-                cocoEval=cocoEval, outDir=res_out_dir, verbose=True
-            )
-            gt_area_histogram_plot_path = _make_gt_area_histogram_plot(cocoEval=cocoEval, outDir=res_out_dir)
-        else:
-            bar_plot_path, gt_area_group_numbers_plot_path, gt_area_histogram_plot_path = None, None, None
-
-        result_type_to_export_paths[res_type] = {
-            "classwise": classname_to_export_path_list,
-            "overall": {
-                "bar_plot": bar_plot_path,
-                "curves": curve_export_path_list,
-                "gt_area_group_numbers": gt_area_group_numbers_plot_path,
-                "gt_area_histogram": gt_area_histogram_plot_path,
-            },
-        }
     print(f"COCO error analysis results are successfully exported to {out_dir}")
 
     return result_type_to_export_paths
