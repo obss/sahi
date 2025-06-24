@@ -12,7 +12,6 @@ import re
 
 try:
     import torch
-    from torch import Tensor, device
 
     has_torch_cuda = torch.cuda.is_available()
     try:
@@ -31,7 +30,7 @@ def empty_cuda_cache():
         return torch.cuda.empty_cache()
 
 
-def to_float_tensor(img: Union[np.ndarray, Image]) -> Tensor:
+def to_float_tensor(img: Union[np.ndarray, Image]) -> "torch.Tensor":
     """
     Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range
     [0, 255] to a torch.FloatTensor of shape (C x H x W).
@@ -59,7 +58,7 @@ def torch_to_numpy(img: Any) -> np.ndarray:
     return img.transpose((1, 2, 0))
 
 
-def select_device(device: Optional[str] = None) -> device:
+def select_device(device: Optional[str] = None) -> "torch.device":
     """
     Selects torch device
 
