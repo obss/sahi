@@ -1,8 +1,13 @@
+import sys
 import unittest
+
+import pytest
 
 from sahi import AutoDetectionModel
 from sahi.predict import get_prediction, get_sliced_prediction
 from sahi.utils.cv import read_image
+
+pytestmark = pytest.mark.skipif(sys.version_info[:2] < (3, 12), reason="Requires Python 3.12 or higher")
 
 
 class TestRoboflowDetectionModel(unittest.TestCase):
