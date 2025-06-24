@@ -1,8 +1,5 @@
 import unittest
 
-from rfdetr import RFDETRBase, RFDETRLarge
-from rfdetr.util.coco_classes import COCO_CLASSES
-
 from sahi import AutoDetectionModel
 from sahi.predict import get_prediction, get_sliced_prediction
 from sahi.utils.cv import read_image
@@ -40,6 +37,9 @@ class TestRoboflowDetectionModel(unittest.TestCase):
 
     def test_rfdetr(self):
         """Test the RFDETR model classes and instances for object detection."""
+        from rfdetr import RFDETRBase, RFDETRLarge
+        from rfdetr.util.coco_classes import COCO_CLASSES
+
         models = [
             RFDETRBase,
             RFDETRBase(),
