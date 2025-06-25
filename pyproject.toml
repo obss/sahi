@@ -1,13 +1,13 @@
 [project]
 name = "sahi"
-version = "0.11.24"
+version = "0.11.25"
 readme = "README.md"
 description = "A vision library for performing sliced inference on large images/small objects"
 requires-python = ">=3.8"
 license = "MIT"
 license-files = ["./LICENSE"]
 dependencies = [
-  "opencv-python<=4.10.0.84",
+  "opencv-python<=4.11.0.86",
   "shapely>=2.0.0",
   "tqdm>=4.48.2",
   "pillow>=8.2.0",
