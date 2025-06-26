@@ -255,6 +255,8 @@ All you need to do is, create a new .py file under [sahi/models/](https://github
 
 <a align="left" href="https://github.com/madenburak" target="_blank">Burak Maden</a>
 
+<a align="left" href="https://github.com/nok" target="_blank">Darius Morawiec</a>
+
 <a align="left" href="https://github.com/PushpakBhoge" target="_blank">Pushpak Bhoge</a>
 
 <a align="left" href="https://github.com/mcvarer" target="_blank">M. Can V.</a>
@@ -262,6 +264,10 @@ All you need to do is, create a new .py file under [sahi/models/](https://github
 <a align="left" href="https://github.com/ChristofferEdlund" target="_blank">Christoffer Edlund</a>
 
 <a align="left" href="https://github.com/ishworii" target="_blank">Ishwor</a>
+
+<a align="left" href="https://github.com/ducviet00" target="_blank">Duc-Viet Hoang</a>
+
+<a align="left" href="https://github.com/mario-dg" target="_blank">Mario da Graca</a>
 
 <a align="left" href="https://github.com/mecevit" target="_blank">Mehmet Ecevit</a>
 
