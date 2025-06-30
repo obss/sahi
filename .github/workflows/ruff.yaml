@@ -1,5 +1,21 @@
 name: Ruff
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "**.ipynb"
+      - "**.cff"
+      - "docs/**"
+      - "demo/**"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "**.ipynb"
+      - "**.cff"
+      - "docs/**"
+      - "demo/**"
 jobs:
   ruff:
     runs-on: ubuntu-latest

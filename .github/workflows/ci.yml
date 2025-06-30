@@ -6,6 +6,8 @@ on:
       - "**.md"
       - "**.ipynb"
       - "**.cff"
+      - "docs/**"
+      - "demo/**"
 
   pull_request:
     branches: [main]
@@ -13,6 +15,8 @@ on:
       - "**.md"
       - "**.ipynb"
       - "**.cff"
+      - "docs/**"
+      - "demo/**"
 
   schedule:
     - cron: "0 0 * * *" # Runs at 00:00 UTC every day
