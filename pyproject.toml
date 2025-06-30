@@ -99,8 +99,8 @@ explicit = true
 torch = [{ index = "pytorch-cpu" }]
 torchvision = [{ index = "pytorch-cpu" }]
 
-[tool.setuptools.dynamic]
-version = { attr = "sahi.__version__" }
+[tool.hatch.version]
+path = "sahi/__init__.py"
 
 [build-system]
 requires = ["hatchling"]
