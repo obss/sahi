@@ -71,9 +71,6 @@ ci = [
   "mmengine;python_version<'3.12' and (platform_system!='Darwin' or platform_machine!='arm64')",
   "mmcv==2.1.0;python_version<'3.12' and (platform_system!='Darwin' or platform_machine!='arm64')",
   "mmdet==3.3.0;python_version<'3.12' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  "onnxruntime<1.20;python_version<'3.12'",
-  "onnx>1.16;python_version>='3.12'",
-  "onnxruntime;python_version>='3.12'",
   # transformers is supported for python>=3.9 (no numpy 2.0 requirement)
   "transformers>=4.49.0;python_version>='3.9'",
   # inference and rfdetr require numpy>=2.0, incompatible with torch 2.1.2
@@ -85,6 +82,8 @@ ci = [
   "ultralytics>=8.3.161",
   "scikit-image",
   "fiftyone",
+  "onnx>1.16",
+  "onnxruntime"
 ]
 
 [tool.uv]

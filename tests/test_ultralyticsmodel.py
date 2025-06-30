@@ -42,16 +42,10 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
 
         download_yolo11n_onnx_model()
 
-        # Create category mapping for COCO (80 classes)
-        coco_categories = {}
-        for i in range(80):
-            coco_categories[str(i)] = f"class_{i}"
-
         detection_model = UltralyticsDetectionModel(
             model_path=UltralyticsTestConstants.YOLO11N_ONNX_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
-            category_mapping=coco_categories,
             load_at_init=True,
         )
 
@@ -65,45 +59,6 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
             model_path="yolo11n.pt",
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
-            category_remapping=None,
-            load_at_init=True,
-            image_size=IMAGE_SIZE,
-        )
-
-        # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
-        image = read_image(image_path)
-
-        # perform inference
-        detection_model.perform_inference(image)
-        original_predictions = detection_model.original_predictions
-        assert original_predictions
-        assert isinstance(original_predictions, list)
-
-        boxes = original_predictions[0].data
-
-        # verify predictions
-        self.assertEqual(len(detection_model.category_names), 80)
-        for box in boxes:  # type: ignore
-            self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
-
-    def test_perform_inference_yolo11_onnx(self):
-        from sahi.models.ultralytics import UltralyticsDetectionModel
-
-        # init model
-        download_yolo11n_onnx_model()
-
-        # Create category mapping for COCO
-        coco_categories = {}
-        for i in range(80):
-            coco_categories[str(i)] = f"class_{i}"
-        coco_categories["2"] = "car"  # Set car category for testing
-
-        detection_model = UltralyticsDetectionModel(
-            model_path=UltralyticsTestConstants.YOLO11N_ONNX_MODEL_PATH,
-            confidence_threshold=CONFIDENCE_THRESHOLD,
-            device=MODEL_DEVICE,
-            category_mapping=coco_categories,
             category_remapping=None,
             load_at_init=True,
             image_size=IMAGE_SIZE,

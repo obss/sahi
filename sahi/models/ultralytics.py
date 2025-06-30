@@ -18,6 +18,11 @@ logger = logging.getLogger(__name__)
 
 
 class UltralyticsDetectionModel(DetectionModel):
+    """
+    Detection model for Ultralytics YOLO models.
+
+    Supports both PyTorch (.pt) and ONNX (.onnx) models.
+    """
     def check_dependencies(self) -> None:
         check_requirements(["ultralytics"])
 
@@ -28,9 +33,14 @@ class UltralyticsDetectionModel(DetectionModel):
         """
         from ultralytics import YOLO
 
+        if self.model_path and ".onnx" in self.model_path:
+            check_requirements(["onnx", "onnxruntime"])
+
         try:
             model = YOLO(self.model_path)
-            model.to(self.device)
+            # Only call .to(device) for PyTorch models, not ONNX
+            if self.model_path and not self.model_path.endswith(".onnx"):
+                model.to(self.device)
             self.set_model(model)
         except Exception as e:
             raise TypeError("model_path is not a valid Ultralytics model path: ", e)
@@ -55,8 +65,6 @@ class UltralyticsDetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-        from ultralytics.engine.results import Masks
-
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
@@ -66,12 +74,21 @@ class UltralyticsDetectionModel(DetectionModel):
         if self.image_size is not None:
             kwargs = {"imgsz": self.image_size, **kwargs}
 
-        prediction_result = self.model(image[:, :, ::-1], **kwargs)  # YOLOv8 expects numpy arrays to have BGR
+        prediction_result = self.model(image[:, :, ::-1], **kwargs)  # YOLO expects numpy arrays to have BGR
 
+        # Handle different result types for PyTorch vs ONNX models
+        # ONNX models might return results in a different format
         if self.has_mask:
+            from ultralytics.engine.results import Masks
+
             if not prediction_result[0].masks:
+                # Create empty masks if none exist
+                if hasattr(self.model, "device"):
+                    device = self.model.device
+                else:
+                    device = "cpu"  # Default for ONNX models
                 prediction_result[0].masks = Masks(
-                    torch.tensor([], device=self.model.device), prediction_result[0].boxes.orig_shape
+                    torch.tensor([], device=device), prediction_result[0].boxes.orig_shape
                 )
 
             # We do not filter results again as confidence threshold is already applied above
@@ -84,6 +101,7 @@ class UltralyticsDetectionModel(DetectionModel):
             ]
         elif self.is_obb:
             # For OBB task, get OBB points in xyxyxyxy format
+            device = getattr(self.model, 'device', 'cpu')
             prediction_result = [
                 (
                     # Get OBB data: xyxy, conf, cls
@@ -96,9 +114,9 @@ class UltralyticsDetectionModel(DetectionModel):
                         dim=1,
                     )
                     if result.obb is not None
-                    else torch.empty((0, 6), device=self.model.device),
+                    else torch.empty((0, 6), device=device),
                     # Get OBB points in (N, 4, 2) format
-                    result.obb.xyxyxyxy if result.obb is not None else torch.empty((0, 4, 2), device=self.model.device),
+                    result.obb.xyxyxyxy if result.obb is not None else torch.empty((0, 4, 2), device=device),
                 )
                 for result in prediction_result
             ]
