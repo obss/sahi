@@ -80,7 +80,7 @@ jobs:
       - name: Test with python ${{ matrix.python-version }}
         run: |
           source .venv/bin/activate
-          pytest --capture=no
+          pytest --capture=no -n auto  # Run tests in parallel using all CPU cores
       - name: Test SAHI CLI
         run: |
           source .venv/bin/activate
