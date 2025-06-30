@@ -48,9 +48,13 @@ jobs:
       - name: Install dependencies
         run: |
           set -e
-          # First install ci dependencies to get torch 2.1.2
+          # Create virtual environment with Python 3.11
+          uv venv --python 3.11
+          # Activate virtual environment
+          source .venv/bin/activate
+          # Install specific torch version for MMDet compatibility
           uv pip install torch==2.1.2+cpu torchvision==0.16.2+cpu --index-url https://download.pytorch.org/whl/cpu
-          # Then install mmdet dependencies
+          # Install dev and mmdet dependencies
           uv sync --extra dev --extra mmdet
       - name: Verify .venv Activation
         run: |
