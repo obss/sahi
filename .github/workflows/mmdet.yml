@@ -52,10 +52,10 @@ jobs:
           uv venv --python 3.11
           # Activate virtual environment
           source .venv/bin/activate
-          # Install specific torch version for MMDet compatibility
-          uv pip install torch==2.1.2+cpu torchvision==0.16.2+cpu --index-url https://download.pytorch.org/whl/cpu
           # Install dev and mmdet dependencies
           uv sync --extra dev --extra mmdet
+          # Install specific torch version for MMDet compatibility AFTER uv sync
+          uv pip install torch==2.1.2+cpu torchvision==0.16.2+cpu --index-url https://download.pytorch.org/whl/cpu
       - name: Verify .venv Activation
         run: |
           if [ ! -d ".venv" ]; then
