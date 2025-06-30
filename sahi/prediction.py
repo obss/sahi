@@ -14,7 +14,7 @@ from sahi.utils.file import Path
 
 
 class PredictionScore:
-    def __init__(self, value: float | np.ndarray):
+    def __init__(self, value: Union[float, np.ndarray]):
         """
         Arguments:
             score: prediction score between 0 and 1
