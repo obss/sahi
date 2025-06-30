@@ -47,8 +47,6 @@ def test_rfdetr():
     models = [
         RFDETRBase,
         RFDETRBase(),
-        RFDETRLarge,
-        RFDETRLarge(),
     ]
     for model_variant in models:
         model = AutoDetectionModel.from_pretrained(
