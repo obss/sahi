@@ -128,5 +128,3 @@ class TestShapelyUtils:
         assert intersection_shapely_annotation.area == 0
 
         assert intersection_shapely_annotation.to_xywh() == []
-
-

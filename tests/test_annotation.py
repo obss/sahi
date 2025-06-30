@@ -102,5 +102,3 @@ class TestAnnotation:
         assert object_annotation3.bbox.maxy == bbox[3]
         assert object_annotation3.category.id == category_id
         assert object_annotation3.category.name == category_name
-
-

@@ -262,5 +262,3 @@ if "1.10." in torch_version:
                 if object_prediction.category.name == "car":
                     num_car += 1
             assert num_car == 19
-
-

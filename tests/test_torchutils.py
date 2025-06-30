@@ -9,6 +9,7 @@ from sahi.utils.torch import empty_cuda_cache, to_float_tensor, torch_to_numpy
 class TestTorchUtils:
     def test_empty_cuda_cache(self):
         import torch
+
         if torch.cuda.is_available():
             assert empty_cuda_cache() is None
 
@@ -18,6 +19,7 @@ class TestTorchUtils:
 
     def test_torch_to_numpy(self):
         import torch
+
         img_t = torch.tensor(np.random.rand(3, 10, 10))
         img = torch_to_numpy(img_t)
         assert img.shape == (10, 10, 3)

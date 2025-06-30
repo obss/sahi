@@ -1,6 +1,7 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2022.
 
+
 class TestHighLevelApi:
     def test_bounding_box(self):
         from sahi import BoundingBox
@@ -105,5 +106,3 @@ class TestHighLevelApi:
         detection_model = DetectionModel(model_path="model_path", image_size=IMAGE_SIZE, load_at_init=False)
         assert detection_model.model_path == MODEL_PATH
         assert detection_model.image_size == IMAGE_SIZE
-
-

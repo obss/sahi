@@ -265,5 +265,3 @@ class TestTorchVisionDetectionModel:
         np.testing.assert_almost_equal(
             object_prediction_list[0].bbox.to_xywh(), [765.81, 259.37, 28.62, 24.63], decimal=1
         )
-
-

@@ -127,5 +127,3 @@ class TestAutoSlicing:
         assert coco_dict["annotations"][2]["bbox"] == [238, 237, 73, 171]
 
         shutil.rmtree(output_dir, ignore_errors=True)
-
-
