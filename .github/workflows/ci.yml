@@ -51,7 +51,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: tests/data/models
-          key: ${{ runner.os }}-models-${{ hashFiles('sahi/utils/mmdet.py', 'sahi/utils/huggingface.py', 'sahi/utils/yolov5.py', 'sahi/utils/ultralytics.py', 'sahi/utils/rtdetr.py', 'sahi/utils/torchvision.py') }}
+          key: ${{ runner.os }}-models-${{ hashFiles('sahi/utils/huggingface.py', 'sahi/utils/yolov5.py', 'sahi/utils/ultralytics.py', 'sahi/utils/rtdetr.py', 'sahi/utils/torchvision.py') }}
           restore-keys: |
             ${{ runner.os }}-models-
       - name: Install libgl
@@ -89,8 +89,9 @@ jobs:
       - name: Test with python ${{ matrix.python-version }}
         run: |
           source .venv/bin/activate
-          pytest --capture=no -n auto  # Run tests in parallel using all CPU cores
-      - name: Test SAHI CLI
+          # Exclude MMDet tests which run in a separate workflow
+          pytest --capture=no -n auto -k "not (mmdet or test_get_prediction_mmdet or test_get_sliced_prediction_mmdet or test_mmdet_yolox_tiny_prediction)"
+      - name: Test SAHI CLI (without MMDet)
         run: |
           source .venv/bin/activate
           set -e
@@ -104,11 +105,3 @@ jobs:
           sahi coco evaluate --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json
           # coco analyse
           sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
-      - name: Test SAHI CLI with MMCV
-        if: matrix.python-version < '3.12'
-        run: |
-          source .venv/bin/activate
-          set -e
-          sahi predict --model_type mmdet --source tests/data/ --novisual --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
-          sahi predict --model_type mmdet --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
-          sahi predict --model_type mmdet --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
