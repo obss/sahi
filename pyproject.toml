@@ -1,6 +1,6 @@
 [project]
 name = "sahi"
-version = "0.11.26"
+dynamic = ["version"]
 readme = "README.md"
 description = "A vision library for performing sliced inference on large images/small objects"
 requires-python = ">=3.8"
@@ -94,6 +94,16 @@ explicit = true
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu" }]
 torchvision = [{ index = "pytorch-cpu" }]
+
+[project.urls]
+"Homepage" = "https://github.com/obss/sahi"
+"Source" = "https://github.com/obss/sahi"
+"Documentation" = "https://github.com/obss/sahi/tree/main/docs"
+"Bug Reports" = "https://github.com/obss/sahi/discussions/categories/q-a"
+"Changelog" = "https://github.com/obss/sahi/releases"
+
+[tool.setuptools.dynamic]
+version = { attr = "sahi.__version__" }
 
 [build-system]
 requires = ["hatchling"]
