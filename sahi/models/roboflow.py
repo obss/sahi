@@ -147,7 +147,7 @@ class RoboflowDetectionModel(DetectionModel):
         if self._use_universe:
             self._original_predictions = self.model.infer(image, confidence=self.confidence_threshold)
         else:
-            self._original_predictions = [self.model.predict(image, confidence=self.confidence_threshold)]
+            self._original_predictions = [self.model.predict(image, threshold=self.confidence_threshold)]
 
     def _create_object_prediction_list_from_original_predictions(
         self,
