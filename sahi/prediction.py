@@ -21,7 +21,7 @@ class PredictionScore:
         """
         # if score is a numpy object, convert it to python variable
         if type(value).__module__ == "numpy":
-            value = copy.deepcopy(value).tolist()[0]
+            value = copy.deepcopy(value).tolist()
         # set score
         self.value = value
 

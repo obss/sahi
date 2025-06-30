@@ -545,12 +545,21 @@ class TestCocoUtils:
         vehicle_subsampled_coco = coco.get_subsampled_coco(subsample_ratio=SUBSAMPLE_RATIO, category_id=1)
         assert vehicle_subsampled_coco.stats
         assert coco.stats
-        assert vehicle_subsampled_coco.stats["num_images_per_category"]["vehicle"] == int(coco.stats["num_images_per_category"]["vehicle"] / SUBSAMPLE_RATIO) + 1
+        assert (
+            vehicle_subsampled_coco.stats["num_images_per_category"]["vehicle"]
+            == int(coco.stats["num_images_per_category"]["vehicle"] / SUBSAMPLE_RATIO) + 1
+        )
 
         negative_subsampled_coco = coco.get_subsampled_coco(subsample_ratio=SUBSAMPLE_RATIO, category_id=-1)
         assert negative_subsampled_coco.stats
-        assert negative_subsampled_coco.stats["num_images_per_category"]["vehicle"] == coco.stats["num_images_per_category"]["vehicle"]
-        assert negative_subsampled_coco.stats["num_negative_images"] == int(coco.stats["num_negative_images"] / SUBSAMPLE_RATIO) + 1
+        assert (
+            negative_subsampled_coco.stats["num_images_per_category"]["vehicle"]
+            == coco.stats["num_images_per_category"]["vehicle"]
+        )
+        assert (
+            negative_subsampled_coco.stats["num_negative_images"]
+            == int(coco.stats["num_negative_images"] / SUBSAMPLE_RATIO) + 1
+        )
 
     def test_get_upsampled_coco(self):
         from sahi.utils.coco import Coco
@@ -567,19 +576,33 @@ class TestCocoUtils:
         assert upsampled_coco.image_dir == image_dir
         assert upsampled_coco.stats
         assert coco.stats
-        assert upsampled_coco.stats["num_images_per_category"]["vehicle"] == coco.stats["num_images_per_category"]["vehicle"] * UPSAMPLE_RATIO
+        assert (
+            upsampled_coco.stats["num_images_per_category"]["vehicle"]
+            == coco.stats["num_images_per_category"]["vehicle"] * UPSAMPLE_RATIO
+        )
         assert upsampled_coco.stats["num_images"] == len(upsampled_coco.images)
         assert upsampled_coco.stats["num_annotations"] == len(upsampled_coco.json["annotations"])
 
         vehicle_upsampled_coco = coco.get_upsampled_coco(upsample_ratio=UPSAMPLE_RATIO, category_id=1)
         assert vehicle_upsampled_coco.stats
-        assert vehicle_upsampled_coco.stats["num_images_per_category"]["vehicle"] == coco.stats["num_images_per_category"]["vehicle"] * UPSAMPLE_RATIO
-        assert vehicle_upsampled_coco.stats["num_images_per_category"]["human"] != coco.stats["num_images_per_category"]["human"] * UPSAMPLE_RATIO
+        assert (
+            vehicle_upsampled_coco.stats["num_images_per_category"]["vehicle"]
+            == coco.stats["num_images_per_category"]["vehicle"] * UPSAMPLE_RATIO
+        )
+        assert (
+            vehicle_upsampled_coco.stats["num_images_per_category"]["human"]
+            != coco.stats["num_images_per_category"]["human"] * UPSAMPLE_RATIO
+        )
 
         negative_upsampled_coco = coco.get_upsampled_coco(upsample_ratio=UPSAMPLE_RATIO, category_id=-1)
         assert negative_upsampled_coco.stats
-        assert negative_upsampled_coco.stats["num_images_per_category"]["vehicle"] == coco.stats["num_images_per_category"]["vehicle"]
-        assert negative_upsampled_coco.stats["num_negative_images"] == coco.stats["num_negative_images"] * UPSAMPLE_RATIO
+        assert (
+            negative_upsampled_coco.stats["num_images_per_category"]["vehicle"]
+            == coco.stats["num_images_per_category"]["vehicle"]
+        )
+        assert (
+            negative_upsampled_coco.stats["num_negative_images"] == coco.stats["num_negative_images"] * UPSAMPLE_RATIO
+        )
 
     def test_get_area_filtered_coco(self):
         from sahi.utils.coco import Coco
@@ -608,8 +631,12 @@ class TestCocoUtils:
         assert len(coco.json["images"]) == 50
         assert len(area_filtered_coco.json["images"]) == 24
         assert area_filtered_coco.stats
-        assert area_filtered_coco.stats["min_annotation_area"] > min(intervals_per_category["human"]["min"], intervals_per_category["vehicle"]["min"])
-        assert area_filtered_coco.stats["max_annotation_area"] < max(intervals_per_category["human"]["max"], intervals_per_category["vehicle"]["max"])
+        assert area_filtered_coco.stats["min_annotation_area"] > min(
+            intervals_per_category["human"]["min"], intervals_per_category["vehicle"]["min"]
+        )
+        assert area_filtered_coco.stats["max_annotation_area"] < max(
+            intervals_per_category["human"]["max"], intervals_per_category["vehicle"]["max"]
+        )
         assert area_filtered_coco.image_dir == image_dir
         assert area_filtered_coco.stats["num_images"] == len(area_filtered_coco.images)
         assert area_filtered_coco.stats["num_annotations"] == len(area_filtered_coco.json["annotations"])
@@ -623,8 +650,12 @@ class TestCocoUtils:
         assert len(coco.json["images"]) == 50
         assert len(area_filtered_coco.json["images"]) == 24
         assert area_filtered_coco.stats
-        assert area_filtered_coco.stats["min_annotation_area"] > min(intervals_per_category["human"]["min"], intervals_per_category["vehicle"]["min"])
-        assert area_filtered_coco.stats["max_annotation_area"] < max(intervals_per_category["human"]["max"], intervals_per_category["vehicle"]["max"])
+        assert area_filtered_coco.stats["min_annotation_area"] > min(
+            intervals_per_category["human"]["min"], intervals_per_category["vehicle"]["min"]
+        )
+        assert area_filtered_coco.stats["max_annotation_area"] < max(
+            intervals_per_category["human"]["max"], intervals_per_category["vehicle"]["max"]
+        )
         assert area_filtered_coco.image_dir == image_dir
         assert area_filtered_coco.stats["num_images"] == len(area_filtered_coco.images)
         assert area_filtered_coco.stats["num_annotations"] == len(area_filtered_coco.json["annotations"])
@@ -692,4 +723,3 @@ class TestCocoUtils:
         assert coco_with_clipped_bboxes.images[0].annotations[5].bbox == [0, 0, 100, 100]
         assert coco_with_clipped_bboxes.images[1] is not None
         assert len(coco_with_clipped_bboxes.images[1].annotations) == 0
-
