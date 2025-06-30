@@ -1,10 +1,10 @@
 import copy
+import json
 import logging
 import os
 from multiprocessing import Pool
 from pathlib import Path
 from typing import List, Optional, Union
-import json
 
 import fire
 import numpy as np
