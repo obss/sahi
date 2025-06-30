@@ -32,11 +32,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup uv python package manager
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
           prune-cache: false
+          cache-dependency-glob: |
+            **/pyproject.toml
       # For python 3.8 and 3.9, it does no suffice to install opencv-python-headless
       # https://itsmycode.com/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directory/
       - name: Cache apt packages
@@ -45,6 +47,13 @@ jobs:
         with:
           path: /var/cache/apt
           key: apt-cache
+      - name: Cache model weights
+        uses: actions/cache@v4
+        with:
+          path: tests/data/models
+          key: ${{ runner.os }}-models-${{ hashFiles('sahi/utils/mmdet.py', 'sahi/utils/huggingface.py', 'sahi/utils/yolov5.py', 'sahi/utils/ultralytics.py', 'sahi/utils/rtdetr.py', 'sahi/utils/torchvision.py') }}
+          restore-keys: |
+            ${{ runner.os }}-models-
       - name: Install libgl
         run: sudo apt-get update && sudo apt-get install -y libgl1
       - name: Install dependencies
