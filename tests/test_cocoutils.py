@@ -4,7 +4,6 @@
 import logging
 import os
 import shutil
-import unittest
 
 from sahi.utils.coco import merge, update_categories
 from sahi.utils.file import load_json
@@ -12,7 +11,7 @@ from sahi.utils.file import load_json
 logger = logging.getLogger(__name__)
 
 
-class TestCocoUtils(unittest.TestCase):
+class TestCocoUtils:
     def test_coco_categories(self):
         from sahi.utils.coco import CocoCategory
 
