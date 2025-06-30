@@ -1,8 +1,8 @@
+import os
 from pathlib import Path
 from typing import List, Optional, Union
 
 import numpy as np
-import os
 
 from sahi.utils.ultralytics import download_yolov8n_model
 
@@ -26,7 +26,7 @@ def download_yolov8n_onnx_model(
     model.export(format="onnx")  # , imgsz=image_size)
 
     # Cleanup temporary files
-    for ext in ['.pt', '.yaml']:
+    for ext in [".pt", ".yaml"]:
         temp_file = destination_path.parent / (destination_path.stem + ext)
         if temp_file.exists():
             os.remove(temp_file)
