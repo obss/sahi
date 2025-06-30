@@ -9,9 +9,16 @@ import pytest
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
+
+# Skip entire module if mmdet is not available
+pytest.importorskip("mmdet", reason="MMDet is not installed")
+pytest.importorskip("mmcv", reason="MMCV is not installed")
+pytest.importorskip("mmengine", reason="MMEngine is not installed")
+
 from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_yolox_tiny_model
 
-pytestmark = pytest.mark.skipif(sys.version_info[:2] > (3, 11), reason="MMDet 3.3.0 requires Python 3.11 or lower")
+pytestmark = pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
+
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
