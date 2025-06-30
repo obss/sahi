@@ -1,10 +1,9 @@
 import os
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import requests
 from tqdm import tqdm
-import numpy as np
 
 YOLO11N_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt"
 YOLO11N_SEG_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-seg.pt"

@@ -10,8 +10,8 @@ from sahi.utils.ultralytics import (
     UltralyticsTestConstants,
     download_yolo11n_model,
     download_yolo11n_obb_model,
+    download_yolo11n_onnx_model,
     download_yolo11n_seg_model,
-    download_yolo11n_onnx_model
 )
 
 MODEL_DEVICE = "cpu"

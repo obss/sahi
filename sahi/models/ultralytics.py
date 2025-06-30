@@ -112,7 +112,7 @@ class UltralyticsDetectionModel(DetectionModel):
     @property
     def category_names(self):
         # For ONNX models, names might not be available, use category_mapping
-        if hasattr(self.model, 'names') and self.model.names:
+        if hasattr(self.model, "names") and self.model.names:
             return self.model.names.values()
         elif self.category_mapping:
             return list(self.category_mapping.values())
@@ -124,7 +124,7 @@ class UltralyticsDetectionModel(DetectionModel):
         """
         Returns number of categories
         """
-        if hasattr(self.model, 'names') and self.model.names:
+        if hasattr(self.model, "names") and self.model.names:
             return len(self.model.names)
         elif self.category_mapping:
             return len(self.category_mapping)
@@ -137,10 +137,10 @@ class UltralyticsDetectionModel(DetectionModel):
         Returns if model output contains segmentation mask
         """
         # Check if model has 'task' attribute (for both .pt and .onnx models)
-        if hasattr(self.model, 'overrides') and 'task' in self.model.overrides:
+        if hasattr(self.model, "overrides") and "task" in self.model.overrides:
             return self.model.overrides["task"] == "segment"
         # For ONNX models, task might be stored differently
-        elif hasattr(self.model, 'task'):
+        elif hasattr(self.model, "task"):
             return self.model.task == "segment"
         # For ONNX models without task info, check model path
         elif self.model_path and isinstance(self.model_path, str):
@@ -153,10 +153,10 @@ class UltralyticsDetectionModel(DetectionModel):
         Returns if model output contains oriented bounding boxes
         """
         # Check if model has 'task' attribute (for both .pt and .onnx models)
-        if hasattr(self.model, 'overrides') and 'task' in self.model.overrides:
+        if hasattr(self.model, "overrides") and "task" in self.model.overrides:
             return self.model.overrides["task"] == "obb"
         # For ONNX models, task might be stored differently
-        elif hasattr(self.model, 'task'):
+        elif hasattr(self.model, "task"):
             return self.model.task == "obb"
         # For ONNX models without task info, check model path
         elif self.model_path and isinstance(self.model_path, str):
