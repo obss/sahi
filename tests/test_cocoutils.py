@@ -577,7 +577,7 @@ class TestCocoUtils:
         upsampled_coco = coco.get_upsampled_coco(upsample_ratio=UPSAMPLE_RATIO)
         assert len(coco.json["images"]) == 50
         assert len(upsampled_coco.json["images"]) == 250
-        assert len(coco.images[5].annotations) == len(upsampled_coco.images[5 + len(coco.images].annotations))
+        assert len(coco.images[5].annotations) == len(upsampled_coco.images[5 + len(coco.images)].annotations)
         assert coco.image_dir == image_dir
         assert upsampled_coco.image_dir == image_dir
         assert upsampled_coco.stats
