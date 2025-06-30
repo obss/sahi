@@ -40,7 +40,7 @@ class TestHighLevelApi:
 
         assert mask.full_shape_height == full_shape_height
         assert mask.full_shape_width == full_shape_width
-        assert mask.bool_mask[11, 2] == True
+        assert mask.bool_mask[11, 2]
 
     def test_object_prediction(self):
         from sahi import ObjectPrediction

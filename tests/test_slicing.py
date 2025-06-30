@@ -38,10 +38,10 @@ class TestSlicing:
         assert slice_image_result.coco_images[0].annotations == []
         assert slice_image_result.coco_images[15].annotations[1].area == 7296
         assert slice_image_result.coco_images[15].annotations[1].bbox == [17, 186, 48, 152]
-        assert type(slice_image_result[0]) == dict
+        assert isinstance(slice_image_result[0], dict)
         assert slice_image_result[0]["image"].shape == (512, 512, 3)
         assert slice_image_result[3]["starting_pixel"] == [924, 0]
-        assert type(slice_image_result[0:4]) == list
+        assert isinstance(slice_image_result[0:4], list)
         assert len(slice_image_result[0:4]) == 4
 
         image_cv = read_image(image_path)
@@ -161,17 +161,17 @@ class TestSlicing:
         shift_y = 20
         shifted_bboxes = shift_bboxes(bboxes=bboxes, offset=[shift_x, shift_y])
         assert shifted_bboxes == [[11, 22, 13, 24]]
-        assert type(shifted_bboxes) == list
+        assert isinstance(shifted_bboxes, list)
 
         bboxes = np.array([[1, 2, 3, 4]])
         shifted_bboxes = shift_bboxes(bboxes=bboxes, offset=[shift_x, shift_y])
         assert shifted_bboxes.tolist() == [[11, 22, 13, 24]]
-        assert type(shifted_bboxes) == np.ndarray
+        assert isinstance(shifted_bboxes, np.ndarray)
 
         bboxes = torch.tensor([[1, 2, 3, 4]])
         shifted_bboxes = shift_bboxes(bboxes=bboxes, offset=[shift_x, shift_y])
         assert shifted_bboxes.tolist() == [[11, 22, 13, 24]]
-        assert type(shifted_bboxes) == torch.Tensor
+        assert isinstance(shifted_bboxes, torch.Tensor)
 
     def test_shift_masks(self):
         masks = np.zeros((3, 30, 30), dtype=bool)
@@ -180,4 +180,4 @@ class TestSlicing:
         full_shape = [720, 1280]
         shifted_masks = shift_masks(masks=masks, offset=[shift_x, shift_y], full_shape=full_shape)
         assert shifted_masks.shape == (3, 720, 1280)
-        assert type(shifted_masks) == np.ndarray
+        assert isinstance(shifted_masks, np.ndarray)
