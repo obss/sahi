@@ -82,7 +82,7 @@ ci = [
   "ultralytics>=8.3.161",
   "scikit-image",
   "fiftyone",
-  "onnx>1.16",
+  "onnx",
   "onnxruntime"
 ]
 
