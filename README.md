@@ -78,7 +78,7 @@ pip install yolov5==7.0.14 sahi==0.11.21
 - Install your desired detection framework (ultralytics):
 
 ```console
-pip install ultralytics>=8.3.86
+pip install ultralytics>=8.3.161
 ```
 
 - Install your desired detection framework (mmdet):
@@ -91,7 +91,7 @@ mim install mmdet==3.3.0
 - Install your desired detection framework (huggingface):
 
 ```console
-pip install transformers>=4.42.0 timm
+pip install transformers>=4.49.0 timm
 ```
 
 - Install your desired detection framework (roboflow):
