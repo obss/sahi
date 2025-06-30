@@ -41,7 +41,7 @@ def test_roboflow_universe():
 
 def test_rfdetr():
     """Test the RFDETR model classes and instances for object detection."""
-    from rfdetr import RFDETRBase, RFDETRLarge
+    from rfdetr import RFDETRBase
     from rfdetr.util.coco_classes import COCO_CLASSES
 
     models = [
