@@ -50,7 +50,7 @@ jobs:
       - name: Install dependencies
         run: |
           set -e
-          uv sync --extra ci
+          uv sync --all-extras
       - name: List installed packages
         run: |
           echo "=== Installed Python packages ==="
