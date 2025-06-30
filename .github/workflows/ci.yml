@@ -51,7 +51,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: tests/data/models
-          key: ${{ runner.os }}-models-${{ hashFiles('sahi/utils/mmdet.py', 'sahi/utils/huggingface.py', 'sahi/utils/yolov5.py', 'sahi/utils/ultralytics.py', 'sahi/utils/rtdetr.py', 'sahi/utils/torchvision.py') }}
+          key: ${{ runner.os }}-models-${{ hashFiles('sahi/utils/huggingface.py', 'sahi/utils/yolov5.py', 'sahi/utils/ultralytics.py', 'sahi/utils/rtdetr.py', 'sahi/utils/torchvision.py') }}
           restore-keys: |
             ${{ runner.os }}-models-
       - name: Install libgl
