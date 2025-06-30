@@ -25,7 +25,7 @@ class TestTorchVisionDetectionModel:
             category_remapping=None,
             load_at_init=True,
         )
-        assert isinstance(torchvision_detection_model.model.roi_heads, RoIHeads) == True
+        assert isinstance(torchvision_detection_model.model.roi_heads, RoIHeads)
 
     def test_load_model_without_config_path(self):
         from torchvision.models.detection.faster_rcnn import RoIHeads
@@ -38,7 +38,7 @@ class TestTorchVisionDetectionModel:
             category_remapping=None,
             load_at_init=True,
         )
-        assert isinstance(torchvision_detection_model.model.roi_heads, RoIHeads) == True
+        assert isinstance(torchvision_detection_model.model.roi_heads, RoIHeads)
 
     def test_set_model(self):
         import torchvision
@@ -58,7 +58,7 @@ class TestTorchVisionDetectionModel:
             load_at_init=True,
         )
 
-        assert isinstance(torchvision_detection_model.model.head, SSDHead) == True
+        assert isinstance(torchvision_detection_model.model.head, SSDHead)
 
     def test_perform_inference_without_mask_output(self):
         from sahi.models.torchvision import TorchVisionDetectionModel
