@@ -37,16 +37,24 @@ jobs:
       # https://itsmycode.com/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directory/
       - name: Cache apt packages
         uses: actions/cache@v4
+        # Only cache apt packages when running GitHub Actions locally with 'act' tool
         if: ${{ env.ACT }}
         with:
           path: /var/cache/apt
           key: apt-cache
       - name: Install libgl
         run: sudo apt-get update && sudo apt-get install -y libgl1
-      - name: Debug uv sync
+      - name: Install dependencies
         run: |
           set -e
-          uv sync -v
+          uv sync
+      - name: Print installed package versions
+        run: |
+          source .venv/bin/activate
+          echo "=== Python Version ==="
+          python --version
+          echo "=== Installed Packages ==="
+          uv pip list
       - name: Verify .venv Activation
         run: |
           if [ ! -d ".venv" ]; then

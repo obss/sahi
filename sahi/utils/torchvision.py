@@ -1,8 +1,6 @@
 # OBSS SAHI Tool
-# Code written by Kadir Nar, 2022.
+# Code written by Fatih C. Akyon, 2025.
 
-
-from packaging import version
 
 from sahi.utils.import_utils import get_package_info
 
@@ -12,7 +10,7 @@ class TorchVisionTestConstants:
     SSD300_CONFIG_PATH = "tests/data/models/torchvision/ssd300_vgg16.yaml"
 
 
-_torchvision_available, _torchvision_version = get_package_info("torchvision", verbose=False)
+_torchvision_available, _ = get_package_info("torchvision", verbose=False)
 
 if _torchvision_available:
     import torchvision
@@ -24,11 +22,8 @@ if _torchvision_available:
         "retinanet_resnet50_fpn": torchvision.models.detection.retinanet_resnet50_fpn,
         "ssd300_vgg16": torchvision.models.detection.ssd300_vgg16,
         "ssdlite320_mobilenet_v3_large": torchvision.models.detection.ssdlite320_mobilenet_v3_large,
+        "fcos_resnet50_fpn": torchvision.models.detection.fcos_resnet50_fpn,
     }
-
-    # fcos requires torchvision >= 0.12.0
-    if version.parse(_torchvision_version) >= version.parse("0.12.0"):
-        MODEL_NAME_TO_CONSTRUCTOR["fcos_resnet50_fpn"] = (torchvision.models.detection.fcos_resnet50_fpn,)
 
 
 COCO_CLASSES = [
