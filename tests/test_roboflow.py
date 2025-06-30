@@ -79,5 +79,3 @@ class TestRoboflowDetectionModel:
 
                 sliced_predictions = sliced_results.object_prediction_list
                 self.assertGreater(len(sliced_predictions), len(predictions))
-
-
