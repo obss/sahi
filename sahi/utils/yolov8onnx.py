@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 import numpy as np
+import os
 
 from sahi.utils.ultralytics import download_yolov8n_model
 
@@ -23,6 +24,12 @@ def download_yolov8n_onnx_model(
 
     model = YOLO(model_path)
     model.export(format="onnx")  # , imgsz=image_size)
+
+    # Cleanup temporary files
+    for ext in ['.pt', '.yaml']:
+        temp_file = destination_path.parent / (destination_path.stem + ext)
+        if temp_file.exists():
+            os.remove(temp_file)
 
 
 def non_max_suppression(boxes: np.ndarray, scores: np.ndarray, iou_threshold: float) -> List[int]:
