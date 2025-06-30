@@ -132,7 +132,7 @@ def test_get_sliced_prediction_mmdet():
     pytest.importorskip("mmdet", reason="MMDet is not installed")
     pytest.importorskip("mmcv", reason="MMCV is not installed")
     pytest.importorskip("mmengine", reason="MMEngine is not installed")
-    
+
     from sahi.models.mmdet import MmdetDetectionModel
     from sahi.predict import get_sliced_prediction
     from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
@@ -314,7 +314,7 @@ def test_mmdet_yolox_tiny_prediction():
     pytest.importorskip("mmdet", reason="MMDet is not installed")
     pytest.importorskip("mmcv", reason="MMCV is not installed")
     pytest.importorskip("mmengine", reason="MMEngine is not installed")
-    
+
     from sahi.predict import predict
     from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_yolox_tiny_model
 
