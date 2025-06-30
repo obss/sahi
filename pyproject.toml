@@ -58,8 +58,6 @@ mmdet = [
   "mmengine;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
   "mmcv==2.1.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
   "mmdet==3.3.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  "torch==2.1.2+cpu;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  "torchvision==0.16.2+cpu;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
   # numpy 2 is not compatible with torch 2.1.2
   "numpy<2.0;python_version=='3.11'",
 ]

@@ -36,11 +36,21 @@ jobs:
           prune-cache: false
           cache-dependency-glob: |
             **/pyproject.toml
+      - name: Cache model weights
+        uses: actions/cache@v4
+        with:
+          path: tests/data/models
+          key: ${{ runner.os }}-models-${{ hashFiles('sahi/utils/mmdet.py') }}
+          restore-keys: |
+            ${{ runner.os }}-models-
       - name: Install libgl
         run: sudo apt-get update && sudo apt-get install -y libgl1
       - name: Install dependencies
         run: |
           set -e
+          # First install ci dependencies to get torch 2.1.2
+          uv pip install torch==2.1.2+cpu torchvision==0.16.2+cpu --index-url https://download.pytorch.org/whl/cpu
+          # Then install mmdet dependencies
           uv sync --extra dev --extra mmdet
       - name: Verify .venv Activation
         run: |
@@ -54,9 +64,9 @@ jobs:
           source .venv/bin/activate
           pytest tests/test_mmdetectionmodel.py -n auto
           # Run MMDet-related tests from test_predict.py
-          pytest tests/test_predict.py::TestPredict::test_get_prediction_mmdet -n auto
-          pytest tests/test_predict.py::TestPredict::test_get_sliced_prediction_mmdet -n auto
-          pytest tests/test_predict.py::TestPredict::test_mmdet_yolox_tiny_prediction -n auto
+          pytest tests/test_predict.py::test_get_prediction_mmdet -n auto
+          pytest tests/test_predict.py::test_get_sliced_prediction_mmdet -n auto
+          pytest tests/test_predict.py::test_mmdet_yolox_tiny_prediction -n auto
       - name: Test SAHI CLI with MMDet
         run: |
           source .venv/bin/activate
