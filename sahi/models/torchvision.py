@@ -47,13 +47,14 @@ class TorchVisionDetectionModel(DetectionModel):
             num_classes = 91
         if self.model_path is None:
             logger.warning("model_path not provided in config, using pretrained weights and default num_classes: 91.")
-            pretrained = True
+            weights = "DEFAULT"
             num_classes = 91
         else:
-            pretrained = False
+            weights = None
 
         # load model
-        model = MODEL_NAME_TO_CONSTRUCTOR[model_name](num_classes=num_classes, pretrained=pretrained)
+        # Note: torchvision >= 0.13 is required for the 'weights' parameter
+        model = MODEL_NAME_TO_CONSTRUCTOR[model_name](num_classes=num_classes, weights=weights)
         if self.model_path:
             try:
                 model.load_state_dict(torch.load(self.model_path))

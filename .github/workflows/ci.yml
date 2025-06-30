@@ -43,6 +43,7 @@ jobs:
       # https://itsmycode.com/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directory/
       - name: Cache apt packages
         uses: actions/cache@v4
+        # Only cache apt packages when running GitHub Actions locally with 'act' tool
         if: ${{ env.ACT }}
         with:
           path: /var/cache/apt

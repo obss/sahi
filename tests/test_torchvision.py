@@ -50,9 +50,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         from sahi.models.torchvision import TorchVisionDetectionModel
 
         NUM_CLASSES = 15
-        PRETRAINED = False
+        WEIGHTS = None  # Using weights=None instead of deprecated pretrained=False
 
-        model = torchvision.models.detection.ssd300_vgg16(num_classes=NUM_CLASSES, pretrained=PRETRAINED)
+        model = torchvision.models.detection.ssd300_vgg16(num_classes=NUM_CLASSES, weights=WEIGHTS)
         torchvision_detection_model = TorchVisionDetectionModel(
             model=model,
             confidence_threshold=CONFIDENCE_THRESHOLD,
