@@ -31,12 +31,12 @@ SAHI helps developers overcome real-world challenges in object detection by enab
 
 | Command  | Description  |
 |---|---|
-| [predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage)  | perform sliced/standard video/image prediction using any [ultralytics](https://github.com/ultralytics/ultralytics)/[mmdet](https://github.com/open-mmlab/mmdetection)/[huggingface](https://huggingface.co/models?pipeline_tag=object-detection&sort=downloads)/[torchvision](https://pytorch.org/vision/stable/models.html#object-detection) model |
-| [predict-fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-fiftyone-command-usage)  | perform sliced/standard prediction using any [ultralytics](https://github.com/ultralytics/ultralytics)/[mmdet](https://github.com/open-mmlab/mmdetection)/[huggingface](https://huggingface.co/models?pipeline_tag=object-detection&sort=downloads)/[torchvision](https://pytorch.org/vision/stable/models.html#object-detection) model and explore results in [fiftyone app](https://github.com/voxel51/fiftyone) |
-| [coco slice](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-slice-command-usage)  | automatically slice COCO annotation and image files |
+| [predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage)  | perform sliced/standard video/image prediction using any [ultralytics](https://github.com/ultralytics/ultralytics)/[mmdet](https://github.com/open-mmlab/mmdetection)/[huggingface](https://huggingface.co/models?pipeline_tag=object-detection&sort=downloads)/[torchvision](https://pytorch.org/vision/stable/models.html#object-detection) model - see [CLI guide](docs/cli.md#predict-command-usage) |
+| [predict-fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-fiftyone-command-usage)  | perform sliced/standard prediction using any supported model and explore results in [fiftyone app](https://github.com/voxel51/fiftyone) - [learn more](docs/fiftyone.md) |
+| [coco slice](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-slice-command-usage)  | automatically slice COCO annotation and image files - see [slicing utilities](docs/slicing.md) |
 | [coco fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-fiftyone-command-usage)  | explore multiple prediction results on your COCO dataset with [fiftyone ui](https://github.com/voxel51/fiftyone) ordered by number of misdetections |
-| [coco evaluate](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-evaluate-command-usage)  | evaluate classwise COCO AP and AR for given predictions and ground truth |
-| [coco analyse](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-analyse-command-usage)  | calculate and export many error analysis plots |
+| [coco evaluate](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-evaluate-command-usage)  | evaluate classwise COCO AP and AR for given predictions and ground truth - check [COCO utilities](docs/coco.md) |
+| [coco analyse](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-analyse-command-usage)  | calculate and export many error analysis plots - see the [complete guide](docs/README.md) |
 | [coco yolo](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-yolo-command-usage)  | automatically convert any COCO dataset to [ultralytics](https://github.com/ultralytics/ultralytics) format |
 
 ### Approved by the Community
@@ -106,7 +106,7 @@ pip install inference>=0.50.3 rfdetr>=1.1.0
 
 ### Tutorials
 
-- [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80)
+- [Introduction to SAHI](https://medium.com/codable/sahi-a-vision-library-for-performing-sliced-inference-on-large-images-small-objects-c8b086af3b80) - explore the [complete documentation](docs/README.md) for advanced usage
 
 - [Official paper](https://ieeexplore.ieee.org/document/9897990) (ICIP 2022 oral)
 
@@ -120,7 +120,7 @@ pip install inference>=0.50.3 rfdetr>=1.1.0
 
 - [Slicing Aided Hyper Inference Explained by Encord](https://encord.com/blog/slicing-aided-hyper-inference-explained/)
 
-- ['VIDEO TUTORIAL: Slicing Aided Hyper Inference for Small Object Detection - SAHI'](https://www.youtube.com/watch?v=UuOjJKxn-M8&t=270s)
+- ['VIDEO TUTORIAL: Slicing Aided Hyper Inference for Small Object Detection - SAHI'](https://www.youtube.com/watch?v=UuOJKxn-M8&t=270s)
 
 - [Video inference support is live](https://github.com/obss/sahi/discussions/626)
 
@@ -164,11 +164,9 @@ pip install inference>=0.50.3 rfdetr>=1.1.0
 
 <img width="700" alt="sahi-predict" src="https://user-images.githubusercontent.com/34196005/149310540-e32f504c-6c9e-4691-8afd-59f3a1a457f0.gif">
 
-Find detailed info on `sahi predict` command at [cli.md](docs/cli.md#predict-command-usage).
+Find detailed info on using `sahi predict` command in the [CLI documentation](docs/cli.md#predict-command-usage) and explore the [prediction API](docs/predict.md) for advanced usage.
 
 Find detailed info on video inference at [video inference tutorial](https://github.com/obss/sahi/discussions/626).
-
-Find detailed info on image/dataset slicing utilities at [slicing.md](docs/slicing.md).
 
 ### Error Analysis Plots & Evaluation
 
@@ -178,13 +176,13 @@ Find detailed info at [Error Analysis Plots & Evaluation](https://github.com/obs
 
 ### Interactive Visualization & Inspection
 
-<img width="700" alt="sahi-fiftyone" src="https://user-images.githubusercontent.com/34196005/149321540-e6ddd5f3-36dc-4267-8574-a985dd0c6578.gif">
+<img width="700" alt="sahi-fiftyone" src="https://user-images.githubusercontent.com/34196005/149321540-e6dd5f3-36dc-4267-8574-a985dd0c6578.gif">
 
-Find detailed info at [Interactive Result Visualization and Inspection](https://github.com/obss/sahi/discussions/624).
+Explore [FiftyOne integration](docs/fiftyone.md) for interactive visualization and inspection.
 
 ### Other utilities
 
-Find detailed info on COCO utilities (yolov5 conversion, slicing, subsampling, filtering, merging, splitting) at [coco.md](docs/coco.md).
+Check the [comprehensive COCO utilities guide](docs/coco.md) for YOLO conversion, dataset slicing, subsampling, filtering, merging, and splitting operations. Learn more about the [slicing utilities](docs/slicing.md) for detailed control over image and dataset slicing parameters.
 
 ## <div align="center">Citation</div>
 
