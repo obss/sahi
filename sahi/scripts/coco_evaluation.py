@@ -1,9 +1,9 @@
 import itertools
 import json
+import os
 from collections import OrderedDict
 from pathlib import Path
 from typing import List, Literal, Optional, Union
-import os
 
 import fire
 import numpy as np

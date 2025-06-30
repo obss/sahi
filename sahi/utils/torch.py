@@ -3,12 +3,11 @@
 
 
 import os
+import re
 from typing import Any, Optional, Union
 
 import numpy as np
 from PIL.Image import Image
-
-import re
 
 try:
     import torch
