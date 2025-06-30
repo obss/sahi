@@ -32,6 +32,9 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+maintainers = [
+  { name = "Fatih Cagatay Akyon (@fcakyon)" },
+]
 
 [project.urls]
 "Homepage" = "https://github.com/obss/sahi"
