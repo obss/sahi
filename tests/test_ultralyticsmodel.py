@@ -1,8 +1,8 @@
 # OBSS SAHI Tool
 # Code written by Fatih Cagatay Akyon, 2025.
 
-import unittest
 import sys
+import pytest
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
@@ -19,162 +19,157 @@ MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3
 IMAGE_SIZE = 640
 
+def test_load_yolo11_model():
+    from sahi.models.ultralytics import UltralyticsDetectionModel
 
-class TestUltralyticsDetectionModel(unittest.TestCase):
-    def test_load_yolo11_model(self):
-        from sahi.models.ultralytics import UltralyticsDetectionModel
+    download_yolo11n_model()
 
-        download_yolo11n_model()
-
-        detection_model = UltralyticsDetectionModel(
-            model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
-            confidence_threshold=CONFIDENCE_THRESHOLD,
-            device=MODEL_DEVICE,
-            category_remapping=None,
-            load_at_init=True,
-        )
-
-        self.assertNotEqual(detection_model.model, None)
-        self.assertTrue(hasattr(detection_model.model, "task"))
-        self.assertEqual(detection_model.model.task, "detect")
-
-    @unittest.skipIf(
-        sys.version_info < (3, 9),
-        "ONNX model tests require Python 3.9 or higher"
+    detection_model = UltralyticsDetectionModel(
+        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=MODEL_DEVICE,
+        category_remapping=None,
+        load_at_init=True,
     )
-    def test_load_yolo11_onnx_model(self):
-        from sahi.models.ultralytics import UltralyticsDetectionModel
 
-        download_yolo11n_onnx_model()
+    assert detection_model.model is not None
+    assert hasattr(detection_model.model, "task")
+    assert detection_model.model.task == "detect"
 
-        detection_model = UltralyticsDetectionModel(
-            model_path=UltralyticsTestConstants.YOLO11N_ONNX_MODEL_PATH,
-            confidence_threshold=CONFIDENCE_THRESHOLD,
-            device=MODEL_DEVICE,
-            load_at_init=True,
-        )
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="ONNX model tests require Python 3.9 or higher")
+def test_load_yolo11_onnx_model():
+    from sahi.models.ultralytics import UltralyticsDetectionModel
 
-        self.assertNotEqual(detection_model.model, None)
+    download_yolo11n_onnx_model()
 
-    def test_perform_inference_yolo11(self):
-        from sahi.models.ultralytics import UltralyticsDetectionModel
+    detection_model = UltralyticsDetectionModel(
+        model_path=UltralyticsTestConstants.YOLO11N_ONNX_MODEL_PATH,
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=MODEL_DEVICE,
+        load_at_init=True,
+    )
 
-        # init model
-        detection_model = UltralyticsDetectionModel(
-            model_path="yolo11n.pt",
-            confidence_threshold=CONFIDENCE_THRESHOLD,
-            device=MODEL_DEVICE,
-            category_remapping=None,
-            load_at_init=True,
-            image_size=IMAGE_SIZE,
-        )
+    assert detection_model.model is not None
 
-        # prepare image
-        image_path = "tests/data/small-vehicles1.jpeg"
-        image = read_image(image_path)
+def test_perform_inference_yolo11():
+    from sahi.models.ultralytics import UltralyticsDetectionModel
 
-        # perform inference
-        detection_model.perform_inference(image)
-        original_predictions = detection_model.original_predictions
-        assert original_predictions
-        assert isinstance(original_predictions, list)
+    # init model
+    detection_model = UltralyticsDetectionModel(
+        model_path="yolo11n.pt",
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=MODEL_DEVICE,
+        category_remapping=None,
+        load_at_init=True,
+        image_size=IMAGE_SIZE,
+    )
 
-        boxes = original_predictions[0].data
+    # prepare image
+    image_path = "tests/data/small-vehicles1.jpeg"
+    image = read_image(image_path)
 
-        # verify predictions
-        self.assertEqual(len(detection_model.category_names), 80)
-        for box in boxes:  # type: ignore
-            self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
+    # perform inference
+    detection_model.perform_inference(image)
+    original_predictions = detection_model.original_predictions
+    assert original_predictions
+    assert isinstance(original_predictions, list)
 
-    def test_yolo11_segmentation(self):
-        from sahi.models.ultralytics import UltralyticsDetectionModel
+    boxes = original_predictions[0].data
 
-        # init model
-        download_yolo11n_seg_model()
+    # verify predictions
+    assert len(detection_model.category_names) == 80
+    for box in boxes:  # type: ignore
+        assert box[4].item() >= CONFIDENCE_THRESHOLD
 
-        detection_model = UltralyticsDetectionModel(
-            model_path=UltralyticsTestConstants.YOLO11N_SEG_MODEL_PATH,
-            confidence_threshold=CONFIDENCE_THRESHOLD,
-            device=MODEL_DEVICE,
-            category_remapping=None,
-            load_at_init=True,
-            image_size=IMAGE_SIZE,
-        )
+def test_yolo11_segmentation():
+    from sahi.models.ultralytics import UltralyticsDetectionModel
 
-        # Verify model properties
-        self.assertTrue(detection_model.has_mask)
-        self.assertEqual(detection_model.model.task, "segment")
+    # init model
+    download_yolo11n_seg_model()
 
-        # prepare image and run inference
-        image_path = "tests/data/small-vehicles1.jpeg"
-        image = read_image(image_path)
-        detection_model.perform_inference(image)
+    detection_model = UltralyticsDetectionModel(
+        model_path=UltralyticsTestConstants.YOLO11N_SEG_MODEL_PATH,
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=MODEL_DEVICE,
+        category_remapping=None,
+        load_at_init=True,
+        image_size=IMAGE_SIZE,
+    )
 
-        # Verify segmentation output
-        original_predictions = detection_model.original_predictions
-        assert original_predictions
-        assert isinstance(original_predictions, list)
-        boxes = original_predictions[0][0]  # Boxes
-        masks = original_predictions[0][1]  # Masks
+    # Verify model properties
+    assert detection_model.has_mask
+    assert detection_model.model.task == "segment"
 
-        self.assertGreater(len(boxes), 0)
-        self.assertEqual(masks.shape[0], len(boxes))  # One mask per box
-        self.assertEqual(len(masks.shape), 3)  # (num_predictions, height, width)
+    # prepare image and run inference
+    image_path = "tests/data/small-vehicles1.jpeg"
+    image = read_image(image_path)
+    detection_model.perform_inference(image)
 
-    def test_yolo11_obb(self):
-        from sahi.models.ultralytics import UltralyticsDetectionModel
+    # Verify segmentation output
+    original_predictions = detection_model.original_predictions
+    assert original_predictions
+    assert isinstance(original_predictions, list)
+    boxes = original_predictions[0][0]  # Boxes
+    masks = original_predictions[0][1]  # Masks
 
-        # init model
-        download_yolo11n_obb_model()
+    assert len(boxes) > 0
+    assert masks.shape[0] == len(boxes)  # One mask per box
+    assert len(masks.shape) == 3  # (num_predictions, height, width)
 
-        detection_model = UltralyticsDetectionModel(
-            model_path=UltralyticsTestConstants.YOLO11N_OBB_MODEL_PATH,
-            confidence_threshold=CONFIDENCE_THRESHOLD,
-            device=MODEL_DEVICE,
-            category_remapping=None,
-            load_at_init=True,
-            image_size=640,
-        )
+def test_yolo11_obb():
+    from sahi.models.ultralytics import UltralyticsDetectionModel
 
-        # Verify model task
-        self.assertTrue(detection_model.is_obb)
-        self.assertEqual(detection_model.model.task, "obb")
+    # init model
+    download_yolo11n_obb_model()
 
-        # prepare image and run inference
-        image_url = "https://ultralytics.com/images/boats.jpg"
-        image_path = "tests/data/boats.jpg"
-        download_from_url(image_url, to_path=image_path)
-        image = read_image(image_path)
-        detection_model.perform_inference(image)
+    detection_model = UltralyticsDetectionModel(
+        model_path=UltralyticsTestConstants.YOLO11N_OBB_MODEL_PATH,
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=MODEL_DEVICE,
+        category_remapping=None,
+        load_at_init=True,
+        image_size=640,
+    )
 
-        # Verify OBB predictions
-        original_predictions = detection_model.original_predictions
-        assert original_predictions
-        assert isinstance(original_predictions, list)
-        boxes = original_predictions[0][0]  # Original box data
-        obb_points = original_predictions[0][1]  # OBB points in xyxyxyxy format
+    # Verify model task
+    assert detection_model.is_obb
+    assert detection_model.model.task == "obb"
 
-        self.assertGreater(len(boxes), 0)
-        # Check box format: x1,y1,x2,y2,conf,cls
-        self.assertEqual(boxes.shape[1], 6)
-        # Check OBB points format
-        self.assertEqual(obb_points.shape[1:], (4, 2))  # (N, 4, 2) format
+    # prepare image and run inference
+    image_url = "https://ultralytics.com/images/boats.jpg"
+    image_path = "tests/data/boats.jpg"
+    download_from_url(image_url, to_path=image_path)
+    image = read_image(image_path)
+    detection_model.perform_inference(image)
 
-        # Convert predictions and verify
-        detection_model.convert_original_predictions()
-        object_prediction_list = detection_model.object_prediction_list
+    # Verify OBB predictions
+    original_predictions = detection_model.original_predictions
+    assert original_predictions
+    assert isinstance(original_predictions, list)
+    boxes = original_predictions[0][0]  # Original box data
+    obb_points = original_predictions[0][1]  # OBB points in xyxyxyxy format
 
-        # Verify converted predictions
-        self.assertEqual(len(object_prediction_list), len(boxes))
-        for object_prediction in object_prediction_list:
-            # Verify confidence threshold
-            assert isinstance(object_prediction, ObjectPrediction)
-            self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
+    assert len(boxes) > 0
+    # Check box format: x1,y1,x2,y2,conf,cls
+    assert boxes.shape[1] == 6
+    # Check OBB points format
+    assert obb_points.shape[1:] == (4, 2)  # (N, 4, 2) format
 
-            assert object_prediction.mask
-            coco_segmentation = object_prediction.mask.segmentation
-            # Verify segmentation exists (converted from OBB)
-            self.assertIsNotNone(coco_segmentation)
-            # Verify segmentation is a list of points
-            self.assertTrue(isinstance(coco_segmentation, list))
-            self.assertGreater(len(coco_segmentation), 0)
+    # Convert predictions and verify
+    detection_model.convert_original_predictions()
+    object_prediction_list = detection_model.object_prediction_list
+
+    # Verify converted predictions
+    assert len(object_prediction_list) == len(boxes)
+    for object_prediction in object_prediction_list:
+        # Verify confidence threshold
+        assert isinstance(object_prediction, ObjectPrediction)
+        assert object_prediction.score.value >= CONFIDENCE_THRESHOLD
+
+        assert object_prediction.mask
+        coco_segmentation = object_prediction.mask.segmentation
+        # Verify segmentation exists (converted from OBB)
+        assert coco_segmentation is not None
+        # Verify segmentation is a list of points
+        assert isinstance(coco_segmentation, list)
+        assert len(coco_segmentation) > 0
