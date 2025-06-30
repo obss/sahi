@@ -45,7 +45,7 @@ class TestAnnotation:
         assert mask.full_shape_height == full_shape_height
         assert mask.full_shape_width == full_shape_width
         logger.debug(f"{type(mask.bool_mask[11, 2])=} {mask.bool_mask[11, 2]=}")
-        assert mask.bool_mask[11, 2] == True
+        assert mask.bool_mask[11, 2]
 
     def test_object_annotation(self):
         from sahi.annotation import ObjectAnnotation

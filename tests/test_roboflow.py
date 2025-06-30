@@ -1,5 +1,4 @@
 import sys
-import unittest
 
 import pytest
 
@@ -10,7 +9,7 @@ from sahi.utils.cv import read_image
 pytestmark = pytest.mark.skipif(sys.version_info[:2] < (3, 12), reason="Requires Python 3.12 or higher")
 
 
-class TestRoboflowDetectionModel(unittest.TestCase):
+class TestRoboflowDetectionModel:
     def test_roboflow_universe(self):
         """Test the Roboflow Universe model for object detection."""
         model = AutoDetectionModel.from_pretrained(
