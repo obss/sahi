@@ -81,5 +81,3 @@ class TestRoboflowDetectionModel:
                 self.assertGreater(len(sliced_predictions), len(predictions))
 
 
-if __name__ == "__main__":
-    unittest.main()
