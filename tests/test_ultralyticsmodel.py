@@ -2,6 +2,7 @@
 # Code written by Fatih Cagatay Akyon, 2025.
 
 import unittest
+import sys
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
@@ -37,6 +38,10 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
         self.assertTrue(hasattr(detection_model.model, "task"))
         self.assertEqual(detection_model.model.task, "detect")
 
+    @unittest.skipIf(
+        sys.version_info < (3, 9),
+        "ONNX model tests require Python 3.9 or higher"
+    )
     def test_load_yolo11_onnx_model(self):
         from sahi.models.ultralytics import UltralyticsDetectionModel
 
@@ -173,7 +178,3 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
             # Verify segmentation is a list of points
             self.assertTrue(isinstance(coco_segmentation, list))
             self.assertGreater(len(coco_segmentation), 0)
-
-
-if __name__ == "__main__":
-    unittest.main()
