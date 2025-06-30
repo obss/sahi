@@ -36,7 +36,7 @@ def test_load_yolo11_model():
     assert hasattr(detection_model.model, "task")
     assert detection_model.model.task == "detect"
 
-@pytest.mark.skipif(sys.version_info < (3, 9), reason="ONNX model tests require Python 3.9 or higher")
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="ONNX model tests require Python 3.10 or higher")
 def test_load_yolo11_onnx_model():
     from sahi.models.ultralytics import UltralyticsDetectionModel
 

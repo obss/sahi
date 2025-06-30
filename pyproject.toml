@@ -77,9 +77,9 @@ ci = [
   # Only install for Python 3.12+ where we use torch 2.6.0
   "inference>=0.50.3;python_version>='3.12'",
   "rfdetr>=1.1.0;python_version>='3.12'",
-  # ultralytics onnx is supported for python>=3.9
-  "onnx;python_version>='3.9'",
-  "onnxruntime;python_version>='3.9'",
+  # ultralytics onnx is supported for python>=3.10
+  "onnx;python_version>='3.10'",
+  "onnxruntime;python_version>='3.10'",
   # These are available for all python versions
   "pycocotools>=2.0.7",
   "ultralytics>=8.3.161",
