@@ -53,28 +53,29 @@ dev = [
   "ruff",
   "jupyterlab>=3.0.14",
 ]
+mmdet = [
+  # MMDetection dependencies - only for Python 3.11 and not on macOS ARM64
+  "mmengine;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
+  "mmcv==2.1.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
+  "mmdet==3.3.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
+  # numpy 2 is not compatible with torch 2.1.2
+  "numpy<2.0;python_version=='3.11'",
+]
 ci = [
-  # Constrain numpy for Python <3.12 due to torch 2.1.2 compatibility
-  "numpy<2.0;python_version<'3.12'",
-  # pytorch should be present for all python versions
+  # max supported pytorch version for python 3.8 is 2.4.1
   # CPU versions for Linux/Windows CI
-  "torch==2.6.0+cpu;python_version>='3.12' and platform_system!='Darwin'",
-  "torchvision==0.21.0+cpu;python_version>='3.12' and platform_system!='Darwin'",
-  "torch==2.1.2+cpu;python_version<'3.12' and platform_system!='Darwin'",
-  "torchvision==0.16.2+cpu;python_version<'3.12' and platform_system!='Darwin'",
+  "torch==2.7.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
+  "torch==2.4.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
+  "torchvision==0.22.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
+  "torchvision==0.19.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
   # Regular versions for macOS
-  "torch==2.6.0;python_version>='3.12' and platform_system=='Darwin'",
-  "torchvision==0.21.0;python_version>='3.12' and platform_system=='Darwin'",
-  "torch==2.1.2;python_version<'3.12' and platform_system=='Darwin'",
-  "torchvision==0.16.2;python_version<'3.12' and platform_system=='Darwin'",
-  # mmdet is supported for python<3.12 and NOT on macOS ARM64
-  "mmengine;python_version<'3.12' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  "mmcv==2.1.0;python_version<'3.12' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  "mmdet==3.3.0;python_version<'3.12' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  # transformers is supported for python>=3.9 (no numpy 2.0 requirement)
+  "torch==2.7.0;python_version>='3.9' and platform_system=='Darwin'",
+  "torch==2.4.1;python_version=='3.8' and platform_system=='Darwin'",
+  "torchvision==0.22.0;python_version>='3.9' and platform_system=='Darwin'",
+  "torchvision==0.19.1;python_version=='3.8' and platform_system=='Darwin'",
+  # transformers is supported for python>=3.9
   "transformers>=4.49.0;python_version>='3.9'",
-  # inference and rfdetr require numpy>=2.0, incompatible with torch 2.1.2
-  # Only install for Python 3.12+ where we use torch 2.6.0
+  # test roboflow only for python>=3.12
   "inference>=0.50.3;python_version>='3.12'",
   "rfdetr>=1.1.0;python_version>='3.12'",
   # ultralytics onnx is supported for python>=3.10

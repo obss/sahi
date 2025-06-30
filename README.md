@@ -60,7 +60,7 @@ pip install sahi
 - Install your desired version of pytorch and torchvision:
 
 ```console
-pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu126
+pip install torch==2.7.0 torchvision==0.22.0 --index-url https://download.pytorch.org/whl/cu126
 ```
 
 (torch 2.1.2 is required for mmdet support):
@@ -69,16 +69,22 @@ pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorc
 pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu121
 ```
 
-- Install your desired detection framework (yolov5):
-
-```console
-pip install yolov5==7.0.14 sahi==0.11.21
-```
-
 - Install your desired detection framework (ultralytics):
 
 ```console
 pip install ultralytics>=8.3.161
+```
+
+- Install your desired detection framework (huggingface):
+
+```console
+pip install transformers>=4.49.0 timm
+```
+
+- Install your desired detection framework (yolov5):
+
+```console
+pip install yolov5==7.0.14 sahi==0.11.21
 ```
 
 - Install your desired detection framework (mmdet):
@@ -86,12 +92,6 @@ pip install ultralytics>=8.3.161
 ```console
 pip install mim
 mim install mmdet==3.3.0
-```
-
-- Install your desired detection framework (huggingface):
-
-```console
-pip install transformers>=4.49.0 timm
 ```
 
 - Install your desired detection framework (roboflow):
