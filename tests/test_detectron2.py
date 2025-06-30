@@ -28,7 +28,7 @@ if "1.10." in torch_version:
                 load_at_init=True,
                 image_size=IMAGE_SIZE,
             )
-            assert detector2_detection_model.model != None
+            assert detector2_detection_model.model is not None
 
         def test_perform_inference_without_mask_output(self):
             detectron2_detection_model = Detectron2DetectionModel(
