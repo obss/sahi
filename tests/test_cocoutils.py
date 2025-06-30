@@ -369,14 +369,11 @@ class TestCocoUtils:
         assert len(target_coco_dict["annotations"]) == 5
         assert len(target_coco_dict["images"]) == 1
         assert len(target_coco_dict["categories"]) == 3
-        self.assertEqual(
-            target_coco_dict["categories"],
-            [
-                {"id": 1, "name": "human", "supercategory": "human"},
-                {"id": 2, "name": "car", "supercategory": "car"},
-                {"id": 3, "name": "big_vehicle", "supercategory": "big_vehicle"},
-            ],
-        )
+        assert target_coco_dict["categories"] == [
+            {"id": 1, "name": "human", "supercategory": "human"},
+            {"id": 2, "name": "car", "supercategory": "car"},
+            {"id": 3, "name": "big_vehicle", "supercategory": "big_vehicle"},
+        ]
         assert target_coco_dict["annotations"][1]["category_id"] == 2
 
     def test_coco_update_categories(self):
@@ -403,14 +400,11 @@ class TestCocoUtils:
         assert len(coco.json["annotations"]) == 5
         assert len(coco.json["images"]) == 1
         assert len(coco.json["categories"]) == 3
-        self.assertEqual(
-            coco.json["categories"],
-            [
-                {"id": 1, "name": "human", "supercategory": "human"},
-                {"id": 2, "name": "car", "supercategory": "car"},
-                {"id": 3, "name": "big_vehicle", "supercategory": "big_vehicle"},
-            ],
-        )
+        assert coco.json["categories"] == [
+            {"id": 1, "name": "human", "supercategory": "human"},
+            {"id": 2, "name": "car", "supercategory": "car"},
+            {"id": 3, "name": "big_vehicle", "supercategory": "big_vehicle"},
+        ]
         assert coco.json["annotations"][1]["category_id"] == 2
         assert coco.image_dir == image_dir
         assert coco.stats["num_images"] == len(coco.images)
