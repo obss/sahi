@@ -43,10 +43,10 @@ jobs:
           key: apt-cache
       - name: Install libgl
         run: sudo apt-get update && sudo apt-get install -y libgl1
-      - name: Debug uv sync
+      - name: Install dependencies
         run: |
           set -e
-          uv sync -v
+          uv sync --extra ci
       - name: Verify .venv Activation
         run: |
           if [ ! -d ".venv" ]; then
@@ -82,7 +82,7 @@ jobs:
           # coco analyse
           sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
       - name: Test SAHI CLI with MMCV
-        if: matrix.python-version != '3.12'
+        if: matrix.python-version < '3.12'
         run: |
           source .venv/bin/activate
           set -e

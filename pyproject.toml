@@ -46,13 +46,7 @@ maintainers = [
 [project.scripts]
 sahi = "sahi.cli:app"
 
-[tool.uv]
-find-links = [
-  "https://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
-]
-default-groups = ["dev", "ci"]
-
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
   "pytest",
   "ruff",
@@ -93,6 +87,11 @@ ci = [
   "fiftyone",
 ]
 
+[tool.uv]
+find-links = [
+  "https://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
+]
+
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
@@ -112,6 +111,14 @@ build-backend = "hatchling.build"
 [tool.ruff]
 line-length = 120
 exclude = ["**/__init__.py", ".git", "__pycache__", "*.ipynb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]  # line too long
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 
 [tool.pytest.ini_options]
 minversion = "6.0"

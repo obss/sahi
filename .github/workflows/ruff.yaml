@@ -1,14 +1,6 @@
 name: Ruff
-on: [push]
+on: [push, pull_request]
 jobs:
-  ruff-format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/ruff-action@v3
-        with:
-          args: "format --check"
-          version: "latest"
   ruff:
     runs-on: ubuntu-latest
     steps:
@@ -16,3 +8,8 @@ jobs:
       - uses: astral-sh/ruff-action@v3
         with:
           version: "latest"
+          args: "check"
+      - uses: astral-sh/ruff-action@v3
+        with:
+          version: "latest"
+          args: "format --check"
