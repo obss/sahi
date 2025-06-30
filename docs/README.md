@@ -10,7 +10,7 @@ Welcome to the SAHI documentation! This directory contains detailed guides and t
 - Batch prediction usage
 - Class exclusion during inference
 - Visualization parameters and export formats
-- Interactive examples with various model integrations (YOLOv8, MMDetection, etc.)
+- Interactive examples with various model integrations (YOLO11, MMDetection, etc.)
 
 ### [Slicing Utilities](slicing.md)
 - Guide for slicing large images and datasets

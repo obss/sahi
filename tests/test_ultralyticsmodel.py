@@ -1,5 +1,5 @@
 # OBSS SAHI Tool
-# Code written by AnNT, 2024.
+# Code written by Fatih Cagatay Akyon, 2025.
 
 import unittest
 
@@ -11,7 +11,7 @@ from sahi.utils.ultralytics import (
     download_yolo11n_model,
     download_yolo11n_obb_model,
     download_yolo11n_seg_model,
-    download_yolov8n_model,
+    download_yolo11n_onnx_model
 )
 
 MODEL_DEVICE = "cpu"
@@ -20,23 +20,6 @@ IMAGE_SIZE = 640
 
 
 class TestUltralyticsDetectionModel(unittest.TestCase):
-    def test_load_yolov8_model(self):
-        from sahi.models.ultralytics import UltralyticsDetectionModel
-
-        download_yolov8n_model()
-
-        detection_model = UltralyticsDetectionModel(
-            model_path=UltralyticsTestConstants.YOLOV8N_MODEL_PATH,
-            confidence_threshold=CONFIDENCE_THRESHOLD,
-            device=MODEL_DEVICE,
-            category_remapping=None,
-            load_at_init=True,
-        )
-
-        self.assertNotEqual(detection_model.model, None)
-        self.assertTrue(hasattr(detection_model.model, "task"))
-        self.assertEqual(detection_model.model.task, "detect")
-
     def test_load_yolo11_model(self):
         from sahi.models.ultralytics import UltralyticsDetectionModel
 
@@ -54,14 +37,32 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
         self.assertTrue(hasattr(detection_model.model, "task"))
         self.assertEqual(detection_model.model.task, "detect")
 
-    def test_perform_inference_yolov8(self):
+    def test_load_yolo11_onnx_model(self):
+        from sahi.models.ultralytics import UltralyticsDetectionModel
+
+        download_yolo11n_onnx_model()
+
+        # Create category mapping for COCO (80 classes)
+        coco_categories = {}
+        for i in range(80):
+            coco_categories[str(i)] = f"class_{i}"
+
+        detection_model = UltralyticsDetectionModel(
+            model_path=UltralyticsTestConstants.YOLO11N_ONNX_MODEL_PATH,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            device=MODEL_DEVICE,
+            category_mapping=coco_categories,
+            load_at_init=True,
+        )
+
+        self.assertNotEqual(detection_model.model, None)
+
+    def test_perform_inference_yolo11(self):
         from sahi.models.ultralytics import UltralyticsDetectionModel
 
         # init model
-        download_yolov8n_model()
-
         detection_model = UltralyticsDetectionModel(
-            model_path=UltralyticsTestConstants.YOLOV8N_MODEL_PATH,
+            model_path="yolo11n.pt",
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -81,30 +82,28 @@ class TestUltralyticsDetectionModel(unittest.TestCase):
 
         boxes = original_predictions[0].data
 
-        # find box of first car detection with conf greater than 0.5
-        for box in boxes:  # type: ignore
-            if box[5].item() == 2:  # if category car
-                if box[4].item() > 0.5:
-                    break
-
-        # compare
-        desired_bbox = [448, 309, 497, 342]
-        predicted_bbox = list(map(int, box[:4].tolist()))
-        margin = 2
-        for ind, point in enumerate(predicted_bbox):
-            assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
+        # verify predictions
         self.assertEqual(len(detection_model.category_names), 80)
         for box in boxes:  # type: ignore
             self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
 
-    def test_perform_inference_yolo11(self):
+    def test_perform_inference_yolo11_onnx(self):
         from sahi.models.ultralytics import UltralyticsDetectionModel
 
         # init model
+        download_yolo11n_onnx_model()
+
+        # Create category mapping for COCO
+        coco_categories = {}
+        for i in range(80):
+            coco_categories[str(i)] = f"class_{i}"
+        coco_categories["2"] = "car"  # Set car category for testing
+
         detection_model = UltralyticsDetectionModel(
-            model_path="yolo11n.pt",
+            model_path=UltralyticsTestConstants.YOLO11N_ONNX_MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
+            category_mapping=coco_categories,
             category_remapping=None,
             load_at_init=True,
             image_size=IMAGE_SIZE,

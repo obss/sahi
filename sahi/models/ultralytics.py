@@ -111,14 +111,25 @@ class UltralyticsDetectionModel(DetectionModel):
 
     @property
     def category_names(self):
-        return self.model.names.values()
+        # For ONNX models, names might not be available, use category_mapping
+        if hasattr(self.model, 'names') and self.model.names:
+            return self.model.names.values()
+        elif self.category_mapping:
+            return list(self.category_mapping.values())
+        else:
+            raise ValueError("Category names not available. Please provide category_mapping for ONNX models.")
 
     @property
     def num_categories(self):
         """
         Returns number of categories
         """
-        return len(self.model.names)
+        if hasattr(self.model, 'names') and self.model.names:
+            return len(self.model.names)
+        elif self.category_mapping:
+            return len(self.category_mapping)
+        else:
+            raise ValueError("Cannot determine number of categories. Please provide category_mapping for ONNX models.")
 
     @property
     def has_mask(self):
@@ -131,6 +142,9 @@ class UltralyticsDetectionModel(DetectionModel):
         # For ONNX models, task might be stored differently
         elif hasattr(self.model, 'task'):
             return self.model.task == "segment"
+        # For ONNX models without task info, check model path
+        elif self.model_path and isinstance(self.model_path, str):
+            return "seg" in self.model_path.lower()
         return False
 
     @property
@@ -144,6 +158,9 @@ class UltralyticsDetectionModel(DetectionModel):
         # For ONNX models, task might be stored differently
         elif hasattr(self.model, 'task'):
             return self.model.task == "obb"
+        # For ONNX models without task info, check model path
+        elif self.model_path and isinstance(self.model_path, str):
+            return "obb" in self.model_path.lower()
         return False
 
     def _create_object_prediction_list_from_original_predictions(
