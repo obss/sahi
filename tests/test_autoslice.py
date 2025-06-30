@@ -1,8 +1,5 @@
 # OBSS SAHI Tool
-# Code written by Murat C Varer, 2022.
-
-
-import unittest
+# Code written by Fatih C Akyon, 2025.
 
 from PIL import Image
 
@@ -11,7 +8,7 @@ from sahi.utils.coco import Coco
 from sahi.utils.cv import read_image
 
 
-class TestAutoSlicing(unittest.TestCase):
+class TestAutoSlicing:
     def test_auto_slice_image(self):
         # read coco file
         coco_path = "tests/data/coco_utils/terrain1_coco.json"
@@ -30,14 +27,11 @@ class TestAutoSlicing(unittest.TestCase):
             verbose=False,
         )
 
-        self.assertEqual(len(slice_image_result.images), 18)
-        self.assertEqual(len(slice_image_result.coco_images), 18)
-        self.assertEqual(slice_image_result.coco_images[0].annotations, [])
-        self.assertEqual(slice_image_result.coco_images[15].annotations[1].area, 7296)
-        self.assertEqual(
-            slice_image_result.coco_images[15].annotations[1].bbox,
-            [17, 356, 48, 152],
-        )
+        assert len(slice_image_result.images) == 18
+        assert len(slice_image_result.coco_images) == 18
+        assert slice_image_result.coco_images[0].annotations == []
+        assert slice_image_result.coco_images[15].annotations[1].area == 7296
+        assert slice_image_result.coco_images[15].annotations[1].bbox == [17, 356, 48, 152]
 
         image_cv = read_image(image_path)
         slice_image_result = slice_image(
@@ -50,14 +44,11 @@ class TestAutoSlicing(unittest.TestCase):
             verbose=False,
         )
 
-        self.assertEqual(len(slice_image_result.images), 18)
-        self.assertEqual(len(slice_image_result.coco_images), 18)
-        self.assertEqual(slice_image_result.coco_images[0].annotations, [])
-        self.assertEqual(slice_image_result.coco_images[15].annotations[1].area, 7296)
-        self.assertEqual(
-            slice_image_result.coco_images[15].annotations[1].bbox,
-            [17, 356, 48, 152],
-        )
+        assert len(slice_image_result.images) == 18
+        assert len(slice_image_result.coco_images) == 18
+        assert slice_image_result.coco_images[0].annotations == []
+        assert slice_image_result.coco_images[15].annotations[1].area == 7296
+        assert slice_image_result.coco_images[15].annotations[1].bbox == [17, 356, 48, 152]
 
         image_pil = Image.open(image_path)
         slice_image_result = slice_image(
@@ -70,14 +61,11 @@ class TestAutoSlicing(unittest.TestCase):
             verbose=False,
         )
 
-        self.assertEqual(len(slice_image_result.images), 18)
-        self.assertEqual(len(slice_image_result.coco_images), 18)
-        self.assertEqual(slice_image_result.coco_images[0].annotations, [])
-        self.assertEqual(slice_image_result.coco_images[15].annotations[1].area, 7296)
-        self.assertEqual(
-            slice_image_result.coco_images[15].annotations[1].bbox,
-            [17, 356, 48, 152],
-        )
+        assert len(slice_image_result.images) == 18
+        assert len(slice_image_result.coco_images) == 18
+        assert slice_image_result.coco_images[0].annotations == []
+        assert slice_image_result.coco_images[15].annotations[1].area == 7296
+        assert slice_image_result.coco_images[15].annotations[1].bbox == [17, 356, 48, 152]
 
     def test_auto_slice_coco(self):
         import shutil
@@ -99,18 +87,15 @@ class TestAutoSlicing(unittest.TestCase):
         )
         assert isinstance(coco_dict, dict)
 
-        self.assertEqual(len(coco_dict["images"]), 8)
-        self.assertEqual(coco_dict["images"][1]["height"], 512)
-        self.assertEqual(coco_dict["images"][1]["width"], 512)
-        self.assertEqual(len(coco_dict["annotations"]), 22)
-        self.assertEqual(coco_dict["annotations"][2]["id"], 3)
-        self.assertEqual(coco_dict["annotations"][2]["image_id"], 2)
-        self.assertEqual(coco_dict["annotations"][2]["category_id"], 1)
-        self.assertEqual(coco_dict["annotations"][2]["area"], 12483)
-        self.assertEqual(
-            coco_dict["annotations"][2]["bbox"],
-            [238, 237, 73, 171],
-        )
+        assert len(coco_dict["images"]) == 8
+        assert coco_dict["images"][1]["height"] == 512
+        assert coco_dict["images"][1]["width"] == 512
+        assert len(coco_dict["annotations"]) == 22
+        assert coco_dict["annotations"][2]["id"] == 3
+        assert coco_dict["annotations"][2]["image_id"] == 2
+        assert coco_dict["annotations"][2]["category_id"] == 1
+        assert coco_dict["annotations"][2]["area"] == 12483
+        assert coco_dict["annotations"][2]["bbox"] == [238, 237, 73, 171]
 
         shutil.rmtree(output_dir, ignore_errors=True)
 
@@ -131,21 +116,16 @@ class TestAutoSlicing(unittest.TestCase):
         )
         assert isinstance(coco_dict, dict)
 
-        self.assertEqual(len(coco_dict["images"]), 20)
-        self.assertEqual(coco_dict["images"][1]["height"], 512)
-        self.assertEqual(coco_dict["images"][1]["width"], 512)
-        self.assertEqual(len(coco_dict["annotations"]), 22)
-        self.assertEqual(coco_dict["annotations"][2]["id"], 3)
-        self.assertEqual(coco_dict["annotations"][2]["image_id"], 12)
-        self.assertEqual(coco_dict["annotations"][2]["category_id"], 1)
-        self.assertEqual(coco_dict["annotations"][2]["area"], 12483)
-        self.assertEqual(
-            coco_dict["annotations"][2]["bbox"],
-            [238, 237, 73, 171],
-        )
+        assert len(coco_dict["images"]) == 20
+        assert coco_dict["images"][1]["height"] == 512
+        assert coco_dict["images"][1]["width"] == 512
+        assert len(coco_dict["annotations"]) == 22
+        assert coco_dict["annotations"][2]["id"] == 3
+        assert coco_dict["annotations"][2]["image_id"] == 12
+        assert coco_dict["annotations"][2]["category_id"] == 1
+        assert coco_dict["annotations"][2]["area"] == 12483
+        assert coco_dict["annotations"][2]["bbox"] == [238, 237, 73, 171]
 
         shutil.rmtree(output_dir, ignore_errors=True)
 
 
-if __name__ == "__main__":
-    unittest.main()

@@ -1,10 +1,7 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2022.
 
-import unittest
-
-
-class TestHighLevelApi(unittest.TestCase):
+class TestHighLevelApi:
     def test_bounding_box(self):
         from sahi import BoundingBox
 
@@ -18,9 +15,9 @@ class TestHighLevelApi(unittest.TestCase):
         shifted_bbox = bbox.get_shifted_box()
 
         # compare
-        self.assertEqual(expanded_bbox.to_xywh(), [18, 23, 94, 134])
-        self.assertEqual(expanded_bbox.to_xyxy(), [18, 23, 112, 157])
-        self.assertEqual(shifted_bbox.to_xyxy(), [80, 70, 150, 190])
+        assert expanded_bbox.to_xywh() == [18, 23, 94, 134]
+        assert expanded_bbox.to_xyxy() == [18, 23, 112, 157]
+        assert shifted_bbox.to_xyxy() == [80, 70, 150, 190]
 
     def test_category(self):
         from sahi import Category
@@ -28,8 +25,8 @@ class TestHighLevelApi(unittest.TestCase):
         category_id = 1
         category_name = "car"
         category = Category(id=category_id, name=category_name)
-        self.assertEqual(category.id, category_id)
-        self.assertEqual(category.name, category_name)
+        assert category.id == category_id
+        assert category.name == category_name
 
     def test_mask(self):
         from sahi import Mask
@@ -40,9 +37,9 @@ class TestHighLevelApi(unittest.TestCase):
 
         mask = Mask(segmentation=coco_segmentation, full_shape=full_shape)
 
-        self.assertEqual(mask.full_shape_height, full_shape_height)
-        self.assertEqual(mask.full_shape_width, full_shape_width)
-        self.assertEqual(mask.bool_mask[11, 2], True)
+        assert mask.full_shape_height == full_shape_height
+        assert mask.full_shape_width == full_shape_width
+        assert mask.bool_mask[11, 2] == True
 
     def test_object_prediction(self):
         from sahi import ObjectPrediction
@@ -79,26 +76,26 @@ class TestHighLevelApi(unittest.TestCase):
             shift_amount=shift_amount,
         )
 
-        self.assertEqual(object_annotation1.bbox.minx, bbox[0])
-        self.assertEqual(object_annotation1.bbox.miny, bbox[1])
-        self.assertEqual(object_annotation1.bbox.maxx, bbox[2])
-        self.assertEqual(object_annotation1.bbox.maxy, bbox[3])
-        self.assertEqual(object_annotation1.category.id, category_id)
-        self.assertEqual(object_annotation1.category.name, category_name)
+        assert object_annotation1.bbox.minx == bbox[0]
+        assert object_annotation1.bbox.miny == bbox[1]
+        assert object_annotation1.bbox.maxx == bbox[2]
+        assert object_annotation1.bbox.maxy == bbox[3]
+        assert object_annotation1.category.id == category_id
+        assert object_annotation1.category.name == category_name
 
-        self.assertEqual(object_annotation2.bbox.minx, bbox[0])
-        self.assertEqual(object_annotation2.bbox.miny, bbox[1])
-        self.assertEqual(object_annotation2.bbox.maxx, bbox[2])
-        self.assertEqual(object_annotation2.bbox.maxy, bbox[3])
-        self.assertEqual(object_annotation2.category.id, category_id)
-        self.assertEqual(object_annotation2.category.name, category_name)
+        assert object_annotation2.bbox.minx == bbox[0]
+        assert object_annotation2.bbox.miny == bbox[1]
+        assert object_annotation2.bbox.maxx == bbox[2]
+        assert object_annotation2.bbox.maxy == bbox[3]
+        assert object_annotation2.category.id == category_id
+        assert object_annotation2.category.name == category_name
 
-        self.assertEqual(object_annotation3.bbox.minx, bbox[0])
-        self.assertEqual(object_annotation3.bbox.miny, bbox[1])
-        self.assertEqual(object_annotation3.bbox.maxx, bbox[2])
-        self.assertEqual(object_annotation3.bbox.maxy, bbox[3])
-        self.assertEqual(object_annotation3.category.id, category_id)
-        self.assertEqual(object_annotation3.category.name, category_name)
+        assert object_annotation3.bbox.minx == bbox[0]
+        assert object_annotation3.bbox.miny == bbox[1]
+        assert object_annotation3.bbox.maxx == bbox[2]
+        assert object_annotation3.bbox.maxy == bbox[3]
+        assert object_annotation3.category.id == category_id
+        assert object_annotation3.category.name == category_name
 
     def test_detection_model(self):
         from sahi import DetectionModel
@@ -106,9 +103,7 @@ class TestHighLevelApi(unittest.TestCase):
         MODEL_PATH = "model_path"
         IMAGE_SIZE = 640
         detection_model = DetectionModel(model_path="model_path", image_size=IMAGE_SIZE, load_at_init=False)
-        self.assertEqual(detection_model.model_path, MODEL_PATH)
-        self.assertEqual(detection_model.image_size, IMAGE_SIZE)
+        assert detection_model.model_path == MODEL_PATH
+        assert detection_model.image_size == IMAGE_SIZE
 
 
-if __name__ == "__main__":
-    unittest.main()
