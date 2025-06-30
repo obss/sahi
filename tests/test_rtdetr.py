@@ -1,7 +1,5 @@
 # OBSS SAHI Tool
-# Code written by Fatih C Akyon (2020), Devrim Çavuşoğlu (2024).
-
-import unittest
+# Code written by Fatih C Akyon (2025), Devrim Cavusoglu (2024).
 
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
@@ -12,7 +10,7 @@ CONFIDENCE_THRESHOLD = 0.3
 IMAGE_SIZE = 640
 
 
-class TestRTDetrDetectionModel(unittest.TestCase):
+class TestRTDetrDetectionModel:
     def test_load_model(self):
         from sahi.models.rtdetr import RTDetrDetectionModel
 
@@ -26,7 +24,7 @@ class TestRTDetrDetectionModel(unittest.TestCase):
             load_at_init=True,
         )
 
-        self.assertNotEqual(rtdetr_detection_model.model, None)
+        assert rtdetr_detection_model.model is not None
 
     def test_set_model(self):
         from ultralytics import RTDETR
@@ -45,7 +43,7 @@ class TestRTDetrDetectionModel(unittest.TestCase):
             load_at_init=True,
         )
 
-        self.assertNotEqual(rtdetr_detection_model.model, None)
+        assert rtdetr_detection_model.model is not None
 
     def test_perform_inference(self):
         from sahi.models.rtdetr import RTDetrDetectionModel
@@ -85,9 +83,9 @@ class TestRTDetrDetectionModel(unittest.TestCase):
         margin = 2
         for ind, point in enumerate(predicted_bbox):
             assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
-        self.assertEqual(len(rtdetr_detection_model.category_names), 80)
+        assert len(rtdetr_detection_model.category_names) == 80
         for box in boxes[0]:  # type: ignore
-            self.assertGreaterEqual(box[4].item(), CONFIDENCE_THRESHOLD)
+            assert box[4].item() >= CONFIDENCE_THRESHOLD
 
     def test_convert_original_predictions(self):
         from sahi.models.rtdetr import RTDetrDetectionModel
@@ -120,7 +118,7 @@ class TestRTDetrDetectionModel(unittest.TestCase):
         object_prediction_list = rtdetr_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), num_results)
+        assert len(object_prediction_list) == num_results
 
         # loop through predictions and check that they are equal
         for i in range(num_results):
@@ -133,15 +131,11 @@ class TestRTDetrDetectionModel(unittest.TestCase):
             desired_cat_id = int(original_results[i].cls[0])
             objectprd = object_prediction_list[i]
             assert isinstance(objectprd, ObjectPrediction)
-            self.assertEqual(objectprd.category.id, desired_cat_id)
+            assert objectprd.category.id == desired_cat_id
             predicted_bbox = objectprd.bbox.to_xywh()
             margin = 2
             for ind, point in enumerate(predicted_bbox):
                 assert point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin
         for object_prediction in object_prediction_list:
             assert isinstance(object_prediction, ObjectPrediction)
-            self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
-
-
-if __name__ == "__main__":
-    unittest.main()
+            assert object_prediction.score.value >= CONFIDENCE_THRESHOLD

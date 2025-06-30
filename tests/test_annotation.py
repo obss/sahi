@@ -1,13 +1,12 @@
 # OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
+# Code written by Fatih C Akyon, 2025.
 
 import logging
-import unittest
 
 logger = logging.getLogger(__name__)
 
 
-class TestAnnotation(unittest.TestCase):
+class TestAnnotation:
     def test_bounding_box(self):
         from sahi.annotation import BoundingBox
 
@@ -21,9 +20,9 @@ class TestAnnotation(unittest.TestCase):
         shifted_bbox = bbox.get_shifted_box()
 
         # compare
-        self.assertEqual(expanded_bbox.to_xywh(), [18, 23, 94, 134])
-        self.assertEqual(expanded_bbox.to_xyxy(), [18, 23, 112, 157])
-        self.assertEqual(shifted_bbox.to_xyxy(), [80, 70, 150, 190])
+        assert expanded_bbox.to_xywh() == [18, 23, 94, 134]
+        assert expanded_bbox.to_xyxy() == [18, 23, 112, 157]
+        assert shifted_bbox.to_xyxy() == [80, 70, 150, 190]
 
     def test_category(self):
         from sahi.annotation import Category
@@ -31,8 +30,8 @@ class TestAnnotation(unittest.TestCase):
         category_id = 1
         category_name = "car"
         category = Category(id=category_id, name=category_name)
-        self.assertEqual(category.id, category_id)
-        self.assertEqual(category.name, category_name)
+        assert category.id == category_id
+        assert category.name == category_name
 
     def test_mask(self):
         from sahi.annotation import Mask
@@ -43,10 +42,10 @@ class TestAnnotation(unittest.TestCase):
 
         mask = Mask(segmentation=coco_segmentation, full_shape=full_shape)
 
-        self.assertEqual(mask.full_shape_height, full_shape_height)
-        self.assertEqual(mask.full_shape_width, full_shape_width)
+        assert mask.full_shape_height == full_shape_height
+        assert mask.full_shape_width == full_shape_width
         logger.debug(f"{type(mask.bool_mask[11, 2])=} {mask.bool_mask[11, 2]=}")
-        self.assertEqual(mask.bool_mask[11, 2], True)
+        assert mask.bool_mask[11, 2]
 
     def test_object_annotation(self):
         from sahi.annotation import ObjectAnnotation
@@ -83,27 +82,23 @@ class TestAnnotation(unittest.TestCase):
             shift_amount=shift_amount,
         )
 
-        self.assertEqual(object_annotation1.bbox.minx, bbox[0])
-        self.assertEqual(object_annotation1.bbox.miny, bbox[1])
-        self.assertEqual(object_annotation1.bbox.maxx, bbox[2])
-        self.assertEqual(object_annotation1.bbox.maxy, bbox[3])
-        self.assertEqual(object_annotation1.category.id, category_id)
-        self.assertEqual(object_annotation1.category.name, category_name)
+        assert object_annotation1.bbox.minx == bbox[0]
+        assert object_annotation1.bbox.miny == bbox[1]
+        assert object_annotation1.bbox.maxx == bbox[2]
+        assert object_annotation1.bbox.maxy == bbox[3]
+        assert object_annotation1.category.id == category_id
+        assert object_annotation1.category.name == category_name
 
-        self.assertEqual(object_annotation2.bbox.minx, bbox[0])
-        self.assertEqual(object_annotation2.bbox.miny, bbox[1])
-        self.assertEqual(object_annotation2.bbox.maxx, bbox[2])
-        self.assertEqual(object_annotation2.bbox.maxy, bbox[3])
-        self.assertEqual(object_annotation2.category.id, category_id)
-        self.assertEqual(object_annotation2.category.name, category_name)
+        assert object_annotation2.bbox.minx == bbox[0]
+        assert object_annotation2.bbox.miny == bbox[1]
+        assert object_annotation2.bbox.maxx == bbox[2]
+        assert object_annotation2.bbox.maxy == bbox[3]
+        assert object_annotation2.category.id == category_id
+        assert object_annotation2.category.name == category_name
 
-        self.assertEqual(object_annotation3.bbox.minx, bbox[0])
-        self.assertEqual(object_annotation3.bbox.miny, bbox[1])
-        self.assertEqual(object_annotation3.bbox.maxx, bbox[2])
-        self.assertEqual(object_annotation3.bbox.maxy, bbox[3])
-        self.assertEqual(object_annotation3.category.id, category_id)
-        self.assertEqual(object_annotation3.category.name, category_name)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert object_annotation3.bbox.minx == bbox[0]
+        assert object_annotation3.bbox.miny == bbox[1]
+        assert object_annotation3.bbox.maxx == bbox[2]
+        assert object_annotation3.bbox.maxy == bbox[3]
+        assert object_annotation3.category.id == category_id
+        assert object_annotation3.category.name == category_name
