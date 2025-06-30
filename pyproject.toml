@@ -67,10 +67,10 @@ ci = [
   "torchvision==0.21.0;python_version>='3.12' and platform_system=='Darwin'",
   "torch==2.1.2;python_version<'3.12' and platform_system=='Darwin'",
   "torchvision==0.16.2;python_version<'3.12' and platform_system=='Darwin'",
-  # mmdet is supported for python<3.12
-  "mmengine;python_version<'3.12'",
-  "mmcv==2.1.0;python_version<'3.12'",
-  "mmdet==3.3.0;python_version<'3.12'",
+  # mmdet is supported for python<3.12 and NOT on macOS ARM64
+  "mmengine;python_version<'3.12' and (platform_system!='Darwin' or platform_machine!='arm64')",
+  "mmcv==2.1.0;python_version<'3.12' and (platform_system!='Darwin' or platform_machine!='arm64')",
+  "mmdet==3.3.0;python_version<'3.12' and (platform_system!='Darwin' or platform_machine!='arm64')",
   "onnxruntime<1.20;python_version<'3.12'",
   "onnx>1.16;python_version>='3.12'",
   "onnxruntime;python_version>='3.12'",
