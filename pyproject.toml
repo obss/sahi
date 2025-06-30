@@ -51,7 +51,6 @@ dev = [
   "pytest",
   "pytest-xdist[psutil]>=3.0",
   "ruff",
-  "pre-commit>=2.0",
   "jupyterlab>=3.0.14",
 ]
 ci = [
