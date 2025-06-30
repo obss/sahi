@@ -23,6 +23,7 @@ class UltralyticsDetectionModel(DetectionModel):
 
     Supports both PyTorch (.pt) and ONNX (.onnx) models.
     """
+
     def check_dependencies(self) -> None:
         check_requirements(["ultralytics"])
 
@@ -101,7 +102,7 @@ class UltralyticsDetectionModel(DetectionModel):
             ]
         elif self.is_obb:
             # For OBB task, get OBB points in xyxyxyxy format
-            device = getattr(self.model, 'device', 'cpu')
+            device = getattr(self.model, "device", "cpu")
             prediction_result = [
                 (
                     # Get OBB data: xyxy, conf, cls
