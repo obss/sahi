@@ -1,5 +1,5 @@
 # OBSS SAHI Tool
-# Code written by AnNT, 2023.
+# Code written by Fatih Cagatay Akyon, 2025.
 
 import logging
 from typing import Any, List, Optional
@@ -24,8 +24,8 @@ class UltralyticsDetectionModel(DetectionModel):
     def load_model(self):
         """
         Detection model is initialized and set to self.model.
+        Supports both PyTorch (.pt) and ONNX (.onnx) models.
         """
-
         from ultralytics import YOLO
 
         try:
@@ -42,7 +42,6 @@ class UltralyticsDetectionModel(DetectionModel):
             model: Any
                 A Ultralytics model
         """
-
         self.model = model
         # set category_mapping
         if not self.category_mapping:
@@ -56,7 +55,6 @@ class UltralyticsDetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-
         from ultralytics.engine.results import Masks
 
         # Confirm model is loaded
@@ -127,14 +125,26 @@ class UltralyticsDetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        return self.model.overrides["task"] == "segment"
+        # Check if model has 'task' attribute (for both .pt and .onnx models)
+        if hasattr(self.model, 'overrides') and 'task' in self.model.overrides:
+            return self.model.overrides["task"] == "segment"
+        # For ONNX models, task might be stored differently
+        elif hasattr(self.model, 'task'):
+            return self.model.task == "segment"
+        return False
 
     @property
     def is_obb(self):
         """
         Returns if model output contains oriented bounding boxes
         """
-        return self.model.overrides["task"] == "obb"
+        # Check if model has 'task' attribute (for both .pt and .onnx models)
+        if hasattr(self.model, 'overrides') and 'task' in self.model.overrides:
+            return self.model.overrides["task"] == "obb"
+        # For ONNX models, task might be stored differently
+        elif hasattr(self.model, 'task'):
+            return self.model.task == "obb"
+        return False
 
     def _create_object_prediction_list_from_original_predictions(
         self,
