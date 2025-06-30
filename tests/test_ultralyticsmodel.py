@@ -2,6 +2,7 @@
 # Code written by Fatih Cagatay Akyon, 2025.
 
 import sys
+
 import pytest
 
 from sahi.prediction import ObjectPrediction
@@ -18,6 +19,7 @@ from sahi.utils.ultralytics import (
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3
 IMAGE_SIZE = 640
+
 
 def test_load_yolo11_model():
     from sahi.models.ultralytics import UltralyticsDetectionModel
@@ -36,6 +38,7 @@ def test_load_yolo11_model():
     assert hasattr(detection_model.model, "task")
     assert detection_model.model.task == "detect"
 
+
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="ONNX model tests require Python 3.10 or higher")
 def test_load_yolo11_onnx_model():
     from sahi.models.ultralytics import UltralyticsDetectionModel
@@ -50,6 +53,7 @@ def test_load_yolo11_onnx_model():
     )
 
     assert detection_model.model is not None
+
 
 def test_perform_inference_yolo11():
     from sahi.models.ultralytics import UltralyticsDetectionModel
@@ -80,6 +84,7 @@ def test_perform_inference_yolo11():
     assert len(detection_model.category_names) == 80
     for box in boxes:  # type: ignore
         assert box[4].item() >= CONFIDENCE_THRESHOLD
+
 
 def test_yolo11_segmentation():
     from sahi.models.ultralytics import UltralyticsDetectionModel
@@ -115,6 +120,7 @@ def test_yolo11_segmentation():
     assert len(boxes) > 0
     assert masks.shape[0] == len(boxes)  # One mask per box
     assert len(masks.shape) == 3  # (num_predictions, height, width)
+
 
 def test_yolo11_obb():
     from sahi.models.ultralytics import UltralyticsDetectionModel
