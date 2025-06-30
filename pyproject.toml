@@ -34,7 +34,11 @@ classifiers = [
 ]
 
 [project.urls]
-homepage = "https://github.com/obss/sahi"
+"Homepage" = "https://github.com/obss/sahi"
+"Source" = "https://github.com/obss/sahi"
+"Documentation" = "https://github.com/obss/sahi/tree/main/docs"
+"Bug Reports" = "https://github.com/obss/sahi/discussions/categories/q-a"
+"Changelog" = "https://github.com/obss/sahi/releases"
 
 [project.scripts]
 sahi = "sahi.cli:app"
@@ -94,13 +98,6 @@ explicit = true
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu" }]
 torchvision = [{ index = "pytorch-cpu" }]
-
-[project.urls]
-"Homepage" = "https://github.com/obss/sahi"
-"Source" = "https://github.com/obss/sahi"
-"Documentation" = "https://github.com/obss/sahi/tree/main/docs"
-"Bug Reports" = "https://github.com/obss/sahi/discussions/categories/q-a"
-"Changelog" = "https://github.com/obss/sahi/releases"
 
 [tool.setuptools.dynamic]
 version = { attr = "sahi.__version__" }
