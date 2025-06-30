@@ -47,6 +47,16 @@ jobs:
         run: |
           set -e
           uv sync --extra ci
+      - name: List installed packages
+        run: |
+          echo "=== Installed Python packages ==="
+          uv pip list
+          echo ""
+          echo "=== Python version ==="
+          python --version
+          echo ""
+          echo "=== uv version ==="
+          uv --version
       - name: Verify .venv Activation
         run: |
           if [ ! -d ".venv" ]; then
