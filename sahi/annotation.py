@@ -26,9 +26,9 @@ class BoundingBox:
     def __init__(self, box: Tuple[float, float, float, float], shift_amount: Tuple[int, int] = (0, 0)):
         """
         Args:
-            box: List[float]
+            box: Tuple[float]
                 [minx, miny, maxx, maxy]
-            shift_amount: List[int]
+            shift_amount: Tuple[int]
                 To shift the box and mask predictions from sliced image
                 to full sized image, should be in the form of [shift_x, shift_y]
         """
