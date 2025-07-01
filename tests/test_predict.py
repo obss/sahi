@@ -23,6 +23,11 @@ def test_prediction_score():
     assert isinstance(prediction_score.value, float)
     assert prediction_score.is_greater_than_threshold(0.5) is True
     assert prediction_score.is_greater_than_threshold(0.7) is False
+    assert prediction_score == 0.6
+    assert prediction_score > 0.5
+    assert prediction_score < 0.7
+    assert not prediction_score > 0.7
+    assert not prediction_score < 0.5
 
 
 @pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
