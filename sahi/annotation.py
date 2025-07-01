@@ -3,7 +3,7 @@
 
 import copy
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -23,13 +23,12 @@ class BoundingBox:
     Bounding box of the annotation.
     """
 
-    # TODO: Better use tuple not lists for data that has a defined length and should no mutate a lot
-    def __init__(self, box: List[float], shift_amount: List[int] = [0, 0]):
+    def __init__(self, box: Tuple[float, float, float, float], shift_amount: Tuple[int, int] = (0, 0)):
         """
         Args:
-            box: List[float]
+            box: Tuple[float]
                 [minx, miny, maxx, maxy]
-            shift_amount: List[int]
+            shift_amount: Tuple[int]
                 To shift the box and mask predictions from sliced image
                 to full sized image, should be in the form of [shift_x, shift_y]
         """
