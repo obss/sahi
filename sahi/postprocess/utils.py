@@ -65,10 +65,9 @@ class ObjectPredictionList(Sequence):
         else:
             return self.list
 
+
 ###################################################sunhao###################################################
-def repair_polygon(
-    shapely_polygon: Polygon
-) -> Polygon:
+def repair_polygon(shapely_polygon: Polygon) -> Polygon:
     """
     Fix polygons
 
@@ -89,9 +88,7 @@ def repair_polygon(
     return shapely_polygon
 
 
-def repair_multipolygon(
-    shapely_multipolygon: MultiPolygon
-) -> MultiPolygon:
+def repair_multipolygon(shapely_multipolygon: MultiPolygon) -> MultiPolygon:
     """
     Fix invalid MultiPolygon objects
 
@@ -113,9 +110,7 @@ def repair_multipolygon(
     return shapely_multipolygon
 
 
-def coco_segmentation_to_shapely(
-    segmentation: Union[List, List[List]]
-):
+def coco_segmentation_to_shapely(segmentation: Union[List, List[List]]):
     """
     Fix segment data in COCO format
 
@@ -139,7 +134,9 @@ def coco_segmentation_to_shapely(
     shapely_multipolygon = repair_multipolygon(MultiPolygon(polygon_list))
     return shapely_multipolygon
 
+
 ############################################################################################################
+
 
 def repair_polygon(shapely_polygon: Polygon) -> Polygon:
     """
