@@ -4,13 +4,16 @@
 import logging
 import os
 import time
-from typing import List, Optional
+from typing import Generator, List, Optional, Union
+
+from PIL import Image
 
 from sahi.utils.import_utils import is_available
 
+# TODO: This does nothing for this module. The issue named here does not exist
 # https://github.com/obss/sahi/issues/526
 if is_available("torch"):
-    import torch
+    import torch  # noqa: F401
 
 from functools import cmp_to_key
 
@@ -54,6 +57,15 @@ LOW_MODEL_CONFIDENCE = 0.1
 logger = logging.getLogger(__name__)
 
 
+def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id):
+    return [
+        obj_pred
+        for obj_pred in object_prediction_list
+        if obj_pred.category.name not in (exclude_classes_by_name or [])
+        and obj_pred.category.id not in (exclude_classes_by_id or [])
+    ]
+
+
 def get_prediction(
     image,
     detection_model,
@@ -61,6 +73,8 @@ def get_prediction(
     full_shape=None,
     postprocess: Optional[PostprocessPredictions] = None,
     verbose: int = 0,
+    exclude_classes_by_name: Optional[List[str]] = None,
+    exclude_classes_by_id: Optional[List[int]] = None,
 ) -> PredictionResult:
     """
     Function for performing prediction for given image using given detection_model.
@@ -78,7 +92,12 @@ def get_prediction(
         verbose: int
             0: no print (default)
             1: print prediction duration
-
+        exclude_classes_by_name: Optional[List[str]]
+            None: if no classes are excluded
+            List[str]: set of classes to exclude using its/their class label name/s
+        exclude_classes_by_id: Optional[List[int]]
+            None: if no classes are excluded
+            List[int]: set of classes to exclude using one or more IDs
     Returns:
         A dict with fields:
             object_prediction_list: a list of ObjectPrediction
@@ -94,6 +113,9 @@ def get_prediction(
     time_end = time.time() - time_start
     durations_in_seconds["prediction"] = time_end
 
+    if full_shape is None:
+        full_shape = [image_as_pil.height, image_as_pil.width]
+
     # process prediction
     time_start = time.time()
     # works only with 1 batch
@@ -102,6 +124,7 @@ def get_prediction(
         full_shape=full_shape,
     )
     object_prediction_list: List[ObjectPrediction] = detection_model.object_prediction_list
+    object_prediction_list = filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id)
 
     # postprocess matching predictions
     if postprocess is not None:
@@ -125,8 +148,8 @@ def get_prediction(
 def get_sliced_prediction(
     image,
     detection_model=None,
-    slice_height: int = None,
-    slice_width: int = None,
+    slice_height: Optional[int] = None,
+    slice_width: Optional[int] = None,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     perform_standard_pred: bool = True,
@@ -135,10 +158,12 @@ def get_sliced_prediction(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
-    merge_buffer_length: int = None,
+    merge_buffer_length: Optional[int] = None,
     auto_slice_resolution: bool = True,
-    slice_export_prefix: str = None,
-    slice_dir: str = None,
+    slice_export_prefix: Optional[str] = None,
+    slice_dir: Optional[str] = None,
+    exclude_classes_by_name: Optional[List[str]] = None,
+    exclude_classes_by_id: Optional[List[int]] = None,
 ) -> PredictionResult:
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -188,7 +213,12 @@ def get_sliced_prediction(
             Prefix for the exported slices. Defaults to None.
         slice_dir: str
             Directory to save the slices. Defaults to None.
-
+        exclude_classes_by_name: Optional[List[str]]
+            None: if no classes are excluded
+            List[str]: set of classes to exclude using its/their class label name/s
+        exclude_classes_by_id: Optional[List[int]]
+            None: if no classes are excluded
+            List[int]: set of classes to exclude using one or more IDs
     Returns:
         A Dict with fields:
             object_prediction_list: a list of sahi.prediction.ObjectPrediction
@@ -212,19 +242,21 @@ def get_sliced_prediction(
         overlap_width_ratio=overlap_width_ratio,
         auto_slice_resolution=auto_slice_resolution,
     )
+    from sahi.models.ultralytics import UltralyticsDetectionModel
 
     num_slices = len(slice_image_result)
     time_end = time.time() - time_start
     durations_in_seconds["slice"] = time_end
+
+    if isinstance(detection_model, UltralyticsDetectionModel) and detection_model.is_obb:
+        # Only NMS is supported for OBB model outputs
+        postprocess_type = "NMS"
 
     # init match postprocess instance
     if postprocess_type not in POSTPROCESS_NAME_TO_CLASS.keys():
         raise ValueError(
             f"postprocess_type should be one of {list(POSTPROCESS_NAME_TO_CLASS.keys())} but given as {postprocess_type}"
         )
-    elif postprocess_type == "UNIONMERGE":
-        # deprecated in v0.9.3
-        raise ValueError("'UNIONMERGE' postprocess_type is deprecated, use 'GREEDYNMM' instead.")
     postprocess_constructor = POSTPROCESS_NAME_TO_CLASS[postprocess_type]
     postprocess = postprocess_constructor(
         match_threshold=postprocess_match_threshold,
@@ -254,6 +286,8 @@ def get_sliced_prediction(
                 slice_image_result.original_image_height,
                 slice_image_result.original_image_width,
             ],
+            exclude_classes_by_name=exclude_classes_by_name,
+            exclude_classes_by_id=exclude_classes_by_id,
         )
         # convert sliced predictions to full predictions
         for object_prediction in prediction_result.object_prediction_list:
@@ -275,6 +309,8 @@ def get_sliced_prediction(
                 slice_image_result.original_image_width,
             ],
             postprocess=None,
+            exclude_classes_by_name=exclude_classes_by_name,
+            exclude_classes_by_id=exclude_classes_by_id,
         )
         object_prediction_list.extend(prediction_result.object_prediction_list)
 
@@ -340,18 +376,18 @@ def agg_prediction(result: PredictionResult, thresh):
 
 
 def predict(
-    detection_model: DetectionModel = None,
-    model_type: str = "mmdet",
-    model_path: str = None,
-    model_config_path: str = None,
+    detection_model: Optional[DetectionModel] = None,
+    model_type: str = "ultralytics",
+    model_path: Optional[str] = None,
+    model_config_path: Optional[str] = None,
     model_confidence_threshold: float = 0.25,
-    model_device: str = None,
-    model_category_mapping: dict = None,
-    model_category_remapping: dict = None,
-    source: str = None,
+    model_device: Optional[str] = None,
+    model_category_mapping: Optional[dict] = None,
+    model_category_remapping: Optional[dict] = None,
+    source: Optional[str] = None,
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
-    image_size: int = None,
+    image_size: Optional[int] = None,
     slice_height: int = 512,
     slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
@@ -365,18 +401,20 @@ def predict(
     frame_skip_interval: int = 0,
     export_pickle: bool = False,
     export_crop: bool = False,
-    dataset_json_path: str = None,
+    dataset_json_path: Optional[str] = None,
     project: str = "runs/predict",
     name: str = "exp",
-    visual_bbox_thickness: int = None,
-    visual_text_size: float = None,
-    visual_text_thickness: int = None,
+    visual_bbox_thickness: Optional[int] = None,
+    visual_text_size: Optional[float] = None,
+    visual_text_thickness: Optional[int] = None,
     visual_hide_labels: bool = False,
     visual_hide_conf: bool = False,
     visual_export_format: str = "png",
     verbose: int = 1,
     return_dict: bool = False,
     force_postprocess_type: bool = False,
+    exclude_classes_by_name: Optional[List[str]] = None,
+    exclude_classes_by_id: Optional[List[int]] = None,
     **kwargs,
 ):
     """
@@ -463,6 +501,12 @@ def predict(
             If True, returns a dict with 'export_dir' field.
         force_postprocess_type: bool
             If True, auto postprocess check will e disabled
+        exclude_classes_by_name: Optional[List[str]]
+            None: if no classes are excluded
+            List[str]: set of classes to exclude using its/their class label name/s
+        exclude_classes_by_id: Optional[List[int]]
+            None: if no classes are excluded
+            List[int]: set of classes to exclude using one or more IDs
     """
     # assert prediction type
     if no_standard_prediction and no_sliced_prediction:
@@ -492,24 +536,24 @@ def predict(
     # TODO: rewrite this as iterator class as in https://github.com/ultralytics/yolov5/blob/d059d1da03aee9a3c0059895aa4c7c14b7f25a9e/utils/datasets.py#L178
     source_is_video = False
     num_frames = None
-    if dataset_json_path:
+    image_iterator: Union[list[str], Generator[Image.Image, None, None]]
+    if dataset_json_path and source:
         coco: Coco = Coco.from_coco_dict_or_path(dataset_json_path)
         image_iterator = [str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images]
         coco_json = []
-    elif os.path.isdir(source):
-        image_iterator = list_files(
-            directory=source,
-            contains=IMAGE_EXTENSIONS,
-            verbose=verbose,
-        )
-    elif Path(source).suffix in VIDEO_EXTENSIONS:
+    elif source and os.path.isdir(source):
+        image_iterator = list_files(directory=source, contains=IMAGE_EXTENSIONS, verbose=verbose)
+    elif source and Path(source).suffix in VIDEO_EXTENSIONS:
         source_is_video = True
         read_video_frame, output_video_writer, video_file_name, num_frames = get_video_reader(
-            source, save_dir, frame_skip_interval, not novisual, view_video
+            source, str(save_dir), frame_skip_interval, not novisual, view_video
         )
         image_iterator = read_video_frame
-    else:
+    elif source:
         image_iterator = [source]
+    else:
+        logger.error("No valid input given to predict function")
+        return
 
     # init model instance
     time_start = time.time()
@@ -538,11 +582,13 @@ def predict(
     for ind, image_path in enumerate(
         tqdm(image_iterator, f"Performing inference on {input_type_str}", total=num_frames)
     ):
-        # get filename
-        if source_is_video:
+        # Source is an image: Iterating over Image objects
+        if source and source_is_video:
             video_name = Path(source).stem
             relative_filepath = video_name + "_frame_" + str(ind)
-        elif os.path.isdir(source):  # preserve source folder structure in export
+        elif isinstance(image_path, Image.Image):
+            raise RuntimeError("Source is not a video, but image is still an Image object ")
+        elif source and os.path.isdir(source):  # preserve source folder structure in export
             relative_filepath = str(Path(image_path)).split(str(Path(source)))[-1]
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
         else:  # no process if source is single file
@@ -569,9 +615,12 @@ def predict(
                 postprocess_match_threshold=postprocess_match_threshold,
                 postprocess_class_agnostic=postprocess_class_agnostic,
                 verbose=1 if verbose else 0,
+                exclude_classes_by_name=exclude_classes_by_name,
+                exclude_classes_by_id=exclude_classes_by_id,
             )
             object_prediction_list = prediction_result.object_prediction_list
-            durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
+            if prediction_result.durations_in_seconds:
+                durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
         else:
             # get standard prediction
             prediction_result = get_prediction(
@@ -581,6 +630,8 @@ def predict(
                 full_shape=None,
                 postprocess=None,
                 verbose=0,
+                exclude_classes_by_name=exclude_classes_by_name,
+                exclude_classes_by_id=exclude_classes_by_id,
             )
             object_prediction_list = prediction_result.object_prediction_list
 
@@ -677,6 +728,8 @@ def predict(
                 export_format=visual_export_format,
             )
             if not novisual and source_is_video:  # export video
+                if output_video_writer is None:
+                    raise RuntimeError("Output video writer could not be created")
                 output_video_writer.write(cv2.cvtColor(result["image"], cv2.COLOR_RGB2BGR))
 
         # render video inference
@@ -725,17 +778,17 @@ def predict(
 
 def predict_fiftyone(
     model_type: str = "mmdet",
-    model_path: str = None,
-    model_config_path: str = None,
+    model_path: Optional[str] = None,
+    model_config_path: Optional[str] = None,
     model_confidence_threshold: float = 0.25,
-    model_device: str = None,
-    model_category_mapping: dict = None,
-    model_category_remapping: dict = None,
-    dataset_json_path: str = None,
-    image_dir: str = None,
+    model_device: Optional[str] = None,
+    model_category_mapping: Optional[dict] = None,
+    model_category_remapping: Optional[dict] = None,
+    dataset_json_path: str = "",
+    image_dir: str = "",
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
-    image_size: int = None,
+    image_size: Optional[int] = None,
     slice_height: int = 256,
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
@@ -745,6 +798,8 @@ def predict_fiftyone(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
+    exclude_classes_by_name: Optional[List[str]] = None,
+    exclude_classes_by_id: Optional[List[int]] = None,
 ):
     """
     Performs prediction for all present images in given folder.
@@ -803,6 +858,12 @@ def predict_fiftyone(
         verbose: int
             0: no print
             1: print slice/prediction durations, number of slices, model loading/file exporting durations
+        exclude_classes_by_name: Optional[List[str]]
+            None: if no classes are excluded
+            List[str]: set of classes to exclude using its/their class label name/s
+        exclude_classes_by_id: Optional[List[int]]
+            None: if no classes are excluded
+            List[int]: set of classes to exclude using one or more IDs
     """
     check_requirements(["fiftyone"])
 
@@ -855,6 +916,8 @@ def predict_fiftyone(
                     postprocess_match_metric=postprocess_match_metric,
                     postprocess_class_agnostic=postprocess_class_agnostic,
                     verbose=verbose,
+                    exclude_classes_by_name=exclude_classes_by_name,
+                    exclude_classes_by_id=exclude_classes_by_id,
                 )
                 durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
             else:
@@ -866,6 +929,8 @@ def predict_fiftyone(
                     full_shape=None,
                     postprocess=None,
                     verbose=0,
+                    exclude_classes_by_name=exclude_classes_by_name,
+                    exclude_classes_by_id=exclude_classes_by_id,
                 )
                 durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
 
@@ -892,7 +957,7 @@ def predict_fiftyone(
         )
 
     # visualize results
-    session = fo.launch_app()
+    session = fo.launch_app()  # pyright: ignore[reportArgumentType]
     session.dataset = dataset
     # Evaluate the predictions
     results = dataset.evaluate_detections(

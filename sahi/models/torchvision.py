@@ -2,7 +2,7 @@
 # Code written by Fatih C Akyon and Kadir Nar, 2021.
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 import numpy as np
 
@@ -19,7 +19,7 @@ class TorchVisionDetectionModel(DetectionModel):
         check_requirements(["torch", "torchvision"])
 
     def load_model(self):
-        import torch
+        import torch  # pyright: ignore[reportMissingImports]
 
         from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
 
@@ -47,17 +47,20 @@ class TorchVisionDetectionModel(DetectionModel):
             num_classes = 91
         if self.model_path is None:
             logger.warning("model_path not provided in config, using pretrained weights and default num_classes: 91.")
-            pretrained = True
+            weights = "DEFAULT"
             num_classes = 91
         else:
-            pretrained = False
+            weights = None
 
         # load model
-        model = MODEL_NAME_TO_CONSTRUCTOR[model_name](num_classes=num_classes, pretrained=pretrained)
-        try:
-            model.load_state_dict(torch.load(self.model_path))
-        except Exception as e:
-            TypeError("model_path is not a valid torchvision model path: ", e)
+        # Note: torchvision >= 0.13 is required for the 'weights' parameter
+        model = MODEL_NAME_TO_CONSTRUCTOR[model_name](num_classes=num_classes, weights=weights)
+        if self.model_path:
+            try:
+                model.load_state_dict(torch.load(self.model_path))
+            except Exception as e:
+                logger.error(f"Invalid {self.model_path=}")
+                raise TypeError("model_path is not a valid torchvision model path: ", e)
 
         self.set_model(model)
 
@@ -80,7 +83,7 @@ class TorchVisionDetectionModel(DetectionModel):
             category_names = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
             self.category_mapping = category_names
 
-    def perform_inference(self, image: np.ndarray, image_size: int = None):
+    def perform_inference(self, image: np.ndarray, image_size: Optional[int] = None):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
@@ -176,13 +179,13 @@ class TorchVisionDetectionModel(DetectionModel):
 
             for ind in range(len(boxes)):
                 if masks is not None:
-                    mask = get_coco_segmentation_from_bool_mask(np.array(masks[ind]))
+                    segmentation = get_coco_segmentation_from_bool_mask(np.array(masks[ind]))
                 else:
-                    mask = None
+                    segmentation = None
 
                 object_prediction = ObjectPrediction(
                     bbox=boxes[ind],
-                    segmentation=mask,
+                    segmentation=segmentation,
                     category_id=int(category_ids[ind]),
                     category_name=self.category_mapping[str(int(category_ids[ind]))],
                     shift_amount=shift_amount,

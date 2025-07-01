@@ -100,11 +100,13 @@ class MmdetDetectionModel(DetectionModel):
         category_mapping: Optional[Dict] = None,
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
-        image_size: int = None,
+        image_size: Optional[int] = None,
         scope: str = "mmdet",
     ):
         if not IMPORT_MMDET_V3:
-            raise ImportError("Failed to import `DetInferencer`. Please confirm you have installed 'mmdet>=3.0.0'")
+            raise ImportError(
+                "Failed to import `DetInferencer`. Please confirm you have installed 'mmdet==3.3.0 mmcv==2.1.0'"
+            )
 
         self.scope = scope
         self.image_size = image_size
@@ -173,8 +175,8 @@ class MmdetDetectionModel(DetectionModel):
             image = image[:, :, ::-1]
         # compatibility with sahi v0.8.15
         if not isinstance(image, list):
-            image = [image]
-        prediction_result = self.model(image)
+            image_list = [image]
+        prediction_result = self.model(image_list)
 
         self._original_predictions = prediction_result["predictions"]
 
@@ -217,7 +219,7 @@ class MmdetDetectionModel(DetectionModel):
     @property
     def category_names(self):
         classes = self.model.model.dataset_meta["classes"]
-        if type(classes) == str:
+        if isinstance(classes, str):
             # https://github.com/open-mmlab/mmdetection/pull/4973
             return (classes,)
         else:

@@ -1,9 +1,8 @@
 # OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
-import unittest
+# Code written by Fatih C Akyon, 2025.
 
 from sahi.models.detectron2 import Detectron2DetectionModel
+from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.detectron2 import Detectron2TestConstants
 from sahi.utils.import_utils import get_package_info
@@ -14,10 +13,11 @@ IMAGE_SIZE = 320
 
 # note that detectron2 binaries are available only for linux
 
+# TODO: This test is currently not running as torch version is pinned to 1.13
 torch_version = get_package_info("torch", verbose=False)[1]
 if "1.10." in torch_version:
 
-    class TestDetectron2DetectionModel(unittest.TestCase):
+    class TestDetectron2DetectionModel:
         def test_load_model(self):
             detector2_detection_model = Detectron2DetectionModel(
                 model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
@@ -28,7 +28,7 @@ if "1.10." in torch_version:
                 load_at_init=True,
                 image_size=IMAGE_SIZE,
             )
-            self.assertNotEqual(detector2_detection_model.model, None)
+            assert detector2_detection_model.model is not None
 
         def test_perform_inference_without_mask_output(self):
             detectron2_detection_model = Detectron2DetectionModel(
@@ -47,19 +47,20 @@ if "1.10." in torch_version:
             # perform inference
             detectron2_detection_model.perform_inference(image)
             original_predictions = detectron2_detection_model.original_predictions
+            assert original_predictions
 
             boxes = original_predictions["instances"].pred_boxes.tensor.cpu().numpy()
             scores = original_predictions["instances"].scores.cpu().numpy()
             category_ids = original_predictions["instances"].pred_classes.cpu().numpy()
 
             # find box of first car detection with conf greater than 0.5
-            for ind, box in enumerate(boxes):
+            for ind, _ in enumerate(boxes):
                 if category_ids[ind] == 2 and scores[ind] > 0.5:
                     break
 
             # compare
-            self.assertEqual(boxes[ind].astype("int").tolist(), [831, 303, 873, 346])
-            self.assertEqual(len(boxes), 35)
+            assert boxes[ind].astype("int").tolist() == [831, 303, 873, 346]
+            assert len(boxes) == 35
 
         def test_convert_original_predictions_without_mask_output(self):
             detectron2_detection_model = Detectron2DetectionModel(
@@ -82,11 +83,15 @@ if "1.10." in torch_version:
             # convert predictions to ObjectPrediction list
             detectron2_detection_model.convert_original_predictions()
             object_prediction_list = detectron2_detection_model.object_prediction_list
+            assert object_prediction_list
+            assert isinstance(object_prediction_list[0], ObjectPrediction)
+            assert isinstance(object_prediction_list[5], ObjectPrediction)
+            assert isinstance(object_prediction_list[2], ObjectPrediction)
 
             # compare
-            self.assertEqual(len(object_prediction_list), 16)
-            self.assertEqual(object_prediction_list[0].category.id, 2)
-            self.assertEqual(object_prediction_list[0].category.name, "car")
+            assert len(object_prediction_list) == 16
+            assert object_prediction_list[0].category.id == 2
+            assert object_prediction_list[0].category.name == "car"
             predicted_bbox = object_prediction_list[0].bbox.to_xywh()
             desired_bbox = [831, 303, 42, 43]
             margin = 3
@@ -94,8 +99,8 @@ if "1.10." in torch_version:
                 if not (point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin):
                     raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
-            self.assertEqual(object_prediction_list[5].category.id, 2)
-            self.assertEqual(object_prediction_list[5].category.name, "car")
+            assert object_prediction_list[5].category.id == 2
+            assert object_prediction_list[5].category.name == "car"
             predicted_bbox = object_prediction_list[2].bbox.to_xywh()
             desired_bbox = [383, 277, 36, 29]
             margin = 3
@@ -120,13 +125,16 @@ if "1.10." in torch_version:
             # perform inference
             detectron2_detection_model.perform_inference(image)
             # convert predictions to ObjectPrediction list
-            detectron2_detection_model.convert_original_predictions(full_shape=(image.shape[0], image.shape[1]))
+            detectron2_detection_model.convert_original_predictions(full_shape=[image.shape[0], image.shape[1]])
             object_prediction_list = detectron2_detection_model.object_prediction_list
+            assert object_prediction_list
+            assert isinstance(object_prediction_list[0], ObjectPrediction)
+            assert isinstance(object_prediction_list[5], ObjectPrediction)
 
             # compare
-            self.assertEqual(len(object_prediction_list), 13)
-            self.assertEqual(object_prediction_list[0].category.id, 2)
-            self.assertEqual(object_prediction_list[0].category.name, "car")
+            assert len(object_prediction_list) == 13
+            assert object_prediction_list[0].category.id == 2
+            assert object_prediction_list[0].category.name == "car"
             predicted_bbox = object_prediction_list[0].bbox.to_xywh()
             desired_bbox = [321, 324, 59, 38]
             margin = 3
@@ -134,8 +142,8 @@ if "1.10." in torch_version:
                 if not (point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin):
                     raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
-            self.assertEqual(object_prediction_list[5].category.id, 2)
-            self.assertEqual(object_prediction_list[5].category.name, "car")
+            assert object_prediction_list[5].category.id == 2
+            assert object_prediction_list[5].category.name == "car"
             predicted_bbox = object_prediction_list[5].bbox.to_xywh()
             desired_bbox = [719, 243, 27, 30]
             margin = 3
@@ -175,22 +183,22 @@ if "1.10." in torch_version:
             object_prediction_list = prediction_result.object_prediction_list
 
             # compare
-            self.assertEqual(len(object_prediction_list), 16)
+            assert len(object_prediction_list) == 16
             num_person = 0
             for object_prediction in object_prediction_list:
                 if object_prediction.category.name == "person":
                     num_person += 1
-            self.assertEqual(num_person, 0)
+            assert num_person == 0
             num_truck = 0
             for object_prediction in object_prediction_list:
                 if object_prediction.category.name == "truck":
                     num_truck += 1
-            self.assertEqual(num_truck, 0)
+            assert num_truck == 0
             num_car = 0
             for object_prediction in object_prediction_list:
                 if object_prediction.category.name == "car":
                     num_car += 1
-            self.assertEqual(num_car, 16)
+            assert num_car == 16
 
         def test_get_sliced_prediction_detectron2(self):
             from sahi.models.detectron2 import Detectron2DetectionModel
@@ -238,23 +246,19 @@ if "1.10." in torch_version:
             object_prediction_list = prediction_result.object_prediction_list
 
             # compare
-            self.assertEqual(len(object_prediction_list), 19)
+            assert len(object_prediction_list) == 19
             num_person = 0
             for object_prediction in object_prediction_list:
                 if object_prediction.category.name == "person":
                     num_person += 1
-            self.assertEqual(num_person, 0)
+            assert num_person == 0
             num_truck = 0
             for object_prediction in object_prediction_list:
                 if object_prediction.category.name == "truck":
                     num_truck += 1
-            self.assertEqual(num_truck, 0)
+            assert num_truck == 0
             num_car = 0
             for object_prediction in object_prediction_list:
                 if object_prediction.category.name == "car":
                     num_car += 1
-            self.assertEqual(num_car, 19)
-
-
-if __name__ == "__main__":
-    unittest.main()
+            assert num_car == 19

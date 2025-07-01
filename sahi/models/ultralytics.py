@@ -1,5 +1,5 @@
 # OBSS SAHI Tool
-# Code written by AnNT, 2023.
+# Code written by Fatih Cagatay Akyon, 2025.
 
 import logging
 from typing import Any, List, Optional
@@ -8,29 +8,40 @@ import cv2
 import numpy as np
 import torch
 
-logger = logging.getLogger(__name__)
-
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.cv import get_coco_segmentation_from_bool_mask, get_coco_segmentation_from_obb_points
+from sahi.utils.cv import get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
+
+logger = logging.getLogger(__name__)
 
 
 class UltralyticsDetectionModel(DetectionModel):
+    """
+    Detection model for Ultralytics YOLO models.
+
+    Supports both PyTorch (.pt) and ONNX (.onnx) models.
+    """
+
     def check_dependencies(self) -> None:
         check_requirements(["ultralytics"])
 
     def load_model(self):
         """
         Detection model is initialized and set to self.model.
+        Supports both PyTorch (.pt) and ONNX (.onnx) models.
         """
-
         from ultralytics import YOLO
+
+        if self.model_path and ".onnx" in self.model_path:
+            check_requirements(["onnx", "onnxruntime"])
 
         try:
             model = YOLO(self.model_path)
-            model.to(self.device)
+            # Only call .to(device) for PyTorch models, not ONNX
+            if self.model_path and not self.model_path.endswith(".onnx"):
+                model.to(self.device)
             self.set_model(model)
         except Exception as e:
             raise TypeError("model_path is not a valid Ultralytics model path: ", e)
@@ -42,7 +53,6 @@ class UltralyticsDetectionModel(DetectionModel):
             model: Any
                 A Ultralytics model
         """
-
         self.model = model
         # set category_mapping
         if not self.category_mapping:
@@ -56,9 +66,6 @@ class UltralyticsDetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-
-        from ultralytics.engine.results import Masks
-
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
@@ -68,12 +75,21 @@ class UltralyticsDetectionModel(DetectionModel):
         if self.image_size is not None:
             kwargs = {"imgsz": self.image_size, **kwargs}
 
-        prediction_result = self.model(image[:, :, ::-1], **kwargs)  # YOLOv8 expects numpy arrays to have BGR
+        prediction_result = self.model(image[:, :, ::-1], **kwargs)  # YOLO expects numpy arrays to have BGR
 
+        # Handle different result types for PyTorch vs ONNX models
+        # ONNX models might return results in a different format
         if self.has_mask:
+            from ultralytics.engine.results import Masks
+
             if not prediction_result[0].masks:
+                # Create empty masks if none exist
+                if hasattr(self.model, "device"):
+                    device = self.model.device
+                else:
+                    device = "cpu"  # Default for ONNX models
                 prediction_result[0].masks = Masks(
-                    torch.tensor([], device=self.model.device), prediction_result[0].boxes.orig_shape
+                    torch.tensor([], device=device), prediction_result[0].boxes.orig_shape
                 )
 
             # We do not filter results again as confidence threshold is already applied above
@@ -86,6 +102,7 @@ class UltralyticsDetectionModel(DetectionModel):
             ]
         elif self.is_obb:
             # For OBB task, get OBB points in xyxyxyxy format
+            device = getattr(self.model, "device", "cpu")
             prediction_result = [
                 (
                     # Get OBB data: xyxy, conf, cls
@@ -98,9 +115,9 @@ class UltralyticsDetectionModel(DetectionModel):
                         dim=1,
                     )
                     if result.obb is not None
-                    else torch.empty((0, 6), device=self.model.device),
+                    else torch.empty((0, 6), device=device),
                     # Get OBB points in (N, 4, 2) format
-                    result.obb.xyxyxyxy if result.obb is not None else torch.empty((0, 4, 2), device=self.model.device),
+                    result.obb.xyxyxyxy if result.obb is not None else torch.empty((0, 4, 2), device=device),
                 )
                 for result in prediction_result
             ]
@@ -113,28 +130,57 @@ class UltralyticsDetectionModel(DetectionModel):
 
     @property
     def category_names(self):
-        return self.model.names.values()
+        # For ONNX models, names might not be available, use category_mapping
+        if hasattr(self.model, "names") and self.model.names:
+            return self.model.names.values()
+        elif self.category_mapping:
+            return list(self.category_mapping.values())
+        else:
+            raise ValueError("Category names not available. Please provide category_mapping for ONNX models.")
 
     @property
     def num_categories(self):
         """
         Returns number of categories
         """
-        return len(self.model.names)
+        if hasattr(self.model, "names") and self.model.names:
+            return len(self.model.names)
+        elif self.category_mapping:
+            return len(self.category_mapping)
+        else:
+            raise ValueError("Cannot determine number of categories. Please provide category_mapping for ONNX models.")
 
     @property
     def has_mask(self):
         """
         Returns if model output contains segmentation mask
         """
-        return self.model.overrides["task"] == "segment"
+        # Check if model has 'task' attribute (for both .pt and .onnx models)
+        if hasattr(self.model, "overrides") and "task" in self.model.overrides:
+            return self.model.overrides["task"] == "segment"
+        # For ONNX models, task might be stored differently
+        elif hasattr(self.model, "task"):
+            return self.model.task == "segment"
+        # For ONNX models without task info, check model path
+        elif self.model_path and isinstance(self.model_path, str):
+            return "seg" in self.model_path.lower()
+        return False
 
     @property
     def is_obb(self):
         """
         Returns if model output contains oriented bounding boxes
         """
-        return self.model.overrides["task"] == "obb"
+        # Check if model has 'task' attribute (for both .pt and .onnx models)
+        if hasattr(self.model, "overrides") and "task" in self.model.overrides:
+            return self.model.overrides["task"] == "obb"
+        # For ONNX models, task might be stored differently
+        elif hasattr(self.model, "task"):
+            return self.model.task == "obb"
+        # For ONNX models without task info, check model path
+        elif self.model_path and isinstance(self.model_path, str):
+            return "obb" in self.model_path.lower()
+        return False
 
     def _create_object_prediction_list_from_original_predictions(
         self,
@@ -207,7 +253,7 @@ class UltralyticsDetectionModel(DetectionModel):
                         segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
                     else:  # is_obb
                         obb_points = masks_or_points[pred_ind]  # Get OBB points for this prediction
-                        segmentation = get_coco_segmentation_from_obb_points(obb_points)
+                        segmentation = [obb_points.reshape(-1).tolist()]
 
                     if len(segmentation) == 0:
                         continue

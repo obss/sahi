@@ -2,10 +2,11 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
+import logging
 import os
 import random
 import time
-from typing import List, Optional, Union
+from typing import Generator, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
@@ -14,8 +15,10 @@ from PIL import Image
 
 from sahi.utils.file import Path
 
+logger = logging.getLogger("__name__")
+
 IMAGE_EXTENSIONS_LOSSY = [".jpg", ".jpeg"]
-IMAGE_EXTENSIONS_LOSSLESS = [".png", ".tiff", ".bmp"]
+IMAGE_EXTENSIONS_LOSSLESS = [".png", ".tif", ".tiff", ".bmp"]
 IMAGE_EXTENSIONS = IMAGE_EXTENSIONS_LOSSY + IMAGE_EXTENSIONS_LOSSLESS
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".flv", ".avi", ".ts", ".mpg", ".mov", "wmv"]
 
@@ -129,7 +132,7 @@ def convert_image_to(read_path, extension: str = "jpg", grayscale: bool = False)
         grayscale (bool, optional): Whether to convert the image to grayscale. Defaults to False.
     """
     image = cv2.imread(read_path)
-    pre, ext = os.path.splitext(read_path)
+    pre, _ = os.path.splitext(read_path)
     if grayscale:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         pre = pre + "_gray"
@@ -155,12 +158,13 @@ def read_large_image(image_path: str):
         # convert to rgb (cv2 reads in bgr)
         img_cv2 = cv2.imread(image_path, 1)
         image0 = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
-    except:
+    except Exception as e:
+        logger.debug(f"OpenCV failed reading image with error {e}, trying skimage instead")
         try:
             import skimage.io
         except ImportError:
             raise ImportError(
-                'Please run "pip install -U scikit-image" ' "to install scikit-image first for large image handling."
+                'Please run "pip install -U scikit-image" to install scikit-image first for large image handling.'
             )
         image0 = skimage.io.imread(image_path, as_grey=False).astype(np.uint8)  # [::-1]
         use_cv2 = False
@@ -205,11 +209,12 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
         # read image if str image path is provided
         try:
             image_pil = Image.open(
-                requests.get(image, stream=True).raw if str(image).startswith("http") else image
+                requests.get(image, stream=True).raw if str(image).startswith("http") else image  # type: ignore
             ).convert("RGB")
             if exif_fix:
                 image_pil = exif_transpose(image_pil)
-        except:  # handle large/tiff image reading
+        except Exception as e:  # handle large/tiff image reading
+            logger.debug(f"OpenCV failed reading image with error {e}, trying skimage instead")
             try:
                 import skimage.io
             except ImportError:
@@ -228,7 +233,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
             image = image[:, :, ::-1]
         image_pil = Image.fromarray(image)
     else:
-        raise TypeError("read image with 'pillow' using 'Image.open()'")
+        raise TypeError("read image with 'pillow' using 'Image.open()'")  # pyright: ignore[reportUnreachable]
     return image_pil
 
 
@@ -256,7 +261,7 @@ def select_random_color():
     return colors[random.randrange(0, 10)]
 
 
-def apply_color_mask(image: np.ndarray, color: tuple):
+def apply_color_mask(image: np.ndarray, color: Tuple[int, int, int]):
     """
     Applies color mask to given input image.
 
@@ -282,7 +287,7 @@ def get_video_reader(
     frame_skip_interval: int,
     export_visual: bool = False,
     view_visual: bool = False,
-):
+) -> Tuple[Generator[Image.Image, None, None], Optional[cv2.VideoWriter], str, int]:
     """
     Creates OpenCV video capture object from given video file path.
 
@@ -308,9 +313,12 @@ def get_video_reader(
         num_frames /= frame_skip_interval + 1
         num_frames = int(num_frames)
 
-    def read_video_frame(video_capture, frame_skip_interval):
+    def read_video_frame(video_capture, frame_skip_interval) -> Generator[Image.Image, None, None]:
         if view_visual:
-            cv2.imshow("Prediction of {}".format(str(video_file_name)), cv2.WINDOW_AUTOSIZE)
+            window_name = "Prediction of {}".format(str(video_file_name))
+            cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
+            default_image = np.zeros((480, 640, 3), dtype=np.uint8)
+            cv2.imshow(window_name, default_image)
 
             while video_capture.isOpened:
                 frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
@@ -365,7 +373,7 @@ def get_video_reader(
         w = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         size = (w, h)
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # pyright: ignore[reportAttributeAccessIssue]
         video_writer = cv2.VideoWriter(os.path.join(save_dir, video_file_name), fourcc, fps, size)
     else:
         video_writer = None
@@ -378,10 +386,10 @@ def visualize_prediction(
     boxes: List[List],
     classes: List[str],
     masks: Optional[List[np.ndarray]] = None,
-    rect_th: float = None,
-    text_size: float = None,
-    text_th: float = None,
-    color: tuple = None,
+    rect_th: Optional[int] = None,
+    text_size: Optional[float] = None,
+    text_th: Optional[int] = None,
+    color: Optional[tuple] = None,
     hide_labels: bool = False,
     output_dir: Optional[str] = None,
     file_name: Optional[str] = "prediction_visual",
@@ -395,9 +403,9 @@ def visualize_prediction(
         boxes (List[List]): List of bounding boxes coordinates.
         classes (List[str]): List of class labels corresponding to each bounding box.
         masks (Optional[List[np.ndarray]], optional): List of masks corresponding to each bounding box. Defaults to None.
-        rect_th (float, optional): Thickness of the bounding box rectangle. Defaults to None.
+        rect_th (int, optional): Thickness of the bounding box rectangle. Defaults to None.
         text_size (float, optional): Size of the text for class labels. Defaults to None.
-        text_th (float, optional): Thickness of the text for class labels. Defaults to None.
+        text_th (int, optional): Thickness of the text for class labels. Defaults to None.
         color (tuple, optional): Color of the bounding box and text. Defaults to None.
         hide_labels (bool, optional): Whether to hide the class labels. Defaults to False.
         output_dir (Optional[str], optional): Output directory to save the visualization. Defaults to None.
@@ -422,7 +430,9 @@ def visualize_prediction(
     text_size = text_size or rect_th / 3
 
     # add masks to image if present
-    if masks is not None:
+    if masks is not None and color is None:
+        logger.error("Cannot add mask, no color tuple given")
+    elif masks is not None and color is not None:
         for mask in masks:
             # deepcopy mask so that original is not altered
             mask = copy.deepcopy(mask)
@@ -438,7 +448,13 @@ def visualize_prediction(
 
         # set color
         if colors is not None:
-            color = colors(class_)
+            mycolor = colors(class_)
+        elif color is not None:
+            mycolor = color
+        else:
+            logger.error("color cannot be defined")
+            continue
+
         # set bbox points
         point1, point2 = [int(box[0]), int(box[1])], [int(box[2]), int(box[3])]
         # visualize boxes
@@ -446,7 +462,7 @@ def visualize_prediction(
             image,
             point1,
             point2,
-            color=color,
+            color=mycolor,
             thickness=rect_th,
         )
 
@@ -459,7 +475,7 @@ def visualize_prediction(
             outside = point1[1] - box_height - 3 >= 0  # label fits outside box
             point2 = point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3
             # add bounding box text
-            cv2.rectangle(image, point1, point2, color, -1, cv2.LINE_AA)  # filled
+            cv2.rectangle(image, point1, point2, color or (0, 0, 0), -1, cv2.LINE_AA)  # filled
             cv2.putText(
                 image,
                 label,
@@ -473,7 +489,7 @@ def visualize_prediction(
         # create output folder if not present
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
-        save_path = os.path.join(output_dir, file_name + ".png")
+        save_path = os.path.join(output_dir, (file_name or "unknown") + ".png")
         cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
     elapsed_time = time.time() - elapsed_time
@@ -481,17 +497,17 @@ def visualize_prediction(
 
 
 def visualize_object_predictions(
-    image: np.array,
+    image: np.ndarray,
     object_prediction_list,
-    rect_th: int = None,
-    text_size: float = None,
-    text_th: float = None,
-    color: tuple = None,
+    rect_th: Optional[int] = None,
+    text_size: Optional[float] = None,
+    text_th: Optional[int] = None,
+    color: Optional[tuple] = None,
     hide_labels: bool = False,
     hide_conf: bool = False,
     output_dir: Optional[str] = None,
-    file_name: str = "prediction_visual",
-    export_format: str = "png",
+    file_name: Optional[str] = "prediction_visual",
+    export_format: Optional[str] = "png",
 ):
     """
     Visualizes prediction category names, bounding boxes over the source image
@@ -524,81 +540,101 @@ def visualize_object_predictions(
     # set text_size for category names
     text_size = text_size or rect_th / 3
 
-    # add masks to image if present
+    # add masks or obb polygons to image if present
     for object_prediction in object_prediction_list:
         # deepcopy object_prediction_list so that original is not altered
         object_prediction = object_prediction.deepcopy()
-        # visualize masks if present
-        if object_prediction.mask is not None:
-            # deepcopy mask so that original is not altered
-            mask = object_prediction.mask.bool_mask
-            # set color
-            if colors is not None:
-                color = colors(object_prediction.category.id)
-            # draw mask
-            rgb_mask = apply_color_mask(mask, color)
-            image = cv2.addWeighted(image, 1, rgb_mask, 0.6, 0)
-
-    # add bboxes to image if present
-    for object_prediction in object_prediction_list:
-        # deepcopy object_prediction_list so that original is not altered
-        object_prediction = object_prediction.deepcopy()
-
-        bbox = object_prediction.bbox.to_xyxy()
-        category_name = object_prediction.category.name
-        score = object_prediction.score.value
-
+        # arange label to be displayed
+        label = f"{object_prediction.category.name}"
+        if not hide_conf:
+            label += f" {object_prediction.score.value:.2f}"
         # set color
         if colors is not None:
             color = colors(object_prediction.category.id)
-        # set bbox points
-        point1, point2 = (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]))
-        # visualize boxes
-        cv2.rectangle(
-            image,
-            point1,
-            point2,
-            color=color,
-            thickness=rect_th,
-        )
+        # visualize masks or obb polygons if present
+        has_mask = object_prediction.mask is not None
+        is_obb_pred = False
+        if has_mask:
+            segmentation = object_prediction.mask.segmentation
+            if len(segmentation) == 1 and len(segmentation[0]) == 8:
+                is_obb_pred = True
 
-        if not hide_labels:
-            # arange bounding box text location
-            label = f"{category_name}"
+            if is_obb_pred:
+                points = np.array(segmentation).reshape((-1, 1, 2)).astype(np.int32)
+                cv2.polylines(image, [points], isClosed=True, color=color or (0, 0, 0), thickness=rect_th)
 
-            if not hide_conf:
-                label += f" {score:.2f}"
+                if not hide_labels:
+                    lowest_point = points[points[:, :, 1].argmax()][0]
+                    box_width, box_height = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[0]
+                    outside = lowest_point[1] - box_height - 3 >= 0
+                    text_bg_point1 = (
+                        lowest_point[0],
+                        lowest_point[1] - box_height - 3 if outside else lowest_point[1] + 3,
+                    )
+                    text_bg_point2 = (lowest_point[0] + box_width, lowest_point[1])
+                    cv2.rectangle(
+                        image, text_bg_point1, text_bg_point2, color or (0, 0, 0), thickness=-1, lineType=cv2.LINE_AA
+                    )
+                    cv2.putText(
+                        image,
+                        label,
+                        (lowest_point[0], lowest_point[1] - 2 if outside else lowest_point[1] + box_height + 2),
+                        0,
+                        text_size,
+                        (255, 255, 255),
+                        thickness=text_th,
+                    )
+            else:
+                # draw mask
+                rgb_mask = apply_color_mask(object_prediction.mask.bool_mask, color or (0, 0, 0))
+                image = cv2.addWeighted(image, 1, rgb_mask, 0.6, 0)
 
-            box_width, box_height = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[
-                0
-            ]  # label width, height
-            outside = point1[1] - box_height - 3 >= 0  # label fits outside box
-            point2 = point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3
-            # add bounding box text
-            cv2.rectangle(image, point1, point2, color, -1, cv2.LINE_AA)  # filled
-            cv2.putText(
+        # add bboxes to image if is_obb_pred=False
+        if not is_obb_pred:
+            bbox = object_prediction.bbox.to_xyxy()
+
+            # set bbox points
+            point1, point2 = (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]))
+            # visualize boxes
+            cv2.rectangle(
                 image,
-                label,
-                (point1[0], point1[1] - 2 if outside else point1[1] + box_height + 2),
-                0,
-                text_size,
-                (255, 255, 255),
-                thickness=text_th,
+                point1,
+                point2,
+                color=color or (0, 0, 0),
+                thickness=rect_th,
             )
+
+            if not hide_labels:
+                box_width, box_height = cv2.getTextSize(label, 0, fontScale=text_size, thickness=text_th)[
+                    0
+                ]  # label width, height
+                outside = point1[1] - box_height - 3 >= 0  # label fits outside box
+                point2 = point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3
+                # add bounding box text
+                cv2.rectangle(image, point1, point2, color or (0, 0, 0), -1, cv2.LINE_AA)  # filled
+                cv2.putText(
+                    image,
+                    label,
+                    (point1[0], point1[1] - 2 if outside else point1[1] + box_height + 2),
+                    0,
+                    text_size,
+                    (255, 255, 255),
+                    thickness=text_th,
+                )
 
     # export if output_dir is present
     if output_dir is not None:
         # export image with predictions
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
-        save_path = str(Path(output_dir) / (file_name + "." + export_format))
+        save_path = str(Path(output_dir) / ((file_name or "") + "." + (export_format or "")))
         cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
     elapsed_time = time.time() - elapsed_time
     return {"image": image, "elapsed_time": elapsed_time}
 
 
-def get_coco_segmentation_from_bool_mask(bool_mask):
+def get_coco_segmentation_from_bool_mask(bool_mask: np.ndarray) -> List[List[float]]:
     """
     Convert boolean mask to coco segmentation format
     [
@@ -610,7 +646,7 @@ def get_coco_segmentation_from_bool_mask(bool_mask):
     # Generate polygons from mask
     mask = np.squeeze(bool_mask)
     mask = mask.astype(np.uint8)
-    mask = cv2.copyMakeBorder(mask, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=0)
+    mask = cv2.copyMakeBorder(mask, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=(0, 0, 0))
     polygons = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE, offset=(-1, -1))
     polygons = polygons[0] if len(polygons) == 2 else polygons[1]
     # Convert polygon to coco segmentation
@@ -638,7 +674,7 @@ def get_bool_mask_from_coco_segmentation(coco_segmentation: List[List[float]], w
     size = [height, width]
     points = [np.array(point).reshape(-1, 2).round().astype(int) for point in coco_segmentation]
     bool_mask = np.zeros(size)
-    bool_mask = cv2.fillPoly(bool_mask, points, 1)
+    bool_mask = cv2.fillPoly(bool_mask, points, (1.0,))
     bool_mask.astype(bool)
     return bool_mask
 
@@ -696,9 +732,10 @@ def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> List[List[f
         obb_points: np.ndarray
             OBB points tensor from ultralytics.engine.results.OBB
             Shape: (4, 2) containing 4 points with (x,y) coordinates each
+
     Returns:
         List[List[float]]: Polygon points in COCO format
-            [[x1, y1, x2, y2, x3, y3, x4, y4, x1, y1], [...], ...]
+            [[x1, y1, x2, y2, x3, y3, x4, y4], [...], ...]
     """
     # Convert from (4,2) to [x1,y1,x2,y2,x3,y3,x4,y4] format
     points = obb_points.reshape(-1).tolist()
@@ -730,8 +767,8 @@ def ipython_display(image: np.ndarray):
 
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     _, ret = cv2.imencode(".png", image)
-    i = IPython.display.Image(data=ret)
-    IPython.display.display(i)
+    i = IPython.display.Image(data=ret)  # type: ignore
+    IPython.display.display(i)  # type: ignore
 
 
 def exif_transpose(image: Image.Image) -> Image.Image:
@@ -749,13 +786,13 @@ def exif_transpose(image: Image.Image) -> Image.Image:
     orientation = exif.get(0x0112, 1)  # default 1
     if orientation > 1:
         method = {
-            2: Image.FLIP_LEFT_RIGHT,
-            3: Image.ROTATE_180,
-            4: Image.FLIP_TOP_BOTTOM,
-            5: Image.TRANSPOSE,
-            6: Image.ROTATE_270,
-            7: Image.TRANSVERSE,
-            8: Image.ROTATE_90,
+            2: Image.Transpose.FLIP_LEFT_RIGHT,
+            3: Image.Transpose.ROTATE_180,
+            4: Image.Transpose.FLIP_TOP_BOTTOM,
+            5: Image.Transpose.TRANSPOSE,
+            6: Image.Transpose.ROTATE_270,
+            7: Image.Transpose.TRANSVERSE,
+            8: Image.Transpose.ROTATE_90,
         }.get(orientation)
         if method is not None:
             image = image.transpose(method)

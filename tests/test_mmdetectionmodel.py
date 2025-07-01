@@ -1,13 +1,22 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
-import unittest
+import sys
 
 import numpy as np
+import pytest
 
+from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
-from sahi.utils.file import download_from_url
+
+# Skip entire module if mmdet is not available
+pytest.importorskip("mmdet", reason="MMDet is not installed")
+pytest.importorskip("mmcv", reason="MMCV is not installed")
+pytest.importorskip("mmengine", reason="MMEngine is not installed")
+
 from sahi.utils.mmdet import MmdetTestConstants, download_mmdet_cascade_mask_rcnn_model, download_mmdet_yolox_tiny_model
+
+pytestmark = pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -15,7 +24,7 @@ IMAGE_SIZE = 320
 IMAGE_PATH = "tests/data/small-vehicles1.jpeg"
 
 
-class TestMmdetDetectionModel(unittest.TestCase):
+class TestMmdetDetectionModel:
     def test_load_model(self):
         from sahi.models.mmdet import MmdetDetectionModel
 
@@ -30,7 +39,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
             load_at_init=True,
         )
 
-        self.assertNotEqual(mmdet_detection_model.model, None)
+        assert mmdet_detection_model.model is not None
 
     def test_perform_inference_with_mask_output(self):
         from sahi.models.mmdet import MmdetDetectionModel
@@ -54,20 +63,21 @@ class TestMmdetDetectionModel(unittest.TestCase):
         # perform inference
         mmdet_detection_model.perform_inference(image)
         original_predictions = mmdet_detection_model.original_predictions
+        assert original_predictions
 
         # check actual prediction structures
         pred = original_predictions[0]
-        self.assertTrue("bboxes" in pred)
-        self.assertTrue("masks" in pred)
-        self.assertTrue("scores" in pred)
-        self.assertTrue("labels" in pred)
+        assert "bboxes" in pred
+        assert "masks" in pred
+        assert "scores" in pred
+        assert "labels" in pred
 
         # all annotations have the same length
         n_preds = len(pred["bboxes"])
-        self.assertTrue(len(pred["bboxes"]) == n_preds)
-        self.assertTrue(len(pred["masks"]) == n_preds)
-        self.assertTrue(len(pred["labels"]) == n_preds)
-        self.assertTrue(len(pred["scores"]) == n_preds)
+        assert len(pred["bboxes"]) == n_preds
+        assert len(pred["masks"]) == n_preds
+        assert len(pred["labels"]) == n_preds
+        assert len(pred["scores"]) == n_preds
 
         boxes = np.array(pred["bboxes"])
         scores = np.array(pred["scores"])
@@ -76,7 +86,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         idx = np.where(scores >= 0.5)[0]
 
         # compare
-        self.assertTrue([446, 304, 490, 346] in boxes[idx].astype(int))
+        assert [446, 304, 490, 346] in boxes[idx].astype(int)
 
     def test_perform_inference_without_mask_output(self):
         from sahi.models.mmdet import MmdetDetectionModel
@@ -101,12 +111,13 @@ class TestMmdetDetectionModel(unittest.TestCase):
         # perform inference
         mmdet_detection_model.perform_inference(image)
         original_predictions = mmdet_detection_model.original_predictions
+        assert original_predictions
 
         pred = original_predictions[0]
         n_preds = len(pred["bboxes"])
-        self.assertTrue(len(pred["bboxes"]) == n_preds)
-        self.assertTrue(len(pred["labels"]) == n_preds)
-        self.assertTrue(len(pred["scores"]) == n_preds)
+        assert len(pred["bboxes"]) == n_preds
+        assert len(pred["labels"]) == n_preds
+        assert len(pred["scores"]) == n_preds
         boxes = np.array(pred["bboxes"])
         labels = np.array(pred["labels"])
         scores = np.array(pred["scores"])
@@ -115,7 +126,7 @@ class TestMmdetDetectionModel(unittest.TestCase):
         idx = np.where((scores >= 0.5) & (labels == 2))[0][0]
 
         # compare
-        self.assertEqual(boxes[idx].astype(int).tolist(), [320, 323, 380, 365])
+        assert boxes[idx].astype(int).tolist() == [320, 323, 380, 365]
 
     def test_convert_original_predictions_with_mask_output(self):
         from sahi.models.mmdet import MmdetDetectionModel
@@ -144,21 +155,15 @@ class TestMmdetDetectionModel(unittest.TestCase):
         object_predictions = mmdet_detection_model.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_predictions), 3)
-        self.assertEqual(object_predictions[0].category.id, 2)
-        self.assertEqual(object_predictions[0].category.name, "car")
-        self.assertEqual(
-            object_predictions[0].bbox.to_xywh(),
-            [448, 308, 41, 36],
-        )
-        self.assertEqual(object_predictions[2].category.id, 2)
-        self.assertEqual(object_predictions[2].category.name, "car")
-        self.assertEqual(
-            object_predictions[2].bbox.to_xywh(),
-            [381, 280, 33, 30],
-        )
+        assert len(object_predictions) == 3
+        assert object_predictions[0].category.id == 2
+        assert object_predictions[0].category.name == "car"
+        assert object_predictions[0].bbox.to_xywh() == [448, 308, 41, 36]
+        assert object_predictions[2].category.id == 2
+        assert object_predictions[2].category.name == "car"
+        assert object_predictions[2].bbox.to_xywh() == [381, 280, 33, 30]
         for object_prediction in object_predictions:
-            self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
+            assert object_prediction.score.value >= CONFIDENCE_THRESHOLD
 
     def test_convert_original_predictions_without_mask_output(self):
         from sahi.models.mmdet import MmdetDetectionModel
@@ -183,23 +188,28 @@ class TestMmdetDetectionModel(unittest.TestCase):
         mmdet_detection_model.perform_inference(image)
 
         # convert predictions to ObjectPrediction list
-        mmdet_detection_model.convert_original_predictions(full_shape=(image.shape[0], image.shape[1]))
+        mmdet_detection_model.convert_original_predictions(full_shape=[image.shape[0], image.shape[1]])
         object_predictions = mmdet_detection_model.object_prediction_list
+        assert isinstance(object_predictions, list)
+        assert isinstance(object_predictions[0], ObjectPrediction)
+        assert isinstance(object_predictions[1], ObjectPrediction)
+        assert isinstance(object_predictions[2], ObjectPrediction)
 
         # compare
-        self.assertEqual(len(object_predictions), 3)
-        self.assertEqual(object_predictions[0].category.id, 2)
-        self.assertEqual(object_predictions[0].category.name, "car")
+        assert len(object_predictions) == 3
+        assert object_predictions[0].category.id == 2
+        assert object_predictions[0].category.name == "car"
         np.testing.assert_almost_equal(object_predictions[0].bbox.to_xywh(), [448, 308, 41, 36], decimal=1)
-        self.assertEqual(object_predictions[1].category.id, 2)
-        self.assertEqual(object_predictions[1].category.name, "car")
+        assert object_predictions[1].category.id == 2
+        assert object_predictions[1].category.name == "car"
         np.testing.assert_almost_equal(object_predictions[1].bbox.to_xywh(), [320, 327, 58, 36], decimal=1)
-        self.assertEqual(object_predictions[2].category.id, 2)
-        self.assertEqual(object_predictions[2].category.name, "car")
+        assert object_predictions[2].category.id == 2
+        assert object_predictions[2].category.name == "car"
         np.testing.assert_almost_equal(object_predictions[2].bbox.to_xywh(), [381, 280, 33, 30], decimal=1)
 
         for object_prediction in object_predictions:
-            self.assertGreaterEqual(object_prediction.score.value, CONFIDENCE_THRESHOLD)
+            assert isinstance(object_prediction, ObjectPrediction)
+            assert object_prediction.score.value >= CONFIDENCE_THRESHOLD
 
     def test_perform_inference_without_mask_output_with_automodel(self):
         from sahi import AutoDetectionModel
@@ -223,12 +233,13 @@ class TestMmdetDetectionModel(unittest.TestCase):
         # perform inference
         mmdet_detection_model.perform_inference(image)
         original_predictions = mmdet_detection_model.original_predictions
+        assert original_predictions
 
         pred = original_predictions[0]
         n_preds = len(pred["bboxes"])
-        self.assertTrue(len(pred["bboxes"]) == n_preds)
-        self.assertTrue(len(pred["labels"]) == n_preds)
-        self.assertTrue(len(pred["scores"]) == n_preds)
+        assert len(pred["bboxes"]) == n_preds
+        assert len(pred["labels"]) == n_preds
+        assert len(pred["scores"]) == n_preds
         boxes = np.array(pred["bboxes"])
         labels = np.array(pred["labels"])
         scores = np.array(pred["scores"])
@@ -237,8 +248,4 @@ class TestMmdetDetectionModel(unittest.TestCase):
         idx = np.where((scores >= 0.5) & (labels == 2))[0][0]
 
         # compare
-        self.assertEqual(boxes[idx].astype(int).tolist(), [320, 323, 380, 365])
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert boxes[idx].astype(int).tolist() == [320, 323, 380, 365]

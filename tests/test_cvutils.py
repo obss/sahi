@@ -1,4 +1,6 @@
-import unittest
+# OBSS SAHI Tool
+# Code written by Fatih C Akyon, 2025.
+
 from unittest.mock import patch
 
 import numpy as np
@@ -14,14 +16,14 @@ from sahi.utils.cv import (
 )
 
 
-class TestCvUtils(unittest.TestCase):
+class TestCvUtils:
     def test_hex_to_rgb(self):
         colors = Colors()
-        self.assertEqual(colors.hex_to_rgb("#FF3838"), (255, 56, 56))
+        assert colors.hex_to_rgb("#FF3838") == (255, 56, 56)
 
     def test_hex_to_rgb_retrieve(self):
         colors = Colors()
-        self.assertEqual(colors(0), (255, 56, 56))
+        assert colors(0) == (255, 56, 56)
 
     @patch("sahi.utils.cv.cv2.cvtColor")
     @patch("sahi.utils.cv.cv2.imread")
@@ -51,14 +53,14 @@ class TestCvUtils(unittest.TestCase):
     def test_get_coco_segmentation_from_bool_mask_simple(self):
         mask = np.zeros((10, 10), dtype=bool)
         result = get_coco_segmentation_from_bool_mask(mask)
-        self.assertEqual(result, [])
+        assert result == []
 
     def test_get_coco_segmentation_from_bool_mask_polygon(self):
         mask = np.zeros((10, 20), dtype=bool)
         mask[1:4, 1:4] = True
         mask[5:8, 5:8] = True
         result = get_coco_segmentation_from_bool_mask(mask)
-        self.assertEqual(len(result), 2)
+        assert len(result) == 2
 
     def test_get_bbox_from_bool_mask(self):
         mask = np.array(
@@ -71,12 +73,12 @@ class TestCvUtils(unittest.TestCase):
         )
         expected_result = [1, 1, 2, 2]
         result = get_bbox_from_bool_mask(mask)
-        self.assertEqual(result, expected_result)
+        assert result == expected_result
 
     def test_exif_transpose_simple(self):
         test_image = Image.new("RGB", (100, 100), color="red")
         transposed = exif_transpose(test_image)
-        self.assertEqual(transposed, test_image)
+        assert transposed == test_image
 
     def test_exif_transpose_non_standard(self):
         test_image = Image.new("RGB", (100, 100), color="red")
@@ -84,8 +86,4 @@ class TestCvUtils(unittest.TestCase):
         exif[0x0112] = 9
         test_image.info["exif"] = exif.tobytes()
         transposed = exif_transpose(test_image)
-        self.assertEqual(transposed, test_image)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert transposed == test_image

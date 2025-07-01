@@ -1,5 +1,6 @@
 from typing import Any, Dict, Optional
 
+from sahi.models.base import DetectionModel
 from sahi.utils.file import import_model_class
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
@@ -10,8 +11,7 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "detectron2": "Detectron2DetectionModel",
     "huggingface": "HuggingfaceDetectionModel",
     "torchvision": "TorchVisionDetectionModel",
-    "yolov5sparse": "Yolov5SparseDetectionModel",
-    "yolov8onnx": "Yolov8OnnxDetectionModel",
+    "roboflow": "RoboflowDetectionModel",
 }
 
 ULTRALYTICS_MODEL_NAMES = ["yolov8", "yolov11", "yolo11", "ultralytics"]
@@ -30,15 +30,15 @@ class AutoDetectionModel:
         category_mapping: Optional[Dict] = None,
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
-        image_size: int = None,
+        image_size: Optional[int] = None,
         **kwargs,
-    ):
+    ) -> DetectionModel:
         """
         Loads a DetectionModel from given path.
 
         Args:
             model_type: str
-                Name of the detection framework (example: "yolov5", "mmdet", "detectron2")
+                Name of the detection framework (example: "ultralytics", "huggingface", "torchvision")
             model_path: str
                 Path of the detection model (ex. 'model.pt')
             config_path: str
@@ -54,11 +54,13 @@ class AutoDetectionModel:
             category_remapping: dict: str to int
                 Remap category ids based on category names, after performing inference e.g. {"car": 3}
             load_at_init: bool
-                If True, automatically loads the model at initalization
+                If True, automatically loads the model at initialization
             image_size: int
                 Inference input size.
+
         Returns:
             Returns an instance of a DetectionModel
+
         Raises:
             ImportError: If given {model_type} framework is not installed
         """

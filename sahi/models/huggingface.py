@@ -2,6 +2,7 @@
 # Code written by Fatih C Akyon and Devrim Cavusoglu, 2022.
 
 import logging
+import os
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -10,7 +11,6 @@ import pybboxes.functional as pbf
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.cv import get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements, ensure_package_minimum_version
 
 logger = logging.getLogger(__name__)
@@ -29,10 +29,12 @@ class HuggingfaceDetectionModel(DetectionModel):
         category_mapping: Optional[Dict] = None,
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
-        image_size: int = None,
+        image_size: Optional[int] = None,
+        token: Optional[str] = None,
     ):
         self._processor = processor
         self._image_shapes = []
+        self._token = token
         super().__init__(
             model_path,
             model,
@@ -48,7 +50,7 @@ class HuggingfaceDetectionModel(DetectionModel):
 
     def check_dependencies(self):
         check_requirements(["torch", "transformers"])
-        ensure_package_minimum_version("transformers", "4.25.1")
+        ensure_package_minimum_version("transformers", "4.42.0")
 
     @property
     def processor(self):
@@ -68,13 +70,19 @@ class HuggingfaceDetectionModel(DetectionModel):
     def load_model(self):
         from transformers import AutoModelForObjectDetection, AutoProcessor
 
-        model = AutoModelForObjectDetection.from_pretrained(self.model_path)
+        hf_token = os.getenv("HF_TOKEN", self._token)
+        model = AutoModelForObjectDetection.from_pretrained(self.model_path, token=hf_token)
         if self.image_size is not None:
+            if model.base_model_prefix == "rt_detr_v2":
+                size = {"height": self.image_size, "width": self.image_size}
+            else:
+                size = {"shortest_edge": self.image_size, "longest_edge": None}
+            # use_fast=True raises error: AttributeError: 'SizeDict' object has no attribute 'keys'
             processor = AutoProcessor.from_pretrained(
-                self.model_path, size={"shortest_edge": self.image_size, "longest_edge": None}, do_resize=True
+                self.model_path, size=size, do_resize=True, use_fast=False, token=hf_token
             )
         else:
-            processor = AutoProcessor.from_pretrained(self.model_path)
+            processor = AutoProcessor.from_pretrained(self.model_path, use_fast=False, token=hf_token)
         self.set_model(model, processor)
 
     def set_model(self, model: Any, processor: Any = None):
@@ -100,7 +108,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         import torch
 
         # Confirm model is loaded
-        if self.model is None:
+        if self.model is None or self.processor is None:
             raise RuntimeError("Model is not loaded, load it by calling .load_model()")
 
         with torch.no_grad():
@@ -157,7 +165,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         """
         original_predictions = self._original_predictions
 
-        # compatilibty for sahi v0.8.15
+        # compatibility for sahi v0.8.15
         shift_amount_list = fix_shift_amount_list(shift_amount_list)
         full_shape_list = fix_full_shape_list(full_shape_list)
 
