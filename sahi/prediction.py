@@ -30,13 +30,13 @@ class PredictionScore:
         Check if score is greater than threshold
         """
         return self.value > threshold
-    
+
     def __eq__(self, threshold):
         return self.value == threshold
-    
+
     def __gt__(self, threshold):
         return self.value > threshold
-    
+
     def __lt__(self, threshold):
         return self.value < threshold
 
