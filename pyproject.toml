@@ -1,13 +1,13 @@
 [project]
 name = "sahi"
-version = "0.11.23"
+dynamic = ["version"]
 readme = "README.md"
 description = "A vision library for performing sliced inference on large images/small objects"
 requires-python = ">=3.8"
 license = "MIT"
 license-files = ["./LICENSE"]
 dependencies = [
-  "opencv-python<=4.10.0.84",
+  "opencv-python<=4.11.0.86",
   "shapely>=2.0.0",
   "tqdm>=4.48.2",
   "pillow>=8.2.0",
@@ -32,53 +32,65 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+maintainers = [
+  { name = "Fatih Cagatay Akyon (@fcakyon)" },
+]
 
 [project.urls]
-homepage = "https://github.com/obss/sahi"
+"Homepage" = "https://github.com/obss/sahi"
+"Source" = "https://github.com/obss/sahi"
+"Documentation" = "https://github.com/obss/sahi/tree/main/docs"
+"Bug Reports" = "https://github.com/obss/sahi/discussions/categories/q-a"
+"Changelog" = "https://github.com/obss/sahi/releases"
 
 [project.scripts]
 sahi = "sahi.cli:app"
 
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-xdist[psutil]>=3.0",
+  "ruff",
+  "jupyterlab>=3.0.14",
+]
+mmdet = [
+  # MMDetection dependencies - only for Python 3.11 and not on macOS ARM64
+  "mmengine;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
+  "mmcv==2.1.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
+  "mmdet==3.3.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
+  # numpy 2 is not compatible with torch 2.1.2
+  "numpy<2.0;python_version=='3.11'",
+]
+ci = [
+  # max supported pytorch version for python 3.8 is 2.4.1
+  # CPU versions for Linux/Windows CI
+  "torch==2.7.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
+  "torch==2.4.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
+  "torchvision==0.22.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
+  "torchvision==0.19.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
+  # Regular versions for macOS
+  "torch==2.7.0;python_version>='3.9' and platform_system=='Darwin'",
+  "torch==2.4.1;python_version=='3.8' and platform_system=='Darwin'",
+  "torchvision==0.22.0;python_version>='3.9' and platform_system=='Darwin'",
+  "torchvision==0.19.1;python_version=='3.8' and platform_system=='Darwin'",
+  # transformers is supported for python>=3.9
+  "transformers>=4.49.0;python_version>='3.9'",
+  # test roboflow only for python>=3.12
+  "inference>=0.50.3;python_version>='3.12'",
+  "rfdetr>=1.1.0;python_version>='3.12'",
+  # ultralytics onnx is supported for python>=3.10
+  "onnx;python_version>='3.10'",
+  "onnxruntime;python_version>='3.10'",
+  # These are available for all python versions
+  "pycocotools>=2.0.7",
+  "ultralytics>=8.3.161",
+  "scikit-image",
+  "fiftyone",
+]
+
 [tool.uv]
 find-links = [
   "https://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
-]
-default-groups = ["dev", "ci"]
-
-[dependency-groups]
-dev = [
-  "pytest",
-  "ruff",
-  "pre-commit>=2.0",
-  "jupyterlab>=3.0.14",
-  "matplotlib-stubs>=0.2.0",
-]
-ci = [
-  # pytorch should be present for all python versions
-  # CPU versions for Linux/Windows CI
-  "torch==2.6.0+cpu;python_version>='3.12' and platform_system!='Darwin'",
-  "torchvision==0.21.0+cpu;python_version>='3.12' and platform_system!='Darwin'",
-  "torch==2.1.2+cpu;python_version<'3.12' and platform_system!='Darwin'",
-  "torchvision==0.16.2+cpu;python_version<'3.12' and platform_system!='Darwin'",
-  # Regular versions for macOS
-  "torch==2.6.0;python_version>='3.12' and platform_system=='Darwin'",
-  "torchvision==0.21.0;python_version>='3.12' and platform_system=='Darwin'",
-  "torch==2.1.2;python_version<'3.12' and platform_system=='Darwin'",
-  "torchvision==0.16.2;python_version<'3.12' and platform_system=='Darwin'",
-  # mmdet is supported for python<3.12
-  "mmengine;python_version<'3.12'",
-  "mmcv==2.1.0;python_version<'3.12'",
-  "mmdet==3.3.0;python_version<'3.12'",
-  "onnxruntime<1.20;python_version<'3.12'",
-  "onnx>1.16;python_version>='3.12'",
-  "onnxruntime;python_version>='3.12'",
-  # transformers is supported for python>=3.9
-  "transformers>=4.49.0;python_version>='3.9'",
-  # These are available for all python versions
-  "pycocotools>=2.0.7",
-  "ultralytics>=8.3.86",
-  "scikit-image",
-  "fiftyone",
 ]
 
 [[tool.uv.index]]
@@ -90,6 +102,9 @@ explicit = true
 torch = [{ index = "pytorch-cpu" }]
 torchvision = [{ index = "pytorch-cpu" }]
 
+[tool.hatch.version]
+path = "sahi/__init__.py"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -97,6 +112,14 @@ build-backend = "hatchling.build"
 [tool.ruff]
 line-length = 120
 exclude = ["**/__init__.py", ".git", "__pycache__", "*.ipynb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]  # line too long
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 
 [tool.pytest.ini_options]
 minversion = "6.0"

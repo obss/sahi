@@ -14,7 +14,7 @@ from sahi.utils.file import Path
 
 
 class PredictionScore:
-    def __init__(self, value: float):
+    def __init__(self, value: Union[float, np.ndarray]):
         """
         Arguments:
             score: prediction score between 0 and 1
@@ -30,6 +30,15 @@ class PredictionScore:
         Check if score is greater than threshold
         """
         return self.value > threshold
+
+    def __eq__(self, threshold):
+        return self.value == threshold
+
+    def __gt__(self, threshold):
+        return self.value > threshold
+
+    def __lt__(self, threshold):
+        return self.value < threshold
 
     def __repr__(self):
         return f"PredictionScore: <value: {self.value}>"

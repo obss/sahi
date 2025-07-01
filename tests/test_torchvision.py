@@ -1,8 +1,5 @@
 # OBSS SAHI Tool
-# Code written by Kadir Nar, 2022.
-
-
-import unittest
+# Code written by Fatih C Akyon, 2025.
 
 import numpy as np
 
@@ -15,7 +12,7 @@ CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
 
 
-class TestTorchVisionDetectionModel(unittest.TestCase):
+class TestTorchVisionDetectionModel:
     def test_load_model(self):
         from torchvision.models.detection.faster_rcnn import RoIHeads
 
@@ -28,7 +25,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             category_remapping=None,
             load_at_init=True,
         )
-        self.assertEqual(isinstance(torchvision_detection_model.model.roi_heads, RoIHeads), True)
+        assert isinstance(torchvision_detection_model.model.roi_heads, RoIHeads)
 
     def test_load_model_without_config_path(self):
         from torchvision.models.detection.faster_rcnn import RoIHeads
@@ -41,7 +38,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             category_remapping=None,
             load_at_init=True,
         )
-        self.assertEqual(isinstance(torchvision_detection_model.model.roi_heads, RoIHeads), True)
+        assert isinstance(torchvision_detection_model.model.roi_heads, RoIHeads)
 
     def test_set_model(self):
         import torchvision
@@ -50,9 +47,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         from sahi.models.torchvision import TorchVisionDetectionModel
 
         NUM_CLASSES = 15
-        PRETRAINED = False
+        WEIGHTS = None  # Using weights=None instead of deprecated pretrained=False
 
-        model = torchvision.models.detection.ssd300_vgg16(num_classes=NUM_CLASSES, pretrained=PRETRAINED)
+        model = torchvision.models.detection.ssd300_vgg16(num_classes=NUM_CLASSES, weights=WEIGHTS)
         torchvision_detection_model = TorchVisionDetectionModel(
             model=model,
             confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -61,7 +58,7 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
             load_at_init=True,
         )
 
-        self.assertEqual(isinstance(torchvision_detection_model.model.head, SSDHead), True)
+        assert isinstance(torchvision_detection_model.model.head, SSDHead)
 
     def test_perform_inference_without_mask_output(self):
         from sahi.models.torchvision import TorchVisionDetectionModel
@@ -97,23 +94,23 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
 
         # ensure all box coords are valid
         for box_ind in range(len(boxes)):
-            self.assertEqual(len(boxes[box_ind]), 4)
-            self.assertTrue(boxes[box_ind][0] <= image_width)
-            self.assertTrue(boxes[box_ind][1] <= image_height)
-            self.assertTrue(boxes[box_ind][2] <= image_width)
-            self.assertTrue(boxes[box_ind][3] <= image_height)
+            assert len(boxes[box_ind]) == 4
+            assert boxes[box_ind][0] <= image_width
+            assert boxes[box_ind][1] <= image_height
+            assert boxes[box_ind][2] <= image_width
+            assert boxes[box_ind][3] <= image_height
             for coord_ind in range(len(boxes[box_ind])):
-                self.assertTrue(boxes[box_ind][coord_ind] >= 0)
+                assert boxes[box_ind][coord_ind] >= 0
 
         # ensure all category ids are valid
         for category_id_ind in range(len(category_ids)):
-            self.assertTrue(category_ids[category_id_ind] < len(COCO_CLASSES))
-            self.assertTrue(category_ids[category_id_ind] >= 0)
+            assert category_ids[category_id_ind] < len(COCO_CLASSES)
+            assert category_ids[category_id_ind] >= 0
 
         # ensure all scores are valid
         for score_ind in range(len(scores)):
-            self.assertTrue(scores[score_ind] <= 1)
-            self.assertTrue(scores[score_ind] >= 0)
+            assert scores[score_ind] <= 1
+            assert scores[score_ind] >= 0
 
     def test_convert_original_predictions_without_mask_output(self):
         from sahi.models.torchvision import TorchVisionDetectionModel
@@ -141,9 +138,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         assert isinstance(object_prediction_list[0], ObjectPrediction)
 
         # compare
-        self.assertEqual(len(object_prediction_list), 7)
-        self.assertEqual(object_prediction_list[0].category.id, 3)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
+        assert len(object_prediction_list) == 7
+        assert object_prediction_list[0].category.id == 3
+        assert object_prediction_list[0].category.name == "car"
         np.testing.assert_almost_equal(
             object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
         )
@@ -174,9 +171,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         assert isinstance(object_prediction_list[0], ObjectPrediction)
 
         # compare
-        self.assertEqual(len(object_prediction_list), 7)
-        self.assertEqual(object_prediction_list[0].category.id, 3)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
+        assert len(object_prediction_list) == 7
+        assert object_prediction_list[0].category.id == 3
+        assert object_prediction_list[0].category.name == "car"
         np.testing.assert_almost_equal(
             object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
         )
@@ -211,9 +208,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 7)
-        self.assertEqual(object_prediction_list[0].category.id, 3)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
+        assert len(object_prediction_list) == 7
+        assert object_prediction_list[0].category.id == 3
+        assert object_prediction_list[0].category.name == "car"
         np.testing.assert_almost_equal(
             object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
         )
@@ -262,13 +259,9 @@ class TestTorchVisionDetectionModel(unittest.TestCase):
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        self.assertEqual(len(object_prediction_list), 20)
-        self.assertEqual(object_prediction_list[0].category.id, 3)
-        self.assertEqual(object_prediction_list[0].category.name, "car")
+        assert len(object_prediction_list) == 20
+        assert object_prediction_list[0].category.id == 3
+        assert object_prediction_list[0].category.name == "car"
         np.testing.assert_almost_equal(
             object_prediction_list[0].bbox.to_xywh(), [765.81, 259.37, 28.62, 24.63], decimal=1
         )
-
-
-if __name__ == "__main__":
-    unittest.main()
