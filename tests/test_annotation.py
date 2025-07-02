@@ -3,6 +3,8 @@
 
 import logging
 
+import pytest
+
 logger = logging.getLogger(__name__)
 
 
@@ -13,7 +15,7 @@ class TestAnnotation:
         bbox_minmax = [30.0, 30.0, 100.0, 150.0]
         shift_amount = [50, 40]
 
-        bbox = BoundingBox(bbox_minmax, shift_amount=[0, 0])
+        bbox = BoundingBox(bbox_minmax)
         expanded_bbox = bbox.get_expanded_box(ratio=0.1)
 
         bbox = BoundingBox(bbox_minmax, shift_amount=shift_amount)
@@ -23,6 +25,34 @@ class TestAnnotation:
         assert expanded_bbox.to_xywh() == [18, 23, 94, 134]
         assert expanded_bbox.to_xyxy() == [18, 23, 112, 157]
         assert shifted_bbox.to_xyxy() == [80, 70, 150, 190]
+
+    def test_bounding_box_immutability(self):
+        import dataclasses
+
+        from sahi.annotation import BoundingBox
+
+        bbox_tuple = (10.0, 20.0, 30.0, 40.0)
+        bbox = BoundingBox(bbox_tuple)
+
+        # Attempt to mutate the box tuple directly
+        with pytest.raises(TypeError):
+            bbox.box[0] = 99.0
+
+        # Attempt to mutate the shift_amount tuple directly
+        with pytest.raises(TypeError):
+            bbox.shift_amount[0] = 99
+
+        # Attempt to assign a new value to an attribute
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            bbox.box = (1.0, 2.0, 3.0, 4.0)
+
+        # Attempt to assign a new value to a property
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            bbox.minx = 123.0
+
+        # Confirm the values remain unchanged
+        assert bbox.box == bbox_tuple
+        assert bbox.shift_amount == (0, 0)
 
     def test_category(self):
         from sahi.annotation import Category
