@@ -5,7 +5,7 @@ import concurrent.futures
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union, Literal
 
 import numpy as np
 from PIL import Image
@@ -501,7 +501,7 @@ def slice_coco(
     return coco_dict, save_path
 
 
-def calc_ratio_and_slice(orientation, slide=1, ratio=0.1):
+def calc_ratio_and_slice(orientation: Literal["vertical", "horizontal", "square"], slide: int=1, ratio: float=0.1):
     """
     According to image resolution calculation overlap params
     Args:
@@ -518,6 +518,8 @@ def calc_ratio_and_slice(orientation, slide=1, ratio=0.1):
         slice_row, slice_col, overlap_height_ratio, overlap_width_ratio = slide * 2, slide, ratio, ratio
     elif orientation == "square":
         slice_row, slice_col, overlap_height_ratio, overlap_width_ratio = slide, slide, ratio, ratio
+    else:
+        raise ValueError(f"Invalid orientation: {orientation}. Must be one of 'vertical', 'horizontal', or 'square'.")
 
     return slice_row, slice_col, overlap_height_ratio, overlap_width_ratio  # noqa
 
