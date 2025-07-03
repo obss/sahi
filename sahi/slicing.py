@@ -32,27 +32,30 @@ def get_slice_bboxes(
     image_width: int,
     slice_height: Optional[int] = None,
     slice_width: Optional[int] = None,
-    auto_slice_resolution: bool = True,
-    overlap_height_ratio: float = 0.2,
-    overlap_width_ratio: float = 0.2,
+    auto_slice_resolution: Optional[bool] = True,
+    overlap_height_ratio: Optional[float] = 0.2,
+    overlap_width_ratio: Optional[float] = 0.2,
 ) -> List[List[int]]:
-    """Slices `image_pil` in crops.
-    Corner values of each slice will be generated using the `slice_height`,
-    `slice_width`, `overlap_height_ratio` and `overlap_width_ratio` arguments.
+    """Generate bounding boxes for slicing an image into crops.
+
+    The function calculates the coordinates for each slice based on the provided
+    image dimensions, slice size, and overlap ratios. If slice size is not provided
+    and auto_slice_resolution is True, the function will automatically determine
+    appropriate slice parameters.
 
     Args:
         image_height (int): Height of the original image.
         image_width (int): Width of the original image.
         slice_height (int, optional): Height of each slice. Default None.
         slice_width (int, optional): Width of each slice. Default None.
-        overlap_height_ratio(float): Fractional overlap in height of each
+        overlap_height_ratio (float, optional): Fractional overlap in height of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
-        overlap_width_ratio(float): Fractional overlap in width of each
+        overlap_width_ratio(float, optional): Fractional overlap in width of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
-        auto_slice_resolution (bool): if not set slice parameters such as slice_height and slice_width,
-            it enables automatically calculate these params from image resolution and orientation.
+        auto_slice_resolution (bool, optional): if not set slice parameters such as slice_height and slice_width,
+            it enables automatically calculate these parameters from image resolution and orientation.
 
     Returns:
         List[List[int]]: List of 4 corner coordinates for each N slices.
