@@ -5,7 +5,7 @@ import concurrent.futures
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple, Union, Literal
+from typing import Dict, List, Literal, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from PIL import Image
@@ -501,7 +501,7 @@ def slice_coco(
     return coco_dict, save_path
 
 
-def calc_ratio_and_slice(orientation: Literal["vertical", "horizontal", "square"], slide: int=1, ratio: float=0.1):
+def calc_ratio_and_slice(orientation: Literal["vertical", "horizontal", "square"], slide: int = 1, ratio: float = 0.1):
     """
     According to image resolution calculation overlap params
     Args:
