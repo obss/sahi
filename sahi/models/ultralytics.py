@@ -7,6 +7,7 @@ from typing import Any, List, Optional
 import cv2
 import numpy as np
 import torch
+from ultralytics.engine.results import Masks
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
@@ -184,7 +185,7 @@ class UltralyticsDetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
+        shift_amount_list=None,
         full_shape_list: Optional[List[List[int]]] = None,
     ):
         """
@@ -198,6 +199,8 @@ class UltralyticsDetectionModel(DetectionModel):
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
+        if shift_amount_list is None:
+            shift_amount_list = [[0, 0]]
         original_predictions = self._original_predictions
 
         # compatibility for sahi v0.8.15
@@ -214,10 +217,14 @@ class UltralyticsDetectionModel(DetectionModel):
 
             # Extract boxes and optional masks/obb
             if self.has_mask or self.is_obb:
-                boxes = image_predictions[0].cpu().detach().numpy()
-                masks_or_points = image_predictions[1].cpu().detach().numpy()
+                boxes = image_predictions.boxes.data.cpu().detach().numpy()
+                if image_predictions.masks is None:
+                    image_predictions.masks = Masks(
+                        torch.tensor([], device=self.model.device), image_predictions.boxes.orig_shape
+                    )
+                masks_or_points = image_predictions.masks.data.cpu().detach().numpy()
             else:
-                boxes = image_predictions.data.cpu().detach().numpy()
+                boxes = image_predictions.boxes.data.cpu().detach().numpy()
                 masks_or_points = None
 
             # Process each prediction
@@ -247,10 +254,20 @@ class UltralyticsDetectionModel(DetectionModel):
                     if self.has_mask:
                         bool_mask = masks_or_points[pred_ind]
                         # Resize mask to original image size
-                        bool_mask = cv2.resize(
-                            bool_mask.astype(np.uint8), (self._original_shape[1], self._original_shape[0])
-                        )
+                        orig_h, orig_w = original_predictions[image_ind].orig_shape
+
+                        # BUG: sahi新版本中,如果对原图进行推理, 则需要进行letterbox处理
+                        if list(original_predictions[-1].orig_shape) == full_shape_list[-1]:
+                            # 逆 letter_box
+                            target_h, target_w = bool_mask.shape
+                            (_, _, _), (pad_left, pad_top, pad_right, pad_bottom) = self.get_letter_args(
+                                (orig_h, orig_w), (target_h, target_w)
+                            )
+                            bool_mask = bool_mask[pad_top : target_h - pad_bottom, pad_left : target_w - pad_right]
+
+                        bool_mask = cv2.resize(bool_mask.astype(np.uint8), (orig_w, orig_h))
                         segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
+
                     else:  # is_obb
                         obb_points = masks_or_points[pred_ind]  # Get OBB points for this prediction
                         segmentation = [obb_points.reshape(-1).tolist()]
@@ -273,3 +290,32 @@ class UltralyticsDetectionModel(DetectionModel):
             object_prediction_list_per_image.append(object_prediction_list)
 
         self._object_prediction_list_per_image = object_prediction_list_per_image
+
+    @staticmethod
+    def get_letter_args(
+        orig_size: tuple[int, int],
+        target_size: tuple[int, int] = (640, 640),
+    ) -> tuple[tuple[int, int, float], tuple[int, int, int, int]]:
+        """
+        获取 resize尺寸 和 pad尺寸
+
+        :param orig_size: 原始图像尺寸 h, w
+        :param target_size: 目标尺寸 h, w
+        :return: resize尺寸和缩放比例(r_h, r_w, ratio) 和 pad尺寸(p_left, p_top, p_right, p_bottom)
+        """
+        # 获取原始图像尺寸
+        orig_height, orig_width = orig_size
+        target_height, target_width = target_size
+
+        # 计算缩放比例, 保持宽高比
+        ratio = min(target_width / orig_width, target_height / orig_height)
+        new_width = int(orig_width * ratio)
+        new_height = int(orig_height * ratio)
+
+        # 计算需要填充的像素
+        pad_left = (target_width - new_width) // 2
+        pad_top = (target_height - new_height) // 2
+        pad_right = target_width - new_width - pad_left
+        pad_bottom = target_height - new_height - pad_top
+
+        return (new_height, new_width, ratio), (pad_left, pad_top, pad_right, pad_bottom)
