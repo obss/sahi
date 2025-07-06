@@ -265,6 +265,7 @@ def get_sliced_prediction(
     )
 
     postprocess_time = 0
+    time_start = time.time()
 
     # create prediction input
     num_group = int(num_slices / num_batch)
@@ -325,7 +326,7 @@ def get_sliced_prediction(
         postprocess_time += time.time() - postprocess_time_start
 
     time_end = time.time() - time_start
-    durations_in_seconds["prediction"] = time_end
+    durations_in_seconds["prediction"] = time_end - postprocess_time
     durations_in_seconds["postprocess"] = postprocess_time
 
     if verbose == 2:
