@@ -264,6 +264,9 @@ def get_sliced_prediction(
         class_agnostic=postprocess_class_agnostic,
     )
 
+    postprocess_time = 0
+    time_start = time.time()
+
     # create prediction input
     num_group = int(num_slices / num_batch)
     if verbose == 1 or verbose == 2:
@@ -296,7 +299,9 @@ def get_sliced_prediction(
 
         # merge matching predictions during sliced prediction
         if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
+            postprocess_time_start = time.time()
             object_prediction_list = postprocess(object_prediction_list)
+            postprocess_time += time.time() - postprocess_time_start
 
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
@@ -316,10 +321,13 @@ def get_sliced_prediction(
 
     # merge matching predictions
     if len(object_prediction_list) > 1:
+        postprocess_time_start = time.time()
         object_prediction_list = postprocess(object_prediction_list)
+        postprocess_time += time.time() - postprocess_time_start
 
     time_end = time.time() - time_start
-    durations_in_seconds["prediction"] = time_end
+    durations_in_seconds["prediction"] = time_end - postprocess_time
+    durations_in_seconds["postprocess"] = postprocess_time
 
     if verbose == 2:
         print(
@@ -330,6 +338,11 @@ def get_sliced_prediction(
         print(
             "Prediction performed in",
             durations_in_seconds["prediction"],
+            "seconds.",
+        )
+        print(
+            "Postprocessing performed in",
+            durations_in_seconds["postprocess"],
             "seconds.",
         )
 
@@ -588,7 +601,8 @@ def predict(
             relative_filepath = video_name + "_frame_" + str(ind)
         elif isinstance(image_path, Image.Image):
             raise RuntimeError("Source is not a video, but image is still an Image object ")
-        elif source and os.path.isdir(source):  # preserve source folder structure in export
+        # preserve source folder structure in export
+        elif source and os.path.isdir(source):
             relative_filepath = str(Path(image_path)).split(str(Path(source)))[-1]
             relative_filepath = relative_filepath[1:] if relative_filepath[0] == os.sep else relative_filepath
         else:  # no process if source is single file
