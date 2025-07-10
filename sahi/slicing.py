@@ -35,7 +35,7 @@ def get_slice_bboxes(
     auto_slice_resolution: bool = True,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
-    inference_org_image: bool = False
+    inference_org_image: bool = False,
 ) -> List[List[int]]:
     """Slices `image_pil` in crops.
     Corner values of each slice will be generated using the `slice_height`,
@@ -242,10 +242,10 @@ class SliceImageResult:
     def __getitem__(self, i):
         def _prepare_ith_dict(i):
             return {
-                "image"         : self.images[i],
-                "coco_image"    : self.coco_images[i],
+                "image": self.images[i],
+                "coco_image": self.coco_images[i],
                 "starting_pixel": self.starting_pixels[i],
-                "filename"      : self.filenames[i],
+                "filename": self.filenames[i],
             }
 
         if isinstance(i, np.ndarray):
@@ -279,7 +279,7 @@ def slice_image(
     min_area_ratio: float = 0.1,
     out_ext: Optional[str] = None,
     verbose: bool = False,
-    inference_org_image: bool = False
+    inference_org_image: bool = False,
 ) -> SliceImageResult:
     """Slice a large image into smaller windows. If output_file_name is given export
     sliced images.
@@ -349,7 +349,7 @@ def slice_image(
         slice_width=slice_width,
         overlap_height_ratio=overlap_height_ratio,
         overlap_width_ratio=overlap_width_ratio,
-        inference_org_image=inference_org_image
+        inference_org_image=inference_org_image,
     )
 
     n_ims = 0

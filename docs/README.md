@@ -10,7 +10,7 @@ Welcome to the SAHI documentation! This directory contains detailed guides and t
 - Batch prediction usage
 - Class exclusion during inference
 - Visualization parameters and export formats
-- Interactive examples with various model integrations (YOLOv8, MMDetection, etc.)
+- Interactive examples with various model integrations (YOLO11, MMDetection, etc.)
 
 ### [Slicing Utilities](slicing.md)
 - Guide for slicing large images and datasets
@@ -56,7 +56,6 @@ All documentation files are complemented by interactive Jupyter notebooks in the
 - `inference_for_huggingface.ipynb` - HuggingFace models integration
 - `inference_for_torchvision.ipynb` - TorchVision models integration
 - `inference_for_rtdetr.ipynb` - RT-DETR integration
-- `inference_for_sparse_yolov5.ipynb` - DeepSparse optimized inference
 
 ## Getting Started
 

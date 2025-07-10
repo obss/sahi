@@ -6,6 +6,8 @@ on:
       - "**.md"
       - "**.ipynb"
       - "**.cff"
+      - "docs/**"
+      - "demo/**"
 
   pull_request:
     branches: [main]
@@ -13,6 +15,8 @@ on:
       - "**.md"
       - "**.ipynb"
       - "**.cff"
+      - "docs/**"
+      - "demo/**"
 
   schedule:
     - cron: "0 0 * * *" # Runs at 00:00 UTC every day
@@ -28,25 +32,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup uv python package manager
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
           prune-cache: false
+          cache-dependency-glob: |
+            **/pyproject.toml
       # For python 3.8 and 3.9, it does no suffice to install opencv-python-headless
       # https://itsmycode.com/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directory/
       - name: Cache apt packages
         uses: actions/cache@v4
+        # Only cache apt packages when running GitHub Actions locally with 'act' tool
         if: ${{ env.ACT }}
         with:
           path: /var/cache/apt
           key: apt-cache
+      - name: Cache model weights
+        uses: actions/cache@v4
+        with:
+          path: tests/data/models
+          key: ${{ runner.os }}-models-${{ hashFiles('sahi/utils/huggingface.py', 'sahi/utils/yolov5.py', 'sahi/utils/ultralytics.py', 'sahi/utils/rtdetr.py', 'sahi/utils/torchvision.py') }}
+          restore-keys: |
+            ${{ runner.os }}-models-
       - name: Install libgl
         run: sudo apt-get update && sudo apt-get install -y libgl1
-      - name: Debug uv sync
+      - name: Install dependencies
         run: |
           set -e
-          uv sync -v
+          uv sync --extra dev --extra ci
+      - name: List installed packages
+        run: |
+          echo "=== Installed Python packages ==="
+          uv pip list
+          echo ""
+          echo "=== Python version ==="
+          python --version
+          echo ""
+          echo "=== uv version ==="
+          uv --version
       - name: Verify .venv Activation
         run: |
           if [ ! -d ".venv" ]; then
@@ -66,8 +90,9 @@ jobs:
       - name: Test with python ${{ matrix.python-version }}
         run: |
           source .venv/bin/activate
-          pytest --capture=no
-      - name: Test SAHI CLI
+          # Exclude MMDet tests which run in a separate workflow
+          pytest --capture=no -n auto -k "not (mmdet or test_get_prediction_mmdet or test_get_sliced_prediction_mmdet or test_mmdet_yolox_tiny_prediction)"
+      - name: Test SAHI CLI (without MMDet)
         run: |
           source .venv/bin/activate
           set -e
@@ -81,11 +106,3 @@ jobs:
           sahi coco evaluate --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json
           # coco analyse
           sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
-      - name: Test SAHI CLI with MMCV
-        if: matrix.python-version != '3.12'
-        run: |
-          source .venv/bin/activate
-          set -e
-          sahi predict --model_type mmdet --source tests/data/ --novisual --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
-          sahi predict --model_type mmdet --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
-          sahi predict --model_type mmdet --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320

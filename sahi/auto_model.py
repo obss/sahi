@@ -11,8 +11,7 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "detectron2": "Detectron2DetectionModel",
     "huggingface": "HuggingfaceDetectionModel",
     "torchvision": "TorchVisionDetectionModel",
-    "yolov5sparse": "Yolov5SparseDetectionModel",
-    "yolov8onnx": "Yolov8OnnxDetectionModel",
+    "roboflow": "RoboflowDetectionModel",
 }
 
 ULTRALYTICS_MODEL_NAMES = ["yolov8", "yolov11", "yolo11", "ultralytics"]

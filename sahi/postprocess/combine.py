@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 # TODO: sahi只编写了基于box的nms, 需要添加基于mask的nms
 
+
 def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):
     """
     Apply non-maximum suppression to avoid detecting too many
