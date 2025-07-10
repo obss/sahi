@@ -46,13 +46,12 @@ from sahi.utils.import_utils import check_requirements
 
 POSTPROCESS_NAME_TO_CLASS = {
     "GREEDYNMM": GreedyNMMPostprocess,
-    "NMM": NMMPostprocess,
-    "NMS": NMSPostprocess,
-    "LSNMS": LSNMSPostprocess,
+    "NMM"      : NMMPostprocess,
+    "NMS"      : NMSPostprocess,
+    "LSNMS"    : LSNMSPostprocess,
 }
 
 LOW_MODEL_CONFIDENCE = 0.1
-
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +61,7 @@ def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_
         obj_pred
         for obj_pred in object_prediction_list
         if obj_pred.category.name not in (exclude_classes_by_name or [])
-        and obj_pred.category.id not in (exclude_classes_by_id or [])
+           and obj_pred.category.id not in (exclude_classes_by_id or [])
     ]
 
 
@@ -110,7 +109,7 @@ def get_prediction(
     # get prediction
     time_start = time.time()
     # detection_model.perform_inference(np.ascontiguousarray(image_as_pil))
-    detection_model._original_predictions = detection_model.model(np.ascontiguousarray(image_as_pil))
+    detection_model._original_predictions = detection_model.model(np.ascontiguousarray(image_as_pil), verbose=False if verbose == 0 else True)
 
     time_end = time.time() - time_start
     durations_in_seconds["prediction"] = time_end
@@ -582,7 +581,7 @@ def predict(
 
     input_type_str = "video frames" if source_is_video else "images"
     for ind, image_path in enumerate(
-        tqdm(image_iterator, f"Performing inference on {input_type_str}", total=num_frames)
+            tqdm(image_iterator, f"Performing inference on {input_type_str}", total=num_frames)
     ):
         # Source is an image: Iterating over Image objects
         if source and source_is_video:
