@@ -189,13 +189,10 @@ def greedy_nmm(
     Args:
         object_predictions_as_tensor: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
-        object_predictions_as_list: ObjectPredictionList Object prediction objects
-            to be merged.
         match_metric: (str) IOU or IOS
-        match_threshold: (float) The overlap thresh for
-            match metric.
+        match_threshold: (float) The overlap thresh for match metric.
     Returns:
-        keep_to_merge_list: (Dict[int:List[int]]) mapping from prediction indices
+        keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
         to keep to a list of prediction indices to be merged.
     """
     keep_to_merge_list = {}
