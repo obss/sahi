@@ -63,6 +63,33 @@ class TestAnnotation:
         assert category.id == category_id
         assert category.name == category_name
 
+        # id must be int
+        with pytest.raises(TypeError):
+            Category(id="not-an-int", name="car")
+
+        # name must be str
+        with pytest.raises(TypeError):
+            Category(id=1, name=123)
+
+    def test_category_immutability(self):
+        import dataclasses
+
+        from sahi.annotation import Category
+
+        category = Category(id=5, name="person")
+
+        # Attempt to mutate the id directly
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            category.id = 10
+
+        # Attempt to mutate the name directly
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            category.name = "cat"
+
+        # Confirm the values remain unchanged
+        assert category.id == 5
+        assert category.name == "person"
+
     def test_mask(self):
         from sahi.annotation import Mask
 
