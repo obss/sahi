@@ -145,25 +145,20 @@ class BoundingBox:
         return f"BoundingBox: <{(self.minx, self.miny, self.maxx, self.maxy)}, w: {self.maxx - self.minx}, h: {self.maxy - self.miny}>"
 
 
+@dataclass(frozen=True)
 class Category:
     """
     Category of the annotation.
     """
 
-    def __init__(self, id=None, name=None):
-        """
-        Args:
-            id: int
-                ID of the object category
-            name: str
-                Name of the object category
-        """
-        if not isinstance(id, int):
+    id: int
+    name: str
+
+    def __post_init__(self):
+        if not isinstance(self.id, int):
             raise TypeError("id should be integer")
-        if not isinstance(name, str):
+        if not isinstance(self.name, str):
             raise TypeError("name should be string")
-        self.id = id
-        self.name = name
 
     def __repr__(self):
         return f"Category: <id: {self.id}, name: {self.name}>"
