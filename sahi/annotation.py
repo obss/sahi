@@ -41,7 +41,7 @@ class BoundingBox:
         shifted_bbox = bbox.get_shifted_box()
         coco_format = bbox.to_coco_bbox()
         ```
-    
+
     """
 
     box: Union[Tuple[float, float, float, float], List[float]]
