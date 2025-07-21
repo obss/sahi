@@ -1,0 +1,5 @@
+# netlify.toml
+[build]
+  command = "pip install -r pyproject.toml --group docs && mkdocs build"
+  publish = "site/"
+  environment = { PYTHON_VERSION = "3.10"}
