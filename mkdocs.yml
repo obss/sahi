@@ -98,6 +98,9 @@ nav:
       - 'Command Line Interface':
           - cli.md
 
+  - Contributing: contributing.md
+  - License: license.md
+
 plugins:
   - search
   - mkdocstrings:
