@@ -4,7 +4,7 @@
 import copy
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -33,15 +33,18 @@ class BoundingBox:
         shift_amount (Tuple[int, int], optional): The amount to shift the bounding box in the x and y directions.
             Defaults to (0, 0).
 
-    Usage:
+    !!! example "BoundingBox Usage Example"
+        ```python
         bbox = BoundingBox((10.0, 20.0, 50.0, 80.0))
         area = bbox.area
         expanded_bbox = bbox.get_expanded_box(ratio=0.2)
         shifted_bbox = bbox.get_shifted_box()
         coco_format = bbox.to_coco_bbox()
+        ```
+    
     """
 
-    box: Tuple[float, float, float, float]
+    box: Union[Tuple[float, float, float, float], List[float]]
     shift_amount: Tuple[int, int] = (0, 0)
 
     def __post_init__(self):
@@ -83,6 +86,7 @@ class BoundingBox:
         Returns an expanded bounding box by increasing its size by a given ratio.
         The expansion is applied equally in all directions. Optionally, the expanded box
         can be clipped to maximum x and y boundaries.
+
         Args:
             ratio (float, optional): The proportion by which to expand the box size.
                 Default is 0.1 (10%).
@@ -90,6 +94,7 @@ class BoundingBox:
                 If None, no maximum is applied.
             max_y (int, optional): The maximum allowed y-coordinate for the expanded box.
                 If None, no maximum is applied.
+
         Returns:
             BoundingBox: A new BoundingBox instance representing the expanded box.
         """
@@ -102,7 +107,7 @@ class BoundingBox:
         minx = max(0, self.minx - x_mar)
         maxy = min(max_y, self.maxy + y_mar) if max_y else self.maxy + y_mar
         miny = max(0, self.miny - y_mar)
-        box = [minx, miny, maxx, maxy]
+        box: list[float] = [minx, miny, maxx, maxy]
         return BoundingBox(box)
 
     def to_xywh(self):
