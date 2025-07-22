@@ -112,31 +112,47 @@ class BoundingBox:
 
     def to_xywh(self):
         """
-        Returns: [xmin, ymin, width, height]
+        Returns [xmin, ymin, width, height]
+        
+        Returns:
+            List[float]: A list containing the bounding box in the format [xmin, ymin, width, height].
         """
+
         return [self.minx, self.miny, self.maxx - self.minx, self.maxy - self.miny]
 
     def to_coco_bbox(self):
         """
         Returns the bounding box in COCO format: [xmin, ymin, width, height]
+        
+        Returns:
+            List[float]: A list containing the bounding box in COCO format.
         """
         return self.to_xywh()
 
     def to_xyxy(self):
         """
         Returns: [xmin, ymin, xmax, ymax]
+        
+        Returns:
+            List[float]: A list containing the bounding box in the format [xmin, ymin, xmax, ymax].
         """
         return [self.minx, self.miny, self.maxx, self.maxy]
 
     def to_voc_bbox(self):
         """
         Returns the bounding box in VOC format: [xmin, ymin, xmax, ymax]
+        
+        Returns:
+            List[float]: A list containing the bounding box in VOC format.
         """
         return self.to_xyxy()
 
     def get_shifted_box(self):
         """
-        Returns: shifted BoundingBox
+        Returns shifted BoundingBox
+
+        Returns:
+            BoundingBox: A new BoundingBox instance representing the shifted box.
         """
         box = [
             self.minx + self.shift_x,
@@ -154,6 +170,11 @@ class BoundingBox:
 class Category:
     """
     Category of the annotation.
+    
+    Attributes:
+        id (int): Unique identifier for the category.
+        name (str): Name of the category.
+        
     """
 
     id: int
