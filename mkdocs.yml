@@ -83,18 +83,6 @@ nav:
           - utils/coco.md
           - utils/cv.md
           - utils/file.md
-          - utils/fiftyone.md
-          - utils/import_utils.md
-          - utils/torch.md
-          - utils/shapely.md
-          - utils/compatibility.md
-          - utils/detectron2.md
-          - utils/huggingface.md
-          - utils/mmdet.md
-          - utils/rtdetr.md
-          - utils/ultralytics.md
-          - utils/yolov5.md
-          - utils/torchvision.md
       - 'Command Line Interface':
           - cli.md
 

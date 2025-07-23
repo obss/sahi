@@ -113,7 +113,7 @@ class BoundingBox:
     def to_xywh(self):
         """
         Returns [xmin, ymin, width, height]
-        
+
         Returns:
             List[float]: A list containing the bounding box in the format [xmin, ymin, width, height].
         """
@@ -123,7 +123,7 @@ class BoundingBox:
     def to_coco_bbox(self):
         """
         Returns the bounding box in COCO format: [xmin, ymin, width, height]
-        
+
         Returns:
             List[float]: A list containing the bounding box in COCO format.
         """
@@ -132,7 +132,7 @@ class BoundingBox:
     def to_xyxy(self):
         """
         Returns: [xmin, ymin, xmax, ymax]
-        
+
         Returns:
             List[float]: A list containing the bounding box in the format [xmin, ymin, xmax, ymax].
         """
@@ -141,7 +141,7 @@ class BoundingBox:
     def to_voc_bbox(self):
         """
         Returns the bounding box in VOC format: [xmin, ymin, xmax, ymax]
-        
+
         Returns:
             List[float]: A list containing the bounding box in VOC format.
         """
@@ -170,11 +170,11 @@ class BoundingBox:
 class Category:
     """
     Category of the annotation.
-    
+
     Attributes:
         id (int): Unique identifier for the category.
         name (str): Name of the category.
-        
+
     """
 
     id: int
@@ -191,6 +191,38 @@ class Category:
 
 
 class Mask:
+    """
+    Init Mask from coco segmentation representation.
+
+    Args:
+        segmentation : List[List]
+            [
+                [x1, y1, x2, y2, x3, y3, ...],
+                [x1, y1, x2, y2, x3, y3, ...],
+                ...
+            ]
+        full_shape: List[int]
+            Size of the full image, should be in the form of [height, width]
+        shift_amount: List[int]
+            To shift the box and mask predictions from sliced image to full
+            sized image, should be in the form of [shift_x, shift_y]
+    """
+
+    def __init__(
+        self,
+        segmentation: List[List[float]],
+        full_shape: List[int],
+        shift_amount: list = [0, 0],
+    ):
+        if full_shape is None:
+            raise ValueError("full_shape must be provided")  # pyright: ignore[reportUnreachable]
+
+        self.shift_x = shift_amount[0]
+        self.shift_y = shift_amount[1]
+        self.full_shape_height = full_shape[0]
+        self.full_shape_width = full_shape[1]
+        self.segmentation = segmentation
+
     @classmethod
     def from_float_mask(
         cls,
@@ -217,37 +249,6 @@ class Mask:
             shift_amount=shift_amount,
             full_shape=full_shape,
         )
-
-    def __init__(
-        self,
-        segmentation: List[List[float]],
-        full_shape: List[int],
-        shift_amount: list = [0, 0],
-    ):
-        """
-        Init Mask from coco segmentation representation.
-
-        Args:
-            segmentation : List[List]
-                [
-                    [x1, y1, x2, y2, x3, y3, ...],
-                    [x1, y1, x2, y2, x3, y3, ...],
-                    ...
-                ]
-            full_shape: List[int]
-                Size of the full image, should be in the form of [height, width]
-            shift_amount: List[int]
-                To shift the box and mask predictions from sliced image to full
-                sized image, should be in the form of [shift_x, shift_y]
-        """
-        if full_shape is None:
-            raise ValueError("full_shape must be provided")  # pyright: ignore[reportUnreachable]
-
-        self.shift_x = shift_amount[0]
-        self.shift_y = shift_amount[1]
-        self.full_shape_height = full_shape[0]
-        self.full_shape_width = full_shape[1]
-        self.segmentation = segmentation
 
     @classmethod
     def from_bool_mask(
@@ -319,6 +320,80 @@ class ObjectAnnotation:
     """
     All about an annotation such as Mask, Category, BoundingBox.
     """
+
+    def __init__(
+        self,
+        bbox: Optional[List[int]] = None,
+        segmentation: Optional[np.ndarray] = None,
+        category_id: Optional[int] = None,
+        category_name: Optional[str] = None,
+        shift_amount: Optional[List[int]] = [0, 0],
+        full_shape: Optional[List[int]] = None,
+    ):
+        """
+        Args:
+            bbox: List
+                [minx, miny, maxx, maxy]
+            segmentation: List[List]
+                [
+                    [x1, y1, x2, y2, x3, y3, ...],
+                    [x1, y1, x2, y2, x3, y3, ...],
+                    ...
+                ]
+            category_id: int
+                ID of the object category
+            category_name: str
+                Name of the object category
+            shift_amount: List
+                To shift the box and mask predictions from sliced image
+                to full sized image, should be in the form of [shift_x, shift_y]
+            full_shape: List
+                Size of the full image after shifting, should be in
+                the form of [height, width]
+        """
+        if not isinstance(category_id, int):
+            raise ValueError("category_id must be an integer")
+        if (bbox is None) and (segmentation is None):
+            raise ValueError("you must provide a bbox or segmentation")
+
+        self.mask: Mask | None = None
+        if segmentation is not None:
+            self.mask = Mask(
+                segmentation=segmentation,
+                shift_amount=shift_amount,
+                full_shape=full_shape,
+            )
+            bbox_from_segmentation = get_bbox_from_coco_segmentation(segmentation)
+            # https://github.com/obss/sahi/issues/235
+            if bbox_from_segmentation is not None:
+                bbox = bbox_from_segmentation
+            else:
+                raise ValueError("Invalid segmentation mask.")
+
+        # if bbox is a numpy object, convert it to python List[float]
+        if type(bbox).__module__ == "numpy":
+            bbox = copy.deepcopy(bbox).tolist()
+
+        # make sure bbox coords lie inside [0, image_size]
+        xmin = max(bbox[0], 0)
+        ymin = max(bbox[1], 0)
+        if full_shape:
+            xmax = min(bbox[2], full_shape[1])
+            ymax = min(bbox[3], full_shape[0])
+        else:
+            xmax = bbox[2]
+            ymax = bbox[3]
+        bbox = [xmin, ymin, xmax, ymax]
+        # set bbox
+        self.bbox = BoundingBox(bbox, shift_amount)
+
+        category_name = category_name if category_name else str(category_id)
+        self.category = Category(
+            id=category_id,
+            name=category_name,
+        )
+
+        self.merged = None
 
     @classmethod
     def from_bool_mask(
@@ -531,80 +606,6 @@ class ObjectAnnotation:
             shift_amount=shift_amount,
             full_shape=full_shape,
         )
-
-    def __init__(
-        self,
-        bbox: Optional[List[int]] = None,
-        segmentation: Optional[np.ndarray] = None,
-        category_id: Optional[int] = None,
-        category_name: Optional[str] = None,
-        shift_amount: Optional[List[int]] = [0, 0],
-        full_shape: Optional[List[int]] = None,
-    ):
-        """
-        Args:
-            bbox: List
-                [minx, miny, maxx, maxy]
-            segmentation: List[List]
-                [
-                    [x1, y1, x2, y2, x3, y3, ...],
-                    [x1, y1, x2, y2, x3, y3, ...],
-                    ...
-                ]
-            category_id: int
-                ID of the object category
-            category_name: str
-                Name of the object category
-            shift_amount: List
-                To shift the box and mask predictions from sliced image
-                to full sized image, should be in the form of [shift_x, shift_y]
-            full_shape: List
-                Size of the full image after shifting, should be in
-                the form of [height, width]
-        """
-        if not isinstance(category_id, int):
-            raise ValueError("category_id must be an integer")
-        if (bbox is None) and (segmentation is None):
-            raise ValueError("you must provide a bbox or segmentation")
-
-        self.mask: Mask | None = None
-        if segmentation is not None:
-            self.mask = Mask(
-                segmentation=segmentation,
-                shift_amount=shift_amount,
-                full_shape=full_shape,
-            )
-            bbox_from_segmentation = get_bbox_from_coco_segmentation(segmentation)
-            # https://github.com/obss/sahi/issues/235
-            if bbox_from_segmentation is not None:
-                bbox = bbox_from_segmentation
-            else:
-                raise ValueError("Invalid segmentation mask.")
-
-        # if bbox is a numpy object, convert it to python List[float]
-        if type(bbox).__module__ == "numpy":
-            bbox = copy.deepcopy(bbox).tolist()
-
-        # make sure bbox coords lie inside [0, image_size]
-        xmin = max(bbox[0], 0)
-        ymin = max(bbox[1], 0)
-        if full_shape:
-            xmax = min(bbox[2], full_shape[1])
-            ymax = min(bbox[3], full_shape[0])
-        else:
-            xmax = bbox[2]
-            ymax = bbox[3]
-        bbox = [xmin, ymin, xmax, ymax]
-        # set bbox
-        self.bbox = BoundingBox(bbox, shift_amount)
-
-        category_name = category_name if category_name else str(category_id)
-        self.category = Category(
-            id=category_id,
-            name=category_name,
-        )
-
-        self.merged = None
 
     def to_coco_annotation(self) -> CocoAnnotation:
         """
