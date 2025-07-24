@@ -88,6 +88,7 @@ nav:
 
   - Contributing: contributing.md
   - License: license.md
+  - Changelog: changelog.md
 
 plugins:
   - search
