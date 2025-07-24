@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 # Quick Start
 
 Welcome to SAHI! This guide will get you up and running with the core features of the library, including installation, performing predictions, and using the command-line interface.
