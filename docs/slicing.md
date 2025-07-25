@@ -1,4 +1,8 @@
-# Slicing Utilities
+# Slicing
+
+::: sahi.slicing
+
+## Slicing Utilities
 
 - Slice an image:
 
