@@ -1,3 +1,0 @@
-# Prediction
-
-::: sahi.prediction

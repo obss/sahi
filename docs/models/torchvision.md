@@ -1,3 +1,0 @@
-# TorchvisionModel
-
-::: sahi.models.torchvision

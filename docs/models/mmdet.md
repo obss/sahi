@@ -1,3 +1,0 @@
-# MmdetModel
-
-::: sahi.models.mmdet

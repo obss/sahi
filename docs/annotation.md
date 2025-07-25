@@ -1,3 +1,0 @@
-# Annotation
-
-::: sahi.annotation

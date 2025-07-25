@@ -1,3 +1,0 @@
-# Combine
-
-::: sahi.postprocess.combine

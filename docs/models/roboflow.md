@@ -1,3 +1,0 @@
-# RoboflowModel
-
-::: sahi.models.roboflow

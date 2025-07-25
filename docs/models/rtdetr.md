@@ -1,3 +1,0 @@
-# RTDETRModel
-
-::: sahi.models.rtdetr

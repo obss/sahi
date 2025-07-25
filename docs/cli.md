@@ -1,9 +1,9 @@
 # CLI Commands
 
-## `predict` command usage
+## `predict` command usage:
 
 ```bash
-sahi predict --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
+>>sahi predict --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
 ```
 
 will perform sliced inference on default parameters and export the prediction visuals to runs/predict/exp folder.
@@ -11,13 +11,13 @@ will perform sliced inference on default parameters and export the prediction vi
 - It also supports video input:
 
 ```bash
-sahi predict --model_path yolo11s.pt --model_type ultralytics --source video.mp4
+>>sahi predict --model_path yolo11s.pt --model_type ultralytics --source video.mp4
 ```
 
 You can also view video render during video inference with `--view_video`:
 
 ```bash
-sahi predict --model_path yolo11s.pt --model_type ultralytics --source video.mp4 --view_video
+>>sahi predict --model_path yolo11s.pt --model_type ultralytics --source video.mp4 --view_video
 ```
 
 - To `forward 100 frames`, on opened window press key `D`
@@ -31,7 +31,7 @@ Note: If `--view_video` is slow, you can add `--frame_skip_interval=20` argument
 You can specify additional sliced prediction parameters as:
 
 ```bash
-sahi predict --slice_width 512 --slice_height 512 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --model_confidence_threshold 0.25 --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
+>>sahi predict --slice_width 512 --slice_height 512 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --model_confidence_threshold 0.25 --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
 ```
 
 - Specify detection framework as `--model_type mmdet` for MMDetection or `--model_type ultralytics` for Ultralytics, to match with your model weight file
@@ -52,32 +52,32 @@ sahi predict --slice_width 512 --slice_height 512 --overlap_height_ratio 0.1 --o
 
 - If you want to perform prediction using a COCO annotation file, provide COCO json path as `--dataset_json_path dataset.json` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_evaluation command to calculate COCO evaluation results or coco_error_analysis command to calculate detailed COCO error plots.
 
-## `predict-fiftyone` command usage
+## `predict-fiftyone` command usage:
 
 ```bash
-sahi predict-fiftyone --image_dir image/file/or/folder --dataset_json_path dataset.json --model_path path/to/model --model_config_path path/to/config
+>>sahi predict-fiftyone --image_dir image/file/or/folder --dataset_json_path dataset.json --model_path path/to/model --model_config_path path/to/config
 ```
 
 will perform sliced inference on default parameters and show the inference result on FiftyOne App.
 
 You can specify additional all extra parameters of the [sahi predict](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-command-usage) command.
 
-## `coco fiftyone` command usage
+## `coco fiftyone` command usage:
 
 You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-command-usage) command can be used to create that.
 
 ```bash
-sahi coco fiftyone --image_dir dir/to/images --dataset_json_path dataset.json cocoresult1.json cocoresult2.json
+>>sahi coco fiftyone --image_dir dir/to/images --dataset_json_path dataset.json cocoresult1.json cocoresult2.json
 ```
 
 will open a FiftyOne app that visualizes the given dataset and 2 detection results.
 
 Specify IOU threshold for FP/TP by `--iou_threshold 0.5` argument
 
-## `coco slice` command usage
+## `coco slice` command usage:
 
 ```bash
-sahi coco slice --image_dir dir/to/images --dataset_json_path dataset.json
+>>sahi coco slice --image_dir dir/to/images --dataset_json_path dataset.json
 ```
 
 will slice the given images and COCO formatted annotations and export them to given output folder directory.
@@ -88,22 +88,22 @@ Specify slice overlap ratio for height/width size as `--overlap_ratio 0.2`.
 
 If you want to ignore images with annotations set it add `--ignore_negative_samples` argument.
 
-## `coco yolo` command usage
+## `coco yolo` command usage:
 
 (In Windows be sure to open anaconda cmd prompt/windows cmd `as admin` to be able to create symlinks properly.)
 
 ```bash
-sahi coco yolo --image_dir dir/to/images --dataset_json_path dataset.json  --train_split 0.9
+>>sahi coco yolo --image_dir dir/to/images --dataset_json_path dataset.json  --train_split 0.9
 ```
 
 will convert given coco dataset to yolo format and export to runs/coco2yolo/exp folder.
 
-## `coco evaluate` command usage
+## `coco evaluate` command usage:
 
 You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-command-usage) command can be used to create that.
 
 ```bash
-sahi coco evaluate --dataset_json_path dataset.json --result_json_path result.json
+>>sahi coco evaluate --dataset_json_path dataset.json --result_json_path result.json
 ```
 
 will calculate coco evaluation and export them to given output folder directory.
@@ -118,12 +118,12 @@ If you want to specify a specific IOU threshold, set it as `--iou_thrs 0.5`. Def
 
 If you want to specify an export directory, set it as `--out_dir output/folder/directory`.
 
-## `coco analyse` command usage
+## `coco analyse` command usage:
 
 You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage) command can be used to create that.
 
 ```bash
-sahi coco analyse --dataset_json_path dataset.json --result_json_path result.json --out_dir output/directory
+>>sahi coco analyse --dataset_json_path dataset.json --result_json_path result.json --out_dir output/directory
 ```
 
 will calculate coco error plots and export them to given output folder directory.
@@ -134,12 +134,12 @@ If you want to export extra mAP bar plots and annotation area stats add `--extra
 
 If you want to specify area regions, set it as `--areas "[1024 9216 10000000000]"`.
 
-## `env` command usage
+## `env` command usage:
 
 Print related package versions in the current env as:
 
 ```bash
-sahi env
+>>sahi env
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   torch version 2.1.2 is available.
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   torchvision version 0.16.2 is available.
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   ultralytics version 8.3.86 is available.
@@ -148,12 +148,12 @@ sahi env
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   fiftyone version 0.14.2 is available.
 ```
 
-## `version` command usage
+## `version` command usage:
 
 Print your SAHI version as:
 
 ```bash
-sahi version
+>>sahi version
 0.11.22
 ```
 
@@ -165,7 +165,7 @@ All scripts can be downloaded from [scripts directory](https://github.com/obss/s
 python script_name.py
 ```
 
-## Additional Resources
+# Additional Resources
 
 Looking to dive deeper? Here are some helpful resources:
 

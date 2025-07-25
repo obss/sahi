@@ -1,3 +1,0 @@
-# UltralyticsModel
-
-::: sahi.models.ultralytics

@@ -1,3 +1,0 @@
-# CV
-
-::: sahi.utils.cv

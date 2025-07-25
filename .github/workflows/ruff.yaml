@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv venv --python 3.10
-          uv sync --group dev
+          uv sync --extra dev
       - name: Check code formatting
         id: ruff_check
         run: |
