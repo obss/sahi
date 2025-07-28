@@ -54,9 +54,6 @@ POSTPROCESS_NAME_TO_CLASS = {
 LOW_MODEL_CONFIDENCE = 0.1
 
 
-
-
-
 def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id):
     return [
         obj_pred

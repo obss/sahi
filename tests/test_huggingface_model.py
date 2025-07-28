@@ -19,8 +19,6 @@ CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
 
 
-
-
 def test_load_model():
     from sahi.models.huggingface import HuggingfaceDetectionModel
 

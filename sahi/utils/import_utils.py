@@ -5,8 +5,6 @@ from sahi.logger import logger
 # adapted from https://github.com/huggingface/transformers/blob/main/src/transformers/utils/import_utils.py
 
 
-
-
 def get_package_info(package_name: str, verbose: bool = True):
     """
     Returns the package version as a string and the package name as a string.
