@@ -1,14 +1,12 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
-import logging
 import os
 import shutil
 
+from sahi.logger import logger
 from sahi.utils.coco import merge, update_categories
 from sahi.utils.file import load_json
-
-logger = logging.getLogger(__name__)
 
 
 class TestCocoUtils:
