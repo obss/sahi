@@ -1,17 +1,15 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
-import logging
 from typing import List, Optional
 
 import numpy as np
 
+from sahi.logger import logger
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
-
-logger = logging.getLogger(__name__)
 
 
 class Detectron2DetectionModel(DetectionModel):

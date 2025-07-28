@@ -1,13 +1,13 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
-import logging
 import os
 import time
 from typing import Generator, List, Optional, Union
 
 from PIL import Image
 
+from sahi.logger import logger
 from sahi.utils.import_utils import is_available
 
 # TODO: This does nothing for this module. The issue named here does not exist
@@ -54,7 +54,7 @@ POSTPROCESS_NAME_TO_CLASS = {
 LOW_MODEL_CONFIDENCE = 0.1
 
 
-logger = logging.getLogger(__name__)
+
 
 
 def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id):

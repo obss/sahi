@@ -1,12 +1,9 @@
 # OBSS SAHI Tool
 # Code written by AnNT, 2023.
 
-import logging
 
 from sahi.models.ultralytics import UltralyticsDetectionModel
 from sahi.utils.import_utils import check_requirements
-
-logger = logging.getLogger(__name__)
 
 
 class RTDetrDetectionModel(UltralyticsDetectionModel):

@@ -1,16 +1,14 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2021.
 
-import logging
 from typing import List
 
 import torch
 
+from sahi.logger import logger
 from sahi.postprocess.utils import ObjectPredictionList, has_match, merge_object_prediction_pair
 from sahi.prediction import ObjectPrediction
 from sahi.utils.import_utils import check_requirements
-
-logger = logging.getLogger(__name__)
 
 
 def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):

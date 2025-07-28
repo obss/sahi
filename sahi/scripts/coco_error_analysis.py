@@ -1,6 +1,5 @@
 import copy
 import json
-import logging
 import os
 from multiprocessing import Pool
 from pathlib import Path
@@ -9,7 +8,7 @@ from typing import List, Optional, Union
 import fire
 import numpy as np
 
-logger = logging.getLogger(__name__)
+from sahi.logger import logger
 
 try:
     from pycocotools.coco import COCO

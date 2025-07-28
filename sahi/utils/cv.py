@@ -2,7 +2,6 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
-import logging
 import os
 import random
 import time
@@ -13,9 +12,8 @@ import numpy as np
 import requests
 from PIL import Image
 
+from sahi.logger import logger
 from sahi.utils.file import Path
-
-logger = logging.getLogger("__name__")
 
 IMAGE_EXTENSIONS_LOSSY = [".jpg", ".jpeg"]
 IMAGE_EXTENSIONS_LOSSLESS = [".png", ".tif", ".tiff", ".bmp"]
@@ -159,7 +157,7 @@ def read_large_image(image_path: str):
         img_cv2 = cv2.imread(image_path, 1)
         image0 = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
     except Exception as e:
-        logger.debug(f"OpenCV failed reading image with error {e}, trying skimage instead")
+        logger.error(f"OpenCV failed reading image with error {e}, trying skimage instead")
         try:
             import skimage.io
         except ImportError:
@@ -214,7 +212,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
             if exif_fix:
                 image_pil = exif_transpose(image_pil)
         except Exception as e:  # handle large/tiff image reading
-            logger.debug(f"OpenCV failed reading image with error {e}, trying skimage instead")
+            logger.error(f"OpenCV failed reading image with error {e}, trying skimage instead")
             try:
                 import skimage.io
             except ImportError:

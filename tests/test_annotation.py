@@ -1,11 +1,9 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2025.
 
-import logging
-
 import pytest
 
-logger = logging.getLogger(__name__)
+from sahi.logger import logger
 
 
 class TestAnnotation:

@@ -1,15 +1,10 @@
 import importlib.util
-import logging
-import os
+
+from sahi.logger import logger
 
 # adapted from https://github.com/huggingface/transformers/blob/main/src/transformers/utils/import_utils.py
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
-    datefmt="%m/%d/%Y %H:%M:%S",
-    level=os.environ.get("LOGLEVEL", "INFO").upper(),
-)
+
 
 
 def get_package_info(package_name: str, verbose: bool = True):
