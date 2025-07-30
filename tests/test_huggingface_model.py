@@ -1,12 +1,12 @@
 # OBSS SAHI Tool
 # Code written by Fatih Cagatay Akyon, 2025.
 
-import logging
 import sys
 
 import pybboxes.functional as pbf
 import pytest
 
+from sahi.logger import logger
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.huggingface import HuggingfaceTestConstants
@@ -17,8 +17,6 @@ pytestmark = pytest.mark.skipif(
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
-
-logger = logging.getLogger(__name__)
 
 
 def test_load_model():

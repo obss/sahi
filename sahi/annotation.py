@@ -2,7 +2,6 @@
 # Code written by Fatih C Akyon, 2020.
 
 import copy
-import logging
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -15,8 +14,6 @@ from sahi.utils.cv import (
     get_coco_segmentation_from_bool_mask,
 )
 from sahi.utils.shapely import ShapelyAnnotation
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)

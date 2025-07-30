@@ -1,7 +1,6 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon and Devrim Cavusoglu, 2022.
 
-import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -12,8 +11,6 @@ from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.import_utils import check_requirements, ensure_package_minimum_version
-
-logger = logging.getLogger(__name__)
 
 
 class HuggingfaceDetectionModel(DetectionModel):

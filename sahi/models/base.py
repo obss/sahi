@@ -1,15 +1,13 @@
 # OBSS SAHI Tool
 # Code written by Fatih C Akyon, 2020.
 
-import logging
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 
+from sahi.logger import logger
 from sahi.prediction import ObjectPrediction
 from sahi.utils.torch import empty_cuda_cache, has_torch, select_device
-
-logger = logging.getLogger(__name__)
 
 
 class DetectionModel:

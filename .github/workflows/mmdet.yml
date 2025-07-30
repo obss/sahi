@@ -106,7 +106,7 @@ jobs:
       - name: Run MMDet tests
         run: |
           source .venv/bin/activate
-          pytest tests/test_mmdetectionmodel.py -n auto
+          pytest tests/test_mmdetection_model.py -n auto
           # Run MMDet-related tests from test_predict.py
           pytest tests/test_predict.py::test_get_prediction_mmdet -n auto
           pytest tests/test_predict.py::test_get_sliced_prediction_mmdet -n auto

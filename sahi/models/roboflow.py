@@ -1,4 +1,3 @@
-import logging
 from typing import Any, Dict, List, Optional
 
 import numpy as np
@@ -7,8 +6,6 @@ from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.import_utils import check_requirements
-
-logger = logging.getLogger(__name__)
 
 
 class RoboflowDetectionModel(DetectionModel):
