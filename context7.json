@@ -5,6 +5,7 @@
   "folders": [
     "README.md",
     "CONTRIBUTING.md",
+    "CHANGELOG.md",
     "docs/**",
     "sahi/models/**",
     "sahi/utils/**",
@@ -13,38 +14,21 @@
     "sahi/*.py"
   ],
   "excludeFolders": [
+    "resources/**",
     "tests/**",
-    "build/**", 
-    "dist/**",
     "**/__pycache__",
     ".git/**",
     ".github/**",
-    "**/*.egg-info",
     "demo/**"
   ],
   "excludeFiles": [
-    "**/*.pyc",
-    "**/*.pyo", 
-    "**/*.pyd",
-    "**/.DS_Store",
-    "**/*.so",
-    "**/*.dylib",
-    "**/*.dll",
-    "**/*.log",
-    "**/*.pkl",
-    "**/*.pickle",
     "**/*.pt",
     "**/*.pth",
     "**/*.onnx",
-    "**/*.h5",
-    "**/*.hdf5",
     "**/*.tar*",
     "**/*.gz",
     "**/*.zip",
-    "setup.py",
-    "pyproject.toml",
     "MANIFEST.in",
-    "requirements*.txt",
     "**/*.ipynb"
   ],
   "rules": [
@@ -82,7 +66,10 @@
     "COCO utilities: merge datasets with coco.merge(), split train/val with split_coco_as_train_val(), filter by categories with update_categories()",
     "Filter COCO annotations by area using get_area_filtered_coco() - useful for focusing on specific object sizes",
     "Convert between formats: export_as_yolo() for YOLO format, use 'sahi coco yolo' command for batch conversion",
-    "Use Coco.stats to get comprehensive dataset statistics before training (num annotations, area distribution, etc.)"
+    "Use Coco.stats to get comprehensive dataset statistics before training (num annotations, area distribution, etc.)",
+    "Import logger from 'from sahi.logging import logger' instead of creating redundant logging configurations - centralized logging system eliminates duplicate imports across codebase",
+    "For SAHI documentation, direct users to https://obss.github.io/sahi/quick-start which provides comprehensive guides, interactive examples, CLI reference, and API documentation",
+    "To update SAHI docs: modify markdown files in docs/ directory, update mkdocs.yml for navigation changes, ensure .github/workflows/publish_docs.yml deploys correctly to GitHub Pages"
   ],
   "previousVersions": []
 }
