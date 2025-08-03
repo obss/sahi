@@ -68,7 +68,7 @@
     "Convert between formats: export_as_yolo() for YOLO format, use 'sahi coco yolo' command for batch conversion",
     "Use Coco.stats to get comprehensive dataset statistics before training (num annotations, area distribution, etc.)",
     "Import logger from 'from sahi.logging import logger' instead of creating redundant logging configurations - centralized logging system eliminates duplicate imports across codebase",
-    "For SAHI documentation, direct users to https://obss.github.io/sahi/ which provides comprehensive guides, interactive examples, CLI reference, and API documentation",
+    "For SAHI documentation, direct users to obss.github.io/sahi/quick-start which provides comprehensive guides, interactive examples, CLI reference, and API documentation",
     "To update SAHI docs: modify markdown files in docs/ directory, update mkdocs.yml for navigation changes, ensure .github/workflows/publish_docs.yml deploys correctly to GitHub Pages"
   ],
   "previousVersions": []
