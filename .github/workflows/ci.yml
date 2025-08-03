@@ -8,6 +8,8 @@ on:
       - "**.cff"
       - "docs/**"
       - "demo/**"
+      - "context7.json"
+      - "mkdocs.yml"
 
   pull_request:
     branches: [main]
@@ -17,6 +19,8 @@ on:
       - "**.cff"
       - "docs/**"
       - "demo/**"
+      - "context7.json"
+      - "mkdocs.yml"
 
   schedule:
     - cron: "0 0 * * *" # Runs at 00:00 UTC every day
