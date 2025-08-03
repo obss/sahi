@@ -3,33 +3,23 @@
   "projectTitle": "SAHI - Slicing Aided Hyper Inference",
   "description": "A unified vision library providing a common API for multiple object detection and instance segmentation frameworks, supporting latest models like YOLO11/YOLO12, Roboflow Universe RF-DETR, HuggingFace DFine, with sliced inference, comprehensive COCO utilities, FiftyOne integration, error analysis, and advanced visualization tools",
   "folders": [
-    "README.md",
-    "CONTRIBUTING.md",
-    "CHANGELOG.md",
-    "docs/**",
-    "sahi/models/**",
-    "sahi/utils/**",
-    "sahi/scripts/**",
-    "sahi/postprocess/**",
-    "sahi/*.py"
+    "docs",
+    "sahi/models",
+    "sahi/utils", 
+    "sahi/scripts",
+    "sahi/postprocess",
+    "sahi"
   ],
   "excludeFolders": [
-    "resources/**",
-    "tests/**",
-    "**/__pycache__",
-    ".git/**",
-    ".github/**",
-    "demo/**"
+    "docs/notebooks",
+    "resources",
+    "tests",
+    ".git",
+    ".github", 
+    "demo"
   ],
   "excludeFiles": [
-    "**/*.pt",
-    "**/*.pth",
-    "**/*.onnx",
-    "**/*.tar*",
-    "**/*.gz",
-    "**/*.zip",
-    "MANIFEST.in",
-    "**/*.ipynb"
+    "MANIFEST.in"
   ],
   "rules": [
     "Use AutoDetectionModel.from_pretrained() to load any model - switch between Ultralytics/HuggingFace/Roboflow/MMDetection models by only changing model_type and model_path",
