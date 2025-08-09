@@ -23,6 +23,7 @@ class UltralyticsDetectionModel(DetectionModel):
     """
 
     def __init__(self, *args, **kwargs):
+        self.fuse: bool = kwargs.pop("fuse", True)
         self.required_packages = list(getattr(self, "required_packages", [])) + ["ultralytics"]
         super().__init__(*args, **kwargs)
 
@@ -43,10 +44,13 @@ class UltralyticsDetectionModel(DetectionModel):
             if self.model_path and not self.model_path.endswith(".onnx"):
                 model.to(self.device)
             self.set_model(model)
+            if self.fuse and hasattr(model, "fuse"):
+                model.fuse()
+
         except Exception as e:
             raise TypeError("model_path is not a valid Ultralytics model path: ", e)
 
-    def set_model(self, model: Any):
+    def set_model(self, model: Any, **kwargs):
         """
         Sets the underlying Ultralytics model.
         Args:
