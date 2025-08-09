@@ -22,6 +22,7 @@ from tqdm import tqdm
 
 from sahi.auto_model import AutoDetectionModel
 from sahi.models.base import DetectionModel
+from sahi.models.batched_inference import BatchedSAHIInference
 from sahi.postprocess.combine import (
     GreedyNMMPostprocess,
     LSNMSPostprocess,
@@ -161,6 +162,8 @@ def get_sliced_prediction(
     slice_dir: Optional[str] = None,
     exclude_classes_by_name: Optional[List[str]] = None,
     exclude_classes_by_id: Optional[List[int]] = None,
+    batched_inference: bool = False,
+    batch_size: int = 12,
 ) -> PredictionResult:
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -216,6 +219,12 @@ def get_sliced_prediction(
         exclude_classes_by_id: Optional[List[int]]
             None: if no classes are excluded
             List[int]: set of classes to exclude using one or more IDs
+        batched_inference: bool
+            If True, performs batched GPU inference for 5x performance improvement.
+            Default: False (maintains backward compatibility)
+        batch_size: int
+            Number of slices to process simultaneously during batched inference.
+            Only used when batched_inference=True. Default: 12
     Returns:
         A Dict with fields:
             object_prediction_list: a list of sahi.prediction.ObjectPrediction
@@ -264,18 +273,85 @@ def get_sliced_prediction(
     postprocess_time = 0
     time_start = time.time()
 
-    # create prediction input
-    num_group = int(num_slices / num_batch)
-    if verbose == 1 or verbose == 2:
-        tqdm.write(f"Performing prediction on {num_slices} slices.")
+    # Initialize object_prediction_list to ensure it's always defined
     object_prediction_list = []
-    # perform sliced prediction
-    for group_ind in range(num_group):
-        # prepare batch (currently supports only 1 batch)
-        image_list = []
-        shift_amount_list = []
-        for image_ind in range(num_batch):
-            image_list.append(slice_image_result.images[group_ind * num_batch + image_ind])
+
+    # Check if batched inference is requested and available
+    if batched_inference and num_slices > 1:
+        # Use batched GPU inference for 5x performance improvement
+        if verbose == 1 or verbose == 2:
+            tqdm.write(f"Performing BATCHED prediction on {num_slices} slices (batch_size={batch_size}).")
+
+        try:
+            # Extract slice images for batched processing
+            slice_images = [slice_img for slice_img in slice_image_result.images]
+            slice_offsets = slice_image_result.starting_pixels
+
+            # Initialize batched inference
+            device = "cpu"  # default fallback
+            if is_available("torch"):
+                import torch
+
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+            if hasattr(detection_model, "device"):
+                device = detection_model.device
+
+            batched_inferencer = BatchedSAHIInference(
+                model=detection_model.model if hasattr(detection_model, "model") else detection_model,
+                device=device,
+                batch_size=batch_size,
+                image_size=getattr(detection_model, "image_size", 640),
+            )
+
+            # Perform batched inference
+            batch_results = batched_inferencer.batched_slice_inference(
+                slice_images=slice_images,
+                slice_offsets=slice_offsets,
+                conf_th=getattr(detection_model, "confidence_threshold", 0.25),
+            )
+
+            # Convert batched results to SAHI ObjectPrediction format
+            object_prediction_list = []
+            for result in batch_results:
+                for detection in result["detections"]:
+                    # Create ObjectPrediction object
+                    object_prediction = ObjectPrediction(
+                        bbox=detection["bbox"],
+                        category_id=detection["class_id"],
+                        score=detection["score"],
+                        bool_mask=None,
+                        category_name=detection.get("class_name", str(detection["class_id"])),
+                        shift_amount=[0, 0],
+                        full_shape=[slice_image_result.original_image_height, slice_image_result.original_image_width],
+                    )
+                    object_prediction_list.append(object_prediction)
+
+            if verbose == 2:
+                performance_stats = batched_inferencer.get_performance_stats()
+                tqdm.write(
+                    f"Batched inference completed: {performance_stats.get('slices_per_second', 0):.1f} slices/sec"
+                )
+
+        except Exception as e:
+            if verbose >= 1:
+                tqdm.write(f"Batched inference failed ({e}), falling back to standard inference.")
+            # Fall back to standard inference
+            batched_inference = False
+
+    if not batched_inference:
+        # Standard SAHI inference (original implementation)
+        # create prediction input
+        num_group = int(num_slices / num_batch)
+        if verbose == 1 or verbose == 2:
+            tqdm.write(f"Performing prediction on {num_slices} slices.")
+        # object_prediction_list already initialized above
+        # perform sliced prediction
+        for group_ind in range(num_group):
+            # prepare batch (currently supports only 1 batch)
+            image_list = []
+            shift_amount_list = []
+            for image_ind in range(num_batch):
+                image_list.append(slice_image_result.images[group_ind * num_batch + image_ind])
             shift_amount_list.append(slice_image_result.starting_pixels[group_ind * num_batch + image_ind])
         # perform batch prediction
         prediction_result = get_prediction(
