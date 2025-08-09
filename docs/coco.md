@@ -102,7 +102,7 @@ save_json = save_json(predictions_array, "coco_predictions.json")
 - this prediction array can be used to get standard coco metrics for the predictions using official pycocotool api :
 
 ```python
-# note:- pycocotools need to be installed separately 
+# note:- pycocotools need to be installed separately
 from pycocotools.cocoeval import COCOeval
 from pycocotools.coco import COCO
 

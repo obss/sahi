@@ -12,13 +12,13 @@ from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
 
+check_requirements(["torch", "mmdet", "mmcv", "mmengine"])  # noqa: E402
 
-check_requirements(["torch", "mmdet", "mmcv", "mmengine"])
+from mmdet.apis.det_inferencer import DetInferencer  # noqa: E402
+from mmdet.utils import ConfigType  # noqa: E402
+from mmengine.dataset import Compose  # noqa: E402
+from mmengine.infer.infer import ModelType  # noqa: E402
 
-from mmdet.apis.det_inferencer import DetInferencer
-from mmdet.utils import ConfigType
-from mmengine.dataset import Compose
-from mmengine.infer.infer import ModelType
 
 class DetInferencerWrapper(DetInferencer):
     def __init__(
@@ -80,7 +80,6 @@ class DetInferencerWrapper(DetInferencer):
         return Compose(pipeline_cfg)
 
 
-
 class MmdetDetectionModel(DetectionModel):
     def __init__(
         self,
@@ -96,7 +95,6 @@ class MmdetDetectionModel(DetectionModel):
         image_size: Optional[int] = None,
         scope: str = "mmdet",
     ):
-
         self.scope = scope
         self.image_size = image_size
         self.required_packages = list(getattr(self, "required_packages", [])) + ["mmdet", "mmcv", "torch"]

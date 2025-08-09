@@ -107,7 +107,7 @@ class RoboflowDetectionModel(DetectionModel):
             assert model.task_type == "object-detection", "Roboflow model must be an object detection model."
 
         else:
-            from rfdetr import RFDETRBase, RFDETRLarge
+            from rfdetr.detr import RFDETRBase, RFDETRLarge
 
             model, model_path = self._model, self.model_path
             model_names = ("RFDETRBase", "RFDETRLarge")

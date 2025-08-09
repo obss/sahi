@@ -3,7 +3,6 @@
 
 import torchvision
 
-
 MODEL_NAME_TO_CONSTRUCTOR = {
     "fasterrcnn_resnet50_fpn": torchvision.models.detection.fasterrcnn_resnet50_fpn,
     "fasterrcnn_mobilenet_v3_large_fpn": torchvision.models.detection.fasterrcnn_mobilenet_v3_large_fpn,

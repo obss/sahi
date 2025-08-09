@@ -20,7 +20,6 @@ class TorchVisionDetectionModel(DetectionModel):
         super().__init__(*args, **kwargs)
 
     def load_model(self):
-        
         import torch
 
         # read config params

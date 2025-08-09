@@ -3,8 +3,12 @@
 
 import sys
 
-import pybboxes.functional as pbf
 import pytest
+
+if sys.version_info[:2] < (3, 9):
+    pytest.skip("transformers>=4.49.0 requires Python 3.9 or higher", allow_module_level=True)
+
+import pybboxes.functional as pbf
 from transformers import AutoModelForObjectDetection, AutoProcessor
 
 from sahi.logger import logger

@@ -106,7 +106,6 @@ class DetectionModel:
 
         self.device = select_device(device)
 
-
     def unload_model(self):
         """
         Unloads the model from CPU/GPU.

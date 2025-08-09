@@ -9,6 +9,7 @@ YOLO11N_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v
 YOLO11N_SEG_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-seg.pt"
 YOLO11N_OBB_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-obb.pt"
 
+
 class UltralyticsConstants:
     YOLO11N_MODEL_PATH = "tests/data/models/yolo11n.pt"
     YOLO11N_SEG_MODEL_PATH = "tests/data/models/yolo11n-seg.pt"

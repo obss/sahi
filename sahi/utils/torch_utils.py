@@ -11,7 +11,6 @@ import torch
 from PIL.Image import Image
 
 
-
 def empty_cuda_cache() -> None:
     torch.cuda.empty_cache()
 

@@ -11,7 +11,8 @@ from sahi.models.torchvision import TorchVisionDetectionModel
 from sahi.predict import get_prediction, get_sliced_prediction
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
-from sahi.utils.torchvision_constants import TorchVisionConstants
+
+from .utils.torchvision import TorchVisionConstants
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
