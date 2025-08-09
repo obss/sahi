@@ -424,7 +424,7 @@ def slice_coco(
         coco_annotation_file_path (str): Location of the coco annotation file
         image_dir (str): Base directory for the images
         output_coco_annotation_file_name (str): File name of the exported coco
-            datatset json.
+            dataset json.
         output_dir (str, optional): Output directory
         ignore_negative_samples (bool, optional): If True, images without annotations
             are ignored. Defaults to False.

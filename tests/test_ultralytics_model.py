@@ -8,8 +8,9 @@ import pytest
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
-from sahi.utils.ultralytics import (
-    UltralyticsTestConstants,
+
+from .utils.ultralytics import (
+    UltralyticsConstants,
     download_yolo11n_model,
     download_yolo11n_obb_model,
     download_yolo11n_onnx_model,
@@ -27,7 +28,7 @@ def test_load_yolo11_model():
     download_yolo11n_model()
 
     detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -46,7 +47,7 @@ def test_load_yolo11_onnx_model():
     download_yolo11n_onnx_model()
 
     detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsTestConstants.YOLO11N_ONNX_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_ONNX_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         load_at_init=True,
@@ -93,7 +94,7 @@ def test_yolo11_segmentation():
     download_yolo11n_seg_model()
 
     detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsTestConstants.YOLO11N_SEG_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_SEG_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -129,7 +130,7 @@ def test_yolo11_obb():
     download_yolo11n_obb_model()
 
     detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsTestConstants.YOLO11N_OBB_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_OBB_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,

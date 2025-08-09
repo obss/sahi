@@ -1,26 +1,22 @@
 # OBSS SAHI Tool
 # Code written by AnNT, 2023.
 
-
 from sahi.models.ultralytics import UltralyticsDetectionModel
-from sahi.utils.import_utils import check_requirements
 
 
 class RTDetrDetectionModel(UltralyticsDetectionModel):
-    def check_dependencies(self) -> None:
-        check_requirements(["ultralytics"])
+    def __init__(self, *args, **kwargs):
+        self.required_packages = list(getattr(self, "required_packages", [])) + ["ultralytics"]
+        super().__init__(*args, **kwargs)
 
     def load_model(self):
-        """
-        Detection model is initialized and set to self.model.
-        """
-
+        """Detection model is initialized and set to self.model."""
         from ultralytics import RTDETR
 
         try:
-            model = RTDETR(self.model_path)
+            model_source = self.model_path or "rtdetr-l.pt"
+            model = RTDETR(model_source)
             model.to(self.device)
-
             self.set_model(model)
         except Exception as e:
             raise TypeError("model_path is not a valid rtdet model path: ", e)

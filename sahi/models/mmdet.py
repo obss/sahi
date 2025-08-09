@@ -12,77 +12,73 @@ from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
 
-try:
-    check_requirements(["torch", "mmdet", "mmcv", "mmengine"])
 
-    from mmdet.apis.det_inferencer import DetInferencer
-    from mmdet.utils import ConfigType
-    from mmengine.dataset import Compose
-    from mmengine.infer.infer import ModelType
+check_requirements(["torch", "mmdet", "mmcv", "mmengine"])
 
-    class DetInferencerWrapper(DetInferencer):
-        def __init__(
-            self,
-            model: Optional[Union[ModelType, str]] = None,
-            weights: Optional[str] = None,
-            device: Optional[str] = None,
-            scope: Optional[str] = "mmdet",
-            palette: str = "none",
-            image_size: Optional[int] = None,
-        ) -> None:
-            self.image_size = image_size
-            super().__init__(model, weights, device, scope, palette)
+from mmdet.apis.det_inferencer import DetInferencer
+from mmdet.utils import ConfigType
+from mmengine.dataset import Compose
+from mmengine.infer.infer import ModelType
 
-        def __call__(self, images: List[np.ndarray], batch_size: int = 1) -> dict:
-            """
-            Emulate DetInferencer(images) without progressbar
-            Args:
-                images: list of np.ndarray
-                    A list of numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
-                batch_size: int
-                    Inference batch size. Defaults to 1.
-            """
-            inputs = self.preprocess(images, batch_size=batch_size)
-            results_dict = {"predictions": [], "visualization": []}
-            for _, data in inputs:
-                preds = self.forward(data)
-                results = self.postprocess(
-                    preds,
-                    visualization=None,
-                    return_datasample=False,
-                    print_result=False,
-                    no_save_pred=True,
-                    pred_out_dir=None,
-                )
-                results_dict["predictions"].extend(results["predictions"])
-            return results_dict
+class DetInferencerWrapper(DetInferencer):
+    def __init__(
+        self,
+        model: Optional[Union[ModelType, str]] = None,
+        weights: Optional[str] = None,
+        device: Optional[str] = None,
+        scope: Optional[str] = "mmdet",
+        palette: str = "none",
+        image_size: Optional[int] = None,
+    ) -> None:
+        self.image_size = image_size
+        super().__init__(model, weights, device, scope, palette)
 
-        def _init_pipeline(self, cfg: ConfigType) -> Compose:
-            """Initialize the test pipeline."""
-            pipeline_cfg = cfg.test_dataloader.dataset.pipeline
+    def __call__(self, images: List[np.ndarray], batch_size: int = 1) -> dict:
+        """
+        Emulate DetInferencer(images) without progressbar
+        Args:
+            images: list of np.ndarray
+                A list of numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+            batch_size: int
+                Inference batch size. Defaults to 1.
+        """
+        inputs = self.preprocess(images, batch_size=batch_size)
+        results_dict = {"predictions": [], "visualization": []}
+        for _, data in inputs:
+            preds = self.forward(data)
+            results = self.postprocess(
+                preds,
+                visualization=None,
+                return_datasample=False,
+                print_result=False,
+                no_save_pred=True,
+                pred_out_dir=None,
+            )
+            results_dict["predictions"].extend(results["predictions"])
+        return results_dict
 
-            # For inference, the key of ``img_id`` is not used.
-            if "meta_keys" in pipeline_cfg[-1]:
-                pipeline_cfg[-1]["meta_keys"] = tuple(
-                    meta_key for meta_key in pipeline_cfg[-1]["meta_keys"] if meta_key != "img_id"
-                )
+    def _init_pipeline(self, cfg: ConfigType) -> Compose:
+        """Initialize the test pipeline."""
+        pipeline_cfg = cfg.test_dataloader.dataset.pipeline
 
-            load_img_idx = self._get_transform_idx(pipeline_cfg, "LoadImageFromFile")
-            if load_img_idx == -1:
-                raise ValueError("LoadImageFromFile is not found in the test pipeline")
-            pipeline_cfg[load_img_idx]["type"] = "mmdet.InferencerLoader"
+        # For inference, the key of ``img_id`` is not used.
+        if "meta_keys" in pipeline_cfg[-1]:
+            pipeline_cfg[-1]["meta_keys"] = tuple(
+                meta_key for meta_key in pipeline_cfg[-1]["meta_keys"] if meta_key != "img_id"
+            )
 
-            resize_idx = self._get_transform_idx(pipeline_cfg, "Resize")
-            if resize_idx == -1:
-                raise ValueError("Resize is not found in the test pipeline")
-            if self.image_size is not None:
-                pipeline_cfg[resize_idx]["scale"] = (self.image_size, self.image_size)
-            return Compose(pipeline_cfg)
+        load_img_idx = self._get_transform_idx(pipeline_cfg, "LoadImageFromFile")
+        if load_img_idx == -1:
+            raise ValueError("LoadImageFromFile is not found in the test pipeline")
+        pipeline_cfg[load_img_idx]["type"] = "mmdet.InferencerLoader"
 
-    IMPORT_MMDET_V3 = True
+        resize_idx = self._get_transform_idx(pipeline_cfg, "Resize")
+        if resize_idx == -1:
+            raise ValueError("Resize is not found in the test pipeline")
+        if self.image_size is not None:
+            pipeline_cfg[resize_idx]["scale"] = (self.image_size, self.image_size)
+        return Compose(pipeline_cfg)
 
-except ImportError:
-    IMPORT_MMDET_V3 = False
 
 
 class MmdetDetectionModel(DetectionModel):
@@ -100,14 +96,10 @@ class MmdetDetectionModel(DetectionModel):
         image_size: Optional[int] = None,
         scope: str = "mmdet",
     ):
-        if not IMPORT_MMDET_V3:
-            raise ImportError(
-                "Failed to import `DetInferencer`. Please confirm you have installed 'mmdet==3.3.0 mmcv==2.1.0'"
-            )
 
         self.scope = scope
         self.image_size = image_size
-
+        self.required_packages = list(getattr(self, "required_packages", [])) + ["mmdet", "mmcv", "torch"]
         super().__init__(
             model_path,
             model,
@@ -120,9 +112,6 @@ class MmdetDetectionModel(DetectionModel):
             load_at_init,
             image_size,
         )
-
-    def check_dependencies(self):
-        check_requirements(["torch", "mmdet", "mmcv"])
 
     def load_model(self):
         """

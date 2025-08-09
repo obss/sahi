@@ -1748,9 +1748,9 @@ def update_categories(desired_name2id: dict, coco_dict: dict) -> dict:
     Returns:
     ---------
         coco_target : dict
-            COCO dict with updated/filtred categories.
+            COCO dict with updated/filtered categories.
     """
-    # so that original variable doesnt get affected
+    # so that original variable doesn't get affected
     coco_source = copy.deepcopy(coco_dict)
 
     # init target coco dict

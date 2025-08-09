@@ -170,3 +170,9 @@ tests/data
 .archive
 .python-version
 uv.lock
+
+# pip-compile
+requirements.txt
+requirements-dev.txt
+requirements/requirements-style.txt
+requirements/*.txt

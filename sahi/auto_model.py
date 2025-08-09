@@ -41,6 +41,8 @@ class AutoDetectionModel:
                 Name of the detection framework (example: "ultralytics", "huggingface", "torchvision")
             model_path: str
                 Path of the detection model (ex. 'model.pt')
+            model: Any
+                A pre-initialized model instance, if available
             config_path: str
                 Path of the config file (ex. 'mmdet/configs/cascade_rcnn_r50_fpn_1x.py')
             device: str

@@ -22,14 +22,16 @@ class UltralyticsDetectionModel(DetectionModel):
     Supports both PyTorch (.pt) and ONNX (.onnx) models.
     """
 
-    def check_dependencies(self) -> None:
-        check_requirements(["ultralytics"])
+    def __init__(self, *args, **kwargs):
+        self.required_packages = list(getattr(self, "required_packages", [])) + ["ultralytics"]
+        super().__init__(*args, **kwargs)
 
     def load_model(self):
         """
         Detection model is initialized and set to self.model.
         Supports both PyTorch (.pt) and ONNX (.onnx) models.
         """
+
         from ultralytics import YOLO
 
         if self.model_path and ".onnx" in self.model_path:
@@ -51,6 +53,7 @@ class UltralyticsDetectionModel(DetectionModel):
             model: Any
                 A Ultralytics model
         """
+
         self.model = model
         # set category_mapping
         if not self.category_mapping:
@@ -64,6 +67,7 @@ class UltralyticsDetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
+
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")

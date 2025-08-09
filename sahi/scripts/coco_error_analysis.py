@@ -50,7 +50,7 @@ def _makeplot(rs, ps, outDir: Union[str, Path], class_name: str, iou_type: str) 
         aps = []
         ps_curve = []
         for ps_ in area_ps:
-            # calculate precision recal curves
+            # calculate precision recall curves
             if ps_.ndim > 1:
                 ps_mean = np.zeros((ps_.shape[0],))
                 for ind, ps_threshold in enumerate(ps_):
