@@ -1,15 +1,16 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2025.
-
-import os
 import shutil
 import sys
+from os import path
 
 import numpy as np
 import pytest
 
+from sahi.models.ultralytics import UltralyticsDetectionModel
+from sahi.predict import get_prediction, get_sliced_prediction, predict
 from sahi.utils.cv import read_image
-from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
+from sahi.utils.file import download_from_url
+
+from .utils.ultralytics import UltralyticsConstants, download_yolo11n_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -86,14 +87,13 @@ def test_get_prediction_mmdet():
 def test_get_prediction_automodel_yolo11():
     from sahi.auto_model import AutoDetectionModel
     from sahi.predict import get_prediction
-    from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
 
     # init model
     download_yolo11n_model()
 
     yolo11_detection_model = AutoDetectionModel.from_pretrained(
         model_type="ultralytics",
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -204,14 +204,11 @@ def test_get_sliced_prediction_mmdet():
 
 
 def test_get_prediction_yolo11():
-    from sahi.models.ultralytics import UltralyticsDetectionModel
-    from sahi.predict import get_prediction
-
     # init model
     download_yolo11n_model()
 
     yolo11_detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -250,14 +247,11 @@ def test_get_prediction_yolo11():
 
 
 def test_get_sliced_prediction_yolo11():
-    from sahi.models.ultralytics import UltralyticsDetectionModel
-    from sahi.predict import get_sliced_prediction
-
     # init model
     download_yolo11n_model()
 
     yolo11_detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -337,7 +331,7 @@ def test_mmdet_yolox_tiny_prediction():
     project_dir = "tests/data/predict_result"
 
     # get sliced prediction
-    if os.path.isdir(project_dir):
+    if path.isdir(project_dir):
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="mmdet",
@@ -370,7 +364,6 @@ def test_mmdet_yolox_tiny_prediction():
 
 def test_ultralytics_yolo11n_prediction():
     from sahi.predict import predict
-    from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
 
     # init model
     download_yolo11n_model()
@@ -386,11 +379,11 @@ def test_ultralytics_yolo11n_prediction():
     project_dir = "tests/data/predict_result"
 
     # get sliced prediction
-    if os.path.isdir(project_dir):
+    if path.isdir(project_dir):
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="ultralytics",
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         model_config_path=None,
         model_confidence_threshold=CONFIDENCE_THRESHOLD,
         model_device=MODEL_DEVICE,
@@ -418,11 +411,6 @@ def test_ultralytics_yolo11n_prediction():
 
 
 def test_video_prediction():
-    from os import path
-
-    from sahi.predict import predict
-    from sahi.utils.file import download_from_url
-
     # download video file
     source_url = "https://github.com/obss/sahi/releases/download/0.9.2/test.mp4"
     destination_path = "tests/data/test.mp4"
@@ -443,11 +431,11 @@ def test_video_prediction():
     project_dir = "tests/data/predict_result"
 
     # get sliced inference from video input without exporting visual
-    if os.path.isdir(project_dir):
+    if path.isdir(project_dir):
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="ultralytics",
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         model_config_path=None,
         model_confidence_threshold=CONFIDENCE_THRESHOLD,
         model_device=MODEL_DEVICE,
@@ -481,11 +469,11 @@ def test_video_prediction():
     class_agnostic = True
 
     # get standard inference from video input without exporting visual
-    if os.path.isdir(project_dir):
+    if path.isdir(project_dir):
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="ultralytics",
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         model_config_path=None,
         model_confidence_threshold=CONFIDENCE_THRESHOLD,
         model_device=MODEL_DEVICE,
@@ -516,11 +504,11 @@ def test_video_prediction():
     class_agnostic = True
 
     # get full sized prediction
-    if os.path.isdir(project_dir):
+    if path.isdir(project_dir):
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="ultralytics",
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         model_config_path=None,
         model_confidence_threshold=CONFIDENCE_THRESHOLD,
         model_device=MODEL_DEVICE,

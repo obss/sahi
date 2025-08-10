@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih Cagatay Akyon, 2025.
-
 from typing import Any, List, Optional
 
 import cv2
@@ -22,14 +19,17 @@ class UltralyticsDetectionModel(DetectionModel):
     Supports both PyTorch (.pt) and ONNX (.onnx) models.
     """
 
-    def check_dependencies(self) -> None:
-        check_requirements(["ultralytics"])
+    def __init__(self, *args, **kwargs):
+        self.fuse: bool = kwargs.pop("fuse", False)
+        self.required_packages = list(getattr(self, "required_packages", [])) + ["ultralytics"]
+        super().__init__(*args, **kwargs)
 
     def load_model(self):
         """
         Detection model is initialized and set to self.model.
         Supports both PyTorch (.pt) and ONNX (.onnx) models.
         """
+
         from ultralytics import YOLO
 
         if self.model_path and ".onnx" in self.model_path:
@@ -41,16 +41,20 @@ class UltralyticsDetectionModel(DetectionModel):
             if self.model_path and not self.model_path.endswith(".onnx"):
                 model.to(self.device)
             self.set_model(model)
+            if self.fuse and hasattr(model, "fuse"):
+                model.fuse()
+
         except Exception as e:
             raise TypeError("model_path is not a valid Ultralytics model path: ", e)
 
-    def set_model(self, model: Any):
+    def set_model(self, model: Any, **kwargs):
         """
         Sets the underlying Ultralytics model.
         Args:
             model: Any
                 A Ultralytics model
         """
+
         self.model = model
         # set category_mapping
         if not self.category_mapping:
@@ -64,6 +68,7 @@ class UltralyticsDetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
+
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")

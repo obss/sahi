@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
 import copy
 from typing import Any, Dict, List, Optional, Union
 

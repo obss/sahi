@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2025.
-
 from unittest.mock import patch
 
 import numpy as np

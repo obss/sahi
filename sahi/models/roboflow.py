@@ -5,7 +5,6 @@ import numpy as np
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.import_utils import check_requirements
 
 
 class RoboflowDetectionModel(DetectionModel):
@@ -50,6 +49,11 @@ class RoboflowDetectionModel(DetectionModel):
         self._device = device
         self._api_key = api_key
 
+        if self._use_universe:
+            self.required_packages = list(getattr(self, "required_packages", [])) + ["inference"]
+        else:
+            self.required_packages = list(getattr(self, "required_packages", [])) + ["rfdetr"]
+
         super().__init__(
             model=model,
             model_path=model_path,
@@ -65,15 +69,6 @@ class RoboflowDetectionModel(DetectionModel):
 
         if load_at_init:
             self.load_model()
-
-    def check_dependencies(self) -> None:
-        """
-        This function can be implemented to ensure model dependencies are installed.
-        """
-        if self._use_universe:
-            check_requirements(["inference"])
-        else:
-            check_requirements(["rfdetr"])
 
     def set_model(self, model: Any, **kwargs):
         """
@@ -107,10 +102,10 @@ class RoboflowDetectionModel(DetectionModel):
             assert model.task_type == "object-detection", "Roboflow model must be an object detection model."
 
         else:
-            from rfdetr import RFDETRBase, RFDETRLarge
+            from rfdetr.detr import RFDETRBase, RFDETRLarge, RFDETRMedium, RFDETRNano, RFDETRSmall
 
             model, model_path = self._model, self.model_path
-            model_names = ("RFDETRBase", "RFDETRLarge")
+            model_names = ("RFDETRBase", "RFDETRNano", "RFDETRSmall", "RFDETRMedium", "RFDETRLarge")
             if hasattr(model, "__name__") and model.__name__ in model_names:
                 model_params = dict(
                     resolution=int(self.image_size) if self.image_size else 560,
@@ -121,7 +116,7 @@ class RoboflowDetectionModel(DetectionModel):
                     model_params["pretrain_weights"] = model_path
 
                 model = model(**model_params)
-            elif isinstance(model, (RFDETRBase, RFDETRLarge)):
+            elif isinstance(model, (RFDETRBase, RFDETRNano, RFDETRSmall, RFDETRMedium, RFDETRLarge)):
                 model = model
             else:
                 raise ValueError(

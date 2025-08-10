@@ -1,16 +1,16 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 
 from sahi.logger import logger
 from sahi.prediction import ObjectPrediction
-from sahi.utils.torch import empty_cuda_cache, has_torch, select_device
+from sahi.utils.import_utils import check_requirements
+from sahi.utils.torch_utils import empty_cuda_cache, select_device
 
 
 class DetectionModel:
+    required_packages: List[str] = []
+
     def __init__(
         self,
         model_path: Optional[str] = None,
@@ -45,6 +45,7 @@ class DetectionModel:
             image_size: int
                 Inference input size.
         """
+
         self.model_path = model_path
         self.config_path = config_path
         self.model = None
@@ -57,6 +58,9 @@ class DetectionModel:
         self._object_prediction_list_per_image = None
         self.set_device(device)
 
+        # automatically ensure dependencies
+        self.check_dependencies()
+
         # automatically load model if load_at_init is True
         if load_at_init:
             if model:
@@ -64,11 +68,14 @@ class DetectionModel:
             else:
                 self.load_model()
 
-    def check_dependencies(self) -> None:
+    def check_dependencies(self, packages: Optional[List[str]] = None) -> None:
         """
-        This function can be implemented to ensure model dependencies are installed.
+        Ensures required dependencies are installed. If 'packages' is None, uses self.required_packages.
+        Subclasses may still call with a custom list for dynamic needs.
         """
-        pass
+        pkgs = packages if packages is not None else getattr(self, "required_packages", [])
+        if pkgs:
+            check_requirements(pkgs)
 
     def load_model(self):
         """
@@ -93,10 +100,8 @@ class DetectionModel:
         Args:
             device: Torch device, "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.
         """
-        if has_torch:
-            self.device = select_device(device)
-        else:
-            raise NotImplementedError(f"Could not set device {self.device}")
+
+        self.device = select_device(device)
 
     def unload_model(self):
         """

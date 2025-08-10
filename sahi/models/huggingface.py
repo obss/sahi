@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon and Devrim Cavusoglu, 2022.
-
 import os
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -10,7 +7,7 @@ import pybboxes.functional as pbf
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.import_utils import check_requirements, ensure_package_minimum_version
+from sahi.utils.import_utils import ensure_package_minimum_version
 
 
 class HuggingfaceDetectionModel(DetectionModel):
@@ -30,8 +27,10 @@ class HuggingfaceDetectionModel(DetectionModel):
         token: Optional[str] = None,
     ):
         self._processor = processor
-        self._image_shapes = []
+        self._image_shapes: List = []
         self._token = token
+        self.required_packages = list(getattr(self, "required_packages", [])) + ["torch", "transformers"]
+        ensure_package_minimum_version("transformers", "4.42.0")
         super().__init__(
             model_path,
             model,
@@ -44,10 +43,6 @@ class HuggingfaceDetectionModel(DetectionModel):
             load_at_init,
             image_size,
         )
-
-    def check_dependencies(self):
-        check_requirements(["torch", "transformers"])
-        ensure_package_minimum_version("transformers", "4.42.0")
 
     @property
     def processor(self):
@@ -82,7 +77,7 @@ class HuggingfaceDetectionModel(DetectionModel):
             processor = AutoProcessor.from_pretrained(self.model_path, use_fast=False, token=hf_token)
         self.set_model(model, processor)
 
-    def set_model(self, model: Any, processor: Any = None):
+    def set_model(self, model: Any, processor: Any = None, **kwargs):
         processor = processor or self.processor
         if processor is None:
             raise ValueError(f"'processor' is required to be set, got {processor}.")

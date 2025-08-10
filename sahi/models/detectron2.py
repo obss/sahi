@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
 from typing import List, Optional
 
 import numpy as np
@@ -9,12 +6,12 @@ from sahi.logger import logger
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bool_mask
-from sahi.utils.import_utils import check_requirements
 
 
 class Detectron2DetectionModel(DetectionModel):
-    def check_dependencies(self):
-        check_requirements(["torch", "detectron2"])
+    def __init__(self, *args, **kwargs):
+        self.required_packages = list(getattr(self, "required_packages", [])) + ["torch", "detectron2"]
+        super().__init__(*args, **kwargs)
 
     def load_model(self):
         from detectron2.config import get_cfg

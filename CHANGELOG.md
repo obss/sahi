@@ -236,7 +236,7 @@
 
 ### 🆕 What's Changed
 
-* Improve suppot for latest mmdet (v3.3.0) by @fcakyon in <https://github.com/obss/sahi/pull/1129>
+* Improve support for latest mmdet (v3.3.0) by @fcakyon in <https://github.com/obss/sahi/pull/1129>
 * Improve support for latest yolov5-pip and ultralytics versions by @fcakyon in <https://github.com/obss/sahi/pull/1130>
 * support latest huggingface/transformers models by @fcakyon in <https://github.com/obss/sahi/pull/1131>
 * refctor coco to yolo conversion, update docs by @fcakyon in <https://github.com/obss/sahi/pull/1132>

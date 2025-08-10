@@ -1,11 +1,15 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2025.
-
 import numpy as np
+import torchvision
+from torchvision.models.detection.faster_rcnn import RoIHeads
+from torchvision.models.detection.ssd import SSDHead
 
+from sahi.constants import COCO_CLASSES
+from sahi.models.torchvision import TorchVisionDetectionModel
+from sahi.predict import get_prediction, get_sliced_prediction
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
-from sahi.utils.torchvision import TorchVisionTestConstants
+
+from .utils.torchvision import TorchVisionConstants
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -14,12 +18,8 @@ IMAGE_SIZE = 320
 
 class TestTorchVisionDetectionModel:
     def test_load_model(self):
-        from torchvision.models.detection.faster_rcnn import RoIHeads
-
-        from sahi.models.torchvision import TorchVisionDetectionModel
-
         torchvision_detection_model = TorchVisionDetectionModel(
-            config_path=TorchVisionTestConstants.FASTERRCNN_CONFIG_PATH,
+            config_path=TorchVisionConstants.FASTERRCNN_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -28,10 +28,6 @@ class TestTorchVisionDetectionModel:
         assert isinstance(torchvision_detection_model.model.roi_heads, RoIHeads)
 
     def test_load_model_without_config_path(self):
-        from torchvision.models.detection.faster_rcnn import RoIHeads
-
-        from sahi.models.torchvision import TorchVisionDetectionModel
-
         torchvision_detection_model = TorchVisionDetectionModel(
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
@@ -41,11 +37,6 @@ class TestTorchVisionDetectionModel:
         assert isinstance(torchvision_detection_model.model.roi_heads, RoIHeads)
 
     def test_set_model(self):
-        import torchvision
-        from torchvision.models.detection.ssd import SSDHead
-
-        from sahi.models.torchvision import TorchVisionDetectionModel
-
         NUM_CLASSES = 15
         WEIGHTS = None  # Using weights=None instead of deprecated pretrained=False
 
@@ -65,7 +56,7 @@ class TestTorchVisionDetectionModel:
 
         # init model
         torchvision_detection_model = TorchVisionDetectionModel(
-            config_path=TorchVisionTestConstants.SSD300_CONFIG_PATH,
+            config_path=TorchVisionConstants.SSD300_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -82,8 +73,6 @@ class TestTorchVisionDetectionModel:
         assert original_predictions is not None
         assert isinstance(original_predictions, list)
         assert len(original_predictions) > 0
-
-        from sahi.utils.torchvision import COCO_CLASSES
 
         boxes = list(original_predictions[0]["boxes"].cpu().detach().numpy())
         scores = list(original_predictions[0]["scores"].cpu().detach().numpy())
@@ -113,10 +102,8 @@ class TestTorchVisionDetectionModel:
             assert scores[score_ind] >= 0
 
     def test_convert_original_predictions_without_mask_output(self):
-        from sahi.models.torchvision import TorchVisionDetectionModel
-
         torchvision_detection_model = TorchVisionDetectionModel(
-            config_path=TorchVisionTestConstants.FASTERRCNN_CONFIG_PATH,
+            config_path=TorchVisionConstants.FASTERRCNN_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -146,10 +133,8 @@ class TestTorchVisionDetectionModel:
         )
 
     def test_convert_original_predictions_with_mask_output(self):
-        from sahi.models.torchvision import TorchVisionDetectionModel
-
         torchvision_detection_model = TorchVisionDetectionModel(
-            config_path=TorchVisionTestConstants.FASTERRCNN_CONFIG_PATH,
+            config_path=TorchVisionConstants.FASTERRCNN_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -179,12 +164,9 @@ class TestTorchVisionDetectionModel:
         )
 
     def test_get_prediction_torchvision(self):
-        from sahi.models.torchvision import TorchVisionDetectionModel
-        from sahi.predict import get_prediction
-
         # init model
         torchvision_detection_model = TorchVisionDetectionModel(
-            config_path=TorchVisionTestConstants.FASTERRCNN_CONFIG_PATH,
+            config_path=TorchVisionConstants.FASTERRCNN_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -216,12 +198,9 @@ class TestTorchVisionDetectionModel:
         )
 
     def test_get_sliced_prediction_torchvision(self):
-        from sahi.models.torchvision import TorchVisionDetectionModel
-        from sahi.predict import get_sliced_prediction
-
         # init model
         torchvision_detection_model = TorchVisionDetectionModel(
-            config_path=TorchVisionTestConstants.FASTERRCNN_CONFIG_PATH,
+            config_path=TorchVisionConstants.FASTERRCNN_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,

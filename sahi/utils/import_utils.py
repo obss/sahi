@@ -22,7 +22,7 @@ def get_package_info(package_name: str, verbose: bool = True):
             except AttributeError:
                 _version = "unknown"
         if verbose:
-            logger.info(f"{package_name} version {_version} is available.")
+            logger.pkg_info(f"{package_name} version {_version} is available.")
     else:
         _version = "N/A"
 
@@ -30,17 +30,20 @@ def get_package_info(package_name: str, verbose: bool = True):
 
 
 def print_environment_info():
-    _torch_available, _torch_version = get_package_info("torch")
-    _torchvision_available, _torchvision_version = get_package_info("torchvision")
-    _tensorflow_available, _tensorflow_version = get_package_info("tensorflow")
-    _tensorflow_hub_available, _tensorflow_hub_version = get_package_info("tensorflow-hub")
-    _yolov5_available, _yolov5_version = get_package_info("yolov5")
-    _mmdet_available, _mmdet_version = get_package_info("mmdet")
-    _mmcv_available, _mmcv_version = get_package_info("mmcv")
-    _detectron2_available, _detectron2_version = get_package_info("detectron2")
-    _transformers_available, _transformers_version = get_package_info("transformers")
-    _timm_available, _timm_version = get_package_info("timm")
-    _fiftyone_available, _fiftyone_version = get_package_info("fiftyone")
+    get_package_info("torch")
+    get_package_info("torchvision")
+    get_package_info("tensorflow")
+    get_package_info("tensorflow-hub")
+    get_package_info("ultralytics")
+    get_package_info("yolov5")
+    get_package_info("mmdet")
+    get_package_info("mmcv")
+    get_package_info("detectron2")
+    get_package_info("transformers")
+    get_package_info("timm")
+    get_package_info("fiftyone")
+    get_package_info("pillow")
+    get_package_info("opencv-python")
 
 
 def is_available(module_name: str):
