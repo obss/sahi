@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon (2025), Devrim Cavusoglu (2024).
-
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.rtdetr import RTDETRTestConstants, download_rtdetrl_model

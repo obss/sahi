@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon and Kadir Nar, 2021.
-
 from typing import Any, List, Optional
 
 import numpy as np

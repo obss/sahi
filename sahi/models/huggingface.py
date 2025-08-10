@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon and Devrim Cavusoglu, 2022.
-
 import os
 from typing import Any, Dict, List, Optional, Tuple, Union
 

@@ -1,7 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
-
 import re
 from os import environ
 from typing import Any, Optional, Union

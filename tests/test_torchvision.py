@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2025.
-
 import numpy as np
 import torchvision
 from torchvision.models.detection.faster_rcnn import RoIHeads

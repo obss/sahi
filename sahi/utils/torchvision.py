@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C. Akyon, 2025.
-
 import torchvision
 
 MODEL_NAME_TO_CONSTRUCTOR = {

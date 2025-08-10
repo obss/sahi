@@ -1,7 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2022.
-
-
 class TestHighLevelApi:
     def test_bounding_box(self):
         from sahi import BoundingBox

@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih Cagatay Akyon, 2025.
-
 import sys
 
 import pytest

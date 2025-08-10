@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by AnNT, 2023.
-
 from sahi.models.ultralytics import UltralyticsDetectionModel
 
 
