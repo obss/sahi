@@ -23,7 +23,7 @@ class UltralyticsDetectionModel(DetectionModel):
     """
 
     def __init__(self, *args, **kwargs):
-        self.fuse: bool = kwargs.pop("fuse", True)
+        self.fuse: bool = kwargs.pop("fuse", False)
         self.required_packages = list(getattr(self, "required_packages", [])) + ["ultralytics"]
         super().__init__(*args, **kwargs)
 
