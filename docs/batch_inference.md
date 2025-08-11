@@ -312,3 +312,4 @@ The batched inference implementation is located in:
 - `tests/test_batched_inference.py` - Test suite
 
 For bug reports or feature requests, please open an issue on the [SAHI GitHub repository](https://github.com/obss/sahi).
+
