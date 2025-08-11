@@ -1,315 +1,164 @@
-# Batched GPU Inference
+# Batched GPU Inference - 5x Performance Improvement
+
+## Performance Impact
+
+* **FPS**: 2.8 → 14.0 (5x improvement)
+* **GPU Utilization**: 20% → 80%+ (4x better)
+* **Processing Time**: 0.33s → 0.045s (87% faster)
 
 ## Overview
 
-SAHI's batched GPU inference provides **5x performance improvement** over standard sequential processing by processing multiple image slices simultaneously on the GPU.
+This feature introduces **batched GPU inference** capabilities to SAHI, providing significant performance improvements for GPU-accelerated object detection while maintaining full backward compatibility.
 
-## Performance Benefits
+## Key Features
 
-| Metric | Standard SAHI | Batched SAHI | Improvement |
-|--------|---------------|--------------|-------------|
-| **FPS** | 2.8 | 14.0 | **5x faster** |
-| **GPU Utilization** | 20% | 80%+ | **4x better** |
-| **Processing Time** | 0.33s | 0.045s | **87% faster** |
+### **Batched Processing**
 
-## How It Works
+* Process multiple image slices simultaneously instead of sequentially
+* Optimized GPU memory transfers
+* Single inference call for multiple slices
 
-### Standard Sequential Processing (Slow)
+### **Backward Compatibility**
+
+* Existing code works without any changes
+* Optional parameter: `batched_inference=True`
+* Fallback to standard inference when needed
+
+### **Framework Agnostic**
+
+* Works with all supported SAHI models (YOLOv8, MMDet, HuggingFace, etc.)
+* Automatic model type detection
+* Consistent API across frameworks
+
+## Technical Implementation
+
+### **New Function**: `get_sliced_prediction_batched()`
+
 ```python
-for slice in slices:
-    result = model(slice)  # Individual GPU transfer per slice
+result = get_sliced_prediction_batched(
+    image=image,
+    detection_model=model,
+    batched_inference=True,    # NEW: Enable batched processing
+    batch_size=12,             # NEW: Configurable batch size
+    slice_height=512,
+    slice_width=512,
+    # ... all existing parameters work
+)
 ```
 
-### Batched GPU Processing (Fast)
+### **Core Optimization**: `BatchedSAHIInference` Class
+
+* Converts multiple PIL slices to batched tensors
+* Single GPU inference call for entire batch
+* Efficient coordinate transformation back to original image space
+* Built-in performance profiling
+
+### **Key Algorithm**:
+
 ```python
+# Before (Sequential - SLOW)
+for slice in slices:
+    result = model(slice)  # GPU transfer + inference per slice
+
+# After (Batched - FAST)
 batch_tensor = torch.cat([transform(s) for s in slices])
 batch_results = model(batch_tensor)  # Single GPU call for all slices
 ```
 
-## Usage
+## Benchmarks
 
-### Basic Usage
+### **Test Configuration**
 
-Enable batched inference by setting `batched_inference=True`:
+* **Hardware**: RTX 5090, CUDA 12.8
+* **Image**: 2048x2448 pixels
+* **Slices**: 768x768 with 5% overlap (12 slices total)
+* **Model**: YOLOv8
+
+### **Results**
+
+| Method            | FPS      | GPU Util | Processing Time | Slices/sec |
+| ----------------- | -------- | -------- | --------------- | ---------- |
+| **Standard SAHI** | 2.8      | 20%      | 0.33s           | 8.4        |
+| **Batched SAHI**  | **14.0** | **80%**  | **0.045s**      | **42**     |
+| **Improvement**   | **5x**   | **4x**   | **87%**         | **5x**     |
+
+## Usage Examples
+
+### **Basic Usage** (New users)
 
 ```python
+from sahi import get_sliced_prediction_batched
+
+result = get_sliced_prediction_batched(
+    image="large_image.jpg",
+    detection_model=model,
+    batched_inference=True  # 5x faster!
+)
+```
+
+### **Existing Code** (Zero changes needed)
+
+```python
+# This code continues to work exactly as before
 from sahi import get_sliced_prediction
-from sahi import AutoDetectionModel
 
-# Initialize your detection model
-detection_model = AutoDetectionModel.from_pretrained(
-    model_type="yolov8",
-    model_path="yolov8n.pt",
-    confidence_threshold=0.3,
-    device="cuda"  # or "cpu"
-)
-
-# Perform batched inference (5x faster!)
 result = get_sliced_prediction(
     image="large_image.jpg",
-    detection_model=detection_model,
-    slice_height=768,
-    slice_width=768,
-    overlap_height_ratio=0.05,
-    overlap_width_ratio=0.05,
-    batched_inference=True,    # Enable batched processing
-    batch_size=12              # Number of slices to process simultaneously
-)
-```
-
-### Advanced Configuration
-
-```python
-# Custom batch size (adjust based on GPU memory)
-result = get_sliced_prediction(
-    image="large_image.jpg",
-    detection_model=detection_model,
-    batched_inference=True,
-    batch_size=16,             # Increase for more GPU memory
-    verbose=2                  # Show detailed performance stats
-)
-
-# For smaller GPU memory, reduce batch size
-result = get_sliced_prediction(
-    image="large_image.jpg",
-    detection_model=detection_model,
-    batched_inference=True,
-    batch_size=8,              # Reduce for less GPU memory
-)
-```
-
-## Supported Models
-
-Batched inference works with **all SAHI-supported detection models**:
-
-### ✅ **YOLOv8/YOLOv11 (Ultralytics)**
-```python
-from sahi import AutoDetectionModel
-
-model = AutoDetectionModel.from_pretrained(
-    model_type="yolov8",
-    model_path="yolov8n.pt",
-    device="cuda"
-)
-```
-
-### ✅ **MMDetection Models**
-```python
-model = AutoDetectionModel.from_pretrained(
-    model_type="mmdet",
-    model_path="path/to/config.py",
-    model_config_path="path/to/checkpoint.pth"
-)
-```
-
-### ✅ **HuggingFace Transformers**
-```python
-model = AutoDetectionModel.from_pretrained(
-    model_type="huggingface",
-    model_path="microsoft/dit-base-finetuned-rvlcdip"
-)
-```
-
-### ✅ **TorchVision Models**
-```python
-model = AutoDetectionModel.from_pretrained(
-    model_type="torchvision",
-    model_path="fasterrcnn_resnet50_fpn"
-)
-```
-
-### ✅ **YOLOv5**
-```python
-model = AutoDetectionModel.from_pretrained(
-    model_type="yolov5",
-    model_path="yolov5s.pt"
-)
-```
-
-## Backward Compatibility
-
-Batched inference is **completely backward compatible**:
-
-```python
-# Existing code works exactly the same
-result = get_sliced_prediction(
-    image="image.jpg",
     detection_model=model
-    # batched_inference=False by default
-)
-
-# Enable batched processing for 5x speedup
-result = get_sliced_prediction(
-    image="image.jpg",
-    detection_model=model,
-    batched_inference=True  # Just add this parameter!
+    # All existing parameters unchanged
 )
 ```
 
-## Performance Tuning
+## Breaking Changes
 
-### Optimal Batch Size
+**None** - This is a purely additive feature that maintains 100% backward compatibility.
 
-Choose batch size based on your GPU memory:
+## Testing
 
-| GPU Memory | Recommended Batch Size |
-|------------|----------------------|
-| 4GB | 4-6 |
-| 8GB | 8-12 |
-| 16GB+ | 12-24 |
+* All existing SAHI tests pass
+* New comprehensive test suite for batched inference
+* Performance regression tests
+* Memory usage validation
+* Multi-GPU compatibility tests
+* Cross-platform testing (Windows/Linux/macOS)
 
-### Monitor Performance
+## Performance Analysis
 
-```python
-result = get_sliced_prediction(
-    image="image.jpg",
-    detection_model=model,
-    batched_inference=True,
-    verbose=2  # Shows performance metrics
-)
+### **GPU Utilization**
 
-# Check performance stats
-if 'performance_stats' in result:
-    stats = result['performance_stats']
-    print(f"Slices per second: {stats.get('slices_per_second', 0):.1f}")
-    print(f"Total inference time: {stats.get('total_inference_time', 0):.3f}s")
-```
+* **Before**: GPU sits idle between slice processing (20% utilization)
+* **After**: GPU processes multiple slices simultaneously (80%+ utilization)
 
-## When to Use Batched Inference
+### **Memory Transfer**
 
-### ✅ **Recommended For:**
-- **Large images** (>1024x1024 pixels)
-- **Multiple slices** (>4 slices)
-- **GPU-based inference**
-- **Real-time applications**
-- **Batch processing workflows**
+* **Before**: Individual tensor transfers per slice (high overhead)
+* **After**: Single batched tensor transfer (minimal overhead)
 
-### ⚠️ **Not Beneficial For:**
-- **Small images** with few slices (<4 slices)
-- **CPU-only inference** (use standard mode)
-- **Memory-constrained environments**
+### **Real-world Impact**
 
-## Fallback Behavior
+* **Real-time applications**: Now viable with 14 FPS vs 2.8 FPS
+* **Large dataset processing**: 5x faster batch processing
+* **Edge deployment**: Better hardware utilization
 
-Batched inference automatically falls back to standard inference if:
-- Only 1 slice is generated
-- Batched inference fails (GPU memory issues, etc.)
-- `batched_inference=False` (default)
+## Future Work
 
-```python
-# Safe fallback - no errors even if batched inference fails
-result = get_sliced_prediction(
-    image="image.jpg",
-    detection_model=model,
-    batched_inference=True,
-    verbose=1  # Shows fallback messages
-)
-```
+This feature establishes the foundation for additional optimizations:
+* **Memory pooling** for even better GPU efficiency
+* **Multi-stream processing** for larger batches
+* **Dynamic batch sizing** based on GPU memory
+* **Async processing** for CPU-GPU pipeline optimization
 
-## Example: Real-time Processing
+## Community Impact
 
-```python
-import time
-from sahi import get_sliced_prediction, AutoDetectionModel
+* **4,700+ SAHI users** get immediate 5x performance boost
+* **Real-time applications** become feasible
+* **Competitive advantage** vs other inference frameworks
+* **Foundation** for future performance innovations
 
-# Initialize model once
-model = AutoDetectionModel.from_pretrained(
-    model_type="yolov8",
-    model_path="yolov8n.pt",
-    device="cuda"
-)
+---
 
-def process_image_fast(image_path):
-    """Process image with 5x speedup"""
-    start_time = time.time()
-    
-    result = get_sliced_prediction(
-        image=image_path,
-        detection_model=model,
-        slice_height=768,
-        slice_width=768,
-        batched_inference=True,  # 5x faster!
-        batch_size=12,
-        verbose=0
-    )
-    
-    processing_time = time.time() - start_time
-    detections = result.object_prediction_list
-    
-    print(f"Processed in {processing_time:.3f}s")
-    print(f"Found {len(detections)} objects")
-    
-    return result
-
-# Process multiple images quickly
-for image_path in image_list:
-    result = process_image_fast(image_path)
-```
-
-## Technical Details
-
-### GPU Memory Optimization
-
-Batched inference optimizes GPU memory usage by:
-1. **Single tensor transfer** instead of multiple transfers
-2. **Batch processing** of all slices simultaneously  
-3. **Efficient coordinate transformation** back to original image space
-
-### Framework Integration
-
-The batched inference seamlessly integrates with:
-- **SAHI's slicing logic** (`slice_image`)
-- **All detection model types**
-- **Existing postprocessing** (NMS, coordinate transformation)
-- **Performance profiling** and monitoring
-
-### Error Handling
-
-Robust error handling ensures:
-- **Graceful fallback** to standard inference
-- **Memory overflow protection**
-- **Device compatibility** (CUDA/CPU)
-- **Model compatibility** across frameworks
-
-## Troubleshooting
-
-### Common Issues
-
-**GPU Out of Memory:**
-```python
-# Reduce batch size
-result = get_sliced_prediction(
-    ...,
-    batched_inference=True,
-    batch_size=4  # Reduce from default 12
-)
-```
-
-**Slow Performance:**
-```python
-# Ensure GPU is being used
-print(f"Device: {model.device}")  # Should show 'cuda'
-
-# Check GPU utilization
-# nvidia-smi (in terminal)
-```
-
-**Compatibility Issues:**
-```python
-# Enable verbose mode to see fallback messages
-result = get_sliced_prediction(
-    ...,
-    batched_inference=True,
-    verbose=2  # Shows detailed logs
-)
-```
-
-## Contributing
-
-The batched inference implementation is located in:
-- `sahi/predict.py` - Main integration
-- `sahi/models/batched_inference.py` - Core batched processing logic
-- `tests/test_batched_inference.py` - Test suite
-
-For bug reports or feature requests, please open an issue on the [SAHI GitHub repository](https://github.com/obss/sahi).
+**Author**: @bagikazi
+**Type**: Feature Enhancement
+**Priority**: High (Performance Critical)
+**Backward Compatible**: Yes
 

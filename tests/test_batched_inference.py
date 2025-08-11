@@ -1,160 +1,297 @@
 """
-Tests for SAHI Batched Inference functionality.
+Test Suite for SAHI Batched Inference
+====================================
 
-Tests the new batched_inference parameter in get_sliced_prediction
-and the BatchedSAHIInference class.
+This file contains comprehensive tests for the batched inference optimization.
 """
 
-import unittest
+# Standard library imports
+import time
 from unittest.mock import Mock, patch
-from PIL import Image
 
-from sahi.models.batched_inference import BatchedSAHIInference
-from sahi.predict import get_sliced_prediction
-from tests.utils_batched_inference import (
+# Third-party imports
+import numpy as np
+import pytest
+import torch
+
+# Local imports
+from batched_inference_patch import (
+    BatchedInferenceProfiler,
+    _perform_batched_inference,
+    _perform_standard_inference,
+    get_sliced_prediction_batched,
+)
+from utils_batched_inference import (
     create_mock_detection_model,
     create_test_image,
-    create_mock_slice_result
+    create_test_slices,
 )
 
 
-class TestBatchedInference(unittest.TestCase):
-    """Test cases for batched inference functionality."""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        # Create a mock detection model using utility function
-        self.mock_model = create_mock_detection_model(
-            device='cpu',
-            confidence_threshold=0.25,
+class TestBatchedInference:
+    """Test suite for batched inference functionality."""
+    
+    @pytest.fixture
+    def mock_detection_model(self):
+        """Create a mock detection model for testing."""
+        return create_mock_detection_model()
+    
+    @pytest.fixture
+    def test_image(self):
+        """Create a test image."""
+        return create_test_image(1024, 1024, 'red')
+    
+    @pytest.fixture
+    def slice_data(self):
+        """Create test slice data."""
+        return create_test_slices(num_slices=4, slice_size=256)
+    
+    def test_batched_inference_performance(self, mock_detection_model, slice_data):
+        """Test that batched inference is faster than standard inference."""
+        slice_images, slice_offsets = slice_data
+        
+        # Test batched inference
+        start_time = time.time()
+        batched_results = _perform_batched_inference(
+            slice_images=slice_images,
+            slice_offsets=slice_offsets,
+            detection_model=mock_detection_model,
+            batch_size=4,
+            conf_th=0.3,
+            image_size=640
+        )
+        batched_time = time.time() - start_time
+        
+        # Test standard inference
+        start_time = time.time()
+        standard_results = _perform_standard_inference(
+            slice_images=slice_images,
+            slice_offsets=slice_offsets,
+            detection_model=mock_detection_model,
+            conf_th=0.3,
+            image_size=640
+        )
+        standard_time = time.time() - start_time
+        
+        # Assertions
+        assert len(batched_results) == len(standard_results)
+        assert batched_time <= standard_time * 1.1  # Allow 10% margin for test variability
+        print(f"Batched: {batched_time:.4f}s, Standard: {standard_time:.4f}s")
+    
+    def test_batched_inference_accuracy(self, mock_detection_model, slice_data):
+        """Test that batched inference produces the same results as standard inference."""
+        slice_images, slice_offsets = slice_data
+        
+        # Get results from both methods
+        batched_results = _perform_batched_inference(
+            slice_images=slice_images,
+            slice_offsets=slice_offsets,
+            detection_model=mock_detection_model,
+            batch_size=4,
+            conf_th=0.3,
             image_size=640
         )
         
-        # Create a test image using utility function
-        self.test_image = create_test_image(1024, 1024, 'red')
-
-    def test_batched_inference_parameter_exists(self):
-        """Test that batched_inference parameter is accepted."""
-        with patch('sahi.predict.BatchedSAHIInference') as mock_batched:
-            with patch('sahi.predict.slice_image') as mock_slice:
-                # Mock slice_image to return minimal result
-                mock_slice_result = Mock()
-                mock_slice_result.images = [self.test_image]
-                mock_slice_result.starting_pixels = [(0, 0)]
-                mock_slice_result.original_image_height = 1024
-                mock_slice_result.original_image_width = 1024
-                mock_slice_result.__len__ = Mock(return_value=1)  # Mock len() method
-                mock_slice.return_value = mock_slice_result
-                
-                # Mock batched inference
-                mock_batched_instance = Mock()
-                mock_batched_instance.batched_slice_inference.return_value = []
-                mock_batched.return_value = mock_batched_instance
-                
-                # Test that function accepts batched_inference parameter
-                try:
-                    result = get_sliced_prediction(
-                        image=self.test_image,
-                        detection_model=self.mock_model,
-                        batched_inference=True,
-                        batch_size=8
-                    )
-                    self.assertIsNotNone(result)
-                except TypeError as e:
-                    self.fail(f"get_sliced_prediction should accept batched_inference parameter: {e}")
-
-    def test_backward_compatibility(self):
-        """Test that existing code without batched_inference still works."""
-        with patch('sahi.predict.slice_image') as mock_slice:
-            with patch('sahi.predict.get_prediction') as mock_pred:
-                # Mock slice_image
-                mock_slice_result = Mock()
-                mock_slice_result.images = [self.test_image]
-                mock_slice_result.starting_pixels = [(0, 0)]
-                mock_slice_result.original_image_height = 1024
-                mock_slice_result.original_image_width = 1024
-                mock_slice_result.__len__ = Mock(return_value=1)  # Mock len() method
-                mock_slice.return_value = mock_slice_result
-                
-                # Mock get_prediction
-                mock_pred.return_value.object_prediction_list = []
-                
-                # Test without batched_inference parameter (should work)
-                result = get_sliced_prediction(
-                    image=self.test_image,
-                    detection_model=self.mock_model
-                )
-                self.assertIsNotNone(result)
-
-    @patch('sahi.models.batched_inference.torch')
-    def test_batched_inference_class_initialization(self, mock_torch):
-        """Test BatchedSAHIInference class initialization."""
-        mock_torch.cuda.is_available.return_value = True
-        
-        # Test initialization
-        batched_inferencer = BatchedSAHIInference(
-            model=self.mock_model,
-            device='cuda',
-            batch_size=12,
+        standard_results = _perform_standard_inference(
+            slice_images=slice_images,
+            slice_offsets=slice_offsets,
+            detection_model=mock_detection_model,
+            conf_th=0.3,
             image_size=640
         )
         
-        self.assertEqual(batched_inferencer.device, 'cuda')
-        self.assertEqual(batched_inferencer.batch_size, 12)
-        self.assertEqual(batched_inferencer.image_size, 640)
+        # Compare results
+        assert len(batched_results) == len(standard_results)
+        
+        for batch_pred, std_pred in zip(batched_results, standard_results):
+            assert batch_pred.score == std_pred.score
+            assert batch_pred.category_id == std_pred.category_id
+            # Allow small differences in bbox coordinates due to floating point
+            bbox_diff = np.abs(np.array(batch_pred.bbox) - np.array(std_pred.bbox))
+            assert np.all(bbox_diff < 1.0)  # Less than 1 pixel difference
+    
+    def test_different_batch_sizes(self, mock_detection_model, slice_data):
+        """Test batched inference with different batch sizes."""
+        slice_images, slice_offsets = slice_data
+        batch_sizes = [1, 2, 4, 8, 16]
+        
+        baseline_results = None
+        
+        for batch_size in batch_sizes:
+            results = _perform_batched_inference(
+                slice_images=slice_images,
+                slice_offsets=slice_offsets,
+                detection_model=mock_detection_model,
+                batch_size=batch_size,
+                conf_th=0.3,
+                image_size=640
+            )
+            
+            if baseline_results is None:
+                baseline_results = results
+            
+            # All batch sizes should produce same number of results
+            assert len(results) == len(baseline_results)
+    
+    def test_empty_slices(self, mock_detection_model):
+        """Test handling of empty slice lists."""
+        results = _perform_batched_inference(
+            slice_images=[],
+            slice_offsets=[],
+            detection_model=mock_detection_model,
+            batch_size=4,
+            conf_th=0.3,
+            image_size=640
+        )
+        
+        assert results == []
+    
+    def test_single_slice(self, mock_detection_model):
+        """Test handling of single slice."""
+        slice_img = create_test_image(256, 256, 'green')
+        
+        results = _perform_batched_inference(
+            slice_images=[slice_img],
+            slice_offsets=[(0, 0)],
+            detection_model=mock_detection_model,
+            batch_size=4,
+            conf_th=0.3,
+            image_size=640
+        )
+        
+        assert len(results) > 0  # Should have detections from mock model
 
-    def test_fallback_to_standard_inference(self):
-        """Test that system falls back to standard inference if batched fails."""
-        with patch('sahi.predict.BatchedSAHIInference') as mock_batched:
-            with patch('sahi.predict.slice_image') as mock_slice:
-                with patch('sahi.predict.get_prediction') as mock_pred:
-                    # Setup mocks
-                    mock_slice_result = Mock()
-                    mock_slice_result.images = [self.test_image, self.test_image]
-                    mock_slice_result.starting_pixels = [(0, 0), (512, 0)]
-                    mock_slice_result.original_image_height = 1024
-                    mock_slice_result.original_image_width = 1024
-                    mock_slice_result.__len__ = Mock(return_value=2)  # Mock len() method
-                    mock_slice.return_value = mock_slice_result
-                    
-                    # Make batched inference fail
-                    mock_batched.side_effect = Exception("Batched inference failed")
-                    
-                    # Mock standard inference
-                    mock_pred.return_value.object_prediction_list = []
-                    
-                    # Should not raise exception, should fall back
-                    result = get_sliced_prediction(
-                        image=self.test_image,
-                        detection_model=self.mock_model,
-                        batched_inference=True,
-                        verbose=0  # Suppress warning messages
-                    )
-                    self.assertIsNotNone(result)
 
-    def test_single_slice_uses_standard_inference(self):
-        """Test that single slice doesn't use batched inference."""
-        with patch('sahi.predict.slice_image') as mock_slice:
-            with patch('sahi.predict.get_prediction') as mock_pred:
-                # Mock single slice
-                mock_slice_result = Mock()
-                mock_slice_result.images = [self.test_image]  # Only one slice
-                mock_slice_result.starting_pixels = [(0, 0)]
-                mock_slice_result.original_image_height = 1024
-                mock_slice_result.original_image_width = 1024
-                mock_slice_result.__len__ = Mock(return_value=1)  # Mock len() method
-                mock_slice.return_value = mock_slice_result
-                
-                mock_pred.return_value.object_prediction_list = []
-                
-                # Even with batched_inference=True, should use standard for single slice
-                result = get_sliced_prediction(
-                    image=self.test_image,
-                    detection_model=self.mock_model,
-                    batched_inference=True
-                )
-                self.assertIsNotNone(result)
+class TestBatchedInferenceProfiler:
+    """Test suite for the performance profiler."""
+    
+    def test_profiler_initialization(self):
+        """Test profiler initialization."""
+        profiler = BatchedInferenceProfiler()
+        stats = profiler.get_stats()
+        assert stats == {}
+    
+    def test_profiler_logging(self):
+        """Test profiler logging functionality."""
+        profiler = BatchedInferenceProfiler()
+        
+        # Log some batches
+        profiler.log_batch(0.1, 4)
+        profiler.log_batch(0.15, 8)
+        profiler.log_batch(0.08, 2)
+        
+        stats = profiler.get_stats()
+        
+        assert stats['total_inference_time'] == 0.33
+        assert stats['total_slices'] == 14
+        assert stats['avg_batch_size'] == pytest.approx(4.67, rel=1e-2)
+        assert stats['slices_per_second'] == pytest.approx(42.42, rel=1e-1)
+    
+    def test_profiler_reset(self):
+        """Test profiler reset functionality."""
+        profiler = BatchedInferenceProfiler()
+        
+        profiler.log_batch(0.1, 4)
+        profiler.reset()
+        
+        stats = profiler.get_stats()
+        assert stats == {}
 
 
-if __name__ == '__main__':
-    unittest.main()
+class TestIntegrationWithSAHI:
+    """Integration tests with existing SAHI functionality."""
+    
+    @patch('batched_inference_patch.slice_image')
+    def test_get_sliced_prediction_batched_integration(self, mock_slice_image, mock_detection_model, test_image):
+        """Test integration with main SAHI prediction function."""
+        # Mock slice_image return
+        mock_slice_data = []
+        for i in range(4):
+            slice_mock = Mock()
+            slice_mock.image = create_test_image(256, 256, 'blue')
+            slice_mock.starting_pixel = (i * 200, 0)
+            mock_slice_data.append(slice_mock)
+        
+        mock_slice_image.return_value = mock_slice_data
+        
+        # Test batched prediction
+        result = get_sliced_prediction_batched(
+            image=test_image,
+            detection_model=mock_detection_model,
+            slice_height=256,
+            slice_width=256,
+            batched_inference=True,
+            batch_size=2
+        )
+        
+        # Verify slice_image was called
+        mock_slice_image.assert_called_once()
+        
+        # Verify result structure
+        assert hasattr(result, 'object_prediction_list')
+        assert hasattr(result, 'image')
+
+
+@pytest.mark.benchmark
+class TestPerformanceBenchmarks:
+    """Performance benchmark tests."""
+    
+    def test_gpu_memory_usage(self, mock_detection_model):
+        """Test GPU memory usage during batched inference."""
+        if not torch.cuda.is_available():
+            pytest.skip("CUDA not available")
+        
+        torch.cuda.empty_cache()
+        initial_memory = torch.cuda.memory_allocated()
+        
+        # Create large batch
+        slice_images = [create_test_image(512, 512, 'red') for _ in range(16)]
+        slice_offsets = [(i * 400, 0) for i in range(16)]
+        
+        _perform_batched_inference(
+            slice_images=slice_images,
+            slice_offsets=slice_offsets,
+            detection_model=mock_detection_model,
+            batch_size=8,
+            conf_th=0.3,
+            image_size=640
+        )
+        
+        peak_memory = torch.cuda.max_memory_allocated()
+        memory_increase = peak_memory - initial_memory
+        
+        # Memory increase should be reasonable (less than 2GB)
+        assert memory_increase < 2 * 1024**3  # 2GB
+        
+        torch.cuda.empty_cache()
+    
+    def test_large_image_processing(self, mock_detection_model):
+        """Test processing of large images with many slices."""
+        # Create large image that will generate many slices
+        large_image = create_test_image(4096, 4096, 'white')
+        
+        start_time = time.time()
+        
+        # This should generate 16x16 = 256 slices
+        result = get_sliced_prediction_batched(
+            image=large_image,
+            detection_model=mock_detection_model,
+            slice_height=256,
+            slice_width=256,
+            overlap_height_ratio=0.1,
+            overlap_width_ratio=0.1,
+            batched_inference=True,
+            batch_size=8
+        )
+        
+        processing_time = time.time() - start_time
+        
+        # Should complete in reasonable time (less than 30 seconds for mock model)
+        assert processing_time < 30.0
+        assert hasattr(result, 'object_prediction_list')
+
+
+if __name__ == "__main__":
+    # Run tests
+    pytest.main([__file__, "-v", "--tb=short"])
+

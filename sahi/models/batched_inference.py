@@ -1,301 +1,306 @@
 """
-SAHI Batched GPU Inference Module
-=================================
+SAHI Batched Inference Implementation
+====================================
 
-This module provides batched GPU inference capabilities for SAHI,
-achieving 5x performance improvement over standard sequential processing.
-
-Integrates with existing SAHI infrastructure.
-
-Author: @bagikazi
-Performance: 2.8 → 14.0 FPS (5x improvement)
+This file contains the actual implementation that can be directly
+integrated into the SAHI repository for batched GPU inference.
 """
 
-import time
-from typing import Any, List, Tuple
+# Standard library imports
+from typing import Any, List, Tuple, Union
 
+# Third-party imports
+import numpy as np
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
 
+# Local imports
+from sahi.models.base import DetectionModel
+from sahi.prediction import ObjectPrediction
 
-class BatchedSAHIInference:
+
+def get_sliced_prediction_batched(
+    image: Union[Image.Image, str, np.ndarray],
+    detection_model: DetectionModel,
+    slice_height: int = 512,
+    slice_width: int = 512,
+    overlap_height_ratio: float = 0.2,
+    overlap_width_ratio: float = 0.2,
+    conf_th: float = 0.25,
+    image_size: int = 640,
+    batched_inference: bool = True,
+    batch_size: int = 12,
+    **kwargs
+) -> Any:
     """
-    Optimized SAHI inference with batched GPU processing.
-
-    This class provides significant performance improvements for GPU-accelerated
-    object detection models by processing multiple image slices simultaneously.
-
-    Performance Improvements:
-    - 5x FPS increase (2.8 → 14.0 FPS)
-    - 4x better GPU utilization (20% → 80%)
-    - 87% faster processing time (0.33s → 0.045s)
-
+    Perform sliced prediction with optional batched inference for improved performance.
+    
     Args:
-        model: Detection model (YOLOv8, MMDet, etc.)
-        device: Device for inference ('cuda' or 'cpu')
+        image: Input image
+        detection_model: SAHI detection model
+        slice_height: Height of each slice
+        slice_width: Width of each slice
+        overlap_height_ratio: Height overlap ratio between slices
+        overlap_width_ratio: Width overlap ratio between slices
+        conf_th: Confidence threshold
+        image_size: Model input size
+        batched_inference: Whether to use batched inference (default: True)
         batch_size: Number of slices to process simultaneously
-        image_size: Model input size for resizing
+        **kwargs: Additional arguments
+        
+    Returns:
+        PredictionResult object with detected objects
     """
+    # Local imports to avoid circular dependencies
+    from sahi.postprocess.combine import PredictionResult
+    from sahi.slicing import slice_image
+    
+    # Convert image to PIL if needed
+    if isinstance(image, str):
+        image = Image.open(image).convert("RGB")
+    elif isinstance(image, np.ndarray):
+        image = Image.fromarray(image)
+    
+    # Slice the image
+    slice_image_result = slice_image(
+        image=image,
+        slice_height=slice_height,
+        slice_width=slice_width,
+        overlap_height_ratio=overlap_height_ratio,
+        overlap_width_ratio=overlap_width_ratio
+    )
+    
+    # Prepare slices and offsets
+    slice_images = []
+    slice_offsets = []
+    
+    for slice_data in slice_image_result:
+        if hasattr(slice_data, 'image'):
+            slice_images.append(slice_data.image)
+            slice_offsets.append(slice_data.starting_pixel)
+        elif isinstance(slice_data, dict):
+            slice_images.append(slice_data['image'])
+            slice_offsets.append(slice_data['starting_pixel'])
+    
+    # Perform inference
+    if batched_inference and len(slice_images) > 1:
+        # Use batched inference for better performance
+        object_prediction_list = _perform_batched_inference(
+            slice_images=slice_images,
+            slice_offsets=slice_offsets,
+            detection_model=detection_model,
+            batch_size=batch_size,
+            conf_th=conf_th,
+            image_size=image_size
+        )
+    else:
+        # Fallback to standard inference
+        object_prediction_list = _perform_standard_inference(
+            slice_images=slice_images,
+            slice_offsets=slice_offsets,
+            detection_model=detection_model,
+            conf_th=conf_th,
+            image_size=image_size
+        )
+    
+    # Create prediction result
+    prediction_result = PredictionResult(
+        object_prediction_list=object_prediction_list,
+        image=image
+    )
+    
+    return prediction_result
 
-    def __init__(self, model: Any, device: str = "cuda", batch_size: int = 12, image_size: int = 640):
-        self.model = model
-        self.device = device
-        self.batch_size = batch_size
-        self.image_size = image_size
 
-        # Preprocessing transform
-        self.transform = transforms.Compose([transforms.Resize((image_size, image_size)), transforms.ToTensor()])
-
-        # Performance monitoring
-        self.profiler = BatchedInferenceProfiler()
-
-    def batched_slice_inference(
-        self, slice_images: List[Image.Image], slice_offsets: List[Tuple[int, int]], conf_th: float = 0.3
-    ) -> List[dict]:
-        """
-        Perform batched inference on multiple image slices.
-
-        This is the core optimization that processes multiple slices
-        simultaneously instead of sequentially, resulting in major
-        performance improvements.
-
-        Args:
-            slice_images: List of PIL Image slices
-            slice_offsets: List of (x, y) offsets for each slice
-            conf_th: Confidence threshold for detections
-
-        Returns:
-            List of detection results for each slice
-        """
-        all_results = []
-
-        # Process slices in batches for optimal GPU utilization
-        for i in range(0, len(slice_images), self.batch_size):
-            batch_start_time = time.time()
-
-            batch_slices = slice_images[i : i + self.batch_size]
-            batch_offsets = slice_offsets[i : i + self.batch_size]
-
-            # Convert to tensors and create batch
-            batch_tensors = self._prepare_batch_tensors(batch_slices)
-
-            if batch_tensors.size(0) > 0:
-                # Single GPU inference for entire batch - KEY OPTIMIZATION
-                batch_results = self._perform_batch_inference(batch_tensors)
-
-                # Process results and adjust coordinates
-                for j, (result, offset) in enumerate(zip(batch_results, batch_offsets)):
-                    processed_result = self._process_single_result(result, offset, conf_th, batch_slices[j])
-                    all_results.append(processed_result)
-
-            # Log performance metrics
-            batch_time = time.time() - batch_start_time
-            self.profiler.log_batch(batch_time, len(batch_slices))
-
-        return all_results
-
-    def _prepare_batch_tensors(self, batch_slices: List[Image.Image]) -> torch.Tensor:
-        """
-        Convert PIL images to batch tensor for GPU processing.
-
-        Args:
-            batch_slices: List of PIL Image slices
-
-        Returns:
-            Batched tensor ready for GPU inference
-        """
+def _perform_batched_inference(
+    slice_images: List[Image.Image],
+    slice_offsets: List[Tuple[int, int]],
+    detection_model: DetectionModel,
+    batch_size: int,
+    conf_th: float,
+    image_size: int
+) -> List[ObjectPrediction]:
+    """
+    Perform batched inference on image slices.
+    
+    Args:
+        slice_images: List of PIL image slices
+        slice_offsets: List of slice offsets
+        detection_model: SAHI detection model
+        batch_size: Batch size for inference
+        conf_th: Confidence threshold
+        image_size: Model input size
+        
+    Returns:
+        List of ObjectPrediction objects
+    """
+    all_predictions = []
+    transform = transforms.Compose([
+        transforms.Resize((image_size, image_size)),
+        transforms.ToTensor()
+    ])
+    
+    # Process in batches
+    for i in range(0, len(slice_images), batch_size):
+        batch_slices = slice_images[i:i + batch_size]
+        batch_offsets = slice_offsets[i:i + batch_size]
+        
+        # Prepare batch tensors
         batch_tensors = []
-
         for slice_img in batch_slices:
-            try:
-                tensor = self.transform(slice_img).unsqueeze(0)
-                batch_tensors.append(tensor)
-            except Exception as e:
-                print(f"Error processing slice: {e}")
-                continue
-
+            tensor = transform(slice_img).unsqueeze(0)
+            batch_tensors.append(tensor)
+        
         if batch_tensors:
-            batch = torch.cat(batch_tensors, dim=0).to(self.device)
-            return batch
-        else:
-            return torch.empty(0, 3, self.image_size, self.image_size).to(self.device)
-
-    def _perform_batch_inference(self, batch_tensors: torch.Tensor) -> List[Any]:
-        """
-        Perform actual batch inference on GPU.
-
-        This method handles different model types and frameworks.
-
-        Args:
-            batch_tensors: Batched input tensors
-
-        Returns:
-            List of raw model outputs
-        """
-        with torch.no_grad():
-            # Handle different model types
-            if hasattr(self.model, "__call__"):
-                # For YOLO models (Ultralytics)
-                if hasattr(self.model, "predict"):
-                    # YOLOv8/v11 style
-                    results = self.model(batch_tensors, verbose=False)
+            # Stack into batch and move to device
+            batch = torch.cat(batch_tensors, dim=0)
+            if hasattr(detection_model, 'device'):
+                batch = batch.to(detection_model.device)
+            
+            # Batch inference
+            with torch.no_grad():
+                if hasattr(detection_model.model, '__call__'):
+                    # For YOLO models
+                    batch_results = detection_model.model(batch, verbose=False)
                 else:
-                    # Direct model call
-                    results = self.model(batch_tensors)
-            elif hasattr(self.model, "forward"):
-                # PyTorch model
-                results = self.model.forward(batch_tensors)
-            else:
-                # Fallback for other frameworks
-                results = self.model(batch_tensors)
-
-            # Ensure results is a list
-            if not isinstance(results, list):
-                if hasattr(results, "__iter__"):
-                    results = list(results)
-                else:
-                    results = [results]
-
-            return results
-
-    def _process_single_result(
-        self, result: Any, offset: Tuple[int, int], conf_th: float, original_slice: Image.Image
-    ) -> dict:
-        """
-        Process single inference result and adjust coordinates.
-
-        Args:
-            result: Raw model output for one slice
-            offset: (x, y) offset of slice in original image
-            conf_th: Confidence threshold
-            original_slice: Original PIL image slice
-
-        Returns:
-            Processed detection result
-        """
-        detections = []
-        offset_x, offset_y = offset
-
-        # Calculate scale factors (model input → slice → original image)
-        scale_x = original_slice.width / self.image_size
-        scale_y = original_slice.height / self.image_size
-
-        try:
-            # Handle different result formats
-            if hasattr(result, "boxes") and result.boxes is not None:
-                # YOLOv8 format
-                boxes = result.boxes.xyxy.cpu().numpy()
-                scores = result.boxes.conf.cpu().numpy()
-                class_ids = result.boxes.cls.cpu().numpy()
-
-                for box, score, class_id in zip(boxes, scores, class_ids):
-                    if score >= conf_th:
-                        x1, y1, x2, y2 = box
-
-                        # Scale coordinates back to original image space
-                        x1 = x1 * scale_x + offset_x
-                        y1 = y1 * scale_y + offset_y
-                        x2 = x2 * scale_x + offset_x
-                        y2 = y2 * scale_y + offset_y
-
-                        detections.append(
-                            {
-                                "bbox": [x1, y1, x2, y2],
-                                "score": float(score),
-                                "class_id": int(class_id),
-                                "class_name": str(int(class_id)),
-                            }
-                        )
-
-            elif isinstance(result, dict) and "boxes" in result:
-                # Dictionary format
-                boxes = result["boxes"]
-                scores = result.get("scores", [1.0] * len(boxes))
-                class_ids = result.get("labels", [0] * len(boxes))
-
-                for box, score, class_id in zip(boxes, scores, class_ids):
-                    if score >= conf_th:
-                        x1, y1, x2, y2 = box
-
-                        # Scale and adjust coordinates
-                        x1 = x1 * scale_x + offset_x
-                        y1 = y1 * scale_y + offset_y
-                        x2 = x2 * scale_x + offset_x
-                        y2 = y2 * scale_y + offset_y
-
-                        detections.append(
-                            {
-                                "bbox": [x1, y1, x2, y2],
-                                "score": float(score),
-                                "class_id": int(class_id),
-                                "class_name": str(int(class_id)),
-                            }
-                        )
-
-        except Exception as e:
-            print(f"Error processing result: {e}")
-
-        return {"detections": detections, "slice_offset": offset, "num_detections": len(detections)}
-
-    def get_performance_stats(self) -> dict:
-        """Get performance statistics from profiler."""
-        return self.profiler.get_stats()
-
-    def reset_profiler(self):
-        """Reset performance profiler."""
-        self.profiler.reset()
+                    # For other models
+                    batch_results = detection_model.perform_inference(batch)
+            
+            # Process batch results
+            for j, (result, offset) in enumerate(zip(batch_results, batch_offsets)):
+                slice_predictions = _extract_predictions_from_result(
+                    result=result,
+                    offset=offset,
+                    conf_th=conf_th,
+                    slice_width=slice_images[i + j].width,
+                    slice_height=slice_images[i + j].height,
+                    image_size=image_size
+                )
+                all_predictions.extend(slice_predictions)
+    
+    return all_predictions
 
 
+def _perform_standard_inference(
+    slice_images: List[Image.Image],
+    slice_offsets: List[Tuple[int, int]],
+    detection_model: DetectionModel,
+    conf_th: float,
+    image_size: int
+) -> List[ObjectPrediction]:
+    """
+    Perform standard (sequential) inference on image slices.
+    
+    Fallback method for compatibility.
+    """
+    all_predictions = []
+    
+    for slice_img, offset in zip(slice_images, slice_offsets):
+        # Standard SAHI inference
+        result = detection_model.perform_inference(slice_img, image_size)
+        
+        slice_predictions = _extract_predictions_from_result(
+            result=result,
+            offset=offset,
+            conf_th=conf_th,
+            slice_width=slice_img.width,
+            slice_height=slice_img.height,
+            image_size=image_size
+        )
+        all_predictions.extend(slice_predictions)
+    
+    return all_predictions
+
+
+def _extract_predictions_from_result(
+    result: Any,
+    offset: Tuple[int, int],
+    conf_th: float,
+    slice_width: int,
+    slice_height: int,
+    image_size: int
+) -> List[ObjectPrediction]:
+    """
+    Extract ObjectPrediction objects from model result.
+    
+    Args:
+        result: Model inference result
+        offset: Slice offset in original image
+        conf_th: Confidence threshold
+        slice_width: Width of the slice
+        slice_height: Height of the slice
+        image_size: Model input size
+        
+    Returns:
+        List of ObjectPrediction objects
+    """
+    predictions = []
+    offset_x, offset_y = offset
+    
+    # Scale factors from model input to slice size
+    scale_x = slice_width / image_size
+    scale_y = slice_height / image_size
+    
+    if hasattr(result, 'boxes') and result.boxes is not None:
+        boxes = result.boxes.xyxy.cpu().numpy()
+        scores = result.boxes.conf.cpu().numpy()
+        class_ids = result.boxes.cls.cpu().numpy()
+        
+        for box, score, class_id in zip(boxes, scores, class_ids):
+            if score >= conf_th:
+                x1, y1, x2, y2 = box
+                
+                # Scale coordinates back to slice size
+                x1 *= scale_x
+                y1 *= scale_y
+                x2 *= scale_x
+                y2 *= scale_y
+                
+                # Adjust to original image coordinates
+                x1 += offset_x
+                y1 += offset_y
+                x2 += offset_x
+                y2 += offset_y
+                
+                # Create ObjectPrediction
+                prediction = ObjectPrediction(
+                    bbox=[x1, y1, x2, y2],
+                    score=score,
+                    category_id=int(class_id),
+                    category_name=str(int(class_id))  # Can be mapped to actual names
+                )
+                predictions.append(prediction)
+    
+    return predictions
+
+
+# Performance monitoring
 class BatchedInferenceProfiler:
-    """Performance profiler for batched inference."""
-
+    """Profiler for batched inference performance."""
+    
     def __init__(self):
         self.reset()
-
+    
     def reset(self):
-        """Reset all performance metrics."""
         self.inference_times = []
         self.batch_sizes = []
         self.total_slices = 0
-        self.start_time = None
-
+        
     def log_batch(self, inference_time: float, batch_size: int):
-        """Log batch processing metrics."""
-        if self.start_time is None:
-            self.start_time = time.time()
-
         self.inference_times.append(inference_time)
         self.batch_sizes.append(batch_size)
         self.total_slices += batch_size
-
+    
     def get_stats(self) -> dict:
-        """Get comprehensive performance statistics."""
         if not self.inference_times:
-            return {"status": "No data available", "total_batches": 0, "total_slices": 0}
-
-        total_time = sum(self.inference_times)
-        avg_batch_time = total_time / len(self.inference_times)
-        avg_batch_size = sum(self.batch_sizes) / len(self.batch_sizes)
-        slices_per_second = self.total_slices / total_time if total_time > 0 else 0
-
+            return {}
+            
         return {
-            "total_inference_time": total_time,
-            "avg_batch_time": avg_batch_time,
-            "min_batch_time": min(self.inference_times),
-            "max_batch_time": max(self.inference_times),
-            "total_batches": len(self.inference_times),
-            "total_slices": self.total_slices,
-            "avg_batch_size": avg_batch_size,
-            "slices_per_second": slices_per_second,
-            "estimated_fps_improvement": slices_per_second / 12,  # Assuming 12 slices per image
+            'total_inference_time': sum(self.inference_times),
+            'avg_batch_time': np.mean(self.inference_times),
+            'total_slices': self.total_slices,
+            'avg_batch_size': np.mean(self.batch_sizes),
+            'slices_per_second': self.total_slices / sum(self.inference_times) if sum(self.inference_times) > 0 else 0
         }
 
-
-# Note: get_sliced_prediction_batched has been integrated directly into
-# sahi.predict.get_sliced_prediction as requested by code reviewers.
-# Use get_sliced_prediction(batched_inference=True) instead.
-
-
-# Note: Test utilities have been moved to tests/utils_batched_inference.py
-# as requested by code reviewers for better separation of concerns.
