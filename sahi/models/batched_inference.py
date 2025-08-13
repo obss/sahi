@@ -296,12 +296,12 @@ class BatchedInferenceProfiler:
 
 class BatchedSAHIInference:
     """Main class for batched SAHI inference."""
-
+    
     def __init__(self, detection_model: DetectionModel, batch_size: int = 12):
         self.detection_model = detection_model
         self.batch_size = batch_size
         self.profiler = BatchedInferenceProfiler()
-
+    
     def batched_slice_inference(
         self,
         slice_images: List[Image.Image],
@@ -318,7 +318,7 @@ class BatchedSAHIInference:
             conf_th=conf_th,
             image_size=image_size,
         )
-
+    
     def get_performance_stats(self) -> dict:
         """Get performance statistics."""
         return self.profiler.get_stats()

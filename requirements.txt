@@ -1,0 +1,21 @@
+# SAHI Core Dependencies
+opencv-python<=4.11.0.86
+shapely>=2.0.0
+tqdm>=4.48.2
+pybboxes==0.1.6
+pillow>=8.2.0
+pyyaml
+fire
+terminaltables
+requests
+click
+
+# PyTorch dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+numpy>=1.21.0
+
+# MMDet dependencies for Python 3.11
+mmengine>=0.7.0
+mmcv>=2.0.0
+mmdet>=3.0.0
