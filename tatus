@@ -1,0 +1,5 @@
+[33m45565f9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeat/batched-gpu-inference[m[33m)[m Fix MMDet CI: Add requirements files and simplify workflow
+[33md1f3fb4[m[33m ([m[1;31morigin/feat/batched-gpu-inference[m[33m)[m Fix CI issues: Add missing BatchedSAHIInference class and fix formatting
+[33mce4a372[m Fix mmdet-tests workflow with flexible thresholds
+[33mcdd741e[m Fix CI test failures with flexible thresholds + comprehensive fixes
+[33m4bd27ec[m Fix CI issues and improve code quality
