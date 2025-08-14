@@ -10,6 +10,52 @@ from PIL import Image
 from sahi.logger import logger
 from sahi.utils.import_utils import is_available
 
+
+from typing import Any, Iterable, List, Sequence, Tuple
+
+def _chunk(seq: Sequence[Any], n: int) -> Iterable[Sequence[Any]]:
+    for i in range(0, len(seq), n):
+        yield seq[i : i + n]
+
+def _flatten(preds: Any) -> List[Any]:
+    if preds is None:
+        return []
+    if isinstance(preds, (list, tuple)):
+        out: List[Any] = []
+        for p in preds:
+            out.extend(_flatten(p))
+        return out
+    return [preds]
+
+def _predict_on_slices(
+    detection_model: Any,
+    slice_images: Sequence[Any],
+    slice_offsets: Sequence[Tuple[int, int]],
+    conf_th: float,
+    image_size: int,
+    batch_size: int | None = None,
+) -> List[Any]:
+    """Model 'perform_inference_batch' destekliyorsa toplu, değilse tek tek çalıştırır."""
+    results: List[Any] = []
+    bs = int(batch_size or int(os.getenv("SAHI_BATCH_SIZE", "8")))
+    bs = max(1, bs)
+
+    if hasattr(detection_model, "perform_inference_batch"):
+        for imgs, offs in zip(_chunk(slice_images, bs), _chunk(slice_offsets, bs)):
+            batch_preds = detection_model.perform_inference_batch(
+                imgs, offs, conf_th=conf_th, image_size=image_size
+            )
+            results.extend(_flatten(batch_preds))
+    else:
+        # tek tek (mevcut davranış)
+        for img, off in zip(slice_images, slice_offsets):
+            preds = detection_model.perform_inference(
+                img, offset=off, conf_th=conf_th, image_size=image_size
+            )
+            results.extend(_flatten(preds))
+    return results
+
+
 # TODO: This does nothing for this module. The issue named here does not exist
 # https://github.com/obss/sahi/issues/526
 if is_available("torch"):
@@ -269,32 +315,55 @@ def get_sliced_prediction(
     if verbose == 1 or verbose == 2:
         tqdm.write(f"Performing prediction on {num_slices} slices.")
     object_prediction_list = []
-    # perform sliced prediction
-    for group_ind in range(num_group):
-        # prepare batch (currently supports only 1 batch)
-        image_list = []
-        shift_amount_list = []
-        for image_ind in range(num_batch):
-            image_list.append(slice_image_result.images[group_ind * num_batch + image_ind])
-            shift_amount_list.append(slice_image_result.starting_pixels[group_ind * num_batch + image_ind])
-        # perform batch prediction
-        prediction_result = get_prediction(
-            image=image_list[0],
-            detection_model=detection_model,
-            shift_amount=shift_amount_list[0],
-            full_shape=[
-                slice_image_result.original_image_height,
-                slice_image_result.original_image_width,
-            ],
-            exclude_classes_by_name=exclude_classes_by_name,
-            exclude_classes_by_id=exclude_classes_by_id,
-        )
-        # convert sliced predictions to full predictions
-        for object_prediction in prediction_result.object_prediction_list:
-            if object_prediction:  # if not empty
-                object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+    
+# perform sliced prediction
+# New: Prefer batched inference when available for better GPU utilization
+slice_images = getattr(slice_image_result, "images", None)
+slice_offsets = getattr(slice_image_result, "starting_pixels", None)
 
-        # merge matching predictions during sliced prediction
+if slice_images is None or slice_offsets is None:
+    # Backward compatibility: slice_image_result may be iterable of slice objects/dicts
+    slice_images, slice_offsets = [], []
+    for s in slice_image_result:
+        if hasattr(s, "image"):
+            slice_images.append(s.image)
+            slice_offsets.append(s.starting_pixel)
+        elif isinstance(s, dict):
+            slice_images.append(s.get("image"))
+            slice_offsets.append(s.get("starting_pixel"))
+
+# Full image shape for shifting
+full_shape = [
+    getattr(slice_image_result, "original_image_height", None),
+    getattr(slice_image_result, "original_image_width", None),
+]
+
+# Batch size from env or default
+try:
+    _bs = int(os.getenv("SAHI_BATCH_SIZE", "8"))
+except Exception:
+    _bs = 8
+_bs = max(1, _bs)
+
+object_prediction_list = []
+# Process slices in batches using the model's default batched implementation (or fallback)
+for start in range(0, len(slice_images), _bs):
+    imgs = slice_images[start:start+_bs]
+    offs = slice_offsets[start:start+_bs]
+    batch_preds_per_image = detection_model.perform_inference_batch(
+        imgs, shift_amount_list=offs, full_shape=full_shape
+    )
+    # Flatten and collect
+    for preds in batch_preds_per_image or []:
+        if preds:
+            object_prediction_list.extend(preds)
+
+    # Optional early merging to reduce memory if buffer is set
+    if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
+        postprocess_time_start = time.time()
+        object_prediction_list = postprocess(object_prediction_list)
+        postprocess_time += time.time() - postprocess_time_start
+
         if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
             postprocess_time_start = time.time()
             object_prediction_list = postprocess(object_prediction_list)

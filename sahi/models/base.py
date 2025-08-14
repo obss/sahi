@@ -154,6 +154,43 @@ class DetectionModel:
                 object_prediction.category.id = new_category_id_int
 
     def convert_original_predictions(
+
+
+def perform_inference_batch(
+    self,
+    image_list,
+    shift_amount_list=None,
+    full_shape=None,
+    conf_th=None,
+    image_size=None,
+):
+    """
+    Default batched inference fallback.
+
+    Loops over ``image_list`` and calls ``perform_inference`` + ``convert_original_predictions``
+    for each item, applying the corresponding shift from ``shift_amount_list`` and a single
+    ``full_shape`` (the original full image shape) if provided.
+
+    Returns:
+        List[List[ObjectPrediction]]: object predictions per image.
+    """
+    results = []
+    if shift_amount_list is None:
+        shift_amount_list = [[0, 0]] * len(image_list)
+    for img, shift in zip(image_list, shift_amount_list):
+        # Individual inference
+        self.perform_inference(img)
+        # Convert & shift into full image coords if given
+        try:
+            self.convert_original_predictions(shift_amount=shift, full_shape=full_shape)
+        except TypeError:
+            # Backward compatibility in case convert_original_predictions signature differs
+            self.convert_original_predictions(shift_amount=shift)
+        # Copy current image predictions out before next iteration mutates internal state
+        preds = list(getattr(self, "object_prediction_list", []))
+        results.append(preds)
+    return results
+
         self,
         shift_amount: Optional[List[List[int]]] = [[0, 0]],
         full_shape: Optional[List[List[int]]] = None,

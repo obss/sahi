@@ -90,7 +90,74 @@ class UltralyticsDetectionModel(DetectionModel):
                     torch.tensor([], device=device), prediction_result[0].boxes.orig_shape
                 )
 
-            # We do not filter results again as confidence threshold is already applied above
+            # We do no
+
+    def perform_inference_batch(
+        self,
+        images,
+        shift_amount_list=None,
+        full_shape=None,
+        conf_th=None,
+        image_size=None,
+    ):
+        """
+        Batched inference using Ultralytics YOLO model.
+        Accepts a list of numpy images (RGB, HxWx3). Returns a list of per-image
+        `ObjectPrediction` lists, and also sets `self._object_prediction_list_per_image`.
+        """
+        # Confirm model is loaded
+        if self.model is None:
+            raise ValueError("Model is not loaded, load it by calling .load_model()")
+
+        # Build kwargs similar to single-image path
+        kwargs = {"cfg": self.config_path, "verbose": False}
+        conf = conf_th if conf_th is not None else self.confidence_threshold
+        if conf is not None:
+            kwargs["conf"] = conf
+        dev = self.device
+        if dev is not None:
+            kwargs["device"] = dev
+        imgsz = image_size if image_size is not None else self.image_size
+        if imgsz is not None:
+            kwargs["imgsz"] = imgsz
+
+        # Run the model on the batch
+        prediction_results = self.model(images, **kwargs)
+
+        # Ultralytics returns a list of Results (one per input)
+        if not isinstance(prediction_results, (list, tuple)):
+            prediction_results = [prediction_results]
+
+        results_per_image = []
+
+        # Some models/weights (ONNX etc.) can lack masks attribute; mirror single-image safeguards
+        try:
+            from ultralytics.engine.results import Masks
+            import torch
+        except Exception:  # keep robustness in minimal envs
+            Masks = None
+            torch = None
+
+        for idx, res in enumerate(prediction_results):
+            # Ensure masks key exists for seg models
+            if self.has_mask and hasattr(res, "masks") and not res.masks and Masks is not None:
+                device = getattr(self.model, "device", "cpu")
+                res.masks = Masks(
+                    torch.tensor([], device=device), res.boxes.orig_shape
+                )
+
+            # Convert to SAHI ObjectPrediction list
+            self._original_predictions = res
+            shift = None
+            if shift_amount_list is not None and idx < len(shift_amount_list):
+                shift = shift_amount_list[idx]
+            self.convert_original_predictions(shift_amount=shift, full_shape=full_shape)
+            results_per_image.append(list(self.object_prediction_list))
+
+        # Cache for downstream access if needed
+        self._object_prediction_list_per_image = results_per_image
+        return results_per_image
+t filter results again as confidence threshold is already applied above
             prediction_result = [
                 (
                     result.boxes.data,
