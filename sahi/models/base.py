@@ -1,16 +1,16 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 
 from sahi.logger import logger
 from sahi.prediction import ObjectPrediction
-from sahi.utils.torch import empty_cuda_cache, has_torch, select_device
+from sahi.utils.import_utils import check_requirements
+from sahi.utils.torch_utils import empty_cuda_cache, select_device
 
 
 class DetectionModel:
+    required_packages: List[str] = []
+
     def __init__(
         self,
         model_path: Optional[str] = None,
@@ -45,6 +45,7 @@ class DetectionModel:
             image_size: int
                 Inference input size.
         """
+
         self.model_path = model_path
         self.config_path = config_path
         self.model = None
@@ -57,6 +58,9 @@ class DetectionModel:
         self._object_prediction_list_per_image = None
         self.set_device(device)
 
+        # automatically ensure dependencies
+        self.check_dependencies()
+
         # automatically load model if load_at_init is True
         if load_at_init:
             if model:
@@ -64,11 +68,14 @@ class DetectionModel:
             else:
                 self.load_model()
 
-    def check_dependencies(self) -> None:
+    def check_dependencies(self, packages: Optional[List[str]] = None) -> None:
         """
-        This function can be implemented to ensure model dependencies are installed.
+        Ensures required dependencies are installed. If 'packages' is None, uses self.required_packages.
+        Subclasses may still call with a custom list for dynamic needs.
         """
-        pass
+        pkgs = packages if packages is not None else getattr(self, "required_packages", [])
+        if pkgs:
+            check_requirements(pkgs)
 
     def load_model(self):
         """
@@ -93,10 +100,8 @@ class DetectionModel:
         Args:
             device: Torch device, "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.
         """
-        if has_torch:
-            self.device = select_device(device)
-        else:
-            raise NotImplementedError(f"Could not set device {self.device}")
+
+        self.device = select_device(device)
 
     def unload_model(self):
         """
@@ -154,43 +159,6 @@ class DetectionModel:
                 object_prediction.category.id = new_category_id_int
 
     def convert_original_predictions(
-
-
-def perform_inference_batch(
-    self,
-    image_list,
-    shift_amount_list=None,
-    full_shape=None,
-    conf_th=None,
-    image_size=None,
-):
-    """
-    Default batched inference fallback.
-
-    Loops over ``image_list`` and calls ``perform_inference`` + ``convert_original_predictions``
-    for each item, applying the corresponding shift from ``shift_amount_list`` and a single
-    ``full_shape`` (the original full image shape) if provided.
-
-    Returns:
-        List[List[ObjectPrediction]]: object predictions per image.
-    """
-    results = []
-    if shift_amount_list is None:
-        shift_amount_list = [[0, 0]] * len(image_list)
-    for img, shift in zip(image_list, shift_amount_list):
-        # Individual inference
-        self.perform_inference(img)
-        # Convert & shift into full image coords if given
-        try:
-            self.convert_original_predictions(shift_amount=shift, full_shape=full_shape)
-        except TypeError:
-            # Backward compatibility in case convert_original_predictions signature differs
-            self.convert_original_predictions(shift_amount=shift)
-        # Copy current image predictions out before next iteration mutates internal state
-        preds = list(getattr(self, "object_prediction_list", []))
-        results.append(preds)
-    return results
-
         self,
         shift_amount: Optional[List[List[int]]] = [[0, 0]],
         full_shape: Optional[List[List[int]]] = None,
