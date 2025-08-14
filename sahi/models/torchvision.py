@@ -108,6 +108,84 @@ class TorchVisionDetectionModel(DetectionModel):
 
         self._original_predictions = prediction_result
 
+    def perform_inference_batch(self, images, **kwargs):
+        """
+        REAL BATCHED INFERENCE: Tüm slice'ları tek seferde GPU'ya gönder
+        """
+        from sahi.utils.torch import to_float_tensor
+        import torch
+        
+        # Check if this is a SAHI sliced inference call
+        slice_offsets = kwargs.get('slice_offsets', None)
+        full_shape = kwargs.get('full_shape', None)
+        
+        if slice_offsets is not None and full_shape is not None:
+            # SAHI sliced inference - tüm slice'ları tek seferde işle
+            batch_images = []
+            for image in images:
+                # arrange model input size
+                if self.image_size is not None:
+                    min_shape, max_shape = min(image.shape[:2]), max(image.shape[:2])
+                    image_size = self.image_size * min_shape / max_shape
+                    self.model.transform.min_size = (image_size,)
+                    self.model.transform.max_size = image_size
+                
+                # Convert to tensor
+                image_tensor = to_float_tensor(image)
+                image_tensor = image_tensor.to(self.device)
+                batch_images.append(image_tensor)
+            
+            # Tüm slice'ları tek seferde GPU'ya gönder
+            with torch.no_grad():
+                batch_predictions = self.model(batch_images)
+            
+            # Her slice için ObjectPrediction objeleri oluştur
+            all_object_predictions = []
+            for i, (image_predictions, (off_x, off_y)) in enumerate(zip(batch_predictions, slice_offsets)):
+                # get indices of boxes with score > confidence_threshold
+                scores = image_predictions["scores"].cpu().detach().numpy()
+                selected_indices = np.where(scores > self.confidence_threshold)[0]
+                
+                # parse boxes, masks, scores, category_ids from predictions
+                category_ids = list(image_predictions["labels"][selected_indices].cpu().detach().numpy())
+                boxes = list(image_predictions["boxes"][selected_indices].cpu().detach().numpy())
+                scores = scores[selected_indices]
+                
+                # check if predictions contain mask
+                masks = image_predictions.get("masks", None)
+                if masks is not None:
+                    masks = list(image_predictions["masks"][selected_indices].cpu().detach().numpy())
+                else:
+                    masks = None
+                
+                # create object_prediction_list for this slice
+                slice_object_predictions = []
+                for ind in range(len(boxes)):
+                    if masks is not None:
+                        from sahi.utils.coco import get_coco_segmentation_from_bool_mask
+                        segmentation = get_coco_segmentation_from_bool_mask(np.array(masks[ind]))
+                    else:
+                        segmentation = None
+                    
+                    from sahi.prediction import ObjectPrediction
+                    object_prediction = ObjectPrediction(
+                        bbox=boxes[ind],
+                        segmentation=segmentation,
+                        category_id=int(category_ids[ind]),
+                        category_name=self.category_mapping[str(int(category_ids[ind]))],
+                        shift_amount=[off_x, off_y],
+                        score=scores[ind],
+                        full_shape=full_shape,
+                    )
+                    slice_object_predictions.append(object_prediction)
+                
+                all_object_predictions.append(slice_object_predictions)
+            
+            return all_object_predictions
+        else:
+            # Regular batch inference - fallback to base class
+            return super().perform_inference_batch(images, **kwargs)
+
     @property
     def num_categories(self):
         """

@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
 import os
 import time
 from typing import Generator, List, Optional, Union
@@ -276,105 +273,102 @@ def get_sliced_prediction(
     # Initialize object_prediction_list to ensure it's always defined
     object_prediction_list = []
 
-    # Check if batched inference is requested and available
-    if batched_inference and num_slices > 1:
-        # Use batched GPU inference for 5x performance improvement
-        if verbose == 1 or verbose == 2:
-            tqdm.write(f"Performing BATCHED prediction on {num_slices} slices (batch_size={batch_size}).")
+    # perform sliced prediction
+    # --- Batched GPU inference (drop-in) ---
 
-        try:
-            # Extract slice images for batched processing
-            slice_images = [slice_img for slice_img in slice_image_result.images]
-            slice_offsets = slice_image_result.starting_pixels
+    
+    slice_images = getattr(slice_image_result, "images", None)
+    slice_offsets = getattr(slice_image_result, "starting_pixels", None)
 
-            # Initialize batched inference
-            device = "cpu"  # default fallback
-            if is_available("torch"):
-                import torch
+    if slice_images is None or slice_offsets is None:
+        slice_images, slice_offsets = [], []
+        for s in slice_image_result:
+            if hasattr(s, "image"):  
+                slice_images.append(s.image)
+                slice_offsets.append(s.starting_pixel)
+            elif isinstance(s, dict):  
+                slice_images.append(s["image"])
+                slice_offsets.append(s["starting_pixel"])
+            else:  
+                slice_images.append(s)
+                slice_offsets.append((0, 0))
 
-                device = "cuda" if torch.cuda.is_available() else "cpu"
-            if hasattr(detection_model, "device"):
-                device = detection_model.device
-
-            batched_inferencer = BatchedSAHIInference(
-                model=detection_model.model if hasattr(detection_model, "model") else detection_model,
-                device=device,
-                batch_size=batch_size,
-                image_size=getattr(detection_model, "image_size", 640),
-            )
-
-            # Perform batched inference
-            batch_results = batched_inferencer.batched_slice_inference(
-                slice_images=slice_images,
-                slice_offsets=slice_offsets,
-                conf_th=getattr(detection_model, "confidence_threshold", 0.25),
-            )
-
-            # Convert batched results to SAHI ObjectPrediction format
-            object_prediction_list = []
-            for result in batch_results:
-                for detection in result["detections"]:
-                    # Create ObjectPrediction object
-                    object_prediction = ObjectPrediction(
-                        bbox=detection["bbox"],
-                        category_id=detection["class_id"],
-                        score=detection["score"],
-                        bool_mask=None,
-                        category_name=detection.get("class_name", str(detection["class_id"])),
-                        shift_amount=[0, 0],
-                        full_shape=[slice_image_result.original_image_height, slice_image_result.original_image_width],
-                    )
-                    object_prediction_list.append(object_prediction)
-
-            if verbose == 2:
-                performance_stats = batched_inferencer.get_performance_stats()
-                tqdm.write(
-                    f"Batched inference completed: {performance_stats.get('slices_per_second', 0):.1f} slices/sec"
-                )
-
-        except Exception as e:
-            if verbose >= 1:
-                tqdm.write(f"Batched inference failed ({e}), falling back to standard inference.")
-            # Fall back to standard inference
-            batched_inference = False
-
-    if not batched_inference:
-        # Standard SAHI inference (original implementation)
-        # create prediction input
-        num_group = int(num_slices / num_batch)
-        if verbose == 1 or verbose == 2:
-            tqdm.write(f"Performing prediction on {num_slices} slices.")
-        # object_prediction_list already initialized above
-        # perform sliced prediction
-        for group_ind in range(num_group):
-            # prepare batch (currently supports only 1 batch)
-            image_list = []
-            shift_amount_list = []
-            for image_ind in range(num_batch):
-                image_list.append(slice_image_result.images[group_ind * num_batch + image_ind])
-            shift_amount_list.append(slice_image_result.starting_pixels[group_ind * num_batch + image_ind])
-        # perform batch prediction
-        prediction_result = get_prediction(
-            image=image_list[0],
-            detection_model=detection_model,
-            shift_amount=shift_amount_list[0],
-            full_shape=[
-                slice_image_result.original_image_height,
-                slice_image_result.original_image_width,
-            ],
-            exclude_classes_by_name=exclude_classes_by_name,
-            exclude_classes_by_id=exclude_classes_by_id,
+    
+    if hasattr(detection_model, "perform_inference_batch"):
+        batched_mode = True
+        
+        if verbose >= 1:
+            print(f"🚀 Starting REAL Batched GPU Inference with {len(slice_images)} slices")
+            print(f"📊 Slice shapes: {[img.shape if hasattr(img, 'shape') else type(img) for img in slice_images]}")
+            print(f"📍 Slice offsets: {slice_offsets}")
+        
+        # REAL BATCHED INFERENCE: Tüm slice'ları tek seferde GPU'ya gönder
+        batch_start_time = time.time()
+        
+        # REAL BATCHED INFERENCE: Tüm slice'ları tek seferde GPU'ya gönder
+        if verbose >= 1:
+            print("🔄 Starting REAL Batched GPU Inference...")
+        
+        # Tüm slice'ları tek seferde gönder
+        all_predictions = detection_model.perform_inference_batch(
+            slice_images,
+            slice_offsets=slice_offsets,
+            full_shape=[slice_image_result.original_image_height,
+                        slice_image_result.original_image_width]
         )
-        # convert sliced predictions to full predictions
-        for object_prediction in prediction_result.object_prediction_list:
-            if object_prediction:  # if not empty
-                object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+        
+        if verbose >= 1:
+            print(f"✅ Batch inference completed! Got {len(all_predictions)} slice results")
+            total_preds = sum(len(preds) if preds else 0 for preds in all_predictions)
+            print(f"📈 Total predictions across all slices: {total_preds}")
+        
+        # Model zaten ObjectPrediction objeleri döndürdü, sadece kullan
+        per_slice_preds = all_predictions
+    else:
+        batched_mode = False
+        per_slice_preds = []
+        for im, (off_x, off_y) in zip(slice_images, slice_offsets):
+            pred = get_prediction(
+                image=im,
+                detection_model=detection_model,
+                shift_amount=[off_x, off_y],
+                full_shape=[
+                    slice_image_result.original_image_height,
+                    slice_image_result.original_image_width,
+                ],
+                exclude_classes_by_name=exclude_classes_by_name,
+                exclude_classes_by_id=exclude_classes_by_id,
+            )
+            per_slice_preds.append(pred.object_prediction_list)
 
-        # merge matching predictions during sliced prediction
+    
+    for preds, (off_x, off_y) in zip(per_slice_preds, slice_offsets):
+        if not preds:
+            continue
+            
+        for obj_pred in preds:
+            if batched_mode:
+                # In batched mode, the ObjectPrediction objects were already created with
+                # the correct shift_amount during inference, so we just need to get the shifted version
+                shifted = obj_pred.get_shifted_object_prediction()
+                if shifted:
+                    object_prediction_list.append(shifted)
+            else:
+                # In non-batched mode, get_prediction already applied shift → don't touch
+                object_prediction_list.append(obj_pred)
+
+
+        
         if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
             postprocess_time_start = time.time()
             object_prediction_list = postprocess(object_prediction_list)
             postprocess_time += time.time() - postprocess_time_start
+
+    # --- /Batched GPU inference ---
+
+
+
+        
 
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
