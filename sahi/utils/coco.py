@@ -1703,10 +1703,14 @@ def export_single_yolo_image_and_corresponding_txt(
     # create a symbolic link pointing to coco_image_path named yolo_image_path
     if disable_symlink:
         import shutil
-
         shutil.copy(coco_image_path, yolo_image_path)
     else:
-        os.symlink(coco_image_path, yolo_image_path)
+        try:
+            os.symlink(coco_image_path, yolo_image_path)
+        except (OSError, NotImplementedError, AttributeError):
+            # Windows'ta yetki yoksa ya da FS desteklemiyorsa kopyaya düş
+            import shutil
+            shutil.copy(coco_image_path, yolo_image_path)
     # calculate annotation normalization ratios
     width = coco_image.width
     height = coco_image.height

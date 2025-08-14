@@ -11,6 +11,22 @@ from sahi.utils.torch_utils import empty_cuda_cache, select_device
 class DetectionModel:
     required_packages: List[str] = []
 
+    def perform_inference_batch(self, images, **kwargs):
+        """
+        Optional batch inference hook.
+
+        Parameters
+        ----------
+        images : Sequence of images (np.ndarray / PIL.Image / cv2 Mat / torch.Tensor)
+        kwargs : forwarded to perform_inference
+
+        Returns
+        -------
+        List[List[ObjectPrediction]] : object predictions per image
+        """
+        return [self.perform_inference(img, **kwargs) for img in images]
+
+
     def __init__(
         self,
         model_path: Optional[str] = None,
