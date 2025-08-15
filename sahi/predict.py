@@ -222,8 +222,6 @@ def get_sliced_prediction(
     # for profiling
     durations_in_seconds = dict()
 
-    # currently only 1 batch supported
-    num_batch = 1
     # create slices from full image
     time_start = time.time()
     slice_image_result = slice_image(
@@ -262,51 +260,51 @@ def get_sliced_prediction(
     time_start = time.time()
 
     # create prediction input
-    num_group = int(num_slices / num_batch)
     if verbose == 1 or verbose == 2:
         tqdm.write(f"Performing prediction on {num_slices} slices.")
     object_prediction_list = []
 
     # perform sliced prediction
-        # --- Batched GPU inference (drop-in) ---
+    # --- Batched GPU inference (drop-in) ---
 
-    
     slice_images = getattr(slice_image_result, "images", None)
     slice_offsets = getattr(slice_image_result, "starting_pixels", None)
 
     if slice_images is None or slice_offsets is None:
         slice_images, slice_offsets = [], []
         for s in slice_image_result:
-            if hasattr(s, "image"):  
+            if hasattr(s, "image"):
                 slice_images.append(s.image)
                 slice_offsets.append(s.starting_pixel)
-            elif isinstance(s, dict):  
+            elif isinstance(s, dict):
                 slice_images.append(s["image"])
                 slice_offsets.append(s["starting_pixel"])
-            else:  
+            else:
                 slice_images.append(s)
                 slice_offsets.append((0, 0))
 
-    
     if hasattr(detection_model, "perform_inference_batch"):
         batched_mode = True
-        
+
         # For models with batched inference, we need to handle each slice individually
         # to properly apply the shift amounts
         per_slice_preds = []
         for im, (off_x, off_y) in zip(slice_images, slice_offsets):
             # Call perform_inference for this slice
             detection_model.perform_inference(im)
-            
+
             # Now create ObjectPrediction objects with the correct shift amount
             detection_model._create_object_prediction_list_from_original_predictions(
                 shift_amount_list=[[off_x, off_y]],
-                full_shape_list=[[slice_image_result.original_image_height,
-                                 slice_image_result.original_image_width]]
+                full_shape_list=[[slice_image_result.original_image_height, slice_image_result.original_image_width]],
             )
-            
+
             # Get the predictions for this slice
-            slice_preds = detection_model._object_prediction_list_per_image[0] if detection_model._object_prediction_list_per_image else []
+            slice_preds = (
+                detection_model._object_prediction_list_per_image[0]
+                if detection_model._object_prediction_list_per_image
+                else []
+            )
             per_slice_preds.append(slice_preds)
     else:
         batched_mode = False
@@ -325,11 +323,10 @@ def get_sliced_prediction(
             )
             per_slice_preds.append(pred.object_prediction_list)
 
-    
     for preds, (off_x, off_y) in zip(per_slice_preds, slice_offsets):
         if not preds:
             continue
-            
+
         for obj_pred in preds:
             if batched_mode:
                 # In batched mode, the ObjectPrediction objects were already created with
@@ -341,18 +338,12 @@ def get_sliced_prediction(
                 # In non-batched mode, get_prediction already applied shift → don't touch
                 object_prediction_list.append(obj_pred)
 
-
-        
         if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
             postprocess_time_start = time.time()
             object_prediction_list = postprocess(object_prediction_list)
             postprocess_time += time.time() - postprocess_time_start
 
     # --- /Batched GPU inference ---
-
-
-
-        
 
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:

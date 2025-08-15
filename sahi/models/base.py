@@ -26,7 +26,6 @@ class DetectionModel:
         """
         return [self.perform_inference(img, **kwargs) for img in images]
 
-
     def __init__(
         self,
         model_path: Optional[str] = None,

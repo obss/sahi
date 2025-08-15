@@ -2,6 +2,7 @@
 # Code written by AnNT, 2023.
 
 from typing import Any, List, Optional
+
 import numpy as np
 import torch
 
@@ -11,6 +12,7 @@ from .base import DetectionModel
 class RTDetrDetectionModel(DetectionModel):
     def load_model(self):
         from ultralytics import RTDETR
+
         model = RTDETR(self.model_path)
         model.to(self.device)
         self.set_model(model)

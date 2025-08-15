@@ -1,4 +1,5 @@
-from typing import List, Any, Optional
+from typing import List
+
 from sahi.models.base import DetectionModel
 
 
@@ -19,8 +20,8 @@ class UltralyticsDetectionModel(DetectionModel):
 
         # Görev bayrakları (detect/segment/obb)
         task = getattr(getattr(self.model, "model", self.model), "task", None)
-        self.has_mask = (task == "segment")
-        self.is_obb = (task == "obb")
+        self.has_mask = task == "segment"
+        self.is_obb = task == "obb"
 
         # (Opsiyonel) sınıf isimleri
         names = None
@@ -38,10 +39,10 @@ class UltralyticsDetectionModel(DetectionModel):
         Herhangi bir boxes formatını YOLO [N,6] (x1,y1,x2,y2,conf,cls) tensörüne çevirir.
         """
         import torch
-        
+
         if boxes is None:
             return None
-            
+
         # Eğer Results nesnesi geldiyse -> .boxes'a in
         rb = getattr(boxes, "boxes", None)
         if rb is not None:
@@ -75,6 +76,7 @@ class UltralyticsDetectionModel(DetectionModel):
 
     def _boxes_to_tensor(self, boxes):
         import torch
+
         # Eğer Results nesnesi geldiyse -> .boxes'a in
         rb = getattr(boxes, "boxes", None)
         if rb is not None:
@@ -107,9 +109,9 @@ class UltralyticsDetectionModel(DetectionModel):
         return torch.as_tensor(boxes)
 
     def perform_inference_batch(self, images, **kwargs):
-        from PIL import Image
         import numpy as np
         import torch
+        from PIL import Image
 
         if self.model is None:
             self.load_model()
@@ -174,9 +176,9 @@ class UltralyticsDetectionModel(DetectionModel):
         self._original_predictions = prediction_result
 
         # Get slice offsets and full shape from kwargs if provided
-        slice_offsets = kwargs.get('slice_offsets', None)
-        full_shape = kwargs.get('full_shape', None)
-        
+        slice_offsets = kwargs.get("slice_offsets", None)
+        full_shape = kwargs.get("full_shape", None)
+
         if slice_offsets is not None and full_shape is not None:
             # Use provided slice offsets and full shape
             shift_amount_list = slice_offsets
@@ -320,6 +322,7 @@ class UltralyticsDetectionModel(DetectionModel):
     ):
         import numpy as np
         import torch
+
         from sahi.prediction import ObjectPrediction
 
         preds = getattr(self, "_original_predictions", None)
@@ -334,14 +337,17 @@ class UltralyticsDetectionModel(DetectionModel):
 
         # shift default
         if shift_amount_list is None or (
-            isinstance(shift_amount_list, (list, tuple)) and shift_amount_list and isinstance(shift_amount_list[0], (int, float))
+            isinstance(shift_amount_list, (list, tuple))
+            and shift_amount_list
+            and isinstance(shift_amount_list[0], (int, float))
         ):
             shift_amount_list = [[0, 0] for _ in range(n)]
 
         # FULL SHAPE fallback (en kritik kısım)
-        if (
-            full_shape_list is None
-            or (isinstance(full_shape_list, (list, tuple)) and full_shape_list and (full_shape_list[0] is None or isinstance(full_shape_list[0], (int, float))))
+        if full_shape_list is None or (
+            isinstance(full_shape_list, (list, tuple))
+            and full_shape_list
+            and (full_shape_list[0] is None or isinstance(full_shape_list[0], (int, float)))
         ):
             if hasattr(self, "_last_full_shape") and self._last_full_shape:
                 full_shape_list = [self._last_full_shape for _ in range(n)]
@@ -368,7 +374,9 @@ class UltralyticsDetectionModel(DetectionModel):
                     obb_points = p[1]
 
             # boxes -> torch.Tensor [N, >=6] (x1,y1,x2,y2,conf,cls)
-            boxes = self._to_yolo_xyxy_conf_cls_tensor(boxes)  # kendi yardımcı dönüşümün; zaten detection tarafında kullanıyorsun
+            boxes = self._to_yolo_xyxy_conf_cls_tensor(
+                boxes
+            )  # kendi yardımcı dönüşümün; zaten detection tarafında kullanıyorsun
             if boxes is None or boxes.numel() == 0:
                 out.append([])
                 continue
@@ -385,7 +393,14 @@ class UltralyticsDetectionModel(DetectionModel):
 
             objs: List[ObjectPrediction] = []
             for j in range(boxes.shape[0]):
-                x1, y1, x2, y2, conf, cls_id = boxes[j, 0].item(), boxes[j, 1].item(), boxes[j, 2].item(), boxes[j, 3].item(), boxes[j, 4].item(), int(boxes[j, 5].item())
+                x1, y1, x2, y2, conf, cls_id = (
+                    boxes[j, 0].item(),
+                    boxes[j, 1].item(),
+                    boxes[j, 2].item(),
+                    boxes[j, 3].item(),
+                    boxes[j, 4].item(),
+                    int(boxes[j, 5].item()),
+                )
                 if conf < conf_thres:
                     continue
 
