@@ -68,7 +68,7 @@ def select_device(device: Optional[str] = None) -> "torch.device":
     valid_cuda_id = bool(re.fullmatch(cuda_id_pattern, device))
 
     if not cpu and not mps and torch.cuda.is_available() and valid_cuda_id:  # prefer GPU if available
-        arg = "cuda:" + (device if int(device) < torch.cuda.device_count() else "0")
+        arg = f"cuda:{device}" if device else "cuda:0"
     elif mps and getattr(torch, "has_mps", False) and torch.backends.mps.is_available():  # prefer MPS if available
         arg = "mps"
     else:  # revert to CPU
