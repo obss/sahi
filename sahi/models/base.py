@@ -1,3 +1,4 @@
+import dataclasses
 from typing import Any, Dict, List, Optional
 
 import numpy as np
@@ -156,7 +157,7 @@ class DetectionModel:
             for object_prediction in object_prediction_list:
                 old_category_id_str = str(object_prediction.category.id)
                 new_category_id_int = self.category_remapping[old_category_id_str]
-                object_prediction.category.id = new_category_id_int
+                object_prediction.category = dataclasses.replace(object_prediction.category, id=new_category_id_int)
 
     def convert_original_predictions(
         self,
