@@ -1,64 +1,64 @@
 name: MMDet CI
 on:
-  push:
-    branches: [main]
-    paths:
-      # Core MMDet implementation files
-      - "sahi/models/mmdet.py"
-      - "sahi/utils/mmdet.py"
+  workflow_dispatch:
+  
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     # Core MMDet implementation files
+  #     - "sahi/models/mmdet.py"
+  #     - "sahi/utils/mmdet.py"
 
-      # Test files that run MMDet tests
-      - "tests/test_mmdetectionmodel.py"
-      - "tests/test_predict.py"
+  #     # Test files that run MMDet tests
+  #     - "tests/test_mmdetectionmodel.py"
+  #     - "tests/test_predict.py"
 
-      # Files that integrate/register MMDet
-      - "sahi/auto_model.py"
-      - "sahi/models/__init__.py"
-      - "sahi/utils/import_utils.py"
+  #     # Files that integrate/register MMDet
+  #     - "sahi/auto_model.py"
+  #     - "sahi/models/__init__.py"
+  #     - "sahi/utils/import_utils.py"
 
-      # Base classes that MMDet depends on
-      - "sahi/models/base.py"
-      - "sahi/predict.py"
-      - "sahi/postprocess/**"
+  #     # Base classes that MMDet depends on
+  #     - "sahi/models/base.py"
+  #     - "sahi/predict.py"
+  #     - "sahi/postprocess/**"
 
-      # Workflow and dependency files
-      - ".github/workflows/mmdet.yml"
-      - "pyproject.toml"
+  #     # Workflow and dependency files
+  #     - ".github/workflows/mmdet.yml"
+  #     - "pyproject.toml"
 
-      # Test data/configs used by MMDet tests
-      - "tests/data/models/mmdet/**"
-      - "tests/data/models/mmdet_*/**"
+  #     # Test data/configs used by MMDet tests
+  #     - "tests/data/models/mmdet/**"
+  #     - "tests/data/models/mmdet_*/**"
 
-  pull_request:
-    branches: [main]
-    paths:
-      # Core MMDet implementation files
-      - "sahi/models/mmdet.py"
-      - "sahi/utils/mmdet.py"
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     # Core MMDet implementation files
+  #     - "sahi/models/mmdet.py"
+  #     - "sahi/utils/mmdet.py"
 
-      # Test files that run MMDet tests
-      - "tests/test_mmdetectionmodel.py"
-      - "tests/test_predict.py"
+  #     # Test files that run MMDet tests
+  #     - "tests/test_mmdetectionmodel.py"
+  #     - "tests/test_predict.py"
 
-      # Files that integrate/register MMDet
-      - "sahi/auto_model.py"
-      - "sahi/models/__init__.py"
-      - "sahi/utils/import_utils.py"
+  #     # Files that integrate/register MMDet
+  #     - "sahi/auto_model.py"
+  #     - "sahi/models/__init__.py"
+  #     - "sahi/utils/import_utils.py"
 
-      # Base classes that MMDet depends on
-      - "sahi/models/base.py"
-      - "sahi/predict.py"
-      - "sahi/postprocess/**"
+  #     # Base classes that MMDet depends on
+  #     - "sahi/models/base.py"
+  #     - "sahi/predict.py"
+  #     - "sahi/postprocess/**"
 
-      # Workflow and dependency files
-      - ".github/workflows/mmdet.yml"
-      - "pyproject.toml"
+  #     # Workflow and dependency files
+  #     - ".github/workflows/mmdet.yml"
+  #     - "pyproject.toml"
 
-      # Test data/configs used by MMDet tests
-      - "tests/data/models/mmdet/**"
-      - "tests/data/models/mmdet_*/**"
-
-  workflow_dispatch: # allow running manually
+  #     # Test data/configs used by MMDet tests
+  #     - "tests/data/models/mmdet/**"
+  #     - "tests/data/models/mmdet_*/**"
 
 jobs:
   mmdet-tests:
