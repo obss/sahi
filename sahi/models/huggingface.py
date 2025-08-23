@@ -9,7 +9,7 @@ import pybboxes.functional as pbf
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.import_utils import ensure_package_minimum_version
+from sahi.utils.package_utils import ensure_package_minimum_version
 
 
 class HuggingfaceDetectionModel(DetectionModel):

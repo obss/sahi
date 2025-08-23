@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import click
-
 from sahi.utils.coco import Coco
 from sahi.utils.file import Path, increment_path
 
@@ -42,7 +40,3 @@ def main(
     )
 
     print(f"COCO to YOLO conversion results are successfully exported to {save_dir}")
-
-
-if __name__ == "__main__":
-    fire.Fire(main)

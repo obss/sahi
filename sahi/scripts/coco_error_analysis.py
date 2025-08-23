@@ -6,7 +6,6 @@ import os
 from multiprocessing import Pool
 from pathlib import Path
 
-import click
 import numpy as np
 
 from sahi.logger import logger
@@ -480,7 +479,3 @@ def analyse(
     )
     if return_dict:
         return result
-
-
-if __name__ == "__main__":
-    fire.Fire(analyse)

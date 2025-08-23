@@ -1,8 +1,6 @@
 import time
 from pathlib import Path
 
-import click
-
 from sahi.utils.file import load_json
 
 
@@ -75,7 +73,3 @@ def main(
         print(f"SAHI has successfully launched a Fiftyone app at http://localhost:{fo.config.default_app_port}")
     while 1:
         time.sleep(3)
-
-
-if __name__ == "__main__":
-    fire.Fire(main)

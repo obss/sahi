@@ -1,7 +1,5 @@
 import os
 
-import click
-
 from sahi.slicing import slice_coco
 from sahi.utils.file import Path, save_json
 
@@ -61,7 +59,3 @@ def slicer(
         output_coco_annotation_file_path = os.path.join(output_dir, sliced_coco_name + ".json")
         save_json(coco_dict, output_coco_annotation_file_path)
         print(f"Sliced dataset for 'slice_size: {slice_size}' is exported to {output_dir}")
-
-
-if __name__ == "__main__":
-    fire.Fire(slice)

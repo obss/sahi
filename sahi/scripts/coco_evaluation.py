@@ -7,7 +7,6 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Literal
 
-import click
 import numpy as np
 from terminaltables import AsciiTable
 
@@ -396,8 +395,3 @@ def evaluate(
     )
     if return_dict:
         return result
-
-
-if __name__ == "__main__":
-    #fire.Fire(evaluate)
-    ...

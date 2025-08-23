@@ -8,7 +8,7 @@ from sahi.logger import logger
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.import_utils import check_package_minimum_version
+from sahi.utils.package_utils import check_package_minimum_version
 
 
 class Yolov5DetectionModel(DetectionModel):

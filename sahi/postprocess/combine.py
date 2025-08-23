@@ -7,7 +7,7 @@ from shapely.strtree import STRtree
 from sahi.logger import logger
 from sahi.postprocess.utils import ObjectPredictionList, has_match, merge_object_prediction_pair
 from sahi.prediction import ObjectPrediction
-from sahi.utils.import_utils import check_requirements
+from sahi.utils.package_utils import check_requirements
 
 
 def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):
