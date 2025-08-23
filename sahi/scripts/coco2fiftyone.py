@@ -1,7 +1,7 @@
 import time
 from pathlib import Path
 
-import fire
+import click
 
 from sahi.utils.file import load_json
 

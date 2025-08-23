@@ -1,4 +1,4 @@
-import fire
+import click
 
 from sahi.predict import predict_fiftyone
 

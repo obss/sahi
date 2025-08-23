@@ -1,6 +1,6 @@
 import os
 
-import fire
+import click
 
 from sahi.slicing import slice_coco
 from sahi.utils.file import Path, save_json

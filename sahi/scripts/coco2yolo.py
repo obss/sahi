@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import fire
+import click
 
 from sahi.utils.coco import Coco
 from sahi.utils.file import Path, increment_path
