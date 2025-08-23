@@ -1,3 +1,5 @@
+# OBSS SAHI Tool
+# Code written by Fatih C Akyon, 2020.
 # Modified by Sinan O Altinuc, 2020.
 
 import copy
@@ -1704,7 +1706,13 @@ def export_single_yolo_image_and_corresponding_txt(
 
         shutil.copy(coco_image_path, yolo_image_path)
     else:
-        os.symlink(coco_image_path, yolo_image_path)
+        try:
+            os.symlink(coco_image_path, yolo_image_path)
+        except (OSError, NotImplementedError, AttributeError):
+            # Windows'ta yetki yoksa ya da FS desteklemiyorsa kopyaya düş
+            import shutil
+
+            shutil.copy(coco_image_path, yolo_image_path)
     # calculate annotation normalization ratios
     width = coco_image.width
     height = coco_image.height
@@ -1746,9 +1754,9 @@ def update_categories(desired_name2id: dict, coco_dict: dict) -> dict:
     Returns:
     ---------
         coco_target : dict
-            COCO dict with updated/filtered categories.
+            COCO dict with updated/filtred categories.
     """
-    # so that original variable doesn't get affected
+    # so that original variable doesnt get affected
     coco_source = copy.deepcopy(coco_dict)
 
     # init target coco dict
