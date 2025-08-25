@@ -1,5 +1,6 @@
 import shutil
 import sys
+from collections import Counter
 from os import path
 
 import numpy as np
@@ -112,23 +113,56 @@ def test_get_prediction_automodel_yolo11():
     )
     object_prediction_list = prediction_result.object_prediction_list
 
-    # compare
+    # assert any object has been detected
     assert len(object_prediction_list) > 0
-    num_person = 0
-    for object_prediction in object_prediction_list:
-        if object_prediction.category.name == "person":
-            num_person += 1
-    assert num_person == 0
-    num_truck = 0
-    for object_prediction in object_prediction_list:
-        if object_prediction.category.name == "truck":
-            num_truck += 1
-    assert num_truck == 0
-    num_car = 0
-    for object_prediction in object_prediction_list:
-        if object_prediction.category.name == "car":
-            num_car += 1
-    assert num_car > 0
+
+    # the number of found objects per category
+    result_counts = Counter([p.category.name for p in object_prediction_list])
+
+    # the test image shows a lot of cars, so we expect only cars to be detected
+    assert result_counts["car"] > 0
+    assert result_counts["truck"] == 0
+    assert result_counts["person"] == 0
+
+
+def test_prediction_category_remapping():
+    from sahi.auto_model import AutoDetectionModel
+    from sahi.predict import get_prediction
+
+    # init model
+    download_yolo11n_model()
+
+    yolo11_detection_model = AutoDetectionModel.from_pretrained(
+        model_type="ultralytics",
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=MODEL_DEVICE,
+        category_remapping={"0": 1, "1": 2, "2": 0},
+        load_at_init=False,
+        image_size=IMAGE_SIZE,
+    )
+    yolo11_detection_model.load_model()
+
+    # prepare image
+    image_path = "tests/data/small-vehicles1.jpeg"
+    image = read_image(image_path)
+
+    # get full sized prediction
+    prediction_result = get_prediction(
+        image=image, detection_model=yolo11_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
+    )
+    object_prediction_list = prediction_result.object_prediction_list
+
+    # assert any object has been detected
+    assert len(object_prediction_list) > 0
+
+    # the number of found objects per category
+    result_counts = Counter([p.category.name for p in object_prediction_list])
+
+    # the test image shows a lot of cars, so we expect only cars to be detected
+    assert result_counts["car"] > 0
+    assert result_counts["truck"] == 0
+    assert result_counts["person"] == 0
 
 
 @pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
