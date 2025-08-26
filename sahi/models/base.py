@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
+from sahi.annotation import Category
 from sahi.logger import logger
 from sahi.prediction import ObjectPrediction
 from sahi.utils.import_utils import check_requirements
