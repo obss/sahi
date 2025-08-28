@@ -8,4 +8,6 @@ MODEL_NAME_TO_CONSTRUCTOR = {
     "ssd300_vgg16": torchvision.models.detection.ssd300_vgg16,
     "ssdlite320_mobilenet_v3_large": torchvision.models.detection.ssdlite320_mobilenet_v3_large,
     "fcos_resnet50_fpn": torchvision.models.detection.fcos_resnet50_fpn,
+    "maskrcnn_resnet50_fpn": torchvision.models.detection.maskrcnn_resnet50_fpn,
+    "maskrcnn_resnet50_fpn_v2": torchvision.models.detection.maskrcnn_resnet50_fpn_v2,
 }

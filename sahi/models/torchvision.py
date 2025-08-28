@@ -114,7 +114,7 @@ class TorchVisionDetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        return self.model.with_mask
+        return hasattr(self.model, "roi_heads") and hasattr(self.model.roi_heads, "mask_predictor")
 
     @property
     def category_names(self):
@@ -159,7 +159,9 @@ class TorchVisionDetectionModel(DetectionModel):
             # check if predictions contain mask
             masks = image_predictions.get("masks", None)
             if masks is not None:
-                masks = list(image_predictions["masks"][selected_indices].cpu().detach().numpy())
+                masks = list(
+                    (image_predictions["masks"][selected_indices] > self.mask_threshold).cpu().detach().numpy()
+                )
             else:
                 masks = None
 
