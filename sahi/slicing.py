@@ -266,6 +266,7 @@ def slice_image(
     min_area_ratio: Optional[float] = 0.1,
     out_ext: Optional[str] = None,
     verbose: Optional[bool] = False,
+    exif_fix: bool = True,
 ) -> SliceImageResult:
     """Slice a large image into smaller windows. If output_file_name and output_dir is given, export
     sliced images.
@@ -292,6 +293,7 @@ def slice_image(
             original suffix for lossless image formats and png for lossy formats ('.jpg','.jpeg').
         verbose (bool, optional): Switch to print relevant values to screen.
             Default 'False'.
+        exif_fix (bool): Whether to apply an EXIF fix to the image.
 
     Returns:
         sliced_image_result: SliceImageResult:
@@ -306,7 +308,7 @@ def slice_image(
     verboselog = logger.info if verbose else lambda *a, **k: None
 
     def _export_single_slice(image: np.ndarray, output_dir: str, slice_file_name: str):
-        image_pil = read_image_as_pil(image)
+        image_pil = read_image_as_pil(image, exif_fix=exif_fix)
         slice_file_path = str(Path(output_dir) / slice_file_name)
         # export sliced image
         image_pil.save(slice_file_path)
@@ -318,7 +320,7 @@ def slice_image(
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     # read image
-    image_pil = read_image_as_pil(image)
+    image_pil = read_image_as_pil(image, exif_fix=exif_fix)
     verboselog("image.shape: " + str(image_pil.size))
 
     image_width, image_height = image_pil.size
@@ -413,6 +415,7 @@ def slice_coco(
     min_area_ratio: Optional[float] = 0.1,
     out_ext: Optional[str] = None,
     verbose: Optional[bool] = False,
+    exif_fix: bool = True,
 ) -> List[Union[Dict, str]]:
     """
     Slice large images given in a directory, into smaller windows. If output_dir is given, export sliced images and coco file.
@@ -438,7 +441,7 @@ def slice_coco(
         out_ext (str, optional): Extension of saved images. Default is the
             original suffix.
         verbose (bool, optional): Switch to print relevant values to screen.
-            Default 'False'.
+        exif_fix (bool, optional): Whether to apply an EXIF fix to the image.
 
     Returns:
         coco_dict: dict
@@ -473,6 +476,7 @@ def slice_coco(
                 min_area_ratio=min_area_ratio,
                 out_ext=out_ext,
                 verbose=verbose,
+                exif_fix=exif_fix,
             )
             # append slice outputs
             sliced_coco_images.extend(slice_image_result.coco_images)
