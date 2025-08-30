@@ -207,7 +207,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
                 requests.get(image, stream=True).raw if str(image).startswith("http") else image  # type: ignore
             ).convert("RGB")
             if exif_fix:
-                ImageOps.exif_transpose(image_pil, inplace=True)
+                ImageOps.exif_transpose(image_pil, in_place=True)
         except Exception as e:  # handle large/tiff image reading
             logger.error(f"OpenCV failed reading image with error {e}, trying skimage instead")
             try:
