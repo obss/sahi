@@ -2,6 +2,7 @@ import copy
 import os
 import random
 import time
+from io import BytesIO
 from typing import Generator, List, Optional, Tuple, Union
 
 import cv2
@@ -204,12 +205,12 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
         # read image if str image path is provided
         try:
             image_pil = Image.open(
-                requests.get(image, stream=True).raw if str(image).startswith("http") else image  # type: ignore
+                BytesIO(requests.get(image, stream=True).content) if str(image).startswith("http") else image
             ).convert("RGB")
             if exif_fix:
                 ImageOps.exif_transpose(image_pil, in_place=True)
         except Exception as e:  # handle large/tiff image reading
-            logger.error(f"OpenCV failed reading image with error {e}, trying skimage instead")
+            logger.error(f"PIL failed reading image with error {e}, trying skimage instead")
             try:
                 import skimage.io
             except ImportError:
@@ -228,7 +229,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
             image = image[:, :, ::-1]
         image_pil = Image.fromarray(image)
     else:
-        raise TypeError("read image with 'pillow' using 'Image.open()'")  # pyright: ignore[reportUnreachable]
+        raise TypeError("read image with 'pillow' using 'Image.open()'")
     return image_pil
 
 
