@@ -59,8 +59,7 @@ jobs:
           key: ${{ runner.os }}-models-${{ hashFiles('sahi/utils/huggingface.py', 'sahi/utils/yolov5.py', 'sahi/utils/ultralytics.py', 'sahi/utils/rtdetr.py', 'sahi/utils/torchvision.py') }}
           restore-keys: |
             ${{ runner.os }}-models-
-      - name: Install libgl
-        run: sudo apt-get update && sudo apt-get install -y libgl1
+
       - name: Install dependencies
         run: |
           set -e
