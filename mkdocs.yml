@@ -1,0 +1,134 @@
+site_name: SAHI Documentation
+site_url: https://sahi.readthedocs.io/
+repo_url: https://github.com/obss/sahi
+repo_name: obss/sahi
+edit_uri: https://github.com/obss/sahi/tree/main/docs
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/obss/sahi
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/sahi
+
+
+theme:
+  name: "material"
+  icon:
+    edit: material/pencil
+  features:
+    - navigation.tracking
+    - content.code.copy
+    - content.action.edit
+    - content.tooltips
+    - content.code.annotate
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.indexes
+
+  palette:
+    - scheme: default
+      primary: "custom"
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    - scheme: slate
+      primary: "custom"
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+  font:
+    text: Inter
+    code: IBM Plex Mono
+
+nav:
+  - Home: index.md
+  - Quick Start: quick-start.md
+  - Notebooks:
+      - Inference Ultralytics: notebooks/inference_for_ultralytics.ipynb
+      - Inference YOLOv5: notebooks/inference_for_yolov5.ipynb
+      - Inference MMDetection: notebooks/inference_for_mmdetection.ipynb
+      - Inference Detectron2: notebooks/inference_for_detectron2.ipynb
+      - Inference HuggingFace: notebooks/inference_for_huggingface.ipynb
+      - Inference RTDETR: notebooks/inference_for_rtdetr.ipynb
+      - Inference Roboflow: notebooks/inference_for_roboflow.ipynb
+      - Inference TorchVision: notebooks/inference_for_torchvision.ipynb
+      - Slicing: notebooks/slicing.ipynb
+
+  - Code Reference:
+      - High-level API:
+          - predict.md
+          - slicing.md
+      - Core:
+          - annotation.md
+          - prediction.md
+          - auto_model.md
+      - Models:
+          - models/base.md
+          - models/ultralytics.md
+          - models/yolov5.md
+          - models/mmdet.md
+          - models/detectron2.md
+          - models/huggingface.md
+          - models/torchvision.md
+          - models/rtdetr.md
+          - models/roboflow.md
+      - 'Post-processing':
+          - postprocess/combine.md
+          - postprocess/utils.md
+      - Utils:
+          - utils/coco.md
+          - utils/cv.md
+          - utils/file.md
+      - 'Command Line Interface':
+          - cli.md
+
+  - Contributing: contributing.md
+  - License: license.md
+  - Changelog: changelog.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [sahi]
+          options:
+            parameter_headings: true
+            load_external_modules: true
+            allow_inspection: true
+            show_bases: true
+            group_by_category: true
+            docstring_style: google
+            show_symbol_type_heading: true
+            show_root_heading: True
+            show_symbol_type_toc: true
+            show_category_heading: true
+  - mkdocs-jupyter:
+      include: ["*.ipynb"]
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - attr_list
+  - md_in_html
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+  - pymdownx.snippets:
+      check_paths: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg

@@ -1,92 +1,80 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
-import logging
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 
+from sahi.logger import logger
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.cv import get_bbox_from_bool_mask
+from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
 
-logger = logging.getLogger(__name__)
+check_requirements(["torch", "mmdet", "mmcv", "mmengine"])  # noqa: E402
+
+from mmdet.apis.det_inferencer import DetInferencer  # noqa: E402
+from mmdet.utils import ConfigType  # noqa: E402
+from mmengine.dataset import Compose  # noqa: E402
+from mmengine.infer.infer import ModelType  # noqa: E402
 
 
-try:
+class DetInferencerWrapper(DetInferencer):
+    def __init__(
+        self,
+        model: Optional[Union[ModelType, str]] = None,
+        weights: Optional[str] = None,
+        device: Optional[str] = None,
+        scope: Optional[str] = "mmdet",
+        palette: str = "none",
+        image_size: Optional[int] = None,
+    ) -> None:
+        self.image_size = image_size
+        super().__init__(model, weights, device, scope, palette)
 
-    check_requirements(["torch", "mmdet", "mmcv", "mmengine"])
+    def __call__(self, images: List[np.ndarray], batch_size: int = 1) -> dict:
+        """
+        Emulate DetInferencer(images) without progressbar
+        Args:
+            images: list of np.ndarray
+                A list of numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
+            batch_size: int
+                Inference batch size. Defaults to 1.
+        """
+        inputs = self.preprocess(images, batch_size=batch_size)
+        results_dict = {"predictions": [], "visualization": []}
+        for _, data in inputs:
+            preds = self.forward(data)
+            results = self.postprocess(
+                preds,
+                visualization=None,
+                return_datasample=False,
+                print_result=False,
+                no_save_pred=True,
+                pred_out_dir=None,
+            )
+            results_dict["predictions"].extend(results["predictions"])
+        return results_dict
 
-    from mmdet.apis.det_inferencer import DetInferencer
-    from mmdet.utils import ConfigType
-    from mmengine.dataset import Compose
-    from mmengine.infer.infer import ModelType
+    def _init_pipeline(self, cfg: ConfigType) -> Compose:
+        """Initialize the test pipeline."""
+        pipeline_cfg = cfg.test_dataloader.dataset.pipeline
 
-    class DetInferencerWrapper(DetInferencer):
-        def __init__(
-            self,
-            model: Optional[Union[ModelType, str]] = None,
-            weights: Optional[str] = None,
-            device: Optional[str] = None,
-            scope: Optional[str] = "mmdet",
-            palette: str = "none",
-            image_size: Optional[int] = None,
-        ) -> None:
-            self.image_size = image_size
-            super().__init__(model, weights, device, scope, palette)
+        # For inference, the key of ``img_id`` is not used.
+        if "meta_keys" in pipeline_cfg[-1]:
+            pipeline_cfg[-1]["meta_keys"] = tuple(
+                meta_key for meta_key in pipeline_cfg[-1]["meta_keys"] if meta_key != "img_id"
+            )
 
-        def __call__(self, images: List[np.ndarray], batch_size: int = 1) -> dict:
-            """
-            Emulate DetInferencer(images) without progressbar
-            Args:
-                images: list of np.ndarray
-                    A list of numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
-                batch_size: int
-                    Inference batch size. Defaults to 1.
-            """
-            inputs = self.preprocess(images, batch_size=batch_size)
-            results_dict = {"predictions": [], "visualization": []}
-            for _, data in inputs:
-                preds = self.forward(data)
-                results = self.postprocess(
-                    preds,
-                    visualization=None,
-                    return_datasample=False,
-                    print_result=False,
-                    no_save_pred=True,
-                    pred_out_dir=None,
-                )
-                results_dict["predictions"].extend(results["predictions"])
-            return results_dict
+        load_img_idx = self._get_transform_idx(pipeline_cfg, "LoadImageFromFile")
+        if load_img_idx == -1:
+            raise ValueError("LoadImageFromFile is not found in the test pipeline")
+        pipeline_cfg[load_img_idx]["type"] = "mmdet.InferencerLoader"
 
-        def _init_pipeline(self, cfg: ConfigType) -> Compose:
-            """Initialize the test pipeline."""
-            pipeline_cfg = cfg.test_dataloader.dataset.pipeline
-
-            # For inference, the key of ``img_id`` is not used.
-            if "meta_keys" in pipeline_cfg[-1]:
-                pipeline_cfg[-1]["meta_keys"] = tuple(
-                    meta_key for meta_key in pipeline_cfg[-1]["meta_keys"] if meta_key != "img_id"
-                )
-
-            load_img_idx = self._get_transform_idx(pipeline_cfg, "LoadImageFromFile")
-            if load_img_idx == -1:
-                raise ValueError("LoadImageFromFile is not found in the test pipeline")
-            pipeline_cfg[load_img_idx]["type"] = "mmdet.InferencerLoader"
-
-            resize_idx = self._get_transform_idx(pipeline_cfg, "Resize")
-            if resize_idx == -1:
-                raise ValueError("Resize is not found in the test pipeline")
-            if self.image_size is not None:
-                pipeline_cfg[resize_idx]["scale"] = (self.image_size, self.image_size)
-            return Compose(pipeline_cfg)
-
-    IMPORT_MMDET_V3 = True
-
-except ImportError:
-    IMPORT_MMDET_V3 = False
+        resize_idx = self._get_transform_idx(pipeline_cfg, "Resize")
+        if resize_idx == -1:
+            raise ValueError("Resize is not found in the test pipeline")
+        if self.image_size is not None:
+            pipeline_cfg[resize_idx]["scale"] = (self.image_size, self.image_size)
+        return Compose(pipeline_cfg)
 
 
 class MmdetDetectionModel(DetectionModel):
@@ -101,16 +89,12 @@ class MmdetDetectionModel(DetectionModel):
         category_mapping: Optional[Dict] = None,
         category_remapping: Optional[Dict] = None,
         load_at_init: bool = True,
-        image_size: int = None,
+        image_size: Optional[int] = None,
         scope: str = "mmdet",
     ):
-
-        if not IMPORT_MMDET_V3:
-            raise ImportError("Failed to import `DetInferencer`. Please confirm you have installed 'mmdet>=3.0.0'")
-
         self.scope = scope
         self.image_size = image_size
-
+        self.required_packages = list(getattr(self, "required_packages", [])) + ["mmdet", "mmcv", "torch"]
         super().__init__(
             model_path,
             model,
@@ -123,9 +107,6 @@ class MmdetDetectionModel(DetectionModel):
             load_at_init,
             image_size,
         )
-
-    def check_dependencies(self):
-        check_requirements(["torch", "mmdet", "mmcv"])
 
     def load_model(self):
         """
@@ -175,8 +156,8 @@ class MmdetDetectionModel(DetectionModel):
             image = image[:, :, ::-1]
         # compatibility with sahi v0.8.15
         if not isinstance(image, list):
-            image = [image]
-        prediction_result = self.model(image)
+            image_list = [image]
+        prediction_result = self.model(image_list)
 
         self._original_predictions = prediction_result["predictions"]
 
@@ -190,15 +171,36 @@ class MmdetDetectionModel(DetectionModel):
     @property
     def has_mask(self):
         """
-        Returns if model output contains segmentation mask
+        Returns if model output contains segmentation mask.
+        Considers both single dataset and ConcatDataset scenarios.
         """
-        has_mask = self.model.model.with_mask
-        return has_mask
+
+        def check_pipeline_for_mask(pipeline):
+            return any(
+                isinstance(item, dict) and any("mask" in key and value is True for key, value in item.items())
+                for item in pipeline
+            )
+
+        # Access the dataset from the configuration
+        dataset_config = self.model.cfg["train_dataloader"]["dataset"]
+
+        if dataset_config["type"] == "ConcatDataset":
+            # If using ConcatDataset, check each dataset individually
+            datasets = dataset_config["datasets"]
+            for dataset in datasets:
+                if check_pipeline_for_mask(dataset["pipeline"]):
+                    return True
+        else:
+            # Otherwise, assume a single dataset with its own pipeline
+            if check_pipeline_for_mask(dataset_config["pipeline"]):
+                return True
+
+        return False
 
     @property
     def category_names(self):
         classes = self.model.model.dataset_meta["classes"]
-        if type(classes) == str:
+        if isinstance(classes, str):
             # https://github.com/open-mmlab/mmdetection/pull/4973
             return (classes,)
         else:
@@ -220,14 +222,12 @@ class MmdetDetectionModel(DetectionModel):
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
-
         try:
             from pycocotools import mask as mask_utils
 
             can_decode_rle = True
         except ImportError:
             can_decode_rle = False
-
         original_predictions = self._original_predictions
         category_mapping = self.category_mapping
 
@@ -275,13 +275,13 @@ class MmdetDetectionModel(DetectionModel):
                             )
                     else:
                         bool_mask = mask
-
                     # check if mask is valid
                     # https://github.com/obss/sahi/discussions/696
                     if get_bbox_from_bool_mask(bool_mask) is None:
                         continue
+                    segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
                 else:
-                    bool_mask = None
+                    segmentation = None
 
                 # fix negative box coords
                 bbox[0] = max(0, bbox[0])
@@ -305,7 +305,7 @@ class MmdetDetectionModel(DetectionModel):
                     bbox=bbox,
                     category_id=category_id,
                     score=score,
-                    bool_mask=bool_mask,
+                    segmentation=segmentation,
                     category_name=category_name,
                     shift_amount=shift_amount,
                     full_shape=full_shape,

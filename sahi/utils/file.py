@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
 import glob
 import json
 import ntpath
@@ -10,7 +7,7 @@ import re
 import urllib.request
 import zipfile
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -75,7 +72,7 @@ def list_files(
     directory: str,
     contains: list = [".json"],
     verbose: int = 1,
-) -> list:
+) -> List[str]:
     """
     Walk given directory and return a list of file path with desired extension
 
@@ -95,12 +92,12 @@ def list_files(
     # define verboseprint
     verboseprint = print if verbose else lambda *a, **k: None
 
-    filepath_list = []
+    filepath_list: List[str] = []
 
     for file in os.listdir(directory):
         # check if filename contains any of the terms given in contains list
         if any(strtocheck in file.lower() for strtocheck in contains):
-            filepath = os.path.join(directory, file)
+            filepath = str(os.path.join(directory, file))
             filepath_list.append(filepath)
 
     number_of_files = len(filepath_list)
@@ -111,7 +108,7 @@ def list_files(
     return filepath_list
 
 
-def list_files_recursively(directory: str, contains: list = [".json"], verbose: str = True) -> (list, list):
+def list_files_recursively(directory: str, contains: list = [".json"], verbose: bool = True) -> Tuple[list, list]:
     """
     Walk given directory recursively and return a list of file path with desired extension
 
@@ -176,7 +173,7 @@ def get_file_extension(path: str):
         str: The file extension.
 
     """
-    filename, file_extension = os.path.splitext(path)
+    _, file_extension = os.path.splitext(path)
     return file_extension
 
 
@@ -186,8 +183,7 @@ def load_pickle(load_path):
     Example inputs:
         load_path: "dirname/coco.pickle"
     """
-    # read from path
-    with open(load_path) as json_file:
+    with open(load_path, "rb") as json_file:
         data = pickle.load(json_file)
     return data
 
@@ -224,7 +220,7 @@ def import_model_class(model_type, class_name):
     return class_
 
 
-def increment_path(path: str, exist_ok: bool = True, sep: str = "") -> str:
+def increment_path(path: Union[str, Path], exist_ok: bool = True, sep: str = "") -> str:
     """
     Increment path, i.e. runs/exp --> runs/exp{sep}0, runs/exp{sep}1 etc.
 

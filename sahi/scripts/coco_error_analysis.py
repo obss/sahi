@@ -1,11 +1,30 @@
 import copy
+import json
 import os
 from multiprocessing import Pool
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Union
 
 import fire
 import numpy as np
+
+from sahi.logger import logger
+
+try:
+    from pycocotools.coco import COCO
+    from pycocotools.cocoeval import COCOeval
+
+    has_pycocotools = True
+except ImportError:
+    has_pycocotools = False
+
+try:
+    import matplotlib.pyplot as plt
+
+    has_matplotlib = True
+except ImportError:
+    has_matplotlib = False
+
 
 COLOR_PALETTE = np.vstack(
     [
@@ -20,9 +39,7 @@ COLOR_PALETTE = np.vstack(
 )
 
 
-def _makeplot(rs, ps, outDir, class_name, iou_type):
-    import matplotlib.pyplot as plt
-
+def _makeplot(rs, ps, outDir: Union[str, Path], class_name: str, iou_type: str) -> List[str]:
     export_path_list = []
 
     areaNames = ["allarea", "small", "medium", "large"]
@@ -33,7 +50,7 @@ def _makeplot(rs, ps, outDir, class_name, iou_type):
         aps = []
         ps_curve = []
         for ps_ in area_ps:
-            # calculate precision recal curves
+            # calculate precision recall curves
             if ps_.ndim > 1:
                 ps_mean = np.zeros((ps_.shape[0],))
                 for ind, ps_threshold in enumerate(ps_):
@@ -93,9 +110,7 @@ def _autolabel(ax, rects, is_percent=True):
         )
 
 
-def _makebarplot(rs, ps, outDir, class_name, iou_type):
-    import matplotlib.pyplot as plt
-
+def _makebarplot(_, ps, outDir, class_name, iou_type):
     areaNames = ["allarea", "small", "medium", "large"]
     types = ["C75", "C50", "Loc", "Sim", "Oth", "BG", "FN"]
     fig, ax = plt.subplots()
@@ -159,8 +174,6 @@ def _get_gt_area_group_numbers(cocoEval):
 
 
 def _make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
-    import matplotlib.pyplot as plt
-
     areaRngLbl2Number = _get_gt_area_group_numbers(cocoEval)
     areaRngLbl = areaRngLbl2Number.keys()
     if verbose:
@@ -172,7 +185,7 @@ def _make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
     width = 0.60  # the width of the bars
     figure_title = "number of annotations per area group"
 
-    rects = ax.bar(x, areaRngLbl2Number.values(), width)
+    rects = ax.bar(x, list(areaRngLbl2Number.values()), width)
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel("Number of annotations")
@@ -193,8 +206,6 @@ def _make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
 
 
 def _make_gt_area_histogram_plot(cocoEval, outDir):
-    import matplotlib.pyplot as plt
-
     n_bins = 100
     areas = [ann["area"] for ann in cocoEval.cocoGt.anns.values()]
 
@@ -219,9 +230,9 @@ def _make_gt_area_histogram_plot(cocoEval, outDir):
     return export_path
 
 
-def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None, max_detections=None, COCOeval=None):
+def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None, max_detections: int = 500):
     nm = cocoGt.loadCats(catId)[0]
-    print(f'--------------analyzing {k + 1}-{nm["name"]}---------------')
+    print(f"--------------analyzing {k + 1}-{nm['name']}---------------")
     ps_ = {}
     dt = copy.deepcopy(cocoDt)
     nm = cocoGt.loadCats(catId)[0]
@@ -291,15 +302,13 @@ def _analyse_results(
     extraplots=None,
     areas=None,
     max_detections=500,
-    COCO=None,
-    COCOeval=None,
 ):
     for res_type in res_types:
         if res_type not in ["bbox", "segm"]:
             raise ValueError(f"res_type {res_type} is not supported")
     if areas is not None:
         if len(areas) != 3:
-            raise ValueError("3 integers should be specified as areas,representing 3 area regions")
+            raise ValueError("3 integers should be specified as areas, representing 3 area regions")
 
     if out_dir is None:
         out_dir = Path(res_file).parent
@@ -312,102 +321,120 @@ def _analyse_results(
 
     result_type_to_export_paths = {}
 
-    cocoGt = COCO(ann_file)
-    cocoDt = cocoGt.loadRes(res_file)
-    imgIds = cocoGt.getImgIds()
-    for res_type in res_types:
-        res_out_dir = out_dir + "/" + res_type + "/"
-        res_directory = os.path.dirname(res_out_dir)
-        if not os.path.exists(res_directory):
-            print(f"-------------create {res_out_dir}-----------------")
-            os.makedirs(res_directory)
-        iou_type = res_type
-        cocoEval = COCOeval(copy.deepcopy(cocoGt), copy.deepcopy(cocoDt), iou_type)
-        cocoEval.params.imgIds = imgIds
-        cocoEval.params.iouThrs = [0.75, 0.5, 0.1]
-        cocoEval.params.maxDets = [max_detections]
-        if areas is not None:
-            cocoEval.params.areaRng = [
-                [0**2, areas[2]],
-                [0**2, areas[0]],
-                [areas[0], areas[1]],
-                [areas[1], areas[2]],
-            ]
-        cocoEval.evaluate()
-        cocoEval.accumulate()
+    # Load annotation file and add empty 'info' field if missing
+    with open(ann_file) as f:
+        ann_dict = json.load(f)
+    if "info" not in ann_dict:
+        ann_dict["info"] = {}
 
-        present_cat_ids = []
-        catIds = cocoGt.getCatIds()
-        for k, catId in enumerate(catIds):
-            image_ids = cocoGt.getImgIds(catIds=[catId])
-            if len(image_ids) != 0:
-                present_cat_ids.append(catId)
-        matrix_shape = list(cocoEval.eval["precision"].shape)
-        matrix_shape[2] = len(present_cat_ids)
-        ps = np.zeros(matrix_shape)
+    # Create temporary file with updated annotations
+    import tempfile
 
-        for k, catId in enumerate(present_cat_ids):
-            ps[:, :, k, :, :] = cocoEval.eval["precision"][:, :, catId, :, :]
-        ps = np.vstack([ps, np.zeros((4, *ps.shape[1:]))])
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp_file:
+        json.dump(ann_dict, tmp_file)
+        temp_ann_file = tmp_file.name
 
-        recThrs = cocoEval.params.recThrs
-        with Pool(processes=48) as pool:
-            args = [
-                (k, cocoDt, cocoGt, catId, iou_type, areas, max_detections, COCOeval)
-                for k, catId in enumerate(present_cat_ids)
-            ]
-            analyze_results = pool.starmap(_analyze_individual_category, args)
+    try:
+        cocoGt = COCO(temp_ann_file)
+        cocoDt = cocoGt.loadRes(res_file)
+        imgIds = cocoGt.getImgIds()
+        for res_type in res_types:
+            res_out_dir = out_dir + "/" + res_type + "/"
+            res_directory = os.path.dirname(res_out_dir)
+            if not os.path.exists(res_directory):
+                print(f"-------------create {res_out_dir}-----------------")
+                os.makedirs(res_directory)
+            iou_type = res_type
+            cocoEval = COCOeval(copy.deepcopy(cocoGt), copy.deepcopy(cocoDt), iou_type)
+            cocoEval.params.imgIds = imgIds
+            cocoEval.params.iouThrs = [0.75, 0.5, 0.1]
+            cocoEval.params.maxDets = [max_detections]
+            if areas is not None:
+                cocoEval.params.areaRng = [
+                    [0**2, areas[2]],
+                    [0**2, areas[0]],
+                    [areas[0], areas[1]],
+                    [areas[1], areas[2]],
+                ]
+            cocoEval.evaluate()
+            cocoEval.accumulate()
 
-        classname_to_export_path_list = {}
-        for k, catId in enumerate(present_cat_ids):
-            nm = cocoGt.loadCats(catId)[0]
-            print(f'--------------saving {k + 1}-{nm["name"]}---------------')
-            analyze_result = analyze_results[k]
-            if k != analyze_result[0]:
-                raise ValueError(f"k {k} != analyze_result[0] {analyze_result[0]}")
-            ps_supercategory = analyze_result[1]["ps_supercategory"]
-            ps_allcategory = analyze_result[1]["ps_allcategory"]
-            # compute precision but ignore superclass confusion
-            ps[3, :, k, :, :] = ps_supercategory
-            # compute precision but ignore any class confusion
-            ps[4, :, k, :, :] = ps_allcategory
-            # fill in background and false negative errors and plot
-            ps[5, :, k, :, :][ps[4, :, k, :, :] == -1] = -1
-            ps[5, :, k, :, :][ps[4, :, k, :, :] > 0] = 1
-            ps[6, :, k, :, :] = 1.0
+            present_cat_ids = []
+            catIds = cocoGt.getCatIds()
+            for k, catId in enumerate(catIds):
+                image_ids = cocoGt.getImgIds(catIds=[catId])
+                if len(image_ids) != 0:
+                    present_cat_ids.append(catId)
+            matrix_shape = list(cocoEval.eval["precision"].shape)
+            matrix_shape[2] = len(present_cat_ids)
+            ps = np.zeros(matrix_shape)
 
-            normalized_class_name = nm["name"].replace("/", "_").replace(os.sep, "_")
+            for k, catId in enumerate(present_cat_ids):
+                ps[:, :, k, :, :] = cocoEval.eval["precision"][:, :, catId, :, :]
+            ps = np.vstack([ps, np.zeros((4, *ps.shape[1:]))])
 
-            curve_export_path_list = _makeplot(recThrs, ps[:, :, k], res_out_dir, normalized_class_name, iou_type)
+            recThrs = cocoEval.params.recThrs
+            with Pool(processes=48) as pool:
+                args = [
+                    (k, cocoDt, cocoGt, catId, iou_type, areas, max_detections)
+                    for k, catId in enumerate(present_cat_ids)
+                ]
+                analyze_results = pool.starmap(_analyze_individual_category, args)
 
+            classname_to_export_path_list = {}
+            for k, catId in enumerate(present_cat_ids):
+                nm = cocoGt.loadCats(catId)[0]
+                print(f"--------------saving {k + 1}-{nm['name']}---------------")
+                analyze_result = analyze_results[k]
+                if k != analyze_result[0]:
+                    raise ValueError(f"k {k} != analyze_result[0] {analyze_result[0]}")
+                ps_supercategory = analyze_result[1]["ps_supercategory"]
+                ps_allcategory = analyze_result[1]["ps_allcategory"]
+                # compute precision but ignore superclass confusion
+                ps[3, :, k, :, :] = ps_supercategory
+                # compute precision but ignore any class confusion
+                ps[4, :, k, :, :] = ps_allcategory
+                # fill in background and false negative errors and plot
+                ps[5, :, k, :, :][ps[4, :, k, :, :] == -1] = -1
+                ps[5, :, k, :, :][ps[4, :, k, :, :] > 0] = 1
+                ps[6, :, k, :, :] = 1.0
+
+                normalized_class_name = nm["name"].replace("/", "_").replace(os.sep, "_")
+
+                curve_export_path_list = _makeplot(recThrs, ps[:, :, k], res_out_dir, normalized_class_name, iou_type)
+
+                if extraplots:
+                    bar_plot_path = _makebarplot(recThrs, ps[:, :, k], res_out_dir, normalized_class_name, iou_type)
+                else:
+                    bar_plot_path = None
+                classname_to_export_path_list[nm["name"]] = {
+                    "curves": curve_export_path_list,
+                    "bar_plot": bar_plot_path,
+                }
+
+            curve_export_path_list = _makeplot(recThrs, ps, res_out_dir, "allclass", iou_type)
             if extraplots:
-                bar_plot_path = _makebarplot(recThrs, ps[:, :, k], res_out_dir, normalized_class_name, iou_type)
+                bar_plot_path = _makebarplot(recThrs, ps, res_out_dir, "allclass", iou_type)
+                gt_area_group_numbers_plot_path = _make_gt_area_group_numbers_plot(
+                    cocoEval=cocoEval, outDir=res_out_dir, verbose=True
+                )
+                gt_area_histogram_plot_path = _make_gt_area_histogram_plot(cocoEval=cocoEval, outDir=res_out_dir)
             else:
-                bar_plot_path = None
-            classname_to_export_path_list[nm["name"]] = {
-                "curves": curve_export_path_list,
-                "bar_plot": bar_plot_path,
+                bar_plot_path, gt_area_group_numbers_plot_path, gt_area_histogram_plot_path = None, None, None
+
+            result_type_to_export_paths[res_type] = {
+                "classwise": classname_to_export_path_list,
+                "overall": {
+                    "bar_plot": bar_plot_path,
+                    "curves": curve_export_path_list,
+                    "gt_area_group_numbers": gt_area_group_numbers_plot_path,
+                    "gt_area_histogram": gt_area_histogram_plot_path,
+                },
             }
+    finally:
+        # Clean up temporary file
+        os.unlink(temp_ann_file)
 
-        curve_export_path_list = _makeplot(recThrs, ps, res_out_dir, "allclass", iou_type)
-        if extraplots:
-            bar_plot_path = _makebarplot(recThrs, ps, res_out_dir, "allclass", iou_type)
-            gt_area_group_numbers_plot_path = _make_gt_area_group_numbers_plot(
-                cocoEval=cocoEval, outDir=res_out_dir, verbose=True
-            )
-            gt_area_histogram_plot_path = _make_gt_area_histogram_plot(cocoEval=cocoEval, outDir=res_out_dir)
-        else:
-            bar_plot_path, gt_area_group_numbers_plot_path, gt_area_histogram_plot_path = None, None, None
-
-        result_type_to_export_paths[res_type] = {
-            "classwise": classname_to_export_path_list,
-            "overall": {
-                "bar_plot": bar_plot_path,
-                "curves": curve_export_path_list,
-                "gt_area_group_numbers": gt_area_group_numbers_plot_path,
-                "gt_area_histogram": gt_area_histogram_plot_path,
-            },
-        }
     print(f"COCO error analysis results are successfully exported to {out_dir}")
 
     return result_type_to_export_paths
@@ -416,13 +443,13 @@ def _analyse_results(
 def analyse(
     dataset_json_path: str,
     result_json_path: str,
-    out_dir: str = None,
+    out_dir: Optional[str] = None,
     type: str = "bbox",
     no_extraplots: bool = False,
     areas: List[int] = [1024, 9216, 10000000000],
     max_detections: int = 500,
     return_dict: bool = False,
-):
+) -> Optional[dict]:
     """
     Args:
         dataset_json_path (str): file path for the coco dataset json file
@@ -434,19 +461,12 @@ def analyse(
         max_detections (int): Maximum number of detections to consider for AP alculation. Default: 500
         return_dict (bool): If True, returns a dict export paths.
     """
-    try:
-        from pycocotools.coco import COCO
-        from pycocotools.cocoeval import COCOeval
-    except ModuleNotFoundError:
-        raise ModuleNotFoundError(
-            'Please run "pip install -U pycocotools" ' "to install pycocotools first for coco evaluation."
-        )
-    try:
-        import matplotlib.pyplot as plt
-    except ModuleNotFoundError:
-        raise ModuleNotFoundError(
-            'Please run "pip install -U matplotlib" ' "to install matplotlib first for visualization."
-        )
+    if not has_matplotlib:
+        logger.error("Please run 'uv pip install -U matplotlib' first for visualization.")
+        raise ModuleNotFoundError("matplotlib not installed")
+    if not has_pycocotools:
+        logger.error("Please run 'uv pip install -U pycocotools' first for Coco analysis.")
+        raise ModuleNotFoundError("pycocotools not installed")
 
     result = _analyse_results(
         result_json_path,
@@ -456,8 +476,6 @@ def analyse(
         extraplots=not no_extraplots,
         areas=areas,
         max_detections=max_detections,
-        COCO=COCO,
-        COCOeval=COCOeval,
     )
     if return_dict:
         return result

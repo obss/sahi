@@ -1,33 +1,28 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon and Kadir Nar, 2021.
-
-import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 import numpy as np
+import yaml
 
+from sahi.constants import COCO_CLASSES
+from sahi.logger import logger
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
-from sahi.utils.import_utils import check_requirements
-
-logger = logging.getLogger(__name__)
+from sahi.utils.cv import get_coco_segmentation_from_bool_mask
+from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
 
 
 class TorchVisionDetectionModel(DetectionModel):
-    def check_dependencies(self) -> None:
-        check_requirements(["torch", "torchvision"])
+    def __init__(self, *args, **kwargs):
+        self.required_packages = list(getattr(self, "required_packages", [])) + ["torch", "torchvision"]
+        super().__init__(*args, **kwargs)
 
     def load_model(self):
         import torch
-
-        from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
 
         # read config params
         model_name = None
         num_classes = None
         if self.config_path is not None:
-            import yaml
-
             with open(self.config_path, "r") as stream:
                 try:
                     config = yaml.safe_load(stream)
@@ -46,17 +41,20 @@ class TorchVisionDetectionModel(DetectionModel):
             num_classes = 91
         if self.model_path is None:
             logger.warning("model_path not provided in config, using pretrained weights and default num_classes: 91.")
-            pretrained = True
+            weights = "DEFAULT"
             num_classes = 91
         else:
-            pretrained = False
+            weights = None
 
         # load model
-        model = MODEL_NAME_TO_CONSTRUCTOR[model_name](num_classes=num_classes, pretrained=pretrained)
-        try:
-            model.load_state_dict(torch.load(self.model_path))
-        except Exception as e:
-            TypeError("model_path is not a valid torchvision model path: ", e)
+        # Note: torchvision >= 0.13 is required for the 'weights' parameter
+        model = MODEL_NAME_TO_CONSTRUCTOR[model_name](num_classes=num_classes, weights=weights)
+        if self.model_path:
+            try:
+                model.load_state_dict(torch.load(self.model_path))
+            except Exception as e:
+                logger.error(f"Invalid {self.model_path=}")
+                raise TypeError("model_path is not a valid torchvision model path: ", e)
 
         self.set_model(model)
 
@@ -67,19 +65,17 @@ class TorchVisionDetectionModel(DetectionModel):
             model: Any
                 A TorchVision model
         """
-        check_requirements(["torch", "torchvision"])
 
         model.eval()
         self.model = model.to(self.device)
 
         # set category_mapping
-        from sahi.utils.torchvision import COCO_CLASSES
 
         if self.category_mapping is None:
             category_names = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
             self.category_mapping = category_names
 
-    def perform_inference(self, image: np.ndarray, image_size: int = None):
+    def perform_inference(self, image: np.ndarray, image_size: Optional[int] = None):
         """
         Prediction is performed using self.model and the prediction result is set to self._original_predictions.
         Args:
@@ -88,7 +84,7 @@ class TorchVisionDetectionModel(DetectionModel):
             image_size: int
                 Inference input size.
         """
-        from sahi.utils.torch import to_float_tensor
+        from sahi.utils.torch_utils import to_float_tensor
 
         # arrange model input size
         if self.image_size is not None:
@@ -118,7 +114,7 @@ class TorchVisionDetectionModel(DetectionModel):
         """
         Returns if model output contains segmentation mask
         """
-        return self.model.with_mask
+        return hasattr(self.model, "roi_heads") and hasattr(self.model.roi_heads, "mask_predictor")
 
     @property
     def category_names(self):
@@ -163,7 +159,9 @@ class TorchVisionDetectionModel(DetectionModel):
             # check if predictions contain mask
             masks = image_predictions.get("masks", None)
             if masks is not None:
-                masks = list(image_predictions["masks"][selected_indices].cpu().detach().numpy())
+                masks = list(
+                    (image_predictions["masks"][selected_indices] > self.mask_threshold).cpu().detach().numpy()
+                )
             else:
                 masks = None
 
@@ -175,13 +173,13 @@ class TorchVisionDetectionModel(DetectionModel):
 
             for ind in range(len(boxes)):
                 if masks is not None:
-                    mask = np.array(masks[ind])
+                    segmentation = get_coco_segmentation_from_bool_mask(np.array(masks[ind]))
                 else:
-                    mask = None
+                    segmentation = None
 
                 object_prediction = ObjectPrediction(
                     bbox=boxes[ind],
-                    bool_mask=mask,
+                    segmentation=segmentation,
                     category_id=int(category_ids[ind]),
                     category_name=self.category_mapping[str(int(category_ids[ind]))],
                     shift_amount=shift_amount,

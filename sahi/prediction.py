@@ -1,20 +1,17 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
 import copy
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 from PIL import Image
 
 from sahi.annotation import ObjectAnnotation
-from sahi.utils.coco import CocoAnnotation, CocoPrediction
+from sahi.utils.coco import CocoPrediction
 from sahi.utils.cv import read_image_as_pil, visualize_object_predictions
 from sahi.utils.file import Path
 
 
 class PredictionScore:
-    def __init__(self, value: float):
+    def __init__(self, value: Union[float, np.ndarray]):
         """
         Arguments:
             score: prediction score between 0 and 1
@@ -31,6 +28,15 @@ class PredictionScore:
         """
         return self.value > threshold
 
+    def __eq__(self, threshold):
+        return self.value == threshold
+
+    def __gt__(self, threshold):
+        return self.value > threshold
+
+    def __lt__(self, threshold):
+        return self.value < threshold
+
     def __repr__(self):
         return f"PredictionScore: <value: {self.value}>"
 
@@ -45,13 +51,13 @@ class ObjectPrediction(ObjectAnnotation):
         bbox: Optional[List[int]] = None,
         category_id: Optional[int] = None,
         category_name: Optional[str] = None,
-        bool_mask: Optional[np.ndarray] = None,
-        score: Optional[float] = 0,
+        segmentation: Optional[List[List[float]]] = None,
+        score: float = 0.0,
         shift_amount: Optional[List[int]] = [0, 0],
         full_shape: Optional[List[int]] = None,
     ):
         """
-        Creates ObjectPrediction from bbox, score, category_id, category_name, bool_mask.
+        Creates ObjectPrediction from bbox, score, category_id, category_name, segmentation.
 
         Arguments:
             bbox: list
@@ -62,8 +68,12 @@ class ObjectPrediction(ObjectAnnotation):
                 ID of the object category
             category_name: str
                 Name of the object category
-            bool_mask: np.ndarray
-                2D boolean mask array. Should be None if model doesn't output segmentation mask.
+            segmentation: List[List]
+                [
+                    [x1, y1, x2, y2, x3, y3, ...],
+                    [x1, y1, x2, y2, x3, y3, ...],
+                    ...
+                ]
             shift_amount: list
                 To shift the box and mask predictions from sliced image
                 to full sized image, should be in the form of [shift_x, shift_y]
@@ -75,7 +85,7 @@ class ObjectPrediction(ObjectAnnotation):
         super().__init__(
             bbox=bbox,
             category_id=category_id,
-            bool_mask=bool_mask,
+            segmentation=segmentation,
             category_name=category_name,
             shift_amount=shift_amount,
             full_shape=full_shape,
@@ -88,21 +98,22 @@ class ObjectPrediction(ObjectAnnotation):
         Used for mapping sliced predictions over full image.
         """
         if self.mask:
+            shifted_mask = self.mask.get_shifted_mask()
             return ObjectPrediction(
                 bbox=self.bbox.get_shifted_box().to_xyxy(),
                 category_id=self.category.id,
                 score=self.score.value,
-                bool_mask=self.mask.get_shifted_mask().bool_mask,
+                segmentation=shifted_mask.segmentation,
                 category_name=self.category.name,
                 shift_amount=[0, 0],
-                full_shape=self.mask.get_shifted_mask().full_shape,
+                full_shape=shifted_mask.full_shape,
             )
         else:
             return ObjectPrediction(
                 bbox=self.bbox.get_shifted_box().to_xyxy(),
                 category_id=self.category.id,
                 score=self.score.value,
-                bool_mask=None,
+                segmentation=None,
                 category_name=self.category.name,
                 shift_amount=[0, 0],
                 full_shape=None,
@@ -114,7 +125,7 @@ class ObjectPrediction(ObjectAnnotation):
         """
         if self.mask:
             coco_prediction = CocoPrediction.from_coco_segmentation(
-                segmentation=self.mask.to_coco_segmentation(),
+                segmentation=self.mask.segmentation,
                 category_id=self.category.id,
                 category_name=self.category.name,
                 score=self.score.value,
@@ -157,7 +168,7 @@ class PredictionResult:
         self,
         object_prediction_list: List[ObjectPrediction],
         image: Union[Image.Image, str, np.ndarray],
-        durations_in_seconds: Optional[Dict] = None,
+        durations_in_seconds: Dict[str, Any] = dict(),
     ):
         self.image: Image.Image = read_image_as_pil(image)
         self.image_width, self.image_height = self.image.size
@@ -167,8 +178,8 @@ class PredictionResult:
     def export_visuals(
         self,
         export_dir: str,
-        text_size: float = None,
-        rect_th: int = None,
+        text_size: Optional[float] = None,
+        rect_th: Optional[int] = None,
         hide_labels: bool = False,
         hide_conf: bool = False,
         file_name: str = "prediction_visual",
@@ -222,7 +233,7 @@ class PredictionResult:
         try:
             import fiftyone as fo
         except ImportError:
-            raise ImportError('Please run "pip install -U fiftyone" to install fiftyone first for fiftyone conversion.')
+            raise ImportError('Please run "uv pip install -U fiftyone" to install fiftyone for conversion.')
 
         fiftyone_detection_list: List[fo.Detection] = []
         for object_prediction in self.object_prediction_list:

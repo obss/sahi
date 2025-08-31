@@ -1,0 +1,3 @@
+# BaseModel
+
+::: sahi.models.base

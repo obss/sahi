@@ -1,22 +1,18 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2021.
-
-import logging
 from typing import List
 
 import torch
 
+from sahi.logger import logger
 from sahi.postprocess.utils import ObjectPredictionList, has_match, merge_object_prediction_pair
 from sahi.prediction import ObjectPrediction
 from sahi.utils.import_utils import check_requirements
-
-logger = logging.getLogger(__name__)
 
 
 def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):
     """
     Apply non-maximum suppression to avoid detecting too many
     overlapping bounding boxes for a given object.
+
     Args:
         predictions: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
@@ -48,6 +44,7 @@ def nms(
     """
     Apply non-maximum suppression to avoid detecting too many
     overlapping bounding boxes for a given object.
+
     Args:
         predictions: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
@@ -155,6 +152,7 @@ def batched_greedy_nmm(
     """
     Apply greedy version of non-maximum merging per category to avoid detecting
     too many overlapping bounding boxes for a given object.
+
     Args:
         object_predictions_as_tensor: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
@@ -186,16 +184,14 @@ def greedy_nmm(
     """
     Apply greedy version of non-maximum merging to avoid detecting too many
     overlapping bounding boxes for a given object.
+
     Args:
         object_predictions_as_tensor: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
-        object_predictions_as_list: ObjectPredictionList Object prediction objects
-            to be merged.
         match_metric: (str) IOU or IOS
-        match_threshold: (float) The overlap thresh for
-            match metric.
+        match_threshold: (float) The overlap thresh for match metric.
     Returns:
-        keep_to_merge_list: (Dict[int:List[int]]) mapping from prediction indices
+        keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
         to keep to a list of prediction indices to be merged.
     """
     keep_to_merge_list = {}
@@ -279,8 +275,8 @@ def greedy_nmm(
 
         # keep the boxes with IoU/IoS less than thresh_iou
         mask = match_metric_value < match_threshold
-        matched_box_indices = order[(mask == False).nonzero().flatten()].flip(dims=(0,))
-        unmatched_indices = order[(mask == True).nonzero().flatten()]
+        matched_box_indices = order[(mask == False).nonzero().flatten()].flip(dims=(0,))  # noqa: E712
+        unmatched_indices = order[(mask == True).nonzero().flatten()]  # noqa: E712
 
         # update box pool
         order = unmatched_indices[scores[unmatched_indices].argsort()]
@@ -295,13 +291,14 @@ def greedy_nmm(
 
 
 def batched_nmm(
-    object_predictions_as_tensor: torch.tensor,
+    object_predictions_as_tensor: torch.Tensor,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ):
     """
     Apply non-maximum merging per category to avoid detecting too many
     overlapping bounding boxes for a given object.
+
     Args:
         object_predictions_as_tensor: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
@@ -326,13 +323,14 @@ def batched_nmm(
 
 
 def nmm(
-    object_predictions_as_tensor: torch.tensor,
+    object_predictions_as_tensor: torch.Tensor,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ):
     """
     Apply non-maximum merging to avoid detecting too many
     overlapping bounding boxes for a given object.
+
     Args:
         object_predictions_as_tensor: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
@@ -423,7 +421,7 @@ def nmm(
 
         # keep the boxes with IoU/IoS less than thresh_iou
         mask = match_metric_value < match_threshold
-        matched_box_indices = other_pred_inds[(mask == False).nonzero().flatten()].flip(dims=(0,))
+        matched_box_indices = other_pred_inds[(mask == False).nonzero().flatten()].flip(dims=(0,))  # noqa: E712
 
         # create keep_ind to merge_ind_list mapping
         if pred_ind not in merge_to_keep:
@@ -459,7 +457,7 @@ class PostprocessPredictions:
 
         check_requirements(["torch"])
 
-    def __call__(self):
+    def __call__(self, predictions: List[ObjectPrediction]):
         raise NotImplementedError()
 
 

@@ -1,12 +1,7 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
 import concurrent.futures
-import logging
 import os
-import time
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Literal, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from PIL import Image
@@ -14,16 +9,10 @@ from shapely.errors import TopologicalError
 from tqdm import tqdm
 
 from sahi.annotation import BoundingBox, Mask
+from sahi.logger import logger
 from sahi.utils.coco import Coco, CocoAnnotation, CocoImage, create_coco_dict
 from sahi.utils.cv import IMAGE_EXTENSIONS_LOSSLESS, IMAGE_EXTENSIONS_LOSSY, read_image_as_pil
 from sahi.utils.file import load_json, save_json
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
-    datefmt="%m/%d/%Y %H:%M:%S",
-    level=os.environ.get("LOGLEVEL", "INFO").upper(),
-)
 
 MAX_WORKERS = 20
 
@@ -33,27 +22,30 @@ def get_slice_bboxes(
     image_width: int,
     slice_height: Optional[int] = None,
     slice_width: Optional[int] = None,
-    auto_slice_resolution: bool = True,
-    overlap_height_ratio: float = 0.2,
-    overlap_width_ratio: float = 0.2,
+    auto_slice_resolution: Optional[bool] = True,
+    overlap_height_ratio: Optional[float] = 0.2,
+    overlap_width_ratio: Optional[float] = 0.2,
 ) -> List[List[int]]:
-    """Slices `image_pil` in crops.
-    Corner values of each slice will be generated using the `slice_height`,
-    `slice_width`, `overlap_height_ratio` and `overlap_width_ratio` arguments.
+    """Generate bounding boxes for slicing an image into crops.
+
+    The function calculates the coordinates for each slice based on the provided
+    image dimensions, slice size, and overlap ratios. If slice size is not provided
+    and auto_slice_resolution is True, the function will automatically determine
+    appropriate slice parameters.
 
     Args:
         image_height (int): Height of the original image.
         image_width (int): Width of the original image.
         slice_height (int, optional): Height of each slice. Default None.
         slice_width (int, optional): Width of each slice. Default None.
-        overlap_height_ratio(float): Fractional overlap in height of each
+        overlap_height_ratio (float, optional): Fractional overlap in height of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
-        overlap_width_ratio(float): Fractional overlap in width of each
+        overlap_width_ratio(float, optional): Fractional overlap in width of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
-        auto_slice_resolution (bool): if not set slice parameters such as slice_height and slice_width,
-            it enables automatically calculate these params from image resolution and orientation.
+        auto_slice_resolution (bool, optional): if not set slice parameters such as slice_height and slice_width,
+            it enables automatically calculate these parameters from image resolution and orientation.
 
     Returns:
         List[List[int]]: List of 4 corner coordinates for each N slices.
@@ -268,14 +260,15 @@ def slice_image(
     output_dir: Optional[str] = None,
     slice_height: Optional[int] = None,
     slice_width: Optional[int] = None,
-    overlap_height_ratio: float = 0.2,
-    overlap_width_ratio: float = 0.2,
-    auto_slice_resolution: bool = True,
-    min_area_ratio: float = 0.1,
+    overlap_height_ratio: Optional[float] = 0.2,
+    overlap_width_ratio: Optional[float] = 0.2,
+    auto_slice_resolution: Optional[bool] = True,
+    min_area_ratio: Optional[float] = 0.1,
     out_ext: Optional[str] = None,
-    verbose: bool = False,
+    verbose: Optional[bool] = False,
+    exif_fix: bool = True,
 ) -> SliceImageResult:
-    """Slice a large image into smaller windows. If output_file_name is given export
+    """Slice a large image into smaller windows. If output_file_name and output_dir is given, export
     sliced images.
 
     Args:
@@ -286,20 +279,21 @@ def slice_image(
         output_dir (str, optional): Output directory
         slice_height (int, optional): Height of each slice. Default None.
         slice_width (int, optional): Width of each slice. Default None.
-        overlap_height_ratio (float): Fractional overlap in height of each
+        overlap_height_ratio (float, optional): Fractional overlap in height of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
-        overlap_width_ratio (float): Fractional overlap in width of each
+        overlap_width_ratio (float, optional): Fractional overlap in width of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
-        auto_slice_resolution (bool): if not set slice parameters such as slice_height and slice_width,
+        auto_slice_resolution (bool, optional): if not set slice parameters such as slice_height and slice_width,
             it enables automatically calculate these params from image resolution and orientation.
-        min_area_ratio (float): If the cropped annotation area to original annotation
+        min_area_ratio (float, optional): If the cropped annotation area to original annotation
             ratio is smaller than this value, the annotation is filtered out. Default 0.1.
         out_ext (str, optional): Extension of saved images. Default is the
             original suffix for lossless image formats and png for lossy formats ('.jpg','.jpeg').
         verbose (bool, optional): Switch to print relevant values to screen.
             Default 'False'.
+        exif_fix (bool): Whether to apply an EXIF fix to the image.
 
     Returns:
         sliced_image_result: SliceImageResult:
@@ -308,18 +302,16 @@ def slice_image(
                                     Directory of the sliced image exports.
                                 original_image_size: list of int
                                     Size of the unsliced original image in [height, width]
-        num_total_invalid_segmentation: int
-            Number of invalid segmentation annotations.
     """
 
     # define verboseprint
     verboselog = logger.info if verbose else lambda *a, **k: None
 
     def _export_single_slice(image: np.ndarray, output_dir: str, slice_file_name: str):
-        image_pil = read_image_as_pil(image)
+        image_pil = read_image_as_pil(image, exif_fix=exif_fix)
         slice_file_path = str(Path(output_dir) / slice_file_name)
         # export sliced image
-        image_pil.save(slice_file_path, quality="keep")
+        image_pil.save(slice_file_path)
         image_pil.close()  # to fix https://github.com/obss/sahi/issues/565
         verboselog("sliced image path: " + slice_file_path)
 
@@ -328,7 +320,7 @@ def slice_image(
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     # read image
-    image_pil = read_image_as_pil(image)
+    image_pil = read_image_as_pil(image, exif_fix=exif_fix)
     verboselog("image.shape: " + str(image_pil.size))
 
     image_width, image_height = image_pil.size
@@ -415,32 +407,33 @@ def slice_coco(
     image_dir: str,
     output_coco_annotation_file_name: str,
     output_dir: Optional[str] = None,
-    ignore_negative_samples: bool = False,
-    slice_height: int = 512,
-    slice_width: int = 512,
-    overlap_height_ratio: float = 0.2,
-    overlap_width_ratio: float = 0.2,
-    min_area_ratio: float = 0.1,
+    ignore_negative_samples: Optional[bool] = False,
+    slice_height: Optional[int] = 512,
+    slice_width: Optional[int] = 512,
+    overlap_height_ratio: Optional[float] = 0.2,
+    overlap_width_ratio: Optional[float] = 0.2,
+    min_area_ratio: Optional[float] = 0.1,
     out_ext: Optional[str] = None,
-    verbose: bool = False,
+    verbose: Optional[bool] = False,
+    exif_fix: bool = True,
 ) -> List[Union[Dict, str]]:
     """
-    Slice large images given in a directory, into smaller windows. If out_name is given export sliced images and coco file.
+    Slice large images given in a directory, into smaller windows. If output_dir is given, export sliced images and coco file.
 
     Args:
-        coco_annotation_file_pat (str): Location of the coco annotation file
+        coco_annotation_file_path (str): Location of the coco annotation file
         image_dir (str): Base directory for the images
         output_coco_annotation_file_name (str): File name of the exported coco
-            datatset json.
+            dataset json.
         output_dir (str, optional): Output directory
-        ignore_negative_samples (bool): If True, images without annotations
+        ignore_negative_samples (bool, optional): If True, images without annotations
             are ignored. Defaults to False.
-        slice_height (int): Height of each slice. Default 512.
-        slice_width (int): Width of each slice. Default 512.
-        overlap_height_ratio (float): Fractional overlap in height of each
+        slice_height (int, optional): Height of each slice. Default 512.
+        slice_width (int, optional): Width of each slice. Default 512.
+        overlap_height_ratio (float, optional): Fractional overlap in height of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
-        overlap_width_ratio (float): Fractional overlap in width of each
+        overlap_width_ratio (float, optional): Fractional overlap in width of each
             slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
             overlap of 20 pixels). Default 0.2.
         min_area_ratio (float): If the cropped annotation area to original annotation
@@ -448,7 +441,7 @@ def slice_coco(
         out_ext (str, optional): Extension of saved images. Default is the
             original suffix.
         verbose (bool, optional): Switch to print relevant values to screen.
-            Default 'False'.
+        exif_fix (bool, optional): Whether to apply an EXIF fix to the image.
 
     Returns:
         coco_dict: dict
@@ -483,6 +476,7 @@ def slice_coco(
                 min_area_ratio=min_area_ratio,
                 out_ext=out_ext,
                 verbose=verbose,
+                exif_fix=exif_fix,
             )
             # append slice outputs
             sliced_coco_images.extend(slice_image_result.coco_images)
@@ -501,7 +495,7 @@ def slice_coco(
     return coco_dict, save_path
 
 
-def calc_ratio_and_slice(orientation, slide=1, ratio=0.1):
+def calc_ratio_and_slice(orientation: Literal["vertical", "horizontal", "square"], slide: int = 1, ratio: float = 0.1):
     """
     According to image resolution calculation overlap params
     Args:
@@ -518,6 +512,8 @@ def calc_ratio_and_slice(orientation, slide=1, ratio=0.1):
         slice_row, slice_col, overlap_height_ratio, overlap_width_ratio = slide * 2, slide, ratio, ratio
     elif orientation == "square":
         slice_row, slice_col, overlap_height_ratio, overlap_width_ratio = slide, slide, ratio, ratio
+    else:
+        raise ValueError(f"Invalid orientation: {orientation}. Must be one of 'vertical', 'horizontal', or 'square'.")
 
     return slice_row, slice_col, overlap_height_ratio, overlap_width_ratio  # noqa
 
@@ -697,7 +693,7 @@ def shift_masks(masks: np.ndarray, offset: Sequence[int], full_shape: Sequence[i
 
     shifted_masks = []
     for mask in masks:
-        mask = Mask(bool_mask=mask, shift_amount=offset, full_shape=full_shape)
+        mask = Mask(segmentation=mask, shift_amount=offset, full_shape=full_shape)
         mask = mask.get_shifted_mask()
         shifted_masks.append(mask.bool_mask)
 
