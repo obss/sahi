@@ -2,12 +2,13 @@ import copy
 import os
 import random
 import time
+from io import BytesIO
 from typing import Generator, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
 import requests
-from PIL import Image
+from PIL import Image, ImageOps
 
 from sahi.logger import logger
 from sahi.utils.file import Path
@@ -183,7 +184,7 @@ def read_image(image_path: str) -> np.ndarray:
     return image
 
 
-def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool = False) -> Image.Image:
+def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool = True) -> Image.Image:
     """
     Loads an image as PIL.Image.Image.
 
@@ -204,12 +205,12 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
         # read image if str image path is provided
         try:
             image_pil = Image.open(
-                requests.get(image, stream=True).raw if str(image).startswith("http") else image  # type: ignore
+                BytesIO(requests.get(image, stream=True).content) if str(image).startswith("http") else image
             ).convert("RGB")
             if exif_fix:
-                image_pil = exif_transpose(image_pil)
+                ImageOps.exif_transpose(image_pil, in_place=True)
         except Exception as e:  # handle large/tiff image reading
-            logger.error(f"OpenCV failed reading image with error {e}, trying skimage instead")
+            logger.error(f"PIL failed reading image with error {e}, trying skimage instead")
             try:
                 import skimage.io
             except ImportError:
@@ -228,7 +229,7 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
             image = image[:, :, ::-1]
         image_pil = Image.fromarray(image)
     else:
-        raise TypeError("read image with 'pillow' using 'Image.open()'")  # pyright: ignore[reportUnreachable]
+        raise TypeError("read image with 'pillow' using 'Image.open()'")
     return image_pil
 
 
@@ -764,33 +765,3 @@ def ipython_display(image: np.ndarray):
     _, ret = cv2.imencode(".png", image)
     i = IPython.display.Image(data=ret)  # type: ignore
     IPython.display.display(i)  # type: ignore
-
-
-def exif_transpose(image: Image.Image) -> Image.Image:
-    """
-    Transpose a PIL image accordingly if it has an EXIF Orientation tag.
-    Inplace version of https://github.com/python-pillow/Pillow/blob/master/src/PIL/ImageOps.py exif_transpose()
-
-    Args:
-        image (Image.Image): The image to transpose.
-
-    Returns:
-        Image.Image: The transposed image.
-    """
-    exif = image.getexif()
-    orientation = exif.get(0x0112, 1)  # default 1
-    if orientation > 1:
-        method = {
-            2: Image.Transpose.FLIP_LEFT_RIGHT,
-            3: Image.Transpose.ROTATE_180,
-            4: Image.Transpose.FLIP_TOP_BOTTOM,
-            5: Image.Transpose.TRANSPOSE,
-            6: Image.Transpose.ROTATE_270,
-            7: Image.Transpose.TRANSVERSE,
-            8: Image.Transpose.ROTATE_90,
-        }.get(orientation)
-        if method is not None:
-            image = image.transpose(method)
-            del exif[0x0112]
-            image.info["exif"] = exif.tobytes()
-    return image
