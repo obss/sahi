@@ -216,7 +216,7 @@ class SliceImageResult:
         return coco_images
 
     @property
-    def starting_pixels(self) -> List[int]:
+    def starting_pixels(self) -> List[List[int]]:
         """Returns a list of starting pixels for each slice.
 
         Returns:
