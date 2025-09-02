@@ -158,6 +158,7 @@ def get_sliced_prediction(
     slice_dir: Optional[str] = None,
     exclude_classes_by_name: Optional[List[str]] = None,
     exclude_classes_by_id: Optional[List[int]] = None,
+    model_category_mapping: Optional[dict] = None,
 ) -> PredictionResult:
     """
     Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -287,7 +288,6 @@ def get_sliced_prediction(
     t0 = time.time()
     batched_predictions = detection_model.perform_inference_batch(
         slice_images,
-        **model_kwargs,
     )
     t1 = time.time()
 
@@ -297,8 +297,7 @@ def get_sliced_prediction(
             batched_predictions=batched_predictions,
             shift_amount_list=slice_offsets,
             full_shape_list=[[slice_image_result.original_image_height, slice_image_result.original_image_width]] * len(slice_images),
-            category_mapping=category_mapping,
-            **converter_kwargs,
+            category_mapping=model_category_mapping,
         )
     else:
         # Fallback: call single-image converter in a loop (still only 1 forward pass)
@@ -308,8 +307,7 @@ def get_sliced_prediction(
                 original_predictions=pred,
                 shift_amount_list=[[off_x, off_y]],
                 full_shape_list=[[slice_image_result.original_image_height, slice_image_result.original_image_width]],
-                category_mapping=category_mapping,
-                **converter_kwargs,
+                category_mapping=model_category_mapping,
             )
             slice_preds = (
                 detection_model._object_prediction_list_per_image[0]
@@ -326,15 +324,10 @@ def get_sliced_prediction(
             continue
 
         for obj_pred in preds:
-            if batched_mode:
-                # In batched mode, the ObjectPrediction objects were already created with
-                # the correct shift_amount during inference, so we just need to get the shifted version
-                shifted = obj_pred.get_shifted_object_prediction()
-                if shifted:
-                    object_prediction_list.append(shifted)
-            else:
-                # In non-batched mode, get_prediction already applied shift → don't touch
-                object_prediction_list.append(obj_pred)
+            # ObjectPrediction objects were already created with the correct shift_amount during inference
+            shifted = obj_pred.get_shifted_object_prediction()
+            if shifted:
+                object_prediction_list.append(shifted)
 
         if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
             postprocess_time_start = time.time()
