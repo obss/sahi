@@ -1,6 +1,7 @@
-from typing import List
+from typing import Any, Dict, List, Optional, Tuple
 
 from sahi.models.base import DetectionModel
+from sahi.prediction import ObjectPrediction
 
 
 class UltralyticsDetectionModel(DetectionModel):
@@ -439,3 +440,27 @@ class UltralyticsDetectionModel(DetectionModel):
 
         self._object_prediction_list_per_image = out
         return out
+
+    def create_object_prediction_lists_from_batched_predictions(
+        self,
+        batched_predictions: List[Any],
+        shift_amount_list: List[Tuple[int, int]],
+        full_shape_list: List[Tuple[int, int]],
+        category_mapping: Optional[Dict[int, int]] = None,
+        **kwargs: Any,
+    ) -> List[List[ObjectPrediction]]:
+        """
+        Convenience wrapper: maps batched per-image predictions to per-image ObjectPrediction lists.
+        """
+        opl: List[List[ObjectPrediction]] = []
+        for pred, shift, shape in zip(batched_predictions, shift_amount_list, full_shape_list):
+            opl.append(
+                self._create_object_prediction_list_from_original_predictions(
+                    original_predictions=pred,
+                    shift_amount_list=[list(shift)],
+                    full_shape_list=[list(shape)],
+                    category_mapping=category_mapping,
+                    **kwargs,
+                )[0]  # Take first (and only) element from the list
+            )
+        return opl

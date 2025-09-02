@@ -283,45 +283,43 @@ def get_sliced_prediction(
                 slice_images.append(s)
                 slice_offsets.append((0, 0))
 
-    if hasattr(detection_model, "perform_inference_batch"):
-        batched_mode = True
+    # NEW: single batched inference call (falls back to sequential for models that don't override)
+    t0 = time.time()
+    batched_predictions = detection_model.perform_inference_batch(
+        slice_images,
+        **model_kwargs,
+    )
+    t1 = time.time()
 
-        # For models with batched inference, we need to handle each slice individually
-        # to properly apply the shift amounts
+    # Convert per-image predictions
+    if hasattr(detection_model, "create_object_prediction_lists_from_batched_predictions"):
+        per_slice_preds = detection_model.create_object_prediction_lists_from_batched_predictions(
+            batched_predictions=batched_predictions,
+            shift_amount_list=slice_offsets,
+            full_shape_list=[[slice_image_result.original_image_height, slice_image_result.original_image_width]] * len(slice_images),
+            category_mapping=category_mapping,
+            **converter_kwargs,
+        )
+    else:
+        # Fallback: call single-image converter in a loop (still only 1 forward pass)
         per_slice_preds = []
-        for im, (off_x, off_y) in zip(slice_images, slice_offsets):
-            # Call perform_inference for this slice
-            detection_model.perform_inference(im)
-
-            # Now create ObjectPrediction objects with the correct shift amount
+        for pred, (off_x, off_y) in zip(batched_predictions, slice_offsets):
             detection_model._create_object_prediction_list_from_original_predictions(
+                original_predictions=pred,
                 shift_amount_list=[[off_x, off_y]],
                 full_shape_list=[[slice_image_result.original_image_height, slice_image_result.original_image_width]],
+                category_mapping=category_mapping,
+                **converter_kwargs,
             )
-
-            # Get the predictions for this slice
             slice_preds = (
                 detection_model._object_prediction_list_per_image[0]
                 if detection_model._object_prediction_list_per_image
                 else []
             )
             per_slice_preds.append(slice_preds)
-    else:
-        batched_mode = False
-        per_slice_preds = []
-        for im, (off_x, off_y) in zip(slice_images, slice_offsets):
-            pred = get_prediction(
-                image=im,
-                detection_model=detection_model,
-                shift_amount=[off_x, off_y],
-                full_shape=[
-                    slice_image_result.original_image_height,
-                    slice_image_result.original_image_width,
-                ],
-                exclude_classes_by_name=exclude_classes_by_name,
-                exclude_classes_by_id=exclude_classes_by_id,
-            )
-            per_slice_preds.append(pred.object_prediction_list)
+
+    if verbose:
+        print(f"[SAHI][BATCH] forward={t1-t0:.3f}s slices={len(slice_images)}")
 
     for preds, (off_x, off_y) in zip(per_slice_preds, slice_offsets):
         if not preds:
