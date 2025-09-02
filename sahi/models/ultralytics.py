@@ -1,278 +1,466 @@
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
-import cv2
-import numpy as np
-import torch
-
-from sahi.logger import logger
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
-from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.cv import get_coco_segmentation_from_bool_mask
-from sahi.utils.import_utils import check_requirements
 
 
 class UltralyticsDetectionModel(DetectionModel):
     """
-    Detection model for Ultralytics YOLO models.
-
-    Supports both PyTorch (.pt) and ONNX (.onnx) models.
+    Ultralytics YOLO (v8/v11) modelleri için DetectionModel.
     """
 
-    def __init__(self, *args, **kwargs):
-        self.fuse: bool = kwargs.pop("fuse", False)
-        self.required_packages = list(getattr(self, "required_packages", [])) + ["ultralytics"]
-        super().__init__(*args, **kwargs)
-
     def load_model(self):
-        """
-        Detection model is initialized and set to self.model.
-        Supports both PyTorch (.pt) and ONNX (.onnx) models.
-        """
-
         from ultralytics import YOLO
 
-        if self.model_path and ".onnx" in self.model_path:
-            check_requirements(["onnx", "onnxruntime"])
+        # Modeli yükle
+        self.model = YOLO(self.model_path)
 
+        # Cihaz
+        if hasattr(self.model, "to"):
+            self.model.to(self.device)
+
+        # Görev bayrakları (detect/segment/obb)
+        task = getattr(getattr(self.model, "model", self.model), "task", None)
+        self.has_mask = task == "segment"
+        self.is_obb = task == "obb"
+
+        # (Opsiyonel) sınıf isimleri
+        names = None
         try:
-            model = YOLO(self.model_path)
-            # Only call .to(device) for PyTorch models, not ONNX
-            if self.model_path and not self.model_path.endswith(".onnx"):
-                model.to(self.device)
-            self.set_model(model)
-            if self.fuse and hasattr(model, "fuse"):
-                model.fuse()
+            names = getattr(getattr(self.model, "model", self.model), "names", None)
+        except Exception:
+            pass
+        self.category_names = names
 
-        except Exception as e:
-            raise TypeError("model_path is not a valid Ultralytics model path: ", e)
+        # set_model_loaded yok; gerek de yok. Model yüklendi.
+        return self.model
 
-    def set_model(self, model: Any, **kwargs):
+    def _to_yolo_xyxy_conf_cls_tensor(self, boxes):
         """
-        Sets the underlying Ultralytics model.
-        Args:
-            model: Any
-                A Ultralytics model
+        Herhangi bir boxes formatını YOLO [N,6] (x1,y1,x2,y2,conf,cls) tensörüne çevirir.
         """
+        import torch
 
-        self.model = model
-        # set category_mapping
-        if not self.category_mapping:
-            category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
-            self.category_mapping = category_mapping
+        if boxes is None:
+            return None
 
-    def perform_inference(self, image: np.ndarray):
-        """
-        Prediction is performed using self.model and the prediction result is set to self._original_predictions.
-        Args:
-            image: np.ndarray
-                A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
-        """
+        # Eğer Results nesnesi geldiyse -> .boxes'a in
+        rb = getattr(boxes, "boxes", None)
+        if rb is not None:
+            boxes = rb
 
-        # Confirm model is loaded
+        # Ultralytics Boxes: doğrudan .data varsa onu kullan
+        if hasattr(boxes, "data") and isinstance(boxes.data, torch.Tensor):
+            return boxes.data
+
+        # Bazı sürümlerde .xyxy/.conf/.cls alanları var
+        if all(hasattr(boxes, a) for a in ("xyxy", "conf", "cls")):
+            xyxy = boxes.xyxy
+            conf = boxes.conf[:, None] if boxes.conf.ndim == 1 else boxes.conf
+            cls_ = boxes.cls[:, None] if boxes.cls.ndim == 1 else boxes.cls
+
+            if not isinstance(xyxy, torch.Tensor):
+                xyxy = torch.as_tensor(xyxy)
+            if not isinstance(conf, torch.Tensor):
+                conf = torch.as_tensor(conf)
+            if not isinstance(cls_, torch.Tensor):
+                cls_ = torch.as_tensor(cls_)
+
+            return torch.cat([xyxy, conf, cls_], dim=1)
+
+        # Liste/tuple içinde tensörler ise birleştir
+        if isinstance(boxes, (list, tuple)) and len(boxes) and isinstance(boxes[0], torch.Tensor):
+            return torch.cat([b for b in boxes], dim=0)
+
+        # Son çare: tensöre dök
+        return torch.as_tensor(boxes)
+
+    def _boxes_to_tensor(self, boxes):
+        import torch
+
+        # Eğer Results nesnesi geldiyse -> .boxes'a in
+        rb = getattr(boxes, "boxes", None)
+        if rb is not None:
+            boxes = rb
+
+        # Ultralytics Boxes: doğrudan .data varsa onu kullan
+        if hasattr(boxes, "data") and isinstance(boxes.data, torch.Tensor):
+            return boxes.data
+
+        # Bazı sürümlerde .xyxy/.conf/.cls alanları var
+        if all(hasattr(boxes, a) for a in ("xyxy", "conf", "cls")):
+            xyxy = boxes.xyxy
+            conf = boxes.conf[:, None] if boxes.conf.ndim == 1 else boxes.conf
+            cls_ = boxes.cls[:, None] if boxes.cls.ndim == 1 else boxes.cls
+
+            if not isinstance(xyxy, torch.Tensor):
+                xyxy = torch.as_tensor(xyxy)
+            if not isinstance(conf, torch.Tensor):
+                conf = torch.as_tensor(conf)
+            if not isinstance(cls_, torch.Tensor):
+                cls_ = torch.as_tensor(cls_)
+
+            return torch.cat([xyxy, conf, cls_], dim=1)
+
+        # Liste/tuple içinde tensörler ise birleştir
+        if isinstance(boxes, (list, tuple)) and len(boxes) and isinstance(boxes[0], torch.Tensor):
+            return torch.cat([b for b in boxes], dim=0)
+
+        # Son çare: tensöre dök
+        return torch.as_tensor(boxes)
+
+    def perform_inference_batch(self, images, **kwargs):
+        import numpy as np
+        import torch
+        from PIL import Image
+
         if self.model is None:
-            raise ValueError("Model is not loaded, load it by calling .load_model()")
+            self.load_model()
 
-        kwargs = {"cfg": self.config_path, "verbose": False, "conf": self.confidence_threshold, "device": self.device}
+        norm_imgs = []
+        full_shape_list = []
+        for im in images:
+            if isinstance(im, Image.Image):
+                arr = np.array(im)  # RGB
+            elif isinstance(im, np.ndarray):
+                arr = im
+            elif isinstance(im, torch.Tensor):
+                t = im.detach().cpu()
+                if t.ndim == 3 and t.shape[0] in (1, 3, 4):
+                    t = t.permute(1, 2, 0)
+                elif t.ndim == 4 and t.shape[0] == 1:
+                    t = t.squeeze(0).permute(1, 2, 0)
+                arr = t.numpy()
+            else:
+                raise TypeError(f"Unsupported image type: {type(im)}")
 
-        if self.image_size is not None:
-            kwargs = {"imgsz": self.image_size, **kwargs}
+            norm_imgs.append(arr)
+            full_shape_list.append([int(arr.shape[0]), int(arr.shape[1])])
 
-        prediction_result = self.model(image[:, :, ::-1], **kwargs)  # YOLO expects numpy arrays to have BGR
+        with torch.no_grad():
+            results = self.model(norm_imgs, verbose=False)
 
-        # Handle different result types for PyTorch vs ONNX models
-        # ONNX models might return results in a different format
-        if self.has_mask:
-            from ultralytics.engine.results import Masks
+        # --- BURASI ÖNEMLİ: her zaman listeye normalize et
+        try:
+            from ultralytics.engine.results import Results as UResults
+        except Exception:
+            UResults = None
 
-            if not prediction_result[0].masks:
-                # Create empty masks if none exist
-                if hasattr(self.model, "device"):
-                    device = self.model.device
-                else:
-                    device = "cpu"  # Default for ONNX models
-                prediction_result[0].masks = Masks(
-                    torch.tensor([], device=device), prediction_result[0].boxes.orig_shape
-                )
+        if UResults and isinstance(results, UResults):
+            results_list = [results]
+        elif isinstance(results, (list, tuple)):
+            results_list = list(results)
+        else:
+            results_list = [results]
+        # ---
 
-            # We do not filter results again as confidence threshold is already applied above
-            prediction_result = [
-                (
-                    result.boxes.data,
-                    result.masks.data,
-                )
-                for result in prediction_result
-            ]
-        elif self.is_obb:
-            # For OBB task, get OBB points in xyxyxyxy format
-            device = getattr(self.model, "device", "cpu")
-            prediction_result = [
-                (
-                    # Get OBB data: xyxy, conf, cls
-                    torch.cat(
-                        [
-                            result.obb.xyxy,  # box coordinates
-                            result.obb.conf.unsqueeze(-1),  # confidence scores
-                            result.obb.cls.unsqueeze(-1),  # class ids
-                        ],
-                        dim=1,
-                    )
-                    if result.obb is not None
-                    else torch.empty((0, 6), device=device),
-                    # Get OBB points in (N, 4, 2) format
-                    result.obb.xyxyxyxy if result.obb is not None else torch.empty((0, 4, 2), device=device),
-                )
-                for result in prediction_result
-            ]
-        else:  # If model doesn't do segmentation or OBB then no need to check masks
-            # We do not filter results again as confidence threshold is already applied above
-            prediction_result = [result.boxes.data for result in prediction_result]
+        # prediction_result'u sadece tensör/ilkel yapılardan kur
+        prediction_result = []
+        for res in results_list:
+            b = getattr(res, "boxes", None)
+            m = getattr(res, "masks", None)
+            obb = getattr(res, "obb", None)
+
+            if self.is_obb:
+                rboxes = getattr(getattr(obb, "rboxes", None), "data", None)
+                boxes = getattr(b, "data", None)
+                masks = getattr(m, "data", None) if m is not None else None
+                prediction_result.append((boxes, rboxes, masks))
+            elif self.has_mask:
+                boxes = getattr(b, "data", None)
+                masks = getattr(m, "data", None) if m is not None else None
+                prediction_result.append((boxes, masks))
+            else:
+                boxes = getattr(b, "data", None)
+                prediction_result.append(boxes)
 
         self._original_predictions = prediction_result
-        self._original_shape = image.shape
 
-    @property
-    def category_names(self):
-        # For ONNX models, names might not be available, use category_mapping
-        if hasattr(self.model, "names") and self.model.names:
-            return self.model.names.values()
-        elif self.category_mapping:
-            return list(self.category_mapping.values())
+        # Get slice offsets and full shape from kwargs if provided
+        slice_offsets = kwargs.get("slice_offsets", None)
+        full_shape = kwargs.get("full_shape", None)
+
+        if slice_offsets is not None and full_shape is not None:
+            # Use provided slice offsets and full shape
+            shift_amount_list = slice_offsets
+            full_shape_list = [full_shape for _ in norm_imgs]
         else:
-            raise ValueError("Category names not available. Please provide category_mapping for ONNX models.")
+            # Fallback to default values
+            shift_amount_list = [[0, 0] for _ in norm_imgs]
 
-    @property
-    def num_categories(self):
+        self._create_object_prediction_list_from_original_predictions(
+            shift_amount_list=shift_amount_list,
+            full_shape_list=full_shape_list,
+        )
+
+        return self._object_prediction_list_per_image
+
+    def perform_inference(self, image):
         """
-        Returns number of categories
+        Tek görsel tahmin. self._original_predictions'ı testlerin beklediği formatta kurar.
+        Detect: [boxes_tensor]
+        Seg:    [(boxes_tensor, masks_tensor)]
+        OBB:    [(boxes_tensor_xyxyccls, obb_xyxyxyxy_tensor, None)]
         """
-        if hasattr(self.model, "names") and self.model.names:
-            return len(self.model.names)
-        elif self.category_mapping:
-            return len(self.category_mapping)
+        import numpy as np
+        import torch
+        from PIL import Image
+
+        if self.model is None:
+            self.load_model()
+
+        # HWC numpy'a normalize et
+        if isinstance(image, Image.Image):
+            im = np.array(image)
+        elif isinstance(image, torch.Tensor):
+            t = image.detach().cpu()
+            if t.ndim == 3 and t.shape[0] in (1, 3, 4):
+                t = t.permute(1, 2, 0)
+            elif t.ndim == 4 and t.shape[0] == 1:
+                t = t.squeeze(0).permute(1, 2, 0)
+            im = t.numpy()
         else:
-            raise ValueError("Cannot determine number of categories. Please provide category_mapping for ONNX models.")
+            im = image
 
-    @property
-    def has_mask(self):
-        """
-        Returns if model output contains segmentation mask
-        """
-        # Check if model has 'task' attribute (for both .pt and .onnx models)
-        if hasattr(self.model, "overrides") and "task" in self.model.overrides:
-            return self.model.overrides["task"] == "segment"
-        # For ONNX models, task might be stored differently
-        elif hasattr(self.model, "task"):
-            return self.model.task == "segment"
-        # For ONNX models without task info, check model path
-        elif self.model_path and isinstance(self.model_path, str):
-            return "seg" in self.model_path.lower()
-        return False
+        # Giriş boyutunu kaydet
+        h, w = int(im.shape[0]), int(im.shape[1])
+        self._last_full_shape = [h, w]
 
-    @property
-    def is_obb(self):
-        """
-        Returns if model output contains oriented bounding boxes
-        """
-        # Check if model has 'task' attribute (for both .pt and .onnx models)
-        if hasattr(self.model, "overrides") and "task" in self.model.overrides:
-            return self.model.overrides["task"] == "obb"
-        # For ONNX models, task might be stored differently
-        elif hasattr(self.model, "task"):
-            return self.model.task == "obb"
-        # For ONNX models without task info, check model path
-        elif self.model_path and isinstance(self.model_path, str):
-            return "obb" in self.model_path.lower()
-        return False
+        # Ultralytics tahmini (eşik ve boyutu geçir)
+        predict_kwargs = {}
+        if getattr(self, "confidence_threshold", None) is not None:
+            predict_kwargs["conf"] = float(self.confidence_threshold)
+        if getattr(self, "image_size", None) is not None:
+            predict_kwargs["imgsz"] = int(self.image_size)
+
+        with torch.no_grad():
+            results = self.model([im], verbose=False, **predict_kwargs)
+        res = results[0]
+
+        th = float(getattr(self, "confidence_threshold", 0.0) or 0.0)
+
+        # --- SEG (mask) değil, OBB değil: klasik detect
+        if not getattr(self, "has_mask", False) and not getattr(self, "is_obb", False):
+            data = res.boxes.data  # (N, 6) -> xyxy, conf, cls
+            if th > 0:
+                data = data[data[:, 4] >= th]
+            # Liste olarak kaydet (testler böyle bekliyor)
+            self._original_predictions = [data]
+            return
+
+        # --- SEGMENTATION
+        if getattr(self, "has_mask", False) and not getattr(self, "is_obb", False):
+            boxes = res.boxes.data if res.boxes is not None else None
+            masks = res.masks.data if getattr(res, "masks", None) is not None else None
+            if boxes is None:
+                self._original_predictions = [(None, masks)]
+                return
+            if th > 0:
+                keep = boxes[:, 4] >= th
+                boxes = boxes[keep]
+                if masks is not None:
+                    masks = masks[keep]
+            self._original_predictions = [(boxes, masks)]
+            return
+
+        # --- OBB
+        # Beklenti: (boxes_xyxyccls, obb_xyxyxyxy, None)
+        obb = getattr(res, "obb", None)
+        xyxyxyxy = None
+        if obb is not None:
+            # Ultralytics OBB polygonları
+            xyxyxyxy = getattr(obb, "xyxyxyxy", None)
+            if hasattr(xyxyxyxy, "data"):
+                xyxyxyxy = xyxyxyxy.data
+
+        # Axis-aligned boxes'ı polygonlardan üret
+        boxes_tensor = None
+        if xyxyxyxy is not None:
+            # (N, 8) -> (N, 4, 2)
+            coords = xyxyxyxy.view(-1, 4, 2) if hasattr(xyxyxyxy, "view") else xyxyxyxy.reshape(-1, 4, 2)
+            x = coords[..., 0]
+            y = coords[..., 1]
+            x1 = x.min(dim=1).values if hasattr(x, "min") else x.min(1)[0]
+            y1 = y.min(dim=1).values if hasattr(y, "min") else y.min(1)[0]
+            x2 = x.max(dim=1).values if hasattr(x, "max") else x.max(1)[0]
+            y2 = y.max(dim=1).values if hasattr(y, "max") else y.max(1)[0]
+
+            # OBB skor ve sınıf bilgisi varsa kullan
+            conf = getattr(obb, "conf", None)
+            cls_ = getattr(obb, "cls", None)
+            if conf is None:
+                conf = torch.ones_like(x1, dtype=x1.dtype)
+            if cls_ is None:
+                cls_ = torch.zeros_like(x1, dtype=x1.dtype)
+
+            if conf.ndim == 1:
+                conf = conf.unsqueeze(1)
+            if cls_.ndim == 1:
+                cls_ = cls_.unsqueeze(1)
+
+            boxes_tensor = torch.stack([x1, y1, x2, y2], dim=1)
+            boxes_tensor = torch.cat([boxes_tensor, conf, cls_], dim=1)  # (N, 6)
+
+            # Eşik uygula
+            if th > 0:
+                keep = boxes_tensor[:, 4] >= th
+                boxes_tensor = boxes_tensor[keep]
+                xyxyxyxy = xyxyxyxy[keep]
+
+        # Eğer Ultralytics klasik axis-aligned boxes doldurmuşsa, onu da tercih edebiliriz
+        if boxes_tensor is None and res.boxes is not None:
+            data = res.boxes.data
+            if th > 0:
+                data = data[data[:, 4] >= th]
+            boxes_tensor = data
+
+        self._original_predictions = [(boxes_tensor, xyxyxyxy, None)]
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amount_list=None,
+        full_shape_list=None,
     ):
-        """
-        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list_per_image.
-        Args:
-            shift_amount_list: list of list
-                To shift the box and mask predictions from sliced image to full sized image, should
-                be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
-            full_shape_list: list of list
-                Size of the full image after shifting, should be in the form of
-                List[[height, width],[height, width],...]
-        """
-        original_predictions = self._original_predictions
+        import numpy as np
+        import torch
 
-        # compatibility for sahi v0.8.15
-        shift_amount_list = fix_shift_amount_list(shift_amount_list)
-        full_shape_list = fix_full_shape_list(full_shape_list)
+        from sahi.prediction import ObjectPrediction
 
-        # handle all predictions
-        object_prediction_list_per_image = []
+        preds = getattr(self, "_original_predictions", None)
+        if preds is None:
+            self._object_prediction_list_per_image = [[]]
+            return self._object_prediction_list_per_image
 
-        for image_ind, image_predictions in enumerate(original_predictions):
-            shift_amount = shift_amount_list[image_ind]
-            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
-            object_prediction_list = []
+        # >>> FARK: her zaman listeye çevir
+        if not isinstance(preds, (list, tuple)):
+            preds = [preds]
+        n = len(preds)
 
-            # Extract boxes and optional masks/obb
-            if self.has_mask or self.is_obb:
-                boxes = image_predictions[0].cpu().detach().numpy()
-                masks_or_points = image_predictions[1].cpu().detach().numpy()
+        # shift default
+        if shift_amount_list is None or (
+            isinstance(shift_amount_list, (list, tuple))
+            and shift_amount_list
+            and isinstance(shift_amount_list[0], (int, float))
+        ):
+            shift_amount_list = [[0, 0] for _ in range(n)]
+
+        # FULL SHAPE fallback (en kritik kısım)
+        if full_shape_list is None or (
+            isinstance(full_shape_list, (list, tuple))
+            and full_shape_list
+            and (full_shape_list[0] is None or isinstance(full_shape_list[0], (int, float)))
+        ):
+            if hasattr(self, "_last_full_shape") and self._last_full_shape:
+                full_shape_list = [self._last_full_shape for _ in range(n)]
             else:
-                boxes = image_predictions.data.cpu().detach().numpy()
-                masks_or_points = None
+                # son çare: 0,0 ver (clip içinde hatayı önlemek için)
+                full_shape_list = [[0, 0] for _ in range(n)]
+        # <<< FARK
 
-            # Process each prediction
-            for pred_ind, prediction in enumerate(boxes):
-                # Get bbox coordinates
-                bbox = prediction[:4].tolist()
-                score = prediction[4]
-                category_id = int(prediction[5])
-                category_name = self.category_mapping[str(category_id)]
+        out: List[List[ObjectPrediction]] = []
+        conf_thres = float(getattr(self, "confidence_threshold", 0.0) or 0.0)
 
-                # Fix box coordinates
-                bbox = [max(0, coord) for coord in bbox]
-                if full_shape is not None:
-                    bbox[0] = min(full_shape[1], bbox[0])
-                    bbox[1] = min(full_shape[0], bbox[1])
-                    bbox[2] = min(full_shape[1], bbox[2])
-                    bbox[3] = min(full_shape[0], bbox[3])
+        for i in range(n):
+            p = preds[i]
+            dx, dy = shift_amount_list[i]
+            H, W = full_shape_list[i]
 
-                # Ignore invalid predictions
-                if not (bbox[0] < bbox[2]) or not (bbox[1] < bbox[3]):
-                    logger.warning(f"ignoring invalid prediction with bbox: {bbox}")
+            # boxes + (opsiyonel) obb_points'u ayıkla
+            boxes = p
+            obb_points = None
+            if isinstance(p, (list, tuple)):
+                if len(p) >= 1:
+                    boxes = p[0]
+                if len(p) >= 2:
+                    obb_points = p[1]
+
+            # boxes -> torch.Tensor [N, >=6] (x1,y1,x2,y2,conf,cls)
+            boxes = self._to_yolo_xyxy_conf_cls_tensor(
+                boxes
+            )  # kendi yardımcı dönüşümün; zaten detection tarafında kullanıyorsun
+            if boxes is None or boxes.numel() == 0:
+                out.append([])
+                continue
+
+            # obb_points -> numpy [N, 4, 2] (varsa)
+            obb_np = None
+            if obb_points is not None:
+                if hasattr(obb_points, "data"):
+                    obb_points = obb_points.data
+                if isinstance(obb_points, torch.Tensor):
+                    obb_np = obb_points.detach().cpu().numpy()
+                else:
+                    obb_np = np.asarray(obb_points)
+
+            objs: List[ObjectPrediction] = []
+            for j in range(boxes.shape[0]):
+                x1, y1, x2, y2, conf, cls_id = (
+                    boxes[j, 0].item(),
+                    boxes[j, 1].item(),
+                    boxes[j, 2].item(),
+                    boxes[j, 3].item(),
+                    boxes[j, 4].item(),
+                    int(boxes[j, 5].item()),
+                )
+                if conf < conf_thres:
                     continue
 
-                # Get segmentation or OBB points
-                segmentation = None
-                if masks_or_points is not None:
-                    if self.has_mask:
-                        bool_mask = masks_or_points[pred_ind]
-                        # Resize mask to original image size
-                        bool_mask = cv2.resize(
-                            bool_mask.astype(np.uint8), (self._original_shape[1], self._original_shape[0])
-                        )
-                        segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
-                    else:  # is_obb
-                        obb_points = masks_or_points[pred_ind]  # Get OBB points for this prediction
-                        segmentation = [obb_points.reshape(-1).tolist()]
+                cat_name = None
+                if getattr(self, "category_names", None) and 0 <= cls_id < len(self.category_names):
+                    cat_name = self.category_names[cls_id]
 
-                    if len(segmentation) == 0:
-                        continue
+                score = float(conf)
 
-                # Create and append object prediction
-                object_prediction = ObjectPrediction(
-                    bbox=bbox,
-                    category_id=category_id,
-                    score=score,
-                    segmentation=segmentation,
-                    category_name=category_name,
-                    shift_amount=shift_amount,
-                    full_shape=self._original_shape[:2] if full_shape is None else full_shape,  # (height, width)
-                )
-                object_prediction_list.append(object_prediction)
+                if self.is_obb and obb_np is not None:
+                    # 4 köşe -> COCO polygon (tek halka)
+                    # obb_np[j] şekli (4, 2) -> [x1,y1,x2,y2,x3,y3,x4,y4]
+                    seg = obb_np[j].reshape(-1).tolist()
+                    obj = ObjectPrediction(
+                        segmentation=[seg],
+                        category_id=cls_id,
+                        category_name=cat_name,
+                        score=score,
+                        shift_amount=[dx, dy],
+                        full_shape=[H, W],
+                    )
+                else:
+                    # klasik axis-aligned bbox
+                    obj = ObjectPrediction(
+                        bbox=[x1, y1, x2, y2],
+                        category_id=cls_id,
+                        category_name=cat_name,
+                        score=score,
+                        shift_amount=[dx, dy],
+                        full_shape=[H, W],
+                    )
 
-            object_prediction_list_per_image.append(object_prediction_list)
+                objs.append(obj)
 
-        self._object_prediction_list_per_image = object_prediction_list_per_image
+            out.append(objs)
+
+        self._object_prediction_list_per_image = out
+        return out
+
+    def create_object_prediction_lists_from_batched_predictions(
+        self,
+        batched_predictions: List[Any],
+        shift_amount_list: List[Tuple[int, int]],
+        full_shape_list: List[Tuple[int, int]],
+        category_mapping: Optional[Dict[int, int]] = None,
+        **kwargs: Any,
+    ) -> List[List[ObjectPrediction]]:
+        """
+        Convenience wrapper: maps batched per-image predictions to per-image ObjectPrediction lists.
+        """
+        opl: List[List[ObjectPrediction]] = []
+        for pred, shift, shape in zip(batched_predictions, shift_amount_list, full_shape_list):
+            opl.append(
+                self._create_object_prediction_list_from_original_predictions(
+                    original_predictions=pred,
+                    shift_amount_list=[list(shift)],
+                    full_shape_list=[list(shape)],
+                    category_mapping=category_mapping,
+                    **kwargs,
+                )[0]  # Take first (and only) element from the list
+            )
+        return opl
