@@ -135,6 +135,43 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
+    def perform_inference_batch(
+        self,
+        images: List[Any],
+        **kwargs: Any,
+    ) -> List[Any]:
+        """
+        Optional batched inference hook.
+
+        Parameters
+        ----------
+        images : list
+            A list of input images (e.g. np.ndarray, PIL.Image, torch.Tensor).
+
+        Returns
+        -------
+        List[Any]
+            A list of 'original_predictions' (one per image) in the same
+            format returned by `perform_inference` so downstream converters
+            can create ObjectPrediction lists per image.
+
+        Notes
+        -----
+        Default implementation falls back to sequential perform_inference
+        calls for full backward compatibility. Subclasses can override
+        to perform a single real batched forward pass.
+        """
+        import warnings
+        warnings.warn(
+            "DetectionModel.perform_inference_batch falling back to sequential calls. "
+            "Override this method in model backends to enable true batching.",
+            stacklevel=2,
+        )
+        results: List[Any] = []
+        for img in images:
+            results.append(self.perform_inference(img, **kwargs))
+        return results
+
     def _create_object_prediction_list_from_original_predictions(
         self,
         shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
