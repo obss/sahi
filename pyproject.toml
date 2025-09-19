@@ -13,7 +13,6 @@ dependencies = [
   "pybboxes==0.1.6",
   "pillow>=8.2.0",
   "pyyaml",
-  "fire",
   "terminaltables",
   "requests",
   "click",
