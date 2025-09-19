@@ -162,6 +162,9 @@ requires = ["hatch-mkdocs", "hatch-pip-compile"]
 [tool.hatch.envs.docs]
 detached = false
 
+[tool.hatch.build.targets.wheel]
+packages = ["sahi"]
+
 [tool.hatch.envs.default.scripts]
 
 # Workaround for https://github.com/juftin/hatch-pip-compile/issues/85
