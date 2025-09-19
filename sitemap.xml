@@ -2,146 +2,146 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://sahi.readthedocs.io/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/annotation/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/auto_model/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/changelog/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/cli/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/coco/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/contributing/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/fiftyone/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/license/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/predict/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/prediction/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/quick-start/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/slicing/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/models/base/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/models/detectron2/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/models/huggingface/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/models/mmdet/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/models/roboflow/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/models/rtdetr/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/models/torchvision/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/models/ultralytics/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/models/yolov5/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/notebooks/inference_for_detectron2/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/notebooks/inference_for_huggingface/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/notebooks/inference_for_mmdetection/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/notebooks/inference_for_roboflow/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/notebooks/inference_for_rtdetr/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/notebooks/inference_for_torchvision/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/notebooks/inference_for_ultralytics/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/notebooks/inference_for_yolov5/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/notebooks/slicing/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/postprocess/combine/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/postprocess/utils/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/utils/coco/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/utils/cv/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
     <url>
          <loc>https://sahi.readthedocs.io/utils/file/</loc>
-         <lastmod>2025-08-31</lastmod>
+         <lastmod>2025-09-19</lastmod>
     </url>
 </urlset>
