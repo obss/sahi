@@ -1,14 +1,14 @@
 from typing import List
 
 import torch
+from shapely.geometry import box
+from shapely.strtree import STRtree
 
 from sahi.logger import logger
 from sahi.postprocess.utils import ObjectPredictionList, has_match, merge_object_prediction_pair
 from sahi.prediction import ObjectPrediction
 from sahi.utils.import_utils import check_requirements
 
-from shapely.geometry import box
-from shapely.strtree import STRtree
 
 def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):
     """
@@ -39,9 +39,9 @@ def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_thre
 
 
 def nms(
-        predictions: torch.Tensor,
-        match_metric: str = "IOU",
-        match_threshold: float = 0.5,
+    predictions: torch.Tensor,
+    match_metric: str = "IOU",
+    match_threshold: float = 0.5,
 ):
     """
     Optimized non-maximum suppression for axis-aligned bounding boxes using STRTree.
@@ -93,8 +93,7 @@ def nms(
         candidate_idxs = tree.query(current_box)
 
         for candidate_idx in candidate_idxs:
-            if (candidate_idx == current_idx or
-                    candidate_idx in suppressed):
+            if candidate_idx == current_idx or candidate_idx in suppressed:
                 continue
 
             # Skip candidates with higher scores (already processed)
@@ -102,8 +101,7 @@ def nms(
                 continue
 
             # For equal scores, keep the box with higher index
-            if (scores[candidate_idx] == scores[current_idx] and
-                    candidate_idx > current_idx):
+            if scores[candidate_idx] == scores[current_idx] and candidate_idx > current_idx:
                 continue
 
             # Calculate intersection area
@@ -160,9 +158,9 @@ def batched_greedy_nmm(
 
 
 def greedy_nmm(
-        object_predictions_as_tensor: torch.Tensor,
-        match_metric: str = "IOU",
-        match_threshold: float = 0.5,
+    object_predictions_as_tensor: torch.Tensor,
+    match_metric: str = "IOU",
+    match_threshold: float = 0.5,
 ):
     """
     Optimized greedy non-maximum merging for axis-aligned bounding boxes using STRTree.
@@ -213,8 +211,7 @@ def greedy_nmm(
 
         merge_list = []
         for candidate_idx in candidate_idxs:
-            if (candidate_idx == current_idx or
-                    candidate_idx in suppressed):
+            if candidate_idx == current_idx or candidate_idx in suppressed:
                 continue
 
             # Only consider candidates with lower or equal score
@@ -222,8 +219,7 @@ def greedy_nmm(
                 continue
 
             # For equal scores, ensure we don't merge the same box twice
-            if (scores[candidate_idx] == scores[current_idx] and
-                    candidate_idx > current_idx):
+            if scores[candidate_idx] == scores[current_idx] and candidate_idx > current_idx:
                 continue
 
             # Calculate intersection area
@@ -283,9 +279,9 @@ def batched_nmm(
 
 
 def nmm(
-        object_predictions_as_tensor: torch.Tensor,
-        match_metric: str = "IOU",
-        match_threshold: float = 0.5,
+    object_predictions_as_tensor: torch.Tensor,
+    match_metric: str = "IOU",
+    match_threshold: float = 0.5,
 ):
     """
     Apply non-maximum merging to avoid detecting too many
@@ -375,8 +371,10 @@ def nmm(
             keep_idx = merge_to_keep[current_idx_native]
             for matched_box_idx in matched_box_indices:
                 matched_box_idx_native = int(matched_box_idx)
-                if (matched_box_idx_native not in keep_to_merge_list.get(keep_idx, []) and
-                        matched_box_idx_native not in merge_to_keep):
+                if (
+                    matched_box_idx_native not in keep_to_merge_list.get(keep_idx, [])
+                    and matched_box_idx_native not in merge_to_keep
+                ):
                     if keep_idx not in keep_to_merge_list:
                         keep_to_merge_list[keep_idx] = []
                     keep_to_merge_list[keep_idx].append(matched_box_idx_native)
