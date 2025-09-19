@@ -283,9 +283,9 @@ def batched_nmm(
 
 
 def nmm(
-    object_predictions_as_tensor: torch.Tensor,
-    match_metric: str = "IOU",
-    match_threshold: float = 0.5,
+        object_predictions_as_tensor: torch.Tensor,
+        match_metric: str = "IOU",
+        match_threshold: float = 0.5,
 ):
     """
     Apply non-maximum merging to avoid detecting too many
@@ -294,110 +294,93 @@ def nmm(
     Args:
         object_predictions_as_tensor: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
-        object_predictions_as_list: ObjectPredictionList Object prediction objects
-            to be merged.
         match_metric: (str) IOU or IOS
-        match_threshold: (float) The overlap thresh for
-            match metric.
+        match_threshold: (float) The overlap thresh for match metric.
     Returns:
         keep_to_merge_list: (Dict[int:List[int]]) mapping from prediction indices
         to keep to a list of prediction indices to be merged.
     """
+    # Extract coordinates and scores directly from tensor
+    x1 = object_predictions_as_tensor[:, 0].tolist()
+    y1 = object_predictions_as_tensor[:, 1].tolist()
+    x2 = object_predictions_as_tensor[:, 2].tolist()
+    y2 = object_predictions_as_tensor[:, 3].tolist()
+    scores = object_predictions_as_tensor[:, 4].tolist()
+
+    # Create Shapely boxes and calculate areas
+    boxes = []
+    areas = []
+
+    for i in range(len(x1)):
+        b = box(x1[i], y1[i], x2[i], y2[i])
+        boxes.append(b)
+        areas.append(b.area)
+
+    # Sort indices by score (descending)
+    sorted_idxs = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+
+    # Build STRtree
+    tree = STRtree(boxes)
+
     keep_to_merge_list = {}
     merge_to_keep = {}
 
-    # we extract coordinates for every
-    # prediction box present in P
-    x1 = object_predictions_as_tensor[:, 0]
-    y1 = object_predictions_as_tensor[:, 1]
-    x2 = object_predictions_as_tensor[:, 2]
-    y2 = object_predictions_as_tensor[:, 3]
+    for current_idx in sorted_idxs:
+        current_box = boxes[current_idx]
+        current_area = areas[current_idx]
 
-    # we extract the confidence scores as well
-    scores = object_predictions_as_tensor[:, 4]
+        # Query potential intersections using STRtree
+        candidate_idxs = tree.query(current_box)
 
-    # calculate area of every block in P
-    areas = (x2 - x1) * (y2 - y1)
+        matched_box_indices = []
+        for candidate_idx in candidate_idxs:
+            if candidate_idx == current_idx:
+                continue
 
-    # sort the prediction boxes in P
-    # according to their confidence scores
-    order = scores.argsort(descending=True)
+            # Only consider candidates with lower or equal score
+            if scores[candidate_idx] > scores[current_idx]:
+                continue
 
-    for ind in range(len(object_predictions_as_tensor)):
-        # extract the index of the
-        # prediction with highest score
-        # we call this prediction S
-        pred_ind = order[ind]
-        pred_ind = pred_ind.tolist()
+            # Calculate intersection area
+            candidate_box = boxes[candidate_idx]
+            intersection = current_box.intersection(candidate_box).area
 
-        # remove selected pred
-        other_pred_inds = order[order != pred_ind]
+            # Calculate metric
+            if match_metric == "IOU":
+                union = current_area + areas[candidate_idx] - intersection
+                metric = intersection / union if union > 0 else 0
+            elif match_metric == "IOS":
+                smaller = min(current_area, areas[candidate_idx])
+                metric = intersection / smaller if smaller > 0 else 0
+            else:
+                raise ValueError("Invalid match_metric")
 
-        # select coordinates of BBoxes according to
-        # the indices in order
-        xx1 = torch.index_select(x1, dim=0, index=other_pred_inds)
-        xx2 = torch.index_select(x2, dim=0, index=other_pred_inds)
-        yy1 = torch.index_select(y1, dim=0, index=other_pred_inds)
-        yy2 = torch.index_select(y2, dim=0, index=other_pred_inds)
+            # Add to matched list if overlap exceeds threshold
+            if metric >= match_threshold:
+                matched_box_indices.append(candidate_idx)
 
-        # find the coordinates of the intersection boxes
-        xx1 = torch.max(xx1, x1[pred_ind])
-        yy1 = torch.max(yy1, y1[pred_ind])
-        xx2 = torch.min(xx2, x2[pred_ind])
-        yy2 = torch.min(yy2, y2[pred_ind])
+        # Convert current_idx to native Python int
+        current_idx_native = int(current_idx)
 
-        # find height and width of the intersection boxes
-        w = xx2 - xx1
-        h = yy2 - yy1
+        # Create keep_ind to merge_ind_list mapping
+        if current_idx_native not in merge_to_keep:
+            keep_to_merge_list[current_idx_native] = []
 
-        # take max with 0.0 to avoid negative w and h
-        # due to non-overlapping boxes
-        w = torch.clamp(w, min=0.0)
-        h = torch.clamp(h, min=0.0)
-
-        # find the intersection area
-        inter = w * h
-
-        # find the areas of BBoxes according the indices in order
-        rem_areas = torch.index_select(areas, dim=0, index=other_pred_inds)
-
-        if match_metric == "IOU":
-            # find the union of every prediction T in P
-            # with the prediction S
-            # Note that areas[idx] represents area of S
-            union = (rem_areas - inter) + areas[pred_ind]
-            # find the IoU of every prediction in P with S
-            match_metric_value = inter / union
-
-        elif match_metric == "IOS":
-            # find the smaller area of every prediction T in P
-            # with the prediction S
-            # Note that areas[idx] represents area of S
-            smaller = torch.min(rem_areas, areas[pred_ind])
-            # find the IoS of every prediction in P with S
-            match_metric_value = inter / smaller
+            for matched_box_idx in matched_box_indices:
+                matched_box_idx_native = int(matched_box_idx)
+                if matched_box_idx_native not in merge_to_keep:
+                    keep_to_merge_list[current_idx_native].append(matched_box_idx_native)
+                    merge_to_keep[matched_box_idx_native] = current_idx_native
         else:
-            raise ValueError()
-
-        # keep the boxes with IoU/IoS less than thresh_iou
-        mask = match_metric_value < match_threshold
-        matched_box_indices = other_pred_inds[(mask == False).nonzero().flatten()].flip(dims=(0,))  # noqa: E712
-
-        # create keep_ind to merge_ind_list mapping
-        if pred_ind not in merge_to_keep:
-            keep_to_merge_list[pred_ind] = []
-
-            for matched_box_ind in matched_box_indices.tolist():
-                if matched_box_ind not in merge_to_keep:
-                    keep_to_merge_list[pred_ind].append(matched_box_ind)
-                    merge_to_keep[matched_box_ind] = pred_ind
-
-        else:
-            keep = merge_to_keep[pred_ind]
-            for matched_box_ind in matched_box_indices.tolist():
-                if matched_box_ind not in keep_to_merge_list and matched_box_ind not in merge_to_keep:
-                    keep_to_merge_list[keep].append(matched_box_ind)
-                    merge_to_keep[matched_box_ind] = keep
+            keep_idx = merge_to_keep[current_idx_native]
+            for matched_box_idx in matched_box_indices:
+                matched_box_idx_native = int(matched_box_idx)
+                if (matched_box_idx_native not in keep_to_merge_list.get(keep_idx, []) and
+                        matched_box_idx_native not in merge_to_keep):
+                    if keep_idx not in keep_to_merge_list:
+                        keep_to_merge_list[keep_idx] = []
+                    keep_to_merge_list[keep_idx].append(matched_box_idx_native)
+                    merge_to_keep[matched_box_idx_native] = keep_idx
 
     return keep_to_merge_list
 
