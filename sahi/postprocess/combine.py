@@ -39,110 +39,91 @@ def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_thre
 
 
 def nms(
-    predictions: torch.tensor,
-    match_metric: str = "IOU",
-    match_threshold: float = 0.5,
+        predictions: torch.Tensor,
+        match_metric: str = "IOU",
+        match_threshold: float = 0.5,
 ):
     """
-    Apply non-maximum suppression to avoid detecting too many
-    overlapping bounding boxes for a given object.
+    Optimized non-maximum suppression for axis-aligned bounding boxes using STRTree.
 
     Args:
-        predictions: (tensor) The location preds for the image
-            along with the class predscores, Shape: [num_boxes,5].
+        predictions: (tensor) The location preds for the image along with the class
+            predscores, Shape: [num_boxes,5].
         match_metric: (str) IOU or IOS
-        match_threshold: (float) The overlap thresh for
-            match metric.
+        match_threshold: (float) The overlap thresh for match metric.
+
     Returns:
         A list of filtered indexes, Shape: [ ,]
     """
 
-    # we extract coordinates for every
-    # prediction box present in P
-    x1 = predictions[:, 0]
-    y1 = predictions[:, 1]
-    x2 = predictions[:, 2]
-    y2 = predictions[:, 3]
+    # Extract coordinates and scores directly from tensor
+    x1 = predictions[:, 0].tolist()
+    y1 = predictions[:, 1].tolist()
+    x2 = predictions[:, 2].tolist()
+    y2 = predictions[:, 3].tolist()
+    scores = predictions[:, 4].tolist()
 
-    # we extract the confidence scores as well
-    scores = predictions[:, 4]
+    # Create Shapely boxes and calculate areas
+    boxes = []
+    areas = []
 
-    # calculate area of every block in P
-    areas = (x2 - x1) * (y2 - y1)
+    for i in range(len(x1)):
+        b = box(x1[i], y1[i], x2[i], y2[i])
+        boxes.append(b)
+        areas.append(b.area)
 
-    # sort the prediction boxes in P
-    # according to their confidence scores
-    order = scores.argsort()
+    # Sort indices by score (descending)
+    sorted_idxs = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
 
-    # initialise an empty list for
-    # filtered prediction boxes
+    # Build STRtree
+    tree = STRtree(boxes)
+
     keep = []
+    suppressed = set()
 
-    while len(order) > 0:
-        # extract the index of the
-        # prediction with highest score
-        # we call this prediction S
-        idx = order[-1]
+    for current_idx in sorted_idxs:
+        if current_idx in suppressed:
+            continue
 
-        # push S in filtered predictions list
-        keep.append(idx.tolist())
+        keep.append(current_idx)
+        current_box = boxes[current_idx]
+        current_area = areas[current_idx]
 
-        # remove S from P
-        order = order[:-1]
+        # Query potential intersections using STRtree
+        candidate_idxs = tree.query(current_box)
 
-        # sanity check
-        if len(order) == 0:
-            break
+        for candidate_idx in candidate_idxs:
+            if (candidate_idx == current_idx or
+                    candidate_idx in suppressed):
+                continue
 
-        # select coordinates of BBoxes according to
-        # the indices in order
-        xx1 = torch.index_select(x1, dim=0, index=order)
-        xx2 = torch.index_select(x2, dim=0, index=order)
-        yy1 = torch.index_select(y1, dim=0, index=order)
-        yy2 = torch.index_select(y2, dim=0, index=order)
+            # Skip candidates with higher scores (already processed)
+            if scores[candidate_idx] > scores[current_idx]:
+                continue
 
-        # find the coordinates of the intersection boxes
-        xx1 = torch.max(xx1, x1[idx])
-        yy1 = torch.max(yy1, y1[idx])
-        xx2 = torch.min(xx2, x2[idx])
-        yy2 = torch.min(yy2, y2[idx])
+            # For equal scores, keep the box with higher index
+            if (scores[candidate_idx] == scores[current_idx] and
+                    candidate_idx > current_idx):
+                continue
 
-        # find height and width of the intersection boxes
-        w = xx2 - xx1
-        h = yy2 - yy1
+            # Calculate intersection area
+            candidate_box = boxes[candidate_idx]
+            intersection = current_box.intersection(candidate_box).area
 
-        # take max with 0.0 to avoid negative w and h
-        # due to non-overlapping boxes
-        w = torch.clamp(w, min=0.0)
-        h = torch.clamp(h, min=0.0)
+            # Calculate metric
+            if match_metric == "IOU":
+                union = current_area + areas[candidate_idx] - intersection
+                metric = intersection / union if union > 0 else 0
+            elif match_metric == "IOS":
+                smaller = min(current_area, areas[candidate_idx])
+                metric = intersection / smaller if smaller > 0 else 0
+            else:
+                raise ValueError("Invalid match_metric")
 
-        # find the intersection area
-        inter = w * h
+            # Suppress if overlap exceeds threshold
+            if metric >= match_threshold:
+                suppressed.add(candidate_idx)
 
-        # find the areas of BBoxes according the indices in order
-        rem_areas = torch.index_select(areas, dim=0, index=order)
-
-        if match_metric == "IOU":
-            # find the union of every prediction T in P
-            # with the prediction S
-            # Note that areas[idx] represents area of S
-            union = (rem_areas - inter) + areas[idx]
-            # find the IoU of every prediction in P with S
-            match_metric_value = inter / union
-
-        elif match_metric == "IOS":
-            # find the smaller area of every prediction T in P
-            # with the prediction S
-            # Note that areas[idx] represents area of S
-            smaller = torch.min(rem_areas, areas[idx])
-            # find the IoU of every prediction in P with S
-            match_metric_value = inter / smaller
-        else:
-            raise ValueError()
-
-        # keep the boxes with IoU less than thresh_iou
-        mask = match_metric_value < match_threshold
-        order = order[mask]
     return keep
 
 
