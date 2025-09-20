@@ -56,24 +56,28 @@ def nms(
         A list of filtered indexes, Shape: [ ,]
     """
 
-    # Extract coordinates and scores directly from tensor
-    x1 = predictions[:, 0].tolist()
-    y1 = predictions[:, 1].tolist()
-    x2 = predictions[:, 2].tolist()
-    y2 = predictions[:, 3].tolist()
-    scores = predictions[:, 4].tolist()
+    # Extract coordinates and scores as tensors
+    x1 = predictions[:, 0]
+    y1 = predictions[:, 1]
+    x2 = predictions[:, 2]
+    y2 = predictions[:, 3]
+    scores = predictions[:, 4]
 
-    # Create Shapely boxes and calculate areas
+    # Calculate areas as tensor (vectorized operation)
+    areas = (x2 - x1) * (y2 - y1)
+
+    # Create Shapely boxes only once
     boxes = []
-    areas = []
+    for i in range(len(predictions)):
+        boxes.append(box(
+            x1[i].item(),  # Convert only individual values
+            y1[i].item(),
+            x2[i].item(),
+            y2[i].item()
+        ))
 
-    for i in range(len(x1)):
-        b = box(x1[i], y1[i], x2[i], y2[i])
-        boxes.append(b)
-        areas.append(b.area)
-
-    # Sort indices by score (descending)
-    sorted_idxs = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+    # Sort indices by score (descending) using torch
+    sorted_idxs = torch.argsort(scores, descending=True).tolist()
 
     # Build STRtree
     tree = STRtree(boxes)
@@ -87,13 +91,13 @@ def nms(
 
         keep.append(current_idx)
         current_box = boxes[current_idx]
-        current_area = areas[current_idx]
+        current_area = areas[current_idx].item()  # Convert only when needed
 
         # Query potential intersections using STRtree
         candidate_idxs = tree.query(current_box)
 
         for candidate_idx in candidate_idxs:
-            if candidate_idx == current_idx or candidate_idx in suppressed:
+            if (candidate_idx == current_idx or candidate_idx in suppressed):
                 continue
 
             # Skip candidates with higher scores (already processed)
@@ -101,7 +105,8 @@ def nms(
                 continue
 
             # For equal scores, keep the box with higher index
-            if scores[candidate_idx] == scores[current_idx] and candidate_idx > current_idx:
+            if (scores[candidate_idx] == scores[current_idx] and
+                    candidate_idx > current_idx):
                 continue
 
             # Calculate intersection area
@@ -110,10 +115,10 @@ def nms(
 
             # Calculate metric
             if match_metric == "IOU":
-                union = current_area + areas[candidate_idx] - intersection
+                union = current_area + areas[candidate_idx].item() - intersection
                 metric = intersection / union if union > 0 else 0
             elif match_metric == "IOS":
-                smaller = min(current_area, areas[candidate_idx])
+                smaller = min(current_area, areas[candidate_idx].item())
                 metric = intersection / smaller if smaller > 0 else 0
             else:
                 raise ValueError("Invalid match_metric")
