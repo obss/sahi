@@ -1,4 +1,4 @@
-from typing import List, Optional
+from __future__ import annotations
 
 import numpy as np
 
@@ -10,7 +10,8 @@ from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bo
 
 class Detectron2DetectionModel(DetectionModel):
     def __init__(self, *args, **kwargs):
-        self.required_packages = list(getattr(self, "required_packages", [])) + ["torch", "detectron2"]
+        existing_packages = getattr(self, "required_packages", None) or []
+        self.required_packages = [*list(existing_packages), "torch", "detectron2"]
         super().__init__(*args, **kwargs)
 
     def load_model(self):
@@ -68,8 +69,8 @@ class Detectron2DetectionModel(DetectionModel):
             self.category_names = list(self.category_mapping.values())
 
     def perform_inference(self, image: np.ndarray):
-        """
-        Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+        """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
@@ -89,20 +90,18 @@ class Detectron2DetectionModel(DetectionModel):
 
     @property
     def num_categories(self):
-        """
-        Returns number of categories
-        """
+        """Returns number of categories."""
         num_categories = len(self.category_mapping)
         return num_categories
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amount_list: list[list[int]] | None = [[0, 0]],
+        full_shape_list: list[list[int]] | None = None,
     ):
-        """
-        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
+
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should

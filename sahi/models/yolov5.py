@@ -1,4 +1,6 @@
-from typing import Any, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 import numpy as np
 
@@ -14,9 +16,7 @@ class Yolov5DetectionModel(DetectionModel):
         check_requirements(["torch", "yolov5"])
 
     def load_model(self):
-        """
-        Detection model is initialized and set to self.model.
-        """
+        """Detection model is initialized and set to self.model."""
 
         import yolov5
 
@@ -27,8 +27,8 @@ class Yolov5DetectionModel(DetectionModel):
             raise TypeError("model_path is not a valid yolov5 model path: ", e)
 
     def set_model(self, model: Any):
-        """
-        Sets the underlying YOLOv5 model.
+        """Sets the underlying YOLOv5 model.
+
         Args:
             model: Any
                 A YOLOv5 model
@@ -46,8 +46,8 @@ class Yolov5DetectionModel(DetectionModel):
             self.category_mapping = category_mapping
 
     def perform_inference(self, image: np.ndarray):
-        """
-        Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+        """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
@@ -65,16 +65,12 @@ class Yolov5DetectionModel(DetectionModel):
 
     @property
     def num_categories(self):
-        """
-        Returns number of categories
-        """
+        """Returns number of categories."""
         return len(self.model.names)
 
     @property
     def has_mask(self):
-        """
-        Returns if model output contains segmentation mask
-        """
+        """Returns if model output contains segmentation mask."""
         import yolov5
         from packaging import version
 
@@ -92,12 +88,12 @@ class Yolov5DetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amount_list: list[list[int]] | None = [[0, 0]],
+        full_shape_list: list[list[int]] | None = None,
     ):
-        """
-        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
+
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
