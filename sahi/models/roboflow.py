@@ -51,9 +51,11 @@ class RoboflowDetectionModel(DetectionModel):
         self._api_key = api_key
 
         if self._use_universe:
-            self.required_packages = [*list(getattr(self, "required_packages", [])), "inference"]
+            existing_packages = getattr(self, "required_packages", None) or []
+            self.required_packages = [*list(existing_packages), "inference"]
         else:
-            self.required_packages = [*list(getattr(self, "required_packages", [])), "rfdetr"]
+            existing_packages = getattr(self, "required_packages", None) or []
+            self.required_packages = [*list(existing_packages), "rfdetr"]
 
         super().__init__(
             model=model,

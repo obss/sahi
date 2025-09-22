@@ -96,7 +96,8 @@ class MmdetDetectionModel(DetectionModel):
     ):
         self.scope = scope
         self.image_size = image_size
-        self.required_packages = [*list(getattr(self, "required_packages", [])), "mmdet", "mmcv", "torch"]
+        existing_packages = getattr(self, "required_packages", None) or []
+        self.required_packages = [*list(existing_packages), "mmdet", "mmcv", "torch"]
         super().__init__(
             model_path,
             model,

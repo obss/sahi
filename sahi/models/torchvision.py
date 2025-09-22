@@ -15,7 +15,8 @@ from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
 
 class TorchVisionDetectionModel(DetectionModel):
     def __init__(self, *args, **kwargs):
-        self.required_packages = [*list(getattr(self, "required_packages", [])), "torch", "torchvision"]
+        existing_packages = getattr(self, "required_packages", None) or []
+        self.required_packages = [*list(existing_packages), "torch", "torchvision"]
         super().__init__(*args, **kwargs)
 
     def load_model(self):

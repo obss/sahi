@@ -31,7 +31,8 @@ class HuggingfaceDetectionModel(DetectionModel):
         self._processor = processor
         self._image_shapes: list = []
         self._token = token
-        self.required_packages = [*list(getattr(self, "required_packages", [])), "torch", "transformers"]
+        existing_packages = getattr(self, "required_packages", None) or []
+        self.required_packages = [*list(existing_packages), "torch", "transformers"]
         ensure_package_minimum_version("transformers", "4.42.0")
         super().__init__(
             model_path,

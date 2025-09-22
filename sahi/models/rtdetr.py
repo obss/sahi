@@ -4,9 +4,10 @@ from sahi.models.ultralytics import UltralyticsDetectionModel
 
 
 class RTDetrDetectionModel(UltralyticsDetectionModel):
-    def __init__(self, *args, **kwargs):
-        self.required_packages = [*list(getattr(self, "required_packages", [])), "ultralytics"]
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        existing_packages = getattr(self, "required_packages", None) or []
+        self.required_packages = [*list(existing_packages), "ultralytics"]
+        super().__init__(**kwargs)
 
     def load_model(self):
         """Detection model is initialized and set to self.model."""

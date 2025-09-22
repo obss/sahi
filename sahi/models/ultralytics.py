@@ -22,7 +22,8 @@ class UltralyticsDetectionModel(DetectionModel):
 
     def __init__(self, *args, **kwargs):
         self.fuse: bool = kwargs.pop("fuse", False)
-        self.required_packages = [*list(getattr(self, "required_packages", [])), "ultralytics"]
+        existing_packages = getattr(self, "required_packages", None) or []
+        self.required_packages = [*list(existing_packages), "ultralytics"]
         super().__init__(*args, **kwargs)
 
     def load_model(self):

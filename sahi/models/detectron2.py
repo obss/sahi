@@ -10,7 +10,8 @@ from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bo
 
 class Detectron2DetectionModel(DetectionModel):
     def __init__(self, *args, **kwargs):
-        self.required_packages = [*list(getattr(self, "required_packages", [])), "torch", "detectron2"]
+        existing_packages = getattr(self, "required_packages", None) or []
+        self.required_packages = [*list(existing_packages), "torch", "detectron2"]
         super().__init__(*args, **kwargs)
 
     def load_model(self):
