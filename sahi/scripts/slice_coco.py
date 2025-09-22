@@ -44,7 +44,7 @@ def slicer(
         sliced_coco_name = Path(dataset_json_path).name.replace(
             ".json", f"_{slice_size!s}_{str(overlap_ratio).replace('.', '')}"
         )
-        coco_dict, coco_path = slice_coco(
+        coco_dict, _ = slice_coco(
             coco_annotation_file_path=dataset_json_path,
             image_dir=image_dir,
             output_coco_annotation_file_name="",

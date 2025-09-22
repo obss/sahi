@@ -13,6 +13,7 @@ repos:
       - id: detect-private-key
       - id: pretty-format-json
         args: ['--autofix', '--no-sort-keys', '--indent=4']
+        exclude: .*\.ipynb
       - id: end-of-file-fixer
       - id: mixed-line-ending
 

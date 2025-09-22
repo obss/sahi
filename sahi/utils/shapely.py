@@ -278,7 +278,7 @@ class ShapelyAnnotation:
             and polygon.exterior.xy[0][0] == polygon.exterior.xy[0][1]
             and polygon.exterior.xy[0][2] == polygon.exterior.xy[0][3]
         ):
-            coco_bbox, voc_bbox = get_bbox_from_shapely(polygon)
+            coco_bbox, _ = get_bbox_from_shapely(polygon)
             slice_bbox = coco_bbox
         else:
             slice_bbox = None
