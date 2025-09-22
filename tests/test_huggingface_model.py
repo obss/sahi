@@ -2,7 +2,6 @@ import sys
 
 import pybboxes.functional as pbf
 import pytest
-from transformers import AutoModelForObjectDetection, AutoProcessor
 
 from sahi.logger import logger
 from sahi.models.huggingface import HuggingfaceDetectionModel
@@ -11,9 +10,17 @@ from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from tests.utils.huggingface import HuggingfaceConstants
 
+# Import transformers conditionally to avoid import errors in Python < 3.9
+try:
+    from transformers import AutoModelForObjectDetection, AutoProcessor
+except ImportError:
+    AutoModelForObjectDetection = None
+    AutoProcessor = None
+
 pytestmark = pytest.mark.skipif(
     sys.version_info[:2] < (3, 9), reason="transformers>=4.49.0 requires Python 3.9 or higher"
 )
+
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
