@@ -97,17 +97,25 @@ def nms(
         candidate_idxs = tree.query(current_box)
 
         for candidate_idx in candidate_idxs:
-            if (candidate_idx == current_idx or candidate_idx in suppressed):
+            if (candidate_idx == current_idx or
+                    candidate_idx in suppressed):
                 continue
 
             # Skip candidates with higher scores (already processed)
             if scores[candidate_idx] > scores[current_idx]:
                 continue
 
-            # For equal scores, keep the box with higher index
-            if (scores[candidate_idx] == scores[current_idx] and
-                    candidate_idx > current_idx):
-                continue
+            # For equal scores, use deterministic tie-breaking based on box coordinates
+            if scores[candidate_idx] == scores[current_idx]:
+                # Use box coordinates for stable ordering
+                current_coords = (x1[current_idx].item(), y1[current_idx].item(),
+                                  x2[current_idx].item(), y2[current_idx].item())
+                candidate_coords = (x1[candidate_idx].item(), y1[candidate_idx].item(),
+                                    x2[candidate_idx].item(), y2[candidate_idx].item())
+
+                # Compare coordinates lexicographically
+                if candidate_coords > current_coords:
+                    continue
 
             # Calculate intersection area
             candidate_box = boxes[candidate_idx]
@@ -228,10 +236,17 @@ def greedy_nmm(
             if scores[candidate_idx] > scores[current_idx]:
                 continue
 
-            # For equal scores, ensure we don't merge the same box twice
-            if (scores[candidate_idx] == scores[current_idx] and
-                candidate_idx > current_idx):
-                continue
+            # For equal scores, use deterministic tie-breaking based on box coordinates
+            if scores[candidate_idx] == scores[current_idx]:
+                # Use box coordinates for stable ordering
+                current_coords = (x1[current_idx].item(), y1[current_idx].item(),
+                                  x2[current_idx].item(), y2[current_idx].item())
+                candidate_coords = (x1[candidate_idx].item(), y1[candidate_idx].item(),
+                                    x2[candidate_idx].item(), y2[candidate_idx].item())
+
+                # Compare coordinates lexicographically
+                if candidate_coords > current_coords:
+                    continue
 
             # Calculate intersection area
             candidate_box = boxes[candidate_idx]
@@ -351,6 +366,18 @@ def nmm(
             # Only consider candidates with lower or equal score
             if scores[candidate_idx] > scores[current_idx]:
                 continue
+
+            # For equal scores, use deterministic tie-breaking based on box coordinates
+            if scores[candidate_idx] == scores[current_idx]:
+                # Use box coordinates for stable ordering
+                current_coords = (x1[current_idx].item(), y1[current_idx].item(),
+                                  x2[current_idx].item(), y2[current_idx].item())
+                candidate_coords = (x1[candidate_idx].item(), y1[candidate_idx].item(),
+                                    x2[candidate_idx].item(), y2[candidate_idx].item())
+
+                # Compare coordinates lexicographically
+                if candidate_coords > current_coords:
+                    continue
 
             # Calculate intersection area
             candidate_box = boxes[candidate_idx]
