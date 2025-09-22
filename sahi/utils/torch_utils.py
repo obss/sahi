@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import re
 from os import environ
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 import torch
@@ -11,10 +13,10 @@ def empty_cuda_cache() -> None:
     torch.cuda.empty_cache()
 
 
-def to_float_tensor(img: Union[np.ndarray, Image]) -> "torch.Tensor":
-    """
-    Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range
-    [0, 255] to a torch.FloatTensor of shape (C x H x W).
+def to_float_tensor(img: np.ndarray | Image) -> torch.Tensor:
+    """Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range [0, 255] to a torch.FloatTensor of shape (C
+    x H x W).
+
     Args:
         img: PIL.Image or numpy array
     Returns:
@@ -39,9 +41,8 @@ def torch_to_numpy(img: Any) -> np.ndarray:
     return img.transpose((1, 2, 0))
 
 
-def select_device(device: Optional[str] = None) -> "torch.device":
-    """
-    Selects torch device
+def select_device(device: str | None = None) -> torch.device:
+    """Selects torch device.
 
     Args:
         device: "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.

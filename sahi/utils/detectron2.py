@@ -8,8 +8,8 @@ class Detectron2TestConstants:
 
 
 def export_cfg_as_yaml(cfg, export_path: str = "config.yaml"):
-    """
-    Exports Detectron2 config object in yaml format so that it can be used later.
+    """Exports Detectron2 config object in yaml format so that it can be used later.
+
     Args:
         cfg (detectron2.config.CfgNode): Detectron2 config object.
         export_path (str): Path to export the Detectron2 config.

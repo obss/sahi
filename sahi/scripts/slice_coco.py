@@ -6,7 +6,7 @@ from sahi.slicing import slice_coco
 from sahi.utils.file import Path, save_json
 
 
-def slice(
+def slicer(
     image_dir: str,
     dataset_json_path: str,
     slice_size: int = 512,
@@ -38,11 +38,11 @@ def slice(
     for slice_size in slice_size_list:
         # in format: train_images_512_01
         output_images_folder_name = (
-            Path(dataset_json_path).stem + f"_images_{str(slice_size)}_{str(overlap_ratio).replace('.', '')}"
+            Path(dataset_json_path).stem + f"_images_{slice_size!s}_{str(overlap_ratio).replace('.', '')}"
         )
         output_images_dir = str(Path(output_dir) / output_images_folder_name)
         sliced_coco_name = Path(dataset_json_path).name.replace(
-            ".json", f"_{str(slice_size)}_{str(overlap_ratio).replace('.', '')}"
+            ".json", f"_{slice_size!s}_{str(overlap_ratio).replace('.', '')}"
         )
         coco_dict, coco_path = slice_coco(
             coco_annotation_file_path=dataset_json_path,

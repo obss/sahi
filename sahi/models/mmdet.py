@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Optional, Union
+from __future__ import annotations
+
+from typing import Any
 
 import numpy as np
 
@@ -9,7 +11,7 @@ from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bool_mask
 from sahi.utils.import_utils import check_requirements
 
-check_requirements(["torch", "mmdet", "mmcv", "mmengine"])  # noqa: E402
+check_requirements(["torch", "mmdet", "mmcv", "mmengine"])
 
 from mmdet.apis.det_inferencer import DetInferencer  # noqa: E402
 from mmdet.utils import ConfigType  # noqa: E402
@@ -20,17 +22,17 @@ from mmengine.infer.infer import ModelType  # noqa: E402
 class DetInferencerWrapper(DetInferencer):
     def __init__(
         self,
-        model: Optional[Union[ModelType, str]] = None,
-        weights: Optional[str] = None,
-        device: Optional[str] = None,
-        scope: Optional[str] = "mmdet",
+        model: ModelType | str | None = None,
+        weights: str | None = None,
+        device: str | None = None,
+        scope: str | None = "mmdet",
         palette: str = "none",
-        image_size: Optional[int] = None,
+        image_size: int | None = None,
     ) -> None:
         self.image_size = image_size
         super().__init__(model, weights, device, scope, palette)
 
-    def __call__(self, images: List[np.ndarray], batch_size: int = 1) -> dict:
+    def __call__(self, images: list[np.ndarray], batch_size: int = 1) -> dict:
         """
         Emulate DetInferencer(images) without progressbar
         Args:
@@ -80,21 +82,21 @@ class DetInferencerWrapper(DetInferencer):
 class MmdetDetectionModel(DetectionModel):
     def __init__(
         self,
-        model_path: Optional[str] = None,
-        model: Optional[Any] = None,
-        config_path: Optional[str] = None,
-        device: Optional[str] = None,
+        model_path: str | None = None,
+        model: Any | None = None,
+        config_path: str | None = None,
+        device: str | None = None,
         mask_threshold: float = 0.5,
         confidence_threshold: float = 0.3,
-        category_mapping: Optional[Dict] = None,
-        category_remapping: Optional[Dict] = None,
+        category_mapping: dict | None = None,
+        category_remapping: dict | None = None,
         load_at_init: bool = True,
-        image_size: Optional[int] = None,
+        image_size: int | None = None,
         scope: str = "mmdet",
     ):
         self.scope = scope
         self.image_size = image_size
-        self.required_packages = list(getattr(self, "required_packages", [])) + ["mmdet", "mmcv", "torch"]
+        self.required_packages = [*list(getattr(self, "required_packages", [])), "mmdet", "mmcv", "torch"]
         super().__init__(
             model_path,
             model,
@@ -109,9 +111,7 @@ class MmdetDetectionModel(DetectionModel):
         )
 
     def load_model(self):
-        """
-        Detection model is initialized and set to self.model.
-        """
+        """Detection model is initialized and set to self.model."""
 
         # create model
         model = DetInferencerWrapper(
@@ -121,8 +121,8 @@ class MmdetDetectionModel(DetectionModel):
         self.set_model(model)
 
     def set_model(self, model: Any):
-        """
-        Sets the underlying MMDetection model.
+        """Sets the underlying MMDetection model.
+
         Args:
             model: Any
                 A MMDetection model
@@ -137,8 +137,8 @@ class MmdetDetectionModel(DetectionModel):
             self.category_mapping = category_mapping
 
     def perform_inference(self, image: np.ndarray):
-        """
-        Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+        """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
@@ -163,15 +163,13 @@ class MmdetDetectionModel(DetectionModel):
 
     @property
     def num_categories(self):
-        """
-        Returns number of categories
-        """
+        """Returns number of categories."""
         return len(self.category_names)
 
     @property
     def has_mask(self):
-        """
-        Returns if model output contains segmentation mask.
+        """Returns if model output contains segmentation mask.
+
         Considers both single dataset and ConcatDataset scenarios.
         """
 
@@ -208,12 +206,12 @@ class MmdetDetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amount_list: list[list[int]] | None = [[0, 0]],
+        full_shape_list: list[list[int]] | None = None,
     ):
-        """
-        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
+
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should

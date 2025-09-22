@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import os
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pybboxes.functional as pbf
@@ -13,23 +15,23 @@ from sahi.utils.import_utils import ensure_package_minimum_version
 class HuggingfaceDetectionModel(DetectionModel):
     def __init__(
         self,
-        model_path: Optional[str] = None,
-        model: Optional[Any] = None,
-        processor: Optional[Any] = None,
-        config_path: Optional[str] = None,
-        device: Optional[str] = None,
+        model_path: str | None = None,
+        model: Any | None = None,
+        processor: Any | None = None,
+        config_path: str | None = None,
+        device: str | None = None,
         mask_threshold: float = 0.5,
         confidence_threshold: float = 0.3,
-        category_mapping: Optional[Dict] = None,
-        category_remapping: Optional[Dict] = None,
+        category_mapping: dict | None = None,
+        category_remapping: dict | None = None,
         load_at_init: bool = True,
-        image_size: Optional[int] = None,
-        token: Optional[str] = None,
+        image_size: int | None = None,
+        token: str | None = None,
     ):
         self._processor = processor
-        self._image_shapes: List = []
+        self._image_shapes: list = []
         self._token = token
-        self.required_packages = list(getattr(self, "required_packages", [])) + ["torch", "transformers"]
+        self.required_packages = [*list(getattr(self, "required_packages", [])), "torch", "transformers"]
         ensure_package_minimum_version("transformers", "4.42.0")
         super().__init__(
             model_path,
@@ -54,9 +56,7 @@ class HuggingfaceDetectionModel(DetectionModel):
 
     @property
     def num_categories(self) -> int:
-        """
-        Returns number of categories
-        """
+        """Returns number of categories."""
         return self.model.config.num_labels
 
     def load_model(self):
@@ -90,9 +90,9 @@ class HuggingfaceDetectionModel(DetectionModel):
         self._processor = processor
         self.category_mapping = self.model.config.id2label
 
-    def perform_inference(self, image: Union[List, np.ndarray]):
-        """
-        Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+    def perform_inference(self, image: list | np.ndarray):
+        """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
@@ -116,7 +116,7 @@ class HuggingfaceDetectionModel(DetectionModel):
             self._image_shapes = [image.shape]
         self._original_predictions = outputs
 
-    def get_valid_predictions(self, logits, pred_boxes) -> Tuple:
+    def get_valid_predictions(self, logits, pred_boxes) -> tuple:
         """
         Args:
             logits: torch.Tensor
@@ -141,12 +141,12 @@ class HuggingfaceDetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amount_list: list[list[int]] | None = [[0, 0]],
+        full_shape_list: list[list[int]] | None = None,
     ):
-        """
-        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
+
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should

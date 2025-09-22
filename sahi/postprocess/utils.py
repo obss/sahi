@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from collections.abc import Sequence
-from typing import List, Union
 
 import numpy as np
 import torch
@@ -67,11 +68,7 @@ class ObjectPredictionList(Sequence):
 
 
 def repair_polygon(shapely_polygon: Polygon) -> Polygon:
-    """
-    Fix polygons
-    :param shapely_polygon: Shapely polygon object
-    :return:
-    """
+    """Fix polygons :param shapely_polygon: Shapely polygon object :return:"""
     if not shapely_polygon.is_valid:
         fixed_polygon = shapely_polygon.buffer(0)
         if fixed_polygon.is_valid:
@@ -87,11 +84,7 @@ def repair_polygon(shapely_polygon: Polygon) -> Polygon:
 
 
 def repair_multipolygon(shapely_multipolygon: MultiPolygon) -> MultiPolygon:
-    """
-    Fix invalid MultiPolygon objects
-    :param shapely_multipolygon: Imported shapely MultiPolygon object
-    :return:
-    """
+    """Fix invalid MultiPolygon objects :param shapely_multipolygon: Imported shapely MultiPolygon object :return:"""
     if not shapely_multipolygon.is_valid:
         fixed_geometry = shapely_multipolygon.buffer(0)
 
@@ -107,15 +100,11 @@ def repair_multipolygon(shapely_multipolygon: MultiPolygon) -> MultiPolygon:
     return shapely_multipolygon
 
 
-def coco_segmentation_to_shapely(segmentation: Union[List, List[List]]):
-    """
-    Fix segment data in COCO format
-    :param segmentation: segment data in COCO format
-    :return:
-    """
-    if isinstance(segmentation, List) and all([not isinstance(seg, List) for seg in segmentation]):
+def coco_segmentation_to_shapely(segmentation: list | list[list]):
+    """Fix segment data in COCO format :param segmentation: segment data in COCO format :return:"""
+    if isinstance(segmentation, list) and all([not isinstance(seg, list) for seg in segmentation]):
         segmentation = [segmentation]
-    elif isinstance(segmentation, List) and all([isinstance(seg, List) for seg in segmentation]):
+    elif isinstance(segmentation, list) and all([isinstance(seg, list) for seg in segmentation]):
         pass
     else:
         raise ValueError("segmentation must be List or List[List]")
@@ -159,7 +148,7 @@ def object_prediction_list_to_numpy(object_prediction_list: ObjectPredictionList
     return numpy_predictions
 
 
-def calculate_box_union(box1: Union[List[int], np.ndarray], box2: Union[List[int], np.ndarray]) -> List[int]:
+def calculate_box_union(box1: list[int] | np.ndarray, box2: list[int] | np.ndarray) -> list[int]:
     """
     Args:
         box1 (List[int]): [x1, y1, x2, y2]
@@ -172,7 +161,7 @@ def calculate_box_union(box1: Union[List[int], np.ndarray], box2: Union[List[int
     return list(np.concatenate((left_top, right_bottom)))
 
 
-def calculate_area(box: Union[List[int], np.ndarray]) -> float:
+def calculate_area(box: list[int] | np.ndarray) -> float:
     """
     Args:
         box (List[int]): [x1, y1, x2, y2]
@@ -193,7 +182,7 @@ def calculate_intersection_area(box1: np.ndarray, box2: np.ndarray) -> float:
 
 
 def calculate_bbox_iou(pred1: ObjectPrediction, pred2: ObjectPrediction) -> float:
-    """Returns the ratio of intersection area to the union"""
+    """Returns the ratio of intersection area to the union."""
     box1 = np.array(pred1.bbox.to_xyxy())
     box2 = np.array(pred2.bbox.to_xyxy())
     area1 = calculate_area(box1)
@@ -203,7 +192,7 @@ def calculate_bbox_iou(pred1: ObjectPrediction, pred2: ObjectPrediction) -> floa
 
 
 def calculate_bbox_ios(pred1: ObjectPrediction, pred2: ObjectPrediction) -> float:
-    """Returns the ratio of intersection area to the smaller box's area"""
+    """Returns the ratio of intersection area to the smaller box's area."""
     box1 = np.array(pred1.bbox.to_xyxy())
     box2 = np.array(pred2.bbox.to_xyxy())
     area1 = calculate_area(box1)
@@ -255,13 +244,13 @@ def get_merged_score(
     pred1: ObjectPrediction,
     pred2: ObjectPrediction,
 ) -> float:
-    scores: List[float] = [pred.score.value for pred in (pred1, pred2)]
+    scores: list[float] = [pred.score.value for pred in (pred1, pred2)]
     return max(scores)
 
 
 def get_merged_bbox(pred1: ObjectPrediction, pred2: ObjectPrediction) -> BoundingBox:
-    box1: List[int] = pred1.bbox.to_xyxy()
-    box2: List[int] = pred2.bbox.to_xyxy()
+    box1: list[int] = pred1.bbox.to_xyxy()
+    box2: list[int] = pred2.bbox.to_xyxy()
     bbox = BoundingBox(box=calculate_box_union(box1, box2))
     return bbox
 

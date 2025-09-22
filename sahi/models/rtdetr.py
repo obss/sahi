@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 from sahi.models.ultralytics import UltralyticsDetectionModel
 
 
 class RTDetrDetectionModel(UltralyticsDetectionModel):
     def __init__(self, *args, **kwargs):
-        self.required_packages = list(getattr(self, "required_packages", [])) + ["ultralytics"]
+        self.required_packages = [*list(getattr(self, "required_packages", [])), "ultralytics"]
         super().__init__(*args, **kwargs)
 
     def load_model(self):

@@ -2,7 +2,7 @@ import logging
 import os
 import re
 from abc import ABC, abstractmethod
-from typing import Protocol, cast
+from typing import ClassVar, Protocol, cast
 
 PKG_INFO_LEVEL = logging.INFO + 5
 logging.addLevelName(PKG_INFO_LEVEL, "PKG_INFO")
@@ -39,7 +39,7 @@ class SahiLoggerFormatter(logging.Formatter):
     reset = "\x1b[0m"
     base_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
 
-    FORMATS = {
+    FORMATS: ClassVar[dict[int, str]] = {
         logging.DEBUG: grey + base_format + reset,
         logging.INFO: grey + base_format + reset,
         logging.WARNING: yellow + base_format + reset,
@@ -80,4 +80,4 @@ else:
 console_handler.setFormatter(SahiLoggerFormatter())
 logger.addHandler(console_handler)
 
-__all__ = ["logger", "SahiLogger", "BaseSahiLogger", "SupportsPkgInfo", "PKG_INFO_LEVEL"]
+__all__ = ["PKG_INFO_LEVEL", "BaseSahiLogger", "SahiLogger", "SupportsPkgInfo", "logger"]

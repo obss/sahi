@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import urllib.request
 from os import path
 from pathlib import Path
-from typing import Optional
 
 
 class Yolov5TestConstants:
@@ -15,7 +16,7 @@ class Yolov5TestConstants:
     YOLOV5M6_MODEL_PATH = "tests/data/models/yolov5/yolov5m6.pt"
 
 
-def download_yolov5n_model(destination_path: Optional[str] = None):
+def download_yolov5n_model(destination_path: str | None = None):
     if destination_path is None:
         destination_path = Yolov5TestConstants.YOLOV5N_MODEL_PATH
 
@@ -28,7 +29,7 @@ def download_yolov5n_model(destination_path: Optional[str] = None):
         )
 
 
-def download_yolov5s6_model(destination_path: Optional[str] = None):
+def download_yolov5s6_model(destination_path: str | None = None):
     if destination_path is None:
         destination_path = Yolov5TestConstants.YOLOV5S6_MODEL_PATH
 
