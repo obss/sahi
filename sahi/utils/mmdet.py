@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import shutil
 import sys
 import urllib.request
 from importlib import import_module
 from os import path
 from pathlib import Path
-from typing import Optional
 
 from sahi.utils.file import download_from_url
 
@@ -30,7 +31,7 @@ class MmdetTestConstants:
     MMDET_YOLOX_TINY_CONFIG_PATH = "tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py"
 
 
-def download_mmdet_cascade_mask_rcnn_model(destination_path: Optional[str] = None):
+def download_mmdet_cascade_mask_rcnn_model(destination_path: str | None = None):
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH
 
@@ -39,7 +40,7 @@ def download_mmdet_cascade_mask_rcnn_model(destination_path: Optional[str] = Non
     download_from_url(MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_URL, destination_path)
 
 
-def download_mmdet_retinanet_model(destination_path: Optional[str] = None):
+def download_mmdet_retinanet_model(destination_path: str | None = None):
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_RETINANET_MODEL_PATH
 
@@ -48,7 +49,7 @@ def download_mmdet_retinanet_model(destination_path: Optional[str] = None):
     download_from_url(MmdetTestConstants.MMDET_RETINANET_MODEL_URL, destination_path)
 
 
-def download_mmdet_yolox_tiny_model(destination_path: Optional[str] = None):
+def download_mmdet_yolox_tiny_model(destination_path: str | None = None):
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH
 
@@ -62,8 +63,7 @@ def download_mmdet_config(
     config_file_name: str = "cascade_mask_rcnn_r50_fpn_1x_coco.py",
     verbose: bool = True,
 ) -> str:
-    """
-    Merges config files starting from given main config file name. Saves as single file.
+    """Merges config files starting from given main config file name. Saves as single file.
 
     Args:
         model_name (str): mmdet model name. check https://github.com/open-mmlab/mmdetection/tree/master/configs.

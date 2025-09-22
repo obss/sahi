@@ -13,11 +13,11 @@ from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 
 __all__ = [
-    "__version__",
+    "AutoDetectionModel",
     "BoundingBox",
     "Category",
-    "Mask",
-    "AutoDetectionModel",
     "DetectionModel",
+    "Mask",
     "ObjectPrediction",
+    "__version__",
 ]
