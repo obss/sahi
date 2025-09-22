@@ -179,24 +179,28 @@ def greedy_nmm(
         keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
         to keep to a list of prediction indices to be merged.
     """
-    # Extract coordinates and scores directly from tensor
-    x1 = object_predictions_as_tensor[:, 0].tolist()
-    y1 = object_predictions_as_tensor[:, 1].tolist()
-    x2 = object_predictions_as_tensor[:, 2].tolist()
-    y2 = object_predictions_as_tensor[:, 3].tolist()
-    scores = object_predictions_as_tensor[:, 4].tolist()
+    # Extract coordinates and scores as tensors
+    x1 = object_predictions_as_tensor[:, 0]
+    y1 = object_predictions_as_tensor[:, 1]
+    x2 = object_predictions_as_tensor[:, 2]
+    y2 = object_predictions_as_tensor[:, 3]
+    scores = object_predictions_as_tensor[:, 4]
 
-    # Create Shapely boxes and calculate areas
+    # Calculate areas as tensor (vectorized operation)
+    areas = (x2 - x1) * (y2 - y1)
+
+    # Create Shapely boxes only once
     boxes = []
-    areas = []
+    for i in range(len(object_predictions_as_tensor)):
+        boxes.append(box(
+            x1[i].item(),  # Convert only individual values
+            y1[i].item(),
+            x2[i].item(),
+            y2[i].item()
+        ))
 
-    for i in range(len(x1)):
-        b = box(x1[i], y1[i], x2[i], y2[i])
-        boxes.append(b)
-        areas.append(b.area)
-
-    # Sort indices by score (descending)
-    sorted_idxs = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+    # Sort indices by score (descending) using torch
+    sorted_idxs = torch.argsort(scores, descending=True).tolist()
 
     # Build STRtree
     tree = STRtree(boxes)
@@ -209,14 +213,15 @@ def greedy_nmm(
             continue
 
         current_box = boxes[current_idx]
-        current_area = areas[current_idx]
+        current_area = areas[current_idx].item()  # Convert only when needed
 
         # Query potential intersections using STRtree
         candidate_idxs = tree.query(current_box)
 
         merge_list = []
         for candidate_idx in candidate_idxs:
-            if candidate_idx == current_idx or candidate_idx in suppressed:
+            if (candidate_idx == current_idx or
+                candidate_idx in suppressed):
                 continue
 
             # Only consider candidates with lower or equal score
@@ -224,7 +229,8 @@ def greedy_nmm(
                 continue
 
             # For equal scores, ensure we don't merge the same box twice
-            if scores[candidate_idx] == scores[current_idx] and candidate_idx > current_idx:
+            if (scores[candidate_idx] == scores[current_idx] and
+                candidate_idx > current_idx):
                 continue
 
             # Calculate intersection area
@@ -233,10 +239,10 @@ def greedy_nmm(
 
             # Calculate metric
             if match_metric == "IOU":
-                union = current_area + areas[candidate_idx] - intersection
+                union = current_area + areas[candidate_idx].item() - intersection
                 metric = intersection / union if union > 0 else 0
             elif match_metric == "IOS":
-                smaller = min(current_area, areas[candidate_idx])
+                smaller = min(current_area, areas[candidate_idx].item())
                 metric = intersection / smaller if smaller > 0 else 0
             else:
                 raise ValueError("Invalid match_metric")
@@ -284,9 +290,9 @@ def batched_nmm(
 
 
 def nmm(
-    object_predictions_as_tensor: torch.Tensor,
-    match_metric: str = "IOU",
-    match_threshold: float = 0.5,
+        object_predictions_as_tensor: torch.Tensor,
+        match_metric: str = "IOU",
+        match_threshold: float = 0.5,
 ):
     """
     Apply non-maximum merging to avoid detecting too many
@@ -301,24 +307,28 @@ def nmm(
         keep_to_merge_list: (Dict[int:List[int]]) mapping from prediction indices
         to keep to a list of prediction indices to be merged.
     """
-    # Extract coordinates and scores directly from tensor
-    x1 = object_predictions_as_tensor[:, 0].tolist()
-    y1 = object_predictions_as_tensor[:, 1].tolist()
-    x2 = object_predictions_as_tensor[:, 2].tolist()
-    y2 = object_predictions_as_tensor[:, 3].tolist()
-    scores = object_predictions_as_tensor[:, 4].tolist()
+    # Extract coordinates and scores as tensors
+    x1 = object_predictions_as_tensor[:, 0]
+    y1 = object_predictions_as_tensor[:, 1]
+    x2 = object_predictions_as_tensor[:, 2]
+    y2 = object_predictions_as_tensor[:, 3]
+    scores = object_predictions_as_tensor[:, 4]
 
-    # Create Shapely boxes and calculate areas
+    # Calculate areas as tensor (vectorized operation)
+    areas = (x2 - x1) * (y2 - y1)
+
+    # Create Shapely boxes only once
     boxes = []
-    areas = []
+    for i in range(len(object_predictions_as_tensor)):
+        boxes.append(box(
+            x1[i].item(),  # Convert only individual values
+            y1[i].item(),
+            x2[i].item(),
+            y2[i].item()
+        ))
 
-    for i in range(len(x1)):
-        b = box(x1[i], y1[i], x2[i], y2[i])
-        boxes.append(b)
-        areas.append(b.area)
-
-    # Sort indices by score (descending)
-    sorted_idxs = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+    # Sort indices by score (descending) using torch
+    sorted_idxs = torch.argsort(scores, descending=True).tolist()
 
     # Build STRtree
     tree = STRtree(boxes)
@@ -328,7 +338,7 @@ def nmm(
 
     for current_idx in sorted_idxs:
         current_box = boxes[current_idx]
-        current_area = areas[current_idx]
+        current_area = areas[current_idx].item()  # Convert only when needed
 
         # Query potential intersections using STRtree
         candidate_idxs = tree.query(current_box)
@@ -348,10 +358,10 @@ def nmm(
 
             # Calculate metric
             if match_metric == "IOU":
-                union = current_area + areas[candidate_idx] - intersection
+                union = current_area + areas[candidate_idx].item() - intersection
                 metric = intersection / union if union > 0 else 0
             elif match_metric == "IOS":
-                smaller = min(current_area, areas[candidate_idx])
+                smaller = min(current_area, areas[candidate_idx].item())
                 metric = intersection / smaller if smaller > 0 else 0
             else:
                 raise ValueError("Invalid match_metric")
@@ -376,10 +386,8 @@ def nmm(
             keep_idx = merge_to_keep[current_idx_native]
             for matched_box_idx in matched_box_indices:
                 matched_box_idx_native = int(matched_box_idx)
-                if (
-                    matched_box_idx_native not in keep_to_merge_list.get(keep_idx, [])
-                    and matched_box_idx_native not in merge_to_keep
-                ):
+                if (matched_box_idx_native not in keep_to_merge_list.get(keep_idx, []) and
+                        matched_box_idx_native not in merge_to_keep):
                     if keep_idx not in keep_to_merge_list:
                         keep_to_merge_list[keep_idx] = []
                     keep_to_merge_list[keep_idx].append(matched_box_idx_native)
