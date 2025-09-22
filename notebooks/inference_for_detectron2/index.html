@@ -2340,7 +2340,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-1">
@@ -2353,11 +2353,13 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">sahi</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># flake8: noqa: E501</span>
+<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">sahi</span>
 <span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="n">detectron2</span> <span class="o">-</span><span class="n">f</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">dl</span><span class="o">.</span><span class="n">fbaipublicfiles</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">detectron2</span><span class="o">/</span><span class="n">wheels</span><span class="o">/</span><span class="n">cpu</span><span class="o">/</span><span class="n">torch1</span><span class="mf">.10</span><span class="o">/</span><span class="n">index</span><span class="o">.</span><span class="n">html</span> <span class="c1"># for Detectron2-cpu</span>
 <span class="c1">#!pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.10/index.html # for Detectron2-cuda11.1</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-1">!pip install -U sahi
+<div class="clipboard-copy-txt" id="cell-1"># flake8: noqa: E501
+!pip install -U sahi
 !pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch1.10/index.html # for Detectron2-cpu
 #!pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.10/index.html # for Detectron2-cuda11.1</div>
 </div>
@@ -2385,9 +2387,11 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
 <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2">import os
+
 os.getcwd()</div>
 </div>
 </div>
@@ -2439,24 +2443,24 @@ os.getcwd()</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># will be used for detectron2 fasterrcnn model zoo name</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.detectron2</span><span class="w"> </span><span class="kn">import</span> <span class="n">Detectron2TestConstants</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 
 <span class="c1"># import required functions, classes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sahi</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoDetectionModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.predict</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_sliced_prediction</span><span class="p">,</span> <span class="n">predict</span><span class="p">,</span> <span class="n">get_prediction</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.file</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_from_url</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.predict</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_prediction</span><span class="p">,</span> <span class="n">get_sliced_prediction</span><span class="p">,</span> <span class="n">predict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.cv</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_image</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.detectron2</span><span class="w"> </span><span class="kn">import</span> <span class="n">Detectron2TestConstants</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.file</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_from_url</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-3"># will be used for detectron2 fasterrcnn model zoo name
-from sahi.utils.detectron2 import Detectron2TestConstants
+from IPython.display import Image
 
 # import required functions, classes
 from sahi import AutoDetectionModel
-from sahi.predict import get_sliced_prediction, predict, get_prediction
-from sahi.utils.file import download_from_url
+from sahi.predict import get_prediction, get_sliced_prediction, predict
 from sahi.utils.cv import read_image
-from IPython.display import Image</div>
+from sahi.utils.detectron2 import Detectron2TestConstants
+from sahi.utils.file import download_from_url</div>
 </div>
 </div>
 </div>
@@ -2485,15 +2489,25 @@ from IPython.display import Image</div>
 <span class="n">model_path</span> <span class="o">=</span> <span class="n">Detectron2TestConstants</span><span class="o">.</span><span class="n">FASTERCNN_MODEL_ZOO_NAME</span>
 
 <span class="c1"># download test images into demo_data folder</span>
-<span class="n">download_from_url</span><span class="p">(</span><span class="s1">'https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg'</span><span class="p">,</span> <span class="s1">'demo_data/small-vehicles1.jpeg'</span><span class="p">)</span>
-<span class="n">download_from_url</span><span class="p">(</span><span class="s1">'https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/terrain2.png'</span><span class="p">,</span> <span class="s1">'demo_data/terrain2.png'</span><span class="p">)</span>
+<span class="n">download_from_url</span><span class="p">(</span>
+    <span class="s2">"https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg"</span><span class="p">,</span>
+    <span class="s2">"demo_data/small-vehicles1.jpeg"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">download_from_url</span><span class="p">(</span>
+    <span class="s2">"https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/terrain2.png"</span><span class="p">,</span> <span class="s2">"demo_data/terrain2.png"</span>
+<span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-4"># set detectron2 fasterrcnn model zoo name
 model_path = Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME
 
 # download test images into demo_data folder
-download_from_url('https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg', 'demo_data/small-vehicles1.jpeg')
-download_from_url('https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/terrain2.png', 'demo_data/terrain2.png')</div>
+download_from_url(
+    "https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg",
+    "demo_data/small-vehicles1.jpeg",
+)
+download_from_url(
+    "https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/terrain2.png", "demo_data/terrain2.png"
+)</div>
 </div>
 </div>
 </div>
@@ -2543,21 +2557,21 @@ download_from_url('https://raw.githubusercontent.com/obss/sahi/main/demo/demo_da
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">detection_model</span> <span class="o">=</span> <span class="n">AutoDetectionModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-    <span class="n">model_type</span><span class="o">=</span><span class="s1">'detectron2'</span><span class="p">,</span>
+    <span class="n">model_type</span><span class="o">=</span><span class="s2">"detectron2"</span><span class="p">,</span>
     <span class="n">model_path</span><span class="o">=</span><span class="n">model_path</span><span class="p">,</span>
     <span class="n">config_path</span><span class="o">=</span><span class="n">model_path</span><span class="p">,</span>
     <span class="n">confidence_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">image_size</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span>
-    <span class="n">device</span><span class="o">=</span><span class="s2">"cpu"</span><span class="p">,</span> <span class="c1"># or 'cuda:0'</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">"cpu"</span><span class="p">,</span>  <span class="c1"># or 'cuda:0'</span>
 <span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-5">detection_model = AutoDetectionModel.from_pretrained(
-    model_type='detectron2',
+    model_type="detectron2",
     model_path=model_path,
     config_path=model_path,
     confidence_threshold=0.5,
     image_size=640,
-    device="cpu", # or 'cuda:0'
+    device="cpu",  # or 'cuda:0'
 )</div>
 </div>
 </div>
@@ -2761,19 +2775,19 @@ Image("demo_data/prediction_visual.png")</div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">get_sliced_prediction</span><span class="p">(</span>
     <span class="s2">"demo_data/small-vehicles1.jpeg"</span><span class="p">,</span>
     <span class="n">detection_model</span><span class="p">,</span>
-    <span class="n">slice_height</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
-    <span class="n">slice_width</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
-    <span class="n">overlap_height_ratio</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
-    <span class="n">overlap_width_ratio</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">slice_height</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+    <span class="n">slice_width</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+    <span class="n">overlap_height_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">overlap_width_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-9">result = get_sliced_prediction(
     "demo_data/small-vehicles1.jpeg",
     detection_model,
-    slice_height = 256,
-    slice_width = 256,
-    overlap_height_ratio = 0.2,
-    overlap_width_ratio = 0.2,
+    slice_height=256,
+    slice_width=256,
+    overlap_height_ratio=0.2,
+    overlap_width_ratio=0.2,
 )</div>
 </div>
 </div>
@@ -3207,7 +3221,7 @@ Image("demo_data/prediction_visual.png")</div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">"detectron2"</span>
 <span class="n">model_path</span> <span class="o">=</span> <span class="n">model_path</span>
 <span class="n">model_config_path</span> <span class="o">=</span> <span class="n">model_path</span>
-<span class="n">model_device</span> <span class="o">=</span> <span class="s2">"cpu"</span> <span class="c1"># or 'cuda:0'</span>
+<span class="n">model_device</span> <span class="o">=</span> <span class="s2">"cpu"</span>  <span class="c1"># or 'cuda:0'</span>
 <span class="n">model_confidence_threshold</span> <span class="o">=</span> <span class="mf">0.5</span>
 
 <span class="n">slice_height</span> <span class="o">=</span> <span class="mi">480</span>
@@ -3220,7 +3234,7 @@ Image("demo_data/prediction_visual.png")</div>
 <div class="clipboard-copy-txt" id="cell-17">model_type = "detectron2"
 model_path = model_path
 model_config_path = model_path
-model_device = "cpu" # or 'cuda:0'
+model_device = "cpu"  # or 'cuda:0'
 model_confidence_threshold = 0.5
 
 slice_height = 480

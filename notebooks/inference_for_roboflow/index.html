@@ -2243,8 +2243,8 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sahi</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoDetectionModel</span>
 
 <span class="n">detection_model</span> <span class="o">=</span> <span class="n">AutoDetectionModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-    <span class="n">model_type</span><span class="o">=</span><span class="s1">'roboflow'</span><span class="p">,</span>
-    <span class="n">model</span><span class="o">=</span><span class="s1">'rfdetr-base'</span><span class="p">,</span>  <span class="c1"># RoboFlow model ID as string</span>
+    <span class="n">model_type</span><span class="o">=</span><span class="s2">"roboflow"</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">"rfdetr-base"</span><span class="p">,</span>  <span class="c1"># RoboFlow model ID as string</span>
     <span class="n">confidence_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">device</span><span class="o">=</span><span class="s2">"cpu"</span><span class="p">,</span>
 <span class="p">)</span>
@@ -2252,8 +2252,8 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="clipboard-copy-txt" id="cell-2">from sahi import AutoDetectionModel
 
 detection_model = AutoDetectionModel.from_pretrained(
-    model_type='roboflow',
-    model='rfdetr-base',  # RoboFlow model ID as string
+    model_type="roboflow",
+    model="rfdetr-base",  # RoboFlow model ID as string
     confidence_threshold=0.5,
     device="cpu",
 )</div>
@@ -2292,24 +2292,26 @@ detection_model = AutoDetectionModel.from_pretrained(
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sahi</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoDetectionModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">rfdetr.detr</span><span class="w"> </span><span class="kn">import</span> <span class="n">RFDETRBase</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">rfdetr.detr</span><span class="w"> </span><span class="kn">import</span> <span class="n">RFDETRBase</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rfdetr.util.coco_classes</span><span class="w"> </span><span class="kn">import</span> <span class="n">COCO_CLASSES</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoDetectionModel</span>
+
 <span class="n">detection_model</span> <span class="o">=</span> <span class="n">AutoDetectionModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-    <span class="n">model_type</span><span class="o">=</span><span class="s1">'roboflow'</span><span class="p">,</span>
+    <span class="n">model_type</span><span class="o">=</span><span class="s2">"roboflow"</span><span class="p">,</span>
     <span class="n">model</span><span class="o">=</span><span class="n">RFDETRBase</span><span class="p">,</span>  <span class="c1"># pass the class itself</span>
     <span class="n">confidence_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">category_mapping</span><span class="o">=</span><span class="n">COCO_CLASSES</span><span class="p">,</span>
     <span class="n">device</span><span class="o">=</span><span class="s2">"cpu"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">from sahi import AutoDetectionModel
-from rfdetr.detr import RFDETRBase
+<div class="clipboard-copy-txt" id="cell-3">from rfdetr.detr import RFDETRBase
 from rfdetr.util.coco_classes import COCO_CLASSES
 
+from sahi import AutoDetectionModel
+
 detection_model = AutoDetectionModel.from_pretrained(
-    model_type='roboflow',
+    model_type="roboflow",
     model=RFDETRBase,  # pass the class itself
     confidence_threshold=0.5,
     category_mapping=COCO_CLASSES,
@@ -2371,24 +2373,26 @@ reinitializing detection head with 90 classes
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sahi</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoDetectionModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">rfdetr.detr</span><span class="w"> </span><span class="kn">import</span> <span class="n">RFDETRBase</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">rfdetr.detr</span><span class="w"> </span><span class="kn">import</span> <span class="n">RFDETRBase</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rfdetr.util.coco_classes</span><span class="w"> </span><span class="kn">import</span> <span class="n">COCO_CLASSES</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoDetectionModel</span>
+
 <span class="n">detection_model</span> <span class="o">=</span> <span class="n">AutoDetectionModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-    <span class="n">model_type</span><span class="o">=</span><span class="s1">'roboflow'</span><span class="p">,</span>
+    <span class="n">model_type</span><span class="o">=</span><span class="s2">"roboflow"</span><span class="p">,</span>
     <span class="n">model</span><span class="o">=</span><span class="n">RFDETRBase</span><span class="p">(),</span>  <span class="c1"># pass an instance of a trained model</span>
     <span class="n">confidence_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">category_mapping</span><span class="o">=</span><span class="n">COCO_CLASSES</span><span class="p">,</span>
     <span class="n">device</span><span class="o">=</span><span class="s2">"cpu"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">from sahi import AutoDetectionModel
-from rfdetr.detr import RFDETRBase
+<div class="clipboard-copy-txt" id="cell-4">from rfdetr.detr import RFDETRBase
 from rfdetr.util.coco_classes import COCO_CLASSES
 
+from sahi import AutoDetectionModel
+
 detection_model = AutoDetectionModel.from_pretrained(
-    model_type='roboflow',
+    model_type="roboflow",
     model=RFDETRBase(),  # pass an instance of a trained model
     confidence_threshold=0.5,
     category_mapping=COCO_CLASSES,
@@ -2444,11 +2448,17 @@ detection_model = AutoDetectionModel.from_pretrained(
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.file</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_from_url</span>
 
-<span class="n">download_from_url</span><span class="p">(</span><span class="s1">'https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg'</span><span class="p">,</span> <span class="s1">'demo_data/small-vehicles1.jpeg'</span><span class="p">)</span>
+<span class="n">download_from_url</span><span class="p">(</span>
+    <span class="s2">"https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg"</span><span class="p">,</span>
+    <span class="s2">"demo_data/small-vehicles1.jpeg"</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-5">from sahi.utils.file import download_from_url
 
-download_from_url('https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg', 'demo_data/small-vehicles1.jpeg')</div>
+download_from_url(
+    "https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg",
+    "demo_data/small-vehicles1.jpeg",
+)</div>
 </div>
 </div>
 </div>
@@ -2473,8 +2483,9 @@ download_from_url('https://raw.githubusercontent.com/obss/sahi/main/demo/demo_da
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sahi.predict</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_prediction</span><span class="p">,</span> <span class="n">get_sliced_prediction</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.predict</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_prediction</span><span class="p">,</span> <span class="n">get_sliced_prediction</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">get_prediction</span><span class="p">(</span>
     <span class="s2">"demo_data/small-vehicles1.jpeg"</span><span class="p">,</span>
@@ -2483,8 +2494,9 @@ download_from_url('https://raw.githubusercontent.com/obss/sahi/main/demo/demo_da
 <span class="n">result</span><span class="o">.</span><span class="n">export_visuals</span><span class="p">(</span><span class="n">export_dir</span><span class="o">=</span><span class="s2">"demo_data/"</span><span class="p">)</span>
 <span class="n">Image</span><span class="p">(</span><span class="s2">"demo_data/prediction_visual.png"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6">from sahi.predict import get_prediction, get_sliced_prediction
-from IPython.display import Image
+<div class="clipboard-copy-txt" id="cell-6">from IPython.display import Image
+
+from sahi.predict import get_prediction, get_sliced_prediction
 
 result = get_prediction(
     "demo_data/small-vehicles1.jpeg",
@@ -2539,10 +2551,10 @@ UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result_sliced</span> <span class="o">=</span> <span class="n">get_sliced_prediction</span><span class="p">(</span>
     <span class="s2">"demo_data/small-vehicles1.jpeg"</span><span class="p">,</span>
     <span class="n">detection_model</span><span class="p">,</span>
-    <span class="n">slice_height</span> <span class="o">=</span> <span class="mi">224</span><span class="p">,</span>
-    <span class="n">slice_width</span> <span class="o">=</span> <span class="mi">224</span><span class="p">,</span>
-    <span class="n">overlap_height_ratio</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
-    <span class="n">overlap_width_ratio</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">slice_height</span><span class="o">=</span><span class="mi">224</span><span class="p">,</span>
+    <span class="n">slice_width</span><span class="o">=</span><span class="mi">224</span><span class="p">,</span>
+    <span class="n">overlap_height_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">overlap_width_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">result_sliced</span><span class="o">.</span><span class="n">export_visuals</span><span class="p">(</span><span class="n">export_dir</span><span class="o">=</span><span class="s2">"demo_data/"</span><span class="p">)</span>
 <span class="n">Image</span><span class="p">(</span><span class="s2">"demo_data/prediction_visual.png"</span><span class="p">)</span>
@@ -2550,10 +2562,10 @@ UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass
 <div class="clipboard-copy-txt" id="cell-7">result_sliced = get_sliced_prediction(
     "demo_data/small-vehicles1.jpeg",
     detection_model,
-    slice_height = 224,
-    slice_width = 224,
-    overlap_height_ratio = 0.2,
-    overlap_width_ratio = 0.2,
+    slice_height=224,
+    slice_width=224,
+    overlap_height_ratio=0.2,
+    overlap_width_ratio=0.2,
 )
 result_sliced.export_visuals(export_dir="demo_data/")
 Image("demo_data/prediction_visual.png")</div>

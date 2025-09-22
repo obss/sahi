@@ -2383,9 +2383,11 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
 <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2">import os
+
 os.getcwd()</div>
 </div>
 </div>
@@ -2425,20 +2427,24 @@ os.getcwd()</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># import required functions, classes</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sahi</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoDetectionModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.predict</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_sliced_prediction</span><span class="p">,</span> <span class="n">predict</span><span class="p">,</span> <span class="n">get_prediction</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.file</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_from_url</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.cv</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_image</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoDetectionModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.predict</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_prediction</span><span class="p">,</span> <span class="n">get_sliced_prediction</span><span class="p">,</span> <span class="n">predict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.cv</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_image</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.file</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_from_url</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-3"># import required functions, classes
-from sahi import AutoDetectionModel
-from sahi.predict import get_sliced_prediction, predict, get_prediction
-from sahi.utils.file import download_from_url
-from sahi.utils.cv import read_image
+import os
+
 from IPython.display import Image
-import os</div>
+
+from sahi import AutoDetectionModel
+from sahi.predict import get_prediction, get_sliced_prediction, predict
+from sahi.utils.cv import read_image
+from sahi.utils.file import download_from_url</div>
 </div>
 </div>
 </div>
@@ -2475,20 +2481,30 @@ import os</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Select a model to use, we use a RD-DETRv2 model.</span>
-<span class="n">model_path</span> <span class="o">=</span> <span class="s2">"PekingU/rtdetr_v2_r18vd"</span> <span class="c1"># larger models: PekingU/rtdetr_v2_r50vd, PekingU/rtdetr_v2_r101vd</span>
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"HF_TOKEN"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"hf_..."</span> <span class="c1"># HF requires a token to download public models (no idea why)</span>
+<span class="n">model_path</span> <span class="o">=</span> <span class="s2">"PekingU/rtdetr_v2_r18vd"</span>  <span class="c1"># larger models: PekingU/rtdetr_v2_r50vd, PekingU/rtdetr_v2_r101vd</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"HF_TOKEN"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"hf_..."</span>  <span class="c1"># HF requires a token to download public models (no idea why)</span>
 
 <span class="c1"># download test images into demo_data folder</span>
-<span class="n">download_from_url</span><span class="p">(</span><span class="s1">'https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg'</span><span class="p">,</span> <span class="s1">'demo_data/small-vehicles1.jpeg'</span><span class="p">)</span>
-<span class="n">download_from_url</span><span class="p">(</span><span class="s1">'https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/terrain2.png'</span><span class="p">,</span> <span class="s1">'demo_data/terrain2.png'</span><span class="p">)</span>
+<span class="n">download_from_url</span><span class="p">(</span>
+    <span class="s2">"https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg"</span><span class="p">,</span>
+    <span class="s2">"demo_data/small-vehicles1.jpeg"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">download_from_url</span><span class="p">(</span>
+    <span class="s2">"https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/terrain2.png"</span><span class="p">,</span> <span class="s2">"demo_data/terrain2.png"</span>
+<span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-4"># Select a model to use, we use a RD-DETRv2 model.
-model_path = "PekingU/rtdetr_v2_r18vd" # larger models: PekingU/rtdetr_v2_r50vd, PekingU/rtdetr_v2_r101vd
-os.environ["HF_TOKEN"] = "hf_..." # HF requires a token to download public models (no idea why)
+model_path = "PekingU/rtdetr_v2_r18vd"  # larger models: PekingU/rtdetr_v2_r50vd, PekingU/rtdetr_v2_r101vd
+os.environ["HF_TOKEN"] = "hf_..."  # HF requires a token to download public models (no idea why)
 
 # download test images into demo_data folder
-download_from_url('https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg', 'demo_data/small-vehicles1.jpeg')
-download_from_url('https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/terrain2.png', 'demo_data/terrain2.png')</div>
+download_from_url(
+    "https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg",
+    "demo_data/small-vehicles1.jpeg",
+)
+download_from_url(
+    "https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/terrain2.png", "demo_data/terrain2.png"
+)</div>
 </div>
 </div>
 </div>
@@ -2538,19 +2554,19 @@ download_from_url('https://raw.githubusercontent.com/obss/sahi/main/demo/demo_da
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">detection_model</span> <span class="o">=</span> <span class="n">AutoDetectionModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-    <span class="n">model_type</span><span class="o">=</span><span class="s1">'huggingface'</span><span class="p">,</span>
+    <span class="n">model_type</span><span class="o">=</span><span class="s2">"huggingface"</span><span class="p">,</span>
     <span class="n">model_path</span><span class="o">=</span><span class="n">model_path</span><span class="p">,</span>
     <span class="n">confidence_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">image_size</span><span class="o">=</span><span class="mi">640</span><span class="p">,</span>
-    <span class="n">device</span><span class="o">=</span><span class="s2">"cpu"</span><span class="p">,</span> <span class="c1"># or 'cuda'</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">"cpu"</span><span class="p">,</span>  <span class="c1"># or 'cuda'</span>
 <span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-5">detection_model = AutoDetectionModel.from_pretrained(
-    model_type='huggingface',
+    model_type="huggingface",
     model_path=model_path,
     confidence_threshold=0.5,
     image_size=640,
-    device="cpu", # or 'cuda'
+    device="cpu",  # or 'cuda'
 )</div>
 </div>
 </div>
@@ -2739,19 +2755,19 @@ Image("demo_data/prediction_visual.png")</div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">get_sliced_prediction</span><span class="p">(</span>
     <span class="s2">"demo_data/small-vehicles1.jpeg"</span><span class="p">,</span>
     <span class="n">detection_model</span><span class="p">,</span>
-    <span class="n">slice_height</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span>
-    <span class="n">slice_width</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span>
-    <span class="n">overlap_height_ratio</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
-    <span class="n">overlap_width_ratio</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">slice_height</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+    <span class="n">slice_width</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+    <span class="n">overlap_height_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">overlap_width_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-9">result = get_sliced_prediction(
     "demo_data/small-vehicles1.jpeg",
     detection_model,
-    slice_height = 512,
-    slice_width = 512,
-    overlap_height_ratio = 0.2,
-    overlap_width_ratio = 0.2,
+    slice_height=512,
+    slice_width=512,
+    overlap_height_ratio=0.2,
+    overlap_width_ratio=0.2,
 )</div>
 </div>
 </div>
@@ -3201,7 +3217,7 @@ result.to_imantics_annotations()[:3]</div>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">"huggingface"</span>
 <span class="n">model_path</span> <span class="o">=</span> <span class="n">model_path</span>
-<span class="n">model_device</span> <span class="o">=</span> <span class="s2">"cpu"</span> <span class="c1"># or 'cuda:0'</span>
+<span class="n">model_device</span> <span class="o">=</span> <span class="s2">"cpu"</span>  <span class="c1"># or 'cuda:0'</span>
 <span class="n">model_confidence_threshold</span> <span class="o">=</span> <span class="mf">0.5</span>
 
 <span class="n">slice_height</span> <span class="o">=</span> <span class="mi">512</span>
@@ -3213,7 +3229,7 @@ result.to_imantics_annotations()[:3]</div>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-17">model_type = "huggingface"
 model_path = model_path
-model_device = "cpu" # or 'cuda:0'
+model_device = "cpu"  # or 'cuda:0'
 model_confidence_threshold = 0.5
 
 slice_height = 512

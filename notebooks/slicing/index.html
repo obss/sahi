@@ -2300,9 +2300,11 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
 <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">import os
+
 os.getcwd()</div>
 </div>
 </div>
@@ -2341,17 +2343,17 @@ os.getcwd()</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sahi.slicing</span><span class="w"> </span><span class="kn">import</span> <span class="n">slice_coco</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.file</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_json</span>
-
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageDraw</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-2">from sahi.slicing import slice_coco
-from sahi.utils.file import load_json
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.slicing</span><span class="w"> </span><span class="kn">import</span> <span class="n">slice_coco</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.file</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_json</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-2">import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
-import matplotlib.pyplot as plt</div>
+
+from sahi.slicing import slice_coco
+from sahi.utils.file import load_json</div>
 </div>
 </div>
 </div>
@@ -2405,14 +2407,14 @@ import matplotlib.pyplot as plt</div>
 <span class="n">f</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
 <span class="c1"># read image</span>
 <span class="n">img_ind</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"demo_data/"</span> <span class="o">+</span> <span class="n">coco_dict</span><span class="p">[</span><span class="s2">"images"</span><span class="p">][</span><span class="n">img_ind</span><span class="p">][</span><span class="s2">"file_name"</span><span class="p">])</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s1">'RGBA'</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"demo_data/"</span> <span class="o">+</span> <span class="n">coco_dict</span><span class="p">[</span><span class="s2">"images"</span><span class="p">][</span><span class="n">img_ind</span><span class="p">][</span><span class="s2">"file_name"</span><span class="p">])</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">"RGBA"</span><span class="p">)</span>
 <span class="c1"># iterate over all annotations</span>
 <span class="k">for</span> <span class="n">ann_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coco_dict</span><span class="p">[</span><span class="s2">"annotations"</span><span class="p">])):</span>
     <span class="c1"># convert coco bbox to pil bbox</span>
     <span class="n">xywh</span> <span class="o">=</span> <span class="n">coco_dict</span><span class="p">[</span><span class="s2">"annotations"</span><span class="p">][</span><span class="n">ann_ind</span><span class="p">][</span><span class="s2">"bbox"</span><span class="p">]</span>
-    <span class="n">xyxy</span> <span class="o">=</span> <span class="p">[</span><span class="n">xywh</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xywh</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">xywh</span><span class="p">[</span><span class="mi">3</span><span class="p">]]</span>
+    <span class="n">xyxy</span> <span class="o">=</span> <span class="p">[</span><span class="n">xywh</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">3</span><span class="p">]]</span>
     <span class="c1"># visualize bbox over image</span>
-    <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="s1">'RGBA'</span><span class="p">)</span><span class="o">.</span><span class="n">rectangle</span><span class="p">(</span><span class="n">xyxy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="s2">"RGBA"</span><span class="p">)</span><span class="o">.</span><span class="n">rectangle</span><span class="p">(</span><span class="n">xyxy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="n">axarr</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-3">coco_dict = load_json("demo_data/terrain2_coco.json")
@@ -2420,14 +2422,14 @@ import matplotlib.pyplot as plt</div>
 f, axarr = plt.subplots(1, 1, figsize=(12, 12))
 # read image
 img_ind = 0
-img = Image.open("demo_data/" + coco_dict["images"][img_ind]["file_name"]).convert('RGBA')
+img = Image.open("demo_data/" + coco_dict["images"][img_ind]["file_name"]).convert("RGBA")
 # iterate over all annotations
 for ann_ind in range(len(coco_dict["annotations"])):
     # convert coco bbox to pil bbox
     xywh = coco_dict["annotations"][ann_ind]["bbox"]
-    xyxy = [xywh[0], xywh[1], xywh[0]+xywh[2], xywh[1]+xywh[3]]
+    xyxy = [xywh[0], xywh[1], xywh[0] + xywh[2], xywh[1] + xywh[3]]
     # visualize bbox over image
-    ImageDraw.Draw(img, 'RGBA').rectangle(xyxy, width=5)
+    ImageDraw.Draw(img, "RGBA").rectangle(xyxy, width=5)
 axarr.imshow(img)</div>
 </div>
 </div>
@@ -2495,7 +2497,7 @@ axarr.imshow(img)</div>
     <span class="n">overlap_height_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
     <span class="n">overlap_width_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
     <span class="n">min_area_ratio</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-4">coco_dict, coco_path = slice_coco(
@@ -2509,7 +2511,7 @@ axarr.imshow(img)</div>
     overlap_height_ratio=0.2,
     overlap_width_ratio=0.2,
     min_area_ratio=0.1,
-    verbose=True
+    verbose=True,
 )</div>
 </div>
 </div>
@@ -2598,7 +2600,7 @@ Time to slice demo_data/terrain2.png 0.09270477294921875 seconds
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">f</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">13</span><span class="p">,</span><span class="mi">13</span><span class="p">))</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">f</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">13</span><span class="p">))</span>
 <span class="n">img_ind</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="k">for</span> <span class="n">ind1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">ind2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
@@ -2606,7 +2608,7 @@ Time to slice demo_data/terrain2.png 0.09270477294921875 seconds
         <span class="n">axarr</span><span class="p">[</span><span class="n">ind1</span><span class="p">,</span> <span class="n">ind2</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
         <span class="n">img_ind</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">f, axarr = plt.subplots(4, 5, figsize=(13,13))
+<div class="clipboard-copy-txt" id="cell-5">f, axarr = plt.subplots(4, 5, figsize=(13, 13))
 img_ind = 0
 for ind1 in range(4):
     for ind2 in range(5):
@@ -2662,42 +2664,41 @@ for ind1 in range(4):
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">f</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">13</span><span class="p">,</span><span class="mi">13</span><span class="p">))</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">f</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">13</span><span class="p">))</span>
 <span class="n">img_ind</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="k">for</span> <span class="n">row_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">column_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
         <span class="c1"># read image</span>
-        <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"demo_data/sliced/"</span> <span class="o">+</span> <span class="n">coco_dict</span><span class="p">[</span><span class="s2">"images"</span><span class="p">][</span><span class="n">img_ind</span><span class="p">][</span><span class="s2">"file_name"</span><span class="p">])</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s1">'RGBA'</span><span class="p">)</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"demo_data/sliced/"</span> <span class="o">+</span> <span class="n">coco_dict</span><span class="p">[</span><span class="s2">"images"</span><span class="p">][</span><span class="n">img_ind</span><span class="p">][</span><span class="s2">"file_name"</span><span class="p">])</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">"RGBA"</span><span class="p">)</span>
         <span class="c1"># iterate over all annotations</span>
         <span class="k">for</span> <span class="n">ann_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coco_dict</span><span class="p">[</span><span class="s2">"annotations"</span><span class="p">])):</span>
             <span class="c1"># find annotations that belong the selected image</span>
             <span class="k">if</span> <span class="n">coco_dict</span><span class="p">[</span><span class="s2">"annotations"</span><span class="p">][</span><span class="n">ann_ind</span><span class="p">][</span><span class="s2">"image_id"</span><span class="p">]</span> <span class="o">==</span> <span class="n">coco_dict</span><span class="p">[</span><span class="s2">"images"</span><span class="p">][</span><span class="n">img_ind</span><span class="p">][</span><span class="s2">"id"</span><span class="p">]:</span>
                 <span class="c1"># convert coco bbox to pil bbox</span>
                 <span class="n">xywh</span> <span class="o">=</span> <span class="n">coco_dict</span><span class="p">[</span><span class="s2">"annotations"</span><span class="p">][</span><span class="n">ann_ind</span><span class="p">][</span><span class="s2">"bbox"</span><span class="p">]</span>
-                <span class="n">xyxy</span> <span class="o">=</span> <span class="p">[</span><span class="n">xywh</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xywh</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">xywh</span><span class="p">[</span><span class="mi">3</span><span class="p">]]</span>
+                <span class="n">xyxy</span> <span class="o">=</span> <span class="p">[</span><span class="n">xywh</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">xywh</span><span class="p">[</span><span class="mi">3</span><span class="p">]]</span>
                 <span class="c1"># visualize bbox over image</span>
-                <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="s1">'RGBA'</span><span class="p">)</span><span class="o">.</span><span class="n">rectangle</span><span class="p">(</span><span class="n">xyxy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+                <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="s2">"RGBA"</span><span class="p">)</span><span class="o">.</span><span class="n">rectangle</span><span class="p">(</span><span class="n">xyxy</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
             <span class="n">axarr</span><span class="p">[</span><span class="n">row_ind</span><span class="p">,</span> <span class="n">column_ind</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
         <span class="n">img_ind</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6">f, axarr = plt.subplots(4, 5, figsize=(13,13))
+<div class="clipboard-copy-txt" id="cell-6">f, axarr = plt.subplots(4, 5, figsize=(13, 13))
 img_ind = 0
 for row_ind in range(4):
     for column_ind in range(5):
         # read image
-        img = Image.open("demo_data/sliced/" + coco_dict["images"][img_ind]["file_name"]).convert('RGBA')
+        img = Image.open("demo_data/sliced/" + coco_dict["images"][img_ind]["file_name"]).convert("RGBA")
         # iterate over all annotations
         for ann_ind in range(len(coco_dict["annotations"])):
             # find annotations that belong the selected image
             if coco_dict["annotations"][ann_ind]["image_id"] == coco_dict["images"][img_ind]["id"]:
                 # convert coco bbox to pil bbox
                 xywh = coco_dict["annotations"][ann_ind]["bbox"]
-                xyxy = [xywh[0], xywh[1], xywh[0]+xywh[2], xywh[1]+xywh[3]]
+                xyxy = [xywh[0], xywh[1], xywh[0] + xywh[2], xywh[1] + xywh[3]]
                 # visualize bbox over image
-                ImageDraw.Draw(img, 'RGBA').rectangle(xyxy, width=5)
+                ImageDraw.Draw(img, "RGBA").rectangle(xyxy, width=5)
             axarr[row_ind, column_ind].imshow(img)
-        img_ind += 1
-</div>
+        img_ind += 1</div>
 </div>
 </div>
 </div>

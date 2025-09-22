@@ -2381,9 +2381,11 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
 <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2">import os
+
 os.getcwd()</div>
 </div>
 </div>
@@ -2423,26 +2425,22 @@ os.getcwd()</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># arrange an instance segmentation model for test</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.rtdetr</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">download_rtdetrl_model</span>
-<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">sahi</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoDetectionModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.predict</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_prediction</span><span class="p">,</span> <span class="n">get_sliced_prediction</span><span class="p">,</span> <span class="n">predict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.cv</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_image</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.file</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_from_url</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.predict</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_prediction</span><span class="p">,</span> <span class="n">get_sliced_prediction</span><span class="p">,</span> <span class="n">predict</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.rtdetr</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_rtdetrl_model</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-3"># arrange an instance segmentation model for test
-from sahi.utils.rtdetr import (
-    download_rtdetrl_model
-)
+from IPython.display import Image
 
 from sahi import AutoDetectionModel
+from sahi.predict import get_prediction, get_sliced_prediction, predict
 from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
-from sahi.predict import get_prediction, get_sliced_prediction, predict
-from IPython.display import Image</div>
+from sahi.utils.rtdetr import download_rtdetrl_model</div>
 </div>
 </div>
 </div>
@@ -2485,16 +2483,26 @@ from IPython.display import Image</div>
 <span class="n">download_rtdetrl_model</span><span class="p">(</span><span class="n">rtdetr_model_path</span><span class="p">)</span>
 
 <span class="c1"># download test images into demo_data folder</span>
-<span class="n">download_from_url</span><span class="p">(</span><span class="s1">'https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg'</span><span class="p">,</span> <span class="s1">'demo_data/small-vehicles1.jpeg'</span><span class="p">)</span>
-<span class="n">download_from_url</span><span class="p">(</span><span class="s1">'https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/terrain2.png'</span><span class="p">,</span> <span class="s1">'demo_data/terrain2.png'</span><span class="p">)</span>
+<span class="n">download_from_url</span><span class="p">(</span>
+    <span class="s2">"https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg"</span><span class="p">,</span>
+    <span class="s2">"demo_data/small-vehicles1.jpeg"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">download_from_url</span><span class="p">(</span>
+    <span class="s2">"https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/terrain2.png"</span><span class="p">,</span> <span class="s2">"demo_data/terrain2.png"</span>
+<span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-4"># download rtdetr-l model to 'models/rtdetr-l.pt'
 rtdetr_model_path = "models/rtdetr-l.pt"
 download_rtdetrl_model(rtdetr_model_path)
 
 # download test images into demo_data folder
-download_from_url('https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg', 'demo_data/small-vehicles1.jpeg')
-download_from_url('https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/terrain2.png', 'demo_data/terrain2.png')</div>
+download_from_url(
+    "https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg",
+    "demo_data/small-vehicles1.jpeg",
+)
+download_from_url(
+    "https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/terrain2.png", "demo_data/terrain2.png"
+)</div>
 </div>
 </div>
 </div>
@@ -2544,17 +2552,17 @@ download_from_url('https://raw.githubusercontent.com/obss/sahi/main/demo/demo_da
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">detection_model</span> <span class="o">=</span> <span class="n">AutoDetectionModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-    <span class="n">model_type</span><span class="o">=</span><span class="s1">'rtdetr'</span><span class="p">,</span>
+    <span class="n">model_type</span><span class="o">=</span><span class="s2">"rtdetr"</span><span class="p">,</span>
     <span class="n">model_path</span><span class="o">=</span><span class="n">rtdetr_model_path</span><span class="p">,</span>
     <span class="n">confidence_threshold</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
-    <span class="n">device</span><span class="o">=</span><span class="s2">"cpu"</span><span class="p">,</span> <span class="c1"># or 'cuda:0'</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">"cpu"</span><span class="p">,</span>  <span class="c1"># or 'cuda:0'</span>
 <span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-5">detection_model = AutoDetectionModel.from_pretrained(
-    model_type='rtdetr',
+    model_type="rtdetr",
     model_path=rtdetr_model_path,
     confidence_threshold=0.3,
-    device="cpu", # or 'cuda:0'
+    device="cpu",  # or 'cuda:0'
 )</div>
 </div>
 </div>
@@ -2731,19 +2739,19 @@ Image("demo_data/prediction_visual.png")</div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">get_sliced_prediction</span><span class="p">(</span>
     <span class="s2">"demo_data/small-vehicles1.jpeg"</span><span class="p">,</span>
     <span class="n">detection_model</span><span class="p">,</span>
-    <span class="n">slice_height</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
-    <span class="n">slice_width</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
-    <span class="n">overlap_height_ratio</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
-    <span class="n">overlap_width_ratio</span> <span class="o">=</span> <span class="mf">0.2</span>
+    <span class="n">slice_height</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+    <span class="n">slice_width</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+    <span class="n">overlap_height_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">overlap_width_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-9">result = get_sliced_prediction(
     "demo_data/small-vehicles1.jpeg",
     detection_model,
-    slice_height = 256,
-    slice_width = 256,
-    overlap_height_ratio = 0.2,
-    overlap_width_ratio = 0.2
+    slice_height=256,
+    slice_width=256,
+    overlap_height_ratio=0.2,
+    overlap_width_ratio=0.2,
 )</div>
 </div>
 </div>
@@ -3077,7 +3085,7 @@ Image("demo_data/prediction_visual.png")</div>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">"rtdetr"</span>
 <span class="n">model_path</span> <span class="o">=</span> <span class="n">rtdetr_model_path</span>
-<span class="n">model_device</span> <span class="o">=</span> <span class="s2">"cpu"</span> <span class="c1"># or 'cuda:0'</span>
+<span class="n">model_device</span> <span class="o">=</span> <span class="s2">"cpu"</span>  <span class="c1"># or 'cuda:0'</span>
 <span class="n">model_confidence_threshold</span> <span class="o">=</span> <span class="mf">0.4</span>
 
 <span class="n">slice_height</span> <span class="o">=</span> <span class="mi">256</span>
@@ -3089,7 +3097,7 @@ Image("demo_data/prediction_visual.png")</div>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-17">model_type = "rtdetr"
 model_path = rtdetr_model_path
-model_device = "cpu" # or 'cuda:0'
+model_device = "cpu"  # or 'cuda:0'
 model_confidence_threshold = 0.4
 
 slice_height = 256
