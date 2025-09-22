@@ -69,12 +69,14 @@ def nms(
     # Create Shapely boxes only once
     boxes = []
     for i in range(len(predictions)):
-        boxes.append(box(
-            x1[i].item(),  # Convert only individual values
-            y1[i].item(),
-            x2[i].item(),
-            y2[i].item()
-        ))
+        boxes.append(
+            box(
+                x1[i].item(),  # Convert only individual values
+                y1[i].item(),
+                x2[i].item(),
+                y2[i].item(),
+            )
+        )
 
     # Sort indices by score (descending) using torch
     sorted_idxs = torch.argsort(scores, descending=True).tolist()
@@ -97,8 +99,7 @@ def nms(
         candidate_idxs = tree.query(current_box)
 
         for candidate_idx in candidate_idxs:
-            if (candidate_idx == current_idx or
-                    candidate_idx in suppressed):
+            if candidate_idx == current_idx or candidate_idx in suppressed:
                 continue
 
             # Skip candidates with higher scores (already processed)
@@ -108,10 +109,18 @@ def nms(
             # For equal scores, use deterministic tie-breaking based on box coordinates
             if scores[candidate_idx] == scores[current_idx]:
                 # Use box coordinates for stable ordering
-                current_coords = (x1[current_idx].item(), y1[current_idx].item(),
-                                  x2[current_idx].item(), y2[current_idx].item())
-                candidate_coords = (x1[candidate_idx].item(), y1[candidate_idx].item(),
-                                    x2[candidate_idx].item(), y2[candidate_idx].item())
+                current_coords = (
+                    x1[current_idx].item(),
+                    y1[current_idx].item(),
+                    x2[current_idx].item(),
+                    y2[current_idx].item(),
+                )
+                candidate_coords = (
+                    x1[candidate_idx].item(),
+                    y1[candidate_idx].item(),
+                    x2[candidate_idx].item(),
+                    y2[candidate_idx].item(),
+                )
 
                 # Compare coordinates lexicographically
                 if candidate_coords > current_coords:
@@ -200,12 +209,14 @@ def greedy_nmm(
     # Create Shapely boxes only once
     boxes = []
     for i in range(len(object_predictions_as_tensor)):
-        boxes.append(box(
-            x1[i].item(),  # Convert only individual values
-            y1[i].item(),
-            x2[i].item(),
-            y2[i].item()
-        ))
+        boxes.append(
+            box(
+                x1[i].item(),  # Convert only individual values
+                y1[i].item(),
+                x2[i].item(),
+                y2[i].item(),
+            )
+        )
 
     # Sort indices by score (descending) using torch
     sorted_idxs = torch.argsort(scores, descending=True).tolist()
@@ -228,8 +239,7 @@ def greedy_nmm(
 
         merge_list = []
         for candidate_idx in candidate_idxs:
-            if (candidate_idx == current_idx or
-                candidate_idx in suppressed):
+            if candidate_idx == current_idx or candidate_idx in suppressed:
                 continue
 
             # Only consider candidates with lower or equal score
@@ -239,10 +249,18 @@ def greedy_nmm(
             # For equal scores, use deterministic tie-breaking based on box coordinates
             if scores[candidate_idx] == scores[current_idx]:
                 # Use box coordinates for stable ordering
-                current_coords = (x1[current_idx].item(), y1[current_idx].item(),
-                                  x2[current_idx].item(), y2[current_idx].item())
-                candidate_coords = (x1[candidate_idx].item(), y1[candidate_idx].item(),
-                                    x2[candidate_idx].item(), y2[candidate_idx].item())
+                current_coords = (
+                    x1[current_idx].item(),
+                    y1[current_idx].item(),
+                    x2[current_idx].item(),
+                    y2[current_idx].item(),
+                )
+                candidate_coords = (
+                    x1[candidate_idx].item(),
+                    y1[candidate_idx].item(),
+                    x2[candidate_idx].item(),
+                    y2[candidate_idx].item(),
+                )
 
                 # Compare coordinates lexicographically
                 if candidate_coords > current_coords:
@@ -305,9 +323,9 @@ def batched_nmm(
 
 
 def nmm(
-        object_predictions_as_tensor: torch.Tensor,
-        match_metric: str = "IOU",
-        match_threshold: float = 0.5,
+    object_predictions_as_tensor: torch.Tensor,
+    match_metric: str = "IOU",
+    match_threshold: float = 0.5,
 ):
     """
     Apply non-maximum merging to avoid detecting too many
@@ -335,12 +353,14 @@ def nmm(
     # Create Shapely boxes only once
     boxes = []
     for i in range(len(object_predictions_as_tensor)):
-        boxes.append(box(
-            x1[i].item(),  # Convert only individual values
-            y1[i].item(),
-            x2[i].item(),
-            y2[i].item()
-        ))
+        boxes.append(
+            box(
+                x1[i].item(),  # Convert only individual values
+                y1[i].item(),
+                x2[i].item(),
+                y2[i].item(),
+            )
+        )
 
     # Sort indices by score (descending) using torch
     sorted_idxs = torch.argsort(scores, descending=True).tolist()
@@ -370,10 +390,18 @@ def nmm(
             # For equal scores, use deterministic tie-breaking based on box coordinates
             if scores[candidate_idx] == scores[current_idx]:
                 # Use box coordinates for stable ordering
-                current_coords = (x1[current_idx].item(), y1[current_idx].item(),
-                                  x2[current_idx].item(), y2[current_idx].item())
-                candidate_coords = (x1[candidate_idx].item(), y1[candidate_idx].item(),
-                                    x2[candidate_idx].item(), y2[candidate_idx].item())
+                current_coords = (
+                    x1[current_idx].item(),
+                    y1[current_idx].item(),
+                    x2[current_idx].item(),
+                    y2[current_idx].item(),
+                )
+                candidate_coords = (
+                    x1[candidate_idx].item(),
+                    y1[candidate_idx].item(),
+                    x2[candidate_idx].item(),
+                    y2[candidate_idx].item(),
+                )
 
                 # Compare coordinates lexicographically
                 if candidate_coords > current_coords:
@@ -413,8 +441,10 @@ def nmm(
             keep_idx = merge_to_keep[current_idx_native]
             for matched_box_idx in matched_box_indices:
                 matched_box_idx_native = int(matched_box_idx)
-                if (matched_box_idx_native not in keep_to_merge_list.get(keep_idx, []) and
-                        matched_box_idx_native not in merge_to_keep):
+                if (
+                    matched_box_idx_native not in keep_to_merge_list.get(keep_idx, [])
+                    and matched_box_idx_native not in merge_to_keep
+                ):
                     if keep_idx not in keep_to_merge_list:
                         keep_to_merge_list[keep_idx] = []
                     keep_to_merge_list[keep_idx].append(matched_box_idx_native)
