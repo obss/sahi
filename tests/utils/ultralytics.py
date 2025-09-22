@@ -32,16 +32,13 @@ def download_file(url: str, save_path: str, chunk_size: int = 8192) -> None:
     # Ensure directory exists
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
-    with (
-        open(save_path, "wb") as f,
-        tqdm(
-            desc=os.path.basename(save_path),
-            total=total_size,
-            unit="B",
-            unit_scale=True,
-            unit_divisor=1024,
-        ) as pbar,
-    ):
+    with open(save_path, "wb") as f, tqdm(
+        desc=os.path.basename(save_path),
+        total=total_size,
+        unit="B",
+        unit_scale=True,
+        unit_divisor=1024,
+    ) as pbar:
         for data in response.iter_content(chunk_size=chunk_size):
             size = f.write(data)
             pbar.update(size)
