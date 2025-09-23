@@ -1,13 +1,12 @@
-#!/usr/bin/env python
-"""Simple code formatting script for SAHI."""
-
+import os
 import subprocess
 import sys
 
 
 def run_command(cmd):
     """Run a command and return exit code."""
-    result = subprocess.run(cmd, shell=True)
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    result = subprocess.run(cmd, shell=True, cwd=repo_root)
     return result.returncode
 
 
@@ -15,11 +14,13 @@ def check_formatting():
     """Check code formatting without making changes."""
     print("Checking code formatting...")
 
-    # Check linting
-    lint_status = run_command("ruff check .")
+    # Check linting (match pre-commit args)
+    lint_status = run_command("ruff check . --exit-non-zero-on-fix")
+    print(lint_status)
 
-    # Check formatting
+    # Check formatting (match pre-commit args)
     format_status = run_command("ruff format --check .")
+    print(format_status)
 
     if lint_status == 0 and format_status == 0:
         print("\n✅ All checks passed!")
@@ -33,11 +34,11 @@ def fix_formatting():
     """Fix code formatting issues."""
     print("Fixing code formatting...")
 
-    # Fix linting issues
+    # Fix linting issues (match pre-commit args)
     print("\nFixing linting issues...")
-    run_command("ruff check --fix .")
+    run_command("ruff check --fix . --unsafe-fixes --exit-non-zero-on-fix")
 
-    # Format code
+    # Format code (match pre-commit ruff-format)
     print("\nFormatting code...")
     run_command("ruff format .")
 
