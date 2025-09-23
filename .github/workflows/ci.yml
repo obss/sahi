@@ -87,7 +87,7 @@ jobs:
           uv run sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
 
   schedule-test:
-    name: "Schedule/PyPI check (OS: ${{ matrix.os }}, Python: ${{ matrix.python-version }})"
+    name: "Schedule/PyPI check"
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
