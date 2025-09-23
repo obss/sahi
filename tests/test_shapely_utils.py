@@ -1,5 +1,6 @@
-from sahi.utils.shapely import MultiPolygon, ShapelyAnnotation, get_shapely_box, get_shapely_multipolygon
 from shapely.geometry import GeometryCollection, Polygon
+
+from sahi.utils.shapely import MultiPolygon, ShapelyAnnotation, get_shapely_box, get_shapely_multipolygon
 
 
 class TestShapelyUtils:
