@@ -1,0 +1,2 @@
+model_name: maskrcnn_resnet50_fpn_v2
+num_classes: 91

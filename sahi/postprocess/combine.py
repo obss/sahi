@@ -1,22 +1,16 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2021.
-
-import logging
-from typing import List
+from __future__ import annotations
 
 import torch
 
+from sahi.logger import logger
 from sahi.postprocess.utils import ObjectPredictionList, has_match, merge_object_prediction_pair
 from sahi.prediction import ObjectPrediction
 from sahi.utils.import_utils import check_requirements
 
-logger = logging.getLogger(__name__)
-
 
 def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):
-    """
-    Apply non-maximum suppression to avoid detecting too many
-    overlapping bounding boxes for a given object.
+    """Apply non-maximum suppression to avoid detecting too many overlapping bounding boxes for a given object.
+
     Args:
         predictions: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
@@ -45,9 +39,8 @@ def nms(
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ):
-    """
-    Apply non-maximum suppression to avoid detecting too many
-    overlapping bounding boxes for a given object.
+    """Apply non-maximum suppression to avoid detecting too many overlapping bounding boxes for a given object.
+
     Args:
         predictions: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
@@ -152,9 +145,9 @@ def batched_greedy_nmm(
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ):
-    """
-    Apply greedy version of non-maximum merging per category to avoid detecting
-    too many overlapping bounding boxes for a given object.
+    """Apply greedy version of non-maximum merging per category to avoid detecting too many overlapping bounding boxes
+    for a given object.
+
     Args:
         object_predictions_as_tensor: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
@@ -183,19 +176,16 @@ def greedy_nmm(
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ):
-    """
-    Apply greedy version of non-maximum merging to avoid detecting too many
-    overlapping bounding boxes for a given object.
+    """Apply greedy version of non-maximum merging to avoid detecting too many overlapping bounding boxes for a given
+    object.
+
     Args:
         object_predictions_as_tensor: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
-        object_predictions_as_list: ObjectPredictionList Object prediction objects
-            to be merged.
         match_metric: (str) IOU or IOS
-        match_threshold: (float) The overlap thresh for
-            match metric.
+        match_threshold: (float) The overlap thresh for match metric.
     Returns:
-        keep_to_merge_list: (Dict[int:List[int]]) mapping from prediction indices
+        keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
         to keep to a list of prediction indices to be merged.
     """
     keep_to_merge_list = {}
@@ -299,9 +289,8 @@ def batched_nmm(
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ):
-    """
-    Apply non-maximum merging per category to avoid detecting too many
-    overlapping bounding boxes for a given object.
+    """Apply non-maximum merging per category to avoid detecting too many overlapping bounding boxes for a given object.
+
     Args:
         object_predictions_as_tensor: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
@@ -330,9 +319,8 @@ def nmm(
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ):
-    """
-    Apply non-maximum merging to avoid detecting too many
-    overlapping bounding boxes for a given object.
+    """Apply non-maximum merging to avoid detecting too many overlapping bounding boxes for a given object.
+
     Args:
         object_predictions_as_tensor: (tensor) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
@@ -445,7 +433,7 @@ def nmm(
 
 
 class PostprocessPredictions:
-    """Utilities for calculating IOU/IOS based match for given ObjectPredictions"""
+    """Utilities for calculating IOU/IOS based match for given ObjectPredictions."""
 
     def __init__(
         self,
@@ -459,14 +447,14 @@ class PostprocessPredictions:
 
         check_requirements(["torch"])
 
-    def __call__(self, predictions: List[ObjectPrediction]):
+    def __call__(self, predictions: list[ObjectPrediction]):
         raise NotImplementedError()
 
 
 class NMSPostprocess(PostprocessPredictions):
     def __call__(
         self,
-        object_predictions: List[ObjectPrediction],
+        object_predictions: list[ObjectPrediction],
     ):
         object_prediction_list = ObjectPredictionList(object_predictions)
         object_predictions_as_torch = object_prediction_list.totensor()
@@ -489,7 +477,7 @@ class NMSPostprocess(PostprocessPredictions):
 class NMMPostprocess(PostprocessPredictions):
     def __call__(
         self,
-        object_predictions: List[ObjectPrediction],
+        object_predictions: list[ObjectPrediction],
     ):
         object_prediction_list = ObjectPredictionList(object_predictions)
         object_predictions_as_torch = object_prediction_list.totensor()
@@ -526,7 +514,7 @@ class NMMPostprocess(PostprocessPredictions):
 class GreedyNMMPostprocess(PostprocessPredictions):
     def __call__(
         self,
-        object_predictions: List[ObjectPrediction],
+        object_predictions: list[ObjectPrediction],
     ):
         object_prediction_list = ObjectPredictionList(object_predictions)
         object_predictions_as_torch = object_prediction_list.totensor()
@@ -564,7 +552,7 @@ class LSNMSPostprocess(PostprocessPredictions):
     # https://github.com/remydubois/lsnms/blob/10b8165893db5bfea4a7cb23e268a502b35883cf/lsnms/nms.py#L62
     def __call__(
         self,
-        object_predictions: List[ObjectPrediction],
+        object_predictions: list[ObjectPrediction],
     ):
         try:
             from lsnms import nms

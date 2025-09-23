@@ -1,35 +1,32 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon and Kadir Nar, 2021.
+from __future__ import annotations
 
-import logging
-from typing import Any, List, Optional
+from typing import Any
 
 import numpy as np
+import yaml
 
+from sahi.constants import COCO_CLASSES
+from sahi.logger import logger
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import get_coco_segmentation_from_bool_mask
-from sahi.utils.import_utils import check_requirements
-
-logger = logging.getLogger(__name__)
+from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
 
 
 class TorchVisionDetectionModel(DetectionModel):
-    def check_dependencies(self) -> None:
-        check_requirements(["torch", "torchvision"])
+    def __init__(self, *args, **kwargs):
+        existing_packages = getattr(self, "required_packages", None) or []
+        self.required_packages = [*list(existing_packages), "torch", "torchvision"]
+        super().__init__(*args, **kwargs)
 
     def load_model(self):
-        import torch  # pyright: ignore[reportMissingImports]
-
-        from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
+        import torch
 
         # read config params
         model_name = None
         num_classes = None
         if self.config_path is not None:
-            import yaml
-
-            with open(self.config_path, "r") as stream:
+            with open(self.config_path) as stream:
                 try:
                     config = yaml.safe_load(stream)
                 except yaml.YAMLError as exc:
@@ -47,13 +44,14 @@ class TorchVisionDetectionModel(DetectionModel):
             num_classes = 91
         if self.model_path is None:
             logger.warning("model_path not provided in config, using pretrained weights and default num_classes: 91.")
-            pretrained = True
+            weights = "DEFAULT"
             num_classes = 91
         else:
-            pretrained = False
+            weights = None
 
         # load model
-        model = MODEL_NAME_TO_CONSTRUCTOR[model_name](num_classes=num_classes, pretrained=pretrained)
+        # Note: torchvision >= 0.13 is required for the 'weights' parameter
+        model = MODEL_NAME_TO_CONSTRUCTOR[model_name](num_classes=num_classes, weights=weights)
         if self.model_path:
             try:
                 model.load_state_dict(torch.load(self.model_path))
@@ -64,34 +62,32 @@ class TorchVisionDetectionModel(DetectionModel):
         self.set_model(model)
 
     def set_model(self, model: Any):
-        """
-        Sets the underlying TorchVision model.
+        """Sets the underlying TorchVision model.
+
         Args:
             model: Any
                 A TorchVision model
         """
-        check_requirements(["torch", "torchvision"])
 
         model.eval()
         self.model = model.to(self.device)
 
         # set category_mapping
-        from sahi.utils.torchvision import COCO_CLASSES
 
         if self.category_mapping is None:
             category_names = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
             self.category_mapping = category_names
 
-    def perform_inference(self, image: np.ndarray, image_size: Optional[int] = None):
-        """
-        Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+    def perform_inference(self, image: np.ndarray, image_size: int | None = None):
+        """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
             image_size: int
                 Inference input size.
         """
-        from sahi.utils.torch import to_float_tensor
+        from sahi.utils.torch_utils import to_float_tensor
 
         # arrange model input size
         if self.image_size is not None:
@@ -111,17 +107,13 @@ class TorchVisionDetectionModel(DetectionModel):
 
     @property
     def num_categories(self):
-        """
-        Returns number of categories
-        """
+        """Returns number of categories."""
         return len(self.category_mapping)
 
     @property
     def has_mask(self):
-        """
-        Returns if model output contains segmentation mask
-        """
-        return self.model.with_mask
+        """Returns if model output contains segmentation mask."""
+        return hasattr(self.model, "roi_heads") and hasattr(self.model.roi_heads, "mask_predictor")
 
     @property
     def category_names(self):
@@ -129,12 +121,12 @@ class TorchVisionDetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amount_list: list[list[int]] | None = [[0, 0]],
+        full_shape_list: list[list[int]] | None = None,
     ):
-        """
-        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
+
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
@@ -166,7 +158,9 @@ class TorchVisionDetectionModel(DetectionModel):
             # check if predictions contain mask
             masks = image_predictions.get("masks", None)
             if masks is not None:
-                masks = list(image_predictions["masks"][selected_indices].cpu().detach().numpy())
+                masks = list(
+                    (image_predictions["masks"][selected_indices] > self.mask_threshold).cpu().detach().numpy()
+                )
             else:
                 masks = None
 

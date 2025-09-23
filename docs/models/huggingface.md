@@ -1,0 +1,3 @@
+# HuggingfaceModel
+
+::: sahi.models.huggingface

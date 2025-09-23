@@ -1,0 +1,5 @@
+[build]
+  command = "pip install mkdocs-material[imaging] mkdocstrings[python] mkdocs-jupyter mkdocs-git-committers-plugin-2 mkdocs-git-revision-date-localized-plugin && pip install -e . && python3 -m mkdocs build"
+  publish = "site/"
+[build.environment]
+  PYTHON_VERSION = "3.10"

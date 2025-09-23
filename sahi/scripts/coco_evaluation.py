@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import itertools
 import json
+import os
 from collections import OrderedDict
 from pathlib import Path
-from typing import List, Literal, Optional, Union
-import os
+from typing import Literal
 
 import fire
 import numpy as np
@@ -21,7 +23,7 @@ def _cocoeval_summarize(
         iStr = " {:<18} {} @[ IoU={:<9} | area={:>6s} | maxDets={:>3d} ] = {:0.3f}"
     titleStr = "Average Precision" if ap == 1 else "Average Recall"
     typeStr = "(AP)" if ap == 1 else "(AR)"
-    iouStr = "{:0.2f}:{:0.2f}".format(p.iouThrs[0], p.iouThrs[-1]) if iouThr is None else "{:0.2f}".format(iouThr)
+    iouStr = f"{p.iouThrs[0]:0.2f}:{p.iouThrs[-1]:0.2f}" if iouThr is None else f"{iouThr:0.2f}"
 
     aind = [i for i, aRng in enumerate(p.areaRngLbl) if aRng == areaRng]
     mind = [i for i, mDet in enumerate(p.maxDets) if mDet == maxDets]
@@ -67,10 +69,11 @@ def evaluate_core(
     max_detections: int = 500,
     iou_thrs=None,
     metric_items=None,
-    out_dir: Union[str, Path, None] = None,
-    areas: List[int] = [1024, 9216, 10000000000],
+    out_dir: str | Path | None = None,
+    areas: list[int] = [1024, 9216, 10000000000],
 ):
     """Evaluation in COCO protocol.
+
     Args:
         dataset_path (str): COCO dataset json path.
         result_path (str): COCO result json path.
@@ -98,7 +101,6 @@ def evaluate_core(
         dict:
             eval_results (dict[str, float]): COCO style evaluation metric.
             export_path (str): Path for the exported eval result json.
-
     """
 
     metrics = metric if isinstance(metric, list) else [metric]
@@ -205,7 +207,8 @@ def evaluate_core(
                 # precision: (iou, recall, cls, area range, max dets)
                 if len(cat_ids) != precisions.shape[2]:
                     raise ValueError(
-                        f"The number of categories {len(cat_ids)} is not equal to the number of precisions {precisions.shape[2]}"
+                        f"The number of categories {len(cat_ids)} is not equal "
+                        f"to the number of precisions {precisions.shape[2]}"
                     )
                 max_cat_name_len = 0
                 for idx, catId in enumerate(cat_ids):
@@ -350,12 +353,12 @@ def evaluate_core(
 def evaluate(
     dataset_json_path: str,
     result_json_path: str,
-    out_dir: Optional[str] = None,
+    out_dir: str | None = None,
     type: Literal["bbox", "segm"] = "bbox",
     classwise: bool = False,
     max_detections: int = 500,
-    iou_thrs: Union[List[float], float, None] = None,
-    areas: List[int] = [1024, 9216, 10000000000],
+    iou_thrs: list[float] | float | None = None,
+    areas: list[int] = [1024, 9216, 10000000000],
     return_dict: bool = False,
 ):
     """

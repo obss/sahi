@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import urllib.request
 from os import path
 from pathlib import Path
-from typing import Optional
 
 
 class RTDETRTestConstants:
@@ -12,7 +13,7 @@ class RTDETRTestConstants:
     RTDETRX_MODEL_PATH = "tests/data/models/rtdetr/rtdetr-x.pt"
 
 
-def download_rtdetrl_model(destination_path: Optional[str] = None):
+def download_rtdetrl_model(destination_path: str | None = None):
     if destination_path is None:
         destination_path = RTDETRTestConstants.RTDETRL_MODEL_PATH
 
@@ -25,7 +26,7 @@ def download_rtdetrl_model(destination_path: Optional[str] = None):
         )
 
 
-def download_rtdetrx_model(destination_path: Optional[str] = None):
+def download_rtdetrx_model(destination_path: str | None = None):
     if destination_path is None:
         destination_path = RTDETRTestConstants.RTDETRX_MODEL_PATH
 

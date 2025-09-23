@@ -1,6 +1,6 @@
 [project]
 name = "sahi"
-version = "0.11.25"
+version = "0.11.34"
 readme = "README.md"
 description = "A vision library for performing sliced inference on large images/small objects"
 requires-python = ">=3.8"
@@ -10,14 +10,15 @@ dependencies = [
   "opencv-python<=4.11.0.86",
   "shapely>=2.0.0",
   "tqdm>=4.48.2",
-  "pillow>=8.2.0",
   "pybboxes==0.1.6",
+  "pillow>=8.2.0",
   "pyyaml",
   "fire",
   "terminaltables",
   "requests",
   "click",
 ]
+
 classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
@@ -32,59 +33,93 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+maintainers = [
+  { name = "Fatih Cagatay Akyon (@fcakyon)" },
+]
 
 [project.urls]
-homepage = "https://github.com/obss/sahi"
+"Homepage" = "https://github.com/obss/sahi"
+"Source" = "https://github.com/obss/sahi"
+"Documentation" = "https://github.com/obss/sahi/tree/main/docs"
+"Bug Reports" = "https://github.com/obss/sahi/discussions/categories/q-a"
+"Changelog" = "https://github.com/obss/sahi/releases"
 
 [project.scripts]
 sahi = "sahi.cli:app"
 
-[tool.uv]
-find-links = [
-  "https://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
-]
-default-groups = ["dev", "ci"]
 
 [dependency-groups]
 dev = [
-  "pytest",
-  "ruff",
-  "pre-commit>=2.0",
-  "jupyterlab>=3.0.14",
+    "pytest>=7.2.2,<9.0.0",
+    "tox>=4.11.4",
+    "notebook>=6.5.3,<8.0.0",
+    "ipywidgets>=8.1.1",
+    "jupytext>=1.16.1",
+    "nbconvert>=7.14.2",
+    "docutils!=0.21",
+    "pytest-xdist[psutil]>=3.0",
+    "ruff",
+    "jupyterlab>=3.0.14",
+]
+docs = [
+    "mkdocs-material[imaging]>=9.6.15,<=10.0.0",
+    "mkdocstrings>=0.25.2,<0.30.0",
+    "mkdocstrings-python>=1.10.9",
+    "mike>=2.0.0",
+    "mkdocs-jupyter>=0.24.3",
+    "mkdocs-git-committers-plugin-2>=2.4.1; python_version >= '3.9' and python_version < '4'",
+    "mkdocs-git-revision-date-localized-plugin>=1.2.4",
+]
+build = [
+    "twine>=5.1.1,<7.0.0",
+    "wheel>=0.40,<0.46",
+    "build>=0.10,<1.3",
+    "hatch>=1.14.1",
+]
+
+[project.optional-dependencies]
+mmdet = [
+  # MMDetection dependencies - only for Python 3.11 and not on macOS ARM64
+  "mmengine;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
+  "mmcv==2.1.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
+  "mmdet==3.3.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
+  # numpy 2 is not compatible with torch 2.1.2
+  "numpy<2.0;python_version=='3.11'",
 ]
 ci = [
-  # Constrain numpy for Python <3.12 due to torch 2.1.2 compatibility
-  "numpy<2.0;python_version<'3.12'",
-  # pytorch should be present for all python versions
+  # max supported pytorch version for python 3.8 is 2.4.1
   # CPU versions for Linux/Windows CI
-  "torch==2.6.0+cpu;python_version>='3.12' and platform_system!='Darwin'",
-  "torchvision==0.21.0+cpu;python_version>='3.12' and platform_system!='Darwin'",
-  "torch==2.1.2+cpu;python_version<'3.12' and platform_system!='Darwin'",
-  "torchvision==0.16.2+cpu;python_version<'3.12' and platform_system!='Darwin'",
+  "torch==2.7.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
+  "torch==2.4.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
+  "torchvision==0.22.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
+  "torchvision==0.19.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
   # Regular versions for macOS
-  "torch==2.6.0;python_version>='3.12' and platform_system=='Darwin'",
-  "torchvision==0.21.0;python_version>='3.12' and platform_system=='Darwin'",
-  "torch==2.1.2;python_version<'3.12' and platform_system=='Darwin'",
-  "torchvision==0.16.2;python_version<'3.12' and platform_system=='Darwin'",
-  # mmdet is supported for python<3.12
-  "mmengine;python_version<'3.12'",
-  "mmcv==2.1.0;python_version<'3.12'",
-  "mmdet==3.3.0;python_version<'3.12'",
-  "onnxruntime<1.20;python_version<'3.12'",
-  "onnx>1.16;python_version>='3.12'",
-  "onnxruntime;python_version>='3.12'",
-  # transformers is supported for python>=3.9 (no numpy 2.0 requirement)
+  "torch==2.7.0;python_version>='3.9' and platform_system=='Darwin'",
+  "torch==2.4.1;python_version=='3.8' and platform_system=='Darwin'",
+  "torchvision==0.22.0;python_version>='3.9' and platform_system=='Darwin'",
+  "torchvision==0.19.1;python_version=='3.8' and platform_system=='Darwin'",
+  # transformers is supported for python>=3.9
   "transformers>=4.49.0;python_version>='3.9'",
-  # inference and rfdetr require numpy>=2.0, incompatible with torch 2.1.2
-  # Only install for Python 3.12+ where we use torch 2.6.0
-  "inference>=0.50.3;python_version>='3.12'",
+  # test roboflow only for python>=3.12
+  "inference>=0.51.5;python_version>='3.12'",
   "rfdetr>=1.1.0;python_version>='3.12'",
+  # ultralytics onnx is supported for python>=3.10
+  "onnx;python_version>='3.10'",
+  "onnxruntime;python_version>='3.10'",
   # These are available for all python versions
   "pycocotools>=2.0.7",
-  "ultralytics>=8.3.86",
+  "ultralytics>=8.3.161",
   "scikit-image",
   "fiftyone",
 ]
+
+[tool.uv]
+
+# find-links = [
+#   "http://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
+# ]
+
+override-dependencies = ["pillow>=8.2.0"]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
@@ -95,13 +130,127 @@ explicit = true
 torch = [{ index = "pytorch-cpu" }]
 torchvision = [{ index = "pytorch-cpu" }]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [tool.ruff]
+target-version = "py38"
 line-length = 120
-exclude = ["**/__init__.py", ".git", "__pycache__", "*.ipynb"]
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "__pycache__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "yarn-error.log",
+    "yarn.lock",
+    "docs",
+]
+
+[tool.ruff.lint]
+# Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
+select = ["E", "F", "I", "A", "Q", "W", "RUF", "UP","FA"]
+ignore = ["A002","A001"]
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "I",
+    "N",
+    "Q",
+    "S",
+    "T",
+    "W",
+    "ANN",
+    "ARG",
+    "BLE",
+    "COM",
+    "DJ",
+    "DTZ",
+    "EM",
+    "ERA",
+    "EXE",
+    "FBT",
+    "ICN",
+    "INP",
+    "ISC",
+    "NPY",
+    "PD",
+    "PGH",
+    "PIE",
+    "PL",
+    "PT",
+    "PTH",
+    "PYI",
+    "RET",
+    "RSE",
+    "RUF",
+    "SIM",
+    "SLF",
+    "TCH",
+    "TID",
+    "TRY",
+    "UP",
+    "YTT",
+    "FA"
+]
+unfixable = []
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+pylint.max-args = 20
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "double"
+multiline-quotes = "double"
+docstring-quotes = "double"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401"]
+
+[tool.ruff.lint.mccabe]
+# Flag errors (`C901`) whenever the complexity level exceeds 5.
+max-complexity = 20
+
+[tool.ruff.lint.isort]
+order-by-type = true
+no-sections = false
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -110,3 +259,52 @@ pythonpath = ["."]
 
 [tool.typos.default]
 extend-ignore-identifiers-re = ["fo"]
+
+[tool.hatch.version]
+path = "sahi/__init__.py"
+
+[tool.hatch.envs.default]
+type = "pip-compile"
+
+[tool.hatch.env]
+requires = ["hatch-mkdocs", "hatch-pip-compile"]
+
+[tool.hatch.envs.docs]
+detached = false
+
+[tool.hatch.build.targets.wheel]
+packages = ["sahi"]
+
+[tool.hatch.envs.default.scripts]
+
+# Workaround for https://github.com/juftin/hatch-pip-compile/issues/85
+# PR https://github.com/pypa/hatch/pull/1882
+dependencies = [
+    "pip",
+]
+
+all = [
+    "hatch run style:check",
+]
+
+[tool.hatch.envs.style]
+pip-compile-verbose = true
+detached = true
+
+dependencies = [
+    "ruff",
+]
+
+[tool.hatch.envs.style.scripts]
+categories = [
+    "lint",
+    "format",
+]
+
+check = [
+    "ruff check . --fix",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

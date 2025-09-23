@@ -6,6 +6,10 @@ on:
       - "**.md"
       - "**.ipynb"
       - "**.cff"
+      - "docs/**"
+      - "demo/**"
+      - "context7.json"
+      - "mkdocs.yml"
 
   pull_request:
     branches: [main]
@@ -13,6 +17,10 @@ on:
       - "**.md"
       - "**.ipynb"
       - "**.cff"
+      - "docs/**"
+      - "demo/**"
+      - "context7.json"
+      - "mkdocs.yml"
 
   schedule:
     - cron: "0 0 * * *" # Runs at 00:00 UTC every day
@@ -26,66 +34,59 @@ jobs:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v5.0.0
       - name: Setup uv python package manager
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
           prune-cache: false
-      # For python 3.8 and 3.9, it does no suffice to install opencv-python-headless
-      # https://itsmycode.com/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directory/
-      - name: Cache apt packages
+          activate-environment: true
+          cache-dependency-glob: |
+            **/pyproject.toml
+
+      - name: Cache model weights
         uses: actions/cache@v4
-        if: ${{ env.ACT }}
         with:
-          path: /var/cache/apt
-          key: apt-cache
-      - name: Install libgl
-        run: sudo apt-get update && sudo apt-get install -y libgl1
-      - name: Debug uv sync
+          path: tests/data/models
+          key: ${{ runner.os }}-models-${{ hashFiles('sahi/utils/huggingface.py', 'sahi/utils/yolov5.py', 'sahi/utils/ultralytics.py', 'sahi/utils/rtdetr.py', 'sahi/utils/torchvision.py') }}
+          restore-keys: |
+            ${{ runner.os }}-models-
+
+      - name: Install dependencies
+        if: github.event_name != 'schedule'
+        run: uv sync --group dev --extra ci
+      - name: List installed packages
         run: |
-          set -e
-          uv sync -v
-      - name: Verify .venv Activation
-        run: |
-          if [ ! -d ".venv" ]; then
-            echo ".venv directory not found"
-            exit 1
-          fi
-          source .venv/bin/activate
+          echo "=== Installed Python packages ==="
+          uv pip list
+          echo ""
+          echo "=== Python version ==="
+          python --version
+          echo ""
+          echo "=== uv version ==="
+          uv --version
+
       - name: Install sahi from PyPI
         if: github.event_name == 'schedule'
         run: |
           rm -fr sahi
-          uv pip install --force-reinstall sahi
-          uv pip install "numpy<2"
+          uv pip install sahi
           uv pip show sahi
-          source .venv/bin/activate
-          python -c "import sahi; print(sahi.__version__)"
+          uv run python -c "import sahi; print(sahi.__version__)"
       - name: Test with python ${{ matrix.python-version }}
         run: |
-          source .venv/bin/activate
-          pytest --capture=no
-      - name: Test SAHI CLI
+          # Exclude MMDet tests which run in a separate workflow
+          uv run pytest --capture=no -n auto -k "not (mmdet or test_get_prediction_mmdet or test_get_sliced_prediction_mmdet or test_mmdet_yolox_tiny_prediction)"
+      - name: Test SAHI CLI (without MMDet)
         run: |
-          source .venv/bin/activate
-          set -e
-          sahi predict --no_sliced_prediction --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
-          sahi predict --model_type ultralytics --source tests/data/ --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
-          sahi predict --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
-          sahi predict --model_type ultralytics --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+          uv run sahi predict --no_sliced_prediction --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+          uv run sahi predict --model_type ultralytics --source tests/data/ --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+          uv run sahi predict --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+          uv run sahi predict --model_type ultralytics --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
           # coco yolov5
-          sahi coco yolov5 --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json --train_split 0.9
+          uv run sahi coco yolov5 --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json --train_split 0.9
           # coco evaluate
-          sahi coco evaluate --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json
+          uv run sahi coco evaluate --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json
           # coco analyse
-          sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
-      - name: Test SAHI CLI with MMCV
-        if: matrix.python-version != '3.12'
-        run: |
-          source .venv/bin/activate
-          set -e
-          sahi predict --model_type mmdet --source tests/data/ --novisual --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
-          sahi predict --model_type mmdet --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
-          sahi predict --model_type mmdet --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/mmdet/yolox/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth --model_config_path tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py --image_size 320
+          uv run sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
