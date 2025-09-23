@@ -1,15 +1,12 @@
-import time
-import math
-
 import torch
 
 from sahi.postprocess.combine import (
-    nms,
-    batched_nms,
-    nmm,
-    batched_nmm,
-    greedy_nmm,
     batched_greedy_nmm,
+    batched_nmm,
+    batched_nms,
+    greedy_nmm,
+    nmm,
+    nms,
 )
 
 
