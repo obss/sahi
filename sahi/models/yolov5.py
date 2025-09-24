@@ -8,16 +8,17 @@ from sahi.logger import logger
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.import_utils import check_package_minimum_version, check_requirements
+from sahi.utils.import_utils import check_package_minimum_version
 
 
 class Yolov5DetectionModel(DetectionModel):
-    def check_dependencies(self) -> None:
-        check_requirements(["torch", "yolov5"])
+    def __init__(self, *args, **kwargs):
+        existing_packages = getattr(self, "required_packages", None) or []
+        self.required_packages = [*list(existing_packages), "yolov5", "torch"]
+        super().__init__(*args, **kwargs)
 
     def load_model(self):
         """Detection model is initialized and set to self.model."""
-
         import yolov5
 
         try:
@@ -71,13 +72,8 @@ class Yolov5DetectionModel(DetectionModel):
     @property
     def has_mask(self):
         """Returns if model output contains segmentation mask."""
-        import yolov5
-        from packaging import version
 
-        if version.parse(yolov5.__version__) < version.parse("6.2.0"):
-            return False
-        else:
-            return False  # fix when yolov5 supports segmentation models
+        return False  # fix when yolov5 supports segmentation models
 
     @property
     def category_names(self):

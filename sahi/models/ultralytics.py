@@ -4,7 +4,6 @@ from typing import Any
 
 import cv2
 import numpy as np
-import torch
 
 from sahi.logger import logger
 from sahi.models.base import DetectionModel
@@ -72,6 +71,9 @@ class UltralyticsDetectionModel(DetectionModel):
         """
 
         # Confirm model is loaded
+
+        import torch
+
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
 

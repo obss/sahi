@@ -2,14 +2,18 @@ from __future__ import annotations
 
 import re
 from os import environ
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-import torch
 from PIL.Image import Image
+
+if TYPE_CHECKING:
+    import torch
 
 
 def empty_cuda_cache() -> None:
+    import torch
+
     torch.cuda.empty_cache()
 
 
@@ -22,6 +26,8 @@ def to_float_tensor(img: np.ndarray | Image) -> torch.Tensor:
     Returns:
         torch.tensor
     """
+    import torch
+
     nparray: np.ndarray
     if isinstance(img, np.ndarray):
         nparray = img
