@@ -78,7 +78,7 @@ build = [
 
 [project.optional-dependencies]
 yolov5 = ["yolov5>=6.0.0,<8.0.0"]
-yolov8 = ["ultralytics>=8.0.0"]
+yolo = ["ultralytics>=8.0.0"]
 torch = ["torch", "torchvision"]
 transformers = ["transformers>=4.49.0;python_version>='3.9'",]
 roboflow = ["inference>=0.51.5;python_version>='3.12'", "rfdetr>=1.1.0;python_version>='3.12'"]
