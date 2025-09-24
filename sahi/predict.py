@@ -3,23 +3,14 @@ from __future__ import annotations
 import os
 import time
 from collections.abc import Generator
-
-from PIL import Image
-
-from sahi.logger import logger
-from sahi.utils.import_utils import is_available
-
-# TODO: This does nothing for this module. The issue named here does not exist
-# https://github.com/obss/sahi/issues/526
-if is_available("torch"):
-    import torch  # noqa: F401
-
 from functools import cmp_to_key
 
 import numpy as np
+from PIL import Image
 from tqdm import tqdm
 
 from sahi.auto_model import AutoDetectionModel
+from sahi.logger import logger
 from sahi.models.base import DetectionModel
 from sahi.postprocess.combine import (
     GreedyNMMPostprocess,

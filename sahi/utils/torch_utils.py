@@ -2,14 +2,18 @@ from __future__ import annotations
 
 import re
 from os import environ
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-import torch
 from PIL.Image import Image
+
+if TYPE_CHECKING:
+    import torch
 
 
 def empty_cuda_cache() -> None:
+    import torch
+
     torch.cuda.empty_cache()
 
 
@@ -22,6 +26,8 @@ def to_float_tensor(img: np.ndarray | Image) -> torch.Tensor:
     Returns:
         torch.tensor
     """
+    import torch
+
     nparray: np.ndarray
     if isinstance(img, np.ndarray):
         nparray = img
@@ -54,6 +60,7 @@ def select_device(device: str | None = None) -> torch.device:
 
     Inspired by https://github.com/ultralytics/yolov5/blob/6371de8879e7ad7ec5283e8b95cc6dd85d6a5e72/utils/torch_utils.py#L107
     """
+    import torch
 
     if device == "cuda" or device is None:
         device = "cuda:0"
