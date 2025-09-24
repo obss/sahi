@@ -60,6 +60,7 @@ def select_device(device: str | None = None) -> torch.device:
 
     Inspired by https://github.com/ultralytics/yolov5/blob/6371de8879e7ad7ec5283e8b95cc6dd85d6a5e72/utils/torch_utils.py#L107
     """
+    import torch
 
     if device == "cuda" or device is None:
         device = "cuda:0"
