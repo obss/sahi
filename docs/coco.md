@@ -221,7 +221,7 @@ save_json(area_filtered_coco.json, "area_filtered_coco.json")
 
 <details closed>
 <summary>
-<big><b>Filter out images that does not contain any annotation:</b></big>
+<big><b>Filter out images that do not contain any annotation:</b></big>
 </summary>
 
 ```python

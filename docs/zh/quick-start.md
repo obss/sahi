@@ -121,6 +121,6 @@ sahi predict --model_path yolov8n.pt --model_type yolov8 --source /path/to/image
 你现在已经了解了 SAHI 的基础用法！想要深入学习，可以参考以下资源：
 
 * **预测深入**：更多高级预测选项，请参见[预测工具指南](predict.md)。
-* **演示示例**：在 [demo目录](../demo/) 中查看交互式 notebook，实践不同模型的使用。
+* **演示示例**：在 [demo目录](../../demo/) 中查看交互式 notebook，实践不同模型的使用。
 * **COCO 工具**： 学习如何创建、操作和转换数据集，请参见[COCO 工具指南](coco.md)。
 * **所有 CLI 命令**： 完整命令列表请参见[CLI 文档](cli.md)。

@@ -37,4 +37,4 @@ coco_dict, coco_path = slice_coco(
 
 # 交互式示例
 
-想要体验不同的切片参数并查看其效果？请查阅我们的 [交互式 Jupyter notebook](../demo/slicing.ipynb) ，其中展示了这些切片操作的实际应用。
+想要体验不同的切片参数并查看其效果？请查阅我们的 [交互式 Jupyter notebook](../../demo/slicing.ipynb) ，其中展示了这些切片操作的实际应用。

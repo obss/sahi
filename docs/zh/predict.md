@@ -24,7 +24,7 @@ result = get_sliced_prediction(
 
 ```
 
-- 标准推理：
+- 基础推理：
 
 ```python
 from sahi.predict import get_prediction
@@ -69,7 +69,6 @@ result = predict(
 )
 
 ```
-排除自定义
 - 在推理时排除自定义类别:
 
 ```python
