@@ -146,11 +146,11 @@ fiftyone_detections = result.to_fiftyone_detections()
 # 交互式示例和演示
 想要马上看到这些预测工具在使用中的表现？我们有几个集成了不同模型的交互式的notebook：
 
-- 对于 YOLOv8/YOLO11/YOLO12 模型，探索我们的 [Ultralytics集成 notebook](../demo/inference_for_ultralytics.ipynb)
-- 对于 YOLOv5 模型，查看我们的 [YOLOv5集成 notebook](../demo/inference_for_yolov5.ipynb)
-- 对于 MMDetection 模型，尝试我们的 [MMDetection集成 notebook](../demo/inference_for_mmdetection.ipynb)
-- 对于 HuggingFace 模型，查看我们的 [HuggingFace集成 notebook](../demo/inference_for_huggingface.ipynb)
-- 对于 TorchVision 模型, 探索我们的 [TorchVision集成 notebook](../demo/inference_for_torchvision.ipynb)
-- 对于 RT-DETR 模型，查看我们的 [RT-DETR集成 notebook](../demo/inference_for_rtdetr.ipynb)
+- 对于 YOLOv8/YOLO11/YOLO12 模型，探索我们的 [Ultralytics集成 notebook](../../demo/inference_for_ultralytics.ipynb)
+- 对于 YOLOv5 模型，查看我们的 [YOLOv5集成 notebook](../../demo/inference_for_yolov5.ipynb)
+- 对于 MMDetection 模型，尝试我们的 [MMDetection集成 notebook](../../demo/inference_for_mmdetection.ipynb)
+- 对于 HuggingFace 模型，查看我们的 [HuggingFace集成 notebook](../../demo/inference_for_huggingface.ipynb)
+- 对于 TorchVision 模型, 探索我们的 [TorchVision集成 notebook](../../demo/inference_for_torchvision.ipynb)
+- 对于 RT-DETR 模型，查看我们的 [RT-DETR集成 notebook](../../demo/inference_for_rtdetr.ipynb)
 
 这些示例提供了快速上手的例子并且让你能够体验不同的参数和设置。
