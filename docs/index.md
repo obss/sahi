@@ -97,7 +97,7 @@ SAHI addresses this by applying a unique methodology that can be used with any o
 
 ## Interactive Examples
 
-All documentation files are complemented by interactive Jupyter notebooks in the [demo directory](/notebooks/):
+All documentation files are complemented by interactive Jupyter notebooks in the [demo directory](notebooks/):
 
 <div class="grid cards" markdown>
 
