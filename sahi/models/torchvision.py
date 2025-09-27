@@ -1,4 +1,6 @@
-from typing import Any, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 import numpy as np
 import yaml
@@ -13,7 +15,8 @@ from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
 
 class TorchVisionDetectionModel(DetectionModel):
     def __init__(self, *args, **kwargs):
-        self.required_packages = list(getattr(self, "required_packages", [])) + ["torch", "torchvision"]
+        existing_packages = getattr(self, "required_packages", None) or []
+        self.required_packages = [*list(existing_packages), "torch", "torchvision"]
         super().__init__(*args, **kwargs)
 
     def load_model(self):
@@ -23,7 +26,7 @@ class TorchVisionDetectionModel(DetectionModel):
         model_name = None
         num_classes = None
         if self.config_path is not None:
-            with open(self.config_path, "r") as stream:
+            with open(self.config_path) as stream:
                 try:
                     config = yaml.safe_load(stream)
                 except yaml.YAMLError as exc:
@@ -59,8 +62,8 @@ class TorchVisionDetectionModel(DetectionModel):
         self.set_model(model)
 
     def set_model(self, model: Any):
-        """
-        Sets the underlying TorchVision model.
+        """Sets the underlying TorchVision model.
+
         Args:
             model: Any
                 A TorchVision model
@@ -75,9 +78,9 @@ class TorchVisionDetectionModel(DetectionModel):
             category_names = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
             self.category_mapping = category_names
 
-    def perform_inference(self, image: np.ndarray, image_size: Optional[int] = None):
-        """
-        Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+    def perform_inference(self, image: np.ndarray, image_size: int | None = None):
+        """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
+
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
@@ -104,17 +107,13 @@ class TorchVisionDetectionModel(DetectionModel):
 
     @property
     def num_categories(self):
-        """
-        Returns number of categories
-        """
+        """Returns number of categories."""
         return len(self.category_mapping)
 
     @property
     def has_mask(self):
-        """
-        Returns if model output contains segmentation mask
-        """
-        return self.model.with_mask
+        """Returns if model output contains segmentation mask."""
+        return hasattr(self.model, "roi_heads") and hasattr(self.model.roi_heads, "mask_predictor")
 
     @property
     def category_names(self):
@@ -122,12 +121,12 @@ class TorchVisionDetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amount_list: list[list[int]] | None = [[0, 0]],
+        full_shape_list: list[list[int]] | None = None,
     ):
-        """
-        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
+
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
@@ -159,7 +158,9 @@ class TorchVisionDetectionModel(DetectionModel):
             # check if predictions contain mask
             masks = image_predictions.get("masks", None)
             if masks is not None:
-                masks = list(image_predictions["masks"][selected_indices].cpu().detach().numpy())
+                masks = list(
+                    (image_predictions["masks"][selected_indices] > self.mask_threshold).cpu().detach().numpy()
+                )
             else:
                 masks = None
 

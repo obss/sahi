@@ -1,23 +1,16 @@
+from __future__ import annotations
+
 import os
 import time
-from typing import Generator, List, Optional, Union
-
-from PIL import Image
-
-from sahi.logger import logger
-from sahi.utils.import_utils import is_available
-
-# TODO: This does nothing for this module. The issue named here does not exist
-# https://github.com/obss/sahi/issues/526
-if is_available("torch"):
-    import torch  # noqa: F401
-
+from collections.abc import Generator
 from functools import cmp_to_key
 
 import numpy as np
+from PIL import Image
 from tqdm import tqdm
 
 from sahi.auto_model import AutoDetectionModel
+from sahi.logger import logger
 from sahi.models.base import DetectionModel
 from sahi.postprocess.combine import (
     GreedyNMMPostprocess,
@@ -65,13 +58,12 @@ def get_prediction(
     detection_model,
     shift_amount: list = [0, 0],
     full_shape=None,
-    postprocess: Optional[PostprocessPredictions] = None,
+    postprocess: PostprocessPredictions | None = None,
     verbose: int = 0,
-    exclude_classes_by_name: Optional[List[str]] = None,
-    exclude_classes_by_id: Optional[List[int]] = None,
+    exclude_classes_by_name: list[str] | None = None,
+    exclude_classes_by_id: list[int] | None = None,
 ) -> PredictionResult:
-    """
-    Function for performing prediction for given image using given detection_model.
+    """Function for performing prediction for given image using given detection_model.
 
     Arguments:
         image: str or np.ndarray
@@ -117,7 +109,7 @@ def get_prediction(
         shift_amount=shift_amount,
         full_shape=full_shape,
     )
-    object_prediction_list: List[ObjectPrediction] = detection_model.object_prediction_list
+    object_prediction_list: list[ObjectPrediction] = detection_model.object_prediction_list
     object_prediction_list = filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id)
 
     # postprocess matching predictions
@@ -142,8 +134,8 @@ def get_prediction(
 def get_sliced_prediction(
     image,
     detection_model=None,
-    slice_height: Optional[int] = None,
-    slice_width: Optional[int] = None,
+    slice_height: int | None = None,
+    slice_width: int | None = None,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     perform_standard_pred: bool = True,
@@ -152,15 +144,14 @@ def get_sliced_prediction(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
-    merge_buffer_length: Optional[int] = None,
+    merge_buffer_length: int | None = None,
     auto_slice_resolution: bool = True,
-    slice_export_prefix: Optional[str] = None,
-    slice_dir: Optional[str] = None,
-    exclude_classes_by_name: Optional[List[str]] = None,
-    exclude_classes_by_id: Optional[List[int]] = None,
+    slice_export_prefix: str | None = None,
+    slice_dir: str | None = None,
+    exclude_classes_by_name: list[str] | None = None,
+    exclude_classes_by_id: list[int] | None = None,
 ) -> PredictionResult:
-    """
-    Function for slice image + get predicion for each slice + combine predictions in full image.
+    """Function for slice image + get predicion for each slice + combine predictions in full image.
 
     Args:
         image: str or np.ndarray
@@ -249,7 +240,8 @@ def get_sliced_prediction(
     # init match postprocess instance
     if postprocess_type not in POSTPROCESS_NAME_TO_CLASS.keys():
         raise ValueError(
-            f"postprocess_type should be one of {list(POSTPROCESS_NAME_TO_CLASS.keys())} but given as {postprocess_type}"
+            f"postprocess_type should be one of {list(POSTPROCESS_NAME_TO_CLASS.keys())} "
+            f"but given as {postprocess_type}"
         )
     postprocess_constructor = POSTPROCESS_NAME_TO_CLASS[postprocess_type]
     postprocess = postprocess_constructor(
@@ -383,18 +375,18 @@ def agg_prediction(result: PredictionResult, thresh):
 
 
 def predict(
-    detection_model: Optional[DetectionModel] = None,
+    detection_model: DetectionModel | None = None,
     model_type: str = "ultralytics",
-    model_path: Optional[str] = None,
-    model_config_path: Optional[str] = None,
+    model_path: str | None = None,
+    model_config_path: str | None = None,
     model_confidence_threshold: float = 0.25,
-    model_device: Optional[str] = None,
-    model_category_mapping: Optional[dict] = None,
-    model_category_remapping: Optional[dict] = None,
-    source: Optional[str] = None,
+    model_device: str | None = None,
+    model_category_mapping: dict | None = None,
+    model_category_remapping: dict | None = None,
+    source: str | None = None,
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
-    image_size: Optional[int] = None,
+    image_size: int | None = None,
     slice_height: int = 512,
     slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
@@ -408,24 +400,23 @@ def predict(
     frame_skip_interval: int = 0,
     export_pickle: bool = False,
     export_crop: bool = False,
-    dataset_json_path: Optional[str] = None,
+    dataset_json_path: str | None = None,
     project: str = "runs/predict",
     name: str = "exp",
-    visual_bbox_thickness: Optional[int] = None,
-    visual_text_size: Optional[float] = None,
-    visual_text_thickness: Optional[int] = None,
+    visual_bbox_thickness: int | None = None,
+    visual_text_size: float | None = None,
+    visual_text_thickness: int | None = None,
     visual_hide_labels: bool = False,
     visual_hide_conf: bool = False,
     visual_export_format: str = "png",
     verbose: int = 1,
     return_dict: bool = False,
     force_postprocess_type: bool = False,
-    exclude_classes_by_name: Optional[List[str]] = None,
-    exclude_classes_by_id: Optional[List[int]] = None,
+    exclude_classes_by_name: list[str] | None = None,
+    exclude_classes_by_id: list[int] | None = None,
     **kwargs,
 ):
-    """
-    Performs prediction for all present images in given folder.
+    """Performs prediction for all present images in given folder.
 
     Args:
         detection_model: sahi.model.DetectionModel
@@ -522,7 +513,8 @@ def predict(
     # auto postprocess type
     if not force_postprocess_type and model_confidence_threshold < LOW_MODEL_CONFIDENCE and postprocess_type != "NMS":
         logger.warning(
-            f"Switching postprocess type/metric to NMS/IOU since confidence threshold is low ({model_confidence_threshold})."
+            f"Switching postprocess type/metric to NMS/IOU since confidence "
+            f"threshold is low ({model_confidence_threshold})."
         )
         postprocess_type = "NMS"
         postprocess_match_metric = "IOU"
@@ -543,7 +535,7 @@ def predict(
     # TODO: rewrite this as iterator class as in https://github.com/ultralytics/yolov5/blob/d059d1da03aee9a3c0059895aa4c7c14b7f25a9e/utils/datasets.py#L178
     source_is_video = False
     num_frames = None
-    image_iterator: Union[list[str], Generator[Image.Image, None, None]]
+    image_iterator: list[str] | Generator[Image.Image]
     if dataset_json_path and source:
         coco: Coco = Coco.from_coco_dict_or_path(dataset_json_path)
         image_iterator = [str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images]
@@ -664,7 +656,7 @@ def predict(
             if not novisual:
                 # convert ground truth annotations to object_prediction_list
                 coco_image: CocoImage = coco.images[ind]
-                object_prediction_gt_list: List[ObjectPrediction] = []
+                object_prediction_gt_list: list[ObjectPrediction] = []
                 for coco_annotation in coco_image.annotations:
                     coco_annotation_dict = coco_annotation.json
                     category_name = coco_annotation.category_name
@@ -742,7 +734,7 @@ def predict(
 
         # render video inference
         if view_video:
-            cv2.imshow("Prediction of {}".format(str(video_file_name)), result["image"])
+            cv2.imshow(f"Prediction of {video_file_name!s}", result["image"])
             cv2.waitKey(1)
 
         time_end = time.time() - time_start
@@ -786,17 +778,17 @@ def predict(
 
 def predict_fiftyone(
     model_type: str = "mmdet",
-    model_path: Optional[str] = None,
-    model_config_path: Optional[str] = None,
+    model_path: str | None = None,
+    model_config_path: str | None = None,
     model_confidence_threshold: float = 0.25,
-    model_device: Optional[str] = None,
-    model_category_mapping: Optional[dict] = None,
-    model_category_remapping: Optional[dict] = None,
+    model_device: str | None = None,
+    model_category_mapping: dict | None = None,
+    model_category_remapping: dict | None = None,
     dataset_json_path: str = "",
     image_dir: str = "",
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
-    image_size: Optional[int] = None,
+    image_size: int | None = None,
     slice_height: int = 256,
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
@@ -806,11 +798,10 @@ def predict_fiftyone(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
-    exclude_classes_by_name: Optional[List[str]] = None,
-    exclude_classes_by_id: Optional[List[int]] = None,
+    exclude_classes_by_name: list[str] | None = None,
+    exclude_classes_by_id: list[int] | None = None,
 ):
-    """
-    Performs prediction for all present images in given folder.
+    """Performs prediction for all present images in given folder.
 
     Args:
         model_type: str

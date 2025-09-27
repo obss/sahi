@@ -124,6 +124,9 @@ class TestTorchVisionDetectionModel:
         assert isinstance(object_prediction_list, list)
         assert isinstance(object_prediction_list[0], ObjectPrediction)
 
+        # confirm that masks do not exist
+        assert object_prediction_list[0].mask is None
+
         # compare
         assert len(object_prediction_list) == 7
         assert object_prediction_list[0].category.id == 3
@@ -134,7 +137,7 @@ class TestTorchVisionDetectionModel:
 
     def test_convert_original_predictions_with_mask_output(self):
         torchvision_detection_model = TorchVisionDetectionModel(
-            config_path=TorchVisionConstants.FASTERRCNN_CONFIG_PATH,
+            config_path=TorchVisionConstants.MASKRCNN_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
             category_remapping=None,
@@ -150,18 +153,19 @@ class TestTorchVisionDetectionModel:
         torchvision_detection_model.perform_inference(image)
 
         # convert predictions to ObjectPrediction list
-        torchvision_detection_model.convert_original_predictions()
+        torchvision_detection_model.convert_original_predictions(full_shape=[image.shape[0], image.shape[1]])
         object_prediction_list = torchvision_detection_model.object_prediction_list
         assert isinstance(object_prediction_list, list)
         assert isinstance(object_prediction_list[0], ObjectPrediction)
 
+        # confirm that masks exist
+        assert object_prediction_list[0].mask is not None
+
         # compare
-        assert len(object_prediction_list) == 7
+        assert len(object_prediction_list) == 8
         assert object_prediction_list[0].category.id == 3
         assert object_prediction_list[0].category.name == "car"
-        np.testing.assert_almost_equal(
-            object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
-        )
+        np.testing.assert_allclose(object_prediction_list[0].bbox.to_xywh(), [317, 312, 60, 50], atol=1)
 
     def test_get_prediction_torchvision(self):
         # init model

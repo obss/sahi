@@ -1,13 +1,16 @@
+from __future__ import annotations
+
 import copy
 import os
 import random
 import time
-from typing import Generator, List, Optional, Tuple, Union
+from collections.abc import Generator
+from io import BytesIO
 
 import cv2
 import numpy as np
 import requests
-from PIL import Image
+from PIL import Image, ImageOps
 
 from sahi.logger import logger
 from sahi.utils.file import Path
@@ -20,34 +23,16 @@ VIDEO_EXTENSIONS = [".mp4", ".mkv", ".flv", ".avi", ".ts", ".mpg", ".mov", "wmv"
 
 class Colors:
     def __init__(self):
-        hex = (
-            "FF3838",
-            "2C99A8",
-            "FF701F",
-            "6473FF",
-            "CFD231",
-            "48F90A",
-            "92CC17",
-            "3DDB86",
-            "1A9334",
-            "00D4BB",
-            "FF9D97",
-            "00C2FF",
-            "344593",
-            "FFB21D",
-            "0018EC",
-            "8438FF",
-            "520085",
-            "CB38FF",
-            "FF95C8",
-            "FF37C7",
+        hex_colors = (
+            "FF3838 2C99A8 FF701F 6473FF CFD231 48F90A 92CC17 3DDB86 1A9334 00D4BB "
+            "FF9D97 00C2FF 344593 FFB21D 0018EC 8438FF 520085 CB38FF FF95C8 FF37C7"
         )
-        self.palette = [self.hex_to_rgb("#" + c) for c in hex]
+
+        self.palette = [self.hex_to_rgb(f"#{c}") for c in hex_colors.split()]
         self.n = len(self.palette)
 
     def __call__(self, ind, bgr: bool = False):
-        """
-        Convert an index to a color code.
+        """Convert an index to a color code.
 
         Args:
             ind (int): The index to convert.
@@ -61,8 +46,7 @@ class Colors:
 
     @staticmethod
     def hex_to_rgb(hex_code):
-        """
-        Converts a hexadecimal color code to RGB format.
+        """Converts a hexadecimal color code to RGB format.
 
         Args:
             hex_code (str): The hexadecimal color code to convert.
@@ -83,8 +67,7 @@ def crop_object_predictions(
     file_name: str = "prediction_visual",
     export_format: str = "png",
 ):
-    """
-    Crops bounding boxes over the source image and exports it to the output folder.
+    """Crops bounding boxes over the source image and exports it to the output folder.
 
     Args:
         image (np.ndarray): The source image to crop bounding boxes from.
@@ -92,7 +75,8 @@ def crop_object_predictions(
         output_dir (str): The directory where the resulting visualizations will be exported. Defaults to an empty string.
         file_name (str): The name of the exported file. The exported file will be saved as `output_dir + file_name + ".png"`. Defaults to "prediction_visual".
         export_format (str): The format of the exported file. Can be specified as 'jpg' or 'png'. Defaults to "png".
-    """
+    """  # noqa
+
     # create output folder if not present
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     # add bbox and mask to image if present
@@ -118,8 +102,7 @@ def crop_object_predictions(
 
 
 def convert_image_to(read_path, extension: str = "jpg", grayscale: bool = False):
-    """
-    Reads an image from the given path and saves it with the specified extension.
+    """Reads an image from the given path and saves it with the specified extension.
 
     Args:
         read_path (str): The path to the image file.
@@ -136,8 +119,7 @@ def convert_image_to(read_path, extension: str = "jpg", grayscale: bool = False)
 
 
 def read_large_image(image_path: str):
-    """
-    Reads a large image from the specified image path.
+    """Reads a large image from the specified image path.
 
     Args:
         image_path (str): The path to the image file.
@@ -167,8 +149,7 @@ def read_large_image(image_path: str):
 
 
 def read_image(image_path: str) -> np.ndarray:
-    """
-    Loads image as a numpy array from the given path.
+    """Loads image as a numpy array from the given path.
 
     Args:
         image_path (str): The path to the image file.
@@ -183,9 +164,8 @@ def read_image(image_path: str) -> np.ndarray:
     return image
 
 
-def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool = False) -> Image.Image:
-    """
-    Loads an image as PIL.Image.Image.
+def read_image_as_pil(image: Image.Image | str | np.ndarray, exif_fix: bool = True) -> Image.Image:
+    """Loads an image as PIL.Image.Image.
 
     Args:
         image (Union[Image.Image, str, np.ndarray]): The image to be loaded. It can be an image path or URL (str),
@@ -204,12 +184,12 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
         # read image if str image path is provided
         try:
             image_pil = Image.open(
-                requests.get(image, stream=True).raw if str(image).startswith("http") else image  # type: ignore
+                BytesIO(requests.get(image, stream=True).content) if str(image).startswith("http") else image
             ).convert("RGB")
             if exif_fix:
-                image_pil = exif_transpose(image_pil)
+                ImageOps.exif_transpose(image_pil, in_place=True)
         except Exception as e:  # handle large/tiff image reading
-            logger.error(f"OpenCV failed reading image with error {e}, trying skimage instead")
+            logger.error(f"PIL failed reading image with error {e}, trying skimage instead")
             try:
                 import skimage.io
             except ImportError:
@@ -228,17 +208,15 @@ def read_image_as_pil(image: Union[Image.Image, str, np.ndarray], exif_fix: bool
             image = image[:, :, ::-1]
         image_pil = Image.fromarray(image)
     else:
-        raise TypeError("read image with 'pillow' using 'Image.open()'")  # pyright: ignore[reportUnreachable]
+        raise TypeError("read image with 'pillow' using 'Image.open()'")
     return image_pil
 
 
 def select_random_color():
-    """
-    Selects a random color from a predefined list of colors.
+    """Selects a random color from a predefined list of colors.
 
     Returns:
         list: A list representing the RGB values of the selected color.
-
     """
     colors = [
         [0, 255, 0],
@@ -256,9 +234,8 @@ def select_random_color():
     return colors[random.randrange(0, 10)]
 
 
-def apply_color_mask(image: np.ndarray, color: Tuple[int, int, int]):
-    """
-    Applies color mask to given input image.
+def apply_color_mask(image: np.ndarray, color: tuple[int, int, int]):
+    """Applies color mask to given input image.
 
     Args:
         image (np.ndarray): The input image to apply the color mask to.
@@ -282,9 +259,8 @@ def get_video_reader(
     frame_skip_interval: int,
     export_visual: bool = False,
     view_visual: bool = False,
-) -> Tuple[Generator[Image.Image, None, None], Optional[cv2.VideoWriter], str, int]:
-    """
-    Creates OpenCV video capture object from given video file path.
+) -> tuple[Generator[Image.Image], cv2.VideoWriter | None, str, int]:
+    """Creates OpenCV video capture object from given video file path.
 
     Args:
         source: Video file path
@@ -308,9 +284,9 @@ def get_video_reader(
         num_frames /= frame_skip_interval + 1
         num_frames = int(num_frames)
 
-    def read_video_frame(video_capture, frame_skip_interval) -> Generator[Image.Image, None, None]:
+    def read_video_frame(video_capture, frame_skip_interval) -> Generator[Image.Image]:
         if view_visual:
-            window_name = "Prediction of {}".format(str(video_file_name))
+            window_name = f"Prediction of {video_file_name!s}"
             cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
             default_image = np.zeros((480, 640, 3), dtype=np.uint8)
             cv2.imshow(window_name, default_image)
@@ -378,20 +354,18 @@ def get_video_reader(
 
 def visualize_prediction(
     image: np.ndarray,
-    boxes: List[List],
-    classes: List[str],
-    masks: Optional[List[np.ndarray]] = None,
-    rect_th: Optional[int] = None,
-    text_size: Optional[float] = None,
-    text_th: Optional[int] = None,
-    color: Optional[tuple] = None,
+    boxes: list[list],
+    classes: list[str],
+    masks: list[np.ndarray] | None = None,
+    rect_th: int | None = None,
+    text_size: float | None = None,
+    text_th: int | None = None,
+    color: tuple | None = None,
     hide_labels: bool = False,
-    output_dir: Optional[str] = None,
-    file_name: Optional[str] = "prediction_visual",
+    output_dir: str | None = None,
+    file_name: str | None = "prediction_visual",
 ):
-    """
-    Visualizes prediction classes, bounding boxes over the source image
-    and exports it to output folder.
+    """Visualizes prediction classes, bounding boxes over the source image and exports it to output folder.
 
     Args:
         image (np.ndarray): The source image.
@@ -408,7 +382,8 @@ def visualize_prediction(
 
     Returns:
         dict: A dictionary containing the visualized image and the elapsed time for the visualization process.
-    """
+    """  # noqa
+
     elapsed_time = time.time()
     # deepcopy image so that original is not altered
     image = copy.deepcopy(image)
@@ -494,19 +469,17 @@ def visualize_prediction(
 def visualize_object_predictions(
     image: np.ndarray,
     object_prediction_list,
-    rect_th: Optional[int] = None,
-    text_size: Optional[float] = None,
-    text_th: Optional[int] = None,
-    color: Optional[tuple] = None,
+    rect_th: int | None = None,
+    text_size: float | None = None,
+    text_th: int | None = None,
+    color: tuple | None = None,
     hide_labels: bool = False,
     hide_conf: bool = False,
-    output_dir: Optional[str] = None,
-    file_name: Optional[str] = "prediction_visual",
-    export_format: Optional[str] = "png",
+    output_dir: str | None = None,
+    file_name: str | None = "prediction_visual",
+    export_format: str | None = "png",
 ):
-    """
-    Visualizes prediction category names, bounding boxes over the source image
-    and exports it to output folder.
+    """Visualizes prediction category names, bounding boxes over the source image and exports it to output folder.
 
     Args:
         object_prediction_list: a list of prediction.ObjectPrediction
@@ -629,7 +602,7 @@ def visualize_object_predictions(
     return {"image": image, "elapsed_time": elapsed_time}
 
 
-def get_coco_segmentation_from_bool_mask(bool_mask: np.ndarray) -> List[List[float]]:
+def get_coco_segmentation_from_bool_mask(bool_mask: np.ndarray) -> list[list[float]]:
     """
     Convert boolean mask to coco segmentation format
     [
@@ -654,9 +627,8 @@ def get_coco_segmentation_from_bool_mask(bool_mask: np.ndarray) -> List[List[flo
     return coco_segmentation
 
 
-def get_bool_mask_from_coco_segmentation(coco_segmentation: List[List[float]], width: int, height: int) -> np.ndarray:
-    """
-    Convert coco segmentation to 2D boolean mask of given height and width
+def get_bool_mask_from_coco_segmentation(coco_segmentation: list[list[float]], width: int, height: int) -> np.ndarray:
+    """Convert coco segmentation to 2D boolean mask of given height and width.
 
     Parameters:
     - coco_segmentation: list of points representing the coco segmentation
@@ -674,9 +646,8 @@ def get_bool_mask_from_coco_segmentation(coco_segmentation: List[List[float]], w
     return bool_mask
 
 
-def get_bbox_from_bool_mask(bool_mask: np.ndarray) -> Optional[List[int]]:
-    """
-    Generate VOC bounding box [xmin, ymin, xmax, ymax] from given boolean mask.
+def get_bbox_from_bool_mask(bool_mask: np.ndarray) -> list[int] | None:
+    """Generate VOC bounding box [xmin, ymin, xmax, ymax] from given boolean mask.
 
     Args:
         bool_mask (np.ndarray): 2D boolean mask.
@@ -702,9 +673,7 @@ def get_bbox_from_bool_mask(bool_mask: np.ndarray) -> Optional[List[int]]:
 
 
 def get_bbox_from_coco_segmentation(coco_segmentation):
-    """
-    Generate voc box ([xmin, ymin, xmax, ymax]) from given coco segmentation
-    """
+    """Generate voc box ([xmin, ymin, xmax, ymax]) from given coco segmentation."""
     xs = []
     ys = []
     for segm in coco_segmentation:
@@ -719,9 +688,8 @@ def get_bbox_from_coco_segmentation(coco_segmentation):
     return [xmin, ymin, xmax, ymax]
 
 
-def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> List[List[float]]:
-    """
-    Convert OBB (Oriented Bounding Box) points to COCO polygon format.
+def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> list[list[float]]:
+    """Convert OBB (Oriented Bounding Box) points to COCO polygon format.
 
     Args:
         obb_points: np.ndarray
@@ -738,22 +706,19 @@ def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> List[List[f
     # Create polygon from points and close it by repeating first point
     polygons = []
     # Add first point to end to close polygon
-    closed_polygon = points + [points[0], points[1]]
+    closed_polygon = [*points, points[0], points[1]]
     polygons.append(closed_polygon)
 
     return polygons
 
 
 def normalize_numpy_image(image: np.ndarray):
-    """
-    Normalizes numpy image
-    """
+    """Normalizes numpy image."""
     return image / np.max(image)
 
 
 def ipython_display(image: np.ndarray):
-    """
-    Displays numpy image in notebook.
+    """Displays numpy image in notebook.
 
     If input image is in range 0..1, please first multiply img by 255
     Assumes image is ndarray of shape [height, width, channels] where channels can be 1, 3 or 4
@@ -764,33 +729,3 @@ def ipython_display(image: np.ndarray):
     _, ret = cv2.imencode(".png", image)
     i = IPython.display.Image(data=ret)  # type: ignore
     IPython.display.display(i)  # type: ignore
-
-
-def exif_transpose(image: Image.Image) -> Image.Image:
-    """
-    Transpose a PIL image accordingly if it has an EXIF Orientation tag.
-    Inplace version of https://github.com/python-pillow/Pillow/blob/master/src/PIL/ImageOps.py exif_transpose()
-
-    Args:
-        image (Image.Image): The image to transpose.
-
-    Returns:
-        Image.Image: The transposed image.
-    """
-    exif = image.getexif()
-    orientation = exif.get(0x0112, 1)  # default 1
-    if orientation > 1:
-        method = {
-            2: Image.Transpose.FLIP_LEFT_RIGHT,
-            3: Image.Transpose.ROTATE_180,
-            4: Image.Transpose.FLIP_TOP_BOTTOM,
-            5: Image.Transpose.TRANSPOSE,
-            6: Image.Transpose.ROTATE_270,
-            7: Image.Transpose.TRANSVERSE,
-            8: Image.Transpose.ROTATE_90,
-        }.get(orientation)
-        if method is not None:
-            image = image.transpose(method)
-            del exif[0x0112]
-            image.info["exif"] = exif.tobytes()
-    return image
