@@ -53,16 +53,16 @@ def _click_params_from_signature(func):
                 param_type = p.annotation
             else:
                 param_type = str
-            params.append(click.Option([opt_name], required=True, type=param_type, help="(auto)"))
+            params.append(click.Option([opt_name], required=True, type=param_type, help=" "))
         else:
             # boolean flags
             if isinstance(p.default, bool):
                 params.append(
-                    click.Option([opt_name], is_flag=True, default=p.default, help=f"(auto) default={p.default}")
+                    click.Option([opt_name], is_flag=True, default=p.default, help=f" default={p.default}")
                 )
             # lists/tuples -> multiple
             elif isinstance(p.default, (list, tuple)):
-                params.append(click.Option([opt_name], multiple=True, default=tuple(p.default), help="(auto) multiple"))
+                params.append(click.Option([opt_name], multiple=True, default=tuple(p.default), help=" multiple"))
             else:
                 # infer type from annotation or default value
                 param_type = None
@@ -73,7 +73,7 @@ def _click_params_from_signature(func):
                 else:
                     param_type = str
                 params.append(
-                    click.Option([opt_name], default=p.default, type=param_type, help=f"(auto) default={p.default}")
+                    click.Option([opt_name], default=p.default, type=param_type, help=f" default={p.default}")
                 )
     return params
 
