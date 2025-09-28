@@ -1,4 +1,5 @@
 import click
+
 from sahi.utils.cli_helper import make_click_command
 
 
@@ -6,6 +7,7 @@ from sahi.utils.cli_helper import make_click_command
 def predict_command(*args, **kwargs):
     """Perform prediction - imports heavy dependencies only when called."""
     from sahi.predict import predict
+
     return predict(*args, **kwargs)
 
 
@@ -61,6 +63,7 @@ def cli():
 def version_command():
     """Show SAHI version."""
     from sahi import __version__ as sahi_version
+
     click.echo(sahi_version)
 
 
