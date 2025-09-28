@@ -7,14 +7,15 @@ from sahi.scripts.coco2yolo import main as coco2yolo
 from sahi.scripts.coco_error_analysis import analyse
 from sahi.scripts.coco_evaluation import evaluate
 from sahi.scripts.slice_coco import slicer
-from sahi.utils.package_utils import print_environment_info
 from sahi.utils.cli_helper import make_click_command
+from sahi.utils.package_utils import print_environment_info
 
 
 @click.group(help="SAHI command-line utilities: slicing-aided high-resolution inference and COCO tools")
 def cli():
     """Top-level click group for SAHI CLI."""
     pass
+
 
 coco_app = {
     "evaluate": evaluate,
