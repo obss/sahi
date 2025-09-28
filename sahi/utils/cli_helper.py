@@ -45,7 +45,7 @@ def _click_params_from_signature(func):
             continue
 
         opt_name = f"--{name}"
-        
+
         if p.default is inspect._empty:
             # required option (no default value)
             param_type = None
@@ -53,9 +53,7 @@ def _click_params_from_signature(func):
                 param_type = p.annotation
             else:
                 param_type = str
-            params.append(
-                click.Option([opt_name], required=True, type=param_type, help="(auto)")
-            )
+            params.append(click.Option([opt_name], required=True, type=param_type, help="(auto)"))
         else:
             # boolean flags
             if isinstance(p.default, bool):

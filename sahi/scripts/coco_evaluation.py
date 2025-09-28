@@ -361,7 +361,7 @@ def evaluate(
     return_dict: bool = False,
 ):
     """COCO evaluation entrypoint.
-    
+
     Args:
         dataset_json_path (str): file path for the coco dataset json file
         result_json_path (str): file path for the coco result json file
@@ -373,7 +373,7 @@ def evaluate(
         areas (List[int]): area regions for coco evaluation calculations
         return_dict (bool): If True, returns a dict with 'eval_results' 'export_path' fields.
     """
-    
+
     try:
         from pycocotools.coco import COCO
         from pycocotools.cocoeval import COCOeval
