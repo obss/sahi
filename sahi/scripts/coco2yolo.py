@@ -5,8 +5,8 @@ from sahi.utils.file import Path, increment_path
 
 
 def main(
-    image_dir: str | None = None,
-    dataset_json_path: str | None = None,
+    image_dir: str,
+    dataset_json_path: str,
     train_split: int | float = 0.9,
     project: str = "runs/coco2yolo",
     name: str = "exp",

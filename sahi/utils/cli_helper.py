@@ -44,11 +44,19 @@ def _click_params_from_signature(func):
             # skip *args/**kwargs
             continue
 
+        opt_name = f"--{name}"
+        
         if p.default is inspect._empty:
-            # required positional argument
-            params.append(click.Argument([name]))
+            # required option (no default value)
+            param_type = None
+            if p.annotation is not inspect._empty and p.annotation in (int, float, str, bool):
+                param_type = p.annotation
+            else:
+                param_type = str
+            params.append(
+                click.Option([opt_name], required=True, type=param_type, help="(auto)")
+            )
         else:
-            opt_name = f"--{name}"
             # boolean flags
             if isinstance(p.default, bool):
                 params.append(
