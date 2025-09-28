@@ -75,8 +75,11 @@ def _click_params_from_signature(func):
 def make_click_command(name, func):
     """Build a click.Command for `func`, auto-generating params from signature if callable."""
     params = _click_params_from_signature(func) if callable(func) else []
-    # use function docstring as help when available
+    # use function docstring as help when available, but only the first line (summary)
     help_text = None
     if callable(func):
-        help_text = func.__doc__ if getattr(func, "__doc__", None) else None
+        docstring = func.__doc__ if getattr(func, "__doc__", None) else None
+        if docstring:
+            # Extract only the first line of the docstring for cleaner CLI help
+            help_text = docstring.strip().split("\n")[0]
     return click.Command(name, params=params, callback=_make_callback(func), help=help_text)
