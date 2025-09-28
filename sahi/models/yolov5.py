@@ -77,7 +77,7 @@ class Yolov5DetectionModel(DetectionModel):
 
     @property
     def category_names(self):
-        if check_package_minimum_version("yolov5", "6.2.0"):
+        if check_package_minimum_version("yolov5", "6.2.0", raise_error=False):
             return list(self.model.names.values())
         else:
             return self.model.names
