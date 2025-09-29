@@ -1,6 +1,6 @@
 [project]
 name = "sahi"
-version = "0.11.35"
+version = "0.11.36"
 readme = "README.md"
 description = "A vision library for performing sliced inference on large images/small objects"
 requires-python = ">=3.8"
@@ -17,6 +17,7 @@ dependencies = [
   "terminaltables",
   "requests",
   "click",
+  "torch>=2.4.1",
 ]
 
 classifiers = [
@@ -78,12 +79,11 @@ build = [
 
 [project.optional-dependencies]
 yolov5 = ["yolov5>=6.0.0,<8.0.0"]
-yolo = ["ultralytics>=8.0.0"]
-torch = ["torch", "torchvision"]
+ultralytics = ["ultralytics>=8.0.0"]
 transformers = ["transformers>=4.49.0;python_version>='3.9'",]
 roboflow = ["inference>=0.51.5;python_version>='3.12'", "rfdetr>=1.1.0;python_version>='3.12'"]
 onnx = ["onnx;python_version>='3.10'", "onnxruntime;python_version>='3.10'"]
-all = ["yolov5>=6.0.0,<8.0.0", "ultralytics>=8.0.0", "torch", "torchvision", "transformers>=4.49.0;python_version>='3.9'", "inference>=0.51.5;python_version>='3.12'", "rfdetr>=1.1.0;python_version>='3.12'", "onnx;python_version>='3.10'", "onnxruntime;python_version>='3.10'"]
+all = ["yolov5>=6.0.0,<8.0.0", "ultralytics>=8.0.0", "torch>=2.4.1", "torchvision", "transformers>=4.49.0;python_version>='3.9'", "inference>=0.51.5;python_version>='3.12'", "rfdetr>=1.1.0;python_version>='3.12'", "onnx;python_version>='3.10'", "onnxruntime;python_version>='3.10'"]
 
 mmdet = [
   # MMDetection dependencies - only for Python 3.11 and not on macOS ARM64
