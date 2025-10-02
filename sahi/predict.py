@@ -150,6 +150,8 @@ def get_sliced_prediction(
     slice_dir: str | None = None,
     exclude_classes_by_name: list[str] | None = None,
     exclude_classes_by_id: list[int] | None = None,
+    tqdm_on: bool = False,
+    progress_callback=None,
 ) -> PredictionResult:
     """Function for slice image + get predicion for each slice + combine predictions in full image.
 
@@ -204,6 +206,11 @@ def get_sliced_prediction(
         exclude_classes_by_id: Optional[List[int]]
             None: if no classes are excluded
             List[int]: set of classes to exclude using one or more IDs
+        tqdm_on: bool
+            Whether to show tqdm progress bar for slice processing. Default: False.
+        progress_callback: callable
+            A callback function that will be called after each slice is processed.
+            The function should accept two arguments: (current_slice, total_slices)
     Returns:
         A Dict with fields:
             object_prediction_list: a list of sahi.prediction.ObjectPrediction
@@ -257,9 +264,16 @@ def get_sliced_prediction(
     num_group = int(num_slices / num_batch)
     if verbose == 1 or verbose == 2:
         tqdm.write(f"Performing prediction on {num_slices} slices.")
+
+    # Create progress bar if requested
+    if tqdm_on:
+        slice_iterator = tqdm(range(num_group), desc="Processing slices", total=num_group)
+    else:
+        slice_iterator = range(num_group)
+
     object_prediction_list = []
     # perform sliced prediction
-    for group_ind in range(num_group):
+    for group_ind in slice_iterator:
         # prepare batch (currently supports only 1 batch)
         image_list = []
         shift_amount_list = []
@@ -288,6 +302,10 @@ def get_sliced_prediction(
             postprocess_time_start = time.time()
             object_prediction_list = postprocess(object_prediction_list)
             postprocess_time += time.time() - postprocess_time_start
+
+        # Call progress callback if provided
+        if progress_callback is not None:
+            progress_callback(group_ind + 1, num_group)
 
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
