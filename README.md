@@ -8,7 +8,7 @@
 </h4>
 
 <h4>
-    <img width="700" alt="teaser" src="https://raw.githubusercontent.com/obss/sahi/main/resources/sliced_inference.gif">
+    <img width="700" alt="teaser" src="https://github.com/ultralytics/docs/releases/download/0/sahi-sliced-inference-overview.avif">
 </h4>
 
 <div>
