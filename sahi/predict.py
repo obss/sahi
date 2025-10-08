@@ -264,7 +264,6 @@ def get_sliced_prediction(
     if verbose == 1 or verbose == 2:
         tqdm.write(f"Performing prediction on {num_slices} slices.")
 
-    # Create progress bar if requested
     if progress_bar:
         slice_iterator = tqdm(range(num_group), desc="Processing slices", total=num_group)
     else:
