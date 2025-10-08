@@ -430,6 +430,7 @@ def predict(
     force_postprocess_type: bool = False,
     exclude_classes_by_name: list[str] | None = None,
     exclude_classes_by_id: list[int] | None = None,
+    progress_bar: bool = False,
     **kwargs,
 ):
     """Performs prediction for all present images in given folder.
@@ -532,6 +533,8 @@ def predict(
         exclude_classes_by_id: Optional[List[int]]
             None: if no classes are excluded
             List[int]: set of classes to exclude using one or more IDs
+        progress_bar: bool
+            Whether to show a progress bar. Default is False.
     """
     # assert prediction type
     if no_standard_prediction and no_sliced_prediction:
@@ -644,6 +647,8 @@ def predict(
                 verbose=1 if verbose else 0,
                 exclude_classes_by_name=exclude_classes_by_name,
                 exclude_classes_by_id=exclude_classes_by_id,
+                progress_bar=progress_bar,
+                
             )
             object_prediction_list = prediction_result.object_prediction_list
             if prediction_result.durations_in_seconds:
@@ -827,6 +832,7 @@ def predict_fiftyone(
     verbose: int = 1,
     exclude_classes_by_name: list[str] | None = None,
     exclude_classes_by_id: list[int] | None = None,
+    progress_bar: bool = False,
 ):
     """Performs prediction for all present images in given folder.
 
@@ -890,6 +896,8 @@ def predict_fiftyone(
         exclude_classes_by_id: Optional[List[int]]
             None: if no classes are excluded
             List[int]: set of classes to exclude using one or more IDs
+        progress_bar: bool
+            Whether to show progress bar for slice processing. Default: False.
     """
     check_requirements(["fiftyone"])
 
@@ -944,6 +952,7 @@ def predict_fiftyone(
                     verbose=verbose,
                     exclude_classes_by_name=exclude_classes_by_name,
                     exclude_classes_by_id=exclude_classes_by_id,
+                    progress_bar=progress_bar,
                 )
                 durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
             else:
