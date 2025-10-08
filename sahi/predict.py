@@ -648,7 +648,6 @@ def predict(
                 exclude_classes_by_name=exclude_classes_by_name,
                 exclude_classes_by_id=exclude_classes_by_id,
                 progress_bar=progress_bar,
-                
             )
             object_prediction_list = prediction_result.object_prediction_list
             if prediction_result.durations_in_seconds:
