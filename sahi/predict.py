@@ -150,7 +150,7 @@ def get_sliced_prediction(
     slice_dir: str | None = None,
     exclude_classes_by_name: list[str] | None = None,
     exclude_classes_by_id: list[int] | None = None,
-    tqdm_on: bool = False,
+    progress_bar: bool = False,
     progress_callback=None,
 ) -> PredictionResult:
     """Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -206,8 +206,8 @@ def get_sliced_prediction(
         exclude_classes_by_id: Optional[List[int]]
             None: if no classes are excluded
             List[int]: set of classes to exclude using one or more IDs
-        tqdm_on: bool
-            Whether to show tqdm progress bar for slice processing. Default: False.
+        progress_bar: bool
+            Whether to show progress bar for slice processing. Default: False.
         progress_callback: callable
             A callback function that will be called after each slice is processed.
             The function should accept two arguments: (current_slice, total_slices)
@@ -259,14 +259,13 @@ def get_sliced_prediction(
 
     postprocess_time = 0
     time_start = time.time()
-
     # create prediction input
     num_group = int(num_slices / num_batch)
     if verbose == 1 or verbose == 2:
         tqdm.write(f"Performing prediction on {num_slices} slices.")
 
     # Create progress bar if requested
-    if tqdm_on:
+    if progress_bar:
         slice_iterator = tqdm(range(num_group), desc="Processing slices", total=num_group)
     else:
         slice_iterator = range(num_group)
@@ -502,13 +501,24 @@ def predict(
             Save results to project/name.
         name: str
             Save results to project/name.
-        visual_bbox_thickness: int
-        visual_text_size: float
-        visual_text_thickness: int
-        visual_hide_labels: bool
-        visual_hide_conf: bool
-        visual_export_format: str
-            Can be specified as 'jpg' or 'png'
+        visual_bbox_thickness: int, optional
+            Line thickness (in pixels) for bounding boxes in exported visualizations.
+            If None, a default thickness is chosen based on image size.
+        visual_text_size: float, optional
+            Font scale/size for label text in exported visualizations. If None, a
+            sensible default is used.
+        visual_text_thickness: int, optional
+            Thickness of text labels. If None, a sensible default is used.
+        visual_hide_labels: bool, optional
+            If True, class label names won't be shown on the exported visuals.
+        visual_hide_conf: bool, optional
+            If True, confidence scores won't be shown on the exported visuals.
+        visual_export_format: str, optional
+            Output image format to use when exporting visuals. Supported values are
+            'png' (default) and 'jpg'. Note that 'jpg' uses lossy compression and may
+            produce smaller files. This parameter is ignored when `novisual` is True.
+            Exported visuals are written under the run directory: `project/name/visuals`
+            (and `project/name/visuals_with_gt` when ground-truth overlays are created).
         verbose: int
             0: no print
             1: print slice/prediction durations, number of slices
@@ -540,7 +550,7 @@ def predict(
     # for profiling
     durations_in_seconds = dict()
 
-    # init export directories
+    # Init export directories
     save_dir = Path(increment_path(Path(project) / name, exist_ok=False))  # increment run
     crop_dir = save_dir / "crops"
     visual_dir = save_dir / "visuals"
@@ -549,7 +559,7 @@ def predict(
     if not novisual or export_pickle or export_crop or dataset_json_path is not None:
         save_dir.mkdir(parents=True, exist_ok=True)  # make dir
 
-    # init image iterator
+    # Init image iterator
     # TODO: rewrite this as iterator class as in https://github.com/ultralytics/yolov5/blob/d059d1da03aee9a3c0059895aa4c7c14b7f25a9e/utils/datasets.py#L178
     source_is_video = False
     num_frames = None
