@@ -57,9 +57,7 @@ def _click_params_from_signature(func):
         else:
             # boolean flags
             if isinstance(p.default, bool):
-                params.append(
-                    click.Option([opt_name], is_flag=True, default=p.default, help=f" default={p.default}")
-                )
+                params.append(click.Option([opt_name], is_flag=True, default=p.default, help=f" default={p.default}"))
             # lists/tuples -> multiple
             elif isinstance(p.default, (list, tuple)):
                 params.append(click.Option([opt_name], multiple=True, default=tuple(p.default), help=" multiple"))

@@ -451,6 +451,8 @@ def analyse(
     return_dict: bool = False,
 ) -> dict | None:
     """
+    Perform COCO error analysis and export result plots to out_dir.
+
     Args:
         dataset_json_path (str): file path for the coco dataset json file
         result_json_paths (str): file path for the coco result json file

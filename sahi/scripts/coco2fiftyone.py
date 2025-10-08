@@ -11,6 +11,8 @@ def main(
     iou_thresh: float = 0.5,
 ):
     """
+    Launch fiftyone app with coco dataset and coco results.
+
     Args:
         image_dir (str): directory for coco images
         dataset_json_path (str): file path for the coco dataset json file

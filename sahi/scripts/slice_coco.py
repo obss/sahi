@@ -14,6 +14,8 @@ def slicer(
     min_area_ratio: float = 0.1,
 ):
     """
+    Slice COCO dataset images and annotations.
+
     Args:
         image_dir (str): directory for coco images
         dataset_json_path (str): file path for the coco dataset json file
