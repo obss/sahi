@@ -46,14 +46,18 @@ def get_package_info(package_name: str) -> tuple[bool, str]:
 def sys_info():
     logger.pkg_info("System Information:")
     logger.pkg_info(f"Python version: {platform.python_version()}")
-    logger.pkg_info(f"Platform: {platform.platform()}")
-    logger.pkg_info(f"Processor: {platform.processor()}")
-    logger.pkg_info(f"Machine: {platform.machine()}")
+    logger.pkg_info(f"Platform: {platform.platform().capitalize()}")
+    logger.pkg_info(f"Processor: {platform.processor().capitalize()}")
+    logger.pkg_info(f"Machine: {platform.machine().capitalize()}")
+    logger.pkg_info(f"System: {platform.system().capitalize()}")
+    logger.pkg_info(f"Release: {platform.release().capitalize()}")
+    logger.pkg_info(f"Version: {platform.version().capitalize()}")
+    logger.pkg_info(f"Architecture: {platform.architecture()[0].capitalize()}")
 
 
 def print_environment_info() -> None:
     sys_info()
-    logger.pkg_info("Package Information:")
+    logger.pkg_info("=== Package Information ===")
     get_package_info("torch")
     get_package_info("torchvision")
     get_package_info("tensorflow")
