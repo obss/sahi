@@ -110,16 +110,15 @@ def list_files(
 def list_files_recursively(directory: str, contains: list = [".json"], verbose: bool = True) -> tuple[list, list]:
     """Walk given directory recursively and return a list of file path with desired extension.
 
-    Arguments
-    -------
+    Args:
         directory : str
             "data/coco/"
         contains : list
             A list of strings to check if the target file contains them, example: ["coco.png", ".jpg", "jpeg"]
         verbose : bool
             If true, prints some results
-    Returns
-    -------
+
+    Returns:
         relative_filepath_list : list
             List of file paths relative to given directory
         abs_filepath_list : list
