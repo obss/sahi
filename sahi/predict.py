@@ -65,7 +65,7 @@ def get_prediction(
 ) -> PredictionResult:
     """Function for performing prediction for given image using given detection_model.
 
-    Arguments:
+    Args:
         image: str or np.ndarray
             Location of image or numpy image matrix to slice
         detection_model: model.DetectionMode
