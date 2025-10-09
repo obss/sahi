@@ -66,7 +66,47 @@ result = predict(
     overlap_width_ratio=0.2,
     export_pickle=False,
     export_crop=False,
+    progress_bar=False,
 )
+```
+
+### Progress-Bar
+
+Two options were added to control and receive progress
+updates when running sliced inference over many slices:
+
+- `progress_bar` (bool): When True, shows a tqdm progress bar during slice processing. Useful for visual feedback in terminals and notebooks. Default is False.
+- `progress_callback` (callable): A callback function that will be called after each slice (or slice group) is processed. The callback receives two integer arguments: `(current_slice_index, total_slices)`. Use this to integrate custom progress reporting (for example, update a GUI element or log progress to a file).
+
+Example using the callback:
+
+```python
+from sahi.predict import get_sliced_prediction
+from sahi import AutoDetectionModel
+
+# init model
+detection_model = AutoDetectionModel.from_pretrained(...)
+
+def my_progress_callback(current, total):
+    print(f"Processed {current}/{total} slices")
+
+result = get_sliced_prediction(
+    image,
+    detection_model,
+    slice_height=512,
+    slice_width=512,
+    overlap_height_ratio=0.2,
+    overlap_width_ratio=0.2,
+    progress_bar=False,           # disable tqdm bar
+    progress_callback=my_progress_callback,  # use callback to receive updates
+)
+```
+
+Notes
+-----
+
+- `progress_bar` and `progress_callback` can be used together. When both are provided, the tqdm bar will display and the callback will be called after each slice group is processed.
+- The `progress_callback` is called with 1-based indices (i.e. first call will be `(1, total)`).
 
 ```
 
@@ -144,7 +184,8 @@ fiftyone_detections = result.to_fiftyone_detections()
 # For use with FiftyOne: https://github.com/voxel51/fiftyone
 ```
 
-# Interactive Demos and Examples
+## Interactive Demos and Examples
+
 Want to see these prediction utilities in action? We have several interactive notebooks that demonstrate different model integrations:
 
 - For YOLOv8/YOLO11/YOLO12 models, explore our [Ultralytics integration notebook](../demo/inference_for_ultralytics.ipynb)

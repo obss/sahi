@@ -52,6 +52,14 @@ sahi predict --slice_width 512 --slice_height 512 --overlap_height_ratio 0.1 --o
 
 - If you want to perform prediction using a COCO annotation file, provide COCO json path as `--dataset_json_path dataset.json` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_evaluation command to calculate COCO evaluation results or coco_error_analysis command to calculate detailed COCO error plots.
 
+- Progress reporting: If you want a terminal progress bar while sliced inference runs, use the `--progress_bar` flag. This enables a tqdm progress bar that shows how many slice groups have been processed. Example:
+
+```bash
+sahi predict --model_path path/to/model --source images/ --slice_width 512 --slice_height 512 --progress_bar
+```
+
+Note: The `--progress_bar` flag controls only the CLI visual progress (tqdm). The `progress_callback` parameter available in the Python API (`get_sliced_prediction`) is a programmatic hook (callable) and is not exposed as a CLI option.
+
 ## `predict-fiftyone` command usage
 
 ```bash

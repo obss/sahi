@@ -86,6 +86,8 @@ nav:
       - 'Command Line Interface':
           - cli.md
 
+  - 'API Reference Index': api.md
+
   - Contributing: contributing.md
   - License: license.md
   - Changelog: changelog.md
