@@ -15,7 +15,7 @@ from sahi.utils.file import Path
 class PredictionScore:
     def __init__(self, value: float | np.ndarray):
         """
-        Arguments:
+        Args:
             score: prediction score between 0 and 1
         """
         # if score is a numpy object, convert it to python variable
@@ -56,7 +56,7 @@ class ObjectPrediction(ObjectAnnotation):
     ):
         """Creates ObjectPrediction from bbox, score, category_id, category_name, segmentation.
 
-        Arguments:
+        Args:
             bbox: list
                 [minx, miny, maxx, maxy]
             score: float

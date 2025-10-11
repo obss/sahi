@@ -215,6 +215,8 @@ def test_get_sliced_prediction_mmdet():
         postprocess_match_threshold=match_threshold,
         postprocess_match_metric=match_metric,
         postprocess_class_agnostic=class_agnostic,
+        progress_bar=True,
+        progress_callback=None,
     )
     object_prediction_list = prediction_result.object_prediction_list
 
