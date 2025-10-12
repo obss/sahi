@@ -17,7 +17,8 @@ from sahi.utils.coco import Coco, CocoAnnotation, CocoImage, create_coco_dict
 from sahi.utils.cv import IMAGE_EXTENSIONS_LOSSLESS, IMAGE_EXTENSIONS_LOSSY, read_image_as_pil
 from sahi.utils.file import load_json, save_json
 
-MAX_WORKERS = 20
+_CPU_COUNT = os.cpu_count() or 4
+MAX_WORKERS = max(1, min(32, _CPU_COUNT * 2))
 
 
 def get_slice_bboxes(
@@ -388,13 +389,20 @@ def slice_image(
 
     # export slices if output directory is provided
     if output_file_name and output_dir:
-        conc_exec = concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS)
-        conc_exec.map(
-            _export_single_slice,
-            sliced_image_result.images,
-            [output_dir] * len(sliced_image_result),
-            sliced_image_result.filenames,
-        )
+        # Use a context-managed ThreadPoolExecutor for clean shutdown and
+        # limit workers based on CPU count to avoid oversubscription.
+        max_workers = min(MAX_WORKERS, len(sliced_image_result))
+        max_workers = max(1, max_workers)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # map will schedule tasks and wait for completion when the context exits
+            list(
+                executor.map(
+                    _export_single_slice,
+                    sliced_image_result.images,
+                    [output_dir] * len(sliced_image_result),
+                    sliced_image_result.filenames,
+                )
+            )
 
     verboselog(
         "Num slices: " + str(n_ims) + " slice_height: " + str(slice_height) + " slice_width: " + str(slice_width)
