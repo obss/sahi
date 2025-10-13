@@ -14,4 +14,5 @@ class RTDetrDetectionModel(UltralyticsDetectionModel):
             model.to(self.device)
             self.set_model(model)
         except Exception as e:
-            raise TypeError("model_path is not a valid rtdet model path: ", e)
+            raise TypeError("model_path is not a valid rtdetr model path: ", e)
+
