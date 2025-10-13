@@ -4,11 +4,6 @@ from sahi.models.ultralytics import UltralyticsDetectionModel
 
 
 class RTDetrDetectionModel(UltralyticsDetectionModel):
-    def __init__(self, **kwargs):
-        existing_packages = getattr(self, "required_packages", None) or []
-        self.required_packages = [*list(existing_packages), "ultralytics"]
-        super().__init__(**kwargs)
-
     def load_model(self):
         """Detection model is initialized and set to self.model."""
         from ultralytics import RTDETR
@@ -19,4 +14,4 @@ class RTDetrDetectionModel(UltralyticsDetectionModel):
             model.to(self.device)
             self.set_model(model)
         except Exception as e:
-            raise TypeError("model_path is not a valid rtdet model path: ", e)
+            raise TypeError("model_path is not a valid rtdetr model path: ", e)
