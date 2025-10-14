@@ -82,11 +82,11 @@ nav:
           - postprocess/combine.md
           - postprocess/utils.md
       - Utils:
-          - utils/coco.md
-          - utils/cv.md
-          - utils/file.md
-      - 'Command Line Interface':
-          - cli.md
+          - 'COCO Utils': utils/coco.md
+          - 'Computer Vision Utils': utils/cv.md
+          - 'File Utils': utils/file.md
+      - 'Command Line Interface': cli.md
+
 
   - 'API Reference Index': api.md
 
