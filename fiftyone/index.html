@@ -1054,6 +1054,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1100,7 +1104,7 @@
   
   
   <span class="md-ellipsis">
-    BaseModel
+    Base Model
     
   </span>
   
@@ -1123,7 +1127,7 @@
   
   
   <span class="md-ellipsis">
-    UltralyticsModel
+    Ultralytics Models
     
   </span>
   
@@ -1146,7 +1150,53 @@
   
   
   <span class="md-ellipsis">
-    Yolov5Model
+    YOLOv5 Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/yoloe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    YOLOE Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/yolo-world/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    YoloWorld Model
     
   </span>
   
@@ -1169,7 +1219,7 @@
   
   
   <span class="md-ellipsis">
-    MmdetModel
+    Mmdet Model
     
   </span>
   
@@ -1192,7 +1242,7 @@
   
   
   <span class="md-ellipsis">
-    Detectron2Model
+    Detectron2 Model
     
   </span>
   
@@ -1215,7 +1265,7 @@
   
   
   <span class="md-ellipsis">
-    HuggingfaceModel
+    Huggingface Model
     
   </span>
   
@@ -1238,7 +1288,7 @@
   
   
   <span class="md-ellipsis">
-    TorchvisionModel
+    Torchvision Model
     
   </span>
   
@@ -1261,7 +1311,7 @@
   
   
   <span class="md-ellipsis">
-    RTDETRModel
+    RTDETR Model
     
   </span>
   
@@ -1284,7 +1334,7 @@
   
   
   <span class="md-ellipsis">
-    RoboflowModel
+    Roboflow Model
     
   </span>
   
@@ -1721,6 +1771,41 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#explore-coco-dataset-via-fiftyone-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      Explore COCO dataset via FiftyOne app
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convert-predictions-to-fiftyone-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Convert predictions to FiftyOne detection:
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convert-predictions-to-fiftyone-detection_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Convert predictions to FiftyOne detection:
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1744,9 +1829,7 @@
 
 
 <h1 id="fiftyone-utilities">Fiftyone Utilities<a class="headerlink" href="#fiftyone-utilities" title="Permanent link">&para;</a></h1>
-<ul>
-<li>Explore COCO dataset via FiftyOne app:</li>
-</ul>
+<h2 id="explore-coco-dataset-via-fiftyone-app">Explore COCO dataset via FiftyOne app<a class="headerlink" href="#explore-coco-dataset-via-fiftyone-app" title="Permanent link">&para;</a></h2>
 <p>Supported version: <code>pip install fiftyone&gt;=0.14.2&lt;0.15.0</code></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.fiftyone</span><span class="w"> </span><span class="kn">import</span> <span class="n">launch_fiftyone_app</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -1756,28 +1839,47 @@
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># close fiftyone app:</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </span></code></pre></div>
-<ul>
-<li>Convert predictions to FiftyOne detection:</li>
-</ul>
+<h2 id="convert-predictions-to-fiftyone-detection">Convert predictions to FiftyOne detection:<a class="headerlink" href="#convert-predictions-to-fiftyone-detection" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sahi</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_sliced_prediction</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># perform sliced prediction</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">result</span> <span class="o">=</span> <span class="n">get_sliced_prediction</span><span class="p">(</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">image</span><span class="p">,</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">detection_model</span><span class="p">,</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">slice_height</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">slice_width</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">overlap_height_ratio</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="n">overlap_width_ratio</span> <span class="o">=</span> <span class="mf">0.2</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">)</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="c1"># convert detections into fiftyone detection format</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="n">fiftyone_detections</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">to_fiftyone_detections</span><span class="p">()</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">image</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># Fiftyone Utilities</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="o">-</span> <span class="n">Explore</span> <span class="n">COCO</span> <span class="n">dataset</span> <span class="n">via</span> <span class="n">FiftyOne</span> <span class="n">app</span><span class="p">:</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">Supported</span> <span class="n">version</span><span class="p">:</span> <span class="err">`</span><span class="n">pip</span> <span class="n">install</span> <span class="n">fiftyone</span><span class="o">&gt;=</span><span class="mf">0.14.2</span><span class="o">&lt;</span><span class="mf">0.15.0</span><span class="err">`</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="err">```</span><span class="n">python</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.fiftyone</span><span class="w"> </span><span class="kn">import</span> <span class="n">launch_fiftyone_app</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="c1"># launch fiftyone app:</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="n">session</span> <span class="o">=</span> <span class="n">launch_fiftyone_app</span><span class="p">(</span><span class="n">coco_image_dir</span><span class="p">,</span> <span class="n">coco_json_path</span><span class="p">)</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="c1"># close fiftyone app:</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="n">session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span></code></pre></div>
+<h2 id="convert-predictions-to-fiftyone-detection_1">Convert predictions to FiftyOne detection:<a class="headerlink" href="#convert-predictions-to-fiftyone-detection_1" title="Permanent link">&para;</a></h2>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sahi</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_sliced_prediction</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># perform sliced prediction</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">result</span> <span class="o">=</span> <span class="n">get_sliced_prediction</span><span class="p">(</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">image</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">detection_model</span><span class="p">,</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">slice_height</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">slice_width</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">overlap_height_ratio</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">overlap_width_ratio</span> <span class="o">=</span> <span class="mf">0.2</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="p">)</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="c1"># convert detections into fiftyone detection format</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="n">fiftyone_detections</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">to_fiftyone_detections</span><span class="p">()</span>
 </span></code></pre></div>
 <ul>
 <li>Explore detection results in Fiftyone UI:</li>
 </ul>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sahi<span class="w"> </span>coco<span class="w"> </span>fiftyone<span class="w"> </span>--image_dir<span class="w"> </span>dir/to/images<span class="w"> </span>--dataset_json_path<span class="w"> </span>dataset.json<span class="w"> </span>cocoresult1.json<span class="w"> </span>cocoresult2.json
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sahi<span class="w"> </span>coco<span class="w"> </span>fiftyone<span class="w"> </span>--image_dir<span class="w"> </span>dir/to/images<span class="w"> </span>--dataset_json_path<span class="w"> </span>dataset.json<span class="w"> </span>cocoresult1.json<span class="w"> </span>cocoresult2.json
 </span></code></pre></div>
 <p>will open a FiftyOne app that visualizes the given dataset and 2 detection results.</p>
 <p>Specify IOU threshold for FP/TP by <code>--iou_threshold 0.5</code> argument</p>

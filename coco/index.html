@@ -1054,6 +1054,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1100,7 +1104,7 @@
   
   
   <span class="md-ellipsis">
-    BaseModel
+    Base Model
     
   </span>
   
@@ -1123,7 +1127,7 @@
   
   
   <span class="md-ellipsis">
-    UltralyticsModel
+    Ultralytics Models
     
   </span>
   
@@ -1146,7 +1150,53 @@
   
   
   <span class="md-ellipsis">
-    Yolov5Model
+    YOLOv5 Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/yoloe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    YOLOE Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/yolo-world/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    YoloWorld Model
     
   </span>
   
@@ -1169,7 +1219,7 @@
   
   
   <span class="md-ellipsis">
-    MmdetModel
+    Mmdet Model
     
   </span>
   
@@ -1192,7 +1242,7 @@
   
   
   <span class="md-ellipsis">
-    Detectron2Model
+    Detectron2 Model
     
   </span>
   
@@ -1215,7 +1265,7 @@
   
   
   <span class="md-ellipsis">
-    HuggingfaceModel
+    Huggingface Model
     
   </span>
   
@@ -1238,7 +1288,7 @@
   
   
   <span class="md-ellipsis">
-    TorchvisionModel
+    Torchvision Model
     
   </span>
   
@@ -1261,7 +1311,7 @@
   
   
   <span class="md-ellipsis">
-    RTDETRModel
+    RTDETR Model
     
   </span>
   
@@ -1284,7 +1334,7 @@
   
   
   <span class="md-ellipsis">
-    RoboflowModel
+    Roboflow Model
     
   </span>
   
@@ -1749,7 +1799,7 @@
 <big><b>COCO dataset creation:</b></big>
 </summary>
 
-- import required classes:
+## import required classes
 
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.coco</span><span class="w"> </span><span class="kn">import</span> <span class="n">Coco</span><span class="p">,</span> <span class="n">CocoCategory</span><span class="p">,</span> <span class="n">CocoImage</span><span class="p">,</span> <span class="n">CocoAnnotation</span>
 </span></code></pre></div>
@@ -1765,12 +1815,12 @@
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">coco</span><span class="o">.</span><span class="n">add_category</span><span class="p">(</span><span class="n">CocoCategory</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;vehicle&#39;</span><span class="p">))</span>
 </span></code></pre></div>
 
-- create a coco image:
+## create a coco image
 
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">coco_image</span> <span class="o">=</span> <span class="n">CocoImage</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;image1.jpg&quot;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">1080</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1920</span><span class="p">)</span>
 </span></code></pre></div>
 
-- add annotations to coco image:
+## add annotations to coco image
 
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">coco_image</span><span class="o">.</span><span class="n">add_annotation</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>  <span class="n">CocoAnnotation</span><span class="p">(</span>
@@ -1788,7 +1838,7 @@
 </span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="p">)</span>
 </span></code></pre></div>
 
-- add predictions to coco image:
+## Add predictions to coco image
 
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">coco_image</span><span class="o">.</span><span class="n">add_prediction</span><span class="p">(</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  <span class="n">CocoPrediction</span><span class="p">(</span>
@@ -1808,24 +1858,24 @@
 </span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="p">)</span>
 </span></code></pre></div>
 
-- add coco image to Coco object:
+## Add coco image to Coco object
 
 <div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">coco</span><span class="o">.</span><span class="n">add_image</span><span class="p">(</span><span class="n">coco_image</span><span class="p">)</span>
 </span></code></pre></div>
 
-- after adding all images, convert coco object to coco json:
+### After adding all images, convert coco object to coco json
 
 <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">coco_json</span> <span class="o">=</span> <span class="n">coco</span><span class="o">.</span><span class="n">json</span>
 </span></code></pre></div>
 
-- you can export it as json file:
+### You can export it as json file:
 
 <div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.file</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_json</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">save_json</span><span class="p">(</span><span class="n">coco_json</span><span class="p">,</span> <span class="s2">&quot;coco_dataset.json&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 
-- you can also export prediction array in coco prediction format and save it as json :
+### You can also export prediction array in coco prediction format and save it as json :
 
 <div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sahi.utils.file</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_json</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
@@ -1833,7 +1883,7 @@
 </span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">save_json</span> <span class="o">=</span> <span class="n">save_json</span><span class="p">(</span><span class="n">predictions_array</span><span class="p">,</span> <span class="s2">&quot;coco_predictions.json&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 
-- this prediction array can be used to get standard coco metrics for the predictions using official pycocotool api :
+### This prediction array can be used to get standard coco metrics for the predictions using official pycocotool api :
 
 <div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># note:- pycocotools need to be installed separately</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pycocotools.cocoeval</span><span class="w"> </span><span class="kn">import</span> <span class="n">COCOeval</span>
