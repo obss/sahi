@@ -1,5 +1,7 @@
 # Slicing
 
+# Slicing
+
 ::: sahi.slicing
 
 ## Slicing Utilities
