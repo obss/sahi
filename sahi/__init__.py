@@ -6,7 +6,6 @@ try:
 except importlib_metadata.PackageNotFoundError:
     __version__ = "development"
 
-
 from sahi.annotation import BoundingBox, Category, Mask
 from sahi.auto_model import AutoDetectionModel
 from sahi.models.base import DetectionModel
