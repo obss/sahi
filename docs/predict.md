@@ -1,6 +1,6 @@
 # Prediction Utilities
 
-- Sliced inference:
+## Sliced inference
 
 ```python
 from sahi.predict import get_sliced_prediction
@@ -11,6 +11,10 @@ detection_model = AutoDetectionModel.from_pretrained(model_type='mmdet',...) # f
 detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',...) # for YOLOv8/YOLO11/YOLO12 models
 detection_model = AutoDetectionModel.from_pretrained(model_type='huggingface',...) # for HuggingFace detection models
 detection_model = AutoDetectionModel.from_pretrained(model_type='torchvision',...) # for Torchvision detection models
+detection_model = AutoDetectionModel.from_pretrained(model_type='rtdetr',...) # for RT-DETR models
+detection_model = AutoDetectionModel.from_pretrained(model_type='yoloe',...) # for YOLOE models
+detection_model = AutoDetectionModel.from_pretrained(model_type='yolov5',...) # for YOLOv5 models
+detection_model = AutoDetectionModel.from_pretrained(model_type='yolo-world',...) # for YOLOWorld models
 
 # get sliced prediction result
 result = get_sliced_prediction(
@@ -24,7 +28,7 @@ result = get_sliced_prediction(
 
 ```
 
-- Standard inference:
+## Standard inference
 
 ```python
 from sahi.predict import get_prediction
@@ -41,7 +45,7 @@ result = get_prediction(
 
 ```
 
-- Batch inference:
+## Batch inference
 
 ```python
 from sahi.predict import predict
@@ -70,7 +74,7 @@ result = predict(
 )
 ```
 
-### Progress-Bar
+## Progress-Bar
 
 Two options were added to control and receive progress
 updates when running sliced inference over many slices:
@@ -102,15 +106,11 @@ result = get_sliced_prediction(
 )
 ```
 
-Notes
------
+!!! tip "Notes"
+    - `progress_bar` and `progress_callback` can be used together. When both are provided, the tqdm bar will display and the callback will be called after each slice group is processed.
+    - The `progress_callback` is called with 1-based indices (i.e. first call will be `(1, total)`).
 
-- `progress_bar` and `progress_callback` can be used together. When both are provided, the tqdm bar will display and the callback will be called after each slice group is processed.
-- The `progress_callback` is called with 1-based indices (i.e. first call will be `(1, total)`).
-
-```
-
-- Exclude custom classes on inference:
+## Exclude custom classes on inference
 
 ```python
 from sahi.predict import get_sliced_prediction
@@ -138,7 +138,7 @@ result = get_sliced_prediction(
 
 ```
 
-- Visualization parameters and export formats:
+## Visualization parameters and export formats
 
 ```python
 from sahi.predict import get_prediction
@@ -184,15 +184,14 @@ fiftyone_detections = result.to_fiftyone_detections()
 # For use with FiftyOne: https://github.com/voxel51/fiftyone
 ```
 
-## Interactive Demos and Examples
+!!! tips "Interactive Demos and Examples"
+    Want to see these prediction utilities in action? We have several interactive notebooks that demonstrate different model integrations:
 
-Want to see these prediction utilities in action? We have several interactive notebooks that demonstrate different model integrations:
+    - For YOLOv8/YOLO11/YOLO12 models, explore our [Ultralytics integration notebook](../demo/inference_for_ultralytics.ipynb)
+    - For YOLOv5 models, check out our [YOLOv5 integration notebook](../demo/inference_for_yolov5.ipynb)
+    - For MMDetection models, try our [MMDetection integration notebook](../demo/inference_for_mmdetection.ipynb)
+    - For HuggingFace models, see our [HuggingFace integration notebook](../demo/inference_for_huggingface.ipynb)
+    - For TorchVision models, explore our [TorchVision integration notebook](../demo/inference_for_torchvision.ipynb)
+    - For RT-DETR models, check out our [RT-DETR integration notebook](../demo/inference_for_rtdetr.ipynb)
 
-- For YOLOv8/YOLO11/YOLO12 models, explore our [Ultralytics integration notebook](../demo/inference_for_ultralytics.ipynb)
-- For YOLOv5 models, check out our [YOLOv5 integration notebook](../demo/inference_for_yolov5.ipynb)
-- For MMDetection models, try our [MMDetection integration notebook](../demo/inference_for_mmdetection.ipynb)
-- For HuggingFace models, see our [HuggingFace integration notebook](../demo/inference_for_huggingface.ipynb)
-- For TorchVision models, explore our [TorchVision integration notebook](../demo/inference_for_torchvision.ipynb)
-- For RT-DETR models, check out our [RT-DETR integration notebook](../demo/inference_for_rtdetr.ipynb)
-
-These notebooks provide hands-on examples and allow you to experiment with different parameters and settings.
+    These notebooks provide hands-on examples and allow you to experiment with different parameters and settings.

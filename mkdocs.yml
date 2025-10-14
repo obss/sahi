@@ -70,6 +70,8 @@ nav:
           - models/base.md
           - models/ultralytics.md
           - models/yolov5.md
+          - models/yoloe.md
+          - models/yolo-world.md
           - models/mmdet.md
           - models/detectron2.md
           - models/huggingface.md
