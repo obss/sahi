@@ -56,7 +56,7 @@ def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_
 def get_prediction(
     image,
     detection_model,
-    shift_amount: list = [0, 0],
+    shift_amount: list | None = None,
     full_shape=None,
     postprocess: PostprocessPredictions | None = None,
     verbose: int = 0,
@@ -94,16 +94,20 @@ def get_prediction(
     # read image as pil
     image_as_pil = read_image_as_pil(image)
     # get prediction
-    time_start = time.time()
+    # ensure shift_amount is a list instance (avoid mutable default arg)
+    if shift_amount is None:
+        shift_amount = [0, 0]
+
+    time_start = time.perf_counter()
     detection_model.perform_inference(np.ascontiguousarray(image_as_pil))
-    time_end = time.time() - time_start
+    time_end = time.perf_counter() - time_start
     durations_in_seconds["prediction"] = time_end
 
     if full_shape is None:
         full_shape = [image_as_pil.height, image_as_pil.width]
 
     # process prediction
-    time_start = time.time()
+    time_start = time.perf_counter()
     # works only with 1 batch
     detection_model.convert_original_predictions(
         shift_amount=shift_amount,
@@ -116,7 +120,7 @@ def get_prediction(
     if postprocess is not None:
         object_prediction_list = postprocess(object_prediction_list)
 
-    time_end = time.time() - time_start
+    time_end = time.perf_counter() - time_start
     durations_in_seconds["postprocess"] = time_end
 
     if verbose == 1:
@@ -223,7 +227,7 @@ def get_sliced_prediction(
     # currently only 1 batch supported
     num_batch = 1
     # create slices from full image
-    time_start = time.time()
+    time_start = time.perf_counter()
     slice_image_result = slice_image(
         image=image,
         output_file_name=slice_export_prefix,
@@ -237,7 +241,7 @@ def get_sliced_prediction(
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
     num_slices = len(slice_image_result)
-    time_end = time.time() - time_start
+    time_end = time.perf_counter() - time_start
     durations_in_seconds["slice"] = time_end
 
     if isinstance(detection_model, UltralyticsDetectionModel) and detection_model.is_obb:
@@ -258,7 +262,7 @@ def get_sliced_prediction(
     )
 
     postprocess_time = 0
-    time_start = time.time()
+    time_start = time.perf_counter()
     # create prediction input
     num_group = int(num_slices / num_batch)
     if verbose == 1 or verbose == 2:
@@ -327,7 +331,7 @@ def get_sliced_prediction(
         object_prediction_list = postprocess(object_prediction_list)
         postprocess_time += time.time() - postprocess_time_start
 
-    time_end = time.time() - time_start
+    time_end = time.perf_counter() - time_start
     durations_in_seconds["prediction"] = time_end - postprocess_time
     durations_in_seconds["postprocess"] = postprocess_time
 
