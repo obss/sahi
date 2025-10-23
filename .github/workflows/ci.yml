@@ -72,7 +72,17 @@ jobs:
       - name: Test with python ${{ matrix.python-version }}
         run: |
           # Exclude MMDet tests which run in a separate workflow
-          uv run pytest --capture=no -n auto -k "not (mmdet or test_get_prediction_mmdet or test_get_sliced_prediction_mmdet or test_mmdet_yolox_tiny_prediction)"
+          uv run pytest --capture=no -n auto --cov=sahi --cov-report=xml --cov-report=term-missing -k "not (mmdet or test_get_prediction_mmdet or test_get_sliced_prediction_mmdet or test_mmdet_yolox_tiny_prediction)"
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Test SAHI CLI (without MMDet)
         run: |
           uv run sahi predict --no_sliced_prediction --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320

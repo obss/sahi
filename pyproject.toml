@@ -266,6 +266,34 @@ minversion = "6.0"
 addopts = ["--import-mode=importlib", "--no-header"]
 pythonpath = ["."]
 
+[tool.coverage.run]
+source = ["sahi"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+    "sahi/scripts/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+    "@abstractmethod",
+    "@abc.abstractmethod",
+]
+precision = 2
+show_missing = true
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
 [tool.typos.default]
 extend-ignore-identifiers-re = ["fo"]
 

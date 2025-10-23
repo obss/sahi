@@ -1,0 +1,43 @@
+codecov:
+  require_ci_to_pass: true
+  notify:
+    wait_for_ci: true
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        if_ci_failed: error
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+        if_ci_failed: error
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+ignore:
+  - "tests/"
+  - "scripts/"
+  - "demo/"
+  - "docs/"
+  - "sahi/scripts/"
+  - "**/__pycache__"
+  - "**/*.ipynb"
+  - "setup.py"
+
+flags:
+  unittests:
+    paths:
+      - sahi/
+    carryforward: true

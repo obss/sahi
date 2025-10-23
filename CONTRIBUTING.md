@@ -64,8 +64,13 @@ uv run pytest
 uv run pytest tests/test_predict.py
 
 # Run with coverage
-uv run pytest --cov=sahi
+uv run pytest --cov=sahi --cov-report=term-missing
+
+# Generate HTML coverage report
+uv run pytest --cov=sahi --cov-report=html
 ```
+
+For more details on code coverage, see the [Coverage Guide](docs/coverage.md).
 
 ## Submitting Pull Requests
 
