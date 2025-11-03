@@ -1,4 +1,14 @@
-# CLI Commands
+## CLI commands
+
+This page documents the SAHI CLI (the program exposed by `sahi/cli.py`).
+
+### Top-level commands
+
+- `predict` — run sliced/standard prediction pipeline and export results (images, COCO json, pickles)
+- `predict-fiftyone` — run prediction and open results in FiftyOne
+- `coco` — subgroup for COCO-format utilities (evaluate, analyse, convert, slice)
+- `version` — print SAHI package version
+- `env` — print environment and dependency versions
 
 SAHI provides a comprehensive command-line interface for object detection tasks. This guide covers all available commands with detailed examples and options.
 
