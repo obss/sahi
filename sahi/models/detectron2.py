@@ -52,8 +52,7 @@ class Detectron2DetectionModel(DetectionModel):
                 category_names = metadata.thing_classes
                 self.category_names = category_names
                 self.category_mapping = {
-                    str(ind): category_name
-                    for ind, category_name in enumerate(self.category_names)
+                    str(ind): category_name for ind, category_name in enumerate(self.category_names)
                 }
             except Exception as e:
                 logger.warning(e)
@@ -62,12 +61,9 @@ class Detectron2DetectionModel(DetectionModel):
                     num_categories = cfg.MODEL.RETINANET.NUM_CLASSES
                 else:  # fasterrcnn/maskrcnn etc
                     num_categories = cfg.MODEL.ROI_HEADS.NUM_CLASSES
-                self.category_names = [
-                    str(category_id) for category_id in range(num_categories)
-                ]
+                self.category_names = [str(category_id) for category_id in range(num_categories)]
                 self.category_mapping = {
-                    str(ind): category_name
-                    for ind, category_name in enumerate(self.category_names)
+                    str(ind): category_name for ind, category_name in enumerate(self.category_names)
                 }
         else:
             self.category_names = list(self.category_mapping.values())
@@ -150,11 +146,7 @@ class Detectron2DetectionModel(DetectionModel):
                 ObjectPrediction(
                     bbox=box.tolist() if mask is None else None,
                     segmentation=(
-                        get_coco_segmentation_from_bool_mask(
-                            mask.detach().cpu().numpy()
-                        )
-                        if mask is not None
-                        else None
+                        get_coco_segmentation_from_bool_mask(mask.detach().cpu().numpy()) if mask is not None else None
                     ),
                     category_id=category_id.item(),
                     category_name=self.category_mapping[str(category_id.item())],
@@ -162,19 +154,15 @@ class Detectron2DetectionModel(DetectionModel):
                     score=score.item(),
                     full_shape=full_shape,
                 )
-                for box, score, category_id, mask in zip(
-                    boxes, scores, category_ids, masks
-                )
+                for box, score, category_id, mask in zip(boxes, scores, category_ids, masks)
                 if mask is None
                 or (
                     (
-                        segmentation := get_coco_segmentation_from_bool_mask(
-                            mask.detach().cpu().numpy()
-                        )
+                        (segmentation := get_coco_segmentation_from_bool_mask(mask.detach().cpu().numpy()))
+                        and len(segmentation) > 0
                     )
-                    and len(segmentation) > 0
+                    and get_bbox_from_bool_mask(mask.detach().cpu().numpy()) is not None
                 )
-                and get_bbox_from_bool_mask(mask.detach().cpu().numpy()) is not None
             ]
         else:
             object_prediction_list = [
