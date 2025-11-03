@@ -6,6 +6,8 @@ from sahi.models.base import DetectionModel
 from sahi.utils.file import import_model_class
 
 MODEL_TYPE_TO_MODEL_CLASS_NAME = {
+    "yolov8openvino": "Yolov8OpenvinoDetectionModel",
+    "yolov8": "Yolov8DetectionModel",
     "ultralytics": "UltralyticsDetectionModel",
     "rtdetr": "RTDetrDetectionModel",
     "mmdet": "MmdetDetectionModel",
