@@ -175,6 +175,7 @@ class PredictionResult:
         hide_labels: bool = False,
         hide_conf: bool = False,
         file_name: str = "prediction_visual",
+        black_background: bool = False,
     ):
         """
 
@@ -185,6 +186,7 @@ class PredictionResult:
             hide_labels: hide labels
             hide_conf: hide confidence
             file_name: saving name
+            black_background: if True, overlay predictions on black background instead of original image
         Returns:
 
         """
@@ -201,6 +203,7 @@ class PredictionResult:
             output_dir=export_dir,
             file_name=file_name,
             export_format="png",
+            black_background=black_background,
         )
 
     def to_coco_annotations(self):

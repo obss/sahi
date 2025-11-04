@@ -478,6 +478,7 @@ def visualize_object_predictions(
     output_dir: str | None = None,
     file_name: str | None = "prediction_visual",
     export_format: str | None = "png",
+    black_background: bool = False,
 ):
     """Visualizes prediction category names, bounding boxes over the source image and exports it to output folder.
 
@@ -492,10 +493,14 @@ def visualize_object_predictions(
         output_dir: directory for resulting visualization to be exported
         file_name: exported file will be saved as: output_dir+file_name+".png"
         export_format: can be specified as 'jpg' or 'png'
+        black_background: if True, overlay predictions on black background instead of original image
     """
     elapsed_time = time.time()
-    # deepcopy image so that original is not altered
-    image = copy.deepcopy(image)
+    # deepcopy image so that original is not altered, or create black background
+    if black_background:
+        image = np.zeros_like(image)
+    else:
+        image = copy.deepcopy(image)
     # select predefined classwise color palette if not specified
     if color is None:
         colors = Colors()

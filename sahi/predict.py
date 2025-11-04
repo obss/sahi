@@ -429,6 +429,7 @@ def predict(
     visual_hide_labels: bool = False,
     visual_hide_conf: bool = False,
     visual_export_format: str = "png",
+    visual_black_background: bool = False,
     verbose: int = 1,
     return_dict: bool = False,
     force_postprocess_type: bool = False,
@@ -523,6 +524,9 @@ def predict(
             produce smaller files. This parameter is ignored when `novisual` is True.
             Exported visuals are written under the run directory: `project/name/visuals`
             (and `project/name/visuals_with_gt` when ground-truth overlays are created).
+        visual_black_background: bool, optional
+            If True, overlay predictions on a black background instead of the original image.
+            Default is False.
         verbose: int
             0: no print
             1: print slice/prediction durations, number of slices
@@ -761,6 +765,7 @@ def predict(
                 output_dir=output_dir if not source_is_video else None,
                 file_name=filename_without_extension,
                 export_format=visual_export_format,
+                black_background=visual_black_background,
             )
             if not novisual and source_is_video:  # export video
                 if output_video_writer is None:
