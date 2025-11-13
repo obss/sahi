@@ -26,7 +26,7 @@ class YOLOEDetectionModel(UltralyticsDetectionModel):
             - yoloe-11s-seg-pf.pt, yoloe-11m-seg-pf.pt, yoloe-11l-seg-pf.pt
             - yoloe-v8s-seg-pf.pt, yoloe-v8m-seg-pf.pt, yoloe-v8l-seg-pf.pt
 
-    !!! example "Usage with text prompts"
+    !!! example "Usage Text Prompts"
         ```python
         from sahi import AutoDetectionModel
 
