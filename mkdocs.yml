@@ -56,6 +56,7 @@ nav:
       - Inference RTDETR: notebooks/inference_for_rtdetr.ipynb
       - Inference Roboflow: notebooks/inference_for_roboflow.ipynb
       - Inference TorchVision: notebooks/inference_for_torchvision.ipynb
+      - Inference YOLOE: notebooks/inference_for_ultralytics_yoloe.ipynb
       - Slicing: notebooks/slicing.ipynb
 
   - Code Reference:
