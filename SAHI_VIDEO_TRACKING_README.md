@@ -5,10 +5,9 @@ Enhanced SAHI implementation combining tiled inference with Ultralytics tracking
 ## Features
 
 - **SAHI Tiling**: 1024x1024 tiles with 33% overlap for detecting small objects in large images/videos
-- **Batched Inference**: Process multiple tiles simultaneously for faster inference
-- **Object Tracking**: Inter-frame tracking using Ultralytics ByteTrack/BoTSORT
+- **Batched Inference**: Process 16 tiles simultaneously for faster inference
+- **Object Tracking**: Inter-frame tracking using Ultralytics BoTSORT/ByteTrack (BoTSORT default)
 - **Mask Extraction**: Automatic extraction and isolation of segmented objects with binary masks
-- **Empty Frame Detection**: Automatically saves frames where nothing was detected
 - **Video Support**: Native video processing with frame-by-frame tracking
 - **Optional Output Video**: Output video disabled by default (can be enabled with --save-output-video)
 
@@ -23,28 +22,28 @@ pip install ultralytics sahi opencv-python numpy pillow
 ### Command Line
 
 ```bash
-# Process video with tracking (default: no output video, saves empty frames)
+# Process video with tracking (default: BoTSORT tracker, batch size 16, no output video)
 python sahi_video_tracking_segmentation.py input_video.mp4 \
     --model yolo11n-seg.pt \
     --slice-size 1024 \
     --overlap 0.33 \
-    --batch-size 4 \
-    --tracker bytetrack.yaml
+    --batch-size 16 \
+    --tracker botsort.yaml
 
 # Process video with output video enabled
 python sahi_video_tracking_segmentation.py input_video.mp4 \
     --model yolo11n-seg.pt \
     --save-output-video
 
-# Process without saving empty frames
+# Use ByteTrack instead of BoTSORT
 python sahi_video_tracking_segmentation.py input_video.mp4 \
     --model yolo11n-seg.pt \
-    --no-empty-frames
+    --tracker bytetrack.yaml
 
 # Process image with batched inference
 python sahi_video_tracking_segmentation.py input_image.jpg \
     --model yolo11n-seg.pt \
-    --batch-size 8
+    --batch-size 16
 ```
 
 ### Python API
@@ -60,16 +59,15 @@ sahi_tracker = SAHITrackedSegmentation(
     slice_height=1024,
     slice_width=1024,
     overlap_ratio=0.33,  # 33% overlap (default)
-    batch_size=4,
-    tracker="bytetrack.yaml",
+    batch_size=16,       # Process 16 tiles at once (default)
+    tracker="botsort.yaml",  # BoTSORT tracker (default)
 )
 
-# Process video (default: no output video, saves empty frames)
+# Process video (default: no output video)
 sahi_tracker.process_video(
     video_path="input_video.mp4",
     output_dir=Path("output"),
     save_isolated=True,         # Save isolated objects with binary masks
-    save_empty_frames=True,     # Save frames where nothing was detected
     save_output_video=False,    # Don't save output video (default)
 )
 
@@ -163,7 +161,8 @@ sahi_tracker = SAHITrackedSegmentation(
     slice_height=1024,
     slice_width=1024,
     overlap_ratio=0.33,  # 33% overlap
-    batch_size=4,
+    batch_size=16,       # Process 16 tiles at once
+    tracker="botsort.yaml",  # BoTSORT tracker
 )
 
 sahi_tracker.process_video("input.mp4", output_dir="output")
@@ -171,11 +170,10 @@ sahi_tracker.process_video("input.mp4", output_dir="output")
 
 **Advantages:**
 - ✅ SAHI tiling (detects small objects)
-- ✅ Batched inference (4-8x faster)
-- ✅ Object tracking (track IDs, motion history)
+- ✅ Batched inference (16 tiles at once, 4-8x faster)
+- ✅ Object tracking (track IDs, motion history) with BoTSORT
 - ✅ Automatic video processing
 - ✅ Isolated object extraction with track IDs and binary masks
-- ✅ Automatic detection and saving of empty frames
 - ✅ Optional output video (disabled by default)
 
 ## Output Structure
@@ -183,7 +181,7 @@ sahi_tracker.process_video("input.mp4", output_dir="output")
 ```
 output/
 ├── video_name_tracked.mp4                  # Processed video with tracking (optional, use --save-output-video)
-├── isolated_objects/                       # Isolated objects per frame
+├── isolated_objects/                       # Isolated objects per frame (only frames with detections)
 │   ├── video_name_frame_000000/
 │   │   ├── id1_person_score0.85.png       # RGB isolated object (Track ID: 1)
 │   │   ├── id1_person_mask.png            # Binary mask for Track ID: 1
@@ -197,13 +195,11 @@ output/
 │   │   ├── id2_car_score0.91.png          # Same car (ID:2)
 │   │   └── id2_car_mask.png
 │   └── ...
-├── empty_frames/                           # Frames where nothing was detected
-│   ├── video_name_frame_000005.jpg
-│   ├── video_name_frame_000012.jpg
-│   └── ...
 └── visualizations/                         # Individual frame visualizations (optional)
     ├── video_name_frame_000000.jpg
     └── ...
+
+Note: Frames with no detections will have no corresponding directory in isolated_objects/
 ```
 
 ## Configuration Options
@@ -222,24 +218,24 @@ overlap_ratio=0.33     # 33% overlap between tiles (default)
 
 ### Batch Size
 ```python
-batch_size=4           # Number of tiles to process simultaneously
+batch_size=16          # Number of tiles to process simultaneously (default)
 ```
 
 **Guidelines:**
-- GPU 6GB: batch_size=2-4
-- GPU 12GB: batch_size=4-8
-- GPU 24GB: batch_size=8-16
-- CPU: batch_size=1
+- GPU 6GB: batch_size=4-8
+- GPU 12GB: batch_size=8-16
+- GPU 24GB: batch_size=16-32
+- CPU: batch_size=1-2
 
 ### Tracking
 ```python
+tracker="botsort.yaml"      # More robust, better for occlusions (default)
 tracker="bytetrack.yaml"    # Fast, good for most cases
-tracker="botsort.yaml"      # More robust, better for occlusions
 ```
 
 **Tracker Comparison:**
+- **BoTSORT** (default): More robust, handles occlusions better, good for crowded scenes
 - **ByteTrack**: Faster, simpler, good for clear scenes
-- **BoTSORT**: Slower, handles occlusions better, good for crowded scenes
 
 ## Performance Benchmarks
 
@@ -267,7 +263,8 @@ sahi_tracker = SAHITrackedSegmentation(
     slice_height=1024,
     slice_width=1024,
     overlap_ratio=0.33,
-    batch_size=4,
+    batch_size=16,
+    tracker="botsort.yaml",
 )
 
 cap = cv2.VideoCapture("input.mp4")
@@ -371,8 +368,8 @@ model_path="yolo11n-seg.pt"  # instead of yolo11x-seg.pt
 
 ### Slow Processing
 ```python
-# Increase batch size
-batch_size=8
+# Increase batch size (if GPU memory allows)
+batch_size=32
 
 # Reduce overlap
 overlap_ratio=0.2
@@ -386,8 +383,8 @@ frame_skip_interval=2  # Process every 3rd frame
 
 ### Poor Tracking
 ```python
-# Use more robust tracker
-tracker="botsort.yaml"
+# BoTSORT is already default, but try ByteTrack for simpler scenes
+tracker="bytetrack.yaml"
 
 # Adjust IoU threshold
 iou_threshold=0.5  # Stricter matching

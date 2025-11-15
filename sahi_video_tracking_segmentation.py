@@ -31,10 +31,10 @@ class TrackingConfig:
     slice_height: int = 1024
     slice_width: int = 1024
     overlap_ratio: float = 0.33  # 33% overlap
-    batch_size: int = 4  # Number of tiles to process simultaneously
+    batch_size: int = 16  # Number of tiles to process simultaneously
     conf_threshold: float = 0.25
     iou_threshold: float = 0.7
-    tracker: str = "bytetrack.yaml"  # or "botsort.yaml"
+    tracker: str = "botsort.yaml"  # or "bytetrack.yaml"
 
 
 class SAHITrackedSegmentation:
@@ -57,8 +57,8 @@ class SAHITrackedSegmentation:
         slice_height: int = 1024,
         slice_width: int = 1024,
         overlap_ratio: float = 0.33,
-        batch_size: int = 4,
-        tracker: str = "bytetrack.yaml",
+        batch_size: int = 16,
+        tracker: str = "botsort.yaml",
     ):
         """
         Initialize SAHI Tracked Segmentation.
@@ -71,8 +71,8 @@ class SAHITrackedSegmentation:
             slice_height: Height of each tile
             slice_width: Width of each tile
             overlap_ratio: Overlap ratio between tiles (0.33 = 33%)
-            batch_size: Number of tiles to process in parallel
-            tracker: Tracker configuration file ("bytetrack.yaml" or "botsort.yaml")
+            batch_size: Number of tiles to process in parallel (default: 16)
+            tracker: Tracker configuration file (default: "botsort.yaml")
         """
         self.model = YOLO(model_path)
         self.device = device
@@ -269,7 +269,6 @@ class SAHITrackedSegmentation:
         frame_name: Optional[str] = None,
         save_isolated: bool = True,
         save_visualization: bool = False,
-        save_empty_frames: bool = True,
     ) -> Dict:
         """
         Process a single frame with SAHI tiling, batched inference, and tracking.
@@ -281,7 +280,6 @@ class SAHITrackedSegmentation:
             frame_name: Name for saved files
             save_isolated: Whether to save isolated objects
             save_visualization: Whether to save visualization
-            save_empty_frames: Whether to save frames where nothing was detected
 
         Returns:
             Dictionary with tracking results and statistics
@@ -381,14 +379,6 @@ class SAHITrackedSegmentation:
             tracked_objects = []
             tracking_result = None
 
-            # Save frame with no detections
-            if save_empty_frames and output_dir:
-                empty_frames_dir = output_dir / "empty_frames"
-                empty_frames_dir.mkdir(parents=True, exist_ok=True)
-
-                empty_frame_path = empty_frames_dir / f"{frame_name}.jpg"
-                cv2.imwrite(str(empty_frame_path), frame)
-
         # Step 5: Save visualization
         if save_visualization and output_dir and tracking_result is not None:
             vis_dir = output_dir / "visualizations"
@@ -413,7 +403,6 @@ class SAHITrackedSegmentation:
         save_output_video: bool = False,
         save_isolated: bool = True,
         save_visualization: bool = False,
-        save_empty_frames: bool = True,
         view_video: bool = False,
     ) -> None:
         """
@@ -426,7 +415,6 @@ class SAHITrackedSegmentation:
             save_output_video: Whether to save processed video (default: False)
             save_isolated: Whether to save isolated objects
             save_visualization: Whether to save frame visualizations
-            save_empty_frames: Whether to save frames where nothing was detected
             view_video: Whether to display video in real-time
         """
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -486,7 +474,6 @@ class SAHITrackedSegmentation:
                     frame_name=frame_name,
                     save_isolated=save_isolated,
                     save_visualization=save_visualization,
-                    save_empty_frames=save_empty_frames,
                 )
 
                 total_objects += result['num_objects']
@@ -627,8 +614,8 @@ def main():
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=4,
-        help="Number of tiles to process simultaneously (default: 4)",
+        default=16,
+        help="Number of tiles to process simultaneously (default: 16)",
     )
     parser.add_argument(
         "--conf-threshold",
@@ -651,9 +638,9 @@ def main():
     parser.add_argument(
         "--tracker",
         type=str,
-        default="bytetrack.yaml",
+        default="botsort.yaml",
         choices=["bytetrack.yaml", "botsort.yaml"],
-        help="Tracker type (default: bytetrack.yaml)",
+        help="Tracker type (default: botsort.yaml)",
     )
     parser.add_argument(
         "--frame-skip",
@@ -675,11 +662,6 @@ def main():
         "--no-visualization",
         action="store_true",
         help="Don't save visualizations",
-    )
-    parser.add_argument(
-        "--no-empty-frames",
-        action="store_true",
-        help="Don't save frames where nothing was detected",
     )
     parser.add_argument(
         "--view-video",
@@ -720,7 +702,6 @@ def main():
             save_output_video=args.save_output_video,
             save_isolated=not args.no_isolated,
             save_visualization=not args.no_visualization,
-            save_empty_frames=not args.no_empty_frames,
             view_video=args.view_video,
         )
     else:
