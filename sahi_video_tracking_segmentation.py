@@ -269,6 +269,7 @@ class SAHITrackedSegmentation:
         frame_name: Optional[str] = None,
         save_isolated: bool = True,
         save_visualization: bool = False,
+        save_empty_frames: bool = True,
     ) -> Dict:
         """
         Process a single frame with SAHI tiling, batched inference, and tracking.
@@ -280,6 +281,7 @@ class SAHITrackedSegmentation:
             frame_name: Name for saved files
             save_isolated: Whether to save isolated objects
             save_visualization: Whether to save visualization
+            save_empty_frames: Whether to save frames where nothing was detected
 
         Returns:
             Dictionary with tracking results and statistics
@@ -379,6 +381,14 @@ class SAHITrackedSegmentation:
             tracked_objects = []
             tracking_result = None
 
+            # Save frame with no detections
+            if save_empty_frames and output_dir:
+                empty_frames_dir = output_dir / "empty_frames"
+                empty_frames_dir.mkdir(parents=True, exist_ok=True)
+
+                empty_frame_path = empty_frames_dir / f"{frame_name}.jpg"
+                cv2.imwrite(str(empty_frame_path), frame)
+
         # Step 5: Save visualization
         if save_visualization and output_dir and tracking_result is not None:
             vis_dir = output_dir / "visualizations"
@@ -400,9 +410,10 @@ class SAHITrackedSegmentation:
         video_path: str,
         output_dir: Path = Path("output"),
         frame_skip_interval: int = 0,
-        save_output_video: bool = True,
+        save_output_video: bool = False,
         save_isolated: bool = True,
         save_visualization: bool = False,
+        save_empty_frames: bool = True,
         view_video: bool = False,
     ) -> None:
         """
@@ -412,9 +423,10 @@ class SAHITrackedSegmentation:
             video_path: Path to input video
             output_dir: Directory to save outputs
             frame_skip_interval: Number of frames to skip (0 = process all)
-            save_output_video: Whether to save processed video
+            save_output_video: Whether to save processed video (default: False)
             save_isolated: Whether to save isolated objects
             save_visualization: Whether to save frame visualizations
+            save_empty_frames: Whether to save frames where nothing was detected
             view_video: Whether to display video in real-time
         """
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -474,6 +486,7 @@ class SAHITrackedSegmentation:
                     frame_name=frame_name,
                     save_isolated=save_isolated,
                     save_visualization=save_visualization,
+                    save_empty_frames=save_empty_frames,
                 )
 
                 total_objects += result['num_objects']
@@ -649,6 +662,11 @@ def main():
         help="Frame skip interval for videos (default: 0 = process all frames)",
     )
     parser.add_argument(
+        "--save-output-video",
+        action="store_true",
+        help="Save output video with tracking visualization",
+    )
+    parser.add_argument(
         "--no-isolated",
         action="store_true",
         help="Don't save isolated objects",
@@ -657,6 +675,11 @@ def main():
         "--no-visualization",
         action="store_true",
         help="Don't save visualizations",
+    )
+    parser.add_argument(
+        "--no-empty-frames",
+        action="store_true",
+        help="Don't save frames where nothing was detected",
     )
     parser.add_argument(
         "--view-video",
@@ -694,9 +717,10 @@ def main():
             video_path=str(input_path),
             output_dir=output_dir,
             frame_skip_interval=args.frame_skip,
-            save_output_video=True,
+            save_output_video=args.save_output_video,
             save_isolated=not args.no_isolated,
             save_visualization=not args.no_visualization,
+            save_empty_frames=not args.no_empty_frames,
             view_video=args.view_video,
         )
     else:

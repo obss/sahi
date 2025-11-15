@@ -4,11 +4,13 @@ Enhanced SAHI implementation combining tiled inference with Ultralytics tracking
 
 ## Features
 
-- **SAHI Tiling**: 1024x1024 tiles with 25% overlap for detecting small objects in large images/videos
+- **SAHI Tiling**: 1024x1024 tiles with 33% overlap for detecting small objects in large images/videos
 - **Batched Inference**: Process multiple tiles simultaneously for faster inference
 - **Object Tracking**: Inter-frame tracking using Ultralytics ByteTrack/BoTSORT
-- **Mask Extraction**: Automatic extraction and isolation of segmented objects
+- **Mask Extraction**: Automatic extraction and isolation of segmented objects with binary masks
+- **Empty Frame Detection**: Automatically saves frames where nothing was detected
 - **Video Support**: Native video processing with frame-by-frame tracking
+- **Optional Output Video**: Output video disabled by default (can be enabled with --save-output-video)
 
 ## Installation
 
@@ -21,13 +23,23 @@ pip install ultralytics sahi opencv-python numpy pillow
 ### Command Line
 
 ```bash
-# Process video with tracking
+# Process video with tracking (default: no output video, saves empty frames)
 python sahi_video_tracking_segmentation.py input_video.mp4 \
     --model yolo11n-seg.pt \
     --slice-size 1024 \
-    --overlap 0.25 \
+    --overlap 0.33 \
     --batch-size 4 \
     --tracker bytetrack.yaml
+
+# Process video with output video enabled
+python sahi_video_tracking_segmentation.py input_video.mp4 \
+    --model yolo11n-seg.pt \
+    --save-output-video
+
+# Process without saving empty frames
+python sahi_video_tracking_segmentation.py input_video.mp4 \
+    --model yolo11n-seg.pt \
+    --no-empty-frames
 
 # Process image with batched inference
 python sahi_video_tracking_segmentation.py input_image.jpg \
@@ -47,17 +59,18 @@ sahi_tracker = SAHITrackedSegmentation(
     device="cuda:0",
     slice_height=1024,
     slice_width=1024,
-    overlap_ratio=0.25,
+    overlap_ratio=0.33,  # 33% overlap (default)
     batch_size=4,
     tracker="bytetrack.yaml",
 )
 
-# Process video
+# Process video (default: no output video, saves empty frames)
 sahi_tracker.process_video(
     video_path="input_video.mp4",
     output_dir=Path("output"),
-    save_isolated=True,
-    save_visualization=True,
+    save_isolated=True,         # Save isolated objects with binary masks
+    save_empty_frames=True,     # Save frames where nothing was detected
+    save_output_video=False,    # Don't save output video (default)
 )
 
 # Process image
@@ -70,7 +83,7 @@ sahi_tracker.process_image(
 
 ## How It Works
 
-### 1. SAHI Tiling (1024x1024 with 25% overlap)
+### 1. SAHI Tiling (1024x1024 with 33% overlap)
 
 ```
 Original Image (4096x4096)
@@ -81,7 +94,7 @@ Original Image (4096x4096)
 │    ┌───────┼──┐                 │
 │    │ Tile2 │  │                 │
 │    └───────┘  │                 │
-│       25% overlap               │
+│       33% overlap               │
 │                                 │
 └─────────────────────────────────┘
 
@@ -149,7 +162,7 @@ sahi_tracker = SAHITrackedSegmentation(
     model_path="yolo11n-seg.pt",
     slice_height=1024,
     slice_width=1024,
-    overlap_ratio=0.25,
+    overlap_ratio=0.33,  # 33% overlap
     batch_size=4,
 )
 
@@ -161,23 +174,34 @@ sahi_tracker.process_video("input.mp4", output_dir="output")
 - ✅ Batched inference (4-8x faster)
 - ✅ Object tracking (track IDs, motion history)
 - ✅ Automatic video processing
-- ✅ Isolated object extraction with track IDs
+- ✅ Isolated object extraction with track IDs and binary masks
+- ✅ Automatic detection and saving of empty frames
+- ✅ Optional output video (disabled by default)
 
 ## Output Structure
 
 ```
 output/
-├── video_name.mp4                          # Processed video with tracking
+├── video_name_tracked.mp4                  # Processed video with tracking (optional, use --save-output-video)
 ├── isolated_objects/                       # Isolated objects per frame
 │   ├── video_name_frame_000000/
-│   │   ├── id1_person_score0.85.png       # Track ID: 1
+│   │   ├── id1_person_score0.85.png       # RGB isolated object (Track ID: 1)
+│   │   ├── id1_person_mask.png            # Binary mask for Track ID: 1
 │   │   ├── id2_car_score0.92.png          # Track ID: 2
-│   │   └── id3_bicycle_score0.78.png      # Track ID: 3
+│   │   ├── id2_car_mask.png               # Binary mask for Track ID: 2
+│   │   ├── id3_bicycle_score0.78.png      # Track ID: 3
+│   │   └── id3_bicycle_mask.png           # Binary mask for Track ID: 3
 │   ├── video_name_frame_000001/
 │   │   ├── id1_person_score0.87.png       # Same person (ID:1)
-│   │   └── id2_car_score0.91.png          # Same car (ID:2)
+│   │   ├── id1_person_mask.png
+│   │   ├── id2_car_score0.91.png          # Same car (ID:2)
+│   │   └── id2_car_mask.png
 │   └── ...
-└── visualizations/                         # Individual frame visualizations
+├── empty_frames/                           # Frames where nothing was detected
+│   ├── video_name_frame_000005.jpg
+│   ├── video_name_frame_000012.jpg
+│   └── ...
+└── visualizations/                         # Individual frame visualizations (optional)
     ├── video_name_frame_000000.jpg
     └── ...
 ```
@@ -188,13 +212,13 @@ output/
 ```python
 slice_height=1024      # Tile height in pixels
 slice_width=1024       # Tile width in pixels
-overlap_ratio=0.25     # 25% overlap between tiles
+overlap_ratio=0.33     # 33% overlap between tiles (default)
 ```
 
 **Guidelines:**
-- Small objects: Use 640x640 tiles with 30% overlap
-- Medium objects: Use 1024x1024 tiles with 25% overlap (default)
-- Large objects: Use 1280x1280 tiles with 20% overlap
+- Small objects: Use 640x640 tiles with 33-40% overlap
+- Medium objects: Use 1024x1024 tiles with 33% overlap (default)
+- Large objects: Use 1280x1280 tiles with 20-25% overlap
 
 ### Batch Size
 ```python
@@ -242,7 +266,7 @@ sahi_tracker = SAHITrackedSegmentation(
     model_path="yolo11n-seg.pt",
     slice_height=1024,
     slice_width=1024,
-    overlap_ratio=0.25,
+    overlap_ratio=0.33,
     batch_size=4,
 )
 
