@@ -1829,7 +1829,7 @@ def merge_from_list(coco_dict_list, desired_name2id=None, verbose=1):
         if not desired_name2id:
             print("'desired_name2id' is not specified, combining all categories.")
 
-    # create desired_name2id by combinin all categories, if desired_name2id is not specified
+    # create desired_name2id by combining all categories, if desired_name2id is not specified
     if desired_name2id is None:
         desired_name2id = {}
         ind = 0
