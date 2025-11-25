@@ -204,8 +204,11 @@ def read_image_as_pil(image: Image.Image | str | np.ndarray, exif_fix: bool = Tr
             else:
                 raise TypeError(f"image with shape: {image_sk.shape[3]} is not supported.")
     elif isinstance(image, np.ndarray):
+        # check if image is in CHW format (Channels, Height, Width)
+        # heuristic: 3 dimensions, first dim (channels) < 5, last dim (width) > 4
         if image.ndim == 3 and image.shape[0] < 5:  # image in CHW
             if image.shape[2] > 4:
+                # convert CHW to HWC (Height, Width, Channels)
                 image = np.transpose(image, (1, 2, 0))
         image_pil = Image.fromarray(image)
     else:
