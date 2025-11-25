@@ -155,7 +155,14 @@ class Detectron2DetectionModel(DetectionModel):
                     full_shape=full_shape,
                 )
                 for box, score, category_id, mask in zip(boxes, scores, category_ids, masks)
-                if mask is None or get_bbox_from_bool_mask(mask.detach().cpu().numpy()) is not None
+                if mask is None
+                or (
+                    (
+                        (segmentation := get_coco_segmentation_from_bool_mask(mask.detach().cpu().numpy()))
+                        and len(segmentation) > 0
+                    )
+                    and get_bbox_from_bool_mask(mask.detach().cpu().numpy()) is not None
+                )
             ]
         else:
             object_prediction_list = [
