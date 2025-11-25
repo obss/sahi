@@ -10,146 +10,321 @@ This page documents the SAHI CLI (the program exposed by `sahi/cli.py`).
 - `version` — print SAHI package version
 - `env` — print environment and dependency versions
 
+SAHI provides a comprehensive command-line interface for object detection tasks. This guide covers all available commands with detailed examples and options.
+
 ## `predict` command usage
+
+Perform object detection inference on images or videos using sliced inference for better small object detection.
+
+### Basic Usage
 
 ```bash
 sahi predict --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
 ```
 
-will perform sliced inference on default parameters and export the prediction visuals to runs/predict/exp folder.
+This will perform sliced inference with default parameters and export prediction visuals to `runs/predict/exp` folder.
 
-- It also supports video input:
+### Video Input Support
+
+SAHI supports video inference with the same command structure:
 
 ```bash
 sahi predict --model_path yolo11s.pt --model_type ultralytics --source video.mp4
 ```
 
-You can also view video render during video inference with `--view_video`:
+#### Real-time Video Visualization
+
+View video rendering during inference with the `--view_video` flag:
 
 ```bash
 sahi predict --model_path yolo11s.pt --model_type ultralytics --source video.mp4 --view_video
 ```
 
-- To `forward 100 frames`, on opened window press key `D`
-- To `revert 100 frames`, on opened window press key `A`
-- To `forward 20 frames`, on opened window press key `G`
-- To `revert 20 frames`, on opened window press key `F`
-- To `exit`, on opened window press key `Esc`
+**Keyboard Controls:**
 
-Note: If `--view_video` is slow, you can add `--frame_skip_interval=20` argument to skip interval of 20 frames each time.
+- **`D`** - Forward 100 frames
+- **`A`** - Rewind 100 frames
+- **`G`** - Forward 20 frames
+- **`F`** - Rewind 20 frames
+- **`Esc`** - Exit viewer
 
-You can specify additional sliced prediction parameters as:
+> **Tip:** If `--view_video` is slow, add `--frame_skip_interval=20` to skip intervals of 20 frames.
+
+### Advanced Slicing Parameters
+
+Customize the slicing behavior for optimal detection:
 
 ```bash
-sahi predict --slice_width 512 --slice_height 512 --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 --model_confidence_threshold 0.25 --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
+sahi predict --slice_width 512 --slice_height 512 \
+  --overlap_height_ratio 0.1 --overlap_width_ratio 0.1 \
+  --model_confidence_threshold 0.25 \
+  --source image/file/or/folder \
+  --model_path path/to/model \
+  --model_config_path path/to/config
 ```
 
-- Specify detection framework as `--model_type mmdet` for MMDetection or `--model_type ultralytics` for Ultralytics, to match with your model weight file
+#### Model Configuration
 
-- Specify postprocess type as `--postprocess_type GREEDYNMM` or `--postprocess_type NMS` to be applied over sliced predictions
+**Detection Framework:**
 
-- Specify postprocess match metric as `--postprocess_match_metric IOS` for intersection over smaller area or `--postprocess_match_metric IOU` for intersection over union
+- `--model_type mmdet` - For MMDetection models
+- `--model_type ultralytics` - For Ultralytics/YOLOv5/YOLO11 models
+- `--model_type huggingface` - For HuggingFace models
+- `--model_type torchvision` - For Torchvision models
 
-- Specify postprocess match threshold as `--postprocess_match_threshold 0.5`
+**Confidence Threshold:**
 
-- Add `--postprocess_class_agnostic` argument to ignore category ids of the predictions during postprocess (merging/nms)
+- `--model_confidence_threshold 0.25` - Set minimum confidence for detections
 
-- If you want to export prediction pickles and cropped predictions add `--export_pickle` and `--export_crop` arguments. If you want to change crop extension type, set it as `--visual_export_format JPG`.
+#### Postprocessing Options
 
-- If you don't want to export prediction visuals, add `--novisual` argument.
+**Postprocess Type:**
 
-- By default, scripts apply both standard and sliced prediction (multi-stage inference). If you don't want to perform sliced prediction add `--no_sliced_prediction` argument. If you don't want to perform standard prediction add `--no_standard_prediction` argument.
+- `--postprocess_type GREEDYNMM` - Greedy non-maximum merging (default)
+- `--postprocess_type NMS` - Standard non-maximum suppression
 
-- If you want to perform prediction using a COCO annotation file, provide COCO json path as `--dataset_json_path dataset.json` and coco image folder as `--source path/to/coco/image/folder`, predictions will be exported as a coco json file to runs/predict/exp/results.json. Then you can use coco_evaluation command to calculate COCO evaluation results or coco_error_analysis command to calculate detailed COCO error plots.
+**Match Metrics:**
+
+- `--postprocess_match_metric IOS` - Intersection over smaller area
+- `--postprocess_match_metric IOU` - Intersection over union (default)
+
+**Additional Options:**
+
+- `--postprocess_match_threshold 0.5` - Set matching threshold
+- `--postprocess_class_agnostic` - Ignore category IDs during postprocessing
+
+#### Export Options
+
+**Visual Exports:**
+
+- `--novisual` - Disable prediction visualization exports
+- `--visual_export_format JPG` - Set export format (JPG, PNG, etc.)
+
+**Data Exports:**
+
+- `--export_pickle` - Export prediction pickles
+- `--export_crop` - Export cropped detections
+
+#### Inference Modes
+
+By default, SAHI performs multi-stage inference (both standard and sliced prediction):
+
+- `--no_sliced_prediction` - Disable sliced inference (standard only)
+- `--no_standard_prediction` - Disable standard inference (sliced only)
+
+### COCO Dataset Evaluation
+
+Perform prediction using a COCO annotation file for evaluation:
+
+```bash
+sahi predict --dataset_json_path dataset.json \
+  --source path/to/coco/image/folder \
+  --model_path path/to/model
+```
+
+Predictions will be exported as a COCO JSON file to `runs/predict/exp/results.json`. You can then use:
+
+- `sahi coco evaluate` - Calculate COCO evaluation metrics
+- `sahi coco analyse` - Generate detailed error analysis plots
+
+### Progress Reporting
+
+Enable a progress bar to track inference progress:
+
+```bash
+sahi predict --model_path path/to/model --source images/ \
+  --slice_width 512 --slice_height 512 --progress_bar
+```
+
+> **Note:** The `--progress_bar` flag controls CLI visual progress (tqdm). The `progress_callback` parameter is available in the Python API but not exposed as a CLI option.
+
+---
 
 ## `predict-fiftyone` command usage
 
+Perform sliced inference and visualize results interactively using the FiftyOne App.
+
+### Basic Usage
+
 ```bash
-sahi predict-fiftyone --image_dir image/file/or/folder --dataset_json_path dataset.json --model_path path/to/model --model_config_path path/to/config
+sahi predict-fiftyone --image_dir image/file/or/folder \
+  --dataset_json_path dataset.json \
+  --model_path path/to/model \
+  --model_config_path path/to/config
 ```
 
-will perform sliced inference on default parameters and show the inference result on FiftyOne App.
+This will perform sliced inference with default parameters and launch the FiftyOne App for interactive exploration.
 
-You can specify additional all extra parameters of the [sahi predict](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-command-usage) command.
+### Additional Parameters
+
+All parameters from the [`sahi predict`](#predict-command-usage) command are supported.
+
+---
 
 ## `coco fiftyone` command usage
 
-You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-command-usage) command can be used to create that.
+Visualize and compare multiple detection results on your COCO dataset using FiftyOne UI.
+
+### Basic Usage
+
+You need to convert your predictions to [COCO result JSON format](https://cocodataset.org/#format-results). Use [`sahi predict`](#predict-command-usage) to generate this format.
 
 ```bash
-sahi coco fiftyone --image_dir dir/to/images --dataset_json_path dataset.json cocoresult1.json cocoresult2.json
+sahi coco fiftyone --image_dir dir/to/images \
+  --dataset_json_path dataset.json \
+  cocoresult1.json cocoresult2.json
 ```
 
-will open a FiftyOne app that visualizes the given dataset and 2 detection results.
+This opens a FiftyOne app that visualizes the dataset and compares 2 detection results ordered by misdetections.
 
-Specify IOU threshold for FP/TP by `--iou_threshold 0.5` argument
+### Options
+
+- `--iou_threshold 0.5` - Set IOU threshold for FP/TP classification
+
+---
 
 ## `coco slice` command usage
 
+Slice large images and their COCO format annotations into smaller tiles.
+
+### Basic Usage
+
 ```bash
-sahi coco slice --image_dir dir/to/images --dataset_json_path dataset.json
+sahi coco slice --image_dir dir/to/images \
+  --dataset_json_path dataset.json
 ```
 
-will slice the given images and COCO formatted annotations and export them to given output folder directory.
+Slices images and COCO annotations, exporting them to the output folder.
 
-Specify slice height/width size as `--slice_size 512`.
+### Parameters
 
-Specify slice overlap ratio for height/width size as `--overlap_ratio 0.2`.
+**Slice Dimensions:**
 
-If you want to ignore images with annotations set it add `--ignore_negative_samples` argument.
+- `--slice_size 512` - Set slice height and width (default: 512)
+
+**Overlap:**
+
+- `--overlap_ratio 0.2` - Set overlap ratio for height/width (default: 0.2)
+
+**Filtering:**
+
+- `--ignore_negative_samples` - Exclude images without annotations
+
+**Output:**
+
+- `--out_dir output/folder` - Specify output directory
+
+---
 
 ## `coco yolo` command usage
 
-(In Windows be sure to open anaconda cmd prompt/windows cmd `as admin` to be able to create symlinks properly.)
+Convert COCO format datasets to YOLO format for training with Ultralytics.
+
+> **Windows Users:** Open Anaconda prompt or Windows CMD **as administrator** to create symlinks properly.
+
+### Basic Usage
 
 ```bash
-sahi coco yolo --image_dir dir/to/images --dataset_json_path dataset.json  --train_split 0.9
+sahi coco yolo --image_dir dir/to/images \
+  --dataset_json_path dataset.json \
+  --train_split 0.9
 ```
 
-will convert given coco dataset to yolo format and export to runs/coco2yolo/exp folder.
+Converts the COCO dataset to YOLO format and exports to `runs/coco2yolo/exp` folder.
+
+### Parameters
+
+- `--train_split 0.9` - Set training split ratio (default: 0.9)
+- `--out_dir output/folder` - Specify output directory
+
+---
 
 ## `coco evaluate` command usage
 
-You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/main/docs/CLI.md#predict-command-usage) command can be used to create that.
+Calculate COCO evaluation metrics (mAP, mAR) for your predictions.
+
+### Basic Usage
+
+You need to convert your predictions to [COCO result JSON format](https://cocodataset.org/#format-results). Use [`sahi predict`](#predict-command-usage) to generate this format.
 
 ```bash
-sahi coco evaluate --dataset_json_path dataset.json --result_json_path result.json
+sahi coco evaluate --dataset_json_path dataset.json \
+  --result_json_path result.json
 ```
 
-will calculate coco evaluation and export them to given output folder directory.
+Calculates COCO evaluation metrics and exports results to the output folder.
 
-If you want to specify mAP metric type, set it as `--type bbox` or `--type mask`.
+### Parameters
 
-If you want to also calculate classwise scores add `--classwise` argument.
+**Metric Type:**
 
-If you want to specify max detections, set it as `--proposal_nums "[10 100 500]"`.
+- `--type bbox` - Evaluate bounding box detections (default)
+- `--type mask` - Evaluate instance segmentation masks
 
-If you want to specify a specific IOU threshold, set it as `--iou_thrs 0.5`. Default includes `0.50:0.95` and `0.5` scores.
+**Scoring Options:**
 
-If you want to specify an export directory, set it as `--out_dir output/folder/directory`.
+- `--classwise` - Calculate per-class scores in addition to overall metrics
+
+**Detection Limits:**
+
+- `--proposal_nums "[10 100 500]"` - Set max detections per image (default: [100, 300, 1000])
+
+**IOU Thresholds:**
+
+- `--iou_thrs 0.5` - Specify IOU threshold (default: 0.50:0.95 and 0.5)
+
+**Output:**
+
+- `--out_dir output/folder` - Specify output directory
+
+---
 
 ## `coco analyse` command usage
 
-You need to convert your predictions into [COCO result json](https://cocodataset.org/#format-results), [sahi predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage) command can be used to create that.
+Generate detailed error analysis plots for COCO predictions.
+
+### Basic Usage
+
+You need to convert your predictions to [COCO result JSON format](https://cocodataset.org/#format-results). Use [`sahi predict`](#predict-command-usage) to generate this format.
 
 ```bash
-sahi coco analyse --dataset_json_path dataset.json --result_json_path result.json --out_dir output/directory
+sahi coco analyse --dataset_json_path dataset.json \
+  --result_json_path result.json \
+  --out_dir output/directory
 ```
 
-will calculate coco error plots and export them to given output folder directory.
+Generates comprehensive error analysis plots and exports them to the specified folder.
 
-If you want to specify mAP result type, set it as `--type bbox` or `--type segm`.
+### Parameters
 
-If you want to export extra mAP bar plots and annotation area stats add `--extraplots` argument.
+**Analysis Type:**
 
-If you want to specify area regions, set it as `--areas "[1024 9216 10000000000]"`.
+- `--type bbox` - Analyze bounding box detections (default)
+- `--type segm` - Analyze instance segmentation masks
+
+**Additional Plots:**
+
+- `--extraplots` - Generate extra mAP bar plots and annotation area statistics
+
+**Area Regions:**
+
+- `--areas "[1024 9216 10000000000]"` - Define area regions for analysis (default: small/medium/large COCO areas)
+
+---
 
 ## `env` command usage
 
-Print related package versions in the current env as:
+Display installed package versions related to SAHI.
+
+### Usage
 
 ```bash
 sahi env
+```
+
+### Example Output
+
+```text
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   torch version 2.1.2 is available.
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   torchvision version 0.16.2 is available.
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   ultralytics version 8.3.86 is available.
@@ -158,30 +333,41 @@ sahi env
 06/19/2022 21:24:52 - INFO - sahi.utils.import_utils -   fiftyone version 0.14.2 is available.
 ```
 
+---
+
 ## `version` command usage
 
-Print your SAHI version as:
+Display your currently installed SAHI version.
+
+### Usage
 
 ```bash
 sahi version
 0.11.22
 ```
 
-## Custom scripts
+---
 
-All scripts can be downloaded from [scripts directory](https://github.com/obss/sahi/tree/main/scripts) and modified by your needs. After installing `sahi` by pip, all scripts can be called from any directory as:
+## Custom Scripts
+
+All scripts can be downloaded from the [scripts directory](https://github.com/obss/sahi/tree/main/scripts) and modified for your specific needs.
+
+After installing SAHI via pip, all scripts can be called from any directory:
 
 ```bash
 python script_name.py
 ```
 
+---
+
 ## Additional Resources
 
 Looking to dive deeper? Here are some helpful resources:
 
-- For a detailed walkthrough of prediction parameters and visualization, check out our [prediction utilities documentation](predict.md)
-- To understand slicing operations in depth, explore our [slicing utilities guide](slicing.md)
-- For hands-on examples with COCO format operations, see our [COCO utilities documentation](coco.md)
-- Want to see these CLI commands in action? Try our interactive notebooks in the [demo directory](../demo/)
+- **[Prediction Utilities Documentation](predict.md)** - Detailed walkthrough of prediction parameters and visualization
+- **[Slicing Utilities Guide](slicing.md)** - In-depth exploration of slicing operations
+- **[COCO Utilities Documentation](coco.md)** - Comprehensive examples with COCO format operations
+- **[Interactive Demo Notebooks](../demo/)** - Hands-on examples of CLI commands in action
+- **[Model Documentation](models/)** - Framework-specific model integration guides
 
 These resources provide comprehensive examples and explanations to help you make the most of SAHI's command-line interface.
