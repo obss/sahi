@@ -63,8 +63,12 @@ def get_slice_bboxes(
     y_max = y_min = 0
 
     if slice_height and slice_width:
-        y_overlap = int(overlap_height_ratio * slice_height)
-        x_overlap = int(overlap_width_ratio * slice_width)
+        if overlap_height_ratio is not None and overlap_height_ratio >= 1.0:
+            raise ValueError("Overlap ratio must be less than 1.0")
+        if overlap_width_ratio is not None and overlap_width_ratio >= 1.0:
+            raise ValueError("Overlap ratio must be less than 1.0")
+        y_overlap = int((overlap_height_ratio if overlap_height_ratio is not None else 0.2) * slice_height)
+        x_overlap = int((overlap_width_ratio if overlap_width_ratio is not None else 0.2) * slice_width)
     elif auto_slice_resolution:
         x_overlap, y_overlap, slice_width, slice_height = get_auto_slice_params(height=image_height, width=image_width)
     else:

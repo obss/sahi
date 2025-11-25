@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import numpy as np
 import torch
-from shapely.geometry import box
-from shapely.strtree import STRtree
+from shapely import STRtree, box
 
 from sahi.logger import logger
 from sahi.postprocess.utils import ObjectPredictionList, has_match, merge_object_prediction_pair
@@ -53,31 +53,30 @@ def nms(
     Returns:
         A list of filtered indexes, Shape: [ ,]
     """
+    if len(predictions) == 0:
+        return []
 
-    # Extract coordinates and scores as tensors
-    x1 = predictions[:, 0]
-    y1 = predictions[:, 1]
-    x2 = predictions[:, 2]
-    y2 = predictions[:, 3]
-    scores = predictions[:, 4]
+    # Ensure predictions are on CPU and convert to numpy
+    if predictions.device.type != "cpu":
+        predictions = predictions.cpu()
 
-    # Calculate areas as tensor (vectorized operation)
+    predictions_np = predictions.numpy()
+
+    # Extract coordinates and scores
+    x1 = predictions_np[:, 0]
+    y1 = predictions_np[:, 1]
+    x2 = predictions_np[:, 2]
+    y2 = predictions_np[:, 3]
+    scores = predictions_np[:, 4]
+
+    # Calculate areas
     areas = (x2 - x1) * (y2 - y1)
 
-    # Create Shapely boxes only once
-    boxes = []
-    for i in range(len(predictions)):
-        boxes.append(
-            box(
-                x1[i].item(),  # Convert only individual values
-                y1[i].item(),
-                x2[i].item(),
-                y2[i].item(),
-            )
-        )
+    # Create Shapely boxes (vectorized)
+    boxes = box(x1, y1, x2, y2)
 
-    # Sort indices by score (descending) using torch
-    sorted_idxs = torch.argsort(scores, descending=True).tolist()
+    # Sort indices by score (descending)
+    sorted_idxs = np.argsort(scores)[::-1]
 
     # Build STRtree
     tree = STRtree(boxes)
@@ -91,7 +90,7 @@ def nms(
 
         keep.append(current_idx)
         current_box = boxes[current_idx]
-        current_area = areas[current_idx].item()  # Convert only when needed
+        current_area = areas[current_idx]
 
         # Query potential intersections using STRtree
         candidate_idxs = tree.query(current_box)
@@ -108,16 +107,16 @@ def nms(
             if scores[candidate_idx] == scores[current_idx]:
                 # Use box coordinates for stable ordering
                 current_coords = (
-                    x1[current_idx].item(),
-                    y1[current_idx].item(),
-                    x2[current_idx].item(),
-                    y2[current_idx].item(),
+                    x1[current_idx],
+                    y1[current_idx],
+                    x2[current_idx],
+                    y2[current_idx],
                 )
                 candidate_coords = (
-                    x1[candidate_idx].item(),
-                    y1[candidate_idx].item(),
-                    x2[candidate_idx].item(),
-                    y2[candidate_idx].item(),
+                    x1[candidate_idx],
+                    y1[candidate_idx],
+                    x2[candidate_idx],
+                    y2[candidate_idx],
                 )
 
                 # Compare coordinates lexicographically
@@ -130,10 +129,10 @@ def nms(
 
             # Calculate metric
             if match_metric == "IOU":
-                union = current_area + areas[candidate_idx].item() - intersection
+                union = current_area + areas[candidate_idx] - intersection
                 metric = intersection / union if union > 0 else 0
             elif match_metric == "IOS":
-                smaller = min(current_area, areas[candidate_idx].item())
+                smaller = min(current_area, areas[candidate_idx])
                 metric = intersection / smaller if smaller > 0 else 0
             else:
                 raise ValueError("Invalid match_metric")
