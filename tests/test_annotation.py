@@ -17,9 +17,9 @@ class TestAnnotation:
         shifted_bbox = bbox.get_shifted_box()
 
         # compare
-        assert expanded_bbox.to_xywh() == [23, 18, 84, 144]
-        assert expanded_bbox.to_xyxy() == [23, 18, 107, 162]
-        assert shifted_bbox.to_xyxy() == [80, 70, 150, 190]
+        assert expanded_bbox.to_xywh() == [23.0, 18.0, 84.0, 144.0]
+        assert expanded_bbox.to_xyxy() == [23.0, 18.0, 107.0, 162.0]
+        assert shifted_bbox.to_xyxy() == [80.0, 70.0, 150.0, 190.0]
 
     def test_bounding_box_immutability(self):
         import dataclasses
