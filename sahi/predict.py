@@ -1016,3 +1016,609 @@ def predict_fiftyone(
     session.view = eval_view.sort_by("eval_fp", reverse=True)
     while 1:
         time.sleep(3)
+
+
+# ============================================================================
+# BATCH PROCESSING AND PERFORMANCE UTILITIES
+# ============================================================================
+
+
+def predict_batch(
+    image_paths: list[str],
+    detection_model: DetectionModel,
+    slice_height: int = 512,
+    slice_width: int = 512,
+    overlap_height_ratio: float = 0.2,
+    overlap_width_ratio: float = 0.2,
+    postprocess_type: str = "GREEDYNMM",
+    postprocess_match_metric: str = "IOS",
+    postprocess_match_threshold: float = 0.5,
+    postprocess_class_agnostic: bool = False,
+    verbose: int = 1,
+    batch_size: int = 1,
+    show_progress: bool = True,
+) -> list[PredictionResult]:
+    """Perform sliced prediction on a batch of images.
+    
+    Args:
+        image_paths: List of paths to images
+        detection_model: Detection model to use
+        slice_height: Height of each slice
+        slice_width: Width of each slice
+        overlap_height_ratio: Overlap ratio in height
+        overlap_width_ratio: Overlap ratio in width
+        postprocess_type: Postprocessing method (GREEDYNMM, NMS, etc.)
+        postprocess_match_metric: Metric for matching (IOS, IOU)
+        postprocess_match_threshold: Threshold for matching
+        postprocess_class_agnostic: Whether to use class-agnostic matching
+        verbose: Verbosity level
+        batch_size: Number of images to process in parallel
+        show_progress: Whether to show progress bar
+    
+    Returns:
+        List of PredictionResult objects
+    """
+    results = []
+    iterator = tqdm(image_paths, desc="Processing images") if show_progress else image_paths
+    
+    for image_path in iterator:
+        try:
+            result = get_sliced_prediction(
+                image=image_path,
+                detection_model=detection_model,
+                slice_height=slice_height,
+                slice_width=slice_width,
+                overlap_height_ratio=overlap_height_ratio,
+                overlap_width_ratio=overlap_width_ratio,
+                postprocess_type=postprocess_type,
+                postprocess_match_metric=postprocess_match_metric,
+                postprocess_match_threshold=postprocess_match_threshold,
+                postprocess_class_agnostic=postprocess_class_agnostic,
+                verbose=verbose,
+            )
+            results.append(result)
+        except Exception as e:
+            logger.error(f"Error processing {image_path}: {e}")
+            results.append(None)
+    
+    return results
+
+
+def benchmark_model(
+    detection_model: DetectionModel,
+    test_images: list[str],
+    slice_configs: list[dict] = None,
+    warmup_runs: int = 3,
+    test_runs: int = 10,
+    output_path: str = None,
+) -> dict:
+    """Benchmark detection model performance with different configurations.
+    
+    Args:
+        detection_model: Detection model to benchmark
+        test_images: List of test image paths
+        slice_configs: List of slicing configuration dictionaries
+        warmup_runs: Number of warmup runs
+        test_runs: Number of test runs for timing
+        output_path: Optional path to save benchmark results
+    
+    Returns:
+        Dictionary with benchmark results
+    """
+    import time
+    
+    if slice_configs is None:
+        slice_configs = [
+            {"name": "small", "slice_height": 320, "slice_width": 320, "overlap": 0.2},
+            {"name": "medium", "slice_height": 640, "slice_width": 640, "overlap": 0.2},
+            {"name": "large", "slice_height": 1280, "slice_width": 1280, "overlap": 0.2},
+        ]
+    
+    results = {
+        "model_type": detection_model.__class__.__name__,
+        "num_test_images": len(test_images),
+        "warmup_runs": warmup_runs,
+        "test_runs": test_runs,
+        "configs": [],
+    }
+    
+    # Warmup
+    logger.info(f"Warming up model with {warmup_runs} runs...")
+    for _ in range(warmup_runs):
+        for img_path in test_images[:1]:
+            _ = get_prediction(img_path, detection_model)
+    
+    # Test each configuration
+    for config in tqdm(slice_configs, desc="Testing configurations"):
+        config_name = config.get("name", "unnamed")
+        logger.info(f"\nBenchmarking configuration: {config_name}")
+        
+        timings = []
+        detection_counts = []
+        
+        for run in range(test_runs):
+            run_times = []
+            run_detections = []
+            
+            for img_path in test_images:
+                start_time = time.time()
+                
+                result = get_sliced_prediction(
+                    image=img_path,
+                    detection_model=detection_model,
+                    slice_height=config["slice_height"],
+                    slice_width=config["slice_width"],
+                    overlap_height_ratio=config["overlap"],
+                    overlap_width_ratio=config["overlap"],
+                    verbose=0,
+                )
+                
+                elapsed = time.time() - start_time
+                run_times.append(elapsed)
+                run_detections.append(len(result.object_prediction_list))
+            
+            timings.append(np.mean(run_times))
+            detection_counts.append(np.mean(run_detections))
+        
+        config_results = {
+            "name": config_name,
+            "slice_height": config["slice_height"],
+            "slice_width": config["slice_width"],
+            "overlap": config["overlap"],
+            "mean_time": float(np.mean(timings)),
+            "std_time": float(np.std(timings)),
+            "min_time": float(np.min(timings)),
+            "max_time": float(np.max(timings)),
+            "mean_detections": float(np.mean(detection_counts)),
+            "fps": float(1.0 / np.mean(timings)) if np.mean(timings) > 0 else 0,
+        }
+        
+        results["configs"].append(config_results)
+        
+        logger.info(f"  Mean time: {config_results['mean_time']:.3f}s")
+        logger.info(f"  FPS: {config_results['fps']:.2f}")
+        logger.info(f"  Mean detections: {config_results['mean_detections']:.1f}")
+    
+    # Save results if output path provided
+    if output_path:
+        save_json(results, output_path)
+        logger.info(f"Benchmark results saved to {output_path}")
+    
+    return results
+
+
+def compare_models(
+    models: dict[str, DetectionModel],
+    test_images: list[str],
+    slice_height: int = 640,
+    slice_width: int = 640,
+    ground_truth_annotations: dict = None,
+    output_dir: str = None,
+) -> dict:
+    """Compare multiple detection models on the same test set.
+    
+    Args:
+        models: Dictionary mapping model names to DetectionModel instances
+        test_images: List of test image paths
+        slice_height: Height of each slice
+        slice_width: Width of each slice
+        ground_truth_annotations: Optional ground truth for accuracy comparison
+        output_dir: Optional directory to save comparison results
+    
+    Returns:
+        Dictionary with comparison results
+    """
+    import time
+    
+    comparison_results = {
+        "num_test_images": len(test_images),
+        "models": {},
+    }
+    
+    for model_name, model in tqdm(models.items(), desc="Comparing models"):
+        logger.info(f"\nEvaluating model: {model_name}")
+        
+        timings = []
+        detection_counts = []
+        predictions_by_image = {}
+        
+        for img_path in tqdm(test_images, desc=f"{model_name} inference", leave=False):
+            start_time = time.time()
+            
+            result = get_sliced_prediction(
+                image=img_path,
+                detection_model=model,
+                slice_height=slice_height,
+                slice_width=slice_width,
+                verbose=0,
+            )
+            
+            elapsed = time.time() - start_time
+            timings.append(elapsed)
+            detection_counts.append(len(result.object_prediction_list))
+            predictions_by_image[img_path] = result
+        
+        model_results = {
+            "mean_time": float(np.mean(timings)),
+            "std_time": float(np.std(timings)),
+            "mean_fps": float(1.0 / np.mean(timings)) if np.mean(timings) > 0 else 0,
+            "mean_detections": float(np.mean(detection_counts)),
+            "total_time": float(np.sum(timings)),
+        }
+        
+        # Calculate accuracy metrics if ground truth provided
+        if ground_truth_annotations:
+            # TODO: Implement accuracy calculation
+            pass
+        
+        comparison_results["models"][model_name] = model_results
+        
+        logger.info(f"  Mean time: {model_results['mean_time']:.3f}s")
+        logger.info(f"  Mean FPS: {model_results['mean_fps']:.2f}")
+        logger.info(f"  Mean detections: {model_results['mean_detections']:.1f}")
+    
+    # Save comparison results
+    if output_dir:
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        save_json(comparison_results, os.path.join(output_dir, "model_comparison.json"))
+        logger.info(f"Comparison results saved to {output_dir}")
+    
+    return comparison_results
+
+
+def analyze_prediction_distribution(
+    predictions: list[PredictionResult],
+    image_paths: list[str] = None,
+    output_path: str = None,
+) -> dict:
+    """Analyze distribution of predictions across images.
+    
+    Args:
+        predictions: List of PredictionResult objects
+        image_paths: Optional list of image paths for reference
+        output_path: Optional path to save analysis results
+    
+    Returns:
+        Dictionary with analysis results
+    """
+    analysis = {
+        "num_images": len(predictions),
+        "total_detections": 0,
+        "detections_per_image": [],
+        "class_distribution": {},
+        "confidence_distribution": [],
+        "bbox_size_distribution": [],
+    }
+    
+    for pred_result in predictions:
+        if pred_result is None:
+            continue
+        
+        num_detections = len(pred_result.object_prediction_list)
+        analysis["detections_per_image"].append(num_detections)
+        analysis["total_detections"] += num_detections
+        
+        for obj_pred in pred_result.object_prediction_list:
+            # Class distribution
+            class_name = obj_pred.category.name
+            analysis["class_distribution"][class_name] = \
+                analysis["class_distribution"].get(class_name, 0) + 1
+            
+            # Confidence distribution
+            analysis["confidence_distribution"].append(float(obj_pred.score.value))
+            
+            # Bbox size distribution
+            bbox = obj_pred.bbox.to_xyxy()
+            width = bbox[2] - bbox[0]
+            height = bbox[3] - bbox[1]
+            area = width * height
+            analysis["bbox_size_distribution"].append(float(area))
+    
+    # Calculate statistics
+    if analysis["detections_per_image"]:
+        analysis["mean_detections_per_image"] = float(np.mean(analysis["detections_per_image"]))
+        analysis["std_detections_per_image"] = float(np.std(analysis["detections_per_image"]))
+        analysis["median_detections_per_image"] = float(np.median(analysis["detections_per_image"]))
+    
+    if analysis["confidence_distribution"]:
+        analysis["mean_confidence"] = float(np.mean(analysis["confidence_distribution"]))
+        analysis["std_confidence"] = float(np.std(analysis["confidence_distribution"]))
+    
+    if analysis["bbox_size_distribution"]:
+        analysis["mean_bbox_area"] = float(np.mean(analysis["bbox_size_distribution"]))
+        analysis["median_bbox_area"] = float(np.median(analysis["bbox_size_distribution"]))
+    
+    # Save analysis
+    if output_path:
+        save_json(analysis, output_path)
+        logger.info(f"Analysis results saved to {output_path}")
+    
+    return analysis
+
+
+def predict_with_ensemble(
+    image,
+    detection_models: list[DetectionModel],
+    slice_height: int = 512,
+    slice_width: int = 512,
+    overlap_height_ratio: float = 0.2,
+    overlap_width_ratio: float = 0.2,
+    ensemble_method: str = "nms",
+    iou_threshold: float = 0.5,
+    score_threshold: float = 0.3,
+    weights: list[float] = None,
+    verbose: int = 0,
+) -> PredictionResult:
+    """Perform ensemble prediction using multiple detection models.
+    
+    Args:
+        image: Image to predict on
+        detection_models: List of detection models
+        slice_height: Height of each slice
+        slice_width: Width of each slice
+        overlap_height_ratio: Overlap ratio in height
+        overlap_width_ratio: Overlap ratio in width
+        ensemble_method: Method for combining predictions (nms, weighted_boxes, voting)
+        iou_threshold: IoU threshold for NMS
+        score_threshold: Minimum confidence score
+        weights: Optional weights for each model
+        verbose: Verbosity level
+    
+    Returns:
+        Combined PredictionResult
+    """
+    if weights is None:
+        weights = [1.0] * len(detection_models)
+    
+    if len(weights) != len(detection_models):
+        raise ValueError("Number of weights must match number of models")
+    
+    # Normalize weights
+    total_weight = sum(weights)
+    weights = [w / total_weight for w in weights]
+    
+    # Get predictions from each model
+    all_predictions = []
+    
+    for i, model in enumerate(detection_models):
+        if verbose > 0:
+            logger.info(f"Running model {i+1}/{len(detection_models)}")
+        
+        result = get_sliced_prediction(
+            image=image,
+            detection_model=model,
+            slice_height=slice_height,
+            slice_width=slice_width,
+            overlap_height_ratio=overlap_height_ratio,
+            overlap_width_ratio=overlap_width_ratio,
+            verbose=0,
+        )
+        
+        # Adjust scores by model weight
+        for pred in result.object_prediction_list:
+            pred.score.value *= weights[i]
+        
+        all_predictions.extend(result.object_prediction_list)
+    
+    # Combine predictions based on ensemble method
+    if ensemble_method == "nms":
+        # Sort by score and apply NMS
+        all_predictions.sort(key=lambda x: x.score.value, reverse=True)
+        
+        final_predictions = []
+        used = [False] * len(all_predictions)
+        
+        for i, pred1 in enumerate(all_predictions):
+            if used[i] or pred1.score.value < score_threshold:
+                continue
+            
+            final_predictions.append(pred1)
+            used[i] = True
+            
+            # Suppress overlapping boxes
+            for j, pred2 in enumerate(all_predictions[i+1:], start=i+1):
+                if used[j]:
+                    continue
+                
+                if pred1.category.id != pred2.category.id:
+                    continue
+                
+                # Calculate IoU
+                bbox1 = pred1.bbox.to_xyxy()
+                bbox2 = pred2.bbox.to_xyxy()
+                
+                x1 = max(bbox1[0], bbox2[0])
+                y1 = max(bbox1[1], bbox2[1])
+                x2 = min(bbox1[2], bbox2[2])
+                y2 = min(bbox1[3], bbox2[3])
+                
+                if x2 > x1 and y2 > y1:
+                    intersection = (x2 - x1) * (y2 - y1)
+                    area1 = (bbox1[2] - bbox1[0]) * (bbox1[3] - bbox1[1])
+                    area2 = (bbox2[2] - bbox2[0]) * (bbox2[3] - bbox2[1])
+                    union = area1 + area2 - intersection
+                    iou = intersection / union if union > 0 else 0
+                    
+                    if iou >= iou_threshold:
+                        used[j] = True
+    
+    elif ensemble_method == "weighted_boxes":
+        # Group overlapping boxes and average them
+        from sahi.slicing import merge_overlapping_predictions
+        final_predictions = merge_overlapping_predictions(
+            [all_predictions],
+            iou_threshold=iou_threshold,
+            score_threshold=score_threshold,
+        )
+    
+    else:
+        # Simple voting - keep all predictions above threshold
+        final_predictions = [p for p in all_predictions if p.score.value >= score_threshold]
+    
+    # Create combined result
+    combined_result = PredictionResult(
+        object_prediction_list=final_predictions,
+        image=read_image_as_pil(image) if isinstance(image, str) else image,
+    )
+    
+    return combined_result
+
+
+def calculate_prediction_metrics(
+    predictions: list[ObjectPrediction],
+    ground_truth: list[dict],
+    iou_threshold: float = 0.5,
+    class_names: list[str] = None,
+) -> dict:
+    """Calculate precision, recall, and F1 score for predictions.
+    
+    Args:
+        predictions: List of ObjectPrediction instances
+        ground_truth: List of ground truth annotation dictionaries
+        iou_threshold: IoU threshold for matching
+        class_names: Optional list of class names to evaluate
+    
+    Returns:
+        Dictionary with metrics (precision, recall, F1, AP)
+    """
+    metrics = {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1_score": 0.0,
+        "class_metrics": {},
+    }
+    
+    # Match predictions to ground truth
+    gt_matched = [False] * len(ground_truth)
+    
+    for pred in predictions:
+        best_iou = 0
+        best_gt_idx = -1
+        
+        pred_bbox = pred.bbox.to_xyxy()
+        
+        for gt_idx, gt in enumerate(ground_truth):
+            if gt_matched[gt_idx]:
+                continue
+            
+            # Check class match
+            if class_names and gt.get("category_name") != pred.category.name:
+                continue
+            
+            gt_bbox = gt["bbox"]  # Assumed format: [x1, y1, x2, y2]
+            
+            # Calculate IoU
+            x1 = max(pred_bbox[0], gt_bbox[0])
+            y1 = max(pred_bbox[1], gt_bbox[1])
+            x2 = min(pred_bbox[2], gt_bbox[2])
+            y2 = min(pred_bbox[3], gt_bbox[3])
+            
+            if x2 > x1 and y2 > y1:
+                intersection = (x2 - x1) * (y2 - y1)
+                area_pred = (pred_bbox[2] - pred_bbox[0]) * (pred_bbox[3] - pred_bbox[1])
+                area_gt = (gt_bbox[2] - gt_bbox[0]) * (gt_bbox[3] - gt_bbox[1])
+                union = area_pred + area_gt - intersection
+                iou = intersection / union if union > 0 else 0
+                
+                if iou > best_iou:
+                    best_iou = iou
+                    best_gt_idx = gt_idx
+        
+        # Classify prediction
+        if best_iou >= iou_threshold:
+            metrics["true_positives"] += 1
+            gt_matched[best_gt_idx] = True
+        else:
+            metrics["false_positives"] += 1
+    
+    # Count false negatives
+    metrics["false_negatives"] = sum(1 for matched in gt_matched if not matched)
+    
+    # Calculate metrics
+    tp = metrics["true_positives"]
+    fp = metrics["false_positives"]
+    fn = metrics["false_negatives"]
+    
+    metrics["precision"] = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+    metrics["recall"] = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+    
+    if metrics["precision"] + metrics["recall"] > 0:
+        metrics["f1_score"] = 2 * (metrics["precision"] * metrics["recall"]) / \
+                               (metrics["precision"] + metrics["recall"])
+    
+    return metrics
+
+
+def export_predictions_to_coco(
+    predictions_dict: dict[str, PredictionResult],
+    image_dir: str,
+    output_path: str,
+    category_mapping: dict[int, str] = None,
+) -> None:
+    """Export predictions to COCO format JSON.
+    
+    Args:
+        predictions_dict: Dictionary mapping image paths to PredictionResult
+        image_dir: Directory containing images
+        output_path: Path to save COCO JSON file
+        category_mapping: Optional mapping from category IDs to names
+    """
+    from datetime import datetime
+    
+    coco_dict = {
+        "info": {
+            "description": "SAHI Predictions Export",
+            "date_created": datetime.now().isoformat(),
+        },
+        "images": [],
+        "annotations": [],
+        "categories": [],
+    }
+    
+    # Collect categories
+    categories_seen = set()
+    annotation_id = 1
+    
+    for image_id, (image_path, pred_result) in enumerate(predictions_dict.items(), start=1):
+        # Add image info
+        image_pil = read_image_as_pil(image_path)
+        width, height = image_pil.size
+        
+        coco_dict["images"].append({
+            "id": image_id,
+            "file_name": os.path.basename(image_path),
+            "height": height,
+            "width": width,
+        })
+        
+        # Add annotations
+        for obj_pred in pred_result.object_prediction_list:
+            bbox = obj_pred.bbox.to_coco()
+            
+            coco_dict["annotations"].append({
+                "id": annotation_id,
+                "image_id": image_id,
+                "category_id": obj_pred.category.id,
+                "bbox": bbox,
+                "area": bbox[2] * bbox[3],
+                "score": float(obj_pred.score.value),
+                "iscrowd": 0,
+            })
+            
+            annotation_id += 1
+            categories_seen.add((obj_pred.category.id, obj_pred.category.name))
+    
+    # Add categories
+    for cat_id, cat_name in sorted(categories_seen):
+        coco_dict["categories"].append({
+            "id": cat_id,
+            "name": cat_name,
+            "supercategory": "object",
+        })
+    
+    # Save to file
+    save_json(coco_dict, output_path)
+    logger.info(f"Exported {len(coco_dict['annotations'])} predictions to {output_path}")

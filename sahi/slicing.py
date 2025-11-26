@@ -711,3 +711,465 @@ def shift_masks(masks: np.ndarray, offset: Sequence[int], full_shape: Sequence[i
         shifted_masks.append(mask.bool_mask)
 
     return np.stack(shifted_masks, axis=0)
+
+
+# ============================================================================
+# ADVANCED SLICING STRATEGIES AND UTILITIES
+# ============================================================================
+
+
+def calculate_optimal_slice_size(
+    image_height: int,
+    image_width: int,
+    model_input_size: int = 640,
+    min_overlap_ratio: float = 0.2,
+    max_slices: int = 100,
+    target_object_size: int = None,
+) -> tuple:
+    """Calculate optimal slice size and overlap based on image and model characteristics.
+    
+    This function dynamically determines the best slicing parameters to balance
+    detection accuracy and computational efficiency.
+    
+    Args:
+        image_height: Height of the input image
+        image_width: Width of the input image
+        model_input_size: Expected input size of the detection model
+        min_overlap_ratio: Minimum overlap ratio between adjacent slices
+        max_slices: Maximum number of slices to generate
+        target_object_size: Expected size of objects to detect (for optimization)
+    
+    Returns:
+        Tuple of (slice_height, slice_width, overlap_height_ratio, overlap_width_ratio)
+    """
+    # Calculate initial slice size based on model input
+    base_slice_size = model_input_size
+    
+    # Determine number of slices needed
+    min_overlap = int(base_slice_size * min_overlap_ratio)
+    
+    # Calculate optimal number of slices per dimension
+    num_h_slices = max(1, int(np.ceil((image_height - min_overlap) / (base_slice_size - min_overlap))))
+    num_w_slices = max(1, int(np.ceil((image_width - min_overlap) / (base_slice_size - min_overlap))))
+    
+    total_slices = num_h_slices * num_w_slices
+    
+    # Adjust if exceeds max_slices
+    if total_slices > max_slices:
+        scale_factor = np.sqrt(max_slices / total_slices)
+        num_h_slices = max(1, int(num_h_slices * scale_factor))
+        num_w_slices = max(1, int(num_w_slices * scale_factor))
+    
+    # Calculate actual slice sizes
+    slice_height = int(np.ceil(image_height / num_h_slices) + min_overlap)
+    slice_width = int(np.ceil(image_width / num_w_slices) + min_overlap)
+    
+    # Calculate overlap ratios
+    overlap_height_ratio = min_overlap / slice_height
+    overlap_width_ratio = min_overlap / slice_width
+    
+    # Adjust for target object size if provided
+    if target_object_size:
+        # Ensure slices are at least 3x the target object size
+        min_slice_size = target_object_size * 3
+        slice_height = max(slice_height, min_slice_size)
+        slice_width = max(slice_width, min_slice_size)
+    
+    return slice_height, slice_width, overlap_height_ratio, overlap_width_ratio
+
+
+def generate_adaptive_grid(
+    image_height: int,
+    image_width: int,
+    density_map: np.ndarray = None,
+    base_slice_size: int = 640,
+    high_density_threshold: float = 0.7,
+    min_slice_size: int = 320,
+    max_slice_size: int = 1280,
+) -> list:
+    """Generate adaptive slicing grid based on object density.
+    
+    Creates variable-sized slices with smaller slices in high-density regions
+    and larger slices in low-density regions for computational efficiency.
+    
+    Args:
+        image_height: Height of the input image
+        image_width: Width of the input image
+        density_map: Optional density map indicating object distribution (0-1)
+        base_slice_size: Base slice size for medium density regions
+        high_density_threshold: Threshold for high-density regions
+        min_slice_size: Minimum slice size for high-density regions
+        max_slice_size: Maximum slice size for low-density regions
+    
+    Returns:
+        List of slice coordinates [(x, y, width, height), ...]
+    """
+    slices = []
+    
+    # If no density map provided, use uniform grid
+    if density_map is None:
+        y = 0
+        while y < image_height:
+            x = 0
+            while x < image_width:
+                slice_w = min(base_slice_size, image_width - x)
+                slice_h = min(base_slice_size, image_height - y)
+                slices.append((x, y, slice_w, slice_h))
+                x += base_slice_size
+            y += base_slice_size
+        return slices
+    
+    # Adaptive grid based on density map
+    grid_resolution = 10  # Divide image into grid for density analysis
+    grid_h = image_height // grid_resolution
+    grid_w = image_width // grid_resolution
+    
+    # Resize density map to grid resolution
+    from sahi.utils.cv import cv2
+    density_grid = cv2.resize(density_map, (grid_resolution, grid_resolution))
+    
+    y = 0
+    while y < image_height:
+        x = 0
+        while x < image_width:
+            # Determine local density
+            grid_y = min(int(y / grid_h), grid_resolution - 1)
+            grid_x = min(int(x / grid_w), grid_resolution - 1)
+            local_density = density_grid[grid_y, grid_x]
+            
+            # Adjust slice size based on density
+            if local_density > high_density_threshold:
+                # High density - use smaller slices
+                slice_size = min_slice_size
+            elif local_density < (1 - high_density_threshold):
+                # Low density - use larger slices
+                slice_size = max_slice_size
+            else:
+                # Medium density - use base slice size
+                slice_size = base_slice_size
+            
+            slice_w = min(slice_size, image_width - x)
+            slice_h = min(slice_size, image_height - y)
+            slices.append((x, y, slice_w, slice_h))
+            
+            x += int(slice_size * 0.8)  # 20% overlap
+        y += int(slice_size * 0.8)
+    
+    return slices
+
+
+def calculate_slice_overlap_iou(slice1: tuple, slice2: tuple) -> float:
+    """Calculate IoU (Intersection over Union) between two slices.
+    
+    Args:
+        slice1: First slice coordinates (x, y, width, height)
+        slice2: Second slice coordinates (x, y, width, height)
+    
+    Returns:
+        IoU value between 0 and 1
+    """
+    x1_1, y1_1, w1, h1 = slice1
+    x2_1, y2_1 = x1_1 + w1, y1_1 + h1
+    
+    x1_2, y1_2, w2, h2 = slice2
+    x2_2, y2_2 = x1_2 + w2, y1_2 + h2
+    
+    # Calculate intersection
+    x1_i = max(x1_1, x1_2)
+    y1_i = max(y1_1, y1_2)
+    x2_i = min(x2_1, x2_2)
+    y2_i = min(y2_1, y2_2)
+    
+    if x2_i < x1_i or y2_i < y1_i:
+        return 0.0
+    
+    intersection = (x2_i - x1_i) * (y2_i - y1_i)
+    union = (w1 * h1) + (w2 * h2) - intersection
+    
+    return intersection / union if union > 0 else 0.0
+
+
+def merge_overlapping_predictions(
+    predictions_list: list,
+    iou_threshold: float = 0.5,
+    score_threshold: float = 0.3,
+) -> list:
+    """Merge predictions from overlapping slices using weighted averaging.
+    
+    Args:
+        predictions_list: List of ObjectPrediction lists from different slices
+        iou_threshold: IoU threshold for considering predictions as duplicates
+        score_threshold: Minimum confidence score to consider
+    
+    Returns:
+        List of merged ObjectPrediction instances
+    """
+    from sahi.prediction import ObjectPrediction
+    
+    # Flatten all predictions
+    all_predictions = []
+    for preds in predictions_list:
+        all_predictions.extend([p for p in preds if p.score.value >= score_threshold])
+    
+    if not all_predictions:
+        return []
+    
+    # Sort by score descending
+    all_predictions.sort(key=lambda x: x.score.value, reverse=True)
+    
+    merged = []
+    used = [False] * len(all_predictions)
+    
+    for i, pred1 in enumerate(all_predictions):
+        if used[i]:
+            continue
+        
+        # Find all overlapping predictions of same class
+        overlapping = [pred1]
+        overlapping_indices = [i]
+        
+        for j, pred2 in enumerate(all_predictions[i+1:], start=i+1):
+            if used[j]:
+                continue
+            
+            if pred1.category.id != pred2.category.id:
+                continue
+            
+            # Calculate IoU
+            bbox1 = pred1.bbox.to_xyxy()
+            bbox2 = pred2.bbox.to_xyxy()
+            
+            x1 = max(bbox1[0], bbox2[0])
+            y1 = max(bbox1[1], bbox2[1])
+            x2 = min(bbox1[2], bbox2[2])
+            y2 = min(bbox1[3], bbox2[3])
+            
+            if x2 < x1 or y2 < y1:
+                continue
+            
+            intersection = (x2 - x1) * (y2 - y1)
+            area1 = (bbox1[2] - bbox1[0]) * (bbox1[3] - bbox1[1])
+            area2 = (bbox2[2] - bbox2[0]) * (bbox2[3] - bbox2[1])
+            union = area1 + area2 - intersection
+            iou = intersection / union if union > 0 else 0
+            
+            if iou >= iou_threshold:
+                overlapping.append(pred2)
+                overlapping_indices.append(j)
+        
+        # Mark as used
+        for idx in overlapping_indices:
+            used[idx] = True
+        
+        # Merge overlapping predictions
+        if len(overlapping) == 1:
+            merged.append(overlapping[0])
+        else:
+            # Weighted average by confidence scores
+            total_weight = sum(p.score.value for p in overlapping)
+            weights = [p.score.value / total_weight for p in overlapping]
+            
+            # Average bbox
+            bboxes = np.array([p.bbox.to_xyxy() for p in overlapping])
+            avg_bbox = np.average(bboxes, axis=0, weights=weights)
+            
+            # Average score
+            avg_score = np.average([p.score.value for p in overlapping], weights=weights)
+            
+            # Create merged prediction
+            merged_pred = overlapping[0].deepcopy()
+            merged_pred.bbox.minx = avg_bbox[0]
+            merged_pred.bbox.miny = avg_bbox[1]
+            merged_pred.bbox.maxx = avg_bbox[2]
+            merged_pred.bbox.maxy = avg_bbox[3]
+            merged_pred.score.value = float(avg_score)
+            
+            merged.append(merged_pred)
+    
+    return merged
+
+
+def visualize_slicing_grid(
+    image_height: int,
+    image_width: int,
+    slices: list,
+    output_path: str = None,
+    show_overlap: bool = True,
+) -> np.ndarray:
+    """Visualize slicing grid on image.
+    
+    Args:
+        image_height: Height of the image
+        image_width: Width of the image
+        slices: List of slice coordinates [(x, y, width, height), ...]
+        output_path: Optional path to save visualization
+        show_overlap: Whether to highlight overlapping regions
+    
+    Returns:
+        Visualization image as numpy array
+    """
+    from sahi.utils.cv import cv2
+    
+    # Create blank image
+    vis = np.ones((image_height, image_width, 3), dtype=np.uint8) * 255
+    
+    # Draw slices
+    for i, (x, y, w, h) in enumerate(slices):
+        # Draw rectangle
+        color = (0, 255, 0) if i % 2 == 0 else (0, 200, 0)
+        cv2.rectangle(vis, (int(x), int(y)), (int(x + w), int(y + h)), color, 2)
+        
+        # Add slice number
+        cv2.putText(vis, str(i), (int(x + 10), int(y + 30)),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+        
+        # Highlight overlap regions if requested
+        if show_overlap and i > 0:
+            for j in range(i):
+                iou = calculate_slice_overlap_iou((x, y, w, h), slices[j])
+                if iou > 0:
+                    # Find overlap region
+                    x2, y2, w2, h2 = slices[j]
+                    x_overlap = max(x, x2)
+                    y_overlap = max(y, y2)
+                    x2_overlap = min(x + w, x2 + w2)
+                    y2_overlap = min(y + h, y2 + h2)
+                    
+                    # Draw semi-transparent overlay
+                    overlay = vis.copy()
+                    cv2.rectangle(overlay,
+                                (int(x_overlap), int(y_overlap)),
+                                (int(x2_overlap), int(y2_overlap)),
+                                (0, 0, 255), -1)
+                    cv2.addWeighted(overlay, 0.3, vis, 0.7, 0, vis)
+    
+    if output_path:
+        cv2.imwrite(output_path, vis)
+    
+    return vis
+
+
+def estimate_memory_usage(
+    image_height: int,
+    image_width: int,
+    slice_height: int,
+    slice_width: int,
+    overlap_height_ratio: float,
+    overlap_width_ratio: float,
+    bytes_per_pixel: int = 3,
+    model_memory_mb: float = 500,
+) -> dict:
+    """Estimate memory usage for sliced inference.
+    
+    Args:
+        image_height: Height of the input image
+        image_width: Width of the input image
+        slice_height: Height of each slice
+        slice_width: Width of each slice
+        overlap_height_ratio: Overlap ratio in height dimension
+        overlap_width_ratio: Overlap ratio in width dimension
+        bytes_per_pixel: Number of bytes per pixel (3 for RGB)
+        model_memory_mb: Estimated model memory usage in MB
+    
+    Returns:
+        Dictionary with memory usage estimates
+    """
+    # Calculate number of slices
+    overlap_height = int(slice_height * overlap_height_ratio)
+    overlap_width = int(slice_width * overlap_width_ratio)
+    
+    stride_height = slice_height - overlap_height
+    stride_width = slice_width - overlap_width
+    
+    num_h_slices = int(np.ceil((image_height - overlap_height) / stride_height))
+    num_w_slices = int(np.ceil((image_width - overlap_width) / stride_width))
+    num_slices = num_h_slices * num_w_slices
+    
+    # Calculate memory usage
+    full_image_mb = (image_height * image_width * bytes_per_pixel) / (1024 ** 2)
+    slice_image_mb = (slice_height * slice_width * bytes_per_pixel) / (1024 ** 2)
+    
+    # Estimate peak memory (image + model + slice)
+    peak_memory_mb = full_image_mb + model_memory_mb + slice_image_mb
+    
+    # Estimate total processing memory
+    total_memory_mb = peak_memory_mb * 1.5  # Add 50% buffer
+    
+    return {
+        "num_slices": num_slices,
+        "full_image_mb": full_image_mb,
+        "slice_image_mb": slice_image_mb,
+        "peak_memory_mb": peak_memory_mb,
+        "total_memory_mb": total_memory_mb,
+        "estimated_time_multiplier": num_slices,
+    }
+
+
+def optimize_slicing_parameters(
+    image_height: int,
+    image_width: int,
+    model_input_size: int = 640,
+    max_memory_mb: float = 8000,
+    min_overlap_ratio: float = 0.1,
+    max_overlap_ratio: float = 0.3,
+    target_num_slices: int = None,
+) -> dict:
+    """Optimize slicing parameters for given constraints.
+    
+    Args:
+        image_height: Height of the input image
+        image_width: Width of the input image
+        model_input_size: Expected input size of the detection model
+        max_memory_mb: Maximum available memory in MB
+        min_overlap_ratio: Minimum overlap ratio
+        max_overlap_ratio: Maximum overlap ratio
+        target_num_slices: Target number of slices (optional)
+    
+    Returns:
+        Dictionary with optimized parameters
+    """
+    best_config = None
+    best_score = -1
+    
+    # Try different configurations
+    for overlap_ratio in np.linspace(min_overlap_ratio, max_overlap_ratio, 5):
+        for scale_factor in [0.8, 1.0, 1.2, 1.5, 2.0]:
+            slice_size = int(model_input_size * scale_factor)
+            
+            memory_est = estimate_memory_usage(
+                image_height, image_width,
+                slice_size, slice_size,
+                overlap_ratio, overlap_ratio
+            )
+            
+            # Check memory constraint
+            if memory_est["peak_memory_mb"] > max_memory_mb:
+                continue
+            
+            # Calculate score (balance between num_slices and coverage)
+            num_slices = memory_est["num_slices"]
+            
+            if target_num_slices:
+                # Prefer configurations close to target
+                slice_score = 1.0 - abs(num_slices - target_num_slices) / target_num_slices
+            else:
+                # Prefer fewer slices with good overlap
+                slice_score = 1.0 / (1.0 + num_slices) + overlap_ratio
+            
+            if slice_score > best_score:
+                best_score = slice_score
+                best_config = {
+                    "slice_height": slice_size,
+                    "slice_width": slice_size,
+                    "overlap_height_ratio": overlap_ratio,
+                    "overlap_width_ratio": overlap_ratio,
+                    "num_slices": num_slices,
+                    "memory_estimate": memory_est,
+                }
+    
+    return best_config if best_config else {
+        "slice_height": model_input_size,
+        "slice_width": model_input_size,
+        "overlap_height_ratio": 0.2,
+        "overlap_width_ratio": 0.2,
+    }

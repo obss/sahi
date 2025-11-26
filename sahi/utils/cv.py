@@ -733,3 +733,597 @@ def ipython_display(image: np.ndarray):
     _, ret = cv2.imencode(".png", image)
     i = IPython.display.Image(data=ret)  # type: ignore
     IPython.display.display(i)  # type: ignore
+
+
+# ============================================================================
+# ENHANCED IMAGE PROCESSING UTILITIES
+# ============================================================================
+
+
+def apply_clahe(image: np.ndarray, clip_limit: float = 2.0, tile_grid_size: tuple = (8, 8)) -> np.ndarray:
+    """Apply Contrast Limited Adaptive Histogram Equalization (CLAHE).
+    
+    Enhances local contrast and can improve detection in low-contrast images.
+    
+    Args:
+        image: Input image (BGR or RGB)
+        clip_limit: Threshold for contrast limiting
+        tile_grid_size: Size of grid for histogram equalization
+    
+    Returns:
+        Enhanced image with improved contrast
+    """
+    if len(image.shape) == 2:
+        # Grayscale image
+        clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
+        return clahe.apply(image)
+    else:
+        # Color image - apply to luminance channel
+        lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
+        l = clahe.apply(l)
+        enhanced = cv2.merge([l, a, b])
+        return cv2.cvtColor(enhanced, cv2.COLOR_LAB2BGR)
+
+
+def apply_gaussian_blur(image: np.ndarray, kernel_size: int = 5, sigma: float = 0) -> np.ndarray:
+    """Apply Gaussian blur for noise reduction.
+    
+    Args:
+        image: Input image
+        kernel_size: Size of the Gaussian kernel (must be odd)
+        sigma: Gaussian kernel standard deviation
+    
+    Returns:
+        Blurred image
+    """
+    if kernel_size % 2 == 0:
+        kernel_size += 1
+    return cv2.GaussianBlur(image, (kernel_size, kernel_size), sigma)
+
+
+def apply_bilateral_filter(image: np.ndarray, d: int = 9, sigma_color: float = 75, sigma_space: float = 75) -> np.ndarray:
+    """Apply bilateral filter for edge-preserving smoothing.
+    
+    Args:
+        image: Input image
+        d: Diameter of pixel neighborhood
+        sigma_color: Filter sigma in the color space
+        sigma_space: Filter sigma in the coordinate space
+    
+    Returns:
+        Filtered image with edges preserved
+    """
+    return cv2.bilateralFilter(image, d, sigma_color, sigma_space)
+
+
+def apply_unsharp_mask(image: np.ndarray, kernel_size: int = 5, sigma: float = 1.0, amount: float = 1.0, threshold: int = 0) -> np.ndarray:
+    """Apply unsharp masking for image sharpening.
+    
+    Args:
+        image: Input image
+        kernel_size: Size of Gaussian kernel
+        sigma: Gaussian kernel standard deviation
+        amount: Strength of the sharpening effect
+        threshold: Minimum brightness change to sharpen
+    
+    Returns:
+        Sharpened image
+    """
+    blurred = apply_gaussian_blur(image, kernel_size, sigma)
+    sharpened = cv2.addWeighted(image, 1.0 + amount, blurred, -amount, 0)
+    
+    if threshold > 0:
+        low_contrast_mask = np.absolute(image - blurred) < threshold
+        np.copyto(sharpened, image, where=low_contrast_mask)
+    
+    return sharpened
+
+
+def auto_gamma_correction(image: np.ndarray, target_mean: float = 128.0) -> np.ndarray:
+    """Automatically adjust gamma to achieve target mean brightness.
+    
+    Args:
+        image: Input image
+        target_mean: Target mean pixel value (0-255)
+    
+    Returns:
+        Gamma-corrected image
+    """
+    # Convert to grayscale to calculate mean brightness
+    if len(image.shape) == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+    
+    current_mean = np.mean(gray)
+    
+    # Calculate gamma value
+    gamma = np.log(target_mean / 255.0) / np.log(current_mean / 255.0)
+    gamma = np.clip(gamma, 0.5, 2.5)  # Limit gamma range
+    
+    # Apply gamma correction
+    inv_gamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in range(256)]).astype("uint8")
+    
+    return cv2.LUT(image, table)
+
+
+def adaptive_threshold_image(image: np.ndarray, method: str = "gaussian", block_size: int = 11, c: int = 2) -> np.ndarray:
+    """Apply adaptive thresholding for binarization.
+    
+    Args:
+        image: Input grayscale image
+        method: 'gaussian' or 'mean' for threshold calculation
+        block_size: Size of pixel neighborhood (must be odd)
+        c: Constant subtracted from weighted mean
+    
+    Returns:
+        Binary image
+    """
+    if len(image.shape) == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+    if block_size % 2 == 0:
+        block_size += 1
+    
+    if method == "gaussian":
+        return cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, block_size, c)
+    else:
+        return cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, block_size, c)
+
+
+def remove_background(image: np.ndarray, method: str = "mog2", learning_rate: float = 0.01) -> tuple:
+    """Remove background using background subtraction.
+    
+    Args:
+        image: Input image
+        method: 'mog2' or 'knn' for background subtractor
+        learning_rate: Learning rate for background model
+    
+    Returns:
+        Tuple of (foreground_mask, foreground_image)
+    """
+    if method == "mog2":
+        bg_subtractor = cv2.createBackgroundSubtractorMOG2(detectShadows=True)
+    else:
+        bg_subtractor = cv2.createBackgroundSubtractorKNN(detectShadows=True)
+    
+    fg_mask = bg_subtractor.apply(image, learningRate=learning_rate)
+    fg_image = cv2.bitwise_and(image, image, mask=fg_mask)
+    
+    return fg_mask, fg_image
+
+
+def calculate_image_quality_score(image: np.ndarray) -> dict:
+    """Calculate comprehensive image quality metrics.
+    
+    Args:
+        image: Input image
+    
+    Returns:
+        Dictionary containing quality metrics:
+        - brightness: Mean brightness (0-255)
+        - contrast: Standard deviation of brightness
+        - sharpness: Variance of Laplacian (higher = sharper)
+        - saturation: Mean saturation for color images
+        - noise_estimate: Estimated noise level
+    """
+    # Convert to grayscale for some metrics
+    if len(image.shape) == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+    
+    # Brightness
+    brightness = np.mean(gray)
+    
+    # Contrast
+    contrast = np.std(gray)
+    
+    # Sharpness (Laplacian variance)
+    laplacian = cv2.Laplacian(gray, cv2.CV_64F)
+    sharpness = np.var(laplacian)
+    
+    # Saturation (for color images)
+    saturation = 0.0
+    if len(image.shape) == 3:
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        saturation = np.mean(hsv[:, :, 1])
+    
+    # Noise estimate (using median absolute deviation)
+    h, w = gray.shape
+    crop_size = min(h, w) // 4
+    center_crop = gray[h//2 - crop_size:h//2 + crop_size, w//2 - crop_size:w//2 + crop_size]
+    noise_estimate = np.median(np.absolute(center_crop - np.median(center_crop)))
+    
+    return {
+        "brightness": float(brightness),
+        "contrast": float(contrast),
+        "sharpness": float(sharpness),
+        "saturation": float(saturation),
+        "noise_estimate": float(noise_estimate),
+    }
+
+
+def is_blurry(image: np.ndarray, threshold: float = 100.0) -> bool:
+    """Detect if image is blurry using Laplacian variance.
+    
+    Args:
+        image: Input image
+        threshold: Variance threshold (lower = more blurry)
+    
+    Returns:
+        True if image is blurry, False otherwise
+    """
+    if len(image.shape) == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+    
+    laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+    return laplacian_var < threshold
+
+
+def is_overexposed(image: np.ndarray, threshold: float = 0.05) -> bool:
+    """Detect if image is overexposed.
+    
+    Args:
+        image: Input image
+        threshold: Ratio of pixels that are very bright (near 255)
+    
+    Returns:
+        True if image is overexposed, False otherwise
+    """
+    if len(image.shape) == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+    
+    bright_pixels = np.sum(gray > 250)
+    total_pixels = gray.size
+    bright_ratio = bright_pixels / total_pixels
+    
+    return bright_ratio > threshold
+
+
+def is_underexposed(image: np.ndarray, threshold: float = 0.05) -> bool:
+    """Detect if image is underexposed.
+    
+    Args:
+        image: Input image
+        threshold: Ratio of pixels that are very dark (near 0)
+    
+    Returns:
+        True if image is underexposed, False otherwise
+    """
+    if len(image.shape) == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+    
+    dark_pixels = np.sum(gray < 5)
+    total_pixels = gray.size
+    dark_ratio = dark_pixels / total_pixels
+    
+    return dark_ratio > threshold
+
+
+def auto_enhance_image(image: np.ndarray, enhance_contrast: bool = True, enhance_sharpness: bool = True, denoise: bool = False) -> np.ndarray:
+    """Automatically enhance image for better detection.
+    
+    Args:
+        image: Input image
+        enhance_contrast: Whether to apply CLAHE for contrast enhancement
+        enhance_sharpness: Whether to apply unsharp masking
+        denoise: Whether to apply denoising
+    
+    Returns:
+        Enhanced image
+    """
+    enhanced = image.copy()
+    
+    # Denoise first if requested
+    if denoise:
+        enhanced = cv2.fastNlMeansDenoisingColored(enhanced, None, 10, 10, 7, 21) if len(enhanced.shape) == 3 else cv2.fastNlMeansDenoising(enhanced, None, 10, 7, 21)
+    
+    # Enhance contrast
+    if enhance_contrast:
+        enhanced = apply_clahe(enhanced)
+    
+    # Enhance sharpness
+    if enhance_sharpness:
+        enhanced = apply_unsharp_mask(enhanced, amount=0.5)
+    
+    return enhanced
+
+
+def apply_color_jitter(image: np.ndarray, brightness: float = 0.2, contrast: float = 0.2, saturation: float = 0.2, hue: float = 0.1) -> np.ndarray:
+    """Apply random color jitter for data augmentation.
+    
+    Args:
+        image: Input image (BGR)
+        brightness: Brightness jitter factor
+        contrast: Contrast jitter factor
+        saturation: Saturation jitter factor
+        hue: Hue jitter factor
+    
+    Returns:
+        Jittered image
+    """
+    # Convert to HSV
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV).astype(np.float32)
+    
+    # Apply brightness jitter
+    brightness_factor = 1.0 + random.uniform(-brightness, brightness)
+    hsv[:, :, 2] = np.clip(hsv[:, :, 2] * brightness_factor, 0, 255)
+    
+    # Apply saturation jitter
+    saturation_factor = 1.0 + random.uniform(-saturation, saturation)
+    hsv[:, :, 1] = np.clip(hsv[:, :, 1] * saturation_factor, 0, 255)
+    
+    # Apply hue jitter
+    hue_shift = random.uniform(-hue, hue) * 180
+    hsv[:, :, 0] = np.clip(hsv[:, :, 0] + hue_shift, 0, 180)
+    
+    # Convert back to BGR
+    jittered = cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR)
+    
+    # Apply contrast jitter
+    contrast_factor = 1.0 + random.uniform(-contrast, contrast)
+    jittered = np.clip(jittered.astype(np.float32) * contrast_factor, 0, 255).astype(np.uint8)
+    
+    return jittered
+
+
+def apply_random_crop(image: np.ndarray, object_predictions: list, crop_ratio: float = 0.8) -> tuple:
+    """Apply random crop while keeping all objects.
+    
+    Args:
+        image: Input image
+        object_predictions: List of ObjectPrediction instances
+        crop_ratio: Ratio of crop size to original size
+    
+    Returns:
+        Tuple of (cropped_image, adjusted_predictions)
+    """
+    h, w = image.shape[:2]
+    crop_h = int(h * crop_ratio)
+    crop_w = int(w * crop_ratio)
+    
+    # Find bounding box of all objects
+    if object_predictions:
+        all_bboxes = np.array([pred.bbox.to_xyxy() for pred in object_predictions])
+        min_x = np.min(all_bboxes[:, 0])
+        min_y = np.min(all_bboxes[:, 1])
+        max_x = np.max(all_bboxes[:, 2])
+        max_y = np.max(all_bboxes[:, 3])
+        
+        # Ensure crop contains all objects
+        max_start_x = max(0, min(int(min_x), w - crop_w))
+        max_start_y = max(0, min(int(min_y), h - crop_h))
+        min_end_x = max(crop_w, min(int(max_x), w))
+        min_end_y = max(crop_h, min(int(max_y), h))
+        
+        start_x = random.randint(max(0, min_end_x - crop_w), min(max_start_x, w - crop_w))
+        start_y = random.randint(max(0, min_end_y - crop_h), min(max_start_y, h - crop_h))
+    else:
+        start_x = random.randint(0, max(0, w - crop_w))
+        start_y = random.randint(0, max(0, h - crop_h))
+    
+    # Crop image
+    cropped = image[start_y:start_y + crop_h, start_x:start_x + crop_w]
+    
+    # Adjust predictions
+    adjusted_predictions = []
+    for pred in object_predictions:
+        bbox = pred.bbox.to_xyxy()
+        new_bbox = [
+            bbox[0] - start_x,
+            bbox[1] - start_y,
+            bbox[2] - start_x,
+            bbox[3] - start_y,
+        ]
+        
+        # Only keep if still within cropped region
+        if new_bbox[0] >= 0 and new_bbox[1] >= 0 and new_bbox[2] <= crop_w and new_bbox[3] <= crop_h:
+            pred_copy = pred.deepcopy()
+            pred_copy.bbox.shift_amount = [start_x, start_y]
+            adjusted_predictions.append(pred_copy)
+    
+    return cropped, adjusted_predictions
+
+
+def create_image_pyramid(image: np.ndarray, scales: list = None, min_size: int = 32) -> list:
+    """Create multi-scale image pyramid.
+    
+    Args:
+        image: Input image
+        scales: List of scale factors (default: [1.0, 0.75, 0.5, 0.25])
+        min_size: Minimum dimension size for smallest scale
+    
+    Returns:
+        List of (scale, scaled_image) tuples
+    """
+    if scales is None:
+        scales = [1.0, 0.75, 0.5, 0.25]
+    
+    pyramid = []
+    h, w = image.shape[:2]
+    
+    for scale in sorted(scales, reverse=True):
+        scaled_h = int(h * scale)
+        scaled_w = int(w * scale)
+        
+        # Skip if too small
+        if scaled_h < min_size or scaled_w < min_size:
+            continue
+        
+        scaled_image = cv2.resize(image, (scaled_w, scaled_h), interpolation=cv2.INTER_LINEAR)
+        pyramid.append((scale, scaled_image))
+    
+    return pyramid
+
+
+def apply_mosaic_augmentation(images: list, object_predictions_list: list, output_size: tuple = (640, 640)) -> tuple:
+    """Create mosaic augmentation from 4 images.
+    
+    Args:
+        images: List of 4 input images
+        object_predictions_list: List of 4 object prediction lists
+        output_size: Output image size (height, width)
+    
+    Returns:
+        Tuple of (mosaic_image, combined_predictions)
+    """
+    if len(images) != 4 or len(object_predictions_list) != 4:
+        raise ValueError("Mosaic augmentation requires exactly 4 images")
+    
+    h, w = output_size
+    center_x = w // 2
+    center_y = h // 2
+    
+    # Create blank canvas
+    mosaic = np.zeros((h, w, 3), dtype=np.uint8)
+    combined_predictions = []
+    
+    # Place images in 4 quadrants
+    quadrants = [
+        (0, 0, center_x, center_y),  # Top-left
+        (center_x, 0, w, center_y),  # Top-right
+        (0, center_y, center_x, h),  # Bottom-left
+        (center_x, center_y, w, h),  # Bottom-right
+    ]
+    
+    for idx, (img, preds, (x1, y1, x2, y2)) in enumerate(zip(images, object_predictions_list, quadrants)):
+        # Resize image to fit quadrant
+        quad_w = x2 - x1
+        quad_h = y2 - y1
+        resized = cv2.resize(img, (quad_w, quad_h))
+        
+        # Place in mosaic
+        mosaic[y1:y2, x1:x2] = resized
+        
+        # Adjust predictions
+        scale_x = quad_w / img.shape[1]
+        scale_y = quad_h / img.shape[0]
+        
+        for pred in preds:
+            bbox = pred.bbox.to_xyxy()
+            new_bbox = [
+                bbox[0] * scale_x + x1,
+                bbox[1] * scale_y + y1,
+                bbox[2] * scale_x + x1,
+                bbox[3] * scale_y + y1,
+            ]
+            
+            pred_copy = pred.deepcopy()
+            pred_copy.bbox.shift_amount = [x1, y1]
+            combined_predictions.append(pred_copy)
+    
+    return mosaic, combined_predictions
+
+
+def apply_mixup(image1: np.ndarray, image2: np.ndarray, alpha: float = 0.5) -> np.ndarray:
+    """Apply mixup augmentation between two images.
+    
+    Args:
+        image1: First input image
+        image2: Second input image
+        alpha: Mixing ratio (0.0-1.0)
+    
+    Returns:
+        Mixed image
+    """
+    # Ensure images are same size
+    if image1.shape != image2.shape:
+        image2 = cv2.resize(image2, (image1.shape[1], image1.shape[0]))
+    
+    # Mix images
+    mixed = cv2.addWeighted(image1, alpha, image2, 1.0 - alpha, 0)
+    
+    return mixed
+
+
+def calculate_histogram(image: np.ndarray, bins: int = 256) -> dict:
+    """Calculate color histogram for image.
+    
+    Args:
+        image: Input image
+        bins: Number of bins for histogram
+    
+    Returns:
+        Dictionary with histogram data for each channel
+    """
+    histograms = {}
+    
+    if len(image.shape) == 2:
+        hist = cv2.calcHist([image], [0], None, [bins], [0, 256])
+        histograms["gray"] = hist.flatten().tolist()
+    else:
+        colors = ["b", "g", "r"]
+        for i, color in enumerate(colors):
+            hist = cv2.calcHist([image], [i], None, [bins], [0, 256])
+            histograms[color] = hist.flatten().tolist()
+    
+    return histograms
+
+
+def match_histogram(source: np.ndarray, reference: np.ndarray) -> np.ndarray:
+    """Match histogram of source image to reference image.
+    
+    Args:
+        source: Source image to transform
+        reference: Reference image with target histogram
+    
+    Returns:
+        Source image with matched histogram
+    """
+    # Convert to LAB color space for better results
+    if len(source.shape) == 3:
+        source_lab = cv2.cvtColor(source, cv2.COLOR_BGR2LAB)
+        reference_lab = cv2.cvtColor(reference, cv2.COLOR_BGR2LAB)
+        
+        # Match each channel
+        matched_lab = np.zeros_like(source_lab)
+        for i in range(3):
+            source_hist, bins = np.histogram(source_lab[:, :, i].flatten(), 256, [0, 256])
+            reference_hist, _ = np.histogram(reference_lab[:, :, i].flatten(), 256, [0, 256])
+            
+            source_cdf = source_hist.cumsum()
+            source_cdf = source_cdf / source_cdf[-1]
+            
+            reference_cdf = reference_hist.cumsum()
+            reference_cdf = reference_cdf / reference_cdf[-1]
+            
+            # Create lookup table
+            lookup_table = np.zeros(256, dtype=np.uint8)
+            j = 0
+            for k in range(256):
+                while j < 255 and source_cdf[k] > reference_cdf[j]:
+                    j += 1
+                lookup_table[k] = j
+            
+            matched_lab[:, :, i] = cv2.LUT(source_lab[:, :, i], lookup_table)
+        
+        return cv2.cvtColor(matched_lab, cv2.COLOR_LAB2BGR)
+    else:
+        # Grayscale
+        source_hist, bins = np.histogram(source.flatten(), 256, [0, 256])
+        reference_hist, _ = np.histogram(reference.flatten(), 256, [0, 256])
+        
+        source_cdf = source_hist.cumsum()
+        source_cdf = source_cdf / source_cdf[-1]
+        
+        reference_cdf = reference_hist.cumsum()
+        reference_cdf = reference_cdf / reference_cdf[-1]
+        
+        lookup_table = np.zeros(256, dtype=np.uint8)
+        j = 0
+        for k in range(256):
+            while j < 255 and source_cdf[k] > reference_cdf[j]:
+                j += 1
+            lookup_table[k] = j
+        
+        return cv2.LUT(source, lookup_table)
