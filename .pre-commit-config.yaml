@@ -1,16 +1,26 @@
 repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version.
-    rev: v0.9.5
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
     hooks:
-      # Run the linter.
-      - id: ruff
-        types_or: [ python, pyi ]
-        args: [--fix]
-      # Run import organizer
-      - id: ruff
-        types_or: [ python, pyi ]
-        args: [--select, I, --fix]
-      # Run the formatter.
-      - id: ruff-format
-        types_or: [ python, pyi ]
+      - id: trailing-whitespace
+        exclude: test/.*\.py
+      - id: check-yaml
+        exclude: mkdocs.yml
+      - id: check-executables-have-shebangs
+      - id: check-toml
+      - id: check-case-conflict
+      - id: check-added-large-files
+      - id: detect-private-key
+      - id: pretty-format-json
+        args: ['--autofix', '--no-sort-keys', '--indent=4']
+        exclude: .*\.ipynb
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+
+  -   repo: https://github.com/astral-sh/ruff-pre-commit
+      rev: v0.12.5
+      hooks:
+      -   id: ruff
+          args: [--fix, --unsafe-fixes,--exit-non-zero-on-fix]
+      -   id: ruff-format
+          types_or: [ python, pyi, jupyter ]

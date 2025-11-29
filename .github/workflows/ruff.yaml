@@ -1,18 +1,62 @@
 name: Ruff
-on: [push]
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "**.ipynb"
+      - "**.cff"
+      - "docs/**"
+      - "demo/**"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "**.ipynb"
+      - "**.cff"
+      - "docs/**"
+      - "demo/**"
 jobs:
-  ruff-format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/ruff-action@v3
-        with:
-          args: "format --check"
-          version: "latest"
   ruff:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/ruff-action@v3
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          version: "latest"
+          python-version: '3.10'
+      - name: Install uv
+        uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7.1.4
+      - name: Install dependencies
+        run: |
+          uv venv --python 3.10
+          uv sync --group dev
+      - name: Check code formatting
+        id: ruff_check
+        run: |
+          source .venv/bin/activate
+          python scripts/format_code.py check
+        continue-on-error: true
+      - name: Provide formatting guidance
+        if: steps.ruff_check.outcome == 'failure'
+        run: |
+          echo "::error::Code formatting check failed! 🚨"
+          echo ""
+          echo "::warning::To fix formatting issues, please run the following commands locally:"
+          echo ""
+          echo "1. Ensure you have the development environment set up:"
+          echo "   pip install uv"
+          echo "   uv venv --python 3.10"
+          echo "   source .venv/bin/activate  # On Windows: .venv\Scripts\activate"
+          echo "   uv sync --extra dev"
+          echo ""
+          echo "2. Fix the formatting issues:"
+          echo "   python scripts/format_code.py fix"
+          echo ""
+          echo "3. Commit and push the changes:"
+          echo "   git add ."
+          echo "   git commit -m 'Fix code formatting'"
+          echo "   git push"
+          echo ""
+          echo "For more details, see CONTRIBUTING.md"
+          exit 1

@@ -1,5 +1,4 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
+from __future__ import annotations
 
 import glob
 import json
@@ -10,14 +9,13 @@ import re
 import urllib.request
 import zipfile
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
 
 def unzip(file_path: str, dest_dir: str):
-    """
-    Unzips compressed .zip file.
+    """Unzips compressed .zip file.
+
     Example inputs:
         file_path: 'data/01_alb_id.zip'
         dest_dir: 'data/'
@@ -28,9 +26,20 @@ def unzip(file_path: str, dest_dir: str):
         zf.extractall(dest_dir)
 
 
-def save_json(data, save_path, indent: Optional[int] = None):
+def save_json(data, save_path, indent: int | None = None):
     """
     Saves json formatted data (given as "data") as save_path
+
+    Args:
+        data: dict
+            Data to be saved as json
+        save_path: str
+            "dirname/coco.json"
+        indent: int or None
+            Indentation level for pretty-printing the JSON data. If None, the most compact representation
+            will be used. If an integer is provided, it specifies the number of spaces to use for indentation.
+            Example: indent=4 will format the JSON data with an indentation of 4 spaces per level.
+
     Example inputs:
         data: {"image_id": 5}
         save_path: "dirname/coco.json"
@@ -54,13 +63,18 @@ class NumpyEncoder(json.JSONEncoder):
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
         else:
-            return super(NumpyEncoder, self).default(obj)
+            return super().default(obj)
 
 
 def load_json(load_path: str, encoding: str = "utf-8"):
-    """
-    Loads json formatted data (given as "data") from load_path
-    Encoding type can be specified with 'encoding' argument
+    """Loads json formatted data (given as "data") from load_path Encoding type can be specified with 'encoding'
+    argument.
+
+    Args:
+        load_path: str
+            "dirname/coco.json"
+        encoding: str
+            Encoding type, default is 'utf-8'
 
     Example inputs:
         load_path: "dirname/coco.json"
@@ -75,9 +89,8 @@ def list_files(
     directory: str,
     contains: list = [".json"],
     verbose: int = 1,
-) -> List[str]:
-    """
-    Walk given directory and return a list of file path with desired extension
+) -> list[str]:
+    """Walk given directory and return a list of file path with desired extension.
 
     Args:
         directory: str
@@ -95,7 +108,7 @@ def list_files(
     # define verboseprint
     verboseprint = print if verbose else lambda *a, **k: None
 
-    filepath_list: List[str] = []
+    filepath_list: list[str] = []
 
     for file in os.listdir(directory):
         # check if filename contains any of the terms given in contains list
@@ -106,25 +119,23 @@ def list_files(
     number_of_files = len(filepath_list)
     folder_name = Path(directory).name
 
-    verboseprint(f"There are {str(number_of_files)} listed files in folder: {folder_name}/")
+    verboseprint(f"There are {number_of_files!s} listed files in folder: {folder_name}/")
 
     return filepath_list
 
 
-def list_files_recursively(directory: str, contains: list = [".json"], verbose: bool = True) -> Tuple[list, list]:
-    """
-    Walk given directory recursively and return a list of file path with desired extension
+def list_files_recursively(directory: str, contains: list = [".json"], verbose: bool = True) -> tuple[list, list]:
+    """Walk given directory recursively and return a list of file path with desired extension.
 
-    Arguments
-    -------
+    Args:
         directory : str
             "data/coco/"
         contains : list
             A list of strings to check if the target file contains them, example: ["coco.png", ".jpg", "jpeg"]
         verbose : bool
             If true, prints some results
-    Returns
-    -------
+
+    Returns:
         relative_filepath_list : list
             List of file paths relative to given directory
         abs_filepath_list : list
@@ -151,30 +162,26 @@ def list_files_recursively(directory: str, contains: list = [".json"], verbose: 
     number_of_files = len(relative_filepath_list)
     folder_name = directory.split(os.sep)[-1]
 
-    verboseprint("There are {} listed files in folder {}.".format(number_of_files, folder_name))
+    verboseprint(f"There are {number_of_files} listed files in folder {folder_name}.")
 
     return relative_filepath_list, abs_filepath_list
 
 
 def get_base_filename(path: str):
-    """
-    Takes a file path, returns (base_filename_with_extension, base_filename_without_extension)
-    """
+    """Takes a file path, returns (base_filename_with_extension, base_filename_without_extension)"""
     base_filename_with_extension = ntpath.basename(path)
     base_filename_without_extension, _ = os.path.splitext(base_filename_with_extension)
     return base_filename_with_extension, base_filename_without_extension
 
 
 def get_file_extension(path: str):
-    """
-    Get the file extension from a given file path.
+    """Get the file extension from a given file path.
 
     Args:
         path (str): The file path.
 
     Returns:
         str: The file extension.
-
     """
     _, file_extension = os.path.splitext(path)
     return file_extension
@@ -183,6 +190,11 @@ def get_file_extension(path: str):
 def load_pickle(load_path):
     """
     Loads pickle formatted data (given as "data") from load_path
+
+    Args:
+        load_path: str
+            "dirname/coco.pickle"
+
     Example inputs:
         load_path: "dirname/coco.pickle"
     """
@@ -194,6 +206,13 @@ def load_pickle(load_path):
 def save_pickle(data, save_path):
     """
     Saves pickle formatted data (given as "data") as save_path
+
+    Args:
+        data: dict
+            Data to be saved as pickle
+        save_path: str
+            "dirname/coco.pickle"
+
     Example inputs:
         data: {"image_id": 5}
         save_path: "dirname/coco.pickle"
@@ -207,8 +226,7 @@ def save_pickle(data, save_path):
 
 
 def import_model_class(model_type, class_name):
-    """
-    Imports a predefined detection class by class name.
+    """Imports a predefined detection class by class name.
 
     Args:
         model_type: str
@@ -223,9 +241,8 @@ def import_model_class(model_type, class_name):
     return class_
 
 
-def increment_path(path: Union[str, Path], exist_ok: bool = True, sep: str = "") -> str:
-    """
-    Increment path, i.e. runs/exp --> runs/exp{sep}0, runs/exp{sep}1 etc.
+def increment_path(path: str | Path, exist_ok: bool = True, sep: str = "") -> str:
+    """Increment path, i.e. runs/exp --> runs/exp{sep}0, runs/exp{sep}1 etc.
 
     Args:
         path: str
@@ -256,8 +273,7 @@ def increment_path(path: Union[str, Path], exist_ok: bool = True, sep: str = "")
 
 
 def download_from_url(from_url: str, to_path: str):
-    """
-    Downloads a file from the given URL and saves it to the specified path.
+    """Downloads a file from the given URL and saves it to the specified path.
 
     Args:
         from_url (str): The URL of the file to download.
@@ -276,8 +292,7 @@ def download_from_url(from_url: str, to_path: str):
 
 
 def is_colab():
-    """
-    Check if the current environment is a Google Colab instance.
+    """Check if the current environment is a Google Colab instance.
 
     Returns:
         bool: True if the environment is a Google Colab instance, False otherwise.

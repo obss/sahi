@@ -1,0 +1,54 @@
+name: 🛠️ Build and 📚 Publish Docs
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  release:
+    types: [published]
+
+# Ensure only one concurrent deployment
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'push' && github.ref}}
+  cancel-in-progress: true
+
+# Restrict permissions by default
+permissions:
+  contents: write # Required for committing to gh-pages
+  pages: write # Required for deploying to Pages
+  pull-requests: write # Required for PR comments
+
+jobs:
+  deploy:
+    name: 📚 Publish Docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+    steps:
+      - name: 📥 Checkout the repository
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          fetch-depth: 0
+
+      - name: 🐍 Install uv and set Python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7.1.4
+        with:
+          python-version: ${{ matrix.python-version }}
+          activate-environment: true
+
+      - name: 🏗️ Install dependencies
+        run: |
+          uv pip install -r pyproject.toml --group docs
+
+      - name: ⚙️ Configure git for github-actions
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: 📚 Build and Publish Docs
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+        run: |
+          uv run mkdocs gh-deploy --force
