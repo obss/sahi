@@ -122,9 +122,9 @@ ci = [
 
 [tool.uv]
 
-# find-links = [
-#   "http://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
-# ]
+find-links = [
+   "http://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
+]
 
 override-dependencies = ["pillow>=8.2.0"]
 
