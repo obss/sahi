@@ -12,9 +12,9 @@ class TestHighLevelApi:
         shifted_bbox = bbox.get_shifted_box()
 
         # compare
-        assert expanded_bbox.to_xywh() == [18, 23, 94, 134]
-        assert expanded_bbox.to_xyxy() == [18, 23, 112, 157]
-        assert shifted_bbox.to_xyxy() == [80, 70, 150, 190]
+        assert expanded_bbox.to_xywh() == [23.0, 18.0, 84.0, 144.0]
+        assert expanded_bbox.to_xyxy() == [23.0, 18.0, 107.0, 162.0]
+        assert shifted_bbox.to_xyxy() == [80.0, 70.0, 150.0, 190.0]
 
     def test_category(self):
         from sahi import Category

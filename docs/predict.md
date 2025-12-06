@@ -1,6 +1,6 @@
 # Prediction Utilities
 
-- Sliced inference:
+## Sliced inference
 
 ```python
 from sahi.predict import get_sliced_prediction
@@ -11,6 +11,10 @@ detection_model = AutoDetectionModel.from_pretrained(model_type='mmdet',...) # f
 detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',...) # for YOLOv8/YOLO11/YOLO12 models
 detection_model = AutoDetectionModel.from_pretrained(model_type='huggingface',...) # for HuggingFace detection models
 detection_model = AutoDetectionModel.from_pretrained(model_type='torchvision',...) # for Torchvision detection models
+detection_model = AutoDetectionModel.from_pretrained(model_type='rtdetr',...) # for RT-DETR models
+detection_model = AutoDetectionModel.from_pretrained(model_type='yoloe',...) # for YOLOE models
+detection_model = AutoDetectionModel.from_pretrained(model_type='yolov5',...) # for YOLOv5 models
+detection_model = AutoDetectionModel.from_pretrained(model_type='yolo-world',...) # for YOLOWorld models
 
 # get sliced prediction result
 result = get_sliced_prediction(
@@ -24,7 +28,7 @@ result = get_sliced_prediction(
 
 ```
 
-- Standard inference:
+## Standard inference
 
 ```python
 from sahi.predict import get_prediction
@@ -41,7 +45,7 @@ result = get_prediction(
 
 ```
 
-- Batch inference:
+## Batch inference
 
 ```python
 from sahi.predict import predict
@@ -66,11 +70,47 @@ result = predict(
     overlap_width_ratio=0.2,
     export_pickle=False,
     export_crop=False,
+    progress_bar=False,
 )
-
 ```
 
-- Exclude custom classes on inference:
+## Progress-Bar
+
+Two options were added to control and receive progress
+updates when running sliced inference over many slices:
+
+- `progress_bar` (bool): When True, shows a tqdm progress bar during slice processing. Useful for visual feedback in terminals and notebooks. Default is False.
+- `progress_callback` (callable): A callback function that will be called after each slice (or slice group) is processed. The callback receives two integer arguments: `(current_slice_index, total_slices)`. Use this to integrate custom progress reporting (for example, update a GUI element or log progress to a file).
+
+Example using the callback:
+
+```python
+from sahi.predict import get_sliced_prediction
+from sahi import AutoDetectionModel
+
+# init model
+detection_model = AutoDetectionModel.from_pretrained(...)
+
+def my_progress_callback(current, total):
+    print(f"Processed {current}/{total} slices")
+
+result = get_sliced_prediction(
+    image,
+    detection_model,
+    slice_height=512,
+    slice_width=512,
+    overlap_height_ratio=0.2,
+    overlap_width_ratio=0.2,
+    progress_bar=False,           # disable tqdm bar
+    progress_callback=my_progress_callback,  # use callback to receive updates
+)
+```
+
+!!! tip "Notes"
+    - `progress_bar` and `progress_callback` can be used together. When both are provided, the tqdm bar will display and the callback will be called after each slice group is processed.
+    - The `progress_callback` is called with 1-based indices (i.e. first call will be `(1, total)`).
+
+## Exclude custom classes on inference
 
 ```python
 from sahi.predict import get_sliced_prediction
@@ -98,7 +138,7 @@ result = get_sliced_prediction(
 
 ```
 
-- Visualization parameters and export formats:
+## Visualization parameters and export formats
 
 ```python
 from sahi.predict import get_prediction
@@ -144,14 +184,14 @@ fiftyone_detections = result.to_fiftyone_detections()
 # For use with FiftyOne: https://github.com/voxel51/fiftyone
 ```
 
-# Interactive Demos and Examples
-Want to see these prediction utilities in action? We have several interactive notebooks that demonstrate different model integrations:
+!!! tips "Interactive Demos and Examples"
+    Want to see these prediction utilities in action? We have several interactive notebooks that demonstrate different model integrations:
 
-- For YOLOv8/YOLO11/YOLO12 models, explore our [Ultralytics integration notebook](../demo/inference_for_ultralytics.ipynb)
-- For YOLOv5 models, check out our [YOLOv5 integration notebook](../demo/inference_for_yolov5.ipynb)
-- For MMDetection models, try our [MMDetection integration notebook](../demo/inference_for_mmdetection.ipynb)
-- For HuggingFace models, see our [HuggingFace integration notebook](../demo/inference_for_huggingface.ipynb)
-- For TorchVision models, explore our [TorchVision integration notebook](../demo/inference_for_torchvision.ipynb)
-- For RT-DETR models, check out our [RT-DETR integration notebook](../demo/inference_for_rtdetr.ipynb)
+    - For YOLOv8/YOLO11/YOLO12 models, explore our [Ultralytics integration notebook](../demo/inference_for_ultralytics.ipynb)
+    - For YOLOv5 models, check out our [YOLOv5 integration notebook](../demo/inference_for_yolov5.ipynb)
+    - For MMDetection models, try our [MMDetection integration notebook](../demo/inference_for_mmdetection.ipynb)
+    - For HuggingFace models, see our [HuggingFace integration notebook](../demo/inference_for_huggingface.ipynb)
+    - For TorchVision models, explore our [TorchVision integration notebook](../demo/inference_for_torchvision.ipynb)
+    - For RT-DETR models, check out our [RT-DETR integration notebook](../demo/inference_for_rtdetr.ipynb)
 
-These notebooks provide hands-on examples and allow you to experiment with different parameters and settings.
+    These notebooks provide hands-on examples and allow you to experiment with different parameters and settings.

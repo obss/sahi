@@ -1,5 +1,29 @@
 # Fiftyone Utilities
 
+## Explore COCO dataset via FiftyOne app
+
+Supported version: `pip install fiftyone>=0.14.2<0.15.0`
+
+```python
+from sahi.utils.fiftyone import launch_fiftyone_app
+
+# launch fiftyone app:
+session = launch_fiftyone_app(coco_image_dir, coco_json_path)
+
+# close fiftyone app:
+session.close()
+```
+
+## Convert predictions to FiftyOne detection:
+
+```python
+from sahi import get_sliced_prediction
+
+# perform sliced prediction
+result = get_sliced_prediction(
+image,
+# Fiftyone Utilities
+
 - Explore COCO dataset via FiftyOne app:
 
 Supported version: `pip install fiftyone>=0.14.2<0.15.0`
@@ -14,7 +38,7 @@ session = launch_fiftyone_app(coco_image_dir, coco_json_path)
 session.close()
 ```
 
-- Convert predictions to FiftyOne detection:
+## Convert predictions to FiftyOne detection:
 
 ```python
 from sahi import get_sliced_prediction
