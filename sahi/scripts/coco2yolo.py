@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import fire
-
 from sahi.utils.coco import Coco
 from sahi.utils.file import Path, increment_path
 
@@ -15,16 +13,23 @@ def main(
     seed: int = 1,
     disable_symlink=False,
 ):
-    """
+    """Convert COCO dataset to YOLO format.
+
     Args:
-        images_dir (str): directory for coco images
-        dataset_json_path (str): file path for the coco json file to be converted
-        train_split (float or int): set the training split ratio
-        project (str): save results to project/name
-        name (str): save results to project/name"
-        seed (int): fix the seed for reproducibility
-        disable_symlink (bool): required in google colab env
+        image_dir: Directory containing COCO images
+        dataset_json_path: Path to the COCO JSON annotation file
+        train_split: Training split ratio (0.0 to 1.0)
+        project: Project directory for output
+        name: Experiment name for output subdirectory
+        seed: Random seed for reproducibility
+        disable_symlink: Disable symbolic links (required in some environments)
     """
+
+    # Validate required parameters
+    if image_dir is None:
+        raise ValueError("image_dir is required")
+    if dataset_json_path is None:
+        raise ValueError("dataset_json_path is required")
 
     # increment run
     save_dir = Path(increment_path(Path(project) / name, exist_ok=False))
@@ -42,7 +47,3 @@ def main(
     )
 
     print(f"COCO to YOLO conversion results are successfully exported to {save_dir}")
-
-
-if __name__ == "__main__":
-    fire.Fire(main)
