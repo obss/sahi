@@ -13,6 +13,9 @@ from sahi.utils.torch_utils import empty_cuda_cache, select_device
 
 class DetectionModel:
     required_packages: list[str] | None = None
+    _object_prediction_list_per_image: list[list[ObjectPrediction]]
+    _shift_amount_indices_per_prediction: list[int]
+    _original_shape: np._AnyShapeT
 
     def __init__(
         self,
@@ -60,6 +63,7 @@ class DetectionModel:
         self._original_predictions = None
         self._object_prediction_list_per_image = None
         self.set_device(device)
+        self._shift_amount_indices_per_prediction = None
 
         # automatically ensure dependencies
         self.check_dependencies()
@@ -119,6 +123,16 @@ class DetectionModel:
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted.
+        """
+        raise NotImplementedError()
+    
+    def perform_per_image_batch_inference(self, image_list: np.ndarray | list[np.ndarray], order: str = "RGB") -> None:
+        """This function should be implemented in a way that prediction should be performed using self.model and the
+        prediction result should be set to self._original_predictions.
+
+        Args:
+            image: np.ndarray or list
+                A numpy array that contains the image to be predicted or a list of numpy arrays.
         """
         raise NotImplementedError()
 
@@ -196,3 +210,7 @@ class DetectionModel:
     @property
     def original_predictions(self):
         return self._original_predictions
+
+    @property
+    def shift_amount_indices_per_prediction(self):
+        return self._shift_amount_indices_per_prediction
