@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from typing import Any
+from typing import Any, Optional, TypedDict
 
 import numpy as np
 from PIL import Image
@@ -154,13 +154,19 @@ class ObjectPrediction(ObjectAnnotation):
     score: {self.score},
     category: {self.category}>"""
 
+class DurationMetrics(TypedDict):
+    prediction: Optional[float]
+    postprocess: Optional[float]
+    slice: Optional[float]
+    model_load: Optional[float]
+    export_files: Optional[float]
 
 class PredictionResult:
     def __init__(
         self,
         object_prediction_list: list[ObjectPrediction],
         image: Image.Image | str | np.ndarray,
-        durations_in_seconds: dict[str, Any] = dict(),
+        durations_in_seconds: DurationMetrics = dict(),
     ):
         self.image: Image.Image = read_image_as_pil(image)
         self.image_width, self.image_height = self.image.size
