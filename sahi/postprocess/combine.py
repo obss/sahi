@@ -7,7 +7,6 @@ from shapely import STRtree, box
 from sahi.logger import logger
 from sahi.postprocess.utils import ObjectPredictionList, has_match, merge_object_prediction_pair
 from sahi.prediction import ObjectPrediction
-from sahi.utils.import_utils import check_requirements
 
 
 def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):
@@ -457,8 +456,6 @@ class PostprocessPredictions:
         self.match_threshold = match_threshold
         self.class_agnostic = class_agnostic
         self.match_metric = match_metric
-
-        check_requirements(["torch"])
 
     def __call__(self, predictions: list[ObjectPrediction]):
         raise NotImplementedError()

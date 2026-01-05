@@ -7,7 +7,6 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Literal
 
-import fire
 import numpy as np
 from terminaltables import AsciiTable
 
@@ -361,7 +360,8 @@ def evaluate(
     areas: list[int] = [1024, 9216, 10000000000],
     return_dict: bool = False,
 ):
-    """
+    """COCO evaluation entrypoint.
+
     Args:
         dataset_json_path (str): file path for the coco dataset json file
         result_json_path (str): file path for the coco result json file
@@ -373,6 +373,7 @@ def evaluate(
         areas (List[int]): area regions for coco evaluation calculations
         return_dict (bool): If True, returns a dict with 'eval_results' 'export_path' fields.
     """
+
     try:
         from pycocotools.coco import COCO
         from pycocotools.cocoeval import COCOeval
@@ -396,7 +397,3 @@ def evaluate(
     )
     if return_dict:
         return result
-
-
-if __name__ == "__main__":
-    fire.Fire(evaluate)

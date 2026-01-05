@@ -6,7 +6,6 @@ import os
 from multiprocessing import Pool
 from pathlib import Path
 
-import fire
 import numpy as np
 
 from sahi.logger import logger
@@ -452,6 +451,8 @@ def analyse(
     return_dict: bool = False,
 ) -> dict | None:
     """
+    Perform COCO error analysis and export result plots to out_dir.
+
     Args:
         dataset_json_path (str): file path for the coco dataset json file
         result_json_paths (str): file path for the coco result json file
@@ -480,7 +481,3 @@ def analyse(
     )
     if return_dict:
         return result
-
-
-if __name__ == "__main__":
-    fire.Fire(analyse)

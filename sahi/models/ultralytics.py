@@ -10,7 +10,7 @@ from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_coco_segmentation_from_bool_mask
-from sahi.utils.import_utils import check_requirements
+from sahi.utils.package_utils import check_requirements
 
 
 class UltralyticsDetectionModel(DetectionModel):

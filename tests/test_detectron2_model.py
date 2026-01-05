@@ -2,7 +2,7 @@ from sahi.models.detectron2 import Detectron2DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.detectron2 import Detectron2TestConstants
-from sahi.utils.import_utils import get_package_info
+from sahi.utils.package_utils import get_package_info
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -11,7 +11,7 @@ IMAGE_SIZE = 320
 # note that detectron2 binaries are available only for linux
 
 # TODO: This test is currently not running as torch version is pinned to 1.13
-torch_version = get_package_info("torch", verbose=False)[1]
+torch_version = get_package_info("torch")[1]
 if "1.10." in torch_version:
 
     class TestDetectron2DetectionModel:
