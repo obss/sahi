@@ -6,7 +6,7 @@ updates:
     schedule:
       interval: "weekly"
     commit-message:
-      prefix: ⬆️
+      prefix: 👷
     target-branch: "main"
   # Python
   - package-ecosystem: "pip"
