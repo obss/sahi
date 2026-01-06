@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2025.
-
 from unittest.mock import patch
 
 
@@ -12,12 +9,21 @@ class TestFileUtils:
         filepath_list = list_files(directory, contains=["json"], verbose=False)
         assert len(filepath_list) == 11
 
-    def test_list_files_recursively(self):
+    def test_list_files_recursively(self, tmp_path):
+        import shutil
+        from pathlib import Path
+
         from sahi.utils.file import list_files_recursively
 
-        directory = "tests/data/coco_utils/"
+        # Copy only the target json files into an isolated temp directory to avoid race
+        # with other tests that may create additional *coco.json files recursively.
+        src_dir = Path("tests/data/coco_utils/")
+        for f in src_dir.iterdir():
+            if f.is_file() and "coco.json" in f.name:
+                shutil.copy(f, tmp_path / f.name)
+
         relative_filepath_list, abs_filepath_list = list_files_recursively(
-            directory, contains=["coco.json"], verbose=False
+            str(tmp_path), contains=["coco.json"], verbose=False
         )
         assert len(relative_filepath_list) == 7
         assert len(abs_filepath_list) == 7

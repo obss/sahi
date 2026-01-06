@@ -1,8 +1,6 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2021.
+from __future__ import annotations
 
 import copy
-from typing import List
 
 import numpy as np
 
@@ -12,7 +10,7 @@ from sahi.prediction import ObjectPrediction
 
 
 class PostprocessPredictions:
-    """Utilities for calculating IOU/IOS based match for given ObjectPredictions"""
+    """Utilities for calculating IOU/IOS based match for given ObjectPredictions."""
 
     def __init__(
         self,
@@ -36,7 +34,7 @@ class PostprocessPredictions:
 
     @staticmethod
     def get_score_func(object_prediction: ObjectPrediction):
-        """Used for sorting predictions"""
+        """Used for sorting predictions."""
         return object_prediction.score.value
 
     @staticmethod
@@ -45,7 +43,7 @@ class PostprocessPredictions:
 
     @staticmethod
     def calculate_bbox_iou(pred1: ObjectPrediction, pred2: ObjectPrediction) -> float:
-        """Returns the ratio of intersection area to the union"""
+        """Returns the ratio of intersection area to the union."""
         box1 = np.array(pred1.bbox.to_xyxy())
         box2 = np.array(pred2.bbox.to_xyxy())
         area1 = calculate_area(box1)
@@ -55,7 +53,7 @@ class PostprocessPredictions:
 
     @staticmethod
     def calculate_bbox_ios(pred1: ObjectPrediction, pred2: ObjectPrediction) -> float:
-        """Returns the ratio of intersection area to the smaller box's area"""
+        """Returns the ratio of intersection area to the smaller box's area."""
         box1 = np.array(pred1.bbox.to_xyxy())
         box2 = np.array(pred2.bbox.to_xyxy())
         area1 = calculate_area(box1)
@@ -71,10 +69,10 @@ class PostprocessPredictions:
 class NMSPostprocess(PostprocessPredictions):
     def __call__(
         self,
-        object_predictions: List[ObjectPrediction],
+        object_predictions: list[ObjectPrediction],
     ):
-        source_object_predictions: List[ObjectPrediction] = copy.deepcopy(object_predictions)
-        selected_object_predictions: List[ObjectPrediction] = []
+        source_object_predictions: list[ObjectPrediction] = copy.deepcopy(object_predictions)
+        selected_object_predictions: list[ObjectPrediction] = []
         while len(source_object_predictions) > 0:
             # select object prediction with highest score
             source_object_predictions.sort(reverse=True, key=self.get_score_func)
@@ -82,7 +80,7 @@ class NMSPostprocess(PostprocessPredictions):
             # remove selected prediction from source list
             del source_object_predictions[0]
             # if any element from remaining source prediction list matches, remove it
-            new_source_object_predictions: List[ObjectPrediction] = []
+            new_source_object_predictions: list[ObjectPrediction] = []
             for candidate_object_prediction in source_object_predictions:
                 if self._has_match(selected_object_prediction, candidate_object_prediction):
                     pass
@@ -97,10 +95,10 @@ class NMSPostprocess(PostprocessPredictions):
 class UnionMergePostprocess(PostprocessPredictions):
     def __call__(
         self,
-        object_predictions: List[ObjectPrediction],
+        object_predictions: list[ObjectPrediction],
     ):
-        source_object_predictions: List[ObjectPrediction] = copy.deepcopy(object_predictions)
-        selected_object_predictions: List[ObjectPrediction] = []
+        source_object_predictions: list[ObjectPrediction] = copy.deepcopy(object_predictions)
+        selected_object_predictions: list[ObjectPrediction] = []
         while len(source_object_predictions) > 0:
             # select object prediction with highest score
             source_object_predictions.sort(reverse=True, key=self.get_score_func)
@@ -108,7 +106,7 @@ class UnionMergePostprocess(PostprocessPredictions):
             # remove selected prediction from source list
             del source_object_predictions[0]
             # if any element from remaining source prediction list matches, remove it and merge with selected prediction
-            new_source_object_predictions: List[ObjectPrediction] = []
+            new_source_object_predictions: list[ObjectPrediction] = []
             for ind, candidate_object_prediction in enumerate(source_object_predictions):
                 if self._has_match(selected_object_prediction, candidate_object_prediction):
                     selected_object_prediction = self._merge_object_prediction_pair(
@@ -156,8 +154,8 @@ class UnionMergePostprocess(PostprocessPredictions):
 
     @staticmethod
     def _get_merged_bbox(pred1: ObjectPrediction, pred2: ObjectPrediction) -> BoundingBox:
-        box1: List[int] = pred1.bbox.to_xyxy()
-        box2: List[int] = pred2.bbox.to_xyxy()
+        box1: list[int] = pred1.bbox.to_xyxy()
+        box2: list[int] = pred2.bbox.to_xyxy()
         bbox = BoundingBox(box=calculate_box_union(box1, box2))
         return bbox
 
@@ -166,7 +164,7 @@ class UnionMergePostprocess(PostprocessPredictions):
         pred1: ObjectPrediction,
         pred2: ObjectPrediction,
     ) -> float:
-        scores: List[float] = [pred.score.value for pred in (pred1, pred2)]
+        scores: list[float] = [pred.score.value for pred in (pred1, pred2)]
         return max(scores)
 
     @staticmethod

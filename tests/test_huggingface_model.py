@@ -1,29 +1,34 @@
-# OBSS SAHI Tool
-# Code written by Fatih Cagatay Akyon, 2025.
-
 import sys
 
 import pybboxes.functional as pbf
 import pytest
 
 from sahi.logger import logger
+from sahi.models.huggingface import HuggingfaceDetectionModel
+from sahi.predict import get_prediction, get_sliced_prediction
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
-from sahi.utils.huggingface import HuggingfaceTestConstants
+from tests.utils.huggingface import HuggingfaceConstants
+
+# Import transformers conditionally to avoid import errors in Python < 3.9
+try:
+    from transformers import AutoModelForObjectDetection, AutoProcessor
+except ImportError:
+    AutoModelForObjectDetection = None
+    AutoProcessor = None
 
 pytestmark = pytest.mark.skipif(
     sys.version_info[:2] < (3, 9), reason="transformers>=4.49.0 requires Python 3.9 or higher"
 )
+
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
 
 
 def test_load_model():
-    from sahi.models.huggingface import HuggingfaceDetectionModel
-
     huggingface_detection_model = HuggingfaceDetectionModel(
-        model_path=HuggingfaceTestConstants.RTDETRV2_MODEL_PATH,
+        model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -34,12 +39,8 @@ def test_load_model():
 
 
 def test_set_model():
-    from transformers import AutoModelForObjectDetection, AutoProcessor
-
-    from sahi.models.huggingface import HuggingfaceDetectionModel
-
-    huggingface_model = AutoModelForObjectDetection.from_pretrained(HuggingfaceTestConstants.RTDETRV2_MODEL_PATH)
-    huggingface_processor = AutoProcessor.from_pretrained(HuggingfaceTestConstants.RTDETRV2_MODEL_PATH)
+    huggingface_model = AutoModelForObjectDetection.from_pretrained(HuggingfaceConstants.RTDETRV2_MODEL_PATH)
+    huggingface_processor = AutoProcessor.from_pretrained(HuggingfaceConstants.RTDETRV2_MODEL_PATH)
 
     huggingface_detection_model = HuggingfaceDetectionModel(
         model=huggingface_model,
@@ -54,10 +55,8 @@ def test_set_model():
 
 
 def test_perform_inference():
-    from sahi.models.huggingface import HuggingfaceDetectionModel
-
     huggingface_detection_model = HuggingfaceDetectionModel(
-        model_path=HuggingfaceTestConstants.RTDETRV2_MODEL_PATH,
+        model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -104,10 +103,8 @@ def test_perform_inference():
 
 
 def test_convert_original_predictions():
-    from sahi.models.huggingface import HuggingfaceDetectionModel
-
     huggingface_detection_model = HuggingfaceDetectionModel(
-        model_path=HuggingfaceTestConstants.RTDETRV2_MODEL_PATH,
+        model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -151,12 +148,8 @@ def test_convert_original_predictions():
 
 
 def test_get_prediction_huggingface():
-    from sahi.models.huggingface import HuggingfaceDetectionModel
-    from sahi.predict import get_prediction
-    from sahi.utils.huggingface import HuggingfaceTestConstants
-
     huggingface_detection_model = HuggingfaceDetectionModel(
-        model_path=HuggingfaceTestConstants.RTDETRV2_MODEL_PATH,
+        model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -197,11 +190,11 @@ def test_get_prediction_huggingface():
 def test_get_prediction_automodel_huggingface():
     from sahi.auto_model import AutoDetectionModel
     from sahi.predict import get_prediction
-    from sahi.utils.huggingface import HuggingfaceTestConstants
+    from tests.utils.huggingface import HuggingfaceConstants
 
     huggingface_detection_model = AutoDetectionModel.from_pretrained(
         model_type="huggingface",
-        model_path=HuggingfaceTestConstants.RTDETRV2_MODEL_PATH,
+        model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -240,12 +233,8 @@ def test_get_prediction_automodel_huggingface():
 
 
 def test_get_sliced_prediction_huggingface():
-    from sahi.models.huggingface import HuggingfaceDetectionModel
-    from sahi.predict import get_sliced_prediction
-    from sahi.utils.huggingface import HuggingfaceTestConstants
-
     huggingface_detection_model = HuggingfaceDetectionModel(
-        model_path=HuggingfaceTestConstants.RTDETRV2_MODEL_PATH,
+        model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,

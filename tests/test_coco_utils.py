@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
-
 import os
 import shutil
 
@@ -610,7 +607,7 @@ class TestCocoUtils:
         min_area = 50
         max_area = 10000
         coco = Coco.from_coco_dict_or_path(coco_path, image_dir=image_dir)
-        area_filtered_coco = coco.get_area_filtered_coco(min=min_area, max=max_area)
+        area_filtered_coco = coco.get_area_filtered_coco(min=min_area, max_val=max_area)
         assert len(coco.json["images"]) == 50
         assert len(area_filtered_coco.json["images"]) == 17
         assert area_filtered_coco.stats

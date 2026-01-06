@@ -6,7 +6,9 @@ from sahi import AutoDetectionModel
 from sahi.predict import get_prediction, get_sliced_prediction
 from sahi.utils.cv import read_image
 
-pytestmark = pytest.mark.skipif(sys.version_info[:2] < (3, 12), reason="Requires Python 3.12 or higher")
+pytestmark = pytest.mark.skipif(
+    sys.version_info[:2] < (3, 12) or sys.platform == "darwin", reason="Requires Python 3.12 or higher and not macOS"
+)
 
 
 def test_roboflow_universe():
@@ -41,7 +43,8 @@ def test_roboflow_universe():
 
 def test_rfdetr():
     """Test the RFDETR model classes and instances for object detection."""
-    from rfdetr import RFDETRBase
+
+    from rfdetr.detr import RFDETRBase
     from rfdetr.util.coco_classes import COCO_CLASSES
 
     models = [

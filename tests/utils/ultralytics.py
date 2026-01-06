@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import os
 from pathlib import Path
-from typing import Optional, Union
 
 import requests
 from tqdm import tqdm
@@ -10,7 +11,7 @@ YOLO11N_SEG_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/downlo
 YOLO11N_OBB_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-obb.pt"
 
 
-class UltralyticsTestConstants:
+class UltralyticsConstants:
     YOLO11N_MODEL_PATH = "tests/data/models/yolo11n.pt"
     YOLO11N_SEG_MODEL_PATH = "tests/data/models/yolo11n-seg.pt"
     YOLO11N_OBB_MODEL_PATH = "tests/data/models/yolo11n-obb.pt"
@@ -18,8 +19,7 @@ class UltralyticsTestConstants:
 
 
 def download_file(url: str, save_path: str, chunk_size: int = 8192) -> None:
-    """
-    Downloads a file from a given URL to the specified path.
+    """Downloads a file from a given URL to the specified path.
 
     Args:
         url: URL to download the file from
@@ -44,30 +44,30 @@ def download_file(url: str, save_path: str, chunk_size: int = 8192) -> None:
             pbar.update(size)
 
 
-def download_yolo11n_model(destination_path: Optional[str] = None) -> str:
+def download_yolo11n_model(destination_path: str | None = None) -> str:
     """Downloads YOLO11n model if not already downloaded."""
     if destination_path is None:
-        destination_path = UltralyticsTestConstants.YOLO11N_MODEL_PATH
+        destination_path = UltralyticsConstants.YOLO11N_MODEL_PATH
 
     if not os.path.exists(destination_path):
         download_file(YOLO11N_WEIGHTS_URL, destination_path)
     return destination_path
 
 
-def download_yolo11n_seg_model(destination_path: Optional[str] = None) -> str:
+def download_yolo11n_seg_model(destination_path: str | None = None) -> str:
     """Downloads YOLO11n-seg model if not already downloaded."""
     if destination_path is None:
-        destination_path = UltralyticsTestConstants.YOLO11N_SEG_MODEL_PATH
+        destination_path = UltralyticsConstants.YOLO11N_SEG_MODEL_PATH
 
     if not os.path.exists(destination_path):
         download_file(YOLO11N_SEG_WEIGHTS_URL, destination_path)
     return destination_path
 
 
-def download_yolo11n_obb_model(destination_path: Optional[str] = None) -> str:
+def download_yolo11n_obb_model(destination_path: str | None = None) -> str:
     """Downloads YOLO11n-obb model if not already downloaded."""
     if destination_path is None:
-        destination_path = UltralyticsTestConstants.YOLO11N_OBB_MODEL_PATH
+        destination_path = UltralyticsConstants.YOLO11N_OBB_MODEL_PATH
 
     if not os.path.exists(destination_path):
         download_file(YOLO11N_OBB_WEIGHTS_URL, destination_path)
@@ -75,8 +75,8 @@ def download_yolo11n_obb_model(destination_path: Optional[str] = None) -> str:
 
 
 def download_yolo11n_onnx_model(
-    destination_path: Union[str, Path] = UltralyticsTestConstants.YOLO11N_ONNX_MODEL_PATH,
-    image_size: Optional[int] = 640,
+    destination_path: str | Path = UltralyticsConstants.YOLO11N_ONNX_MODEL_PATH,
+    image_size: int | None = 640,
 ):
     destination_path = Path(destination_path)
     model_path = destination_path.parent / (destination_path.stem + ".pt")
@@ -95,8 +95,7 @@ def download_yolo11n_onnx_model(
 
 
 def download_model_weights(model_path: str) -> str:
-    """
-    Downloads model weights based on the model path.
+    """Downloads model weights based on the model path.
 
     Args:
         model_path: Path or name of the model

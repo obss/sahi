@@ -1,5 +1,4 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2025.
+from shapely.geometry import GeometryCollection, Polygon
 
 from sahi.utils.shapely import MultiPolygon, ShapelyAnnotation, get_shapely_box, get_shapely_multipolygon
 
@@ -128,3 +127,27 @@ class TestShapelyUtils:
         assert intersection_shapely_annotation.area == 0
 
         assert intersection_shapely_annotation.to_xywh() == []
+
+    def test_get_shapely_multipolygon_make_valid_returns_geometry_collection(self, monkeypatch):
+        # Prepare simple polygons to be returned by make_valid inside a GeometryCollection
+        poly1 = Polygon([(0, 0), (1, 0), (1, 1), (0, 1)])
+        poly2 = Polygon([(2, 2), (3, 2), (3, 3), (2, 3)])
+        multi = MultiPolygon([poly2])
+
+        # Monkeypatch make_valid to return a GeometryCollection containing a Polygon and a MultiPolygon
+        import sahi.utils.shapely as shapely_module
+
+        def fake_make_valid(_):
+            return GeometryCollection([poly1, multi])
+
+        monkeypatch.setattr(shapely_module, "make_valid", fake_make_valid)
+
+        # Use a segmentation that produces an invalid polygon so make_valid is invoked
+        naughty_segmentation = [[3559.0, 2046.86, 3.49, 2060.0, 3540.9, 3249.7, 2060.0, 3239.61, 2052.87]]
+        result = get_shapely_multipolygon(naughty_segmentation)
+
+        # Result should be a MultiPolygon and area equals sum of component areas
+        assert isinstance(result, MultiPolygon)
+        expected_area = poly1.area + poly2.area
+        # allow small floating point tolerance
+        assert abs(result.area - expected_area) < 1e-6

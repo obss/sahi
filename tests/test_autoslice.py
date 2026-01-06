@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2025.
-
 from PIL import Image
 
 from sahi.slicing import slice_coco, slice_image

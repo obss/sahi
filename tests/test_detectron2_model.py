@@ -1,6 +1,3 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2025.
-
 from sahi.models.detectron2 import Detectron2DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image

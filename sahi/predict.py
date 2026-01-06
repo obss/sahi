@@ -1,26 +1,16 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
+from __future__ import annotations
 
 import os
 import time
-from typing import Generator, List, Optional, Union
-
-from PIL import Image
-
-from sahi.logger import logger
-from sahi.utils.import_utils import is_available
-
-# TODO: This does nothing for this module. The issue named here does not exist
-# https://github.com/obss/sahi/issues/526
-if is_available("torch"):
-    import torch  # noqa: F401
-
+from collections.abc import Generator
 from functools import cmp_to_key
 
 import numpy as np
+from PIL import Image
 from tqdm import tqdm
 
 from sahi.auto_model import AutoDetectionModel
+from sahi.logger import logger
 from sahi.models.base import DetectionModel
 from sahi.postprocess.combine import (
     GreedyNMMPostprocess,
@@ -66,17 +56,16 @@ def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_
 def get_prediction(
     image,
     detection_model,
-    shift_amount: list = [0, 0],
+    shift_amount: list | None = None,
     full_shape=None,
-    postprocess: Optional[PostprocessPredictions] = None,
+    postprocess: PostprocessPredictions | None = None,
     verbose: int = 0,
-    exclude_classes_by_name: Optional[List[str]] = None,
-    exclude_classes_by_id: Optional[List[int]] = None,
+    exclude_classes_by_name: list[str] | None = None,
+    exclude_classes_by_id: list[int] | None = None,
 ) -> PredictionResult:
-    """
-    Function for performing prediction for given image using given detection_model.
+    """Function for performing prediction for given image using given detection_model.
 
-    Arguments:
+    Args:
         image: str or np.ndarray
             Location of image or numpy image matrix to slice
         detection_model: model.DetectionMode
@@ -105,29 +94,33 @@ def get_prediction(
     # read image as pil
     image_as_pil = read_image_as_pil(image)
     # get prediction
-    time_start = time.time()
+    # ensure shift_amount is a list instance (avoid mutable default arg)
+    if shift_amount is None:
+        shift_amount = [0, 0]
+
+    time_start = time.perf_counter()
     detection_model.perform_inference(np.ascontiguousarray(image_as_pil))
-    time_end = time.time() - time_start
+    time_end = time.perf_counter() - time_start
     durations_in_seconds["prediction"] = time_end
 
     if full_shape is None:
         full_shape = [image_as_pil.height, image_as_pil.width]
 
     # process prediction
-    time_start = time.time()
+    time_start = time.perf_counter()
     # works only with 1 batch
     detection_model.convert_original_predictions(
         shift_amount=shift_amount,
         full_shape=full_shape,
     )
-    object_prediction_list: List[ObjectPrediction] = detection_model.object_prediction_list
+    object_prediction_list: list[ObjectPrediction] = detection_model.object_prediction_list
     object_prediction_list = filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id)
 
     # postprocess matching predictions
     if postprocess is not None:
         object_prediction_list = postprocess(object_prediction_list)
 
-    time_end = time.time() - time_start
+    time_end = time.perf_counter() - time_start
     durations_in_seconds["postprocess"] = time_end
 
     if verbose == 1:
@@ -145,8 +138,8 @@ def get_prediction(
 def get_sliced_prediction(
     image,
     detection_model=None,
-    slice_height: Optional[int] = None,
-    slice_width: Optional[int] = None,
+    slice_height: int | None = None,
+    slice_width: int | None = None,
     overlap_height_ratio: float = 0.2,
     overlap_width_ratio: float = 0.2,
     perform_standard_pred: bool = True,
@@ -155,15 +148,16 @@ def get_sliced_prediction(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
-    merge_buffer_length: Optional[int] = None,
+    merge_buffer_length: int | None = None,
     auto_slice_resolution: bool = True,
-    slice_export_prefix: Optional[str] = None,
-    slice_dir: Optional[str] = None,
-    exclude_classes_by_name: Optional[List[str]] = None,
-    exclude_classes_by_id: Optional[List[int]] = None,
+    slice_export_prefix: str | None = None,
+    slice_dir: str | None = None,
+    exclude_classes_by_name: list[str] | None = None,
+    exclude_classes_by_id: list[int] | None = None,
+    progress_bar: bool = False,
+    progress_callback=None,
 ) -> PredictionResult:
-    """
-    Function for slice image + get predicion for each slice + combine predictions in full image.
+    """Function for slice image + get predicion for each slice + combine predictions in full image.
 
     Args:
         image: str or np.ndarray
@@ -216,6 +210,11 @@ def get_sliced_prediction(
         exclude_classes_by_id: Optional[List[int]]
             None: if no classes are excluded
             List[int]: set of classes to exclude using one or more IDs
+        progress_bar: bool
+            Whether to show progress bar for slice processing. Default: False.
+        progress_callback: callable
+            A callback function that will be called after each slice is processed.
+            The function should accept two arguments: (current_slice, total_slices)
     Returns:
         A Dict with fields:
             object_prediction_list: a list of sahi.prediction.ObjectPrediction
@@ -228,7 +227,7 @@ def get_sliced_prediction(
     # currently only 1 batch supported
     num_batch = 1
     # create slices from full image
-    time_start = time.time()
+    time_start = time.perf_counter()
     slice_image_result = slice_image(
         image=image,
         output_file_name=slice_export_prefix,
@@ -242,7 +241,7 @@ def get_sliced_prediction(
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
     num_slices = len(slice_image_result)
-    time_end = time.time() - time_start
+    time_end = time.perf_counter() - time_start
     durations_in_seconds["slice"] = time_end
 
     if isinstance(detection_model, UltralyticsDetectionModel) and detection_model.is_obb:
@@ -252,7 +251,8 @@ def get_sliced_prediction(
     # init match postprocess instance
     if postprocess_type not in POSTPROCESS_NAME_TO_CLASS.keys():
         raise ValueError(
-            f"postprocess_type should be one of {list(POSTPROCESS_NAME_TO_CLASS.keys())} but given as {postprocess_type}"
+            f"postprocess_type should be one of {list(POSTPROCESS_NAME_TO_CLASS.keys())} "
+            f"but given as {postprocess_type}"
         )
     postprocess_constructor = POSTPROCESS_NAME_TO_CLASS[postprocess_type]
     postprocess = postprocess_constructor(
@@ -262,15 +262,20 @@ def get_sliced_prediction(
     )
 
     postprocess_time = 0
-    time_start = time.time()
-
+    time_start = time.perf_counter()
     # create prediction input
     num_group = int(num_slices / num_batch)
     if verbose == 1 or verbose == 2:
         tqdm.write(f"Performing prediction on {num_slices} slices.")
+
+    if progress_bar:
+        slice_iterator = tqdm(range(num_group), desc="Processing slices", total=num_group)
+    else:
+        slice_iterator = range(num_group)
+
     object_prediction_list = []
     # perform sliced prediction
-    for group_ind in range(num_group):
+    for group_ind in slice_iterator:
         # prepare batch (currently supports only 1 batch)
         image_list = []
         shift_amount_list = []
@@ -300,6 +305,10 @@ def get_sliced_prediction(
             object_prediction_list = postprocess(object_prediction_list)
             postprocess_time += time.time() - postprocess_time_start
 
+        # Call progress callback if provided
+        if progress_callback is not None:
+            progress_callback(group_ind + 1, num_group)
+
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
         prediction_result = get_prediction(
@@ -322,7 +331,7 @@ def get_sliced_prediction(
         object_prediction_list = postprocess(object_prediction_list)
         postprocess_time += time.time() - postprocess_time_start
 
-    time_end = time.time() - time_start
+    time_end = time.perf_counter() - time_start
     durations_in_seconds["prediction"] = time_end - postprocess_time
     durations_in_seconds["postprocess"] = postprocess_time
 
@@ -386,18 +395,18 @@ def agg_prediction(result: PredictionResult, thresh):
 
 
 def predict(
-    detection_model: Optional[DetectionModel] = None,
+    detection_model: DetectionModel | None = None,
     model_type: str = "ultralytics",
-    model_path: Optional[str] = None,
-    model_config_path: Optional[str] = None,
+    model_path: str | None = None,
+    model_config_path: str | None = None,
     model_confidence_threshold: float = 0.25,
-    model_device: Optional[str] = None,
-    model_category_mapping: Optional[dict] = None,
-    model_category_remapping: Optional[dict] = None,
-    source: Optional[str] = None,
+    model_device: str | None = None,
+    model_category_mapping: dict | None = None,
+    model_category_remapping: dict | None = None,
+    source: str | None = None,
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
-    image_size: Optional[int] = None,
+    image_size: int | None = None,
     slice_height: int = 512,
     slice_width: int = 512,
     overlap_height_ratio: float = 0.2,
@@ -411,24 +420,24 @@ def predict(
     frame_skip_interval: int = 0,
     export_pickle: bool = False,
     export_crop: bool = False,
-    dataset_json_path: Optional[str] = None,
+    dataset_json_path: str | None = None,
     project: str = "runs/predict",
     name: str = "exp",
-    visual_bbox_thickness: Optional[int] = None,
-    visual_text_size: Optional[float] = None,
-    visual_text_thickness: Optional[int] = None,
+    visual_bbox_thickness: int | None = None,
+    visual_text_size: float | None = None,
+    visual_text_thickness: int | None = None,
     visual_hide_labels: bool = False,
     visual_hide_conf: bool = False,
     visual_export_format: str = "png",
     verbose: int = 1,
     return_dict: bool = False,
     force_postprocess_type: bool = False,
-    exclude_classes_by_name: Optional[List[str]] = None,
-    exclude_classes_by_id: Optional[List[int]] = None,
+    exclude_classes_by_name: list[str] | None = None,
+    exclude_classes_by_id: list[int] | None = None,
+    progress_bar: bool = False,
     **kwargs,
 ):
-    """
-    Performs prediction for all present images in given folder.
+    """Performs prediction for all present images in given folder.
 
     Args:
         detection_model: sahi.model.DetectionModel
@@ -496,13 +505,24 @@ def predict(
             Save results to project/name.
         name: str
             Save results to project/name.
-        visual_bbox_thickness: int
-        visual_text_size: float
-        visual_text_thickness: int
-        visual_hide_labels: bool
-        visual_hide_conf: bool
-        visual_export_format: str
-            Can be specified as 'jpg' or 'png'
+        visual_bbox_thickness: int, optional
+            Line thickness (in pixels) for bounding boxes in exported visualizations.
+            If None, a default thickness is chosen based on image size.
+        visual_text_size: float, optional
+            Font scale/size for label text in exported visualizations. If None, a
+            sensible default is used.
+        visual_text_thickness: int, optional
+            Thickness of text labels. If None, a sensible default is used.
+        visual_hide_labels: bool, optional
+            If True, class label names won't be shown on the exported visuals.
+        visual_hide_conf: bool, optional
+            If True, confidence scores won't be shown on the exported visuals.
+        visual_export_format: str, optional
+            Output image format to use when exporting visuals. Supported values are
+            'png' (default) and 'jpg'. Note that 'jpg' uses lossy compression and may
+            produce smaller files. This parameter is ignored when `novisual` is True.
+            Exported visuals are written under the run directory: `project/name/visuals`
+            (and `project/name/visuals_with_gt` when ground-truth overlays are created).
         verbose: int
             0: no print
             1: print slice/prediction durations, number of slices
@@ -517,6 +537,8 @@ def predict(
         exclude_classes_by_id: Optional[List[int]]
             None: if no classes are excluded
             List[int]: set of classes to exclude using one or more IDs
+        progress_bar: bool
+            Whether to show a progress bar. Default is False.
     """
     # assert prediction type
     if no_standard_prediction and no_sliced_prediction:
@@ -525,7 +547,8 @@ def predict(
     # auto postprocess type
     if not force_postprocess_type and model_confidence_threshold < LOW_MODEL_CONFIDENCE and postprocess_type != "NMS":
         logger.warning(
-            f"Switching postprocess type/metric to NMS/IOU since confidence threshold is low ({model_confidence_threshold})."
+            f"Switching postprocess type/metric to NMS/IOU since confidence "
+            f"threshold is low ({model_confidence_threshold})."
         )
         postprocess_type = "NMS"
         postprocess_match_metric = "IOU"
@@ -533,7 +556,7 @@ def predict(
     # for profiling
     durations_in_seconds = dict()
 
-    # init export directories
+    # Init export directories
     save_dir = Path(increment_path(Path(project) / name, exist_ok=False))  # increment run
     crop_dir = save_dir / "crops"
     visual_dir = save_dir / "visuals"
@@ -542,11 +565,11 @@ def predict(
     if not novisual or export_pickle or export_crop or dataset_json_path is not None:
         save_dir.mkdir(parents=True, exist_ok=True)  # make dir
 
-    # init image iterator
+    # Init image iterator
     # TODO: rewrite this as iterator class as in https://github.com/ultralytics/yolov5/blob/d059d1da03aee9a3c0059895aa4c7c14b7f25a9e/utils/datasets.py#L178
     source_is_video = False
     num_frames = None
-    image_iterator: Union[list[str], Generator[Image.Image, None, None]]
+    image_iterator: list[str] | Generator[Image.Image]
     if dataset_json_path and source:
         coco: Coco = Coco.from_coco_dict_or_path(dataset_json_path)
         image_iterator = [str(Path(source) / Path(coco_image.file_name)) for coco_image in coco.images]
@@ -628,6 +651,7 @@ def predict(
                 verbose=1 if verbose else 0,
                 exclude_classes_by_name=exclude_classes_by_name,
                 exclude_classes_by_id=exclude_classes_by_id,
+                progress_bar=progress_bar,
             )
             object_prediction_list = prediction_result.object_prediction_list
             if prediction_result.durations_in_seconds:
@@ -667,7 +691,7 @@ def predict(
             if not novisual:
                 # convert ground truth annotations to object_prediction_list
                 coco_image: CocoImage = coco.images[ind]
-                object_prediction_gt_list: List[ObjectPrediction] = []
+                object_prediction_gt_list: list[ObjectPrediction] = []
                 for coco_annotation in coco_image.annotations:
                     coco_annotation_dict = coco_annotation.json
                     category_name = coco_annotation.category_name
@@ -745,7 +769,7 @@ def predict(
 
         # render video inference
         if view_video:
-            cv2.imshow("Prediction of {}".format(str(video_file_name)), result["image"])
+            cv2.imshow(f"Prediction of {video_file_name!s}", result["image"])
             cv2.waitKey(1)
 
         time_end = time.time() - time_start
@@ -789,17 +813,17 @@ def predict(
 
 def predict_fiftyone(
     model_type: str = "mmdet",
-    model_path: Optional[str] = None,
-    model_config_path: Optional[str] = None,
+    model_path: str | None = None,
+    model_config_path: str | None = None,
     model_confidence_threshold: float = 0.25,
-    model_device: Optional[str] = None,
-    model_category_mapping: Optional[dict] = None,
-    model_category_remapping: Optional[dict] = None,
+    model_device: str | None = None,
+    model_category_mapping: dict | None = None,
+    model_category_remapping: dict | None = None,
     dataset_json_path: str = "",
     image_dir: str = "",
     no_standard_prediction: bool = False,
     no_sliced_prediction: bool = False,
-    image_size: Optional[int] = None,
+    image_size: int | None = None,
     slice_height: int = 256,
     slice_width: int = 256,
     overlap_height_ratio: float = 0.2,
@@ -809,11 +833,11 @@ def predict_fiftyone(
     postprocess_match_threshold: float = 0.5,
     postprocess_class_agnostic: bool = False,
     verbose: int = 1,
-    exclude_classes_by_name: Optional[List[str]] = None,
-    exclude_classes_by_id: Optional[List[int]] = None,
+    exclude_classes_by_name: list[str] | None = None,
+    exclude_classes_by_id: list[int] | None = None,
+    progress_bar: bool = False,
 ):
-    """
-    Performs prediction for all present images in given folder.
+    """Performs prediction for all present images in given folder.
 
     Args:
         model_type: str
@@ -875,6 +899,8 @@ def predict_fiftyone(
         exclude_classes_by_id: Optional[List[int]]
             None: if no classes are excluded
             List[int]: set of classes to exclude using one or more IDs
+        progress_bar: bool
+            Whether to show progress bar for slice processing. Default: False.
     """
     check_requirements(["fiftyone"])
 
@@ -929,6 +955,7 @@ def predict_fiftyone(
                     verbose=verbose,
                     exclude_classes_by_name=exclude_classes_by_name,
                     exclude_classes_by_id=exclude_classes_by_id,
+                    progress_bar=progress_bar,
                 )
                 durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
             else:

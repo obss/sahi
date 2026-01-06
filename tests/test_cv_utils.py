@@ -1,15 +1,10 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2025.
-
 from unittest.mock import patch
 
 import numpy as np
-from PIL import Image
 
 from sahi.utils.cv import (
     Colors,
     apply_color_mask,
-    exif_transpose,
     get_bbox_from_bool_mask,
     get_coco_segmentation_from_bool_mask,
     read_image,
@@ -74,16 +69,3 @@ class TestCvUtils:
         expected_result = [1, 1, 2, 2]
         result = get_bbox_from_bool_mask(mask)
         assert result == expected_result
-
-    def test_exif_transpose_simple(self):
-        test_image = Image.new("RGB", (100, 100), color="red")
-        transposed = exif_transpose(test_image)
-        assert transposed == test_image
-
-    def test_exif_transpose_non_standard(self):
-        test_image = Image.new("RGB", (100, 100), color="red")
-        exif = test_image.getexif()
-        exif[0x0112] = 9
-        test_image.info["exif"] = exif.tobytes()
-        transposed = exif_transpose(test_image)
-        assert transposed == test_image

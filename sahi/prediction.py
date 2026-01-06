@@ -1,8 +1,7 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2020.
+from __future__ import annotations
 
 import copy
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import numpy as np
 from PIL import Image
@@ -14,9 +13,9 @@ from sahi.utils.file import Path
 
 
 class PredictionScore:
-    def __init__(self, value: Union[float, np.ndarray]):
+    def __init__(self, value: float | np.ndarray):
         """
-        Arguments:
+        Args:
             score: prediction score between 0 and 1
         """
         # if score is a numpy object, convert it to python variable
@@ -26,9 +25,7 @@ class PredictionScore:
         self.value = value
 
     def is_greater_than_threshold(self, threshold):
-        """
-        Check if score is greater than threshold
-        """
+        """Check if score is greater than threshold."""
         return self.value > threshold
 
     def __eq__(self, threshold):
@@ -45,24 +42,21 @@ class PredictionScore:
 
 
 class ObjectPrediction(ObjectAnnotation):
-    """
-    Class for handling detection model predictions.
-    """
+    """Class for handling detection model predictions."""
 
     def __init__(
         self,
-        bbox: Optional[List[int]] = None,
-        category_id: Optional[int] = None,
-        category_name: Optional[str] = None,
-        segmentation: Optional[List[List[float]]] = None,
+        bbox: list[int] | None = None,
+        category_id: int | None = None,
+        category_name: str | None = None,
+        segmentation: list[list[float]] | None = None,
         score: float = 0.0,
-        shift_amount: Optional[List[int]] = [0, 0],
-        full_shape: Optional[List[int]] = None,
+        shift_amount: list[int] | None = [0, 0],
+        full_shape: list[int] | None = None,
     ):
-        """
-        Creates ObjectPrediction from bbox, score, category_id, category_name, segmentation.
+        """Creates ObjectPrediction from bbox, score, category_id, category_name, segmentation.
 
-        Arguments:
+        Args:
             bbox: list
                 [minx, miny, maxx, maxy]
             score: float
@@ -95,10 +89,9 @@ class ObjectPrediction(ObjectAnnotation):
         )
 
     def get_shifted_object_prediction(self):
-        """
-        Returns shifted version ObjectPrediction.
-        Shifts bbox and mask coords.
-        Used for mapping sliced predictions over full image.
+        """Returns shifted version ObjectPrediction.
+
+        Shifts bbox and mask coords. Used for mapping sliced predictions over full image.
         """
         if self.mask:
             shifted_mask = self.mask.get_shifted_mask()
@@ -123,9 +116,7 @@ class ObjectPrediction(ObjectAnnotation):
             )
 
     def to_coco_prediction(self, image_id=None):
-        """
-        Returns sahi.utils.coco.CocoPrediction representation of ObjectAnnotation.
-        """
+        """Returns sahi.utils.coco.CocoPrediction representation of ObjectAnnotation."""
         if self.mask:
             coco_prediction = CocoPrediction.from_coco_segmentation(
                 segmentation=self.mask.segmentation,
@@ -145,9 +136,7 @@ class ObjectPrediction(ObjectAnnotation):
         return coco_prediction
 
     def to_fiftyone_detection(self, image_height: int, image_width: int):
-        """
-        Returns fiftyone.Detection representation of ObjectPrediction.
-        """
+        """Returns fiftyone.Detection representation of ObjectPrediction."""
         try:
             import fiftyone as fo
         except ImportError:
@@ -169,20 +158,20 @@ class ObjectPrediction(ObjectAnnotation):
 class PredictionResult:
     def __init__(
         self,
-        object_prediction_list: List[ObjectPrediction],
-        image: Union[Image.Image, str, np.ndarray],
-        durations_in_seconds: Dict[str, Any] = dict(),
+        object_prediction_list: list[ObjectPrediction],
+        image: Image.Image | str | np.ndarray,
+        durations_in_seconds: dict[str, Any] = dict(),
     ):
         self.image: Image.Image = read_image_as_pil(image)
         self.image_width, self.image_height = self.image.size
-        self.object_prediction_list: List[ObjectPrediction] = object_prediction_list
+        self.object_prediction_list: list[ObjectPrediction] = object_prediction_list
         self.durations_in_seconds = durations_in_seconds
 
     def export_visuals(
         self,
         export_dir: str,
-        text_size: Optional[float] = None,
-        rect_th: Optional[int] = None,
+        text_size: float | None = None,
+        rect_th: int | None = None,
         hide_labels: bool = False,
         hide_conf: bool = False,
         file_name: str = "prediction_visual",
@@ -220,7 +209,7 @@ class PredictionResult:
             coco_annotation_list.append(object_prediction.to_coco_prediction().json)
         return coco_annotation_list
 
-    def to_coco_predictions(self, image_id: Optional[int] = None):
+    def to_coco_predictions(self, image_id: int | None = None):
         coco_prediction_list = []
         for object_prediction in self.object_prediction_list:
             coco_prediction_list.append(object_prediction.to_coco_prediction(image_id=image_id).json)
@@ -238,7 +227,7 @@ class PredictionResult:
         except ImportError:
             raise ImportError('Please run "uv pip install -U fiftyone" to install fiftyone for conversion.')
 
-        fiftyone_detection_list: List[fo.Detection] = []
+        fiftyone_detection_list: list[fo.Detection] = []
         for object_prediction in self.object_prediction_list:
             fiftyone_detection_list.append(
                 object_prediction.to_fiftyone_detection(image_height=self.image_height, image_width=self.image_width)

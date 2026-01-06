@@ -1,15 +1,17 @@
-# OBSS SAHI Tool
-# Code written by Fatih C Akyon, 2025.
-
-import os
 import shutil
 import sys
+from collections import Counter
+from os import path
 
 import numpy as np
 import pytest
 
+from sahi.models.ultralytics import UltralyticsDetectionModel
+from sahi.predict import get_prediction, get_sliced_prediction, predict
 from sahi.utils.cv import read_image
-from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
+from sahi.utils.file import download_from_url
+
+from .utils.ultralytics import UltralyticsConstants, download_yolo11n_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -86,14 +88,13 @@ def test_get_prediction_mmdet():
 def test_get_prediction_automodel_yolo11():
     from sahi.auto_model import AutoDetectionModel
     from sahi.predict import get_prediction
-    from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
 
     # init model
     download_yolo11n_model()
 
     yolo11_detection_model = AutoDetectionModel.from_pretrained(
         model_type="ultralytics",
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -112,23 +113,56 @@ def test_get_prediction_automodel_yolo11():
     )
     object_prediction_list = prediction_result.object_prediction_list
 
-    # compare
+    # assert any object has been detected
     assert len(object_prediction_list) > 0
-    num_person = 0
-    for object_prediction in object_prediction_list:
-        if object_prediction.category.name == "person":
-            num_person += 1
-    assert num_person == 0
-    num_truck = 0
-    for object_prediction in object_prediction_list:
-        if object_prediction.category.name == "truck":
-            num_truck += 1
-    assert num_truck == 0
-    num_car = 0
-    for object_prediction in object_prediction_list:
-        if object_prediction.category.name == "car":
-            num_car += 1
-    assert num_car > 0
+
+    # the number of found objects per category
+    result_counts = Counter([p.category.name for p in object_prediction_list])
+
+    # the test image shows a lot of cars, so we expect only cars to be detected
+    assert result_counts["car"] > 0
+    assert result_counts["truck"] == 0
+    assert result_counts["person"] == 0
+
+
+def test_prediction_category_remapping():
+    from sahi.auto_model import AutoDetectionModel
+    from sahi.predict import get_prediction
+
+    # init model
+    download_yolo11n_model()
+
+    yolo11_detection_model = AutoDetectionModel.from_pretrained(
+        model_type="ultralytics",
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=MODEL_DEVICE,
+        category_remapping={"0": 1, "1": 2, "2": 0},
+        load_at_init=False,
+        image_size=IMAGE_SIZE,
+    )
+    yolo11_detection_model.load_model()
+
+    # prepare image
+    image_path = "tests/data/small-vehicles1.jpeg"
+    image = read_image(image_path)
+
+    # get full sized prediction
+    prediction_result = get_prediction(
+        image=image, detection_model=yolo11_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
+    )
+    object_prediction_list = prediction_result.object_prediction_list
+
+    # assert any object has been detected
+    assert len(object_prediction_list) > 0
+
+    # the number of found objects per category
+    result_counts = Counter([p.category.name for p in object_prediction_list])
+
+    # the test image shows a lot of cars, so we expect only cars to be detected
+    assert result_counts["car"] > 0
+    assert result_counts["truck"] == 0
+    assert result_counts["person"] == 0
 
 
 @pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
@@ -181,6 +215,8 @@ def test_get_sliced_prediction_mmdet():
         postprocess_match_threshold=match_threshold,
         postprocess_match_metric=match_metric,
         postprocess_class_agnostic=class_agnostic,
+        progress_bar=True,
+        progress_callback=None,
     )
     object_prediction_list = prediction_result.object_prediction_list
 
@@ -204,14 +240,11 @@ def test_get_sliced_prediction_mmdet():
 
 
 def test_get_prediction_yolo11():
-    from sahi.models.ultralytics import UltralyticsDetectionModel
-    from sahi.predict import get_prediction
-
     # init model
     download_yolo11n_model()
 
     yolo11_detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -250,14 +283,11 @@ def test_get_prediction_yolo11():
 
 
 def test_get_sliced_prediction_yolo11():
-    from sahi.models.ultralytics import UltralyticsDetectionModel
-    from sahi.predict import get_sliced_prediction
-
     # init model
     download_yolo11n_model()
 
     yolo11_detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -337,7 +367,7 @@ def test_mmdet_yolox_tiny_prediction():
     project_dir = "tests/data/predict_result"
 
     # get sliced prediction
-    if os.path.isdir(project_dir):
+    if path.isdir(project_dir):
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="mmdet",
@@ -370,7 +400,6 @@ def test_mmdet_yolox_tiny_prediction():
 
 def test_ultralytics_yolo11n_prediction():
     from sahi.predict import predict
-    from sahi.utils.ultralytics import UltralyticsTestConstants, download_yolo11n_model
 
     # init model
     download_yolo11n_model()
@@ -386,11 +415,11 @@ def test_ultralytics_yolo11n_prediction():
     project_dir = "tests/data/predict_result"
 
     # get sliced prediction
-    if os.path.isdir(project_dir):
+    if path.isdir(project_dir):
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="ultralytics",
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         model_config_path=None,
         model_confidence_threshold=CONFIDENCE_THRESHOLD,
         model_device=MODEL_DEVICE,
@@ -418,11 +447,6 @@ def test_ultralytics_yolo11n_prediction():
 
 
 def test_video_prediction():
-    from os import path
-
-    from sahi.predict import predict
-    from sahi.utils.file import download_from_url
-
     # download video file
     source_url = "https://github.com/obss/sahi/releases/download/0.9.2/test.mp4"
     destination_path = "tests/data/test.mp4"
@@ -443,11 +467,11 @@ def test_video_prediction():
     project_dir = "tests/data/predict_result"
 
     # get sliced inference from video input without exporting visual
-    if os.path.isdir(project_dir):
+    if path.isdir(project_dir):
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="ultralytics",
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         model_config_path=None,
         model_confidence_threshold=CONFIDENCE_THRESHOLD,
         model_device=MODEL_DEVICE,
@@ -481,11 +505,11 @@ def test_video_prediction():
     class_agnostic = True
 
     # get standard inference from video input without exporting visual
-    if os.path.isdir(project_dir):
+    if path.isdir(project_dir):
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="ultralytics",
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         model_config_path=None,
         model_confidence_threshold=CONFIDENCE_THRESHOLD,
         model_device=MODEL_DEVICE,
@@ -516,11 +540,11 @@ def test_video_prediction():
     class_agnostic = True
 
     # get full sized prediction
-    if os.path.isdir(project_dir):
+    if path.isdir(project_dir):
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="ultralytics",
-        model_path=UltralyticsTestConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
         model_config_path=None,
         model_confidence_threshold=CONFIDENCE_THRESHOLD,
         model_device=MODEL_DEVICE,

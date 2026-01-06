@@ -1,30 +1,30 @@
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 import numpy as np
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.import_utils import check_requirements
 
 
 class RoboflowDetectionModel(DetectionModel):
     def __init__(
         self,
-        model: Optional[Any] = None,
-        model_path: Optional[str] = None,
-        config_path: Optional[str] = None,
-        device: Optional[str] = None,
+        model: Any | None = None,
+        model_path: str | None = None,
+        config_path: str | None = None,
+        device: str | None = None,
         mask_threshold: float = 0.5,
         confidence_threshold: float = 0.3,
-        category_mapping: Optional[Dict] = None,
-        category_remapping: Optional[Dict] = None,
+        category_mapping: dict | None = None,
+        category_remapping: dict | None = None,
         load_at_init: bool = True,
-        image_size: Optional[int] = None,
-        api_key: Optional[str] = None,
+        image_size: int | None = None,
+        api_key: str | None = None,
     ):
-        """
-        Initialize the RoboflowDetectionModel with the given parameters.
+        """Initialize the RoboflowDetectionModel with the given parameters.
 
         Args:
             model_path: str
@@ -50,6 +50,13 @@ class RoboflowDetectionModel(DetectionModel):
         self._device = device
         self._api_key = api_key
 
+        if self._use_universe:
+            existing_packages = getattr(self, "required_packages", None) or []
+            self.required_packages = [*list(existing_packages), "inference"]
+        else:
+            existing_packages = getattr(self, "required_packages", None) or []
+            self.required_packages = [*list(existing_packages), "rfdetr"]
+
         super().__init__(
             model=model,
             model_path=model_path,
@@ -66,15 +73,6 @@ class RoboflowDetectionModel(DetectionModel):
         if load_at_init:
             self.load_model()
 
-    def check_dependencies(self) -> None:
-        """
-        This function can be implemented to ensure model dependencies are installed.
-        """
-        if self._use_universe:
-            check_requirements(["inference"])
-        else:
-            check_requirements(["rfdetr"])
-
     def set_model(self, model: Any, **kwargs):
         """
         This function should be implemented to instantiate a DetectionModel out of an already loaded model
@@ -85,9 +83,9 @@ class RoboflowDetectionModel(DetectionModel):
         self.model = model
 
     def load_model(self):
-        """
-        This function should be implemented in a way that detection model
-        should be initialized and set to self.model.
+        """This function should be implemented in a way that detection model should be initialized and set to
+        self.model.
+
         (self.model_path, self.config_path, and self.device should be utilized)
         """
         if self._use_universe:
@@ -101,16 +99,17 @@ class RoboflowDetectionModel(DetectionModel):
                 model = get_model(self._model, api_key=api_key)
             except RoboflowAPINotAuthorizedError as e:
                 raise ValueError(
-                    "Authorization failed. Please pass a valid API key with the `api_key` parameter or set the `ROBOFLOW_API_KEY` environment variable."
+                    "Authorization failed. Please pass a valid API key with "
+                    "the `api_key` parameter or set the `ROBOFLOW_API_KEY` environment variable."
                 ) from e
 
             assert model.task_type == "object-detection", "Roboflow model must be an object detection model."
 
         else:
-            from rfdetr import RFDETRBase, RFDETRLarge
+            from rfdetr.detr import RFDETRBase, RFDETRLarge, RFDETRMedium, RFDETRNano, RFDETRSmall
 
             model, model_path = self._model, self.model_path
-            model_names = ("RFDETRBase", "RFDETRLarge")
+            model_names = ("RFDETRBase", "RFDETRNano", "RFDETRSmall", "RFDETRMedium", "RFDETRLarge")
             if hasattr(model, "__name__") and model.__name__ in model_names:
                 model_params = dict(
                     resolution=int(self.image_size) if self.image_size else 560,
@@ -121,7 +120,7 @@ class RoboflowDetectionModel(DetectionModel):
                     model_params["pretrain_weights"] = model_path
 
                 model = model(**model_params)
-            elif isinstance(model, (RFDETRBase, RFDETRLarge)):
+            elif isinstance(model, (RFDETRBase, RFDETRNano, RFDETRSmall, RFDETRMedium, RFDETRLarge)):
                 model = model
             else:
                 raise ValueError(
@@ -134,9 +133,9 @@ class RoboflowDetectionModel(DetectionModel):
         self,
         image: np.ndarray,
     ):
-        """
-        This function should be implemented in a way that prediction should be
-        performed using self.model and the prediction result should be set to self._original_predictions.
+        """This function should be implemented in a way that prediction should be performed using self.model and the
+        prediction result should be set to self._original_predictions.
+
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted.
@@ -148,13 +147,13 @@ class RoboflowDetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: Optional[List[List[int]]] = [[0, 0]],
-        full_shape_list: Optional[List[List[int]]] = None,
+        shift_amount_list: list[list[int]] | None = [[0, 0]],
+        full_shape_list: list[list[int]] | None = None,
     ):
-        """
-        This function should be implemented in a way that self._original_predictions should
-        be converted to a list of prediction.ObjectPrediction and set to
-        self._object_prediction_list. self.mask_threshold can also be utilized.
+        """This function should be implemented in a way that self._original_predictions should be converted to a list of
+        prediction.ObjectPrediction and set to self._object_prediction_list.
+
+        self.mask_threshold can also be utilized.
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should
@@ -167,7 +166,7 @@ class RoboflowDetectionModel(DetectionModel):
         shift_amount_list = fix_shift_amount_list(shift_amount_list)
         full_shape_list = fix_full_shape_list(full_shape_list)
 
-        object_prediction_list: List[ObjectPrediction] = []
+        object_prediction_list: list[ObjectPrediction] = []
 
         if self._use_universe:
             from inference.core.entities.responses.inference import (
@@ -177,7 +176,7 @@ class RoboflowDetectionModel(DetectionModel):
                 ObjectDetectionPrediction as InferenceObjectDetectionPrediction,
             )
 
-            original_reponses: List[InferenceObjectDetectionInferenceResponse] = self._original_predictions
+            original_reponses: list[InferenceObjectDetectionInferenceResponse] = self._original_predictions
 
             assert len(original_reponses) == len(shift_amount_list) == len(full_shape_list), (
                 "Length mismatch between original responses, shift amounts, and full shapes."
@@ -209,7 +208,7 @@ class RoboflowDetectionModel(DetectionModel):
         else:
             from supervision.detection.core import Detections
 
-            original_detections: List[Detections] = self._original_predictions
+            original_detections: list[Detections] = self._original_predictions
 
             assert len(original_detections) == len(shift_amount_list) == len(full_shape_list), (
                 "Length mismatch between original responses, shift amounts, and full shapes."

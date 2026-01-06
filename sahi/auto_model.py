@@ -1,4 +1,6 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from sahi.models.base import DetectionModel
 from sahi.utils.file import import_model_class
@@ -12,6 +14,8 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "huggingface": "HuggingfaceDetectionModel",
     "torchvision": "TorchVisionDetectionModel",
     "roboflow": "RoboflowDetectionModel",
+    "yolo-world": "YOLOWORLDDetectionModel",
+    "yoloe": "YOLOEDetectionModel",
 }
 
 ULTRALYTICS_MODEL_NAMES = ["yolov8", "yolov11", "yolo11", "ultralytics"]
@@ -21,26 +25,27 @@ class AutoDetectionModel:
     @staticmethod
     def from_pretrained(
         model_type: str,
-        model_path: Optional[str] = None,
-        model: Optional[Any] = None,
-        config_path: Optional[str] = None,
-        device: Optional[str] = None,
+        model_path: str | None = None,
+        model: Any | None = None,
+        config_path: str | None = None,
+        device: str | None = None,
         mask_threshold: float = 0.5,
         confidence_threshold: float = 0.3,
-        category_mapping: Optional[Dict] = None,
-        category_remapping: Optional[Dict] = None,
+        category_mapping: dict | None = None,
+        category_remapping: dict | None = None,
         load_at_init: bool = True,
-        image_size: Optional[int] = None,
+        image_size: int | None = None,
         **kwargs,
     ) -> DetectionModel:
-        """
-        Loads a DetectionModel from given path.
+        """Loads a DetectionModel from given path.
 
         Args:
             model_type: str
                 Name of the detection framework (example: "ultralytics", "huggingface", "torchvision")
             model_path: str
                 Path of the detection model (ex. 'model.pt')
+            model: Any
+                A pre-initialized model instance, if available
             config_path: str
                 Path of the config file (ex. 'mmdet/configs/cascade_rcnn_r50_fpn_1x.py')
             device: str

@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import copy
 import json
 import os
 from multiprocessing import Pool
 from pathlib import Path
-from typing import List, Optional, Union
 
 import fire
 import numpy as np
@@ -39,7 +40,7 @@ COLOR_PALETTE = np.vstack(
 )
 
 
-def _makeplot(rs, ps, outDir: Union[str, Path], class_name: str, iou_type: str) -> List[str]:
+def _makeplot(rs, ps, outDir: str | Path, class_name: str, iou_type: str) -> list[str]:
     export_path_list = []
 
     areaNames = ["allarea", "small", "medium", "large"]
@@ -50,7 +51,7 @@ def _makeplot(rs, ps, outDir: Union[str, Path], class_name: str, iou_type: str) 
         aps = []
         ps_curve = []
         for ps_ in area_ps:
-            # calculate precision recal curves
+            # calculate precision recall curves
             if ps_.ndim > 1:
                 ps_mean = np.zeros((ps_.shape[0],))
                 for ind, ps_threshold in enumerate(ps_):
@@ -96,9 +97,9 @@ def _autolabel(ax, rects, is_percent=True):
     for rect in rects:
         height = rect.get_height()
         if is_percent and height > 0 and height <= 1:  # for percent values
-            text_label = "{:2.0f}".format(height * 100)
+            text_label = f"{height * 100:2.0f}"
         else:
-            text_label = "{:2.0f}".format(height)
+            text_label = f"{height:2.0f}"
         ax.annotate(
             text_label,
             xy=(rect.get_x() + rect.get_width() / 2, height),
@@ -443,13 +444,13 @@ def _analyse_results(
 def analyse(
     dataset_json_path: str,
     result_json_path: str,
-    out_dir: Optional[str] = None,
+    out_dir: str | None = None,
     type: str = "bbox",
     no_extraplots: bool = False,
-    areas: List[int] = [1024, 9216, 10000000000],
+    areas: list[int] = [1024, 9216, 10000000000],
     max_detections: int = 500,
     return_dict: bool = False,
-) -> Optional[dict]:
+) -> dict | None:
     """
     Args:
         dataset_json_path (str): file path for the coco dataset json file

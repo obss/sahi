@@ -8,6 +8,8 @@ weights*
 .vscode
 .idea
 runs
+# clip models
+mobileclip_blt.ts
 
 # outputs
 outputs
@@ -170,3 +172,9 @@ tests/data
 .archive
 .python-version
 uv.lock
+
+# pip-compile
+requirements.txt
+requirements-dev.txt
+requirements/requirements-style.txt
+requirements/*.txt
