@@ -1,36 +1,36 @@
-# COCO Utilities
+# COCO 工具
 
 <details closed>
 <summary>
-<big><b>COCO dataset creation:</b></big>
+<big><b>创建 COCO 数据集：</b></big>
 </summary>
 
-## import required classes
+- 导入需要的类：
 
 ```python
 from sahi.utils.coco import Coco, CocoCategory, CocoImage, CocoAnnotation
 ```
 
-- init Coco object:
+- 初始化 COCO 对象：
 
 ```python
 coco = Coco()
 ```
 
-- add categories starting from id 0:
+- 添加从 id 0 开始的类别：
 
 ```python
 coco.add_category(CocoCategory(id=0, name='human'))
 coco.add_category(CocoCategory(id=1, name='vehicle'))
 ```
 
-## create a coco image
+- 创建COCO图像：
 
 ```python
 coco_image = CocoImage(file_name="image1.jpg", height=1080, width=1920)
 ```
 
-## add annotations to coco image
+- 在COCO图像上添加标注：
 
 ```python
 coco_image.add_annotation(
@@ -49,7 +49,7 @@ coco_image.add_annotation(
 )
 ```
 
-## Add predictions to coco image
+- 为 COCO 图像添加预测结果：
 
 ```python
 coco_image.add_prediction(
@@ -70,19 +70,19 @@ coco_image.add_prediction(
 )
 ```
 
-## Add coco image to Coco object
+- 将 COCO 图像添加到 COCO 对象中：
 
 ```python
 coco.add_image(coco_image)
 ```
 
-### After adding all images, convert coco object to coco json
+- 在添加了所有的图像后，将COCO对象转换为COCO数据集的json格式：
 
 ```python
 coco_json = coco.json
 ```
 
-### You can export it as json file:
+- 你可以把它导出为 json 文件：
 
 ```python
 from sahi.utils.file import save_json
@@ -90,7 +90,7 @@ from sahi.utils.file import save_json
 save_json(coco_json, "coco_dataset.json")
 ```
 
-### You can also export prediction array in coco prediction format and save it as json :
+- 你也可以导出COCO预测格式的预测结果数组并且将它保存为json文件：
 
 ```python
 from sahi.utils.file import save_json
@@ -99,10 +99,10 @@ predictions_array = coco.prediction_array
 save_json = save_json(predictions_array, "coco_predictions.json")
 ```
 
-### This prediction array can be used to get standard coco metrics for the predictions using official pycocotool api :
+- 此预测数组可用于通过官方 pycocotool API 获取标准的 COCO 评估指标：
 
 ```python
-# note:- pycocotools need to be installed separately
+# note:- pycocotools 需要另外安装
 from pycocotools.cocoeval import COCOeval
 from pycocotools.coco import COCO
 
@@ -119,7 +119,7 @@ coco_evaluator.summarize()
 
 <details closed>
 <summary>
-<big><b>Slice COCO dataset images and annotations into grids:</b></big>
+<big><b>将 COCO 数据集的图像和标注分割成片：</b></big>
 </summary>
 
 ```python
@@ -139,25 +139,25 @@ coco_dict, coco_path = slice_coco(
 
 <details closed>
 <summary>
-<big><b>Split COCO dataset into train/val:</b></big>
+<big><b>将 COCO 数据集分割为训练/验证集：</b></big>
 </summary>
 
 ```python
 from sahi.utils.coco import Coco
 from sahi.utils.file import save_json
 
-# specify coco dataset path
+# 指定 COCO 数据集路径
 coco_path = "coco.json"
 
-# init Coco object
+# 初始化 COCO 对象
 coco = Coco.from_coco_dict_or_path(coco_path)
 
-# split COCO dataset with a 85% train/15% val split
+# 将 COCO 数据集分割为 85% 的训练集 和 15% 的验证集
 result = coco.split_coco_as_train_val(
   train_split_rate=0.85
 )
 
-# export train val split files
+# 导出分割完的文件
 save_json(result["train_coco"].json, "train_split.json")
 save_json(result["val_coco"].json, "val_split.json")
 ```
@@ -166,17 +166,18 @@ save_json(result["val_coco"].json, "val_split.json")
 
 <details closed>
 <summary>
-<big><b>Filter/Update COCO dataset by categories:</b></big>
+<big><b>按类别筛选/更新 COCO 数据集：</b></big>
 </summary>
 
 ```python
 from sahi.utils.coco import Coco
 from sahi.utils.file import save_json
 
-# init Coco objects by specifying coco dataset paths and image folder directories
+
+# 通过指定 COCO 数据集和图像文件夹路径初始化 COCO 对象
 coco = Coco.from_coco_dict_or_path("coco.json")
 
-# select only 3 categories; and map them to ids 1, 2 and 3
+# 只选择3个类别并将其映射到不同 id 值
 desired_name2id = {
   "big_vehicle": 1,
   "car": 2,
@@ -184,7 +185,7 @@ desired_name2id = {
 }
 coco.update_categories(desired_name2id)
 
-# export updated/filtered COCO dataset
+# 导出更新和筛选好的 COCO 数据集
 save_json(coco.json, "updated_coco.json")
 ```
 
@@ -192,28 +193,29 @@ save_json(coco.json, "updated_coco.json")
 
 <details closed>
 <summary>
-<big><b>Filter COCO dataset by annotation area:</b></big>
+<big><b>通过标注区域筛选 COCO 数据集：</b></big>
 </summary>
 
 ```python
 from sahi.utils.coco import Coco
 from sahi.utils.file import save_json
 
-# init Coco objects by specifying coco dataset paths and image folder directories
+# 通过指定 COCO 数据集和图像文件夹路径初始化 COCO 对象
 coco = Coco.from_coco_dict_or_path("coco.json")
 
-# filter out images that contain annotations with smaller area than 50
+# 过滤掉包含面积小于50的标注图像
 area_filtered_coco = coco.get_area_filtered_coco(min=50)
-# filter out images that contain annotations with smaller area than 50 and larger area than 10000
+# 过滤掉包含面积小于50大于10000的标注图像
 area_filtered_coco = coco.get_area_filtered_coco(min=50, max_val=10000)
-# filter out images with separate area intervals per category
+过滤掉
+# 根据每个类别独立的面积区间来筛选图像
 intervals_per_category = {
   "human": {"min": 20, "max": 10000},
   "vehicle": {"min": 50, "max": 15000},
 }
 area_filtered_coco = coco.get_area_filtered_coco(intervals_per_category=intervals_per_category)
 
-# export filtered COCO dataset
+# 导出筛选好的 COCO 数据集
 save_json(area_filtered_coco.json, "area_filtered_coco.json")
 ```
 
@@ -221,13 +223,13 @@ save_json(area_filtered_coco.json, "area_filtered_coco.json")
 
 <details closed>
 <summary>
-<big><b>Filter out images that do not contain any annotation:</b></big>
+<big><b>过滤掉不包含任何标注的图像：</b></big>
 </summary>
 
 ```python
 from sahi.utils.coco import Coco
 
-# set ignore_negative_samples as False if you want images without annotations present in json and YOLO exports
+# 如果你希望在 JSON 和 YOLO 导出中保留没有标注的图像，请将 ignore_negative_samples 设置为 False
 coco = Coco.from_coco_dict_or_path("coco.json", ignore_negative_samples=False)
 
 ```
@@ -236,21 +238,21 @@ coco = Coco.from_coco_dict_or_path("coco.json", ignore_negative_samples=False)
 
 <details closed>
 <summary>
-<big><b>Merge COCO dataset files:</b></big>
+<big><b>合并 COCO 数据集文件：</b></big>
 </summary>
 
 ```python
 from sahi.utils.coco import Coco
 from sahi.utils.file import save_json
 
-# init Coco objects by specifying coco dataset paths and image folder directories
+# 通过指定 COCO 数据集路径和图像文件夹目录来初始化 COCO 对象
 coco_1 = Coco.from_coco_dict_or_path("coco1.json", image_dir="images_1/")
 coco_2 = Coco.from_coco_dict_or_path("coco2.json", image_dir="images_2/")
 
-# merge Coco datasets
+# 合并 COCO 数据集
 coco_1.merge(coco_2)
 
-# export merged COCO dataset
+# 导出合并后的 COCO 数据集
 save_json(coco_1.json, "merged_coco.json")
 ```
 
@@ -258,16 +260,16 @@ save_json(coco_1.json, "merged_coco.json")
 
 <details closed>
 <summary>
-<big><b>Convert COCO dataset to ultralytics/YOLO format:</b></big>
+<big><b>将 COCO 数据集转换为 ultralytics/YOLO 格式：</b></big>
 </summary>
 
 ```python
 from sahi.utils.coco import Coco
 
-# init Coco object
+# 初始化 COCO 对象
 coco = Coco.from_coco_dict_or_path("coco.json", image_dir="coco_images/")
 
-# export converted YOLO formatted dataset into given output_dir with a 85% train/15% val split
+# 将转换后的 YOLO 格式数据集导出到指定的 output_dir 中，并按 85% 训练集 / 15% 验证集划分。
 coco.export_as_yolo(
   output_dir="output/folder/dir",
   train_split_rate=0.85
@@ -278,17 +280,17 @@ coco.export_as_yolo(
 
 <details closed>
 <summary>
-<big><b>Convert train/val COCO dataset to ultralytics/YOLO format:</b></big>
+<big><b>将训练/验证 COCO 数据集转换为 ultralytics/YOLO 格式：</b></big>
 </summary>
 
 ```python
 from sahi.utils.coco import Coco, export_coco_as_yolo
 
-# init Coco object
+# 初始化 COCO 对象
 train_coco = Coco.from_coco_dict_or_path("train_coco.json", image_dir="coco_images/")
 val_coco = Coco.from_coco_dict_or_path("val_coco.json", image_dir="coco_images/")
 
-# export converted YOLO formatted dataset into given output_dir with given train/val split
+# 将转换后的 YOLO 格式数据集导出到指定的 output_dir 中，并按照给定的训练集/验证集划分。
 data_yml_path = export_coco_as_yolo(
   output_dir="output/folder/dir",
   train_coco=train_coco,
@@ -300,72 +302,72 @@ data_yml_path = export_coco_as_yolo(
 
 <details closed>
 <summary>
-<big><b>Subsample COCO dataset file:</b></big>
+<big><b>对 COCO 数据集文件进行抽样：</b></big>
 </summary>
 
 ```python
 from sahi.utils.coco import Coco
 
-# specify coco dataset path
+# 指定 COCO 数据集路径
 coco_path = "coco.json"
 
-# init Coco object
+# 初始化 COCO 对象
 coco = Coco.from_coco_dict_or_path(coco_path)
 
-# create a Coco object with 1/10 of total images
+# 创建一个包含全部图像十分之一的 COCO 对象
 subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10)
 
-# export subsampled COCO dataset
+# 导出抽样后的 COCO 数据集
 save_json(subsampled_coco.json, "subsampled_coco.json")
 
-# bonus: create a Coco object with 1/10 of total images that contain first category
+# bonus: 基于仅含“第一个类别”的图像构建 COCO 对象，样本规模为总图像数的 1/10
 subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10, category_id=0)
 
-# bonus2: create a Coco object with negative samples reduced to 1/10
+# bonus2: 构建 COCO 对象，并将负样本（无标注图像）数量抽样 1/10
 subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10, category_id=-1)
 ```
 </details>
 
 <details closed>
 <summary>
-<big><b>Upsample COCO dataset file:</b></big>
+<big><b>上采样 COCO 数据集文件：</b></big>
 </summary>
 
 ```python
 from sahi.utils.coco import Coco
 
-# specify coco dataset path
+# 指定 COCO 数据集路径
 coco_path = "coco.json"
 
-# init Coco object
+# 初始化 COCO 对象
 coco = Coco.from_coco_dict_or_path(coco_path)
 
-# create a Coco object with each sample is repeated 10 times
+# 创建一个 COCO 对象，其中每个样本都会被重复 10 次
 upsampled_coco = coco.get_upsampled_coco(upsample_ratio=10)
 
-# export upsampled COCO dataset
+# 导出上采样后的数据集
 save_json(upsampled_coco.json, "upsampled_coco.json")
 
-# bonus: create a Coco object with images that contain first category repeated 10 times
+# bonus: 构建 COCO 对象，并将包含“第一个类别”的图像重复采样 10 次
 subsampled_coco = coco.get_subsampled_coco(upsample_ratio=10, category_id=0)
 
-# bonus2: create a Coco object with negative samples upsampled by 10 times
+# bonus2: 构建 COCO 对象，并将负样本上采样 10 倍
 upsampled_coco = coco.get_upsampled_coco(upsample_ratio=10, category_id=-1)
 ```
 </details>
 
 <details closed>
 <summary>
-<big><b>Get dataset stats:</b></big>
+<big><b>获取数据集统计信息：</b></big>
 </summary>
 
 ```python
 from sahi.utils.coco import Coco
 
-# init Coco object
+# 初始化 COCO 对象
 coco = Coco.from_coco_dict_or_path("coco.json")
 
-# get dataset stats
+# 获取数据集的统计信息
 coco.stats
 {
   'num_images': 6471,
@@ -389,60 +391,62 @@ coco.stats
 
 <details closed>
 <summary>
-<big><b>Remove invalid coco results:</b></big>
+<big><b>移除无效的 COCO 结果：</b></big>
 </summary>
 
 ```python
 from sahi.utils.file import save_json
 from sahi.utils.coco import remove_invalid_coco_results
 
-# remove invalid predictions from COCO results JSON
+# 从 COCO 结果的 JSON 中移除无效预测
 coco_results = remove_invalid_coco_results("coco_result.json")
 
-# export processed COCO results
+# 导出经过处理的 COCO 结果
 save_json(coco_results, "fixed_coco_result.json")
 
-# bonus: remove invalid predictions from COCO results JSON by giving COCO
-# dataset path to also filter out bbox results exceeding image height&width
+# bonus: 通过提供 COCO 数据集路径，从 COCO 结果 JSON 中移除无效预测
+# 同时过滤掉超出图像高度和宽度范围的 bbox 结果
 coco_results = remove_invalid_coco_results("coco_result.json", "coco_dataset.json")
 ```
 </details>
 
 <details closed>
 <summary>
-<big><b>Get COCO with clipped bounding boxes:</b></big>
+<big><b>获取边界框经过裁剪的 COCO 数据：</b></big>
 </summary>
 
-- import required classes:
+- 导入必要的类：
 
 ```python
 from sahi.utils.coco import Coco
 from sahi.utils.file import save_json
 ```
-Usage:
+用法：
 
 ```python
-# Clip overflowing bounding boxes to image width & height
+# 将越界的边界框裁剪到图像的宽度和高度范围内
 coco = Coco.from_coco_dict_or_path(coco_path, clip_bboxes_to_img_dims=True)
 ```
-or,
+或者，
 
 ```python
-# apply to your already created coco object
+# 应用到你已经创建好的 COCO 对象
 coco = coco.get_coco_with_clipped_bboxes()
 ```
-- Export your clipped_bboxed_coco:
+
+- 导出裁剪后有边界框的 COCO 对象:
+
 ```python
 save_json(coco.json, "coco.json")
 ```
 </details>
 
-# Interactive Examples and Additional Resources
+# 交互式示例和附加资源
 
-Want to see these COCO utilities in action? Here are some helpful resources:
+想要马上看到 COCO 工具在使用中的表现？这里有一些有用的资源：
 
-- For hands-on examples of COCO dataset slicing, check out our [slicing demo notebook](../demo/slicing.ipynb)
-- To learn about prediction and visualization with COCO datasets, explore our model-specific notebooks in the [demo directory](../demo/)
-- For command-line operations with COCO datasets, refer to our [CLI documentation](cli.md)
+- 关于 COCO 数据集切片的动手实践示例，查看我们的 [切片示例 notebook](../../demo/slicing.ipynb)
+- 要了解如何使用 COCO 数据集进行预测与可视化，探索我们在 [demo 目录](../../demo/) 中特定模型的notebook
+- 关于 COCO 数据集的命令行操作, 参考我们的 [CLI 文档](cli.md)
 
-These resources provide practical examples and detailed explanations to help you work effectively with COCO datasets using SAHI.
+这些资源提供了实用的例子和详细的解释，来帮助你用 SAHI 来高效的处理 COCO 数据集。
