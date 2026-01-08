@@ -93,7 +93,7 @@ mmdet = [
   "mmcv==2.1.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
   "mmdet==3.3.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
   # numpy 2 is not compatible with torch 2.1.2
-  "numpy<2.0;python_version=='3.11'",
+  "numpy<3.0;python_version=='3.11'",
 ]
 ci = [
   # max supported pytorch version for python 3.8 is 2.4.1
