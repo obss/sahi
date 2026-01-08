@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import math
 import os
 import time
 from collections.abc import Generator
 from functools import cmp_to_key
+from typing import List
 
 import numpy as np
 from PIL import Image
@@ -44,30 +46,38 @@ POSTPROCESS_NAME_TO_CLASS = {
 LOW_MODEL_CONFIDENCE = 0.1
 
 
-def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id):
+def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id, shift_amount_indices = []):
     return [
-        obj_pred
-        for obj_pred in object_prediction_list
+        (obj_pred, shift_amount)
+        for obj_pred, shift_amount in zip(object_prediction_list, shift_amount_indices)
+        if obj_pred.category.name not in (exclude_classes_by_name or [])
+        and obj_pred.category.id not in (exclude_classes_by_id or [])
+    ]
+    
+def filter_predictions_with_shift_indices(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id, shift_amount_indices = []):
+    return [
+        (obj_pred, shift_amount)
+        for obj_pred, shift_amount in zip(object_prediction_list, shift_amount_indices)
         if obj_pred.category.name not in (exclude_classes_by_name or [])
         and obj_pred.category.id not in (exclude_classes_by_id or [])
     ]
 
 
 def get_prediction(
-    image,
+    image: str | np.ndarray | list[np.ndarray],
     detection_model,
-    shift_amount: list | None = None,
+    shift_amount: list[int, int] | list[list[int, int]] | None = None,
     full_shape=None,
     postprocess: PostprocessPredictions | None = None,
     verbose: int = 0,
     exclude_classes_by_name: list[str] | None = None,
     exclude_classes_by_id: list[int] | None = None,
-) -> PredictionResult:
+) -> PredictionResult | list[PredictionResult]:
     """Function for performing prediction for given image using given detection_model.
 
     Args:
-        image: str or np.ndarray
-            Location of image or numpy image matrix to slice
+        image: str, np.ndarray or list of np.ndarray
+            Location of image, numpy image matrix to slice or list of numpy image matrices
         detection_model: model.DetectionMode
         shift_amount: List
             To shift the box and mask predictions from sliced image to full
@@ -90,16 +100,27 @@ def get_prediction(
             durations_in_seconds: a dict containing elapsed times for profiling
     """
     durations_in_seconds = dict()
-
-    # read image as pil
-    image_as_pil = read_image_as_pil(image)
+    
     # get prediction
     # ensure shift_amount is a list instance (avoid mutable default arg)
     if shift_amount is None:
         shift_amount = [0, 0]
 
-    time_start = time.perf_counter()
-    detection_model.perform_inference(np.ascontiguousarray(image_as_pil))
+    # check if image is a list
+    if isinstance(image, list):
+        time_start = time.perf_counter()
+        if len(image) == 0:
+            raise ValueError("Input image list is empty.")
+        
+        if not isinstance(image[0], np.ndarray):
+            raise ValueError("Input image list should be a list of numpy arrays.")
+        
+        detection_model.perform_per_image_batch_inference(image)
+    else:
+        # read image as pil
+        image_as_pil = read_image_as_pil(image)
+        time_start = time.perf_counter()
+        detection_model.perform_inference(np.ascontiguousarray(image_as_pil))
     time_end = time.perf_counter() - time_start
     durations_in_seconds["prediction"] = time_end
 
@@ -113,7 +134,39 @@ def get_prediction(
         shift_amount=shift_amount,
         full_shape=full_shape,
     )
+    
     object_prediction_list: list[ObjectPrediction] = detection_model.object_prediction_list
+    if isinstance(image, list):
+        shift_amount_indices_per_prediction = detection_model.shift_amount_indices_per_prediction
+        object_prediction_list = filter_predictions_with_shift_indices(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id, shift_amount_indices_per_prediction)
+        object_prediction_dict = {}
+        
+        for obj_preds, shift_amount_index in object_prediction_list:
+            if shift_amount_index not in object_prediction_dict:
+                object_prediction_dict[shift_amount_index] = []
+            if postprocess is not None:
+                obj_preds = postprocess(obj_preds)
+            object_prediction_dict[shift_amount_index].append(obj_preds)
+        
+        time_end = time.perf_counter() - time_start
+        durations_in_seconds["postprocess"] = time_end / len(object_prediction_dict)
+        
+        if verbose == 1:
+            print(
+                "Prediction performed in",
+                durations_in_seconds["prediction"],
+                "seconds.",
+            )
+        
+        return [
+            PredictionResult(
+                image=image[i],
+                object_prediction_list=obj_preds,
+                durations_in_seconds=durations_in_seconds,
+            )
+            for i, obj_preds in object_prediction_dict.items()
+        ]
+        
     object_prediction_list = filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id)
 
     # postprocess matching predictions
@@ -156,6 +209,7 @@ def get_sliced_prediction(
     exclude_classes_by_id: list[int] | None = None,
     progress_bar: bool = False,
     progress_callback=None,
+    num_batch: int = 1,
 ) -> PredictionResult:
     """Function for slice image + get predicion for each slice + combine predictions in full image.
 
@@ -224,8 +278,6 @@ def get_sliced_prediction(
     # for profiling
     durations_in_seconds = dict()
 
-    # currently only 1 batch supported
-    num_batch = 1
     # create slices from full image
     time_start = time.perf_counter()
     slice_image_result = slice_image(
@@ -264,7 +316,7 @@ def get_sliced_prediction(
     postprocess_time = 0
     time_start = time.perf_counter()
     # create prediction input
-    num_group = int(num_slices / num_batch)
+    num_group = math.ceil(num_slices / num_batch)
     if verbose == 1 or verbose == 2:
         tqdm.write(f"Performing prediction on {num_slices} slices.")
 
@@ -273,20 +325,22 @@ def get_sliced_prediction(
     else:
         slice_iterator = range(num_group)
 
-    object_prediction_list = []
+    object_prediction_list: List[ObjectPrediction] = []
     # perform sliced prediction
     for group_ind in slice_iterator:
         # prepare batch (currently supports only 1 batch)
-        image_list = []
-        shift_amount_list = []
-        for image_ind in range(num_batch):
-            image_list.append(slice_image_result.images[group_ind * num_batch + image_ind])
-            shift_amount_list.append(slice_image_result.starting_pixels[group_ind * num_batch + image_ind])
+        image_list: list[np.ndarray] = []
+        shift_amount_list: list[list[int]] = []
+        for image_ind in range(num_batch if num_slices > num_batch else num_slices):
+            idx = min(group_ind * num_batch + image_ind, num_slices - 1)
+            image_list.append(slice_image_result.images[idx])
+            shift_amount_list.append(slice_image_result.starting_pixels[idx])
+            
         # perform batch prediction
         prediction_result = get_prediction(
-            image=image_list[0],
+            image=image_list,
             detection_model=detection_model,
-            shift_amount=shift_amount_list[0],
+            shift_amount=shift_amount_list,
             full_shape=[
                 slice_image_result.original_image_height,
                 slice_image_result.original_image_width,
@@ -294,10 +348,17 @@ def get_sliced_prediction(
             exclude_classes_by_name=exclude_classes_by_name,
             exclude_classes_by_id=exclude_classes_by_id,
         )
-        # convert sliced predictions to full predictions
-        for object_prediction in prediction_result.object_prediction_list:
-            if object_prediction:  # if not empty
-                object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+        
+        if isinstance(prediction_result, list):
+            for prediction in prediction_result:
+                for object_prediction in prediction.object_prediction_list:
+                    if object_prediction:  # if not empty
+                        object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+        else:
+            # convert sliced predictions to full predictions
+            for object_prediction in prediction_result.object_prediction_list:
+                if object_prediction:  # if not empty
+                    object_prediction_list.append(object_prediction.get_shifted_object_prediction())
 
         # merge matching predictions during sliced prediction
         if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
