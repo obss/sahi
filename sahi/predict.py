@@ -156,6 +156,7 @@ def get_sliced_prediction(
     exclude_classes_by_id: list[int] | None = None,
     progress_bar: bool = False,
     progress_callback=None,
+    batch_size: int = 1,
 ) -> PredictionResult:
     """Function for slice image + get predicion for each slice + combine predictions in full image.
 
@@ -215,6 +216,8 @@ def get_sliced_prediction(
         progress_callback: callable
             A callback function that will be called after each slice is processed.
             The function should accept two arguments: (current_slice, total_slices)
+        batch_size: int
+            Number of slices to process per inference batch. Default: 1.
     Returns:
         A Dict with fields:
             object_prediction_list: a list of sahi.prediction.ObjectPrediction
@@ -224,8 +227,10 @@ def get_sliced_prediction(
     # for profiling
     durations_in_seconds = dict()
 
-    # currently only 1 batch supported
-    num_batch = 1
+    if batch_size < 1:
+        raise ValueError(f"batch_size should be greater than 0, got {batch_size}")
+
+    num_batch = batch_size
     # create slices from full image
     time_start = time.perf_counter()
     slice_image_result = slice_image(
@@ -264,7 +269,7 @@ def get_sliced_prediction(
     postprocess_time = 0
     time_start = time.perf_counter()
     # create prediction input
-    num_group = int(num_slices / num_batch)
+    num_group = (num_slices + num_batch - 1) // num_batch
     if verbose == 1 or verbose == 2:
         tqdm.write(f"Performing prediction on {num_slices} slices.")
 
@@ -275,29 +280,66 @@ def get_sliced_prediction(
 
     object_prediction_list = []
     # perform sliced prediction
-    for group_ind in slice_iterator:
-        # prepare batch (currently supports only 1 batch)
+    for group_index in slice_iterator:
+        # prepare batch
         image_list = []
         shift_amount_list = []
-        for image_ind in range(num_batch):
-            image_list.append(slice_image_result.images[group_ind * num_batch + image_ind])
-            shift_amount_list.append(slice_image_result.starting_pixels[group_ind * num_batch + image_ind])
-        # perform batch prediction
-        prediction_result = get_prediction(
-            image=image_list[0],
-            detection_model=detection_model,
-            shift_amount=shift_amount_list[0],
-            full_shape=[
-                slice_image_result.original_image_height,
-                slice_image_result.original_image_width,
-            ],
-            exclude_classes_by_name=exclude_classes_by_name,
-            exclude_classes_by_id=exclude_classes_by_id,
-        )
+        group_start = group_index * num_batch
+        group_end = min(group_start + num_batch, num_slices)
+        for image_index in range(group_start, group_end):
+            image_list.append(slice_image_result.images[image_index])
+            shift_amount_list.append(slice_image_result.starting_pixels[image_index])
+
+        if len(image_list) == 1:
+            prediction_result = get_prediction(
+                image=image_list[0],
+                detection_model=detection_model,
+                shift_amount=shift_amount_list[0],
+                full_shape=[
+                    slice_image_result.original_image_height,
+                    slice_image_result.original_image_width,
+                ],
+                exclude_classes_by_name=exclude_classes_by_name,
+                exclude_classes_by_id=exclude_classes_by_id,
+            )
+            object_prediction_list_per_image = [prediction_result.object_prediction_list]
+        else:
+            image_as_pil_list = [read_image_as_pil(image) for image in image_list]
+            full_shape_list = [
+                [slice_image_result.original_image_height, slice_image_result.original_image_width]
+                for _ in image_as_pil_list
+            ]
+            try:
+                detection_model.perform_inference([np.ascontiguousarray(image_as_pil) for image_as_pil in image_as_pil_list])
+                detection_model.convert_original_predictions(
+                    shift_amount=shift_amount_list,
+                    full_shape=full_shape_list,
+                )
+                object_prediction_list_per_image = detection_model.object_prediction_list_per_image
+            except Exception as e:
+                logger.warning(f"Batch sliced inference failed, falling back to single inference per slice. Error: {e}")
+                object_prediction_list_per_image = []
+                for image_index, image in enumerate(image_list):
+                    prediction_result = get_prediction(
+                        image=image,
+                        detection_model=detection_model,
+                        shift_amount=shift_amount_list[image_index],
+                        full_shape=full_shape_list[image_index],
+                        exclude_classes_by_name=exclude_classes_by_name,
+                        exclude_classes_by_id=exclude_classes_by_id,
+                    )
+                    object_prediction_list_per_image.append(prediction_result.object_prediction_list)
+
         # convert sliced predictions to full predictions
-        for object_prediction in prediction_result.object_prediction_list:
-            if object_prediction:  # if not empty
-                object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+        for image_object_prediction_list in object_prediction_list_per_image:
+            image_object_prediction_list = filter_predictions(
+                image_object_prediction_list,
+                exclude_classes_by_name,
+                exclude_classes_by_id,
+            )
+            for object_prediction in image_object_prediction_list:
+                if object_prediction:  # if not empty
+                    object_prediction_list.append(object_prediction.get_shifted_object_prediction())
 
         # merge matching predictions during sliced prediction
         if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
@@ -307,7 +349,7 @@ def get_sliced_prediction(
 
         # Call progress callback if provided
         if progress_callback is not None:
-            progress_callback(group_ind + 1, num_group)
+            progress_callback(group_index + 1, num_group)
 
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:

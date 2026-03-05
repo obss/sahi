@@ -343,6 +343,62 @@ def test_get_sliced_prediction_yolo11():
     assert num_car > 0
 
 
+def test_get_sliced_prediction_batch_size_greater_than_one():
+    # init model
+    download_yolo11n_model()
+
+    yolo11_detection_model = UltralyticsDetectionModel(
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=MODEL_DEVICE,
+        category_remapping=None,
+        load_at_init=False,
+        image_size=IMAGE_SIZE,
+    )
+    yolo11_detection_model.load_model()
+
+    # prepare image
+    image_path = "tests/data/small-vehicles1.jpeg"
+
+    # get sliced prediction with batch size 1
+    prediction_result_batch_size_1 = get_sliced_prediction(
+        image=image_path,
+        detection_model=yolo11_detection_model,
+        slice_height=512,
+        slice_width=512,
+        overlap_height_ratio=0.1,
+        overlap_width_ratio=0.2,
+        perform_standard_pred=False,
+        postprocess_type="GREEDYNMM",
+        postprocess_match_threshold=0.5,
+        postprocess_match_metric="IOS",
+        postprocess_class_agnostic=True,
+        batch_size=1,
+    )
+    object_prediction_list_batch_size_1 = prediction_result_batch_size_1.object_prediction_list
+
+    # get sliced prediction with batch size 2
+    prediction_result_batch_size_2 = get_sliced_prediction(
+        image=image_path,
+        detection_model=yolo11_detection_model,
+        slice_height=512,
+        slice_width=512,
+        overlap_height_ratio=0.1,
+        overlap_width_ratio=0.2,
+        perform_standard_pred=False,
+        postprocess_type="GREEDYNMM",
+        postprocess_match_threshold=0.5,
+        postprocess_match_metric="IOS",
+        postprocess_class_agnostic=True,
+        batch_size=2,
+    )
+    object_prediction_list_batch_size_2 = prediction_result_batch_size_2.object_prediction_list
+
+    assert len(object_prediction_list_batch_size_1) > 0
+    assert len(object_prediction_list_batch_size_2) > 0
+    assert len(object_prediction_list_batch_size_1) == len(object_prediction_list_batch_size_2)
+
+
 @pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
 def test_mmdet_yolox_tiny_prediction():
     # Skip if mmdet is not installed
