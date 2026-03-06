@@ -1,4 +1,4 @@
-from typing import Union
+from __future__ import annotations
 
 import fire
 
@@ -9,7 +9,7 @@ from sahi.utils.file import Path, increment_path
 def main(
     image_dir: str,
     dataset_json_path: str,
-    train_split: Union[int, float] = 0.9,
+    train_split: int | float = 0.9,
     project: str = "runs/coco2yolo",
     name: str = "exp",
     seed: int = 1,

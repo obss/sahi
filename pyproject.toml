@@ -1,13 +1,13 @@
 [project]
 name = "sahi"
-version = "0.11.33"
+version = "0.11.36"
 readme = "README.md"
 description = "A vision library for performing sliced inference on large images/small objects"
 requires-python = ">=3.8"
 license = "MIT"
 license-files = ["./LICENSE"]
 dependencies = [
-  "opencv-python<=4.11.0.86",
+  "opencv-python<=4.12.0.88",
   "shapely>=2.0.0",
   "tqdm>=4.48.2",
   "pybboxes==0.1.6",
@@ -17,6 +17,7 @@ dependencies = [
   "terminaltables",
   "requests",
   "click",
+  "torch>=2.4.1",
 ]
 
 classifiers = [
@@ -30,6 +31,8 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -47,10 +50,9 @@ maintainers = [
 [project.scripts]
 sahi = "sahi.cli:app"
 
-
 [dependency-groups]
 dev = [
-    "pytest>=7.2.2,<9.0.0",
+    "pytest>=7.2.2,<10.0.0",
     "tox>=4.11.4",
     "notebook>=6.5.3,<8.0.0",
     "ipywidgets>=8.1.1",
@@ -60,10 +62,11 @@ dev = [
     "pytest-xdist[psutil]>=3.0",
     "ruff",
     "jupyterlab>=3.0.14",
+    "pywinpty!=2.0.14; os_name == 'nt'",
 ]
 docs = [
     "mkdocs-material[imaging]>=9.6.15,<=10.0.0",
-    "mkdocstrings>=0.25.2,<0.30.0",
+    "mkdocstrings>=0.25.2,<1.1.0",
     "mkdocstrings-python>=1.10.9",
     "mike>=2.0.0",
     "mkdocs-jupyter>=0.24.3",
@@ -78,6 +81,13 @@ build = [
 ]
 
 [project.optional-dependencies]
+yolov5 = ["yolov5>=6.0.0,<8.0.0"]
+ultralytics = ["ultralytics>=8.0.0"]
+transformers = ["transformers>=4.49.0;python_version>='3.9'",]
+roboflow = ["inference>=0.51.5;python_version>='3.12'", "rfdetr>=1.1.0;python_version>='3.12'"]
+onnx = ["onnx;python_version>='3.10'", "onnxruntime;python_version>='3.10'"]
+all = ["yolov5>=6.0.0,<8.0.0", "ultralytics>=8.0.0", "torch>=2.4.1", "torchvision", "transformers>=4.49.0;python_version>='3.9'", "inference>=0.51.5;python_version>='3.12'", "rfdetr>=1.1.0;python_version>='3.12'", "onnx;python_version>='3.10'", "onnxruntime;python_version>='3.10'"]
+
 mmdet = [
   # MMDetection dependencies - only for Python 3.11 and not on macOS ARM64
   "mmengine;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
@@ -115,11 +125,11 @@ ci = [
 
 [tool.uv]
 
-# find-links = [
-#   "http://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
-# ]
+find-links = [
+   "http://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
+]
 
-override-dependencies = ["pillow>=8.2.0"]
+override-dependencies = ["pillow>=8.2.0", "pywinpty!=2.0.14; os_name == 'nt'"]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
@@ -131,16 +141,126 @@ torch = [{ index = "pytorch-cpu" }]
 torchvision = [{ index = "pytorch-cpu" }]
 
 [tool.ruff]
+target-version = "py38"
 line-length = 120
-exclude = ["**/__init__.py", ".git", "__pycache__", "*.ipynb"]
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "__pycache__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "yarn-error.log",
+    "yarn.lock",
+    "docs",
+]
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
-ignore = ["E501"]  # line too long
+# Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
+select = ["E", "F", "I", "A", "Q", "W", "RUF", "UP","FA"]
+ignore = ["A002","A001"]
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "I",
+    "N",
+    "Q",
+    "S",
+    "T",
+    "W",
+    "ANN",
+    "ARG",
+    "BLE",
+    "COM",
+    "DJ",
+    "DTZ",
+    "EM",
+    "ERA",
+    "EXE",
+    "FBT",
+    "ICN",
+    "INP",
+    "ISC",
+    "NPY",
+    "PD",
+    "PGH",
+    "PIE",
+    "PL",
+    "PT",
+    "PTH",
+    "PYI",
+    "RET",
+    "RSE",
+    "RUF",
+    "SIM",
+    "SLF",
+    "TCH",
+    "TID",
+    "TRY",
+    "UP",
+    "YTT",
+    "FA"
+]
+unfixable = []
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+pylint.max-args = 20
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "double"
+multiline-quotes = "double"
+docstring-quotes = "double"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401"]
+
+[tool.ruff.lint.mccabe]
+# Flag errors (`C901`) whenever the complexity level exceeds 5.
+max-complexity = 20
+
+[tool.ruff.lint.isort]
+order-by-type = true
+no-sections = false
 
 [tool.ruff.format]
+# Like Black, use double quotes for strings.
 quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
 indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -161,6 +281,9 @@ requires = ["hatch-mkdocs", "hatch-pip-compile"]
 
 [tool.hatch.envs.docs]
 detached = false
+
+[tool.hatch.build.targets.wheel]
+packages = ["sahi"]
 
 [tool.hatch.envs.default.scripts]
 

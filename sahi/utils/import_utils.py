@@ -6,9 +6,7 @@ from sahi.logger import logger
 
 
 def get_package_info(package_name: str, verbose: bool = True):
-    """
-    Returns the package version as a string and the package name as a string.
-    """
+    """Returns the package version as a string and the package name as a string."""
     _is_available = is_available(package_name)
 
     if _is_available:
@@ -51,9 +49,7 @@ def is_available(module_name: str):
 
 
 def check_requirements(package_names):
-    """
-    Raise error if module is not installed.
-    """
+    """Raise error if module is not installed."""
     missing_packages = []
     for package_name in package_names:
         if importlib.util.find_spec(package_name) is None:
@@ -64,9 +60,7 @@ def check_requirements(package_names):
 
 
 def check_package_minimum_version(package_name: str, minimum_version: str, verbose=False):
-    """
-    Raise error if module version is not compatible.
-    """
+    """Raise error if module version is not compatible."""
     from packaging import version
 
     _is_available, _version = get_package_info(package_name, verbose=verbose)
@@ -82,9 +76,7 @@ def check_package_minimum_version(package_name: str, minimum_version: str, verbo
 
 
 def ensure_package_minimum_version(package_name: str, minimum_version: str, verbose=False):
-    """
-    Raise error if module version is not compatible.
-    """
+    """Raise error if module version is not compatible."""
     from packaging import version
 
     _is_available, _version = get_package_info(package_name, verbose=verbose)
