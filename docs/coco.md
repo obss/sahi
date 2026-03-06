@@ -5,7 +5,7 @@
 <big><b>COCO dataset creation:</b></big>
 </summary>
 
-- import required classes:
+## import required classes
 
 ```python
 from sahi.utils.coco import Coco, CocoCategory, CocoImage, CocoAnnotation
@@ -24,13 +24,13 @@ coco.add_category(CocoCategory(id=0, name='human'))
 coco.add_category(CocoCategory(id=1, name='vehicle'))
 ```
 
-- create a coco image:
+## create a coco image
 
 ```python
 coco_image = CocoImage(file_name="image1.jpg", height=1080, width=1920)
 ```
 
-- add annotations to coco image:
+## add annotations to coco image
 
 ```python
 coco_image.add_annotation(
@@ -49,7 +49,7 @@ coco_image.add_annotation(
 )
 ```
 
-- add predictions to coco image:
+## Add predictions to coco image
 
 ```python
 coco_image.add_prediction(
@@ -70,19 +70,19 @@ coco_image.add_prediction(
 )
 ```
 
-- add coco image to Coco object:
+## Add coco image to Coco object
 
 ```python
 coco.add_image(coco_image)
 ```
 
-- after adding all images, convert coco object to coco json:
+### After adding all images, convert coco object to coco json
 
 ```python
 coco_json = coco.json
 ```
 
-- you can export it as json file:
+### You can export it as json file:
 
 ```python
 from sahi.utils.file import save_json
@@ -90,7 +90,7 @@ from sahi.utils.file import save_json
 save_json(coco_json, "coco_dataset.json")
 ```
 
-- you can also export prediction array in coco prediction format and save it as json :
+### You can also export prediction array in coco prediction format and save it as json :
 
 ```python
 from sahi.utils.file import save_json
@@ -99,7 +99,7 @@ predictions_array = coco.prediction_array
 save_json = save_json(predictions_array, "coco_predictions.json")
 ```
 
-- this prediction array can be used to get standard coco metrics for the predictions using official pycocotool api :
+### This prediction array can be used to get standard coco metrics for the predictions using official pycocotool api :
 
 ```python
 # note:- pycocotools need to be installed separately

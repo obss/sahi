@@ -225,6 +225,9 @@ class TestTorchVisionDetectionModel:
         match_threshold = 0.5
         class_agnostic = True
 
+        def progress_callback(progress, total):
+            print(f"Progress: {progress}/{total} slices processed.")
+
         # get sliced prediction
         prediction_result = get_sliced_prediction(
             image=image_path,
@@ -238,6 +241,8 @@ class TestTorchVisionDetectionModel:
             postprocess_match_threshold=match_threshold,
             postprocess_match_metric=match_metric,
             postprocess_class_agnostic=class_agnostic,
+            progress_bar=True,
+            progress_callback=progress_callback,
         )
         object_prediction_list = prediction_result.object_prediction_list
 

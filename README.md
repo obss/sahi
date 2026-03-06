@@ -8,7 +8,7 @@
 </h4>
 
 <h4>
-    <img width="700" alt="teaser" src="https://raw.githubusercontent.com/obss/sahi/main/resources/sliced_inference.gif">
+    <img width="700" alt="teaser" src="https://raw.githubusercontent.com/obss/sahi/main/resources/sahi-sliced-inference-overview.avif">
 </h4>
 
 <div>
@@ -46,16 +46,18 @@ SAHI helps developers overcome real-world challenges in object detection by enab
 
 ### Approved by the Community
 
-[📜 List of publications that cite SAHI (currently 400+)](https://scholar.google.com/scholar?hl=en&as_sdt=2005&sciodt=0,5&cites=14065474760484865747&scipsc=&q=&scisbd=1)
+[📜 List of publications that cite SAHI (currently 600+)](https://scholar.google.com/scholar?hl=en&as_sdt=2005&sciodt=0,5&cites=14065474760484865747&scipsc=&q=&scisbd=1)
 
 [🏆 List of competition winners that used SAHI](https://github.com/obss/sahi/discussions/688)
 
 ### Approved by AI Tools
+
 SAHI's documentation is [indexed in Context7 MCP](https://context7.com/obss/sahi), providing AI coding assistants with up-to-date, version-specific code examples and API references. We also provide an [llms.txt](https://context7.com/obss/sahi/llms.txt) file following the emerging standard for AI-readable documentation. To integrate SAHI docs with your AI development workflow, check out the [Context7 MCP installation guide](https://github.com/upstash/context7#%EF%B8%8F-installation).
 
 ## <div align="center">Installation</div>
 
 ### Basic Installation
+
 ```bash
 pip install sahi
 ```

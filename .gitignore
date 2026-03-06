@@ -8,6 +8,8 @@ weights*
 .vscode
 .idea
 runs
+# clip models
+mobileclip_blt.ts
 
 # outputs
 outputs

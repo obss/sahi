@@ -1685,14 +1685,14 @@ def update_categories(desired_name2id: dict, coco_dict: dict) -> dict:
     """Rearranges category mapping of given COCO dictionary based on given category_mapping. Can also be used to filter
     some of the categories.
 
-    Arguments:
-    ---------
+    Args:
+
         desired_name2id : dict
             {"big_vehicle": 1, "car": 2, "human": 3}
         coco_dict : dict
             COCO formatted dictionary.
+
     Returns:
-    ---------
         coco_target : dict
             COCO dict with updated/filtered categories.
     """
@@ -1746,8 +1746,7 @@ def update_categories_from_file(desired_name2id: dict, coco_path: str, save_path
     """Rearranges category mapping of a COCO dictionary in coco_path based on given category_mapping. Can also be used
     to filter some of the categories.
 
-    Arguments:
-    ---------
+    Args:
         desired_name2id : dict
             {"human": 1, "car": 2, "big_vehicle": 3}
         coco_path : str
@@ -1766,8 +1765,7 @@ def update_categories_from_file(desired_name2id: dict, coco_path: str, save_path
 def merge(coco_dict1: dict, coco_dict2: dict, desired_name2id: dict | None = None) -> dict:
     """Combines 2 coco formatted annotations dicts, and returns the combined coco dict.
 
-    Arguments:
-    ---------
+    Args:
         coco_dict1 : dict
             First coco dictionary.
         coco_dict2 : dict
@@ -1775,7 +1773,6 @@ def merge(coco_dict1: dict, coco_dict2: dict, desired_name2id: dict | None = Non
         desired_name2id : dict
             {"human": 1, "car": 2, "big_vehicle": 3}
     Returns:
-    ---------
         merged_coco_dict : dict
             Merged COCO dict.
     """
@@ -1815,8 +1812,8 @@ def merge(coco_dict1: dict, coco_dict2: dict, desired_name2id: dict | None = Non
 def merge_from_list(coco_dict_list, desired_name2id=None, verbose=1):
     """Combines a list of coco formatted annotations dicts, and returns the combined coco dict.
 
-    Arguments:
-    ---------
+    Args:
+
         coco_dict_list: list of dict
             A list of coco dicts
         desired_name2id: dict
@@ -1824,7 +1821,7 @@ def merge_from_list(coco_dict_list, desired_name2id=None, verbose=1):
         verbose: bool
             If True, merging info is printed
     Returns:
-    ---------
+
         merged_coco_dict: dict
             Merged COCO dict.
     """
@@ -1864,8 +1861,8 @@ def merge_from_list(coco_dict_list, desired_name2id=None, verbose=1):
 def merge_from_file(coco_path1: str, coco_path2: str, save_path: str):
     """Combines 2 coco formatted annotations files given their paths, and saves the combined file to save_path.
 
-    Arguments:
-    ---------
+    Args:
+
         coco_path1 : str
             Path for the first coco file.
         coco_path2 : str
@@ -1888,12 +1885,12 @@ def merge_from_file(coco_path1: str, coco_path2: str, save_path: str):
 def get_imageid2annotationlist_mapping(coco_dict: dict) -> dict[int, list[CocoAnnotation]]:
     """Get image_id to annotationlist mapping for faster indexing.
 
-    Arguments
-    ---------
+    Args
+
         coco_dict : dict
             coco dict with fields "images", "annotations", "categories"
     Returns
-    -------
+
         image_id_to_annotation_list : dict
         {
             1: [CocoAnnotation, CocoAnnotation, CocoAnnotation],
@@ -1923,8 +1920,8 @@ def get_imageid2annotationlist_mapping(coco_dict: dict) -> dict[int, list[CocoAn
 def create_coco_dict(images, categories, ignore_negative_samples=False, image_id_setting="auto"):
     """Creates COCO dict with fields "images", "annotations", "categories".
 
-    Arguments
-    ---------
+    Args
+
         images : List of CocoImage containing a list of CocoAnnotation
         categories : List of Dict
             COCO categories
@@ -1935,7 +1932,7 @@ def create_coco_dict(images, categories, ignore_negative_samples=False, image_id
                 auto --> will assign id from scratch (<CocoImage>.id will be ignored)
                 manual --> you will need to provide image ids in <CocoImage> instances (<CocoImage>.id can not be None)
     Returns
-    -------
+
         coco_dict : Dict
             COCO dict with fields "images", "annotations", "categories"
     """
@@ -1997,8 +1994,8 @@ def create_coco_dict(images, categories, ignore_negative_samples=False, image_id
 def create_coco_prediction_array(images, ignore_negative_samples=False, image_id_setting="auto"):
     """Creates COCO prediction array which is list of predictions.
 
-    Arguments
-    ---------
+    Args
+
         images : List of CocoImage containing a list of CocoAnnotation
         ignore_negative_samples : Bool
             If True, images without predictions are ignored
@@ -2007,7 +2004,7 @@ def create_coco_prediction_array(images, ignore_negative_samples=False, image_id
                 auto --> will assign id from scratch (<CocoImage>.id will be ignored)
                 manual --> you will need to provide image ids in <CocoImage> instances (<CocoImage>.id can not be None)
     Returns
-    -------
+
         coco_prediction_array : List
             COCO predictions array
     """

@@ -29,6 +29,17 @@ def unzip(file_path: str, dest_dir: str):
 def save_json(data, save_path, indent: int | None = None):
     """
     Saves json formatted data (given as "data") as save_path
+
+    Args:
+        data: dict
+            Data to be saved as json
+        save_path: str
+            "dirname/coco.json"
+        indent: int or None
+            Indentation level for pretty-printing the JSON data. If None, the most compact representation
+            will be used. If an integer is provided, it specifies the number of spaces to use for indentation.
+            Example: indent=4 will format the JSON data with an indentation of 4 spaces per level.
+
     Example inputs:
         data: {"image_id": 5}
         save_path: "dirname/coco.json"
@@ -58,6 +69,12 @@ class NumpyEncoder(json.JSONEncoder):
 def load_json(load_path: str, encoding: str = "utf-8"):
     """Loads json formatted data (given as "data") from load_path Encoding type can be specified with 'encoding'
     argument.
+
+    Args:
+        load_path: str
+            "dirname/coco.json"
+        encoding: str
+            Encoding type, default is 'utf-8'
 
     Example inputs:
         load_path: "dirname/coco.json"
@@ -110,16 +127,15 @@ def list_files(
 def list_files_recursively(directory: str, contains: list = [".json"], verbose: bool = True) -> tuple[list, list]:
     """Walk given directory recursively and return a list of file path with desired extension.
 
-    Arguments
-    -------
+    Args:
         directory : str
             "data/coco/"
         contains : list
             A list of strings to check if the target file contains them, example: ["coco.png", ".jpg", "jpeg"]
         verbose : bool
             If true, prints some results
-    Returns
-    -------
+
+    Returns:
         relative_filepath_list : list
             List of file paths relative to given directory
         abs_filepath_list : list
@@ -174,6 +190,11 @@ def get_file_extension(path: str):
 def load_pickle(load_path):
     """
     Loads pickle formatted data (given as "data") from load_path
+
+    Args:
+        load_path: str
+            "dirname/coco.pickle"
+
     Example inputs:
         load_path: "dirname/coco.pickle"
     """
@@ -185,6 +206,13 @@ def load_pickle(load_path):
 def save_pickle(data, save_path):
     """
     Saves pickle formatted data (given as "data") as save_path
+
+    Args:
+        data: dict
+            Data to be saved as pickle
+        save_path: str
+            "dirname/coco.pickle"
+
     Example inputs:
         data: {"image_id": 5}
         save_path: "dirname/coco.pickle"
