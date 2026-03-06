@@ -104,7 +104,6 @@ plugins:
           paths: [sahi]
           options:
             parameter_headings: true
-            load_external_modules: true
             allow_inspection: true
             show_bases: true
             group_by_category: true

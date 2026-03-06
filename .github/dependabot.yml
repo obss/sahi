@@ -8,3 +8,11 @@ updates:
     commit-message:
       prefix: 👷
     target-branch: "main"
+  # Python
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: ⬆️
+    target-branch: "main"
