@@ -60,6 +60,7 @@ dev = [
     "pytest-xdist[psutil]>=3.0",
     "ruff",
     "jupyterlab>=3.0.14",
+    "pywinpty!=2.0.14; os_name == 'nt'",
 ]
 docs = [
     "mkdocs-material[imaging]>=9.6.15,<=10.0.0",
@@ -126,7 +127,7 @@ ci = [
 #   "http://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
 # ]
 
-override-dependencies = ["pillow>=8.2.0"]
+override-dependencies = ["pillow>=8.2.0", "pywinpty!=2.0.14; os_name == 'nt'"]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
