@@ -343,7 +343,37 @@ def test_get_sliced_prediction_yolo11():
     assert num_car > 0
 
 
-def test_get_sliced_prediction_batch_size_greater_than_one():
+def _serialize_object_prediction_for_comparison(object_prediction):
+    segmentation = None
+    if object_prediction.mask is not None:
+        segmentation = [[round(float(value), 3) for value in segment] for segment in object_prediction.mask.segmentation]
+
+    return {
+        "category_id": object_prediction.category.id,
+        "category_name": object_prediction.category.name,
+        "bbox_xyxy": [round(float(value), 3) for value in object_prediction.bbox.to_xyxy()],
+        "score": round(float(object_prediction.score.value), 3),
+        "segmentation": segmentation,
+    }
+
+
+def _serialize_prediction_list_for_comparison(object_prediction_list):
+    serialized_list = [_serialize_object_prediction_for_comparison(obj_pred) for obj_pred in object_prediction_list]
+    return sorted(
+        serialized_list,
+        key=lambda item: (
+            item["category_id"],
+            item["category_name"],
+            item["bbox_xyxy"][0],
+            item["bbox_xyxy"][1],
+            item["bbox_xyxy"][2],
+            item["bbox_xyxy"][3],
+            item["score"],
+        ),
+    )
+
+
+def test_get_sliced_prediction_batch_size_exact_output():
     # init model
     download_yolo11n_model()
 
@@ -360,43 +390,37 @@ def test_get_sliced_prediction_batch_size_greater_than_one():
     # prepare image
     image_path = "tests/data/small-vehicles1.jpeg"
 
-    # get sliced prediction with batch size 1
-    prediction_result_batch_size_1 = get_sliced_prediction(
-        image=image_path,
-        detection_model=yolo11_detection_model,
-        slice_height=512,
-        slice_width=512,
-        overlap_height_ratio=0.1,
-        overlap_width_ratio=0.2,
-        perform_standard_pred=False,
-        postprocess_type="GREEDYNMM",
-        postprocess_match_threshold=0.5,
-        postprocess_match_metric="IOS",
-        postprocess_class_agnostic=True,
-        batch_size=1,
-    )
-    object_prediction_list_batch_size_1 = prediction_result_batch_size_1.object_prediction_list
+    common_prediction_kwargs = {
+        "image": image_path,
+        "detection_model": yolo11_detection_model,
+        "slice_height": 512,
+        "slice_width": 512,
+        "overlap_height_ratio": 0.1,
+        "overlap_width_ratio": 0.2,
+        "perform_standard_pred": False,
+        "postprocess_type": "GREEDYNMM",
+        "postprocess_match_threshold": 0.5,
+        "postprocess_match_metric": "IOS",
+        "postprocess_class_agnostic": True,
+    }
 
-    # get sliced prediction with batch size 2
-    prediction_result_batch_size_2 = get_sliced_prediction(
-        image=image_path,
-        detection_model=yolo11_detection_model,
-        slice_height=512,
-        slice_width=512,
-        overlap_height_ratio=0.1,
-        overlap_width_ratio=0.2,
-        perform_standard_pred=False,
-        postprocess_type="GREEDYNMM",
-        postprocess_match_threshold=0.5,
-        postprocess_match_metric="IOS",
-        postprocess_class_agnostic=True,
-        batch_size=2,
-    )
-    object_prediction_list_batch_size_2 = prediction_result_batch_size_2.object_prediction_list
+    prediction_result_batch_size_1 = get_sliced_prediction(batch_size=1, **common_prediction_kwargs)
+    prediction_result_batch_size_4 = get_sliced_prediction(batch_size=4, **common_prediction_kwargs)
+    prediction_result_batch_size_8 = get_sliced_prediction(batch_size=8, **common_prediction_kwargs)
 
-    assert len(object_prediction_list_batch_size_1) > 0
-    assert len(object_prediction_list_batch_size_2) > 0
-    assert len(object_prediction_list_batch_size_1) == len(object_prediction_list_batch_size_2)
+    serialized_predictions_batch_size_1 = _serialize_prediction_list_for_comparison(
+        prediction_result_batch_size_1.object_prediction_list
+    )
+    serialized_predictions_batch_size_4 = _serialize_prediction_list_for_comparison(
+        prediction_result_batch_size_4.object_prediction_list
+    )
+    serialized_predictions_batch_size_8 = _serialize_prediction_list_for_comparison(
+        prediction_result_batch_size_8.object_prediction_list
+    )
+
+    assert len(serialized_predictions_batch_size_1) > 0
+    assert serialized_predictions_batch_size_4 == serialized_predictions_batch_size_1
+    assert serialized_predictions_batch_size_8 == serialized_predictions_batch_size_1
 
 
 @pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")

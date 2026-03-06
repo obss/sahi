@@ -349,7 +349,7 @@ def get_sliced_prediction(
 
         # Call progress callback if provided
         if progress_callback is not None:
-            progress_callback(group_index + 1, num_group)
+            progress_callback(group_end, num_slices)
 
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
