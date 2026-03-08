@@ -204,8 +204,12 @@ def read_image_as_pil(image: Image.Image | str | np.ndarray, exif_fix: bool = Tr
             else:
                 raise TypeError(f"image with shape: {image_sk.shape[3]} is not supported.")
     elif isinstance(image, np.ndarray):
-        if image.shape[0] < 5:  # image in CHW
-            image = image[:, :, ::-1]
+        # check if image is in CHW format (Channels, Height, Width)
+        # heuristic: 3 dimensions, first dim (channels) < 5, last dim (width) > 4
+        if image.ndim == 3 and image.shape[0] < 5:  # image in CHW
+            if image.shape[2] > 4:
+                # convert CHW to HWC (Height, Width, Channels)
+                image = np.transpose(image, (1, 2, 0))
         image_pil = Image.fromarray(image)
     else:
         raise TypeError("read image with 'pillow' using 'Image.open()'")
@@ -685,6 +689,26 @@ def get_bbox_from_coco_segmentation(coco_segmentation):
     xmax = max(xs)
     ymin = min(ys)
     ymax = max(ys)
+    return [xmin, ymin, xmax, ymax]
+
+
+def yolo_bbox_to_voc_bbox(yolo_bbox: list[float], image_width: int, image_height: int) -> list[float]:
+    """Convert a YOLO format bounding box [x_center, y_center, width, height] (normalized)
+    to VOC format [xmin, ymin, xmax, ymax] (absolute pixel coordinates).
+
+    Args:
+        yolo_bbox: list of [x_center, y_center, width, height]
+        image_width: width of the image
+        image_height: height of the image
+
+    Returns:
+        list of [xmin, ymin, xmax, ymax]
+    """
+    x_c, y_c, w, h = yolo_bbox
+    xmin = (x_c - w / 2) * image_width
+    ymin = (y_c - h / 2) * image_height
+    xmax = (x_c + w / 2) * image_width
+    ymax = (y_c + h / 2) * image_height
     return [xmin, ymin, xmax, ymax]
 
 

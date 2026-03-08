@@ -1,6 +1,5 @@
 import sys
 
-import pybboxes.functional as pbf
 import pytest
 
 from sahi.logger import logger
@@ -82,15 +81,13 @@ def test_perform_inference():
         if huggingface_detection_model.category_mapping[cat_ids[i].item()] == "car":  # if category car
             break
 
+    from sahi.utils.cv import yolo_bbox_to_voc_bbox
+
     image_height, image_width, _ = huggingface_detection_model.image_shapes[0]
-    box = list(
-        pbf.convert_bbox(  #  type: ignore
-            box.tolist(),
-            from_type="yolo",
-            to_type="voc",
-            image_size=(image_width, image_height),
-            return_values=True,
-        )
+    box = yolo_bbox_to_voc_bbox(
+        box.tolist(),
+        image_width=image_width,
+        image_height=image_height,
     )
     desired_bbox = [451, 312, 490, 341]
     predicted_bbox = list(map(int, box[:4]))

@@ -92,8 +92,8 @@ class BoundingBox:
 
         w = self.maxx - self.minx
         h = self.maxy - self.miny
-        y_mar = int(w * ratio)
-        x_mar = int(h * ratio)
+        y_mar = int(h * ratio)
+        x_mar = int(w * ratio)
         maxx = min(max_x, self.maxx + x_mar) if max_x else self.maxx + x_mar
         minx = max(0, self.minx - x_mar)
         maxy = min(max_y, self.maxy + y_mar) if max_y else self.maxy + y_mar

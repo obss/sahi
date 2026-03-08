@@ -7,10 +7,9 @@ requires-python = ">=3.8"
 license = "MIT"
 license-files = ["./LICENSE"]
 dependencies = [
-  "opencv-python<=4.11.0.86",
+  "opencv-python<=4.12.0.88",
   "shapely>=2.0.0",
   "tqdm>=4.48.2",
-  "pybboxes==0.1.6",
   "pillow>=8.2.0",
   "pyyaml",
   "fire",
@@ -36,9 +35,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-maintainers = [
-  { name = "Fatih Cagatay Akyon (@fcakyon)" },
-]
+maintainers = [{ name = "Fatih Cagatay Akyon (@fcakyon)" }]
 
 [project.urls]
 "Homepage" = "https://github.com/obss/sahi"
@@ -52,40 +49,54 @@ sahi = "sahi.cli:app"
 
 [dependency-groups]
 dev = [
-    "pytest>=7.2.2,<9.0.0",
-    "tox>=4.11.4",
-    "notebook>=6.5.3,<8.0.0",
-    "ipywidgets>=8.1.1",
-    "jupytext>=1.16.1",
-    "nbconvert>=7.14.2",
-    "docutils!=0.21",
-    "pytest-xdist[psutil]>=3.0",
-    "ruff",
-    "jupyterlab>=3.0.14",
+  "pytest>=7.2.2,<10.0.0",
+  "tox>=4.11.4",
+  "notebook>=6.5.3,<8.0.0",
+  "ipywidgets>=8.1.1",
+  "jupytext>=1.16.1",
+  "nbconvert>=7.14.2",
+  "docutils!=0.21",
+  "pytest-xdist[psutil]>=3.0",
+  "ruff",
+  "jupyterlab>=3.0.14",
+  "pywinpty!=2.0.14; os_name == 'nt'",
 ]
 docs = [
-    "mkdocs-material[imaging]>=9.6.15,<=10.0.0",
-    "mkdocstrings>=0.25.2,<0.30.0",
-    "mkdocstrings-python>=1.10.9",
-    "mike>=2.0.0",
-    "mkdocs-jupyter>=0.24.3",
-    "mkdocs-git-committers-plugin-2>=2.4.1; python_version >= '3.9' and python_version < '4'",
-    "mkdocs-git-revision-date-localized-plugin>=1.2.4",
+  "mkdocs-material[imaging]>=9.6.15,<=10.0.0",
+  "mkdocstrings>=0.25.2,<1.1.0",
+  "mkdocstrings-python>=1.10.9",
+  "mike>=2.0.0",
+  "mkdocs-jupyter>=0.24.3",
+  "mkdocs-git-committers-plugin-2>=2.4.1; python_version >= '3.9' and python_version < '4'",
+  "mkdocs-git-revision-date-localized-plugin>=1.2.4",
 ]
 build = [
-    "twine>=5.1.1,<7.0.0",
-    "wheel>=0.40,<0.46",
-    "build>=0.10,<1.3",
-    "hatch>=1.14.1",
+  "twine>=5.1.1,<7.0.0",
+  "wheel>=0.40,<0.46",
+  "build>=0.10,<1.5",
+  "hatch>=1.14.1",
 ]
 
 [project.optional-dependencies]
 yolov5 = ["yolov5>=6.0.0,<8.0.0"]
 ultralytics = ["ultralytics>=8.0.0"]
-transformers = ["transformers>=4.49.0;python_version>='3.9'",]
-roboflow = ["inference>=0.51.5;python_version>='3.12'", "rfdetr>=1.1.0;python_version>='3.12'"]
+transformers = ["transformers>=4.49.0;python_version>='3.9'"]
+roboflow = [
+  "inference>=0.51.5;python_version>='3.12'",
+  "rfdetr>=1.1.0;python_version>='3.12'",
+]
 onnx = ["onnx;python_version>='3.10'", "onnxruntime;python_version>='3.10'"]
-all = ["yolov5>=6.0.0,<8.0.0", "ultralytics>=8.0.0", "torch>=2.4.1", "torchvision", "transformers>=4.49.0;python_version>='3.9'", "inference>=0.51.5;python_version>='3.12'", "rfdetr>=1.1.0;python_version>='3.12'", "onnx;python_version>='3.10'", "onnxruntime;python_version>='3.10'"]
+all = [
+  "yolov5>=6.0.0,<8.0.0",
+  "ultralytics>=8.0.0",
+  "torch>=2.4.1",
+  "torchvision",
+  "transformers>=4.49.0;python_version>='3.9'",
+  "inference>=0.51.5;python_version>='3.12'",
+  "rfdetr>=1.1.0;python_version>='3.12'",
+  "onnx;python_version>='3.10'",
+  "onnxruntime;python_version>='3.10'",
+]
 
 mmdet = [
   # MMDetection dependencies - only for Python 3.11 and not on macOS ARM64
@@ -93,7 +104,7 @@ mmdet = [
   "mmcv==2.1.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
   "mmdet==3.3.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
   # numpy 2 is not compatible with torch 2.1.2
-  "numpy<2.0;python_version=='3.11'",
+  "numpy<3.0;python_version=='3.11'",
 ]
 ci = [
   # max supported pytorch version for python 3.8 is 2.4.1
@@ -124,11 +135,11 @@ ci = [
 
 [tool.uv]
 
-# find-links = [
-#   "http://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
-# ]
+find-links = [
+  "http://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
+]
 
-override-dependencies = ["pillow>=8.2.0"]
+override-dependencies = ["pillow>=8.2.0", "pywinpty!=2.0.14; os_name == 'nt'"]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
@@ -145,84 +156,84 @@ line-length = 120
 
 # Exclude a variety of commonly ignored directories.
 exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pypackages__",
-    "__pycache__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
-    "yarn-error.log",
-    "yarn.lock",
-    "docs",
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".git-rewrite",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "__pycache__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+  "yarn-error.log",
+  "yarn.lock",
+  "docs",
 ]
 
 [tool.ruff.lint]
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
-select = ["E", "F", "I", "A", "Q", "W", "RUF", "UP","FA"]
-ignore = ["A002","A001"]
+select = ["E", "F", "I", "A", "Q", "W", "RUF", "UP", "FA"]
+ignore = ["A002", "A001"]
 # Allow autofix for all enabled rules (when `--fix`) is provided.
 fixable = [
-    "A",
-    "B",
-    "C",
-    "D",
-    "E",
-    "F",
-    "G",
-    "I",
-    "N",
-    "Q",
-    "S",
-    "T",
-    "W",
-    "ANN",
-    "ARG",
-    "BLE",
-    "COM",
-    "DJ",
-    "DTZ",
-    "EM",
-    "ERA",
-    "EXE",
-    "FBT",
-    "ICN",
-    "INP",
-    "ISC",
-    "NPY",
-    "PD",
-    "PGH",
-    "PIE",
-    "PL",
-    "PT",
-    "PTH",
-    "PYI",
-    "RET",
-    "RSE",
-    "RUF",
-    "SIM",
-    "SLF",
-    "TCH",
-    "TID",
-    "TRY",
-    "UP",
-    "YTT",
-    "FA"
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "I",
+  "N",
+  "Q",
+  "S",
+  "T",
+  "W",
+  "ANN",
+  "ARG",
+  "BLE",
+  "COM",
+  "DJ",
+  "DTZ",
+  "EM",
+  "ERA",
+  "EXE",
+  "FBT",
+  "ICN",
+  "INP",
+  "ISC",
+  "NPY",
+  "PD",
+  "PGH",
+  "PIE",
+  "PL",
+  "PT",
+  "PTH",
+  "PYI",
+  "RET",
+  "RSE",
+  "RUF",
+  "SIM",
+  "SLF",
+  "TCH",
+  "TID",
+  "TRY",
+  "UP",
+  "YTT",
+  "FA",
 ]
 unfixable = []
 # Allow unused variables when underscore-prefixed.
@@ -288,31 +299,20 @@ packages = ["sahi"]
 
 # Workaround for https://github.com/juftin/hatch-pip-compile/issues/85
 # PR https://github.com/pypa/hatch/pull/1882
-dependencies = [
-    "pip",
-]
+dependencies = ["pip"]
 
-all = [
-    "hatch run style:check",
-]
+all = ["hatch run style:check"]
 
 [tool.hatch.envs.style]
 pip-compile-verbose = true
 detached = true
 
-dependencies = [
-    "ruff",
-]
+dependencies = ["ruff"]
 
 [tool.hatch.envs.style.scripts]
-categories = [
-    "lint",
-    "format",
-]
+categories = ["lint", "format"]
 
-check = [
-    "ruff check . --fix",
-]
+check = ["ruff check . --fix"]
 
 [build-system]
 requires = ["hatchling"]
