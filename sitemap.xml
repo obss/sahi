@@ -156,4 +156,28 @@
          <loc>https://sahi.readthedocs.io/utils/file/</loc>
          <lastmod>2026-03-08</lastmod>
     </url>
+    <url>
+         <loc>https://sahi.readthedocs.io/zh/</loc>
+         <lastmod>2026-03-08</lastmod>
+    </url>
+    <url>
+         <loc>https://sahi.readthedocs.io/zh/coco/</loc>
+         <lastmod>2026-03-08</lastmod>
+    </url>
+    <url>
+         <loc>https://sahi.readthedocs.io/zh/fiftyone/</loc>
+         <lastmod>2026-03-08</lastmod>
+    </url>
+    <url>
+         <loc>https://sahi.readthedocs.io/zh/predict/</loc>
+         <lastmod>2026-03-08</lastmod>
+    </url>
+    <url>
+         <loc>https://sahi.readthedocs.io/zh/quick-start/</loc>
+         <lastmod>2026-03-08</lastmod>
+    </url>
+    <url>
+         <loc>https://sahi.readthedocs.io/zh/slicing/</loc>
+         <lastmod>2026-03-08</lastmod>
+    </url>
 </urlset>
