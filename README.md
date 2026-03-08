@@ -34,6 +34,12 @@
 
 SAHI helps developers overcome real-world challenges in object detection by enabling **sliced inference** for detecting small objects in large images. It supports various popular detection models and provides easy-to-use APIs.
 
+<div align="center">
+
+🌐 [English](README.md) | 🇨🇳 [简体中文](docs/zh/README.md)
+
+</div>
+
 | Command  | Description  |
 |---|---|
 | [predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage)  | perform sliced/standard video/image prediction using any [ultralytics](https://github.com/ultralytics/ultralytics)/[mmdet](https://github.com/open-mmlab/mmdetection)/[huggingface](https://huggingface.co/models?pipeline_tag=object-detection&sort=downloads)/[torchvision](https://pytorch.org/vision/stable/models.html#object-detection) model - see [CLI guide](docs/cli.md#predict-command-usage) |
@@ -46,7 +52,7 @@ SAHI helps developers overcome real-world challenges in object detection by enab
 
 ### Approved by the Community
 
-[📜 List of publications that cite SAHI (currently 400+)](https://scholar.google.com/scholar?hl=en&as_sdt=2005&sciodt=0,5&cites=14065474760484865747&scipsc=&q=&scisbd=1)
+[📜 List of publications that cite SAHI (currently 600+)](https://scholar.google.com/scholar?hl=en&as_sdt=2005&sciodt=0,5&cites=14065474760484865747&scipsc=&q=&scisbd=1)
 
 [🏆 List of competition winners that used SAHI](https://github.com/obss/sahi/discussions/688)
 

@@ -692,6 +692,26 @@ def get_bbox_from_coco_segmentation(coco_segmentation):
     return [xmin, ymin, xmax, ymax]
 
 
+def yolo_bbox_to_voc_bbox(yolo_bbox: list[float], image_width: int, image_height: int) -> list[float]:
+    """Convert a YOLO format bounding box [x_center, y_center, width, height] (normalized)
+    to VOC format [xmin, ymin, xmax, ymax] (absolute pixel coordinates).
+
+    Args:
+        yolo_bbox: list of [x_center, y_center, width, height]
+        image_width: width of the image
+        image_height: height of the image
+
+    Returns:
+        list of [xmin, ymin, xmax, ymax]
+    """
+    x_c, y_c, w, h = yolo_bbox
+    xmin = (x_c - w / 2) * image_width
+    ymin = (y_c - h / 2) * image_height
+    xmax = (x_c + w / 2) * image_width
+    ymax = (y_c + h / 2) * image_height
+    return [xmin, ymin, xmax, ymax]
+
+
 def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> list[list[float]]:
     """Convert OBB (Oriented Bounding Box) points to COCO polygon format.
 
