@@ -8,7 +8,7 @@ import numpy as np
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
-from sahi.utils.import_utils import ensure_package_minimum_version
+from sahi.utils.package_utils import check_package_minimum_version
 
 
 class HuggingfaceDetectionModel(DetectionModel):
@@ -32,7 +32,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         self._token = token
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "transformers"]
-        ensure_package_minimum_version("transformers", "4.42.0")
+        check_package_minimum_version("transformers", "4.42.0", raise_error=True)
         super().__init__(
             model_path,
             model,

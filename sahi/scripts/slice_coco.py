@@ -1,7 +1,5 @@
 import os
 
-import fire
-
 from sahi.slicing import slice_coco
 from sahi.utils.file import Path, save_json
 
@@ -16,6 +14,8 @@ def slicer(
     min_area_ratio: float = 0.1,
 ):
     """
+    Slice COCO dataset images and annotations.
+
     Args:
         image_dir (str): directory for coco images
         dataset_json_path (str): file path for the coco dataset json file
@@ -61,7 +61,3 @@ def slicer(
         output_coco_annotation_file_path = os.path.join(output_dir, sliced_coco_name + ".json")
         save_json(coco_dict, output_coco_annotation_file_path)
         print(f"Sliced dataset for 'slice_size: {slice_size}' is exported to {output_dir}")
-
-
-if __name__ == "__main__":
-    fire.Fire(slice)

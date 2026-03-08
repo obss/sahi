@@ -7,7 +7,7 @@ import numpy as np
 from sahi.annotation import Category
 from sahi.logger import logger
 from sahi.prediction import ObjectPrediction
-from sahi.utils.import_utils import check_requirements
+from sahi.utils.package_utils import check_requirements
 from sahi.utils.torch_utils import empty_cuda_cache, select_device
 
 
