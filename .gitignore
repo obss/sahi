@@ -4,6 +4,11 @@
 *.pth
 *.pt
 *.onnx
+*_openvino*
+*.torchscript
+*.bin
+*.param
+*.nccn.*
 weights*
 .vscode
 .idea

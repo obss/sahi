@@ -10,36 +10,36 @@ from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_coco_segmentation_from_bool_mask
-from sahi.utils.import_utils import check_requirements
 
 
 class UltralyticsDetectionModel(DetectionModel):
     """Detection model for Ultralytics YOLO models.
 
-    Supports both PyTorch (.pt) and ONNX (.onnx) models.
+    Supports PyTorch (.pt), ONNX (.onnx), OpenVINO (.xml or _openvino_model/),
+    NCNN (.param or _ncnn_model/), and TorchScript (.torchscript) models.
     """
 
     def __init__(self, *args, **kwargs):
         self.fuse: bool = kwargs.pop("fuse", False)
+        self.task: str | None = kwargs.pop("task", None)
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "ultralytics"]
         super().__init__(*args, **kwargs)
 
-    def load_model(self):
+    def load_model(self) -> None:
         """Detection model is initialized and set to self.model.
-
-        Supports both PyTorch (.pt) and ONNX (.onnx) models.
         """
 
         from ultralytics import YOLO
 
-        if self.model_path and ".onnx" in self.model_path:
-            check_requirements(["onnx", "onnxruntime"])
-
         try:
-            model = YOLO(self.model_path)
-            # Only call .to(device) for PyTorch models, not ONNX
-            if self.model_path and not self.model_path.endswith(".onnx"):
+            if self.task:
+                model = YOLO(self.model_path, task=self.task)
+            else:
+                model = YOLO(self.model_path)
+
+            # Only call .to(device) for PyTorch models, not ONNX,OpenVINO,Ncnn.
+            if self.model_path and isinstance(self.model_path, str) and self.model_path.endswith(".pt"):
                 model.to(self.device)
             self.set_model(model)
             if self.fuse and hasattr(model, "fuse"):
@@ -139,7 +139,7 @@ class UltralyticsDetectionModel(DetectionModel):
     def category_names(self):
         # For ONNX models, names might not be available, use category_mapping
         if hasattr(self.model, "names") and self.model.names:
-            return self.model.names.values()
+            return list(self.model.names.values())
         elif self.category_mapping:
             return list(self.category_mapping.values())
         else:
