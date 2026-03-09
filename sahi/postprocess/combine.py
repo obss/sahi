@@ -10,7 +10,7 @@ from sahi.prediction import ObjectPrediction
 from sahi.utils.import_utils import check_requirements
 
 
-def batched_nms(predictions: torch.tensor, match_metric: str = "IOU", match_threshold: float = 0.5):
+def batched_nms(predictions: torch.Tensor, match_metric: str = "IOU", match_threshold: float = 0.5) -> list[int]:
     """Apply non-maximum suppression to avoid detecting too many overlapping bounding boxes for a given object.
 
     Args:
@@ -40,7 +40,7 @@ def nms(
     predictions: torch.Tensor,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
-):
+) -> list[int]:
     """
     Optimized non-maximum suppression for axis-aligned bounding boxes using STRTree.
 
@@ -145,10 +145,10 @@ def nms(
 
 
 def batched_greedy_nmm(
-    object_predictions_as_tensor: torch.tensor,
+    object_predictions_as_tensor: torch.Tensor,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
-):
+) -> dict[int, list[int]]:
     """Apply greedy version of non-maximum merging per category to avoid detecting too many overlapping bounding boxes
     for a given object.
 
@@ -159,7 +159,7 @@ def batched_greedy_nmm(
         match_threshold: (float) The overlap thresh for
             match metric.
     Returns:
-        keep_to_merge_list: (Dict[int:List[int]]) mapping from prediction indices
+        keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
         to keep to a list of prediction indices to be merged.
     """
     category_ids = object_predictions_as_tensor[:, 5].squeeze()
@@ -179,7 +179,7 @@ def greedy_nmm(
     object_predictions_as_tensor: torch.Tensor,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
-):
+) -> dict[int, list[int]]:
     """
     Optimized greedy non-maximum merging for axis-aligned bounding boxes using STRTree.
 
@@ -290,7 +290,7 @@ def batched_nmm(
     object_predictions_as_tensor: torch.Tensor,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
-):
+) -> dict[int, list[int]]:
     """Apply non-maximum merging per category to avoid detecting too many overlapping bounding boxes for a given object.
 
     Args:
@@ -300,7 +300,7 @@ def batched_nmm(
         match_threshold: (float) The overlap thresh for
             match metric.
     Returns:
-        keep_to_merge_list: (Dict[int:List[int]]) mapping from prediction indices
+        keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
         to keep to a list of prediction indices to be merged.
     """
     category_ids = object_predictions_as_tensor[:, 5].squeeze()
@@ -320,7 +320,7 @@ def nmm(
     object_predictions_as_tensor: torch.Tensor,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
-):
+) -> dict[int, list[int]]:
     """Apply non-maximum merging to avoid detecting too many overlapping bounding boxes for a given object.
 
     Args:
@@ -329,7 +329,7 @@ def nmm(
         match_metric: (str) IOU or IOS
         match_threshold: (float) The overlap thresh for match metric.
     Returns:
-        keep_to_merge_list: (Dict[int:List[int]]) mapping from prediction indices
+        keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
         to keep to a list of prediction indices to be merged.
     """
     # Extract coordinates and scores as tensors
@@ -460,7 +460,7 @@ class PostprocessPredictions:
 
         check_requirements(["torch"])
 
-    def __call__(self, predictions: list[ObjectPrediction]):
+    def __call__(self, predictions: list[ObjectPrediction]) -> list[ObjectPrediction]:
         raise NotImplementedError()
 
 
@@ -468,7 +468,7 @@ class NMSPostprocess(PostprocessPredictions):
     def __call__(
         self,
         object_predictions: list[ObjectPrediction],
-    ):
+    ) -> list[ObjectPrediction]:
         object_prediction_list = ObjectPredictionList(object_predictions)
         object_predictions_as_torch = object_prediction_list.totensor()
         if self.class_agnostic:
@@ -491,7 +491,7 @@ class NMMPostprocess(PostprocessPredictions):
     def __call__(
         self,
         object_predictions: list[ObjectPrediction],
-    ):
+    ) -> list[ObjectPrediction]:
         object_prediction_list = ObjectPredictionList(object_predictions)
         object_predictions_as_torch = object_prediction_list.totensor()
         if self.class_agnostic:
@@ -528,7 +528,7 @@ class GreedyNMMPostprocess(PostprocessPredictions):
     def __call__(
         self,
         object_predictions: list[ObjectPrediction],
-    ):
+    ) -> list[ObjectPrediction]:
         object_prediction_list = ObjectPredictionList(object_predictions)
         object_predictions_as_torch = object_prediction_list.totensor()
         if self.class_agnostic:
@@ -566,7 +566,7 @@ class LSNMSPostprocess(PostprocessPredictions):
     def __call__(
         self,
         object_predictions: list[ObjectPrediction],
-    ):
+    ) -> list[ObjectPrediction]:
         try:
             from lsnms import nms
         except ModuleNotFoundError:
