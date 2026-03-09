@@ -9,7 +9,8 @@ from typing import Literal
 
 import fire
 import numpy as np
-from terminaltables import AsciiTable
+
+from sahi.utils.table import create_ascii_table
 
 
 def _cocoeval_summarize(
@@ -316,8 +317,7 @@ def evaluate_core(
                 results_2d = itertools.zip_longest(*[results_flatten[i::num_columns] for i in range(num_columns)])
                 table_data = [headers]
                 table_data += [result for result in results_2d]
-                table = AsciiTable(table_data)
-                print("\n" + table.table)
+                print("\n" + create_ascii_table(table_data))
 
             if metric_items is None:
                 metric_items = ["mAP", "mAP50", "mAP75", "mAP_s", "mAP_m", "mAP_l", "mAP50_s", "mAP50_m", "mAP50_l"]
