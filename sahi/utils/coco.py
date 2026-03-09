@@ -5,7 +5,6 @@ import copy
 import os
 import random
 import threading
-import warnings
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from multiprocessing import Pool
@@ -285,10 +284,6 @@ class CocoAnnotation:
             "area": self.area,
         }
 
-    def serialize(self):
-        warnings.warn("Use json property instead of serialize method", DeprecationWarning, stacklevel=2)
-        return self.json
-
     def __repr__(self):
         return f"""CocoAnnotation<
     image_id: {self.image_id},
@@ -432,9 +427,6 @@ class CocoPrediction(CocoAnnotation):
             "iscrowd": self.iscrowd,
             "area": self.area,
         }
-
-    def serialize(self):
-        warnings.warn("Use json property instead of serialize method", DeprecationWarning, stacklevel=2)
 
     def __repr__(self):
         return f"""CocoPrediction<
@@ -1250,30 +1242,6 @@ class Coco:
             "train_coco": train_coco,
             "val_coco": val_coco,
         }
-
-    def export_as_yolov5(
-        self,
-        output_dir: str | Path,
-        train_split_rate: float = 1.0,
-        numpy_seed: int = 0,
-        mp: bool = False,
-        disable_symlink: bool = False,
-    ):
-        """Deprecated.
-
-        Please use export_as_yolo instead. Calls export_as_yolo with the same arguments.
-        """
-        warnings.warn(
-            "export_as_yolov5 is deprecated. Please use export_as_yolo instead.",
-            DeprecationWarning,
-        )
-        self.export_as_yolo(
-            output_dir=output_dir,
-            train_split_rate=train_split_rate,
-            numpy_seed=numpy_seed,
-            mp=mp,
-            disable_symlink=disable_symlink,
-        )
 
     def export_as_yolo(
         self,
@@ -2323,32 +2291,6 @@ def remove_invalid_coco_results(result_list_or_path: list | str, dataset_dict_or
     return fixed_result_list
 
 
-def export_coco_as_yolov5(
-    output_dir: str,
-    train_coco: Coco | None = None,
-    val_coco: Coco | None = None,
-    train_split_rate: float = 0.9,
-    numpy_seed=0,
-    disable_symlink=False,
-):
-    """Deprecated.
-
-    Please use export_coco_as_yolo instead. Calls export_coco_as_yolo with the same arguments.
-    """
-    warnings.warn(
-        "export_coco_as_yolov5 is deprecated. Please use export_coco_as_yolo instead.",
-        DeprecationWarning,
-    )
-    export_coco_as_yolo(
-        output_dir=output_dir,
-        train_coco=train_coco,
-        val_coco=val_coco,
-        train_split_rate=train_split_rate,
-        numpy_seed=numpy_seed,
-        disable_symlink=disable_symlink,
-    )
-
-
 def export_coco_as_yolo(
     output_dir: str,
     train_coco: Coco | None = None,
@@ -2439,26 +2381,6 @@ def export_coco_as_yolo(
         yaml.dump(data, outfile, default_flow_style=False)
 
     return yaml_path
-
-
-def export_coco_as_yolov5_via_yml(
-    yml_path: str, output_dir: str, train_split_rate: float = 0.9, numpy_seed=0, disable_symlink=False
-):
-    """Deprecated.
-
-    Please use export_coco_as_yolo_via_yml instead. Calls export_coco_as_yolo_via_yml with the same arguments.
-    """
-    warnings.warn(
-        "export_coco_as_yolov5_via_yml is deprecated. Please use export_coco_as_yolo_via_yml instead.",
-        DeprecationWarning,
-    )
-    export_coco_as_yolo_via_yml(
-        yml_path=yml_path,
-        output_dir=output_dir,
-        train_split_rate=train_split_rate,
-        numpy_seed=numpy_seed,
-        disable_symlink=disable_symlink,
-    )
 
 
 def export_coco_as_yolo_via_yml(
