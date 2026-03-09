@@ -2079,10 +2079,10 @@
 <div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sahi</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoDetectionModel</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sahi.predict</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_sliced_prediction</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># 初始化 YOLOv8 模型</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># 初始化 YOLO26 模型</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">detection_model</span> <span class="o">=</span> <span class="n">AutoDetectionModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">model_type</span><span class="o">=</span><span class="s1">&#39;yolov8&#39;</span><span class="p">,</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">model_path</span><span class="o">=</span><span class="s1">&#39;yolov8n.pt&#39;</span><span class="p">,</span> <span class="c1"># 或其他 YOLOv8 模型</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">model_type</span><span class="o">=</span><span class="s1">&#39;ultralytics&#39;</span><span class="p">,</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">model_path</span><span class="o">=</span><span class="s1">&#39;yolo26n.pt&#39;</span><span class="p">,</span> <span class="c1"># 或其他 Ultralytics 模型</span>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="n">confidence_threshold</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda:0&quot;</span><span class="p">,</span> <span class="c1"># 或 &quot;cpu&quot;</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="p">)</span>
@@ -2105,7 +2105,7 @@
 </span></code></pre></div>
 <h1 id="3">3. 使用命令行的切片预测<a class="headerlink" href="#3" title="Permanent link">&para;</a></h1>
 <p>SAHI 还提供了功能强大的命令行工具，可以无需编写任何 Python 代码即可快速进行预测。</p>
-<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sahi<span class="w"> </span>predict<span class="w"> </span>--model_path<span class="w"> </span>yolov8n.pt<span class="w"> </span>--model_type<span class="w"> </span>yolov8<span class="w"> </span>--source<span class="w"> </span>/path/to/images/<span class="w"> </span>--slice_height<span class="w"> </span><span class="m">512</span><span class="w"> </span>--slice_width<span class="w"> </span><span class="m">512</span>
+<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sahi<span class="w"> </span>predict<span class="w"> </span>--model_path<span class="w"> </span>yolo26n.pt<span class="w"> </span>--model_type<span class="w"> </span>ultralytics<span class="w"> </span>--source<span class="w"> </span>/path/to/images/<span class="w"> </span>--slice_height<span class="w"> </span><span class="m">512</span><span class="w"> </span>--slice_width<span class="w"> </span><span class="m">512</span>
 </span></code></pre></div>
 该命令会对指定目录下的所有图片进行切片推理，并保存预测结果。</p>
 <h1 id="_2">下一步<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h1>
