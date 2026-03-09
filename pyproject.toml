@@ -7,7 +7,7 @@ requires-python = ">=3.8"
 license = "MIT"
 license-files = ["./LICENSE"]
 dependencies = [
-  "opencv-python<=4.12.0.88",
+  "opencv-python>=4.12.0.88",
   "shapely>=2.0.0",
   "tqdm>=4.48.2",
   "pillow>=8.2.0",
@@ -139,7 +139,7 @@ find-links = [
   "http://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
 ]
 
-override-dependencies = ["pillow>=8.2.0", "pywinpty!=2.0.14; os_name == 'nt'"]
+override-dependencies = ["opencv-python>=4.12.0.88", "pillow>=8.2.0", "pywinpty!=2.0.14; os_name == 'nt'"]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
