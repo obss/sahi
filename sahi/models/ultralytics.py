@@ -27,8 +27,7 @@ class UltralyticsDetectionModel(DetectionModel):
         super().__init__(*args, **kwargs)
 
     def load_model(self) -> None:
-        """Detection model is initialized and set to self.model.
-        """
+        """Detection model is initialized and set to self.model."""
 
         from ultralytics import YOLO
 
