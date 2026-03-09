@@ -4,7 +4,6 @@ import os
 from typing import Any
 
 import numpy as np
-import pybboxes.functional as pbf
 
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
@@ -178,16 +177,13 @@ class HuggingfaceDetectionModel(DetectionModel):
 
             for ind in range(len(boxes)):
                 category_id = cat_ids[ind].item()
+                from sahi.utils.cv import yolo_bbox_to_voc_bbox
+
                 yolo_bbox = boxes[ind].tolist()
-                bbox = list(
-                    pbf.convert_bbox(
-                        yolo_bbox,
-                        from_type="yolo",
-                        to_type="voc",
-                        image_size=(image_width, image_height),
-                        return_values=True,
-                        strict=False,
-                    )
+                bbox = yolo_bbox_to_voc_bbox(
+                    yolo_bbox,
+                    image_width=image_width,
+                    image_height=image_height,
                 )
 
                 # fix negative box coords
