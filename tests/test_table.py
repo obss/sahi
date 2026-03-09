@@ -33,4 +33,3 @@ class TestTable(unittest.TestCase):
         data = [["ID", "Value"], [1, None]]
         table = create_ascii_table(data)
         self.assertIn("| 1  |       |", table)
-
