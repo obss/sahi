@@ -12,6 +12,7 @@ from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
 
 from .utils.ultralytics import UltralyticsConstants, download_yolo11n_model
+import torch
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -342,6 +343,153 @@ def test_get_sliced_prediction_yolo11():
             num_car += 1
     assert num_car > 0
 
+def test_get_sliced_batch_prediction_yolo11():
+    # init model
+    download_yolo11n_model()
+
+    yolo11_detection_model = UltralyticsDetectionModel(
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=MODEL_DEVICE,
+        category_remapping=None,
+        load_at_init=False,
+        image_size=IMAGE_SIZE,
+    )
+    yolo11_detection_model.load_model()
+
+    # prepare image
+    image_path = "tests/data/small-vehicles1.jpeg"
+
+    slice_height = 512
+    slice_width = 512
+    overlap_height_ratio = 0.1
+    overlap_width_ratio = 0.2
+    postprocess_type = "GREEDYNMM"
+    match_metric = "IOS"
+    match_threshold = 0.5
+    class_agnostic = True
+
+    # get sliced prediction
+    prediction_result = get_sliced_prediction(
+        image=image_path,
+        detection_model=yolo11_detection_model,
+        slice_height=slice_height,
+        slice_width=slice_width,
+        overlap_height_ratio=overlap_height_ratio,
+        overlap_width_ratio=overlap_width_ratio,
+        perform_standard_pred=False,
+        postprocess_type=postprocess_type,
+        postprocess_match_threshold=match_threshold,
+        postprocess_match_metric=match_metric,
+        postprocess_class_agnostic=class_agnostic,
+        num_batch=4,
+    )
+    object_prediction_list = prediction_result.object_prediction_list
+
+    # compare
+    assert len(object_prediction_list) > 0
+    num_person = 0
+    for object_prediction in object_prediction_list:
+        if object_prediction.category.name == "person":
+            num_person += 1
+    assert num_person == 0
+    num_truck = 0
+    for object_prediction in object_prediction_list:
+        if object_prediction.category.name == "truck":
+            num_truck += 1
+    assert num_truck == 0
+    num_car = 0
+    for object_prediction in object_prediction_list:
+        if object_prediction.category.name == "car":
+            num_car += 1
+    assert num_car > 0
+
+def test_batch_vs_single_prediction_on_cuda_yolo11():
+    # init model
+    download_yolo11n_model()
+    # if CUDA is available
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA is not available. Please install the CUDA version of PyTorch")
+        
+    device = "cuda:0"
+
+    yolo11_detection_model = UltralyticsDetectionModel(
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=device,
+        category_remapping=None,
+        load_at_init=False,
+        image_size=IMAGE_SIZE,
+    )
+    yolo11_detection_model.load_model()
+
+    yolo11_detection_model2 = UltralyticsDetectionModel(
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=device,
+        category_remapping=None,
+        load_at_init=False,
+        image_size=IMAGE_SIZE,
+    )
+    yolo11_detection_model2.load_model()
+
+    # prepare image
+    image_path = "tests/data/small-vehicles1.jpeg"
+
+    slice_height = 512
+    slice_width = 512
+    overlap_height_ratio = 0.1
+    overlap_width_ratio = 0.2
+    postprocess_type = "GREEDYNMM"
+    match_metric = "IOS"
+    match_threshold = 0.5
+    class_agnostic = True
+    
+    values1 = []
+    values2 = []
+
+    N = 1000
+    
+    for i in range(N):
+        # get batch sliced prediction
+        prediction_result1 = get_sliced_prediction(
+            image=image_path,
+            detection_model=yolo11_detection_model,
+            slice_height=slice_height,
+            slice_width=slice_width,
+            overlap_height_ratio=overlap_height_ratio,
+            overlap_width_ratio=overlap_width_ratio,
+            perform_standard_pred=False,
+            postprocess_type=postprocess_type,
+            postprocess_match_threshold=match_threshold,
+            postprocess_match_metric=match_metric,
+            postprocess_class_agnostic=class_agnostic,
+            num_batch=4,
+        )
+        
+        values1.append(prediction_result1.durations_in_seconds['prediction'])
+
+    for i in range(N):
+        # get single sliced prediction
+        prediction_result2 = get_sliced_prediction(
+            image=image_path,
+            detection_model=yolo11_detection_model2,
+            slice_height=slice_height,
+            slice_width=slice_width,
+            overlap_height_ratio=overlap_height_ratio,
+            overlap_width_ratio=overlap_width_ratio,
+            perform_standard_pred=False,
+            postprocess_type=postprocess_type,
+            postprocess_match_threshold=match_threshold,
+            postprocess_match_metric=match_metric,
+            postprocess_class_agnostic=class_agnostic,
+        )
+        
+        values2.append(prediction_result2.durations_in_seconds['prediction'])
+    
+    assert np.mean(values1) < np.mean(values2)
+    print(f"Mean duration on batch: {np.mean(values1)}; Mean duration on single: {np.mean(values1)}")
+    
 
 @pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
 def test_mmdet_yolox_tiny_prediction():
