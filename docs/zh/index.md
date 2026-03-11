@@ -111,7 +111,7 @@ SAHI 通过一种独特的方法解决了这一问题，该方法可以与任意
 
     ***
 
-    [➡️ 打开 Notebook](../notebooks/slicing.ipynb/)
+    [➡️ 打开 Notebook](../notebooks/slicing.ipynb)
 
 - 📓 **Ultralytics**
 
