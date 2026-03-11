@@ -195,8 +195,6 @@ pip install inference>=0.50.3 rfdetr>=1.1.0
 
 ### 其他实用工具
 
-请查阅全面的 COCO 工具指南，了解 YOLO 格式转换、数据集切片、子采样、筛选、合并与分割等操作。
-
 请查阅 [完整的 COCO 工具指南](docs/coco.md) 了解 YOLO 格式转换、数据集切片、子采样、筛选、合并与分割等操作。了解更多关于 [切片工具](docs/slicing.md) ，以实现对图像和数据集切片参数的精细控制。
 
 ## <div align="center">引用</div>
