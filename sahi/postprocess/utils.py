@@ -13,11 +13,11 @@ from sahi.utils.shapely import ShapelyAnnotation, get_shapely_multipolygon
 
 
 class ObjectPredictionList(Sequence):
-    def __init__(self, list):
-        self.list = list
+    def __init__(self, prediction_list: list[ObjectPrediction]) -> None:
+        self.list: list[ObjectPrediction] = prediction_list
         super().__init__()
 
-    def __getitem__(self, i):
+    def __getitem__(self, i: int | tuple | list | torch.Tensor | np.ndarray) -> ObjectPredictionList:
         if torch.is_tensor(i) or isinstance(i, np.ndarray):
             i = i.tolist()
         if isinstance(i, int):
@@ -28,7 +28,11 @@ class ObjectPredictionList(Sequence):
         else:
             raise NotImplementedError(f"{type(i)}")
 
-    def __setitem__(self, i, elem):
+    def __setitem__(
+        self,
+        i: int | tuple | list | torch.Tensor | np.ndarray,
+        elem: ObjectPredictionList | ObjectPrediction | list[ObjectPrediction],
+    ) -> None:
         if torch.is_tensor(i) or isinstance(i, np.ndarray):
             i = i.tolist()
         if isinstance(i, int):
@@ -45,22 +49,22 @@ class ObjectPredictionList(Sequence):
         else:
             raise NotImplementedError(f"{type(i)}")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.list)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.list)
 
-    def extend(self, object_prediction_list):
+    def extend(self, object_prediction_list: ObjectPredictionList) -> None:
         self.list.extend(object_prediction_list.list)
 
-    def totensor(self):
+    def totensor(self) -> torch.Tensor:
         return object_prediction_list_to_torch(self)
 
-    def tonumpy(self):
+    def tonumpy(self) -> np.ndarray:
         return object_prediction_list_to_numpy(self)
 
-    def tolist(self):
+    def tolist(self) -> ObjectPrediction | list[ObjectPrediction]:
         if len(self.list) == 1:
             return self.list[0]
         else:
@@ -100,7 +104,7 @@ def repair_multipolygon(shapely_multipolygon: MultiPolygon) -> MultiPolygon:
     return shapely_multipolygon
 
 
-def coco_segmentation_to_shapely(segmentation: list | list[list]):
+def coco_segmentation_to_shapely(segmentation: list | list[list]) -> MultiPolygon:
     """Fix segment data in COCO format :param segmentation: segment data in COCO format :return:"""
     if isinstance(segmentation, list) and all([not isinstance(seg, list) for seg in segmentation]):
         segmentation = [segmentation]
@@ -120,7 +124,7 @@ def coco_segmentation_to_shapely(segmentation: list | list[list]):
     return shapely_multipolygon
 
 
-def object_prediction_list_to_torch(object_prediction_list: ObjectPredictionList) -> torch.tensor:
+def object_prediction_list_to_torch(object_prediction_list: ObjectPredictionList) -> torch.Tensor:
     """
     Returns:
         torch.tensor of size N x [x1, y1, x2, y2, score, category_id]

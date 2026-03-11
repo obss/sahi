@@ -83,10 +83,10 @@ pip install -e .
 from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
 
-# 初始化 YOLOv8 模型
+# 初始化 YOLO26 模型
 detection_model = AutoDetectionModel.from_pretrained(
-    model_type='yolov8',
-    model_path='yolov8n.pt', # 或其他 YOLOv8 模型
+    model_type='ultralytics',
+    model_path='yolo26n.pt', # 或其他 Ultralytics 模型
     confidence_threshold=0.25,
     device="cuda:0", # 或 "cpu"
 )
@@ -112,7 +112,7 @@ predictions = result.object_prediction_list
 SAHI 还提供了功能强大的命令行工具，可以无需编写任何 Python 代码即可快速进行预测。
 
 ```bash
-sahi predict --model_path yolov8n.pt --model_type yolov8 --source /path/to/images/ --slice_height 512 --slice_width 512
+sahi predict --model_path yolo26n.pt --model_type ultralytics --source /path/to/images/ --slice_height 512 --slice_width 512
 ```
 该命令会对指定目录下的所有图片进行切片推理，并保存预测结果。
 
