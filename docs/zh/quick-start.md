@@ -44,6 +44,8 @@ conda install -c conda-forge sahi
 
 更多详情请访问 [Anaconda](https://anaconda.org/conda-forge/sahi)。  | 更新 Conda 包的 feedstock 仓库：[GitHub](https://github.com/conda-forge/sahi-feedstock/)。
 
+[![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi) [![Conda Recipe](https://img.shields.io/badge/recipe-sahi-green.svg)](https://anaconda.org/conda-forge/sahi) [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
+
 > ⚠️ 注意  
 > 如果你在 CUDA 环境下安装，建议同时安装 `ultralytics`、`pytorch` 和 `pytorch-cuda`，这样 Conda 可以自动解决依赖冲突。或者在必要时最后安装 `pytorch-cuda` 来覆盖 CPU 版本的 `pytorch`：
 >
