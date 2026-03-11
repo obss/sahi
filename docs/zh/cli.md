@@ -358,3 +358,4 @@ python script_name.py
 - **[切片工具指南](slicing.md)** - 切片操作的深入探索
 - **[COCO 工具文档](coco.md)** - COCO 格式操作的全面示例
 - **[交互式示例 Notebook](../../demo/)** - CLI 命令的实践示例
+- **[模型文档](../models/)** - 各框架的模型集成指南
