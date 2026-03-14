@@ -61,7 +61,7 @@ class UltralyticsDetectionModel(DetectionModel):
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, image: np.ndarray | list[np.ndarray]):
         """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
 
         Args:
@@ -81,7 +81,12 @@ class UltralyticsDetectionModel(DetectionModel):
         if self.image_size is not None:
             kwargs = {"imgsz": self.image_size, **kwargs}
 
-        prediction_result = self.model(image[:, :, ::-1], **kwargs)  # YOLO expects numpy arrays to have BGR
+        if isinstance(image, list):
+            image_bgr = [image_item[:, :, ::-1] for image_item in image]  # YOLO expects numpy arrays to have BGR
+        else:
+            image_bgr = image[:, :, ::-1]  # YOLO expects numpy arrays to have BGR
+
+        prediction_result = self.model(image_bgr, **kwargs)
 
         # Handle different result types for PyTorch vs ONNX models
         # ONNX models might return results in a different format
@@ -132,7 +137,10 @@ class UltralyticsDetectionModel(DetectionModel):
             prediction_result = [result.boxes.data for result in prediction_result]
 
         self._original_predictions = prediction_result
-        self._original_shape = image.shape
+        if isinstance(image, list):
+            self._original_shape = [image_item.shape for image_item in image]
+        else:
+            self._original_shape = image.shape
 
     @property
     def category_names(self):
@@ -211,6 +219,10 @@ class UltralyticsDetectionModel(DetectionModel):
             shift_amount = shift_amount_list[image_ind]
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
             object_prediction_list = []
+            if isinstance(self._original_shape, list):
+                original_shape = self._original_shape[image_ind]
+            else:
+                original_shape = self._original_shape
 
             # Extract boxes and optional masks/obb
             if self.has_mask or self.is_obb:
@@ -248,7 +260,7 @@ class UltralyticsDetectionModel(DetectionModel):
                         bool_mask = masks_or_points[pred_ind]
                         # Resize mask to original image size
                         bool_mask = cv2.resize(
-                            bool_mask.astype(np.uint8), (self._original_shape[1], self._original_shape[0])
+                            bool_mask.astype(np.uint8), (original_shape[1], original_shape[0])
                         )
                         segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
                     else:  # is_obb
@@ -266,7 +278,7 @@ class UltralyticsDetectionModel(DetectionModel):
                     segmentation=segmentation,
                     category_name=category_name,
                     shift_amount=shift_amount,
-                    full_shape=self._original_shape[:2] if full_shape is None else full_shape,  # (height, width)
+                    full_shape=original_shape[:2] if full_shape is None else full_shape,  # (height, width)
                 )
                 object_prediction_list.append(object_prediction)
 
