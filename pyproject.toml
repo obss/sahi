@@ -116,7 +116,7 @@ ci = [
   "torch==2.7.0;python_version>='3.9' and platform_system=='Darwin'",
   "torch==2.4.1;python_version=='3.8' and platform_system=='Darwin'",
   "torchvision==0.22.0;python_version>='3.9' and platform_system=='Darwin'",
-  "torchvision==0.19.1;python_version=='3.8' and platform_system=='Darwin'",
+  "torchvision==0.23.0;python_version=='3.8' and platform_system=='Darwin'",
   # transformers is supported for python>=3.9
   "transformers>=4.49.0;python_version>='3.9'",
   # test roboflow only for python>=3.12
