@@ -18,7 +18,7 @@ MODEL_TYPE_TO_MODEL_CLASS_NAME = {
     "yoloe": "YOLOEDetectionModel",
 }
 
-ULTRALYTICS_MODEL_NAMES = ["yolov8", "yolov11", "yolo11", "ultralytics"]
+ULTRALYTICS_MODEL_NAMES = ["yolov8", "yolov11", "yolo11", "yolo26", "ultralytics"]
 
 
 class AutoDetectionModel:

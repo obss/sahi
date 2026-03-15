@@ -19,7 +19,7 @@ This will perform sliced inference with default parameters and export prediction
 SAHI supports video inference with the same command structure:
 
 ```bash
-sahi predict --model_path yolo11s.pt --model_type ultralytics --source video.mp4
+sahi predict --model_path yolo26s.pt --model_type ultralytics --source video.mp4
 ```
 
 #### Real-time Video Visualization
@@ -27,7 +27,7 @@ sahi predict --model_path yolo11s.pt --model_type ultralytics --source video.mp4
 View video rendering during inference with the `--view_video` flag:
 
 ```bash
-sahi predict --model_path yolo11s.pt --model_type ultralytics --source video.mp4 --view_video
+sahi predict --model_path yolo26s.pt --model_type ultralytics --source video.mp4 --view_video
 ```
 
 **Keyboard Controls:**
