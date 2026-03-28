@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from itertools import chain, zip_longest
 from typing import Any
 
 import numpy as np
@@ -7,6 +8,7 @@ import numpy as np
 from sahi.models.base import DetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
+from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bool_mask
 
 
 class RoboflowDetectionModel(DetectionModel):
@@ -103,13 +105,52 @@ class RoboflowDetectionModel(DetectionModel):
                     "the `api_key` parameter or set the `ROBOFLOW_API_KEY` environment variable."
                 ) from e
 
-            assert model.task_type == "object-detection", "Roboflow model must be an object detection model."
+            assert model.task_type in ["object-detection", "instance-segmentation"], (
+                "Roboflow model must be an object detection model or an instance segmentation model."
+            )
 
         else:
-            from rfdetr.detr import RFDETRBase, RFDETRLarge, RFDETRMedium, RFDETRNano, RFDETRSmall
+            from rfdetr.detr import (
+                RFDETRBase,
+                RFDETRLarge,
+                RFDETRMedium,
+                RFDETRNano,
+                RFDETRSeg2XLarge,
+                RFDETRSegLarge,
+                RFDETRSegMedium,
+                RFDETRSegNano,
+                RFDETRSegSmall,
+                RFDETRSegXLarge,
+                RFDETRSmall,
+            )
 
             model, model_path = self._model, self.model_path
-            model_names = ("RFDETRBase", "RFDETRNano", "RFDETRSmall", "RFDETRMedium", "RFDETRLarge")
+            model_names = (
+                "RFDETRBase",
+                "RFDETRNano",
+                "RFDETRSmall",
+                "RFDETRMedium",
+                "RFDETRLarge",
+                "RFDETRSegNano",
+                "RFDETRSegSmall",
+                "RFDETRSegMedium",
+                "RFDETRSegLarge",
+                "RFDETRSegXLarge",
+                "RFDETRSeg2XLarge",
+            )
+            model_types = (
+                RFDETRBase,
+                RFDETRNano,
+                RFDETRSmall,
+                RFDETRMedium,
+                RFDETRLarge,
+                RFDETRSegNano,
+                RFDETRSegSmall,
+                RFDETRSegMedium,
+                RFDETRSegLarge,
+                RFDETRSegXLarge,
+                RFDETRSeg2XLarge,
+            )
             if hasattr(model, "__name__") and model.__name__ in model_names:
                 model_params = dict(
                     resolution=int(self.image_size) if self.image_size else 560,
@@ -120,7 +161,7 @@ class RoboflowDetectionModel(DetectionModel):
                     model_params["pretrain_weights"] = model_path
 
                 model = model(**model_params)
-            elif isinstance(model, (RFDETRBase, RFDETRNano, RFDETRSmall, RFDETRMedium, RFDETRLarge)):
+            elif isinstance(model, model_types):
                 model = model
             else:
                 raise ValueError(
@@ -144,6 +185,14 @@ class RoboflowDetectionModel(DetectionModel):
             self._original_predictions = self.model.infer(image, confidence=self.confidence_threshold)
         else:
             self._original_predictions = [self.model.predict(image, threshold=self.confidence_threshold)]
+
+    @property
+    def has_mask(self):
+        """Returns if model output contains segmentation mask."""
+        if self._use_universe:
+            return self.model.task_type == "instance-segmentation"
+        else:
+            return "seg" in self.model.size
 
     def _create_object_prediction_list_from_original_predictions(
         self,
@@ -169,14 +218,14 @@ class RoboflowDetectionModel(DetectionModel):
         object_prediction_list: list[ObjectPrediction] = []
 
         if self._use_universe:
-            from inference.core.entities.responses.inference import (
-                ObjectDetectionInferenceResponse as InferenceObjectDetectionInferenceResponse,
-            )
-            from inference.core.entities.responses.inference import (
-                ObjectDetectionPrediction as InferenceObjectDetectionPrediction,
-            )
+            try:
+                from pycocotools import mask as mask_utils
 
-            original_reponses: list[InferenceObjectDetectionInferenceResponse] = self._original_predictions
+                can_decode_rle = True
+            except ImportError:
+                can_decode_rle = False
+
+            original_reponses = self._original_predictions
 
             assert len(original_reponses) == len(shift_amount_list) == len(full_shape_list), (
                 "Length mismatch between original responses, shift amounts, and full shapes."
@@ -188,15 +237,32 @@ class RoboflowDetectionModel(DetectionModel):
                 full_shape_list,
             ):
                 for prediction in original_reponse.predictions:
-                    prediction: InferenceObjectDetectionPrediction
                     bbox = [
                         prediction.x - prediction.width / 2,
                         prediction.y - prediction.height / 2,
                         prediction.x + prediction.width / 2,
                         prediction.y + prediction.height / 2,
                     ]
+
+                    segmentation: list[list[float]] | None = None
+                    if self.has_mask:
+                        if hasattr(prediction, "points"):
+                            segmentation = [list(chain(*[[pt.x, pt.y] for pt in prediction.points]))]
+                        elif hasattr(prediction, "rle"):
+                            if can_decode_rle:
+                                bool_mask = mask_utils.decode(prediction.rle)
+                            else:
+                                raise ValueError(
+                                    "Can not decode rle mask. Please install pycocotools. ex: 'pip install pycocotools'"
+                                )
+                            # check if mask is valid
+                            if get_bbox_from_bool_mask(bool_mask) is None:
+                                continue
+                            segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
+
                     object_prediction = ObjectPrediction(
                         bbox=bbox,
+                        segmentation=segmentation,
                         category_id=prediction.class_id,
                         category_name=prediction.class_name,
                         score=prediction.confidence,
@@ -219,13 +285,18 @@ class RoboflowDetectionModel(DetectionModel):
                 shift_amount_list,
                 full_shape_list,
             ):
-                for xyxy, confidence, class_id in zip(
+                original_detection: Detections
+                for xyxy, mask, confidence, class_id in zip_longest(
                     original_detection.xyxy,
+                    original_detection.mask if original_detection.mask is not None else [],
                     original_detection.confidence,
                     original_detection.class_id,
                 ):
+                    segmentation = get_coco_segmentation_from_bool_mask(mask) if mask is not None else None
+
                     object_prediction = ObjectPrediction(
                         bbox=xyxy,
+                        segmentation=segmentation,
                         category_id=int(class_id),
                         category_name=self.category_mapping.get(int(class_id), None),
                         score=float(confidence),
