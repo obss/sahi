@@ -110,7 +110,7 @@ mim install mmdet==3.3.0
 - 安装您所需的检测框架 (roboflow):
 
 ```console
-pip install inference>=0.50.3 rfdetr>=1.1.0
+pip install inference>=0.51.5 rfdetr>=1.6.2
 ```
 
 </details>
