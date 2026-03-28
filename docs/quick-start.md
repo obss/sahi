@@ -86,10 +86,10 @@ Sliced inference is the core feature of SAHI, allowing you to detect small objec
 from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
 
-# Initialize a YOLOv8 model
+# Initialize a YOLO26 model
 detection_model = AutoDetectionModel.from_pretrained(
-    model_type='yolov8',
-    model_path='yolov8n.pt', # or any other YOLOv8 model
+    model_type='ultralytics',
+    model_path='yolo26n.pt', # or any other Ultralytics model
     confidence_threshold=0.25,
     device="cuda:0", # or "cpu"
 )
@@ -116,7 +116,7 @@ predictions = result.object_prediction_list
 SAHI also provides a powerful command-line interface for quick predictions without writing any Python code.
 
 ```bash
-sahi predict --model_path yolov8n.pt --model_type yolov8 --source /path/to/images/ --slice_height 512 --slice_width 512
+sahi predict --model_path yolo26n.pt --model_type ultralytics --source /path/to/images/ --slice_height 512 --slice_width 512
 ```
 
 This command will run sliced inference on all images in the specified directory and save the results.
