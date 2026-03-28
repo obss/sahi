@@ -207,7 +207,6 @@ coco = Coco.from_coco_dict_or_path("coco.json")
 area_filtered_coco = coco.get_area_filtered_coco(min=50)
 # 过滤掉包含面积小于50大于10000的标注图像
 area_filtered_coco = coco.get_area_filtered_coco(min=50, max_val=10000)
-过滤掉
 # 根据每个类别独立的面积区间来筛选图像
 intervals_per_category = {
   "human": {"min": 20, "max": 10000},
