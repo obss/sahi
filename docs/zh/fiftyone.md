@@ -1,8 +1,8 @@
 # Fiftyone 工具
 
-- 通过 FiftyOne 应用来探索COCO数据集：
+## 通过 FiftyOne 应用探索 COCO 数据集
 
-支持版本： `pip install fiftyone>=0.14.2<0.15.0`
+支持版本：`pip install fiftyone>=0.14.2<0.15.0`
 
 ```python
 from sahi.utils.fiftyone import launch_fiftyone_app
@@ -14,7 +14,7 @@ session = launch_fiftyone_app(coco_image_dir, coco_json_path)
 session.close()
 ```
 
-- 将预测结果转换为 FiftyOne 检测格式：
+## 将预测结果转换为 FiftyOne 检测格式：
 
 ```python
 from sahi import get_sliced_prediction
@@ -33,12 +33,12 @@ result = get_sliced_prediction(
 fiftyone_detections = result.to_fiftyone_detections()
 ```
 
-- 在 Fiftyone UI 中探索检测结果：
+## 在 Fiftyone UI 中探索检测结果
 
 ```bash
 sahi coco fiftyone --image_dir dir/to/images --dataset_json_path dataset.json cocoresult1.json cocoresult2.json
 ```
 
-该操作将打开一个 FiftyOne 应用，用于可视化给定的数据集和 2 个检测结果
+该操作将打开一个 FiftyOne 应用，用于可视化给定的数据集和 2 个检测结果。
 
 使用 `--iou_threshold 0.5` 参数来指定用于判断 FP/TP 的 IOU 阈值。
