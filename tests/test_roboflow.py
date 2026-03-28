@@ -42,7 +42,7 @@ def test_roboflow_universe():
 
 
 def test_roboflow_universe_segmentation():
-    """Test the Roboflow Universe model for object detection."""
+    """Test the Roboflow Universe model for instance segmentation."""
     model = AutoDetectionModel.from_pretrained(
         model_type="roboflow",
         model="rfdetr-seg-medium",
@@ -115,7 +115,7 @@ def test_rfdetr():
 
 
 def test_rfdetr_seg():
-    """Test the RFDETR model classes and instances for object detection."""
+    """Test the RFDETR model classes and instances for instance segmentation."""
 
     from rfdetr.detr import RFDETRSegMedium
     from rfdetr.util.coco_classes import COCO_CLASSES
