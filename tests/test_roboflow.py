@@ -45,7 +45,7 @@ def test_roboflow_universe_segmentation():
     """Test the Roboflow Universe model for instance segmentation."""
     model = AutoDetectionModel.from_pretrained(
         model_type="roboflow",
-        model="rfdetr-seg-medium",
+        model="coco-dataset-vdnr1/37",
         confidence_threshold=0.5,
         device="cpu",
     )
