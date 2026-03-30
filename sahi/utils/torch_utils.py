@@ -7,19 +7,14 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 from PIL.Image import Image
 
+from sahi.utils.import_utils import is_available
+
 if TYPE_CHECKING:
     import torch
 
 
-def _torch_available() -> bool:
-    """Check if torch is installed without importing it."""
-    import importlib.util
-
-    return importlib.util.find_spec("torch") is not None
-
-
 def empty_cuda_cache() -> None:
-    if not _torch_available():
+    if not is_available("torch"):
         return
     import torch
 
@@ -74,7 +69,7 @@ def select_device(device: str | None = None) -> str | torch.device:
 
     Inspired by https://github.com/ultralytics/yolov5/blob/6371de8879e7ad7ec5283e8b95cc6dd85d6a5e72/utils/torch_utils.py#L107
     """
-    if not _torch_available():
+    if not is_available("torch"):
         # Without torch only CPU is possible
         if device is not None and device not in ("cpu", "none", "None", ""):
             raise ImportError(
