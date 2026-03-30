@@ -11,7 +11,16 @@ if TYPE_CHECKING:
     import torch
 
 
+def _torch_available() -> bool:
+    """Check if torch is installed without importing it."""
+    import importlib.util
+
+    return importlib.util.find_spec("torch") is not None
+
+
 def empty_cuda_cache() -> None:
+    if not _torch_available():
+        return
     import torch
 
     torch.cuda.empty_cache()
@@ -47,8 +56,13 @@ def torch_to_numpy(img: Any) -> np.ndarray:
     return img.transpose((1, 2, 0))
 
 
-def select_device(device: str | None = None) -> torch.device:
-    """Selects torch device.
+def select_device(device: str | None = None) -> str | torch.device:
+    """Selects compute device.
+
+    When torch is not installed, returns the string ``"cpu"`` (raising an
+    error if a GPU device was explicitly requested).  When torch *is*
+    installed, returns a ``torch.device`` with the usual auto-detection
+    logic (cuda > mps > cpu).
 
     Args:
         device: "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.
@@ -56,10 +70,19 @@ def select_device(device: str | None = None) -> torch.device:
                 to try is: cuda:0 > mps > cpu
 
     Returns:
-        torch.device
+        torch.device (when torch is available) or str "cpu"
 
     Inspired by https://github.com/ultralytics/yolov5/blob/6371de8879e7ad7ec5283e8b95cc6dd85d6a5e72/utils/torch_utils.py#L107
     """
+    if not _torch_available():
+        # Without torch only CPU is possible
+        if device is not None and device not in ("cpu", "none", "None", ""):
+            raise ImportError(
+                f"torch is required to use device='{device}'. "
+                "Install it with: pip install torch"
+            )
+        return "cpu"
+
     import torch
 
     if device == "cuda" or device is None:
