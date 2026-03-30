@@ -82,7 +82,7 @@ def test_rfdetr():
     """Test the RFDETR model classes and instances for object detection."""
 
     from rfdetr.detr import RFDETRBase
-    from rfdetr.util.coco_classes import COCO_CLASSES
+    from rfdetr.assets.coco_classes import COCO_CLASSES
 
     models = [
         RFDETRBase,
@@ -122,7 +122,7 @@ def test_rfdetr_seg():
     """Test the RFDETR model classes and instances for instance segmentation."""
 
     from rfdetr.detr import RFDETRSegMedium
-    from rfdetr.util.coco_classes import COCO_CLASSES
+    from rfdetr.assets.coco_classes import COCO_CLASSES
 
     models = [
         RFDETRSegMedium,
