@@ -8,6 +8,7 @@ from shapely.geometry.collection import GeometryCollection
 
 from sahi.annotation import BoundingBox, Category, Mask
 from sahi.prediction import ObjectPrediction
+from sahi.utils.import_utils import is_available
 from sahi.utils.shapely import ShapelyAnnotation, get_shapely_multipolygon
 
 
@@ -131,10 +132,9 @@ def object_prediction_list_to_torch(object_prediction_list: ObjectPredictionList
     Returns:
         torch.Tensor of size N x [x1, y1, x2, y2, score, category_id]
     """
-    try:
-        import torch
-    except ImportError:
-        raise ImportError("torch is required for totensor(). Install it with: pip install torch")
+    if not is_available("torch"):
+        raise ImportError("torch is required for totensor(). Install it with: pip install sahi[torch]")
+    import torch
 
     num_predictions = len(object_prediction_list)
     torch_predictions = torch.zeros([num_predictions, 6], dtype=torch.float32)
