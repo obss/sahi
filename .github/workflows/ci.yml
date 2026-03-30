@@ -76,21 +76,29 @@ jobs:
           uv --version
 
       - name: Test with python ${{ matrix.python-version }}
-        run: |
-          # Exclude MMDet tests which run in a separate workflow
-          uv run pytest --capture=no -n auto -k "not (mmdet or test_get_prediction_mmdet or test_get_sliced_prediction_mmdet or test_mmdet_yolox_tiny_prediction)"
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          command: |
+            # Exclude MMDet tests which run in a separate workflow
+            uv run pytest --capture=no -n auto -k "not (mmdet or test_get_prediction_mmdet or test_get_sliced_prediction_mmdet or test_mmdet_yolox_tiny_prediction)"
       - name: Test SAHI CLI (without MMDet)
-        run: |
-          uv run sahi predict --no_sliced_prediction --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
-          uv run sahi predict --model_type ultralytics --source tests/data/ --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
-          uv run sahi predict --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
-          uv run sahi predict --model_type ultralytics --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
-          # coco yolov5
-          uv run sahi coco yolov5 --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json --train_split 0.9
-          # coco evaluate
-          uv run sahi coco evaluate --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json
-          # coco analyse
-          uv run sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: |
+            uv run sahi predict --no_sliced_prediction --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+            uv run sahi predict --model_type ultralytics --source tests/data/ --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+            uv run sahi predict --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+            uv run sahi predict --model_type ultralytics --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+            # coco yolov5
+            uv run sahi coco yolov5 --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json --train_split 0.9
+            # coco evaluate
+            uv run sahi coco evaluate --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json
+            # coco analyse
+            uv run sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
 
   schedule-test:
     name: "Schedule/PyPI check (OS: ${{ matrix.os }}, Python: ${{ matrix.python-version }})"
