@@ -11,11 +11,11 @@ dependencies = [
   "shapely>=2.0.0",
   "tqdm>=4.48.2",
   "pillow>=8.2.0",
+  "numpy",
   "pyyaml",
   "fire",
   "requests",
   "click",
-  "torch>=2.4.1",
 ]
 
 classifiers = [
@@ -78,6 +78,7 @@ build = [
 ]
 
 [project.optional-dependencies]
+torch = ["torch>=2.4.1"]
 yolov5 = ["yolov5>=6.0.0,<8.0.0"]
 ultralytics = ["ultralytics>=8.0.0"]
 transformers = ["transformers>=4.49.0;python_version>='3.9'"]
