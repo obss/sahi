@@ -122,6 +122,28 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
+    def perform_batch_inference(self, images: list[np.ndarray]):
+        """Performs inference on a batch of images.
+
+        Subclasses can override this for native batch support. The default
+        implementation falls back to sequential single-image inference.
+
+        After this call, ``self._original_predictions`` contains one entry per
+        image and ``self._original_shapes`` stores the shape of each input image.
+
+        Args:
+            images: list[np.ndarray]
+                List of numpy arrays (H, W, C) to run inference on.
+        """
+        all_predictions: list = []
+        original_shapes: list = []
+        for image in images:
+            self.perform_inference(image)
+            all_predictions.extend(self._original_predictions)
+            original_shapes.append(image.shape)
+        self._original_predictions = all_predictions
+        self._original_shapes = original_shapes
+
     def _create_object_prediction_list_from_original_predictions(
         self,
         shift_amount_list: list[list[int]] | None = [[0, 0]],
