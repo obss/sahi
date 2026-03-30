@@ -29,10 +29,11 @@ on:
 
 jobs:
   ci:
-    name: "CI — Full tests (OS: ${{ matrix.os }}, Python: ${{ matrix.python-version }})"
+    name: "Tests (OS: ${{ matrix.os }}, Python: ${{ matrix.python-version }})"
     if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
@@ -96,6 +97,7 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
