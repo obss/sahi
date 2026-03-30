@@ -156,6 +156,7 @@ def get_sliced_prediction(
     exclude_classes_by_id: list[int] | None = None,
     progress_bar: bool = False,
     progress_callback=None,
+    batch_size: int = 1,
 ) -> PredictionResult:
     """Function for slice image + get predicion for each slice + combine predictions in full image.
 
@@ -215,17 +216,21 @@ def get_sliced_prediction(
         progress_callback: callable
             A callback function that will be called after each slice is processed.
             The function should accept two arguments: (current_slice, total_slices)
+        batch_size: int
+            Number of slices to process in a single batch inference call.
+            Increasing this value can improve GPU utilization and throughput.
+            Default: 1 (sequential, same as previous behavior).
     Returns:
         A Dict with fields:
             object_prediction_list: a list of sahi.prediction.ObjectPrediction
             durations_in_seconds: a dict containing elapsed times for profiling
     """
+    if batch_size < 1:
+        raise ValueError(f"batch_size must be >= 1, got {batch_size}")
 
     # for profiling
     durations_in_seconds = dict()
 
-    # currently only 1 batch supported
-    num_batch = 1
     # create slices from full image
     time_start = time.perf_counter()
     slice_image_result = slice_image(
@@ -263,41 +268,46 @@ def get_sliced_prediction(
 
     postprocess_time = 0
     time_start = time.perf_counter()
-    # create prediction input
-    num_group = int(num_slices / num_batch)
+    num_batches = (num_slices + batch_size - 1) // batch_size
     if verbose == 1 or verbose == 2:
         tqdm.write(f"Performing prediction on {num_slices} slices.")
 
     if progress_bar:
-        slice_iterator = tqdm(range(num_group), desc="Processing slices", total=num_group)
+        slice_iterator = tqdm(range(num_batches), desc="Processing slices", total=num_batches)
     else:
-        slice_iterator = range(num_group)
+        slice_iterator = range(num_batches)
 
+    full_shape = [
+        slice_image_result.original_image_height,
+        slice_image_result.original_image_width,
+    ]
     object_prediction_list = []
+    slices_processed = 0
     # perform sliced prediction
-    for group_ind in slice_iterator:
-        # prepare batch (currently supports only 1 batch)
-        image_list = []
-        shift_amount_list = []
-        for image_ind in range(num_batch):
-            image_list.append(slice_image_result.images[group_ind * num_batch + image_ind])
-            shift_amount_list.append(slice_image_result.starting_pixels[group_ind * num_batch + image_ind])
-        # perform batch prediction
-        prediction_result = get_prediction(
-            image=image_list[0],
-            detection_model=detection_model,
-            shift_amount=shift_amount_list[0],
-            full_shape=[
-                slice_image_result.original_image_height,
-                slice_image_result.original_image_width,
-            ],
-            exclude_classes_by_name=exclude_classes_by_name,
-            exclude_classes_by_id=exclude_classes_by_id,
+    for batch_ind in slice_iterator:
+        batch_start = batch_ind * batch_size
+        batch_end = min(batch_start + batch_size, num_slices)
+        batch_images = [slice_image_result.images[i] for i in range(batch_start, batch_end)]
+        batch_shifts = [slice_image_result.starting_pixels[i] for i in range(batch_start, batch_end)]
+        current_batch_size = len(batch_images)
+
+        # perform batch inference
+        detection_model.perform_batch_inference(
+            [np.ascontiguousarray(img) for img in batch_images]
         )
-        # convert sliced predictions to full predictions
-        for object_prediction in prediction_result.object_prediction_list:
-            if object_prediction:  # if not empty
-                object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+        detection_model.convert_original_predictions(
+            shift_amount=batch_shifts,
+            full_shape=[full_shape] * current_batch_size,
+        )
+
+        # collect and shift predictions from all images in this batch
+        for image_preds in detection_model.object_prediction_list_per_image:
+            filtered_preds = filter_predictions(image_preds, exclude_classes_by_name, exclude_classes_by_id)
+            for object_prediction in filtered_preds:
+                if object_prediction:  # if not empty
+                    object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+
+        slices_processed += current_batch_size
 
         # merge matching predictions during sliced prediction
         if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
@@ -307,7 +317,7 @@ def get_sliced_prediction(
 
         # Call progress callback if provided
         if progress_callback is not None:
-            progress_callback(group_ind + 1, num_group)
+            progress_callback(slices_processed, num_slices)
 
     # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
@@ -435,6 +445,7 @@ def predict(
     exclude_classes_by_name: list[str] | None = None,
     exclude_classes_by_id: list[int] | None = None,
     progress_bar: bool = False,
+    batch_size: int = 1,
     **kwargs,
 ):
     """Performs prediction for all present images in given folder.
@@ -652,6 +663,7 @@ def predict(
                 exclude_classes_by_name=exclude_classes_by_name,
                 exclude_classes_by_id=exclude_classes_by_id,
                 progress_bar=progress_bar,
+                batch_size=batch_size,
             )
             object_prediction_list = prediction_result.object_prediction_list
             if prediction_result.durations_in_seconds:
@@ -836,6 +848,7 @@ def predict_fiftyone(
     exclude_classes_by_name: list[str] | None = None,
     exclude_classes_by_id: list[int] | None = None,
     progress_bar: bool = False,
+    batch_size: int = 1,
 ):
     """Performs prediction for all present images in given folder.
 
@@ -956,6 +969,7 @@ def predict_fiftyone(
                     exclude_classes_by_name=exclude_classes_by_name,
                     exclude_classes_by_id=exclude_classes_by_id,
                     progress_bar=progress_bar,
+                    batch_size=batch_size,
                 )
                 durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
             else:
