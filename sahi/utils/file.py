@@ -6,7 +6,6 @@ import ntpath
 import os
 import pickle
 import re
-import urllib.request
 import zipfile
 from pathlib import Path
 
@@ -285,10 +284,9 @@ def download_from_url(from_url: str, to_path: str):
     Path(to_path).parent.mkdir(parents=True, exist_ok=True)
 
     if not os.path.exists(to_path):
-        urllib.request.urlretrieve(
-            from_url,
-            to_path,
-        )
+        import urllib.request
+
+        urllib.request.urlretrieve(from_url, to_path)
 
 
 def is_colab():
