@@ -1,4 +1,4 @@
-import torch
+import numpy as np
 
 from sahi.postprocess.combine import (
     batched_greedy_nmm,
@@ -16,13 +16,13 @@ def make_pred(x1, y1, x2, y2, score, cid):
 
 def test_nms_basic():
     # two overlapping boxes, same class -> keep highest scored and the distant box
-    preds = torch.tensor(
+    preds = np.array(
         [
             make_pred(0, 0, 10, 10, 0.9, 1),
             make_pred(1, 1, 9, 9, 0.8, 1),
             make_pred(100, 100, 110, 110, 0.7, 1),
         ],
-        dtype=torch.float32,
+        dtype=np.float32,
     )
 
     keep = nms(preds, match_metric="IOU", match_threshold=0.5)
@@ -33,13 +33,13 @@ def test_nms_basic():
 
 def test_batched_nms_class_aware():
     # overlapping boxes but different classes -> both kept
-    preds = torch.tensor(
+    preds = np.array(
         [
             make_pred(0, 0, 10, 10, 0.9, 1),
             make_pred(1, 1, 9, 9, 0.8, 2),
             make_pred(0, 0, 10, 10, 0.85, 1),
         ],
-        dtype=torch.float32,
+        dtype=np.float32,
     )
 
     keep = batched_nms(preds, match_metric="IOU", match_threshold=0.5)
@@ -51,13 +51,13 @@ def test_batched_nms_class_aware():
 
 def test_nmm_merge_mapping():
     # create one high-score box overlapping two lower-score boxes
-    preds = torch.tensor(
+    preds = np.array(
         [
             make_pred(0, 0, 20, 20, 0.95, 1),
             make_pred(2, 2, 10, 10, 0.5, 1),
             make_pred(5, 5, 15, 15, 0.4, 1),
         ],
-        dtype=torch.float32,
+        dtype=np.float32,
     )
 
     keep_to_merge = nmm(preds, match_metric="IOU", match_threshold=0.1)
@@ -71,13 +71,13 @@ def test_nmm_merge_mapping():
 
 def test_greedy_nmm_and_batched():
     # similar to nmm but greedy variant should also map the two low-score boxes to keeper
-    preds = torch.tensor(
+    preds = np.array(
         [
             make_pred(0, 0, 20, 20, 0.95, 1),
             make_pred(2, 2, 10, 10, 0.5, 1),
             make_pred(5, 5, 15, 15, 0.4, 1),
         ],
-        dtype=torch.float32,
+        dtype=np.float32,
     )
 
     greedy_map = greedy_nmm(preds, match_metric="IOU", match_threshold=0.1)
@@ -92,13 +92,13 @@ def test_greedy_nmm_and_batched():
 
 def test_batched_nmm_class_aware():
     # create two classes, ensure merging works per-class
-    preds = torch.tensor(
+    preds = np.array(
         [
             make_pred(0, 0, 20, 20, 0.95, 1),
             make_pred(2, 2, 10, 10, 0.5, 2),
             make_pred(3, 3, 11, 11, 0.4, 2),
         ],
-        dtype=torch.float32,
+        dtype=np.float32,
     )
 
     keep_to_merge = batched_nmm(preds, match_metric="IOU", match_threshold=0.1)
