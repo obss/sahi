@@ -101,7 +101,7 @@ all = [
 mmdet = [
   # MMDetection dependencies - only for Python 3.11 and not on macOS ARM64
   "mmengine;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  "mmcv==2.1.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
+  "mmcv==2.2.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
   "mmdet==3.3.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
   # numpy 2 is not compatible with torch 2.1.2
   "numpy<3.0;python_version=='3.11'",
