@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import numpy as np
-import torch
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.geometry.collection import GeometryCollection
 
@@ -12,13 +11,18 @@ from sahi.prediction import ObjectPrediction
 from sahi.utils.shapely import ShapelyAnnotation, get_shapely_multipolygon
 
 
+def _is_tensor_like(obj) -> bool:
+    """Check if an object is a torch Tensor or numpy array (without importing torch)."""
+    return isinstance(obj, np.ndarray) or (hasattr(obj, "tolist") and not isinstance(obj, (int, float, list, tuple)))
+
+
 class ObjectPredictionList(Sequence):
     def __init__(self, prediction_list: list[ObjectPrediction]) -> None:
         self.list: list[ObjectPrediction] = prediction_list
         super().__init__()
 
-    def __getitem__(self, i: int | tuple | list | torch.Tensor | np.ndarray) -> ObjectPredictionList:
-        if torch.is_tensor(i) or isinstance(i, np.ndarray):
+    def __getitem__(self, i) -> ObjectPredictionList:
+        if _is_tensor_like(i):
             i = i.tolist()
         if isinstance(i, int):
             return ObjectPredictionList([self.list[i]])
@@ -28,12 +32,8 @@ class ObjectPredictionList(Sequence):
         else:
             raise NotImplementedError(f"{type(i)}")
 
-    def __setitem__(
-        self,
-        i: int | tuple | list | torch.Tensor | np.ndarray,
-        elem: ObjectPredictionList | ObjectPrediction | list[ObjectPrediction],
-    ) -> None:
-        if torch.is_tensor(i) or isinstance(i, np.ndarray):
+    def __setitem__(self, i, elem) -> None:
+        if _is_tensor_like(i):
             i = i.tolist()
         if isinstance(i, int):
             self.list[i] = elem
@@ -58,7 +58,8 @@ class ObjectPredictionList(Sequence):
     def extend(self, object_prediction_list: ObjectPredictionList) -> None:
         self.list.extend(object_prediction_list.list)
 
-    def totensor(self) -> torch.Tensor:
+    def totensor(self):
+        """Convert to torch.Tensor. Requires torch to be installed."""
         return object_prediction_list_to_torch(self)
 
     def tonumpy(self) -> np.ndarray:
@@ -124,11 +125,17 @@ def coco_segmentation_to_shapely(segmentation: list | list[list]) -> MultiPolygo
     return shapely_multipolygon
 
 
-def object_prediction_list_to_torch(object_prediction_list: ObjectPredictionList) -> torch.Tensor:
-    """
+def object_prediction_list_to_torch(object_prediction_list: ObjectPredictionList):
+    """Convert to torch.Tensor. Requires torch to be installed.
+
     Returns:
-        torch.tensor of size N x [x1, y1, x2, y2, score, category_id]
+        torch.Tensor of size N x [x1, y1, x2, y2, score, category_id]
     """
+    try:
+        import torch
+    except ImportError:
+        raise ImportError("torch is required for totensor(). Install it with: pip install torch")
+
     num_predictions = len(object_prediction_list)
     torch_predictions = torch.zeros([num_predictions, 6], dtype=torch.float32)
     for ind, object_prediction in enumerate(object_prediction_list):

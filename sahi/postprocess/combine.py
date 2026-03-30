@@ -1,20 +1,18 @@
 from __future__ import annotations
 
 import numpy as np
-import torch
 from shapely import STRtree, box
 
 from sahi.logger import logger
 from sahi.postprocess.utils import ObjectPredictionList, has_match, merge_object_prediction_pair
 from sahi.prediction import ObjectPrediction
-from sahi.utils.import_utils import check_requirements
 
 
-def batched_nms(predictions: torch.Tensor, match_metric: str = "IOU", match_threshold: float = 0.5) -> list[int]:
+def batched_nms(predictions: np.ndarray, match_metric: str = "IOU", match_threshold: float = 0.5) -> list[int]:
     """Apply non-maximum suppression to avoid detecting too many overlapping bounding boxes for a given object.
 
     Args:
-        predictions: (tensor) The location preds for the image
+        predictions: (np.ndarray) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
         match_metric: (str) IOU or IOS
         match_threshold: (float) The overlap thresh for
@@ -23,21 +21,21 @@ def batched_nms(predictions: torch.Tensor, match_metric: str = "IOU", match_thre
         A list of filtered indexes, Shape: [ ,]
     """
 
-    scores = predictions[:, 4].squeeze()
-    category_ids = predictions[:, 5].squeeze()
-    keep_mask = torch.zeros_like(category_ids, dtype=torch.bool)
-    for category_id in torch.unique(category_ids):
-        curr_indices = torch.where(category_ids == category_id)[0]
+    scores = predictions[:, 4]
+    category_ids = predictions[:, 5]
+    keep_mask = np.zeros_like(category_ids, dtype=bool)
+    for category_id in np.unique(category_ids):
+        curr_indices = np.where(category_ids == category_id)[0]
         curr_keep_indices = nms(predictions[curr_indices], match_metric, match_threshold)
         keep_mask[curr_indices[curr_keep_indices]] = True
-    keep_indices = torch.where(keep_mask)[0]
+    keep_indices = np.where(keep_mask)[0]
     # sort selected indices by their scores
-    keep_indices = keep_indices[scores[keep_indices].sort(descending=True)[1]].tolist()
+    keep_indices = keep_indices[np.argsort(scores[keep_indices])[::-1]].tolist()
     return keep_indices
 
 
 def nms(
-    predictions: torch.Tensor,
+    predictions: np.ndarray,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ) -> list[int]:
@@ -45,7 +43,7 @@ def nms(
     Optimized non-maximum suppression for axis-aligned bounding boxes using STRTree.
 
     Args:
-        predictions: (tensor) The location preds for the image along with the class
+        predictions: (np.ndarray) The location preds for the image along with the class
             predscores, Shape: [num_boxes,5].
         match_metric: (str) IOU or IOS
         match_threshold: (float) The overlap thresh for match metric.
@@ -56,18 +54,12 @@ def nms(
     if len(predictions) == 0:
         return []
 
-    # Ensure predictions are on CPU and convert to numpy
-    if predictions.device.type != "cpu":
-        predictions = predictions.cpu()
-
-    predictions_np = predictions.numpy()
-
     # Extract coordinates and scores
-    x1 = predictions_np[:, 0]
-    y1 = predictions_np[:, 1]
-    x2 = predictions_np[:, 2]
-    y2 = predictions_np[:, 3]
-    scores = predictions_np[:, 4]
+    x1 = predictions[:, 0]
+    y1 = predictions[:, 1]
+    x2 = predictions[:, 2]
+    y2 = predictions[:, 3]
+    scores = predictions[:, 4]
 
     # Calculate areas
     areas = (x2 - x1) * (y2 - y1)
@@ -145,7 +137,7 @@ def nms(
 
 
 def batched_greedy_nmm(
-    object_predictions_as_tensor: torch.Tensor,
+    object_predictions_as_numpy: np.ndarray,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
@@ -153,7 +145,7 @@ def batched_greedy_nmm(
     for a given object.
 
     Args:
-        object_predictions_as_tensor: (tensor) The location preds for the image
+        object_predictions_as_numpy: (np.ndarray) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
         match_metric: (str) IOU or IOS
         match_threshold: (float) The overlap thresh for
@@ -162,11 +154,11 @@ def batched_greedy_nmm(
         keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
         to keep to a list of prediction indices to be merged.
     """
-    category_ids = object_predictions_as_tensor[:, 5].squeeze()
+    category_ids = object_predictions_as_numpy[:, 5]
     keep_to_merge_list = {}
-    for category_id in torch.unique(category_ids):
-        curr_indices = torch.where(category_ids == category_id)[0]
-        curr_keep_to_merge_list = greedy_nmm(object_predictions_as_tensor[curr_indices], match_metric, match_threshold)
+    for category_id in np.unique(category_ids):
+        curr_indices = np.where(category_ids == category_id)[0]
+        curr_keep_to_merge_list = greedy_nmm(object_predictions_as_numpy[curr_indices], match_metric, match_threshold)
         curr_indices_list = curr_indices.tolist()
         for curr_keep, curr_merge_list in curr_keep_to_merge_list.items():
             keep = curr_indices_list[curr_keep]
@@ -176,7 +168,7 @@ def batched_greedy_nmm(
 
 
 def greedy_nmm(
-    object_predictions_as_tensor: torch.Tensor,
+    object_predictions_as_numpy: np.ndarray,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
@@ -184,7 +176,7 @@ def greedy_nmm(
     Optimized greedy non-maximum merging for axis-aligned bounding boxes using STRTree.
 
     Args:
-        object_predictions_as_tensor: (tensor) The location preds for the image
+        object_predictions_as_numpy: (np.ndarray) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
         match_metric: (str) IOU or IOS
         match_threshold: (float) The overlap thresh for match metric.
@@ -192,30 +184,21 @@ def greedy_nmm(
         keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
         to keep to a list of prediction indices to be merged.
     """
-    # Extract coordinates and scores as tensors
-    x1 = object_predictions_as_tensor[:, 0]
-    y1 = object_predictions_as_tensor[:, 1]
-    x2 = object_predictions_as_tensor[:, 2]
-    y2 = object_predictions_as_tensor[:, 3]
-    scores = object_predictions_as_tensor[:, 4]
+    x1 = object_predictions_as_numpy[:, 0]
+    y1 = object_predictions_as_numpy[:, 1]
+    x2 = object_predictions_as_numpy[:, 2]
+    y2 = object_predictions_as_numpy[:, 3]
+    scores = object_predictions_as_numpy[:, 4]
 
-    # Calculate areas as tensor (vectorized operation)
     areas = (x2 - x1) * (y2 - y1)
 
     # Create Shapely boxes only once
     boxes = []
-    for i in range(len(object_predictions_as_tensor)):
-        boxes.append(
-            box(
-                x1[i].item(),  # Convert only individual values
-                y1[i].item(),
-                x2[i].item(),
-                y2[i].item(),
-            )
-        )
+    for i in range(len(object_predictions_as_numpy)):
+        boxes.append(box(x1[i], y1[i], x2[i], y2[i]))
 
-    # Sort indices by score (descending) using torch
-    sorted_idxs = torch.argsort(scores, descending=True).tolist()
+    # Sort indices by score (descending)
+    sorted_idxs = np.argsort(scores)[::-1].tolist()
 
     # Build STRtree
     tree = STRtree(boxes)
@@ -228,7 +211,7 @@ def greedy_nmm(
             continue
 
         current_box = boxes[current_idx]
-        current_area = areas[current_idx].item()  # Convert only when needed
+        current_area = float(areas[current_idx])
 
         # Query potential intersections using STRtree
         candidate_idxs = tree.query(current_box)
@@ -244,21 +227,8 @@ def greedy_nmm(
 
             # For equal scores, use deterministic tie-breaking based on box coordinates
             if scores[candidate_idx] == scores[current_idx]:
-                # Use box coordinates for stable ordering
-                current_coords = (
-                    x1[current_idx].item(),
-                    y1[current_idx].item(),
-                    x2[current_idx].item(),
-                    y2[current_idx].item(),
-                )
-                candidate_coords = (
-                    x1[candidate_idx].item(),
-                    y1[candidate_idx].item(),
-                    x2[candidate_idx].item(),
-                    y2[candidate_idx].item(),
-                )
-
-                # Compare coordinates lexicographically
+                current_coords = (x1[current_idx], y1[current_idx], x2[current_idx], y2[current_idx])
+                candidate_coords = (x1[candidate_idx], y1[candidate_idx], x2[candidate_idx], y2[candidate_idx])
                 if candidate_coords > current_coords:
                     continue
 
@@ -268,10 +238,10 @@ def greedy_nmm(
 
             # Calculate metric
             if match_metric == "IOU":
-                union = current_area + areas[candidate_idx].item() - intersection
+                union = current_area + float(areas[candidate_idx]) - intersection
                 metric = intersection / union if union > 0 else 0
             elif match_metric == "IOS":
-                smaller = min(current_area, areas[candidate_idx].item())
+                smaller = min(current_area, float(areas[candidate_idx]))
                 metric = intersection / smaller if smaller > 0 else 0
             else:
                 raise ValueError("Invalid match_metric")
@@ -287,14 +257,14 @@ def greedy_nmm(
 
 
 def batched_nmm(
-    object_predictions_as_tensor: torch.Tensor,
+    object_predictions_as_numpy: np.ndarray,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
     """Apply non-maximum merging per category to avoid detecting too many overlapping bounding boxes for a given object.
 
     Args:
-        object_predictions_as_tensor: (tensor) The location preds for the image
+        object_predictions_as_numpy: (np.ndarray) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
         match_metric: (str) IOU or IOS
         match_threshold: (float) The overlap thresh for
@@ -303,11 +273,11 @@ def batched_nmm(
         keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
         to keep to a list of prediction indices to be merged.
     """
-    category_ids = object_predictions_as_tensor[:, 5].squeeze()
+    category_ids = object_predictions_as_numpy[:, 5]
     keep_to_merge_list = {}
-    for category_id in torch.unique(category_ids):
-        curr_indices = torch.where(category_ids == category_id)[0]
-        curr_keep_to_merge_list = nmm(object_predictions_as_tensor[curr_indices], match_metric, match_threshold)
+    for category_id in np.unique(category_ids):
+        curr_indices = np.where(category_ids == category_id)[0]
+        curr_keep_to_merge_list = nmm(object_predictions_as_numpy[curr_indices], match_metric, match_threshold)
         curr_indices_list = curr_indices.tolist()
         for curr_keep, curr_merge_list in curr_keep_to_merge_list.items():
             keep = curr_indices_list[curr_keep]
@@ -317,14 +287,14 @@ def batched_nmm(
 
 
 def nmm(
-    object_predictions_as_tensor: torch.Tensor,
+    object_predictions_as_numpy: np.ndarray,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
     """Apply non-maximum merging to avoid detecting too many overlapping bounding boxes for a given object.
 
     Args:
-        object_predictions_as_tensor: (tensor) The location preds for the image
+        object_predictions_as_numpy: (np.ndarray) The location preds for the image
             along with the class predscores, Shape: [num_boxes,5].
         match_metric: (str) IOU or IOS
         match_threshold: (float) The overlap thresh for match metric.
@@ -332,30 +302,21 @@ def nmm(
         keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
         to keep to a list of prediction indices to be merged.
     """
-    # Extract coordinates and scores as tensors
-    x1 = object_predictions_as_tensor[:, 0]
-    y1 = object_predictions_as_tensor[:, 1]
-    x2 = object_predictions_as_tensor[:, 2]
-    y2 = object_predictions_as_tensor[:, 3]
-    scores = object_predictions_as_tensor[:, 4]
+    x1 = object_predictions_as_numpy[:, 0]
+    y1 = object_predictions_as_numpy[:, 1]
+    x2 = object_predictions_as_numpy[:, 2]
+    y2 = object_predictions_as_numpy[:, 3]
+    scores = object_predictions_as_numpy[:, 4]
 
-    # Calculate areas as tensor (vectorized operation)
     areas = (x2 - x1) * (y2 - y1)
 
     # Create Shapely boxes only once
     boxes = []
-    for i in range(len(object_predictions_as_tensor)):
-        boxes.append(
-            box(
-                x1[i].item(),  # Convert only individual values
-                y1[i].item(),
-                x2[i].item(),
-                y2[i].item(),
-            )
-        )
+    for i in range(len(object_predictions_as_numpy)):
+        boxes.append(box(x1[i], y1[i], x2[i], y2[i]))
 
-    # Sort indices by score (descending) using torch
-    sorted_idxs = torch.argsort(scores, descending=True).tolist()
+    # Sort indices by score (descending)
+    sorted_idxs = np.argsort(scores)[::-1].tolist()
 
     # Build STRtree
     tree = STRtree(boxes)
@@ -365,7 +326,7 @@ def nmm(
 
     for current_idx in sorted_idxs:
         current_box = boxes[current_idx]
-        current_area = areas[current_idx].item()  # Convert only when needed
+        current_area = float(areas[current_idx])
 
         # Query potential intersections using STRtree
         candidate_idxs = tree.query(current_box)
@@ -381,21 +342,8 @@ def nmm(
 
             # For equal scores, use deterministic tie-breaking based on box coordinates
             if scores[candidate_idx] == scores[current_idx]:
-                # Use box coordinates for stable ordering
-                current_coords = (
-                    x1[current_idx].item(),
-                    y1[current_idx].item(),
-                    x2[current_idx].item(),
-                    y2[current_idx].item(),
-                )
-                candidate_coords = (
-                    x1[candidate_idx].item(),
-                    y1[candidate_idx].item(),
-                    x2[candidate_idx].item(),
-                    y2[candidate_idx].item(),
-                )
-
-                # Compare coordinates lexicographically
+                current_coords = (x1[current_idx], y1[current_idx], x2[current_idx], y2[current_idx])
+                candidate_coords = (x1[candidate_idx], y1[candidate_idx], x2[candidate_idx], y2[candidate_idx])
                 if candidate_coords > current_coords:
                     continue
 
@@ -405,10 +353,10 @@ def nmm(
 
             # Calculate metric
             if match_metric == "IOU":
-                union = current_area + areas[candidate_idx].item() - intersection
+                union = current_area + float(areas[candidate_idx]) - intersection
                 metric = intersection / union if union > 0 else 0
             elif match_metric == "IOS":
-                smaller = min(current_area, areas[candidate_idx].item())
+                smaller = min(current_area, float(areas[candidate_idx]))
                 metric = intersection / smaller if smaller > 0 else 0
             else:
                 raise ValueError("Invalid match_metric")
@@ -458,8 +406,6 @@ class PostprocessPredictions:
         self.class_agnostic = class_agnostic
         self.match_metric = match_metric
 
-        check_requirements(["torch"])
-
     def __call__(self, predictions: list[ObjectPrediction]) -> list[ObjectPrediction]:
         raise NotImplementedError()
 
@@ -470,14 +416,14 @@ class NMSPostprocess(PostprocessPredictions):
         object_predictions: list[ObjectPrediction],
     ) -> list[ObjectPrediction]:
         object_prediction_list = ObjectPredictionList(object_predictions)
-        object_predictions_as_torch = object_prediction_list.totensor()
+        object_predictions_as_numpy = object_prediction_list.tonumpy()
         if self.class_agnostic:
             keep = nms(
-                object_predictions_as_torch, match_threshold=self.match_threshold, match_metric=self.match_metric
+                object_predictions_as_numpy, match_threshold=self.match_threshold, match_metric=self.match_metric
             )
         else:
             keep = batched_nms(
-                object_predictions_as_torch, match_threshold=self.match_threshold, match_metric=self.match_metric
+                object_predictions_as_numpy, match_threshold=self.match_threshold, match_metric=self.match_metric
             )
 
         selected_object_predictions = object_prediction_list[keep].tolist()
@@ -493,16 +439,16 @@ class NMMPostprocess(PostprocessPredictions):
         object_predictions: list[ObjectPrediction],
     ) -> list[ObjectPrediction]:
         object_prediction_list = ObjectPredictionList(object_predictions)
-        object_predictions_as_torch = object_prediction_list.totensor()
+        object_predictions_as_numpy = object_prediction_list.tonumpy()
         if self.class_agnostic:
             keep_to_merge_list = nmm(
-                object_predictions_as_torch,
+                object_predictions_as_numpy,
                 match_threshold=self.match_threshold,
                 match_metric=self.match_metric,
             )
         else:
             keep_to_merge_list = batched_nmm(
-                object_predictions_as_torch,
+                object_predictions_as_numpy,
                 match_threshold=self.match_threshold,
                 match_metric=self.match_metric,
             )
@@ -530,16 +476,16 @@ class GreedyNMMPostprocess(PostprocessPredictions):
         object_predictions: list[ObjectPrediction],
     ) -> list[ObjectPrediction]:
         object_prediction_list = ObjectPredictionList(object_predictions)
-        object_predictions_as_torch = object_prediction_list.totensor()
+        object_predictions_as_numpy = object_prediction_list.tonumpy()
         if self.class_agnostic:
             keep_to_merge_list = greedy_nmm(
-                object_predictions_as_torch,
+                object_predictions_as_numpy,
                 match_threshold=self.match_threshold,
                 match_metric=self.match_metric,
             )
         else:
             keep_to_merge_list = batched_greedy_nmm(
-                object_predictions_as_torch,
+                object_predictions_as_numpy,
                 match_threshold=self.match_threshold,
                 match_metric=self.match_metric,
             )
