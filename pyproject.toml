@@ -87,6 +87,8 @@ roboflow = [
   "rfdetr>=1.6.2;python_version>='3.12'",
 ]
 onnx = ["onnx;python_version>='3.10'", "onnxruntime;python_version>='3.10'"]
+numba = ["numba>=0.59.0;python_version>='3.10'"]
+torchvision = ["torch>=2.4.1", "torchvision>=0.19.0"]
 all = [
   "yolov5>=6.0.0,<8.0.0",
   "ultralytics>=8.0.0",
