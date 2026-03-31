@@ -20,6 +20,16 @@ _LAZY_IMPORTS = {
 
 
 def __getattr__(name: str):
+    """Lazily import public symbols on first access.
+
+    When a name listed in ``_LAZY_IMPORTS`` is accessed on the ``sahi``
+    module, this function dynamically imports the corresponding submodule,
+    retrieves the attribute, and caches it in the module globals so that
+    subsequent accesses bypass this hook.
+
+    Raises:
+        AttributeError: If ``name`` is not a known lazy import.
+    """
     if name in _LAZY_IMPORTS:
         import importlib
 
