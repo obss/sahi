@@ -45,6 +45,19 @@ LOW_MODEL_CONFIDENCE = 0.1
 
 
 def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id):
+    """Filter out predictions whose category matches an exclusion list.
+
+    Args:
+        object_prediction_list: list[ObjectPrediction]
+            Predictions to filter.
+        exclude_classes_by_name: list[str] or None
+            Category names to exclude.
+        exclude_classes_by_id: list[int] or None
+            Category IDs to exclude.
+
+    Returns:
+        list[ObjectPrediction]: Predictions not matching any exclusion criterion.
+    """
     return [
         obj_pred
         for obj_pred in object_prediction_list
@@ -368,13 +381,24 @@ def get_sliced_prediction(
 
 
 def bbox_sort(a, b, thresh):
-    """
-    a, b  - function receives two bounding bboxes
+    """Compare two bounding boxes for reading-order sorting.
 
-    thresh - the threshold takes into account how far two bounding bboxes differ in
-    Y where thresh is the threshold we set for the
-    minimum allowable difference in height between adjacent bboxes
-    and sorts them by the X coordinate
+    Boxes whose Y-coordinates differ by no more than ``thresh`` are
+    considered to be on the same row and are sorted by X-coordinate.
+    Otherwise they are sorted by Y-coordinate.
+
+    Args:
+        a: tuple
+            First bounding box as ``(x, y, w, h)``.
+        b: tuple
+            Second bounding box as ``(x, y, w, h)``.
+        thresh: int or float
+            Maximum Y-coordinate difference to treat two boxes as being
+            on the same row.
+
+    Returns:
+        int or float: Negative if ``a`` should come first, positive if ``b``
+        should come first, zero if equal.
     """
 
     bbox_a = a
