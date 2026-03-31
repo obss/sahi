@@ -6,7 +6,16 @@ from sahi.logger import logger
 
 
 def get_package_info(package_name: str, verbose: bool = True):
-    """Returns the package version as a string and the package name as a string."""
+    """Check whether a package is installed and retrieve its version.
+
+    Args:
+        package_name: The name of the package to look up.
+        verbose: If True, log the package version when available.
+
+    Returns:
+        A tuple of (is_available, version_string). If the package is not
+        installed, version_string is "N/A".
+    """
     _is_available = is_available(package_name)
 
     if _is_available:
@@ -28,6 +37,7 @@ def get_package_info(package_name: str, verbose: bool = True):
 
 
 def print_environment_info():
+    """Log version info for all commonly used SAHI dependency packages."""
     get_package_info("torch")
     get_package_info("torchvision")
     get_package_info("tensorflow")
@@ -45,11 +55,29 @@ def print_environment_info():
 
 
 def is_available(module_name: str):
+    """Check whether a Python module is importable.
+
+    Args:
+        module_name: Dotted module name (e.g. "torch", "torchvision").
+
+    Returns:
+        True if the module can be found by the import system.
+    """
     return importlib.util.find_spec(module_name) is not None
 
 
 def check_requirements(package_names):
-    """Raise error if module is not installed."""
+    """Verify that all required packages are importable.
+
+    Args:
+        package_names: Iterable of package names to check.
+
+    Raises:
+        ImportError: If any of the listed packages cannot be found.
+
+    Yields:
+        Control back to the caller if all packages are available.
+    """
     missing_packages = []
     for package_name in package_names:
         if importlib.util.find_spec(package_name) is None:
@@ -60,7 +88,18 @@ def check_requirements(package_names):
 
 
 def check_package_minimum_version(package_name: str, minimum_version: str, verbose=False):
-    """Raise error if module version is not compatible."""
+    """Check whether an installed package meets a minimum version requirement.
+
+    Args:
+        package_name: The name of the package to check.
+        minimum_version: The minimum acceptable version string (e.g. "1.0.0").
+        verbose: If True, log the detected package version.
+
+    Returns:
+        True if the package is missing (assumed compatible), its version
+        is unknown, or its version meets the minimum. False if the
+        installed version is below the minimum.
+    """
     from packaging import version
 
     _is_available, _version = get_package_info(package_name, verbose=verbose)
@@ -76,7 +115,19 @@ def check_package_minimum_version(package_name: str, minimum_version: str, verbo
 
 
 def ensure_package_minimum_version(package_name: str, minimum_version: str, verbose=False):
-    """Raise error if module version is not compatible."""
+    """Ensure a package meets a minimum version, raising on failure.
+
+    Args:
+        package_name: The name of the package to check.
+        minimum_version: The minimum acceptable version string (e.g. "1.0.0").
+        verbose: If True, log the detected package version.
+
+    Raises:
+        ImportError: If the installed version is below minimum_version.
+
+    Yields:
+        Control back to the caller if the version requirement is met.
+    """
     from packaging import version
 
     _is_available, _version = get_package_info(package_name, verbose=verbose)
