@@ -14,6 +14,11 @@ if TYPE_CHECKING:
 
 
 def empty_cuda_cache() -> None:
+    """Release all unused cached memory from the CUDA allocator.
+
+    Acts as a no-op when torch is not installed, so it is safe to call
+    unconditionally regardless of the runtime environment.
+    """
     if not is_available("torch"):
         return
     import torch
@@ -45,6 +50,16 @@ def to_float_tensor(img: np.ndarray | Image) -> torch.Tensor:
 
 
 def torch_to_numpy(img: Any) -> np.ndarray:
+    """Convert a torch image tensor to a numpy array in HWC format.
+
+    Pixel values greater than 1 are rescaled to [0, 1] by dividing by 255.
+
+    Args:
+        img: A torch.Tensor of shape (C, H, W).
+
+    Returns:
+        A numpy array of shape (H, W, C) with values in [0, 1].
+    """
     img = img.numpy()
     if img.max() > 1:
         img /= 255
