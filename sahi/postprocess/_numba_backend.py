@@ -11,13 +11,11 @@ merge logic runs in Python via the shared nmm_from_matrix function.
 
 from __future__ import annotations
 
-import numpy as np
-
 import numba
+import numpy as np
 
 from sahi.postprocess._numpy_backend import (
     _score_tiebreak_order,
-    greedy_nmm_from_matrix,
     nmm_from_matrix,
 )
 
@@ -86,8 +84,16 @@ def _nms_numba_inner(x1, y1, x2, y2, scores, areas, match_threshold, use_iou):
             if suppressed[cand]:
                 continue
             metric = _compute_metric(
-                x1[idx], y1[idx], x2[idx], y2[idx], areas[idx],
-                x1[cand], y1[cand], x2[cand], y2[cand], areas[cand],
+                x1[idx],
+                y1[idx],
+                x2[idx],
+                y2[idx],
+                areas[idx],
+                x1[cand],
+                y1[cand],
+                x2[cand],
+                y2[cand],
+                areas[cand],
                 use_iou,
             )
             if metric >= match_threshold:
@@ -119,8 +125,16 @@ def _greedy_nmm_numba_inner(x1, y1, x2, y2, scores, areas, match_threshold, use_
             if suppressed[cand]:
                 continue
             metric = _compute_metric(
-                x1[idx], y1[idx], x2[idx], y2[idx], areas[idx],
-                x1[cand], y1[cand], x2[cand], y2[cand], areas[cand],
+                x1[idx],
+                y1[idx],
+                x2[idx],
+                y2[idx],
+                areas[idx],
+                x1[cand],
+                y1[cand],
+                x2[cand],
+                y2[cand],
+                areas[cand],
                 use_iou,
             )
             if metric >= match_threshold:
@@ -138,8 +152,16 @@ def _compute_metric_matrix_numba(boxes, areas, use_iou):
     for i in range(n):
         for j in range(i + 1, n):
             metric = _compute_metric(
-                boxes[i, 0], boxes[i, 1], boxes[i, 2], boxes[i, 3], areas[i],
-                boxes[j, 0], boxes[j, 1], boxes[j, 2], boxes[j, 3], areas[j],
+                boxes[i, 0],
+                boxes[i, 1],
+                boxes[i, 2],
+                boxes[i, 3],
+                areas[i],
+                boxes[j, 0],
+                boxes[j, 1],
+                boxes[j, 2],
+                boxes[j, 3],
+                areas[j],
                 use_iou,
             )
             matrix[i, j] = metric

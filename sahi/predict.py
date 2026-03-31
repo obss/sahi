@@ -305,9 +305,7 @@ def get_sliced_prediction(
         current_batch_size = len(batch_images)
 
         # perform batch inference
-        detection_model.perform_batch_inference(
-            [np.ascontiguousarray(img) for img in batch_images]
-        )
+        detection_model.perform_batch_inference([np.ascontiguousarray(img) for img in batch_images])
         detection_model.convert_original_predictions(
             shift_amount=batch_shifts,
             full_shape=[full_shape] * current_batch_size,

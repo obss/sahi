@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import numpy as np
 
-# Maximum N for full N×N matrix computation. Above this, compute row-batches.
+# Maximum N for full NxN matrix computation. Above this, compute row-batches.
 _MAX_FULL_MATRIX = 8000
 
 
@@ -142,9 +142,7 @@ def nms_from_matrix(matrix: np.ndarray, sorted_idxs: np.ndarray, match_threshold
     return keep
 
 
-def greedy_nmm_from_matrix(
-    matrix: np.ndarray, sorted_idxs: np.ndarray, match_threshold: float
-) -> dict[int, list[int]]:
+def greedy_nmm_from_matrix(matrix: np.ndarray, sorted_idxs: np.ndarray, match_threshold: float) -> dict[int, list[int]]:
     """Greedy NMM using a precomputed metric matrix. Used by numpy, numba, and torchvision backends."""
     keep_to_merge_list: dict[int, list[int]] = {}
     suppressed = np.zeros(matrix.shape[0], dtype=bool)
@@ -153,7 +151,7 @@ def greedy_nmm_from_matrix(
         if suppressed[idx]:
             continue
 
-        remaining = sorted_idxs[i + 1:]
+        remaining = sorted_idxs[i + 1 :]
         if len(remaining) == 0:
             keep_to_merge_list[int(idx)] = []
             continue

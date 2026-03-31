@@ -87,10 +87,7 @@ def select_device(device: str | None = None) -> str | torch.device:
     if not is_available("torch"):
         # Without torch only CPU is possible
         if device is not None and device not in ("cpu", "none", "None", ""):
-            raise ImportError(
-                f"torch is required to use device='{device}'. "
-                "Install it with: pip install torch"
-            )
+            raise ImportError(f"torch is required to use device='{device}'. Install it with: pip install torch")
         return "cpu"
 
     import torch

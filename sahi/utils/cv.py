@@ -182,7 +182,8 @@ def read_image_as_pil(image: Image.Image | str | np.ndarray, exif_fix: bool = Tr
     elif isinstance(image, str):
         # read image if str image path is provided
         try:
-            import requests 
+            import requests
+
             image_pil = Image.open(
                 BytesIO(requests.get(image, stream=True).content) if str(image).startswith("http") else image
             ).convert("RGB")

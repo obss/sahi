@@ -72,28 +72,37 @@ class TestEdgeCases:
         assert result == {0: []}
 
     def test_nms_identical_boxes(self):
-        preds = np.array([
-            make_pred(0, 0, 10, 10, 0.9, 1),
-            make_pred(0, 0, 10, 10, 0.8, 1),
-        ], dtype=np.float32)
+        preds = np.array(
+            [
+                make_pred(0, 0, 10, 10, 0.9, 1),
+                make_pred(0, 0, 10, 10, 0.8, 1),
+            ],
+            dtype=np.float32,
+        )
         keep = nms(preds, match_threshold=0.5)
         assert len(keep) == 1
         assert 0 in keep
 
     def test_nms_non_overlapping(self):
-        preds = np.array([
-            make_pred(0, 0, 10, 10, 0.9, 1),
-            make_pred(50, 50, 60, 60, 0.8, 1),
-            make_pred(100, 100, 110, 110, 0.7, 1),
-        ], dtype=np.float32)
+        preds = np.array(
+            [
+                make_pred(0, 0, 10, 10, 0.9, 1),
+                make_pred(50, 50, 60, 60, 0.8, 1),
+                make_pred(100, 100, 110, 110, 0.7, 1),
+            ],
+            dtype=np.float32,
+        )
         keep = nms(preds, match_threshold=0.5)
         assert len(keep) == 3  # all kept — no overlap
 
     def test_nms_equal_scores_deterministic(self):
-        preds = np.array([
-            make_pred(0, 0, 10, 10, 0.9, 1),
-            make_pred(1, 1, 11, 11, 0.9, 1),
-        ], dtype=np.float32)
+        preds = np.array(
+            [
+                make_pred(0, 0, 10, 10, 0.9, 1),
+                make_pred(1, 1, 11, 11, 0.9, 1),
+            ],
+            dtype=np.float32,
+        )
         keep1 = nms(preds, match_threshold=0.5)
         keep2 = nms(preds, match_threshold=0.5)
         assert keep1 == keep2  # deterministic tie-breaking
@@ -107,19 +116,25 @@ class TestEdgeCases:
 class TestIOSMetric:
     def test_nms_ios_small_inside_large(self):
         """Small box fully inside large box: IOS=1.0 (suppressed), IOU < 1.0."""
-        preds = np.array([
-            make_pred(0, 0, 100, 100, 0.9, 1),  # large box
-            make_pred(10, 10, 20, 20, 0.8, 1),   # small box fully inside
-        ], dtype=np.float32)
+        preds = np.array(
+            [
+                make_pred(0, 0, 100, 100, 0.9, 1),  # large box
+                make_pred(10, 10, 20, 20, 0.8, 1),  # small box fully inside
+            ],
+            dtype=np.float32,
+        )
         keep_ios = nms(preds, match_metric="IOS", match_threshold=0.5)
         assert len(keep_ios) == 1  # small box suppressed (IOS = 1.0)
 
     def test_nms_iou_vs_ios_differ(self):
         """IOU and IOS give different results for asymmetric overlap."""
-        preds = np.array([
-            make_pred(0, 0, 100, 100, 0.9, 1),
-            make_pred(10, 10, 20, 20, 0.8, 1),
-        ], dtype=np.float32)
+        preds = np.array(
+            [
+                make_pred(0, 0, 100, 100, 0.9, 1),
+                make_pred(10, 10, 20, 20, 0.8, 1),
+            ],
+            dtype=np.float32,
+        )
         keep_iou = nms(preds, match_metric="IOU", match_threshold=0.5)
         keep_ios = nms(preds, match_metric="IOS", match_threshold=0.5)
         # IOU of small inside large is ~1% (100/10000+100-100), below threshold
@@ -128,30 +143,39 @@ class TestIOSMetric:
         assert len(keep_ios) == 1  # small suppressed with IOS
 
     def test_greedy_nmm_ios(self):
-        preds = np.array([
-            make_pred(0, 0, 100, 100, 0.9, 1),
-            make_pred(10, 10, 20, 20, 0.8, 1),
-        ], dtype=np.float32)
+        preds = np.array(
+            [
+                make_pred(0, 0, 100, 100, 0.9, 1),
+                make_pred(10, 10, 20, 20, 0.8, 1),
+            ],
+            dtype=np.float32,
+        )
         result = greedy_nmm(preds, match_metric="IOS", match_threshold=0.5)
         assert 0 in result
         assert 1 in result[0]
 
     def test_nmm_ios(self):
-        preds = np.array([
-            make_pred(0, 0, 100, 100, 0.9, 1),
-            make_pred(10, 10, 20, 20, 0.8, 1),
-        ], dtype=np.float32)
+        preds = np.array(
+            [
+                make_pred(0, 0, 100, 100, 0.9, 1),
+                make_pred(10, 10, 20, 20, 0.8, 1),
+            ],
+            dtype=np.float32,
+        )
         result = nmm(preds, match_metric="IOS", match_threshold=0.5)
         assert 0 in result
         assert 1 in result[0]
 
     def test_batched_nms_ios(self):
-        preds = np.array([
-            make_pred(0, 0, 100, 100, 0.9, 1),
-            make_pred(10, 10, 20, 20, 0.8, 1),
-            make_pred(0, 0, 100, 100, 0.7, 2),
-            make_pred(10, 10, 20, 20, 0.6, 2),
-        ], dtype=np.float32)
+        preds = np.array(
+            [
+                make_pred(0, 0, 100, 100, 0.9, 1),
+                make_pred(10, 10, 20, 20, 0.8, 1),
+                make_pred(0, 0, 100, 100, 0.7, 2),
+                make_pred(10, 10, 20, 20, 0.6, 2),
+            ],
+            dtype=np.float32,
+        )
         keep = batched_nms(preds, match_metric="IOS", match_threshold=0.5)
         assert len(keep) == 2  # one per category
 
@@ -285,7 +309,7 @@ class TestBackendRegistry:
             set_postprocess_backend("invalid_backend")
 
     def test_resolve_cache_invalidation(self):
-        from sahi.postprocess.backends import _resolved_cache, resolve_backend, set_postprocess_backend
+        from sahi.postprocess.backends import resolve_backend, set_postprocess_backend
 
         original = get_postprocess_backend()
         try:
@@ -411,10 +435,13 @@ class TestNumbaBackend:
         from sahi.postprocess._numba_backend import nms_numba
         from sahi.postprocess._numpy_backend import nms_numpy
 
-        preds = np.array([
-            make_pred(0, 0, 100, 100, 0.9, 1),
-            make_pred(10, 10, 20, 20, 0.8, 1),
-        ], dtype=np.float32)
+        preds = np.array(
+            [
+                make_pred(0, 0, 100, 100, 0.9, 1),
+                make_pred(10, 10, 20, 20, 0.8, 1),
+            ],
+            dtype=np.float32,
+        )
         assert nms_numpy(preds, "IOS", 0.5) == nms_numba(preds, "IOS", 0.5)
 
     def test_random_parity(self):

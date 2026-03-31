@@ -275,9 +275,7 @@ class UltralyticsDetectionModel(DetectionModel):
                     if self.has_mask:
                         bool_mask = masks_or_points[pred_ind]
                         # Resize mask to original image size
-                        bool_mask = cv2.resize(
-                            bool_mask.astype(np.uint8), (image_shape[1], image_shape[0])
-                        )
+                        bool_mask = cv2.resize(bool_mask.astype(np.uint8), (image_shape[1], image_shape[0]))
                         segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
                     else:  # is_obb
                         obb_points = masks_or_points[pred_ind]  # Get OBB points for this prediction
