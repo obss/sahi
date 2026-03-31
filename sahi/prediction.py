@@ -13,6 +13,12 @@ from sahi.utils.file import Path
 
 
 class PredictionScore:
+    """Wrapper around a numeric prediction confidence score.
+
+    Provides comparison operators and conversion from numpy scalars to
+    native Python floats for serialization safety.
+    """
+
     def __init__(self, value: float | np.ndarray):
         """
         Args:
@@ -156,12 +162,29 @@ class ObjectPrediction(ObjectAnnotation):
 
 
 class PredictionResult:
+    """Container for detection results on a single image.
+
+    Holds the list of ``ObjectPrediction`` instances together with the
+    source image and optional profiling durations. Provides helpers for
+    exporting results to COCO, FiftyOne, and visual formats.
+    """
+
     def __init__(
         self,
         object_prediction_list: list[ObjectPrediction],
         image: Image.Image | str | np.ndarray,
         durations_in_seconds: dict[str, Any] = dict(),
     ):
+        """Initialize a PredictionResult.
+
+        Args:
+            object_prediction_list: list[ObjectPrediction]
+                Detected objects for this image.
+            image: Image.Image or str or np.ndarray
+                The source image as a PIL Image, file path, or numpy array.
+            durations_in_seconds: dict[str, Any]
+                Elapsed times for profiling (e.g. inference, postprocess).
+        """
         self.image: Image.Image = read_image_as_pil(image)
         self.image_width, self.image_height = self.image.size
         self.object_prediction_list: list[ObjectPrediction] = object_prediction_list
