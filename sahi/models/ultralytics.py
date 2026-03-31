@@ -20,6 +20,20 @@ class UltralyticsDetectionModel(DetectionModel):
     """
 
     def __init__(self, *args, **kwargs):
+        """Initialize the Ultralytics detection model.
+
+        Accepts all arguments from ``DetectionModel.__init__`` plus the
+        following keyword arguments.
+
+        Args:
+            fuse: bool
+                If True, fuse Conv2d and BatchNorm2d layers for faster
+                inference. Default: False.
+            task: str or None
+                Ultralytics task type (e.g. ``"detect"``, ``"segment"``,
+                ``"obb"``). When None, the task is inferred from the model.
+                Default: None.
+        """
         self.fuse: bool = kwargs.pop("fuse", False)
         self.task: str | None = kwargs.pop("task", None)
         existing_packages = getattr(self, "required_packages", None) or []
@@ -141,6 +155,14 @@ class UltralyticsDetectionModel(DetectionModel):
 
     @property
     def category_names(self):
+        """Returns the list of category names from the model.
+
+        Falls back to ``category_mapping`` values when model metadata is
+        unavailable (e.g. ONNX models without embedded names).
+
+        Raises:
+            ValueError: If neither model names nor category_mapping are available.
+        """
         # For ONNX models, names might not be available, use category_mapping
         if hasattr(self.model, "names") and self.model.names:
             return list(self.model.names.values())
@@ -212,13 +234,10 @@ class UltralyticsDetectionModel(DetectionModel):
         # handle all predictions
         object_prediction_list_per_image = []
 
-        # Support both single (_original_shape) and batch (_original_shapes) inference
-        original_shapes = getattr(self, "_original_shapes", None)
-
         for image_ind, image_predictions in enumerate(original_predictions):
             shift_amount = shift_amount_list[image_ind]
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
-            image_shape = original_shapes[image_ind] if original_shapes else getattr(self, "_original_shape", None)
+            image_shape = self._original_shapes[image_ind]
             object_prediction_list = []
 
             # Extract boxes and optional masks/obb
