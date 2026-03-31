@@ -18,11 +18,29 @@ def _is_tensor_like(obj) -> bool:
 
 
 class ObjectPredictionList(Sequence):
+    """Sequence wrapper around a list of ObjectPrediction instances.
+
+    Provides indexing by int, list, or tensor-like objects, and conversion
+    to numpy arrays or torch tensors for batch postprocessing operations.
+
+    Args:
+        prediction_list: List of ObjectPrediction instances to wrap.
+    """
+
     def __init__(self, prediction_list: list[ObjectPrediction]) -> None:
         self.list: list[ObjectPrediction] = prediction_list
         super().__init__()
 
     def __getitem__(self, i) -> ObjectPredictionList:
+        """Retrieve predictions by index, list of indices, or tensor-like.
+
+        Args:
+            i: An integer index, list/tuple of indices, or tensor-like
+                object convertible via ``.tolist()``.
+
+        Returns:
+            A new ObjectPredictionList containing the selected predictions.
+        """
         if _is_tensor_like(i):
             i = i.tolist()
         if isinstance(i, int):
@@ -34,6 +52,13 @@ class ObjectPredictionList(Sequence):
             raise NotImplementedError(f"{type(i)}")
 
     def __setitem__(self, i, elem) -> None:
+        """Set predictions at the given index or indices.
+
+        Args:
+            i: An integer index, list/tuple of indices, or tensor-like.
+            elem: An ObjectPrediction, ObjectPredictionList, or list of
+                ObjectPrediction instances to assign.
+        """
         if _is_tensor_like(i):
             i = i.tolist()
         if isinstance(i, int):
@@ -57,6 +82,11 @@ class ObjectPredictionList(Sequence):
         return str(self.list)
 
     def extend(self, object_prediction_list: ObjectPredictionList) -> None:
+        """Extend this list with predictions from another ObjectPredictionList.
+
+        Args:
+            object_prediction_list: The list whose predictions to append.
+        """
         self.list.extend(object_prediction_list.list)
 
     def totensor(self):
@@ -64,9 +94,20 @@ class ObjectPredictionList(Sequence):
         return object_prediction_list_to_torch(self)
 
     def tonumpy(self) -> np.ndarray:
+        """Convert to a numpy array of shape (N, 6).
+
+        Returns:
+            np.ndarray with columns [x1, y1, x2, y2, score, category_id].
+        """
         return object_prediction_list_to_numpy(self)
 
     def tolist(self) -> ObjectPrediction | list[ObjectPrediction]:
+        """Unwrap to a single ObjectPrediction or a list.
+
+        Returns:
+            A single ObjectPrediction if the list has one element,
+            otherwise the full list of ObjectPrediction instances.
+        """
         if len(self.list) == 1:
             return self.list[0]
         else:
@@ -74,7 +115,18 @@ class ObjectPredictionList(Sequence):
 
 
 def repair_polygon(shapely_polygon: Polygon) -> Polygon:
-    """Fix polygons :param shapely_polygon: Shapely polygon object :return:"""
+    """Attempt to fix an invalid Shapely polygon using a zero-width buffer.
+
+    If the repaired result is a MultiPolygon or GeometryCollection, the
+    polygon with the largest area is returned.
+
+    Args:
+        shapely_polygon: A Shapely Polygon that may be invalid.
+
+    Returns:
+        A valid Polygon, or the original if it was already valid or
+        could not be repaired.
+    """
     if not shapely_polygon.is_valid:
         fixed_polygon = shapely_polygon.buffer(0)
         if fixed_polygon.is_valid:
@@ -90,7 +142,18 @@ def repair_polygon(shapely_polygon: Polygon) -> Polygon:
 
 
 def repair_multipolygon(shapely_multipolygon: MultiPolygon) -> MultiPolygon:
-    """Fix invalid MultiPolygon objects :param shapely_multipolygon: Imported shapely MultiPolygon object :return:"""
+    """Attempt to fix an invalid Shapely MultiPolygon using a zero-width buffer.
+
+    If the repaired result is a single Polygon, it is wrapped in a
+    MultiPolygon. GeometryCollection results are filtered to polygons only.
+
+    Args:
+        shapely_multipolygon: A Shapely MultiPolygon that may be invalid.
+
+    Returns:
+        A valid MultiPolygon, or the original if it was already valid or
+        could not be repaired.
+    """
     if not shapely_multipolygon.is_valid:
         fixed_geometry = shapely_multipolygon.buffer(0)
 
@@ -146,9 +209,14 @@ def object_prediction_list_to_torch(object_prediction_list: ObjectPredictionList
 
 
 def object_prediction_list_to_numpy(object_prediction_list: ObjectPredictionList) -> np.ndarray:
-    """
+    """Convert an ObjectPredictionList to a numpy array.
+
+    Args:
+        object_prediction_list: The predictions to convert.
+
     Returns:
-        np.ndarray of size N x [x1, y1, x2, y2, score, category_id]
+        np.ndarray of shape (N, 6) with columns
+        [x1, y1, x2, y2, score, category_id].
     """
     num_predictions = len(object_prediction_list)
     numpy_predictions = np.zeros([num_predictions, 6], dtype=np.float32)
@@ -160,10 +228,14 @@ def object_prediction_list_to_numpy(object_prediction_list: ObjectPredictionList
 
 
 def calculate_box_union(box1: list[int] | np.ndarray, box2: list[int] | np.ndarray) -> list[int]:
-    """
+    """Compute the smallest bounding box enclosing both input boxes.
+
     Args:
-        box1 (List[int]): [x1, y1, x2, y2]
-        box2 (List[int]): [x1, y1, x2, y2]
+        box1: First box as [x1, y1, x2, y2].
+        box2: Second box as [x1, y1, x2, y2].
+
+    Returns:
+        The union bounding box as [x1, y1, x2, y2].
     """
     box1 = np.array(box1)
     box2 = np.array(box2)
@@ -173,18 +245,27 @@ def calculate_box_union(box1: list[int] | np.ndarray, box2: list[int] | np.ndarr
 
 
 def calculate_area(box: list[int] | np.ndarray) -> float:
-    """
+    """Compute the area of an axis-aligned bounding box.
+
     Args:
-        box (List[int]): [x1, y1, x2, y2]
+        box: Bounding box as [x1, y1, x2, y2].
+
+    Returns:
+        The area of the box (width * height).
     """
     return (box[2] - box[0]) * (box[3] - box[1])
 
 
 def calculate_intersection_area(box1: np.ndarray, box2: np.ndarray) -> float:
-    """
+    """Compute the intersection area of two axis-aligned bounding boxes.
+
     Args:
-        box1 (np.ndarray): np.array([x1, y1, x2, y2])
-        box2 (np.ndarray): np.array([x1, y1, x2, y2])
+        box1: First box as np.array([x1, y1, x2, y2]).
+        box2: Second box as np.array([x1, y1, x2, y2]).
+
+    Returns:
+        The area of the intersection region, or 0 if the boxes do not
+        overlap.
     """
     left_top = np.maximum(box1[:2], box2[:2])
     right_bottom = np.minimum(box1[2:], box2[2:])
@@ -193,7 +274,15 @@ def calculate_intersection_area(box1: np.ndarray, box2: np.ndarray) -> float:
 
 
 def calculate_bbox_iou(pred1: ObjectPrediction, pred2: ObjectPrediction) -> float:
-    """Returns the ratio of intersection area to the union."""
+    """Compute Intersection over Union (IoU) between two predictions.
+
+    Args:
+        pred1: First object prediction.
+        pred2: Second object prediction.
+
+    Returns:
+        The IoU value in [0, 1].
+    """
     box1 = np.array(pred1.bbox.to_xyxy())
     box2 = np.array(pred2.bbox.to_xyxy())
     area1 = calculate_area(box1)
@@ -203,7 +292,16 @@ def calculate_bbox_iou(pred1: ObjectPrediction, pred2: ObjectPrediction) -> floa
 
 
 def calculate_bbox_ios(pred1: ObjectPrediction, pred2: ObjectPrediction) -> float:
-    """Returns the ratio of intersection area to the smaller box's area."""
+    """Compute Intersection over Smaller (IoS) between two predictions.
+
+    Args:
+        pred1: First object prediction.
+        pred2: Second object prediction.
+
+    Returns:
+        The IoS value in [0, 1], where the denominator is the area of
+        the smaller bounding box.
+    """
     box1 = np.array(pred1.bbox.to_xyxy())
     box2 = np.array(pred2.bbox.to_xyxy())
     area1 = calculate_area(box1)
@@ -216,6 +314,20 @@ def calculate_bbox_ios(pred1: ObjectPrediction, pred2: ObjectPrediction) -> floa
 def has_match(
     pred1: ObjectPrediction, pred2: ObjectPrediction, match_type: str = "IOU", match_threshold: float = 0.5
 ) -> bool:
+    """Check whether two predictions overlap above the given threshold.
+
+    Args:
+        pred1: First object prediction.
+        pred2: Second object prediction.
+        match_type: Overlap metric, "IOU" or "IOS".
+        match_threshold: Minimum overlap to count as a match.
+
+    Returns:
+        True if the overlap exceeds match_threshold.
+
+    Raises:
+        ValueError: If match_type is not "IOU" or "IOS".
+    """
     if match_type == "IOU":
         threshold_condition = calculate_bbox_iou(pred1, pred2) > match_threshold
     elif match_type == "IOS":
@@ -226,6 +338,15 @@ def has_match(
 
 
 def get_merged_mask(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Mask:
+    """Compute the union of two prediction masks.
+
+    Args:
+        pred1: First object prediction with a valid mask.
+        pred2: Second object prediction with a valid mask.
+
+    Returns:
+        A new Mask representing the geometric union of both masks.
+    """
     mask1 = pred1.mask
     mask2 = pred2.mask
 
@@ -255,11 +376,29 @@ def get_merged_score(
     pred1: ObjectPrediction,
     pred2: ObjectPrediction,
 ) -> float:
+    """Return the higher confidence score from two predictions.
+
+    Args:
+        pred1: First object prediction.
+        pred2: Second object prediction.
+
+    Returns:
+        The maximum score value.
+    """
     scores: list[float] = [pred.score.value for pred in (pred1, pred2)]
     return max(scores)
 
 
 def get_merged_bbox(pred1: ObjectPrediction, pred2: ObjectPrediction) -> BoundingBox:
+    """Compute the union bounding box of two predictions.
+
+    Args:
+        pred1: First object prediction.
+        pred2: Second object prediction.
+
+    Returns:
+        A BoundingBox enclosing both input bounding boxes.
+    """
     box1: list[int] = pred1.bbox.to_xyxy()
     box2: list[int] = pred2.bbox.to_xyxy()
     bbox = BoundingBox(box=calculate_box_union(box1, box2))
@@ -267,6 +406,15 @@ def get_merged_bbox(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Boundin
 
 
 def get_merged_category(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Category:
+    """Return the category of the higher-scored prediction.
+
+    Args:
+        pred1: First object prediction.
+        pred2: Second object prediction.
+
+    Returns:
+        The Category from whichever prediction has the higher score.
+    """
     if pred1.score.value > pred2.score.value:
         return pred1.category
     else:
@@ -277,6 +425,18 @@ def merge_object_prediction_pair(
     pred1: ObjectPrediction,
     pred2: ObjectPrediction,
 ) -> ObjectPrediction:
+    """Merge two overlapping predictions into a single prediction.
+
+    Combines bounding boxes (union), masks (geometric union), scores
+    (maximum), and categories (from the higher-scored prediction).
+
+    Args:
+        pred1: First object prediction.
+        pred2: Second object prediction.
+
+    Returns:
+        A new ObjectPrediction with merged attributes.
+    """
     shift_amount = pred1.bbox.shift_amount
     merged_bbox: BoundingBox = get_merged_bbox(pred1, pred2)
     merged_score: float = get_merged_score(pred1, pred2)
