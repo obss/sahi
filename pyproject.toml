@@ -72,7 +72,7 @@ docs = [
 ]
 build = [
   "twine>=5.1.1,<7.0.0",
-  "wheel>=0.40,<0.46",
+  "wheel>=0.40,<0.47",
   "build>=0.10,<1.5",
   "hatch>=1.14.1",
 ]
@@ -101,7 +101,7 @@ all = [
 mmdet = [
   # MMDetection dependencies - only for Python 3.11 and not on macOS ARM64
   "mmengine;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  "mmcv==2.1.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
+  "mmcv==2.2.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
   "mmdet==3.3.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
   # numpy 2 is not compatible with torch 2.1.2
   "numpy<3.0;python_version=='3.11'",
@@ -109,14 +109,14 @@ mmdet = [
 ci = [
   # max supported pytorch version for python 3.8 is 2.4.1
   # CPU versions for Linux/Windows CI
-  "torch==2.7.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
+  "torch==2.8.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
   "torch==2.4.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
-  "torchvision==0.22.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
+  "torchvision==0.23.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
   "torchvision==0.19.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
   # Regular versions for macOS
-  "torch==2.7.0;python_version>='3.9' and platform_system=='Darwin'",
+  "torch==2.8.0;python_version>='3.9' and platform_system=='Darwin'",
   "torch==2.4.1;python_version=='3.8' and platform_system=='Darwin'",
-  "torchvision==0.22.0;python_version>='3.9' and platform_system=='Darwin'",
+  "torchvision==0.23.0;python_version>='3.9' and platform_system=='Darwin'",
   "torchvision==0.19.1;python_version=='3.8' and platform_system=='Darwin'",
   # transformers is supported for python>=3.9
   "transformers>=4.49.0;python_version>='3.9'",

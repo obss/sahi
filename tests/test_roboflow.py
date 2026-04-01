@@ -8,8 +8,8 @@ from sahi.utils.cv import read_image
 
 pytestmark = [
     pytest.mark.skipif(
-        sys.version_info[:2] < (3, 12) or sys.platform == "darwin",
-        reason="Requires Python 3.12 or higher and not macOS",
+        sys.version_info[:2] < (3, 12) or sys.platform in ("darwin", "win32"),
+        reason="Requires Python 3.12 or higher, skipped on macOS and Windows",
     ),
     pytest.mark.flaky(reruns=3, reruns_delay=2),
 ]
@@ -81,8 +81,8 @@ def test_roboflow_universe_segmentation():
 def test_rfdetr():
     """Test the RFDETR model classes and instances for object detection."""
 
+    from rfdetr.assets.coco_classes import COCO_CLASSES
     from rfdetr.detr import RFDETRBase
-    from rfdetr.util.coco_classes import COCO_CLASSES
 
     models = [
         RFDETRBase,
@@ -121,8 +121,8 @@ def test_rfdetr():
 def test_rfdetr_seg():
     """Test the RFDETR model classes and instances for instance segmentation."""
 
+    from rfdetr.assets.coco_classes import COCO_CLASSES
     from rfdetr.detr import RFDETRSegMedium
-    from rfdetr.util.coco_classes import COCO_CLASSES
 
     models = [
         RFDETRSegMedium,
