@@ -15,6 +15,7 @@ detection_model = AutoDetectionModel.from_pretrained(model_type='rtdetr',...) # 
 detection_model = AutoDetectionModel.from_pretrained(model_type='yoloe',...) # for YOLOE models
 detection_model = AutoDetectionModel.from_pretrained(model_type='yolov5',...) # for YOLOv5 models
 detection_model = AutoDetectionModel.from_pretrained(model_type='yolo-world',...) # for YOLOWorld models
+detection_model = AutoDetectionModel.from_pretrained(model_type='roboflow',...) # for Roboflow RFDETR detection/segmentation models
 
 # get sliced prediction result
 result = get_sliced_prediction(
