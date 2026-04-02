@@ -13,7 +13,7 @@ colorama==0.4.6 ; sys_platform == 'win32'
     #   tqdm
 filelock==3.16.1 ; python_full_version < '3.9'
     # via torch
-filelock==3.17.0 ; python_full_version >= '3.9'
+filelock==3.19.1 ; python_full_version >= '3.9'
     # via torch
 fire==0.7.1
     # via sahi
