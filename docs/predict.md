@@ -8,7 +8,7 @@ from sahi import AutoDetectionModel
 
 # init any model
 detection_model = AutoDetectionModel.from_pretrained(model_type='mmdet',...) # for MMDetection models
-detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',...) # for YOLOv8/YOLO11/YOLO12 models
+detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',...) # for YOLOv8/YOLO11/YOLO12/YOLO26 models
 detection_model = AutoDetectionModel.from_pretrained(model_type='huggingface',...) # for HuggingFace detection models
 detection_model = AutoDetectionModel.from_pretrained(model_type='torchvision',...) # for Torchvision detection models
 detection_model = AutoDetectionModel.from_pretrained(model_type='rtdetr',...) # for RT-DETR models
@@ -48,6 +48,10 @@ result = get_prediction(
 
 ## Batch inference
 
+### Batch prediction over a folder or file list
+
+Use the high-level `predict` function to run sliced inference over many images at once and export results automatically:
+
 ```python
 from sahi.predict import predict
 from sahi import AutoDetectionModel
@@ -74,6 +78,50 @@ result = predict(
     progress_bar=False,
 )
 ```
+
+### Low-level batch inference API
+
+`perform_batch_inference` lets you run a model over multiple images in a single call and retrieve per-image prediction lists. Ultralytics YOLO models use native GPU batching; all other models fall back to sequential single-image inference with the same API.
+
+```python
+import cv2
+from sahi import AutoDetectionModel
+
+detection_model = AutoDetectionModel.from_pretrained(
+    model_type="ultralytics",
+    model_path="yolo26n.pt",
+    confidence_threshold=0.25,
+    device="cuda:0",
+)
+
+# Load a batch of images as numpy arrays (H, W, C) in RGB
+images = [cv2.cvtColor(cv2.imread(p), cv2.COLOR_BGR2RGB) for p in image_paths]
+
+# Run batch inference (native GPU batching for Ultralytics)
+detection_model.perform_batch_inference(images)
+
+# Provide per-image shift amounts and full image sizes (use [[0, 0]] defaults
+# when images are not slices)
+shift_amount_list = [[0, 0]] * len(images)
+full_shape_list   = [[img.shape[0], img.shape[1]] for img in images]
+
+detection_model.convert_original_predictions(
+    shift_amount=shift_amount_list,
+    full_shape=full_shape_list,
+)
+
+# Access predictions per image
+for i, preds in enumerate(detection_model.object_prediction_list_per_image):
+    print(f"Image {i}: {len(preds)} detections")
+    for pred in preds:
+        print(pred.category.name, pred.score.value, pred.bbox.to_xyxy())
+```
+
+!!! note "Single-image compatibility"
+    The existing `object_prediction_list` property is unchanged and returns
+    predictions for the first image, so code that uses `perform_inference` +
+    `convert_original_predictions` + `object_prediction_list` continues to
+    work without modification.
 
 ## Progress-Bar
 
@@ -188,7 +236,7 @@ fiftyone_detections = result.to_fiftyone_detections()
 !!! tips "Interactive Demos and Examples"
     Want to see these prediction utilities in action? We have several interactive notebooks that demonstrate different model integrations:
 
-    - For YOLOv8/YOLO11/YOLO12 models, explore our [Ultralytics integration notebook](../demo/inference_for_ultralytics.ipynb)
+    - For YOLOv8/YOLO11/YOLO12/YOLO26 models, explore our [Ultralytics integration notebook](../demo/inference_for_ultralytics.ipynb)
     - For YOLOv5 models, check out our [YOLOv5 integration notebook](../demo/inference_for_yolov5.ipynb)
     - For MMDetection models, try our [MMDetection integration notebook](../demo/inference_for_mmdetection.ipynb)
     - For HuggingFace models, see our [HuggingFace integration notebook](../demo/inference_for_huggingface.ipynb)
