@@ -116,6 +116,23 @@ class HuggingfaceDetectionModel(DetectionModel):
             self._image_shapes = [image.shape]
         self._original_predictions = outputs
 
+    def perform_batch_inference(self, images: list[np.ndarray]):
+        """Native batch inference: process all images in a single processor + model call.
+
+        Unlike the base-class default (which runs images sequentially), this
+        feeds the entire list to the HuggingFace processor at once and executes
+        one batched forward pass.  The processor pads images to a uniform size
+        internally, so images of different resolutions are handled correctly.
+
+        This avoids setting ``_batch_images`` so
+        ``convert_original_predictions`` uses the standard multi-image path
+        rather than the sequential fallback.
+
+        Args:
+            images: List of numpy arrays (H, W, C) in RGB order.
+        """
+        self.perform_inference(images)
+
     def get_valid_predictions(self, logits, pred_boxes) -> tuple:
         """
         Args:
