@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 from abc import ABC, abstractmethod
+from typing import Any, Callable
 
 import numpy as np
 
@@ -27,7 +28,7 @@ _FUNC_NAME_MAP = {
 }
 
 
-def _dispatch(func_type: str):
+def _dispatch(func_type: str) -> Callable[..., Any]:
     """Resolve and return the backend-specific function for a given operation type.
 
     Uses a two-level lookup table: first maps the requested backend name
@@ -53,7 +54,12 @@ def _dispatch(func_type: str):
 # ---------------------------------------------------------------------------
 
 
-def _batched_apply(predictions: np.ndarray, func, match_metric: str, match_threshold: float):
+def _batched_apply(
+    predictions: np.ndarray,
+    func: Callable[..., Any],
+    match_metric: str,
+    match_threshold: float,
+) -> list[int] | dict[int, list[int]]:
     """Apply a postprocessing function per category and remap indices to global space.
 
     Works for both suppression functions (returning list[int]) and

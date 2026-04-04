@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 from shapely.geometry import MultiPolygon, Polygon
@@ -12,7 +13,7 @@ from sahi.utils.import_utils import is_available
 from sahi.utils.shapely import ShapelyAnnotation, get_shapely_multipolygon
 
 
-def _is_tensor_like(obj) -> bool:
+def _is_tensor_like(obj: Any) -> bool:
     """Check if an object is a torch Tensor or numpy array (without importing torch)."""
     return isinstance(obj, np.ndarray) or (hasattr(obj, "tolist") and not isinstance(obj, (int, float, list, tuple)))
 
@@ -189,7 +190,7 @@ def coco_segmentation_to_shapely(segmentation: list | list[list]) -> MultiPolygo
     return shapely_multipolygon
 
 
-def object_prediction_list_to_torch(object_prediction_list: ObjectPredictionList):
+def object_prediction_list_to_torch(object_prediction_list: ObjectPredictionList) -> Any:
     """Convert to torch.Tensor. Requires torch to be installed.
 
     Returns:

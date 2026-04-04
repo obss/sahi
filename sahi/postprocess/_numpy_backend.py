@@ -78,7 +78,13 @@ def _compute_metric_matrix_full(boxes: np.ndarray, areas: np.ndarray, match_metr
         return np.where(smaller > 0, inter / smaller, 0).astype(np.float32)
 
 
-def _score_tiebreak_order(x1, y1, x2, y2, scores):
+def _score_tiebreak_order(
+    x1: np.ndarray,
+    y1: np.ndarray,
+    x2: np.ndarray,
+    y2: np.ndarray,
+    scores: np.ndarray,
+) -> np.ndarray:
     """Return indices sorted by score descending, with deterministic tie-breaking.
 
     When scores are equal, ties are broken by box coordinates
@@ -99,7 +105,7 @@ def _score_tiebreak_order(x1, y1, x2, y2, scores):
     return order
 
 
-def _prepare_matrix(predictions: np.ndarray, match_metric: str):
+def _prepare_matrix(predictions: np.ndarray, match_metric: str) -> tuple[np.ndarray, np.ndarray]:
     """Extract boxes, scores, and areas, then compute the pairwise metric matrix.
 
     Shared setup step used by nms_numpy, greedy_nmm_numpy, and nmm_numpy.
@@ -128,7 +134,16 @@ def _prepare_matrix(predictions: np.ndarray, match_metric: str):
 
 
 def nms_from_matrix(matrix: np.ndarray, sorted_idxs: np.ndarray, match_threshold: float) -> list[int]:
-    """NMS using a precomputed metric matrix. Used by numpy and torchvision backends."""
+    """NMS using a precomputed metric matrix. Used by numpy and torchvision backends.
+
+    Args:
+        matrix: (N, N) pairwise metric array.
+        sorted_idxs: Indices sorted by score descending.
+        match_threshold: Minimum metric value to suppress a candidate.
+
+    Returns:
+        List of kept indices sorted by score descending.
+    """
     keep = []
     suppressed = np.zeros(matrix.shape[0], dtype=bool)
 
@@ -143,7 +158,16 @@ def nms_from_matrix(matrix: np.ndarray, sorted_idxs: np.ndarray, match_threshold
 
 
 def greedy_nmm_from_matrix(matrix: np.ndarray, sorted_idxs: np.ndarray, match_threshold: float) -> dict[int, list[int]]:
-    """Greedy NMM using a precomputed metric matrix. Used by numpy, numba, and torchvision backends."""
+    """Greedy NMM using a precomputed metric matrix. Used by numpy, numba, and torchvision backends.
+
+    Args:
+        matrix: (N, N) pairwise metric array.
+        sorted_idxs: Indices sorted by score descending.
+        match_threshold: Minimum metric value to merge a candidate.
+
+    Returns:
+        Dict mapping each kept index to a list of indices merged into it.
+    """
     keep_to_merge_list: dict[int, list[int]] = {}
     suppressed = np.zeros(matrix.shape[0], dtype=bool)
 

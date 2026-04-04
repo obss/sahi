@@ -19,7 +19,7 @@ from sahi.postprocess._numpy_backend import (
 )
 
 
-def _get_device():
+def _get_device() -> str:
     """Get the best available torch device."""
     if torch.cuda.is_available():
         return "cuda"
@@ -52,7 +52,7 @@ def _compute_metric_matrix_torch(predictions: np.ndarray, match_metric: str) -> 
     return matrix.cpu().numpy().astype(np.float32)
 
 
-def _prepare_matrix_torch(predictions: np.ndarray, match_metric: str):
+def _prepare_matrix_torch(predictions: np.ndarray, match_metric: str) -> tuple[np.ndarray, np.ndarray]:
     """Compute metric matrix on GPU and sort indices. Shared prep for all functions."""
     matrix = _compute_metric_matrix_torch(predictions, match_metric)
     boxes = predictions[:, :4]
