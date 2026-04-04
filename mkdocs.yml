@@ -80,6 +80,7 @@ nav:
           - models/rtdetr.md
           - models/roboflow.md
       - 'Post-processing':
+          - postprocess/backends.md
           - postprocess/combine.md
           - postprocess/utils.md
       - Utils:
