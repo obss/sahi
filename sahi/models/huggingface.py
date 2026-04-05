@@ -66,7 +66,8 @@ class HuggingfaceDetectionModel(DetectionModel):
         hf_token = os.getenv("HF_TOKEN", self._token)
         model = AutoModelForObjectDetection.from_pretrained(self.model_path, token=hf_token)
         if self.image_size is not None:
-            if model.base_model_prefix == "rt_detr_v2":
+            # RT-DETR family expects explicit height/width; other models use shortest_edge
+            if model.__class__.__name__.startswith("RTDetr"):
                 size = {"height": self.image_size, "width": self.image_size}
             else:
                 size = {"shortest_edge": self.image_size, "longest_edge": None}
