@@ -17,15 +17,12 @@ from sahi.postprocess._numpy_backend import (
     nmm_from_matrix,
     nms_from_matrix,
 )
+from sahi.utils.torch_utils import select_device
 
 
 def _get_device() -> str:
     """Get the best available torch device."""
-    if torch.cuda.is_available():
-        return "cuda"
-    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-        return "mps"
-    return "cpu"
+    return str(select_device())
 
 
 def _compute_metric_matrix_torch(predictions: np.ndarray, match_metric: str) -> np.ndarray:
