@@ -20,6 +20,9 @@ _resolved_cache: str | None = None
 def set_postprocess_backend(name: str) -> None:
     """Set the postprocessing backend.
 
+    Call once at startup before running any inference.  This function is
+    **not** thread-safe.
+
     Args:
         name: One of "auto", "numpy", "numba", "torchvision".
     """
