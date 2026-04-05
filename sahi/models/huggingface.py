@@ -28,7 +28,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         token: str | None = None,
     ):
         self._processor = processor
-        self._image_shapes: list = []
+        self._original_shapes: list = []
         self._token = token
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "transformers"]
@@ -52,7 +52,8 @@ class HuggingfaceDetectionModel(DetectionModel):
 
     @property
     def image_shapes(self):
-        return self._image_shapes
+        # TODO: remove this property in a future release; use _original_shapes directly
+        return self._original_shapes
 
     @property
     def num_categories(self) -> int:
@@ -109,9 +110,9 @@ class HuggingfaceDetectionModel(DetectionModel):
             outputs = self.model(**inputs)
 
         if isinstance(image, list):
-            self._image_shapes = [img.shape for img in image]
+            self._original_shapes = [img.shape for img in image]
         else:
-            self._image_shapes = [image.shape]
+            self._original_shapes = [image.shape]
         self._original_predictions = outputs
 
     def perform_batch_inference(self, images: list[np.ndarray]):
