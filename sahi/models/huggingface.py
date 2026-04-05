@@ -105,9 +105,7 @@ class HuggingfaceDetectionModel(DetectionModel):
 
         with torch.no_grad():
             inputs = self.processor(images=image, return_tensors="pt")
-            inputs["pixel_values"] = inputs.pixel_values.to(self.device)
-            if hasattr(inputs, "pixel_mask"):
-                inputs["pixel_mask"] = inputs.pixel_mask.to(self.device)
+            inputs = {k: v.to(self.device) if hasattr(v, "to") else v for k, v in inputs.items()}
             outputs = self.model(**inputs)
 
         if isinstance(image, list):
@@ -133,6 +131,15 @@ class HuggingfaceDetectionModel(DetectionModel):
         """
         self.perform_inference(images)
 
+    # Models using per-class sigmoid (no background class in logits)
+    _SIGMOID_CLS_PREFIXES = ("RTDetr", "ConditionalDetr", "DeformableDetr", "Deta", "GroundingDino")
+
+    @property
+    def _uses_sigmoid_cls(self) -> bool:
+        """True for models that use per-class sigmoid instead of softmax+background."""
+        cls_name = self.model.__class__.__name__
+        return any(cls_name.startswith(p) for p in self._SIGMOID_CLS_PREFIXES)
+
     def get_valid_predictions(self, logits, pred_boxes) -> tuple:
         """
         Args:
@@ -145,12 +152,20 @@ class HuggingfaceDetectionModel(DetectionModel):
         """
         import torch
 
-        probs = logits.softmax(-1)
-        scores = probs.max(-1).values
-        cat_ids = probs.argmax(-1)
-        valid_detections = torch.where(cat_ids < self.num_categories, 1, 0)
-        valid_confidences = torch.where(scores >= self.confidence_threshold, 1, 0)
-        valid_mask = valid_detections.logical_and(valid_confidences)
+        if self._uses_sigmoid_cls:
+            # RT-DETR family: per-class sigmoid, logits shape (Q, num_classes) — no background class
+            probs = logits.sigmoid()
+            scores, cat_ids = probs.max(-1)
+            valid_mask = scores >= self.confidence_threshold
+        else:
+            # DETR family: softmax over (num_classes + 1), last index is no-object/background
+            probs = logits.softmax(-1)
+            scores = probs.max(-1).values
+            cat_ids = probs.argmax(-1)
+            valid_detections = torch.where(cat_ids < self.num_categories, 1, 0)
+            valid_confidences = torch.where(scores >= self.confidence_threshold, 1, 0)
+            valid_mask = valid_detections.logical_and(valid_confidences).bool()
+
         scores = scores[valid_mask]
         cat_ids = cat_ids[valid_mask]
         boxes = pred_boxes[valid_mask]
