@@ -344,15 +344,18 @@ class NMMPostprocess(PostprocessPredictions):
     directly overlap C.
     """
 
+    _agnostic_func = staticmethod(nmm)
+    _batched_func = staticmethod(batched_nmm)
+
     def __call__(self, object_predictions: list[ObjectPrediction]) -> list[ObjectPrediction]:
         object_prediction_list = ObjectPredictionList(object_predictions)
         preds_np = object_prediction_list.tonumpy()
-        func = nmm if self.class_agnostic else batched_nmm
+        func = self._agnostic_func if self.class_agnostic else self._batched_func
         keep_to_merge = func(preds_np, match_threshold=self.match_threshold, match_metric=self.match_metric)
         return _apply_merge(object_prediction_list, keep_to_merge, self.match_metric, self.match_threshold)
 
 
-class GreedyNMMPostprocess(PostprocessPredictions):
+class GreedyNMMPostprocess(NMMPostprocess):
     """Postprocessor using Greedy Non-Maximum Merging (NMM).
 
     Similar to NMM but uses a greedy strategy: each kept prediction only
@@ -360,12 +363,8 @@ class GreedyNMMPostprocess(PostprocessPredictions):
     This is faster than full NMM and produces tighter merged boxes.
     """
 
-    def __call__(self, object_predictions: list[ObjectPrediction]) -> list[ObjectPrediction]:
-        object_prediction_list = ObjectPredictionList(object_predictions)
-        preds_np = object_prediction_list.tonumpy()
-        func = greedy_nmm if self.class_agnostic else batched_greedy_nmm
-        keep_to_merge = func(preds_np, match_threshold=self.match_threshold, match_metric=self.match_metric)
-        return _apply_merge(object_prediction_list, keep_to_merge, self.match_metric, self.match_threshold)
+    _agnostic_func = staticmethod(greedy_nmm)
+    _batched_func = staticmethod(batched_greedy_nmm)
 
 
 class LSNMSPostprocess(PostprocessPredictions):
