@@ -207,43 +207,71 @@ def nmm_from_matrix(
     """NMM (non-greedy, transitive merge) using a precomputed metric matrix.
 
     Used by numpy, numba, and torchvision backends.
+
+    The inner candidate search is vectorized with numpy; only the
+    transitive merge bookkeeping remains sequential.
     """
+    n = len(sorted_idxs)
+    if n == 0:
+        return {}
+
+    # Precompute a boolean dominance matrix: dominates[i, j] = True means
+    # box i can claim box j as a merge candidate (j has lower score, or
+    # equal score with j's coordinates <= i's coordinates).
+    s = scores  # (N,)
+    cand_lower_score = s[:, None] > s[None, :]  # s[i] > s[j]: j has strictly lower score
+    score_equal = s[:, None] == s[None, :]
+
+    # Lexicographic comparison: cur_lt_cand[i, j] = coords(i) < coords(j).
+    # We need: coords(j) <= coords(i), which is NOT (coords(j) > coords(i))
+    # = NOT (coords(i) < coords(j)) = ~cur_lt_cand[i, j].
+    b = boxes  # (N, 4)
+    cur_lt_cand = np.zeros((n, n), dtype=bool)
+    still_eq = np.ones((n, n), dtype=bool)
+    for col in range(4):
+        col_lt = b[:, col][:, None] < b[:, col][None, :]
+        col_eq = b[:, col][:, None] == b[:, col][None, :]
+        cur_lt_cand |= still_eq & col_lt
+        still_eq &= col_eq
+
+    # dominates[i, j]: i can merge j (j is a valid candidate for i)
+    eye_mask = np.eye(n, dtype=bool)
+    dominates = (~eye_mask) & (cand_lower_score | (score_equal & ~cur_lt_cand))
+
+    # Threshold mask from the metric matrix
+    above_thresh = matrix >= match_threshold
+
+    # For each box, precompute the set of candidates it dominates AND exceeds threshold
+    # candidates_of[i] is the array of indices j that i can merge
+    candidates_of = dominates & above_thresh
+
+    # Sequential transitive merge bookkeeping
     keep_to_merge_list: dict[int, list[int]] = {}
-    merge_to_keep: dict[int, int] = {}
+    merge_to_keep = np.full(n, -1, dtype=np.intp)
 
-    for idx_pos in range(len(sorted_idxs)):
+    for idx_pos in range(n):
         current_idx = int(sorted_idxs[idx_pos])
+        matched = np.where(candidates_of[current_idx])[0]
 
-        matched_box_indices = []
-        for cand_pos in range(len(sorted_idxs)):
-            candidate = int(sorted_idxs[cand_pos])
-            if candidate == current_idx:
-                continue
-            if scores[candidate] > scores[current_idx]:
-                continue
-            if scores[candidate] == scores[current_idx]:
-                c_cur = (boxes[current_idx, 0], boxes[current_idx, 1], boxes[current_idx, 2], boxes[current_idx, 3])
-                c_can = (boxes[candidate, 0], boxes[candidate, 1], boxes[candidate, 2], boxes[candidate, 3])
-                if c_can > c_cur:
-                    continue
-
-            if matrix[current_idx, candidate] >= match_threshold:
-                matched_box_indices.append(candidate)
-
-        if current_idx not in merge_to_keep:
+        if merge_to_keep[current_idx] < 0:
+            # current_idx is a keeper
             keep_to_merge_list[current_idx] = []
-            for matched in matched_box_indices:
-                if matched not in merge_to_keep:
-                    keep_to_merge_list[current_idx].append(matched)
-                    merge_to_keep[matched] = current_idx
+            for m in matched:
+                m_int = int(m)
+                if merge_to_keep[m_int] < 0:
+                    keep_to_merge_list[current_idx].append(m_int)
+                    merge_to_keep[m_int] = current_idx
         else:
-            keep_idx = merge_to_keep[current_idx]
-            for matched in matched_box_indices:
-                if matched not in keep_to_merge_list.get(keep_idx, []) and matched not in merge_to_keep:
-                    if keep_idx not in keep_to_merge_list:
-                        keep_to_merge_list[keep_idx] = []
-                    keep_to_merge_list[keep_idx].append(matched)
-                    merge_to_keep[matched] = keep_idx
+            # current_idx was already merged into a keeper
+            keep_idx = int(merge_to_keep[current_idx])
+            merge_list = keep_to_merge_list.get(keep_idx, [])
+            if keep_idx not in keep_to_merge_list:
+                keep_to_merge_list[keep_idx] = merge_list
+            for m in matched:
+                m_int = int(m)
+                if m_int not in merge_list and merge_to_keep[m_int] < 0:
+                    merge_list.append(m_int)
+                    merge_to_keep[m_int] = keep_idx
 
     return keep_to_merge_list
 

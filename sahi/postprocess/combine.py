@@ -28,12 +28,17 @@ _FUNC_NAME_MAP = {
 }
 
 
+_dispatch_cache: dict[tuple[str, str], Callable[..., Any]] = {}
+
+
 def _dispatch(func_type: str) -> Callable[..., Any]:
     """Resolve and return the backend-specific function for a given operation type.
 
     Uses a two-level lookup table: first maps the requested backend name
     (e.g. "numpy") to its module path, then maps the operation type
     (e.g. "nms") to the concrete function name within that module.
+    Results are cached per (backend, func_type) pair and invalidated
+    when the backend changes.
 
     Args:
         func_type: The operation type to dispatch. One of "nms",
@@ -43,10 +48,16 @@ def _dispatch(func_type: str) -> Callable[..., Any]:
         The callable backend function for the requested operation.
     """
     backend = resolve_backend()
+    key = (backend, func_type)
+    cached = _dispatch_cache.get(key)
+    if cached is not None:
+        return cached
     module_path = _BACKEND_MODULE_MAP[backend]
     func_name = _FUNC_NAME_MAP[func_type][backend]
     module = importlib.import_module(module_path)
-    return getattr(module, func_name)
+    func = getattr(module, func_name)
+    _dispatch_cache[key] = func
+    return func
 
 
 # ---------------------------------------------------------------------------
@@ -101,10 +112,11 @@ def _batched_apply(
                 global_merge = [curr_indices_list[m] for m in local_merge_list]
                 all_results[global_keep] = global_merge
 
-    # Return in the same format as the inner function
-    sample_result = func(predictions[:1], match_metric, match_threshold) if len(predictions) > 0 else []
-    if isinstance(sample_result, list):
-        # NMS: return sorted by score
+    # Determine return type from collected results: NMS returns list,
+    # NMM returns dict.  We detect by checking if any value is non-None
+    # (NMM stores lists, NMS stores None placeholders).
+    is_nms = all(v is None for v in all_results.values())
+    if is_nms:
         keep = list(all_results.keys())
         keep.sort(key=lambda i: scores[i], reverse=True)
         return keep

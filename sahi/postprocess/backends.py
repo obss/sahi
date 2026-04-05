@@ -31,6 +31,13 @@ def set_postprocess_backend(name: str) -> None:
         raise ValueError(f"Unknown backend {name!r}. Choose from {VALID_BACKENDS}")
     _backend = name
     _resolved_cache = None  # force re-resolve
+    # Invalidate the dispatch function cache in combine module
+    try:
+        from sahi.postprocess.combine import _dispatch_cache
+
+        _dispatch_cache.clear()
+    except ImportError:
+        pass
 
 
 def get_postprocess_backend() -> str:
