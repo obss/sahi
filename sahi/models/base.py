@@ -67,6 +67,7 @@ class DetectionModel:
         self.image_size = image_size
         self._original_predictions = None
         self._object_prediction_list_per_image = None
+        self._batch_images = None
         self.set_device(device)
 
         # automatically ensure dependencies
@@ -142,13 +143,14 @@ class DetectionModel:
 
         Subclasses can override this for native batch support (e.g.
         ``UltralyticsDetectionModel`` passes the full list to YOLO for
-        true GPU batching).
+        true GPU batching, ``HuggingfaceDetectionModel`` feeds all images
+        to the processor in one call).
 
-        The default implementation runs single-image inference sequentially
-        for each image, keeping the model's internal ``_original_predictions``
-        format intact. Results are stored so that a subsequent call to
-        ``convert_original_predictions`` with per-image shift/shape lists
-        will produce correct per-image prediction lists.
+        The default does **not** run inference here.  It stores images so
+        that ``convert_original_predictions`` can call ``perform_inference``
+        per image, preserving each model's ``_original_predictions`` format.
+        Subclasses with native batch support override this to run inference
+        immediately.
 
         Args:
             images: list[np.ndarray]
