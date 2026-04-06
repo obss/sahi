@@ -1,4 +1,4 @@
-name: "Python CI (uv)"
+name: "CI"
 on:
   push:
     branches: [main]

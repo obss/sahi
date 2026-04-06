@@ -121,11 +121,33 @@ sahi predict --model_path yolo26n.pt --model_type ultralytics --source /path/to/
 
 This command will run sliced inference on all images in the specified directory and save the results.
 
+## 4. Choosing a postprocessing backend (optional)
+
+After sliced inference SAHI merges overlapping predictions with NMS or NMM. By default the best available backend is selected automatically:
+
+- **torchvision** — fastest; chosen when a CUDA GPU and `torchvision` are available.
+- **numba** — JIT-compiled loops; chosen when `numba` is installed and no GPU is present.
+- **numpy** — pure numpy; always available as the fallback.
+
+You can override the choice before running any inference:
+
+```python
+from sahi.postprocess.backends import set_postprocess_backend
+
+set_postprocess_backend("numpy")       # always available, no extra install
+set_postprocess_backend("numba")       # pip install numba
+set_postprocess_backend("torchvision") # pip install torch torchvision  (CUDA)
+set_postprocess_backend("auto")        # restore auto-detection (default)
+```
+
+See the [Postprocessing Backends guide](postprocess/backends.md) for a full reference.
+
 ## Next Steps
 
 You've now seen the basics of SAHI! To dive deeper, check out these resources:
 
 * **Prediction In-Depth**: For advanced prediction options, see the [Prediction Utilities guide](predict.md).
+* **Postprocessing Backends**: Learn how to configure NMS/NMM backends in the [Backends guide](postprocess/backends.md).
 * **Demos**: Explore our interactive notebooks in the [demo directory](../demo/) for hands-on examples with different models.
 * **COCO Tools**: Learn how to create, manipulate, and convert datasets in the [COCO Utilities guide](coco.md).
 * **All CLI Commands**: See the full list of commands in the [CLI documentation](cli.md).

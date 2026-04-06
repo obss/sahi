@@ -28,7 +28,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         token: str | None = None,
     ):
         self._processor = processor
-        self._image_shapes: list = []
+        self._original_shapes: list = []
         self._token = token
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "transformers"]
@@ -52,7 +52,8 @@ class HuggingfaceDetectionModel(DetectionModel):
 
     @property
     def image_shapes(self):
-        return self._image_shapes
+        # TODO: remove this property in a future release; use _original_shapes directly
+        return self._original_shapes
 
     @property
     def num_categories(self) -> int:
@@ -65,7 +66,8 @@ class HuggingfaceDetectionModel(DetectionModel):
         hf_token = os.getenv("HF_TOKEN", self._token)
         model = AutoModelForObjectDetection.from_pretrained(self.model_path, token=hf_token)
         if self.image_size is not None:
-            if model.base_model_prefix == "rt_detr_v2":
+            # RT-DETR family expects explicit height/width; other models use shortest_edge
+            if model.__class__.__name__.startswith("RTDetr"):
                 size = {"height": self.image_size, "width": self.image_size}
             else:
                 size = {"shortest_edge": self.image_size, "longest_edge": None}
@@ -105,16 +107,40 @@ class HuggingfaceDetectionModel(DetectionModel):
 
         with torch.no_grad():
             inputs = self.processor(images=image, return_tensors="pt")
-            inputs["pixel_values"] = inputs.pixel_values.to(self.device)
-            if hasattr(inputs, "pixel_mask"):
-                inputs["pixel_mask"] = inputs.pixel_mask.to(self.device)
+            inputs = {k: v.to(self.device) if hasattr(v, "to") else v for k, v in inputs.items()}
             outputs = self.model(**inputs)
 
         if isinstance(image, list):
-            self._image_shapes = [img.shape for img in image]
+            self._original_shapes = [img.shape for img in image]
         else:
-            self._image_shapes = [image.shape]
+            self._original_shapes = [image.shape]
         self._original_predictions = outputs
+
+    def perform_batch_inference(self, images: list[np.ndarray]):
+        """Native batch inference: process all images in a single processor + model call.
+
+        Unlike the base-class default (which runs images sequentially), this
+        feeds the entire list to the HuggingFace processor at once and executes
+        one batched forward pass.  The processor pads images to a uniform size
+        internally, so images of different resolutions are handled correctly.
+
+        This avoids setting ``_batch_images`` so
+        ``convert_original_predictions`` uses the standard multi-image path
+        rather than the sequential fallback.
+
+        Args:
+            images: List of numpy arrays (H, W, C) in RGB order.
+        """
+        self.perform_inference(images)
+
+    # Models using per-class sigmoid (no background class in logits)
+    _SIGMOID_CLS_PREFIXES = ("RTDetr", "ConditionalDetr", "DeformableDetr", "Deta", "GroundingDino")
+
+    @property
+    def _uses_sigmoid_cls(self) -> bool:
+        """True for models that use per-class sigmoid instead of softmax+background."""
+        cls_name = self.model.__class__.__name__
+        return any(cls_name.startswith(p) for p in self._SIGMOID_CLS_PREFIXES)
 
     def get_valid_predictions(self, logits, pred_boxes) -> tuple:
         """
@@ -128,12 +154,20 @@ class HuggingfaceDetectionModel(DetectionModel):
         """
         import torch
 
-        probs = logits.softmax(-1)
-        scores = probs.max(-1).values
-        cat_ids = probs.argmax(-1)
-        valid_detections = torch.where(cat_ids < self.num_categories, 1, 0)
-        valid_confidences = torch.where(scores >= self.confidence_threshold, 1, 0)
-        valid_mask = valid_detections.logical_and(valid_confidences)
+        if self._uses_sigmoid_cls:
+            # RT-DETR family: per-class sigmoid, logits shape (Q, num_classes) — no background class
+            probs = logits.sigmoid()
+            scores, cat_ids = probs.max(-1)
+            valid_mask = scores >= self.confidence_threshold
+        else:
+            # DETR family: softmax over (num_classes + 1), last index is no-object/background
+            probs = logits.softmax(-1)
+            scores = probs.max(-1).values
+            cat_ids = probs.argmax(-1)
+            valid_detections = torch.where(cat_ids < self.num_categories, 1, 0)
+            valid_confidences = torch.where(scores >= self.confidence_threshold, 1, 0)
+            valid_mask = valid_detections.logical_and(valid_confidences).bool()
+
         scores = scores[valid_mask]
         cat_ids = cat_ids[valid_mask]
         boxes = pred_boxes[valid_mask]

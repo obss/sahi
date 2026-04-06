@@ -343,6 +343,59 @@ def test_get_sliced_prediction_yolo11():
     assert num_car > 0
 
 
+def test_get_sliced_prediction_batch_size():
+    """Verifies that batch_size > 1 produces identical results to batch_size=1."""
+    download_yolo11n_model()
+
+    yolo11_detection_model = UltralyticsDetectionModel(
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=MODEL_DEVICE,
+        category_remapping=None,
+        load_at_init=False,
+        image_size=IMAGE_SIZE,
+    )
+    yolo11_detection_model.load_model()
+
+    image_path = "tests/data/small-vehicles1.jpeg"
+    common_kwargs = dict(
+        image=image_path,
+        detection_model=yolo11_detection_model,
+        slice_height=512,
+        slice_width=512,
+        overlap_height_ratio=0.1,
+        overlap_width_ratio=0.2,
+        perform_standard_pred=False,
+        postprocess_type="GREEDYNMM",
+        postprocess_match_threshold=0.5,
+        postprocess_match_metric="IOS",
+        postprocess_class_agnostic=True,
+    )
+
+    result_bs1 = get_sliced_prediction(**common_kwargs, batch_size=1)
+    result_bs4 = get_sliced_prediction(**common_kwargs, batch_size=4)
+
+    preds_bs1 = result_bs1.object_prediction_list
+    preds_bs4 = result_bs4.object_prediction_list
+
+    assert len(preds_bs1) > 0, "batch_size=1 should produce predictions"
+    assert len(preds_bs1) == len(preds_bs4), (
+        f"batch_size=1 gave {len(preds_bs1)} predictions, batch_size=4 gave {len(preds_bs4)}"
+    )
+
+    def serialize_pred(pred):
+        return (
+            pred.category.id,
+            pred.category.name,
+            tuple(round(c, 2) for c in pred.bbox.to_voc_bbox()),
+            round(pred.score.value, 4),
+        )
+
+    set_bs1 = sorted(serialize_pred(p) for p in preds_bs1)
+    set_bs4 = sorted(serialize_pred(p) for p in preds_bs4)
+    assert set_bs1 == set_bs4, "batch_size=1 and batch_size=4 should produce identical predictions"
+
+
 @pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
 def test_mmdet_yolox_tiny_prediction():
     # Skip if mmdet is not installed

@@ -1,452 +1,277 @@
 from __future__ import annotations
 
+import importlib
+from abc import ABC, abstractmethod
+from typing import Any, Callable
+
 import numpy as np
-import torch
-from shapely import STRtree, box
 
 from sahi.logger import logger
+from sahi.postprocess.backends import resolve_backend
 from sahi.postprocess.utils import ObjectPredictionList, has_match, merge_object_prediction_pair
 from sahi.prediction import ObjectPrediction
-from sahi.utils.import_utils import check_requirements
+
+# ---------------------------------------------------------------------------
+# Backend dispatch
+# ---------------------------------------------------------------------------
+
+_BACKEND_MODULE_MAP = {
+    "numpy": "sahi.postprocess._numpy_backend",
+    "numba": "sahi.postprocess._numba_backend",
+    "torchvision": "sahi.postprocess._torchvision_backend",
+}
+
+_FUNC_NAME_MAP = {
+    "nms": {"numpy": "nms_numpy", "numba": "nms_numba", "torchvision": "nms_torchvision"},
+    "greedy_nmm": {"numpy": "greedy_nmm_numpy", "numba": "greedy_nmm_numba", "torchvision": "greedy_nmm_torchvision"},
+    "nmm": {"numpy": "nmm_numpy", "numba": "nmm_numba", "torchvision": "nmm_torchvision"},
+}
 
 
-def batched_nms(predictions: torch.Tensor, match_metric: str = "IOU", match_threshold: float = 0.5) -> list[int]:
-    """Apply non-maximum suppression to avoid detecting too many overlapping bounding boxes for a given object.
+_dispatch_cache: dict[tuple[str, str], Callable[..., Any]] = {}
+
+
+def _dispatch(func_type: str) -> Callable[..., Any]:
+    """Resolve and return the backend-specific function for a given operation type.
+
+    Uses a two-level lookup table: first maps the requested backend name
+    (e.g. "numpy") to its module path, then maps the operation type
+    (e.g. "nms") to the concrete function name within that module.
+    Results are cached per (backend, func_type) pair and invalidated
+    when the backend changes.
 
     Args:
-        predictions: (tensor) The location preds for the image
-            along with the class predscores, Shape: [num_boxes,5].
-        match_metric: (str) IOU or IOS
-        match_threshold: (float) The overlap thresh for
-            match metric.
-    Returns:
-        A list of filtered indexes, Shape: [ ,]
-    """
+        func_type: The operation type to dispatch. One of "nms",
+            "greedy_nmm", or "nmm".
 
-    scores = predictions[:, 4].squeeze()
-    category_ids = predictions[:, 5].squeeze()
-    keep_mask = torch.zeros_like(category_ids, dtype=torch.bool)
-    for category_id in torch.unique(category_ids):
-        curr_indices = torch.where(category_ids == category_id)[0]
-        curr_keep_indices = nms(predictions[curr_indices], match_metric, match_threshold)
-        keep_mask[curr_indices[curr_keep_indices]] = True
-    keep_indices = torch.where(keep_mask)[0]
-    # sort selected indices by their scores
-    keep_indices = keep_indices[scores[keep_indices].sort(descending=True)[1]].tolist()
-    return keep_indices
+    Returns:
+        The callable backend function for the requested operation.
+    """
+    backend = resolve_backend()
+    key = (backend, func_type)
+    cached = _dispatch_cache.get(key)
+    if cached is not None:
+        return cached
+    module_path = _BACKEND_MODULE_MAP[backend]
+    func_name = _FUNC_NAME_MAP[func_type][backend]
+    module = importlib.import_module(module_path)
+    func = getattr(module, func_name)
+    _dispatch_cache[key] = func
+    return func
+
+
+# ---------------------------------------------------------------------------
+# Batched (per-category) wrapper — shared logic for all batched_* functions
+# ---------------------------------------------------------------------------
+
+
+def _batched_apply(
+    predictions: np.ndarray,
+    func: Callable[..., Any],
+    match_metric: str,
+    match_threshold: float,
+) -> list[int] | dict[int, list[int]]:
+    """Apply a postprocessing function per category and remap indices to global space.
+
+    Works for both suppression functions (returning list[int]) and
+    merging functions (returning dict[int, list[int]]).
+
+    Args:
+        predictions: Array of shape (N, 6) with columns
+            [x1, y1, x2, y2, score, category_id].
+        func: The postprocessing function to apply per category (e.g. nms,
+            greedy_nmm, nmm).
+        match_metric: Metric for overlap computation, "IOU" or "IOS".
+        match_threshold: Minimum overlap value to consider a match.
+
+    Returns:
+        For NMS-style functions: a list of kept global indices sorted by
+        score descending.
+        For NMM-style functions: a dict mapping each kept global index to
+        a list of merged global indices.
+    """
+    category_ids = predictions[:, 5]
+    scores = predictions[:, 4]
+
+    # Collect results from each category
+    all_results = {}
+    for category_id in np.unique(category_ids):
+        curr_indices = np.where(category_ids == category_id)[0]
+        result = func(predictions[curr_indices], match_metric, match_threshold)
+        curr_indices_list = curr_indices.tolist()
+
+        if isinstance(result, list):
+            # NMS-style: list of kept indices
+            for local_idx in result:
+                global_idx = curr_indices_list[local_idx]
+                all_results[global_idx] = None  # placeholder for ordering
+        else:
+            # NMM-style: dict of keeper → merged list
+            for local_keep, local_merge_list in result.items():
+                global_keep = curr_indices_list[local_keep]
+                global_merge = [curr_indices_list[m] for m in local_merge_list]
+                all_results[global_keep] = global_merge
+
+    # Determine return type from collected results: NMS returns list,
+    # NMM returns dict.  We detect by checking if any value is non-None
+    # (NMM stores lists, NMS stores None placeholders).
+    is_nms = all(v is None for v in all_results.values())
+    if is_nms:
+        keep = list(all_results.keys())
+        keep.sort(key=lambda i: scores[i], reverse=True)
+        return keep
+    else:
+        return all_results
+
+
+# ---------------------------------------------------------------------------
+# Public API — unchanged signatures
+# ---------------------------------------------------------------------------
 
 
 def nms(
-    predictions: torch.Tensor,
+    predictions: np.ndarray,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ) -> list[int]:
-    """
-    Optimized non-maximum suppression for axis-aligned bounding boxes using STRTree.
+    """Non-maximum suppression for axis-aligned bounding boxes.
+
+    Dispatches to the resolved backend (numpy, numba, or torchvision).
 
     Args:
-        predictions: (tensor) The location preds for the image along with the class
-            predscores, Shape: [num_boxes,5].
-        match_metric: (str) IOU or IOS
-        match_threshold: (float) The overlap thresh for match metric.
+        predictions: Array of shape (N, 6) with columns
+            [x1, y1, x2, y2, score, category_id].
+        match_metric: Overlap metric, "IOU" or "IOS".
+        match_threshold: Minimum overlap to suppress a lower-scored box.
 
     Returns:
-        A list of filtered indexes, Shape: [ ,]
+        List of indices of the kept predictions, sorted by score descending.
     """
     if len(predictions) == 0:
         return []
-
-    # Ensure predictions are on CPU and convert to numpy
-    if predictions.device.type != "cpu":
-        predictions = predictions.cpu()
-
-    predictions_np = predictions.numpy()
-
-    # Extract coordinates and scores
-    x1 = predictions_np[:, 0]
-    y1 = predictions_np[:, 1]
-    x2 = predictions_np[:, 2]
-    y2 = predictions_np[:, 3]
-    scores = predictions_np[:, 4]
-
-    # Calculate areas
-    areas = (x2 - x1) * (y2 - y1)
-
-    # Create Shapely boxes (vectorized)
-    boxes = box(x1, y1, x2, y2)
-
-    # Sort indices by score (descending)
-    sorted_idxs = np.argsort(scores)[::-1]
-
-    # Build STRtree
-    tree = STRtree(boxes)
-
-    keep = []
-    suppressed = set()
-
-    for current_idx in sorted_idxs:
-        if current_idx in suppressed:
-            continue
-
-        keep.append(current_idx)
-        current_box = boxes[current_idx]
-        current_area = areas[current_idx]
-
-        # Query potential intersections using STRtree
-        candidate_idxs = tree.query(current_box)
-
-        for candidate_idx in candidate_idxs:
-            if candidate_idx == current_idx or candidate_idx in suppressed:
-                continue
-
-            # Skip candidates with higher scores (already processed)
-            if scores[candidate_idx] > scores[current_idx]:
-                continue
-
-            # For equal scores, use deterministic tie-breaking based on box coordinates
-            if scores[candidate_idx] == scores[current_idx]:
-                # Use box coordinates for stable ordering
-                current_coords = (
-                    x1[current_idx],
-                    y1[current_idx],
-                    x2[current_idx],
-                    y2[current_idx],
-                )
-                candidate_coords = (
-                    x1[candidate_idx],
-                    y1[candidate_idx],
-                    x2[candidate_idx],
-                    y2[candidate_idx],
-                )
-
-                # Compare coordinates lexicographically
-                if candidate_coords > current_coords:
-                    continue
-
-            # Calculate intersection area
-            candidate_box = boxes[candidate_idx]
-            intersection = current_box.intersection(candidate_box).area
-
-            # Calculate metric
-            if match_metric == "IOU":
-                union = current_area + areas[candidate_idx] - intersection
-                metric = intersection / union if union > 0 else 0
-            elif match_metric == "IOS":
-                smaller = min(current_area, areas[candidate_idx])
-                metric = intersection / smaller if smaller > 0 else 0
-            else:
-                raise ValueError("Invalid match_metric")
-
-            # Suppress if overlap exceeds threshold
-            if metric >= match_threshold:
-                suppressed.add(candidate_idx)
-
-    return keep
+    return _dispatch("nms")(predictions, match_metric, match_threshold)
 
 
-def batched_greedy_nmm(
-    object_predictions_as_tensor: torch.Tensor,
+def batched_nms(
+    predictions: np.ndarray,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
-) -> dict[int, list[int]]:
-    """Apply greedy version of non-maximum merging per category to avoid detecting too many overlapping bounding boxes
-    for a given object.
+) -> list[int]:
+    """Apply non-maximum suppression independently per category.
 
     Args:
-        object_predictions_as_tensor: (tensor) The location preds for the image
-            along with the class predscores, Shape: [num_boxes,5].
-        match_metric: (str) IOU or IOS
-        match_threshold: (float) The overlap thresh for
-            match metric.
+        predictions: Array of shape (N, 6) with columns
+            [x1, y1, x2, y2, score, category_id].
+        match_metric: Overlap metric, "IOU" or "IOS".
+        match_threshold: Minimum overlap to suppress a lower-scored box.
+
     Returns:
-        keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
-        to keep to a list of prediction indices to be merged.
+        List of indices of the kept predictions, sorted by score descending.
     """
-    category_ids = object_predictions_as_tensor[:, 5].squeeze()
-    keep_to_merge_list = {}
-    for category_id in torch.unique(category_ids):
-        curr_indices = torch.where(category_ids == category_id)[0]
-        curr_keep_to_merge_list = greedy_nmm(object_predictions_as_tensor[curr_indices], match_metric, match_threshold)
-        curr_indices_list = curr_indices.tolist()
-        for curr_keep, curr_merge_list in curr_keep_to_merge_list.items():
-            keep = curr_indices_list[curr_keep]
-            merge_list = [curr_indices_list[curr_merge_ind] for curr_merge_ind in curr_merge_list]
-            keep_to_merge_list[keep] = merge_list
-    return keep_to_merge_list
+    return _batched_apply(predictions, nms, match_metric, match_threshold)
 
 
 def greedy_nmm(
-    object_predictions_as_tensor: torch.Tensor,
+    predictions: np.ndarray,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
-    """
-    Optimized greedy non-maximum merging for axis-aligned bounding boxes using STRTree.
+    """Greedy non-maximum merging for axis-aligned bounding boxes.
+
+    Instead of discarding overlapping boxes, merges them into the
+    highest-scored box. Dispatches to the resolved backend.
 
     Args:
-        object_predictions_as_tensor: (tensor) The location preds for the image
-            along with the class predscores, Shape: [num_boxes,5].
-        match_metric: (str) IOU or IOS
-        match_threshold: (float) The overlap thresh for match metric.
+        predictions: Array of shape (N, 6) with columns
+            [x1, y1, x2, y2, score, category_id].
+        match_metric: Overlap metric, "IOU" or "IOS".
+        match_threshold: Minimum overlap to merge a lower-scored box.
+
     Returns:
-        keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
-        to keep to a list of prediction indices to be merged.
+        Dict mapping each kept index to a list of indices merged into it.
     """
-    # Extract coordinates and scores as tensors
-    x1 = object_predictions_as_tensor[:, 0]
-    y1 = object_predictions_as_tensor[:, 1]
-    x2 = object_predictions_as_tensor[:, 2]
-    y2 = object_predictions_as_tensor[:, 3]
-    scores = object_predictions_as_tensor[:, 4]
-
-    # Calculate areas as tensor (vectorized operation)
-    areas = (x2 - x1) * (y2 - y1)
-
-    # Create Shapely boxes only once
-    boxes = []
-    for i in range(len(object_predictions_as_tensor)):
-        boxes.append(
-            box(
-                x1[i].item(),  # Convert only individual values
-                y1[i].item(),
-                x2[i].item(),
-                y2[i].item(),
-            )
-        )
-
-    # Sort indices by score (descending) using torch
-    sorted_idxs = torch.argsort(scores, descending=True).tolist()
-
-    # Build STRtree
-    tree = STRtree(boxes)
-
-    keep_to_merge_list = {}
-    suppressed = set()
-
-    for current_idx in sorted_idxs:
-        if current_idx in suppressed:
-            continue
-
-        current_box = boxes[current_idx]
-        current_area = areas[current_idx].item()  # Convert only when needed
-
-        # Query potential intersections using STRtree
-        candidate_idxs = tree.query(current_box)
-
-        merge_list = []
-        for candidate_idx in candidate_idxs:
-            if candidate_idx == current_idx or candidate_idx in suppressed:
-                continue
-
-            # Only consider candidates with lower or equal score
-            if scores[candidate_idx] > scores[current_idx]:
-                continue
-
-            # For equal scores, use deterministic tie-breaking based on box coordinates
-            if scores[candidate_idx] == scores[current_idx]:
-                # Use box coordinates for stable ordering
-                current_coords = (
-                    x1[current_idx].item(),
-                    y1[current_idx].item(),
-                    x2[current_idx].item(),
-                    y2[current_idx].item(),
-                )
-                candidate_coords = (
-                    x1[candidate_idx].item(),
-                    y1[candidate_idx].item(),
-                    x2[candidate_idx].item(),
-                    y2[candidate_idx].item(),
-                )
-
-                # Compare coordinates lexicographically
-                if candidate_coords > current_coords:
-                    continue
-
-            # Calculate intersection area
-            candidate_box = boxes[candidate_idx]
-            intersection = current_box.intersection(candidate_box).area
-
-            # Calculate metric
-            if match_metric == "IOU":
-                union = current_area + areas[candidate_idx].item() - intersection
-                metric = intersection / union if union > 0 else 0
-            elif match_metric == "IOS":
-                smaller = min(current_area, areas[candidate_idx].item())
-                metric = intersection / smaller if smaller > 0 else 0
-            else:
-                raise ValueError("Invalid match_metric")
-
-            # Add to merge list if overlap exceeds threshold
-            if metric >= match_threshold:
-                merge_list.append(candidate_idx)
-                suppressed.add(candidate_idx)
-
-        keep_to_merge_list[int(current_idx)] = [int(idx) for idx in merge_list]
-
-    return keep_to_merge_list
+    return _dispatch("greedy_nmm")(predictions, match_metric, match_threshold)
 
 
-def batched_nmm(
-    object_predictions_as_tensor: torch.Tensor,
+def batched_greedy_nmm(
+    predictions: np.ndarray,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
-    """Apply non-maximum merging per category to avoid detecting too many overlapping bounding boxes for a given object.
+    """Apply greedy non-maximum merging independently per category.
 
     Args:
-        object_predictions_as_tensor: (tensor) The location preds for the image
-            along with the class predscores, Shape: [num_boxes,5].
-        match_metric: (str) IOU or IOS
-        match_threshold: (float) The overlap thresh for
-            match metric.
+        predictions: Array of shape (N, 6) with columns
+            [x1, y1, x2, y2, score, category_id].
+        match_metric: Overlap metric, "IOU" or "IOS".
+        match_threshold: Minimum overlap to merge a lower-scored box.
+
     Returns:
-        keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
-        to keep to a list of prediction indices to be merged.
+        Dict mapping each kept index to a list of indices merged into it.
     """
-    category_ids = object_predictions_as_tensor[:, 5].squeeze()
-    keep_to_merge_list = {}
-    for category_id in torch.unique(category_ids):
-        curr_indices = torch.where(category_ids == category_id)[0]
-        curr_keep_to_merge_list = nmm(object_predictions_as_tensor[curr_indices], match_metric, match_threshold)
-        curr_indices_list = curr_indices.tolist()
-        for curr_keep, curr_merge_list in curr_keep_to_merge_list.items():
-            keep = curr_indices_list[curr_keep]
-            merge_list = [curr_indices_list[curr_merge_ind] for curr_merge_ind in curr_merge_list]
-            keep_to_merge_list[keep] = merge_list
-    return keep_to_merge_list
+    return _batched_apply(predictions, greedy_nmm, match_metric, match_threshold)
 
 
 def nmm(
-    object_predictions_as_tensor: torch.Tensor,
+    predictions: np.ndarray,
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
-    """Apply non-maximum merging to avoid detecting too many overlapping bounding boxes for a given object.
+    """Non-maximum merging (non-greedy, transitive) for axis-aligned bounding boxes.
+
+    Unlike greedy NMM, this variant allows transitive merging: if box A
+    merges with B and B merges with C, all three are merged together.
+    Dispatches to the resolved backend.
 
     Args:
-        object_predictions_as_tensor: (tensor) The location preds for the image
-            along with the class predscores, Shape: [num_boxes,5].
-        match_metric: (str) IOU or IOS
-        match_threshold: (float) The overlap thresh for match metric.
+        predictions: Array of shape (N, 6) with columns
+            [x1, y1, x2, y2, score, category_id].
+        match_metric: Overlap metric, "IOU" or "IOS".
+        match_threshold: Minimum overlap to merge a lower-scored box.
+
     Returns:
-        keep_to_merge_list: (dict[int, list[int]]) mapping from prediction indices
-        to keep to a list of prediction indices to be merged.
+        Dict mapping each kept index to a list of indices merged into it.
     """
-    # Extract coordinates and scores as tensors
-    x1 = object_predictions_as_tensor[:, 0]
-    y1 = object_predictions_as_tensor[:, 1]
-    x2 = object_predictions_as_tensor[:, 2]
-    y2 = object_predictions_as_tensor[:, 3]
-    scores = object_predictions_as_tensor[:, 4]
-
-    # Calculate areas as tensor (vectorized operation)
-    areas = (x2 - x1) * (y2 - y1)
-
-    # Create Shapely boxes only once
-    boxes = []
-    for i in range(len(object_predictions_as_tensor)):
-        boxes.append(
-            box(
-                x1[i].item(),  # Convert only individual values
-                y1[i].item(),
-                x2[i].item(),
-                y2[i].item(),
-            )
-        )
-
-    # Sort indices by score (descending) using torch
-    sorted_idxs = torch.argsort(scores, descending=True).tolist()
-
-    # Build STRtree
-    tree = STRtree(boxes)
-
-    keep_to_merge_list = {}
-    merge_to_keep = {}
-
-    for current_idx in sorted_idxs:
-        current_box = boxes[current_idx]
-        current_area = areas[current_idx].item()  # Convert only when needed
-
-        # Query potential intersections using STRtree
-        candidate_idxs = tree.query(current_box)
-
-        matched_box_indices = []
-        for candidate_idx in candidate_idxs:
-            if candidate_idx == current_idx:
-                continue
-
-            # Only consider candidates with lower or equal score
-            if scores[candidate_idx] > scores[current_idx]:
-                continue
-
-            # For equal scores, use deterministic tie-breaking based on box coordinates
-            if scores[candidate_idx] == scores[current_idx]:
-                # Use box coordinates for stable ordering
-                current_coords = (
-                    x1[current_idx].item(),
-                    y1[current_idx].item(),
-                    x2[current_idx].item(),
-                    y2[current_idx].item(),
-                )
-                candidate_coords = (
-                    x1[candidate_idx].item(),
-                    y1[candidate_idx].item(),
-                    x2[candidate_idx].item(),
-                    y2[candidate_idx].item(),
-                )
-
-                # Compare coordinates lexicographically
-                if candidate_coords > current_coords:
-                    continue
-
-            # Calculate intersection area
-            candidate_box = boxes[candidate_idx]
-            intersection = current_box.intersection(candidate_box).area
-
-            # Calculate metric
-            if match_metric == "IOU":
-                union = current_area + areas[candidate_idx].item() - intersection
-                metric = intersection / union if union > 0 else 0
-            elif match_metric == "IOS":
-                smaller = min(current_area, areas[candidate_idx].item())
-                metric = intersection / smaller if smaller > 0 else 0
-            else:
-                raise ValueError("Invalid match_metric")
-
-            # Add to matched list if overlap exceeds threshold
-            if metric >= match_threshold:
-                matched_box_indices.append(candidate_idx)
-
-        # Convert current_idx to native Python int
-        current_idx_native = int(current_idx)
-
-        # Create keep_ind to merge_ind_list mapping
-        if current_idx_native not in merge_to_keep:
-            keep_to_merge_list[current_idx_native] = []
-
-            for matched_box_idx in matched_box_indices:
-                matched_box_idx_native = int(matched_box_idx)
-                if matched_box_idx_native not in merge_to_keep:
-                    keep_to_merge_list[current_idx_native].append(matched_box_idx_native)
-                    merge_to_keep[matched_box_idx_native] = current_idx_native
-        else:
-            keep_idx = merge_to_keep[current_idx_native]
-            for matched_box_idx in matched_box_indices:
-                matched_box_idx_native = int(matched_box_idx)
-                if (
-                    matched_box_idx_native not in keep_to_merge_list.get(keep_idx, [])
-                    and matched_box_idx_native not in merge_to_keep
-                ):
-                    if keep_idx not in keep_to_merge_list:
-                        keep_to_merge_list[keep_idx] = []
-                    keep_to_merge_list[keep_idx].append(matched_box_idx_native)
-                    merge_to_keep[matched_box_idx_native] = keep_idx
-
-    return keep_to_merge_list
+    return _dispatch("nmm")(predictions, match_metric, match_threshold)
 
 
-class PostprocessPredictions:
-    """Utilities for calculating IOU/IOS based match for given ObjectPredictions."""
+def batched_nmm(
+    predictions: np.ndarray,
+    match_metric: str = "IOU",
+    match_threshold: float = 0.5,
+) -> dict[int, list[int]]:
+    """Apply non-maximum merging (non-greedy, transitive) independently per category.
+
+    Args:
+        predictions: Array of shape (N, 6) with columns
+            [x1, y1, x2, y2, score, category_id].
+        match_metric: Overlap metric, "IOU" or "IOS".
+        match_threshold: Minimum overlap to merge a lower-scored box.
+
+    Returns:
+        Dict mapping each kept index to a list of indices merged into it.
+    """
+    return _batched_apply(predictions, nmm, match_metric, match_threshold)
+
+
+# ---------------------------------------------------------------------------
+# Postprocess classes
+# ---------------------------------------------------------------------------
+
+
+class PostprocessPredictions(ABC):
+    """Abstract base class for postprocessing object prediction lists.
+
+    Subclasses implement a specific strategy (NMS, NMM, greedy NMM, etc.)
+    to reduce overlapping detections produced by sliced inference.
+
+    Args:
+        match_threshold: Minimum overlap value (IoU or IoS) to consider
+            two predictions as matching.
+        match_metric: Overlap metric, "IOU" or "IOS".
+        class_agnostic: If True, apply postprocessing across all
+            categories. If False, apply per category independently.
+    """
 
     def __init__(
         self,
@@ -458,115 +283,115 @@ class PostprocessPredictions:
         self.class_agnostic = class_agnostic
         self.match_metric = match_metric
 
-        check_requirements(["torch"])
-
+    @abstractmethod
     def __call__(self, predictions: list[ObjectPrediction]) -> list[ObjectPrediction]:
-        raise NotImplementedError()
+        pass
+
+
+def _apply_merge(
+    object_prediction_list: ObjectPredictionList,
+    keep_to_merge_list: dict[int, list[int]],
+    match_metric: str,
+    match_threshold: float,
+) -> list[ObjectPrediction]:
+    """Apply merge operations using the keep-to-merge mapping.
+
+    Shared merge logic for NMM and GreedyNMM postprocess classes.
+    For each kept prediction, iteratively merges all matched predictions
+    (bounding boxes, masks, scores, and categories) into it.
+
+    Args:
+        object_prediction_list: The full list of object predictions.
+        keep_to_merge_list: Dict mapping each kept index to a list of
+            indices that should be merged into it.
+        match_metric: Overlap metric used for the merge check, "IOU"
+            or "IOS".
+        match_threshold: Minimum overlap to confirm and apply a merge.
+
+    Returns:
+        List of merged ObjectPrediction instances.
+    """
+    selected = []
+    for keep_ind, merge_ind_list in keep_to_merge_list.items():
+        for merge_ind in merge_ind_list:
+            if has_match(
+                object_prediction_list[keep_ind].tolist(),
+                object_prediction_list[merge_ind].tolist(),
+                match_metric,
+                match_threshold,
+            ):
+                object_prediction_list[keep_ind] = merge_object_prediction_pair(
+                    object_prediction_list[keep_ind].tolist(),
+                    object_prediction_list[merge_ind].tolist(),
+                )
+        selected.append(object_prediction_list[keep_ind].tolist())
+    return selected
 
 
 class NMSPostprocess(PostprocessPredictions):
-    def __call__(
-        self,
-        object_predictions: list[ObjectPrediction],
-    ) -> list[ObjectPrediction]:
+    """Postprocessor using Non-Maximum Suppression (NMS).
+
+    Keeps the highest-scored prediction among overlapping boxes and
+    discards the rest. Does not merge bounding boxes or masks.
+    """
+
+    def __call__(self, object_predictions: list[ObjectPrediction]) -> list[ObjectPrediction]:
         object_prediction_list = ObjectPredictionList(object_predictions)
-        object_predictions_as_torch = object_prediction_list.totensor()
-        if self.class_agnostic:
-            keep = nms(
-                object_predictions_as_torch, match_threshold=self.match_threshold, match_metric=self.match_metric
-            )
-        else:
-            keep = batched_nms(
-                object_predictions_as_torch, match_threshold=self.match_threshold, match_metric=self.match_metric
-            )
+        preds_np = object_prediction_list.tonumpy()
+        func = nms if self.class_agnostic else batched_nms
+        keep = func(preds_np, match_threshold=self.match_threshold, match_metric=self.match_metric)
 
-        selected_object_predictions = object_prediction_list[keep].tolist()
-        if not isinstance(selected_object_predictions, list):
-            selected_object_predictions = [selected_object_predictions]
-
-        return selected_object_predictions
+        selected = object_prediction_list[keep].tolist()
+        if not isinstance(selected, list):
+            selected = [selected]
+        return selected
 
 
 class NMMPostprocess(PostprocessPredictions):
-    def __call__(
-        self,
-        object_predictions: list[ObjectPrediction],
-    ) -> list[ObjectPrediction]:
+    """Postprocessor using Non-Maximum Merging (NMM) with transitive merging.
+
+    Instead of discarding overlapping detections, merges their bounding
+    boxes, masks, and scores. Uses non-greedy transitive merging: if A
+    overlaps B and B overlaps C, all three are merged even if A does not
+    directly overlap C.
+    """
+
+    _agnostic_func = staticmethod(nmm)
+    _batched_func = staticmethod(batched_nmm)
+
+    def __call__(self, object_predictions: list[ObjectPrediction]) -> list[ObjectPrediction]:
         object_prediction_list = ObjectPredictionList(object_predictions)
-        object_predictions_as_torch = object_prediction_list.totensor()
-        if self.class_agnostic:
-            keep_to_merge_list = nmm(
-                object_predictions_as_torch,
-                match_threshold=self.match_threshold,
-                match_metric=self.match_metric,
-            )
-        else:
-            keep_to_merge_list = batched_nmm(
-                object_predictions_as_torch,
-                match_threshold=self.match_threshold,
-                match_metric=self.match_metric,
-            )
-
-        selected_object_predictions = []
-        for keep_ind, merge_ind_list in keep_to_merge_list.items():
-            for merge_ind in merge_ind_list:
-                if has_match(
-                    object_prediction_list[keep_ind].tolist(),
-                    object_prediction_list[merge_ind].tolist(),
-                    self.match_metric,
-                    self.match_threshold,
-                ):
-                    object_prediction_list[keep_ind] = merge_object_prediction_pair(
-                        object_prediction_list[keep_ind].tolist(), object_prediction_list[merge_ind].tolist()
-                    )
-            selected_object_predictions.append(object_prediction_list[keep_ind].tolist())
-
-        return selected_object_predictions
+        preds_np = object_prediction_list.tonumpy()
+        func = self._agnostic_func if self.class_agnostic else self._batched_func
+        keep_to_merge = func(preds_np, match_threshold=self.match_threshold, match_metric=self.match_metric)
+        return _apply_merge(object_prediction_list, keep_to_merge, self.match_metric, self.match_threshold)
 
 
-class GreedyNMMPostprocess(PostprocessPredictions):
-    def __call__(
-        self,
-        object_predictions: list[ObjectPrediction],
-    ) -> list[ObjectPrediction]:
-        object_prediction_list = ObjectPredictionList(object_predictions)
-        object_predictions_as_torch = object_prediction_list.totensor()
-        if self.class_agnostic:
-            keep_to_merge_list = greedy_nmm(
-                object_predictions_as_torch,
-                match_threshold=self.match_threshold,
-                match_metric=self.match_metric,
-            )
-        else:
-            keep_to_merge_list = batched_greedy_nmm(
-                object_predictions_as_torch,
-                match_threshold=self.match_threshold,
-                match_metric=self.match_metric,
-            )
+class GreedyNMMPostprocess(NMMPostprocess):
+    """Postprocessor using Greedy Non-Maximum Merging (NMM).
 
-        selected_object_predictions = []
-        for keep_ind, merge_ind_list in keep_to_merge_list.items():
-            for merge_ind in merge_ind_list:
-                if has_match(
-                    object_prediction_list[keep_ind].tolist(),
-                    object_prediction_list[merge_ind].tolist(),
-                    self.match_metric,
-                    self.match_threshold,
-                ):
-                    object_prediction_list[keep_ind] = merge_object_prediction_pair(
-                        object_prediction_list[keep_ind].tolist(), object_prediction_list[merge_ind].tolist()
-                    )
-            selected_object_predictions.append(object_prediction_list[keep_ind].tolist())
+    Similar to NMM but uses a greedy strategy: each kept prediction only
+    merges boxes that directly overlap with it (no transitive merging).
+    This is faster than full NMM and produces tighter merged boxes.
+    """
 
-        return selected_object_predictions
+    _agnostic_func = staticmethod(greedy_nmm)
+    _batched_func = staticmethod(batched_greedy_nmm)
 
 
 class LSNMSPostprocess(PostprocessPredictions):
-    # https://github.com/remydubois/lsnms/blob/10b8165893db5bfea4a7cb23e268a502b35883cf/lsnms/nms.py#L62
-    def __call__(
-        self,
-        object_predictions: list[ObjectPrediction],
-    ) -> list[ObjectPrediction]:
+    """Postprocessor using Locality-Sensitive NMS from the ``lsnms`` package.
+
+    Uses a spatial index for fast neighbor lookup, making it efficient for
+    large numbers of predictions. Only supports IoU metric (not IoS).
+    Requires the ``lsnms`` package (``pip install lsnms>0.3.1``).
+
+    Note:
+        This postprocessor is experimental and not recommended for
+        production use.
+    """
+
+    def __call__(self, object_predictions: list[ObjectPrediction]) -> list[ObjectPrediction]:
         try:
             from lsnms import nms
         except ModuleNotFoundError:
@@ -575,23 +400,22 @@ class LSNMSPostprocess(PostprocessPredictions):
             )
 
         if self.match_metric == "IOS":
-            NotImplementedError(f"match_metric={self.match_metric} is not supported for LSNMSPostprocess")
+            raise NotImplementedError(f"match_metric={self.match_metric} is not supported for LSNMSPostprocess")
 
         logger.warning("LSNMSPostprocess is experimental and not recommended to use.")
 
         object_prediction_list = ObjectPredictionList(object_predictions)
-        object_predictions_as_numpy = object_prediction_list.tonumpy()
+        preds_np = object_prediction_list.tonumpy()
 
-        boxes = object_predictions_as_numpy[:, :4]
-        scores = object_predictions_as_numpy[:, 4]
-        class_ids = object_predictions_as_numpy[:, 5].astype("uint8")
+        boxes = preds_np[:, :4]
+        scores = preds_np[:, 4]
+        class_ids = preds_np[:, 5].astype("uint8")
 
         keep = nms(
             boxes, scores, iou_threshold=self.match_threshold, class_ids=None if self.class_agnostic else class_ids
         )
 
-        selected_object_predictions = object_prediction_list[keep].tolist()
-        if not isinstance(selected_object_predictions, list):
-            selected_object_predictions = [selected_object_predictions]
-
-        return selected_object_predictions
+        selected = object_prediction_list[keep].tolist()
+        if not isinstance(selected, list):
+            selected = [selected]
+        return selected
