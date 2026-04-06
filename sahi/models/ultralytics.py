@@ -20,6 +20,20 @@ class UltralyticsDetectionModel(DetectionModel):
     """
 
     def __init__(self, *args, **kwargs):
+        """Initialize the Ultralytics detection model.
+
+        Accepts all arguments from ``DetectionModel.__init__`` plus the
+        following keyword arguments.
+
+        Args:
+            fuse: bool
+                If True, fuse Conv2d and BatchNorm2d layers for faster
+                inference. Default: False.
+            task: str or None
+                Ultralytics task type (e.g. ``"detect"``, ``"segment"``,
+                ``"obb"``). When None, the task is inferred from the model.
+                Default: None.
+        """
         self.fuse: bool = kwargs.pop("fuse", False)
         self.task: str | None = kwargs.pop("task", None)
         existing_packages = getattr(self, "required_packages", None) or []
@@ -68,11 +82,62 @@ class UltralyticsDetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
+        self.perform_batch_inference([image])
 
-        # Confirm model is loaded
+    def _extract_predictions(self, prediction_result):
+        """Extracts predictions from YOLO result objects into the internal format.
 
+        Args:
+            prediction_result: list of YOLO Result objects from self.model()
+
+        Returns:
+            list of extracted predictions (tensors or tuple of tensors per image)
+        """
         import torch
 
+        if self.has_mask:
+            from ultralytics.engine.results import Masks
+
+            for result in prediction_result:
+                if not result.masks:
+                    device = getattr(self.model, "device", "cpu")
+                    result.masks = Masks(torch.tensor([], device=device), result.boxes.orig_shape)
+
+            return [
+                (
+                    result.boxes.data,
+                    result.masks.data,
+                )
+                for result in prediction_result
+            ]
+        elif self.is_obb:
+            device = getattr(self.model, "device", "cpu")
+            return [
+                (
+                    torch.cat(
+                        [
+                            result.obb.xyxy,
+                            result.obb.conf.unsqueeze(-1),
+                            result.obb.cls.unsqueeze(-1),
+                        ],
+                        dim=1,
+                    )
+                    if result.obb is not None
+                    else torch.empty((0, 6), device=device),
+                    result.obb.xyxyxyxy if result.obb is not None else torch.empty((0, 4, 2), device=device),
+                )
+                for result in prediction_result
+            ]
+        else:
+            return [result.boxes.data for result in prediction_result]
+
+    def perform_batch_inference(self, images: list[np.ndarray]):
+        """Performs inference on a batch of images using native YOLO batch support.
+
+        Args:
+            images: list[np.ndarray]
+                List of numpy arrays (H, W, C) in RGB order.
+        """
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
 
@@ -81,61 +146,23 @@ class UltralyticsDetectionModel(DetectionModel):
         if self.image_size is not None:
             kwargs = {"imgsz": self.image_size, **kwargs}
 
-        prediction_result = self.model(image[:, :, ::-1], **kwargs)  # YOLO expects numpy arrays to have BGR
+        # YOLO expects BGR — convert each image and pass the list for native batch inference
+        images_bgr = [img[:, :, ::-1] for img in images]
+        prediction_result = self.model(images_bgr, **kwargs)
 
-        # Handle different result types for PyTorch vs ONNX models
-        # ONNX models might return results in a different format
-        if self.has_mask:
-            from ultralytics.engine.results import Masks
-
-            if not prediction_result[0].masks:
-                # Create empty masks if none exist
-                if hasattr(self.model, "device"):
-                    device = self.model.device
-                else:
-                    device = "cpu"  # Default for ONNX models
-                prediction_result[0].masks = Masks(
-                    torch.tensor([], device=device), prediction_result[0].boxes.orig_shape
-                )
-
-            # We do not filter results again as confidence threshold is already applied above
-            prediction_result = [
-                (
-                    result.boxes.data,
-                    result.masks.data,
-                )
-                for result in prediction_result
-            ]
-        elif self.is_obb:
-            # For OBB task, get OBB points in xyxyxyxy format
-            device = getattr(self.model, "device", "cpu")
-            prediction_result = [
-                (
-                    # Get OBB data: xyxy, conf, cls
-                    torch.cat(
-                        [
-                            result.obb.xyxy,  # box coordinates
-                            result.obb.conf.unsqueeze(-1),  # confidence scores
-                            result.obb.cls.unsqueeze(-1),  # class ids
-                        ],
-                        dim=1,
-                    )
-                    if result.obb is not None
-                    else torch.empty((0, 6), device=device),
-                    # Get OBB points in (N, 4, 2) format
-                    result.obb.xyxyxyxy if result.obb is not None else torch.empty((0, 4, 2), device=device),
-                )
-                for result in prediction_result
-            ]
-        else:  # If model doesn't do segmentation or OBB then no need to check masks
-            # We do not filter results again as confidence threshold is already applied above
-            prediction_result = [result.boxes.data for result in prediction_result]
-
-        self._original_predictions = prediction_result
-        self._original_shape = image.shape
+        self._original_predictions = self._extract_predictions(prediction_result)
+        self._original_shapes = [img.shape for img in images]
 
     @property
     def category_names(self):
+        """Returns the list of category names from the model.
+
+        Falls back to ``category_mapping`` values when model metadata is
+        unavailable (e.g. ONNX models without embedded names).
+
+        Raises:
+            ValueError: If neither model names nor category_mapping are available.
+        """
         # For ONNX models, names might not be available, use category_mapping
         if hasattr(self.model, "names") and self.model.names:
             return list(self.model.names.values())
@@ -210,6 +237,7 @@ class UltralyticsDetectionModel(DetectionModel):
         for image_ind, image_predictions in enumerate(original_predictions):
             shift_amount = shift_amount_list[image_ind]
             full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+            image_shape = self._original_shapes[image_ind]
             object_prediction_list = []
 
             # Extract boxes and optional masks/obb
@@ -247,9 +275,7 @@ class UltralyticsDetectionModel(DetectionModel):
                     if self.has_mask:
                         bool_mask = masks_or_points[pred_ind]
                         # Resize mask to original image size
-                        bool_mask = cv2.resize(
-                            bool_mask.astype(np.uint8), (self._original_shape[1], self._original_shape[0])
-                        )
+                        bool_mask = cv2.resize(bool_mask.astype(np.uint8), (image_shape[1], image_shape[0]))
                         segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
                     else:  # is_obb
                         obb_points = masks_or_points[pred_ind]  # Get OBB points for this prediction
@@ -266,7 +292,7 @@ class UltralyticsDetectionModel(DetectionModel):
                     segmentation=segmentation,
                     category_name=category_name,
                     shift_amount=shift_amount,
-                    full_shape=self._original_shape[:2] if full_shape is None else full_shape,  # (height, width)
+                    full_shape=image_shape[:2] if full_shape is None else full_shape,  # (height, width)
                 )
                 object_prediction_list.append(object_prediction)
 

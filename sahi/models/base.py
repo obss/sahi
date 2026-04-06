@@ -12,6 +12,14 @@ from sahi.utils.torch_utils import empty_cuda_cache, select_device
 
 
 class DetectionModel:
+    """Base class for all detection models in SAHI.
+
+    Subclasses must implement ``load_model``, ``perform_inference``, and
+    ``_create_object_prediction_list_from_original_predictions`` to integrate
+    a new detection framework. The base class handles device management,
+    dependency checking, category remapping, and the public prediction API.
+    """
+
     required_packages: list[str] | None = None
 
     def __init__(
@@ -59,6 +67,7 @@ class DetectionModel:
         self.image_size = image_size
         self._original_predictions = None
         self._object_prediction_list_per_image = None
+        self._batch_images = None
         self.set_device(device)
 
         # automatically ensure dependencies
@@ -82,19 +91,23 @@ class DetectionModel:
             check_requirements(pkgs)
 
     def load_model(self):
-        """This function should be implemented in a way that detection model should be initialized and set to
-        self.model.
+        """Load the detection model from disk and assign it to ``self.model``.
 
-        (self.model_path, self.config_path, and self.device should be utilized)
+        Subclasses must override this method. The implementation should use
+        ``self.model_path``, ``self.config_path``, and ``self.device`` to
+        construct the underlying model object and store it in ``self.model``.
         """
         raise NotImplementedError()
 
     def set_model(self, model: Any, **kwargs):
-        """
-        This function should be implemented to instantiate a DetectionModel out of an already loaded model
+        """Set an already-instantiated model as the underlying detection model.
+
+        Subclasses must override this method to assign ``model`` to
+        ``self.model`` and perform any additional setup (e.g. category mapping).
+
         Args:
             model: Any
-                Loaded model
+                A pre-loaded detection model instance.
         """
         raise NotImplementedError()
 
@@ -113,31 +126,59 @@ class DetectionModel:
         empty_cuda_cache()
 
     def perform_inference(self, image: np.ndarray):
-        """This function should be implemented in a way that prediction should be performed using self.model and the
-        prediction result should be set to self._original_predictions.
+        """Run inference on a single image and store raw predictions.
+
+        Subclasses must override this method. The implementation should run
+        the model on ``image`` and assign the raw results to
+        ``self._original_predictions``.
 
         Args:
             image: np.ndarray
-                A numpy array that contains the image to be predicted.
+                A numpy array (H, W, C) containing the image to run inference on.
         """
         raise NotImplementedError()
+
+    def perform_batch_inference(self, images: list[np.ndarray]):
+        """Performs inference on a batch of images.
+
+        Subclasses can override this for native batch support (e.g.
+        ``UltralyticsDetectionModel`` passes the full list to YOLO for
+        true GPU batching, ``HuggingfaceDetectionModel`` feeds all images
+        to the processor in one call).
+
+        The default does **not** run inference here.  It stores images so
+        that ``convert_original_predictions`` can call ``perform_inference``
+        per image, preserving each model's ``_original_predictions`` format.
+        Subclasses with native batch support override this to run inference
+        immediately.
+
+        Args:
+            images: list[np.ndarray]
+                List of numpy arrays (H, W, C) to run inference on.
+        """
+        self._batch_images = images
+        self._original_shapes = [img.shape for img in images]
 
     def _create_object_prediction_list_from_original_predictions(
         self,
         shift_amount_list: list[list[int]] | None = [[0, 0]],
         full_shape_list: list[list[int]] | None = None,
     ):
-        """This function should be implemented in a way that self._original_predictions should be converted to a list of
-        prediction.ObjectPrediction and set to self._object_prediction_list.
+        """Convert raw predictions to a list of ObjectPrediction instances.
 
-        self.mask_threshold can also be utilized.
+        Subclasses must override this method. The implementation should read
+        ``self._original_predictions``, convert each raw prediction into an
+        ``ObjectPrediction``, and store the result in
+        ``self._object_prediction_list_per_image``. ``self.mask_threshold``
+        may be used to threshold segmentation masks.
+
         Args:
             shift_amount_list: list of list
-                To shift the box and mask predictions from sliced image to full sized image, should
-                be in the form of List[[shift_x, shift_y],[shift_x, shift_y],...]
+                Per-image pixel shifts for mapping sliced predictions back to
+                the full image, in the form ``[[shift_x, shift_y], ...]``.
             full_shape_list: list of list
-                Size of the full image after shifting, should be in the form of
-                List[[height, width],[height, width],...]
+                Per-image full image dimensions after shifting, in the form
+                ``[[height, width], ...]``.
         """
         raise NotImplementedError()
 
@@ -164,16 +205,45 @@ class DetectionModel:
         shift_amount: list[list[int]] | None = [[0, 0]],
         full_shape: list[list[int]] | None = None,
     ):
-        """Converts original predictions of the detection model to a list of prediction.ObjectPrediction object.
+        """Convert raw predictions to ObjectPrediction lists.
 
-        Should be called after perform_inference().
+        Should be called after ``perform_inference`` or ``perform_batch_inference``.
+
+        When the default (sequential) ``perform_batch_inference`` was used,
+        this method runs inference + conversion one image at a time so that
+        each model's internal ``_original_predictions`` format is preserved.
+
         Args:
-            shift_amount: list
-                To shift the box and mask predictions from sliced image to full sized image,
-                    should be in the form of [shift_x, shift_y]
-            full_shape: list
-                Size of the full image after shifting, should be in the form of [height, width]
+            shift_amount: Per-image shift amounts ``[[shift_x, shift_y], ...]``
+                or a single ``[shift_x, shift_y]`` for one image.
+            full_shape: Per-image full image sizes ``[[height, width], ...]``
+                or a single ``[height, width]`` for one image.
         """
+
+        batch_images = getattr(self, "_batch_images", None)
+        if batch_images is not None:
+            from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
+
+            shift_amount_list = fix_shift_amount_list(shift_amount)
+            full_shape_list = fix_full_shape_list(full_shape)
+
+            all_preds: list[list[ObjectPrediction]] = []
+            for i, image in enumerate(batch_images):
+                self.perform_inference(np.ascontiguousarray(image))
+                sa = [shift_amount_list[i]] if shift_amount_list else [[0, 0]]
+                fs = [full_shape_list[i]] if full_shape_list else None
+                self._create_object_prediction_list_from_original_predictions(
+                    shift_amount_list=sa,
+                    full_shape_list=fs,
+                )
+                if self.category_remapping:
+                    self._apply_category_remapping()
+                all_preds.extend(self._object_prediction_list_per_image or [])
+            self._object_prediction_list_per_image = all_preds
+            self._batch_images = None  # clear deferred state
+            return
+
+        # Standard single-image path
         self._create_object_prediction_list_from_original_predictions(
             shift_amount_list=shift_amount,
             full_shape_list=full_shape,
@@ -183,6 +253,11 @@ class DetectionModel:
 
     @property
     def object_prediction_list(self) -> list[list[ObjectPrediction]]:
+        """Returns the object predictions for the first image.
+
+        This is a convenience accessor for single-image inference. For batch
+        inference results, use ``object_prediction_list_per_image`` instead.
+        """
         if self._object_prediction_list_per_image is None:
             return []
         if len(self._object_prediction_list_per_image) == 0:
@@ -191,8 +266,18 @@ class DetectionModel:
 
     @property
     def object_prediction_list_per_image(self) -> list[list[ObjectPrediction]]:
+        """Returns object predictions grouped by image.
+
+        Each element is a list of ``ObjectPrediction`` instances for the
+        corresponding image in the batch.
+        """
         return self._object_prediction_list_per_image or []
 
     @property
     def original_predictions(self):
+        """Returns the raw predictions from the underlying model.
+
+        The format is model-specific and is set by ``perform_inference`` or
+        ``perform_batch_inference``.
+        """
         return self._original_predictions
