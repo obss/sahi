@@ -5,11 +5,14 @@ hide:
 
 # Quick Start
 
-Welcome to SAHI! This guide will get you up and running with the core features of the library, including installation, performing predictions, and using the command-line interface.
+Welcome to SAHI! This guide will get you up and running with the core features
+of the library, including installation, performing predictions, and using the
+command-line interface.
 
 ## 1. Installation
 
-Install SAHI using pip. For object detection, it's recommended to also install `ultralytics`.
+Install SAHI using pip. For object detection, it's recommended to also install
+`ultralytics`.
 
 !!! example "Install"
 
@@ -75,12 +78,14 @@ Install SAHI using pip. For object detection, it's recommended to also install `
         pip install -e .
         ```
 
-
-See the `sahi` [pyproject.toml](https://github.com/obss/sahi/blob/main/pyproject.toml) file for a list of dependencies.
+See the `sahi`
+[pyproject.toml](https://github.com/obss/sahi/blob/main/pyproject.toml) file for
+a list of dependencies.
 
 ## 2. Sliced Prediction with Python
 
-Sliced inference is the core feature of SAHI, allowing you to detect small objects in large images. Here's a simple example using the Python API:
+Sliced inference is the core feature of SAHI, allowing you to detect small
+objects in large images. Here's a simple example using the Python API:
 
 ```python
 from sahi import AutoDetectionModel
@@ -113,20 +118,25 @@ predictions = result.object_prediction_list
 
 ## 3. Prediction with the CLI
 
-SAHI also provides a powerful command-line interface for quick predictions without writing any Python code.
+SAHI also provides a powerful command-line interface for quick predictions
+without writing any Python code.
 
 ```bash
 sahi predict --model_path yolo26n.pt --model_type ultralytics --source /path/to/images/ --slice_height 512 --slice_width 512
 ```
 
-This command will run sliced inference on all images in the specified directory and save the results.
+This command will run sliced inference on all images in the specified directory
+and save the results.
 
 ## 4. Choosing a postprocessing backend (optional)
 
-After sliced inference SAHI merges overlapping predictions with NMS or NMM. By default the best available backend is selected automatically:
+After sliced inference SAHI merges overlapping predictions with NMS or NMM. By
+default the best available backend is selected automatically:
 
-- **torchvision** — fastest; chosen when a CUDA GPU and `torchvision` are available.
-- **numba** — JIT-compiled loops; chosen when `numba` is installed and no GPU is present.
+- **torchvision** — fastest; chosen when a CUDA GPU and `torchvision` are
+  available.
+- **numba** — JIT-compiled loops; chosen when `numba` is installed and no GPU is
+  present.
 - **numpy** — pure numpy; always available as the fallback.
 
 You can override the choice before running any inference:
@@ -140,14 +150,20 @@ set_postprocess_backend("torchvision") # pip install torch torchvision  (CUDA)
 set_postprocess_backend("auto")        # restore auto-detection (default)
 ```
 
-See the [Postprocessing Backends guide](postprocess/backends.md) for a full reference.
+See the [Postprocessing Backends guide](postprocess/backends.md) for a full
+reference.
 
 ## Next Steps
 
 You've now seen the basics of SAHI! To dive deeper, check out these resources:
 
-* **Prediction In-Depth**: For advanced prediction options, see the [Prediction Utilities guide](predict.md).
-* **Postprocessing Backends**: Learn how to configure NMS/NMM backends in the [Backends guide](postprocess/backends.md).
-* **Demos**: Explore our interactive notebooks in the [demo directory](../demo/) for hands-on examples with different models.
-* **COCO Tools**: Learn how to create, manipulate, and convert datasets in the [COCO Utilities guide](coco.md).
-* **All CLI Commands**: See the full list of commands in the [CLI documentation](cli.md).
+- **Prediction In-Depth**: For advanced prediction options, see the
+  [Prediction Utilities guide](predict.md).
+- **Postprocessing Backends**: Learn how to configure NMS/NMM backends in the
+  [Backends guide](postprocess/backends.md).
+- **Demos**: Explore our interactive notebooks in the [demo directory](../demo/)
+  for hands-on examples with different models.
+- **COCO Tools**: Learn how to create, manipulate, and convert datasets in the
+  [COCO Utilities guide](coco.md).
+- **All CLI Commands**: See the full list of commands in the
+  [CLI documentation](cli.md).

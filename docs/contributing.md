@@ -1,2 +1,1 @@
-
 --8<-- "CONTRIBUTING.md"

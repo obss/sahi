@@ -16,7 +16,7 @@ session.close()
 
 ## Convert predictions to FiftyOne detection:
 
-```python
+````python
 from sahi import get_sliced_prediction
 
 # perform sliced prediction
@@ -36,7 +36,7 @@ session = launch_fiftyone_app(coco_image_dir, coco_json_path)
 
 # close fiftyone app:
 session.close()
-```
+````
 
 ## Convert predictions to FiftyOne detection:
 
@@ -63,6 +63,7 @@ fiftyone_detections = result.to_fiftyone_detections()
 sahi coco fiftyone --image_dir dir/to/images --dataset_json_path dataset.json cocoresult1.json cocoresult2.json
 ```
 
-will open a FiftyOne app that visualizes the given dataset and 2 detection results.
+will open a FiftyOne app that visualizes the given dataset and 2 detection
+results.
 
 Specify IOU threshold for FP/TP by `--iou_threshold 0.5` argument

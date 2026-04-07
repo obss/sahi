@@ -324,6 +324,7 @@ subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10, category_id=0)
 # bonus2: create a Coco object with negative samples reduced to 1/10
 subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10, category_id=-1)
 ```
+
 </details>
 
 <details closed>
@@ -352,6 +353,7 @@ subsampled_coco = coco.get_subsampled_coco(upsample_ratio=10, category_id=0)
 # bonus2: create a Coco object with negative samples upsampled by 10 times
 upsampled_coco = coco.get_upsampled_coco(upsample_ratio=10, category_id=-1)
 ```
+
 </details>
 
 <details closed>
@@ -385,6 +387,7 @@ coco.stats
 }
 
 ```
+
 </details>
 
 <details closed>
@@ -406,6 +409,7 @@ save_json(coco_results, "fixed_coco_result.json")
 # dataset path to also filter out bbox results exceeding image height&width
 coco_results = remove_invalid_coco_results("coco_result.json", "coco_dataset.json")
 ```
+
 </details>
 
 <details closed>
@@ -419,30 +423,39 @@ coco_results = remove_invalid_coco_results("coco_result.json", "coco_dataset.jso
 from sahi.utils.coco import Coco
 from sahi.utils.file import save_json
 ```
+
 Usage:
 
 ```python
 # Clip overflowing bounding boxes to image width & height
 coco = Coco.from_coco_dict_or_path(coco_path, clip_bboxes_to_img_dims=True)
 ```
+
 or,
 
 ```python
 # apply to your already created coco object
 coco = coco.get_coco_with_clipped_bboxes()
 ```
+
 - Export your clipped_bboxed_coco:
+
 ```python
 save_json(coco.json, "coco.json")
 ```
+
 </details>
 
 # Interactive Examples and Additional Resources
 
 Want to see these COCO utilities in action? Here are some helpful resources:
 
-- For hands-on examples of COCO dataset slicing, check out our [slicing demo notebook](../demo/slicing.ipynb)
-- To learn about prediction and visualization with COCO datasets, explore our model-specific notebooks in the [demo directory](../demo/)
-- For command-line operations with COCO datasets, refer to our [CLI documentation](cli.md)
+- For hands-on examples of COCO dataset slicing, check out our
+  [slicing demo notebook](../demo/slicing.ipynb)
+- To learn about prediction and visualization with COCO datasets, explore our
+  model-specific notebooks in the [demo directory](../demo/)
+- For command-line operations with COCO datasets, refer to our
+  [CLI documentation](cli.md)
 
-These resources provide practical examples and detailed explanations to help you work effectively with COCO datasets using SAHI.
+These resources provide practical examples and detailed explanations to help you
+work effectively with COCO datasets using SAHI.

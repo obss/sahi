@@ -1,3 +1,1 @@
-::: sahi
-    options:
-      show_submodules: true
+::: sahi options: show_submodules: true

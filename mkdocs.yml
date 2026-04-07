@@ -11,7 +11,6 @@ extra:
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/sahi
 
-
 theme:
   name: "material"
   icon:
@@ -79,18 +78,17 @@ nav:
           - models/torchvision.md
           - models/rtdetr.md
           - models/roboflow.md
-      - 'Post-processing':
+      - "Post-processing":
           - postprocess/backends.md
           - postprocess/combine.md
           - postprocess/utils.md
       - Utils:
-          - 'COCO Utils': utils/coco.md
-          - 'Computer Vision Utils': utils/cv.md
-          - 'File Utils': utils/file.md
-      - 'Command Line Interface': cli.md
+          - "COCO Utils": utils/coco.md
+          - "Computer Vision Utils": utils/cv.md
+          - "File Utils": utils/file.md
+      - "Command Line Interface": cli.md
 
-
-  - 'API Reference Index': api.md
+  - "API Reference Index": api.md
 
   - Contributing: contributing.md
   - License: license.md

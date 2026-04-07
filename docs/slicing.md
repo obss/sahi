@@ -39,4 +39,6 @@ coco_dict, coco_path = slice_coco(
 
 # Interactive Demo
 
-Want to experiment with different slicing parameters and see their effects? Check out our [interactive Jupyter notebook](../demo/slicing.ipynb) that demonstrates these slicing operations in action.
+Want to experiment with different slicing parameters and see their effects?
+Check out our [interactive Jupyter notebook](../demo/slicing.ipynb) that
+demonstrates these slicing operations in action.

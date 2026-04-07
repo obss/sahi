@@ -4,7 +4,6 @@ hide:
   - toc
 ---
 
-
 <div align="center">
 <h1>
   SAHI: Slicing Aided Hyper Inference
@@ -37,138 +36,150 @@ hide:
 
 ## What is SAHI?
 
-SAHI (Slicing Aided Hyper Inference) is an open-source framework that provides a generic slicing-aided inference and fine-tuning pipeline for small object detection. Detecting small objects and those far from the camera is a major challenge in surveillance applications, as they are represented by a small number of pixels and lack sufficient detail for conventional detectors.
+SAHI (Slicing Aided Hyper Inference) is an open-source framework that provides a
+generic slicing-aided inference and fine-tuning pipeline for small object
+detection. Detecting small objects and those far from the camera is a major
+challenge in surveillance applications, as they are represented by a small
+number of pixels and lack sufficient detail for conventional detectors.
 
-SAHI addresses this by applying a unique methodology that can be used with any object detector without requiring additional fine-tuning. Experimental evaluations on the Visdrone and xView aerial object detection datasets show that SAHI can increase object detection AP by up to 6.8% for FCOS, 5.1% for VFNet, and 5.3% for TOOD detectors. With slicing-aided fine-tuning, the accuracy can be further improved, resulting in a cumulative increase of 12.7%, 13.4%, and 14.5% AP, respectively. The technique has been successfully integrated with Detectron2, MMDetection, and YOLOv5 models.
+SAHI addresses this by applying a unique methodology that can be used with any
+object detector without requiring additional fine-tuning. Experimental
+evaluations on the Visdrone and xView aerial object detection datasets show that
+SAHI can increase object detection AP by up to 6.8% for FCOS, 5.1% for VFNet,
+and 5.3% for TOOD detectors. With slicing-aided fine-tuning, the accuracy can be
+further improved, resulting in a cumulative increase of 12.7%, 13.4%, and 14.5%
+AP, respectively. The technique has been successfully integrated with
+Detectron2, MMDetection, and YOLOv5 models.
 
 <div class="grid cards" markdown>
 
 - :material-clock-fast:{ .lg .middle } &nbsp; **Getting Started**
 
-    ***
+  ***
 
-    Install `sahi` with pip and get up and running in minutes.
+  Install `sahi` with pip and get up and running in minutes.
 
-    ***
+  ***
 
-    [:octicons-arrow-right-24: Quickstart](quick-start.md)
+  [:octicons-arrow-right-24: Quickstart](quick-start.md)
 
 - :material-image:{ .lg .middle } &nbsp; **Predict**
 
-    ***
+  ***
 
-    Predict on new images, videos and streams with SAHI.
+  Predict on new images, videos and streams with SAHI.
 
-    ***
+  ***
 
-    [:octicons-arrow-right-24: Learn more](predict.md)
+  [:octicons-arrow-right-24: Learn more](predict.md)
 
 - :material-content-cut:{ .lg .middle } &nbsp; **Slicing**
 
-    ***
+  ***
 
-    Learn how to slice large images and datasets for inference.
+  Learn how to slice large images and datasets for inference.
 
-    ***
+  ***
 
-    [:octicons-arrow-right-24: Learn more](slicing.md)
+  [:octicons-arrow-right-24: Learn more](slicing.md)
 
 - :material-database:{ .lg .middle } &nbsp; **COCO Utilities**
 
-    ***
+  ***
 
-    Work with COCO format datasets, including creation, splitting, and filtering.
+  Work with COCO format datasets, including creation, splitting, and filtering.
 
-    ***
+  ***
 
-    [:octicons-arrow-right-24: Learn more](coco.md)
+  [:octicons-arrow-right-24: Learn more](coco.md)
 
 - :material-console:{ .lg .middle } &nbsp; **CLI Commands**
 
-    ***
+  ***
 
-    Use SAHI from the command-line for prediction and dataset operations.
+  Use SAHI from the command-line for prediction and dataset operations.
 
-    ***
+  ***
 
-    [:octicons-arrow-right-24: Learn more](cli.md)
+  [:octicons-arrow-right-24: Learn more](cli.md)
 
 </div>
 
 ## Interactive Examples
 
-All documentation files are complemented by interactive Jupyter notebooks in the [demo directory](notebooks/):
+All documentation files are complemented by interactive Jupyter notebooks in the
+[demo directory](notebooks/):
 
 <div class="grid cards" markdown>
 
 - :material-notebook:{ .lg .middle } &nbsp; **Slicing**
 
-    ***
+  ***
 
-    Slicing operations demonstration.
+  Slicing operations demonstration.
 
-    ***
+  ***
 
-    [:octicons-arrow-right-24: Open Notebook](notebooks/slicing.ipynb)
+  [:octicons-arrow-right-24: Open Notebook](notebooks/slicing.ipynb)
 
 - :material-notebook:{ .lg .middle } &nbsp; **Ultralytics**
 
-    ***
+  ***
 
-    YOLOv8/YOLO11/YOLO12 integration.
+  YOLOv8/YOLO11/YOLO12 integration.
 
-    ***
+  ***
 
-    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_ultralytics.ipynb)
+  [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_ultralytics.ipynb)
 
 - :material-notebook:{ .lg .middle } &nbsp; **YOLOv5**
 
-    ***
+  ***
 
-    YOLOv5 integration.
+  YOLOv5 integration.
 
-    ***
+  ***
 
-    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_yolov5.ipynb)
+  [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_yolov5.ipynb)
 
 - :material-notebook:{ .lg .middle } &nbsp; **MMDetection**
 
-    ***
+  ***
 
-    MMDetection integration.
+  MMDetection integration.
 
-    ***
+  ***
 
-    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_mmdetection.ipynb)
+  [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_mmdetection.ipynb)
 
 - :material-notebook:{ .lg .middle } &nbsp; **HuggingFace**
 
-    ***
+  ***
 
-    HuggingFace models integration.
+  HuggingFace models integration.
 
-    ***
+  ***
 
-    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_huggingface.ipynb)
+  [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_huggingface.ipynb)
 
 - :material-notebook:{ .lg .middle } &nbsp; **TorchVision**
 
-    ***
+  ***
 
-    TorchVision models integration.
+  TorchVision models integration.
 
-    ***
+  ***
 
-    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_torchvision.ipynb)
+  [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_torchvision.ipynb)
 
 - :material-notebook:{ .lg .middle } &nbsp; **RT-DETR**
 
-    ***
+  ***
 
-    RT-DETR integration.
+  RT-DETR integration.
 
-    ***
+  ***
 
-    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_rtdetr.ipynb)
+  [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_rtdetr.ipynb)
 
 </div>

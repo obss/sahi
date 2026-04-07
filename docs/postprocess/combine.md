@@ -1,5 +1,6 @@
 # Combine
 
-For a full guide including backend selection, usage examples, and per-category postprocessing, see the [Postprocessing Backends](backends.md) page.
+For a full guide including backend selection, usage examples, and per-category
+postprocessing, see the [Postprocessing Backends](backends.md) page.
 
 ::: sahi.postprocess.combine

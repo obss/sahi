@@ -30,7 +30,9 @@ on:
 jobs:
   ci:
     name: "Tests (OS: ${{ matrix.os }}, Python: ${{ matrix.python-version }})"
-    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
+    if:
+      github.event_name != 'schedule' && github.event_name !=
+      'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -58,7 +60,10 @@ jobs:
         uses: actions/cache@v5
         with:
           path: tests/data/models
-          key: ${{ runner.os }}-models-${{ hashFiles('sahi/utils/huggingface.py', 'sahi/utils/yolov5.py', 'sahi/utils/ultralytics.py', 'sahi/utils/rtdetr.py', 'sahi/utils/torchvision.py') }}
+          key:
+            ${{ runner.os }}-models-${{ hashFiles('sahi/utils/huggingface.py',
+            'sahi/utils/yolov5.py', 'sahi/utils/ultralytics.py',
+            'sahi/utils/rtdetr.py', 'sahi/utils/torchvision.py') }}
           restore-keys: |
             ${{ runner.os }}-models-
 
@@ -93,8 +98,12 @@ jobs:
           uv run sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
 
   schedule-test:
-    name: "Schedule/PyPI check (OS: ${{ matrix.os }}, Python: ${{ matrix.python-version }})"
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    name:
+      "Schedule/PyPI check (OS: ${{ matrix.os }}, Python: ${{
+      matrix.python-version }})"
+    if:
+      github.event_name == 'schedule' || github.event_name ==
+      'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

@@ -1,6 +1,7 @@
 # SAHI Test Suite
 
-This directory contains the test suite for SAHI. The tests are organized by model type and functionality.
+This directory contains the test suite for SAHI. The tests are organized by
+model type and functionality.
 
 ## Test Structure
 
@@ -13,6 +14,7 @@ This directory contains the test suite for SAHI. The tests are organized by mode
 ## Running Tests
 
 ### Running all tests (excluding MMDet)
+
 ```bash
 # Install dependencies
 uv sync --extra dev --extra ci
@@ -22,6 +24,7 @@ pytest -k "not mmdet"
 ```
 
 ### Running MMDet tests separately (Python 3.11 only)
+
 ```bash
 # Ensure you're using Python 3.11
 python --version  # Should show 3.11.x
@@ -36,6 +39,7 @@ pytest -k "mmdet"
 ```
 
 ### Running specific test categories
+
 ```bash
 # Run only Ultralytics tests
 pytest tests/test_ultralyticsmodel.py
@@ -62,6 +66,7 @@ The test suite is split into two GitHub Actions workflows:
    - Can fail without affecting the main CI pipeline
 
 This separation ensures that:
+
 - MMDet dependency conflicts don't affect other tests
 - MMDet failures don't block PRs
 - Simplified dependency management
@@ -73,7 +78,8 @@ The test dependencies are organized in `pyproject.toml`:
 
 - `[project.optional-dependencies.dev]` - Basic development dependencies
 - `[project.optional-dependencies.ci]` - Main CI dependencies (no MMDet)
-- `[project.optional-dependencies.mmdet]` - MMDetection dependencies (Python 3.11 only)
+- `[project.optional-dependencies.mmdet]` - MMDetection dependencies (Python
+  3.11 only)
 
 ## Writing New Tests
 
@@ -85,6 +91,7 @@ All tests use pytest format. When adding new tests:
 4. Add appropriate skip conditions for Python version or missing dependencies
 
 Example:
+
 ```python
 import pytest
 import sys
