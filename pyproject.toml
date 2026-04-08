@@ -184,7 +184,7 @@ exclude = [
 
 [tool.ruff.lint]
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
-select = ["E", "F", "I", "A", "Q", "W", "RUF", "UP", "FA", "ANN"]
+select = ["E", "F", "I", "A", "Q", "W", "RUF", "UP", "FA"]
 ignore = ["A002", "A001"]
 # Allow autofix for all enabled rules (when `--fix`) is provided.
 fixable = [
