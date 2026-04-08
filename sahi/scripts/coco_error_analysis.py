@@ -5,8 +5,11 @@ import json
 import os
 from multiprocessing import Pool
 from pathlib import Path
+from typing import Any
 
 import fire
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 
 from sahi.logger import logger
@@ -18,6 +21,8 @@ try:
     has_pycocotools = True
 except ImportError:
     has_pycocotools = False
+    COCO = Any  # type: ignore[assignment,misc]
+    COCOeval = Any  # type: ignore[assignment,misc]
 
 try:
     import matplotlib.pyplot as plt
@@ -39,7 +44,7 @@ COLOR_PALETTE = np.vstack(
 )
 
 
-def _makeplot(rs, ps, outDir: str | Path, class_name: str, iou_type: str) -> list[str]:
+def _makeplot(rs: np.ndarray, ps: np.ndarray, outDir: str | Path, class_name: str, iou_type: str) -> list[str]:
     export_path_list = []
 
     areaNames = ["allarea", "small", "medium", "large"]
@@ -91,7 +96,7 @@ def _makeplot(rs, ps, outDir: str | Path, class_name: str, iou_type: str) -> lis
     return export_path_list
 
 
-def _autolabel(ax, rects, is_percent=True) -> None:
+def _autolabel(ax: matplotlib.axes.Axes, rects: list[Any], is_percent: bool = True) -> None:
     """Attach a text label above each bar in *rects*, displaying its height."""
     for rect in rects:
         height = rect.get_height()
@@ -110,7 +115,7 @@ def _autolabel(ax, rects, is_percent=True) -> None:
         )
 
 
-def _makebarplot(_, ps, outDir, class_name, iou_type):
+def _makebarplot(_: np.ndarray, ps: np.ndarray, outDir: str, class_name: str, iou_type: str) -> str:
     areaNames = ["allarea", "small", "medium", "large"]
     types = ["C75", "C50", "Loc", "Sim", "Oth", "BG", "FN"]
     fig, ax = plt.subplots()
@@ -158,7 +163,7 @@ def _makebarplot(_, ps, outDir, class_name, iou_type):
     return export_path
 
 
-def _get_gt_area_group_numbers(cocoEval):
+def _get_gt_area_group_numbers(cocoEval: COCOeval) -> dict[str, int]:
     areaRng = cocoEval.params.areaRng
     areaRngStr = [str(aRng) for aRng in areaRng]
     areaRngLbl = cocoEval.params.areaRngLbl
@@ -173,7 +178,7 @@ def _get_gt_area_group_numbers(cocoEval):
     return areaRngLbl2Number
 
 
-def _make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
+def _make_gt_area_group_numbers_plot(cocoEval: COCOeval, outDir: str, verbose: int = True) -> str:
     areaRngLbl2Number = _get_gt_area_group_numbers(cocoEval)
     areaRngLbl = areaRngLbl2Number.keys()
     if verbose:
@@ -205,7 +210,7 @@ def _make_gt_area_group_numbers_plot(cocoEval, outDir, verbose=True):
     return export_path
 
 
-def _make_gt_area_histogram_plot(cocoEval, outDir):
+def _make_gt_area_histogram_plot(cocoEval: COCOeval, outDir: str) -> str:
     n_bins = 100
     areas = [ann["area"] for ann in cocoEval.cocoGt.anns.values()]
 
@@ -230,7 +235,15 @@ def _make_gt_area_histogram_plot(cocoEval, outDir):
     return export_path
 
 
-def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None, max_detections: int = 500):
+def _analyze_individual_category(
+    k: int,
+    cocoDt: COCO,
+    cocoGt: COCO,
+    catId: int,
+    iou_type: str,
+    areas: list[int] | None = None,
+    max_detections: int = 500,
+) -> tuple[int, dict[str, Any]]:
     nm = cocoGt.loadCats(catId)[0]
     print(f"--------------analyzing {k + 1}-{nm['name']}---------------")
     ps_ = {}
@@ -295,14 +308,14 @@ def _analyze_individual_category(k, cocoDt, cocoGt, catId, iou_type, areas=None,
 
 
 def _analyse_results(
-    res_file,
-    ann_file,
-    res_types,
-    out_dir=None,
-    extraplots=None,
-    areas=None,
-    max_detections=500,
-):
+    res_file: str,
+    ann_file: str,
+    res_types: list[str],
+    out_dir: str | None = None,
+    extraplots: bool | None = None,
+    areas: list[int] | None = None,
+    max_detections: int = 500,
+) -> dict[str, dict[str, Any]]:
     for res_type in res_types:
         if res_type not in ["bbox", "segm"]:
             raise ValueError(f"res_type {res_type} is not supported")
