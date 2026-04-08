@@ -2,6 +2,12 @@
 hide:
   - navigation
   - toc
+tags:
+  - getting-started
+  - object-detection
+  - small-object-detection
+  - slicing
+  - instance-segmentation
 ---
 
 <div align="center">

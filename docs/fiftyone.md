@@ -1,3 +1,11 @@
+---
+tags:
+  - fiftyone
+  - visualization
+  - coco
+  - dataset
+---
+
 # Fiftyone Utilities
 
 ## Explore COCO dataset via FiftyOne app

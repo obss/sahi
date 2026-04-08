@@ -1,3 +1,13 @@
+---
+tags:
+  - inference
+  - slicing
+  - batch-inference
+  - visualization
+  - object-detection
+  - small-object-detection
+---
+
 # Prediction Utilities
 
 ## Sliced inference

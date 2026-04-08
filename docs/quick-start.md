@@ -1,6 +1,12 @@
 ---
 hide:
   - navigation
+tags:
+  - getting-started
+  - installation
+  - inference
+  - slicing
+  - postprocessing
 ---
 
 # Quick Start

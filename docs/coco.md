@@ -1,3 +1,12 @@
+---
+tags:
+  - coco
+  - dataset
+  - annotation
+  - slicing
+  - evaluation
+---
+
 # COCO Utilities
 
 <details closed>

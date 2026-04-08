@@ -1,3 +1,12 @@
+---
+tags:
+  - postprocessing
+  - nms
+  - nmm
+  - gpu
+  - api-reference
+---
+
 # Postprocessing Backends
 
 SAHI's postprocessing (NMS, NMM) can run on three interchangeable backends. The

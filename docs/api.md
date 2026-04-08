@@ -1,3 +1,8 @@
+---
+tags:
+  - api-reference
+---
+
 <!-- prettier-ignore -->
 ::: sahi
     options:

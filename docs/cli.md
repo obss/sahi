@@ -1,3 +1,13 @@
+---
+tags:
+  - cli
+  - inference
+  - coco
+  - slicing
+  - evaluation
+  - fiftyone
+---
+
 # CLI Commands
 
 SAHI provides a comprehensive command-line interface for object detection tasks.

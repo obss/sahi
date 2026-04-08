@@ -1,3 +1,12 @@
+---
+tags:
+  - slicing
+  - api-reference
+  - coco
+  - dataset
+  - small-object-detection
+---
+
 # Slicing
 
 # Slicing
