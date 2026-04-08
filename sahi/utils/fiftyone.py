@@ -64,14 +64,14 @@ if is_available("fiftyone"):
             self._annotations = annotations
             self._filenames = filenames
 
-    def create_fiftyone_dataset_from_coco_file(coco_image_dir: str, coco_json_path: str):
+    def create_fiftyone_dataset_from_coco_file(coco_image_dir: str, coco_json_path: str) -> object:
         coco_importer = COCODetectionDatasetImporter(
             data_path=coco_image_dir, labels_path=coco_json_path, include_id=True
         )
         dataset = fo.Dataset.from_importer(coco_importer, label_field="gt")
         return dataset
 
-    def launch_fiftyone_app(coco_image_dir: str, coco_json_path: str):
+    def launch_fiftyone_app(coco_image_dir: str, coco_json_path: str) -> object:
         dataset = create_fiftyone_dataset_from_coco_file(coco_image_dir, coco_json_path)
         session = fo.launch_app()
         session.dataset = dataset
