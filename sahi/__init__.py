@@ -18,7 +18,7 @@ _LAZY_IMPORTS = {
 }
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> object:
     """Lazily import public symbols on first access.
 
     When a name listed in ``_LAZY_IMPORTS`` is accessed on the ``sahi``
