@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 import numpy as np
 import yaml
 
@@ -14,7 +12,7 @@ from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
 
 
 class TorchVisionDetectionModel(DetectionModel):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: object, **kwargs: object) -> None:
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "torchvision"]
         super().__init__(*args, **kwargs)
@@ -61,7 +59,7 @@ class TorchVisionDetectionModel(DetectionModel):
 
         self.set_model(model)
 
-    def set_model(self, model: Any) -> None:
+    def set_model(self, model: object) -> None:
         """Sets the underlying TorchVision model.
 
         Args:
@@ -106,17 +104,17 @@ class TorchVisionDetectionModel(DetectionModel):
         self._original_predictions = prediction_result
 
     @property
-    def num_categories(self):
+    def num_categories(self) -> int:
         """Returns number of categories."""
         return len(self.category_mapping)
 
     @property
-    def has_mask(self):
+    def has_mask(self) -> bool:
         """Returns if model output contains segmentation mask."""
         return hasattr(self.model, "roi_heads") and hasattr(self.model.roi_heads, "mask_predictor")
 
     @property
-    def category_names(self):
+    def category_names(self) -> list:
         return list(self.category_mapping.values())
 
     def _create_object_prediction_list_from_original_predictions(
