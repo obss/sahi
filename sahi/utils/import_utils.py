@@ -6,7 +6,7 @@ from sahi.logger import logger
 # adapted from https://github.com/huggingface/transformers/blob/main/src/transformers/utils/import_utils.py
 
 
-def get_package_info(package_name: str, verbose: bool = True):
+def get_package_info(package_name: str, verbose: bool = True) -> tuple[bool, str]:
     """Check whether a package is installed and retrieve its version.
 
     Args:
