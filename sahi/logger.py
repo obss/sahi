@@ -11,18 +11,18 @@ logging.addLevelName(PKG_INFO_LEVEL, "PKG_INFO")
 
 
 class SupportsPkgInfo(Protocol):
-    def pkg_info(self, message: str, *args, **kws) -> None: ...  # pragma: no cover
+    def pkg_info(self, message: str, *args: object, **kws: object) -> None: ...  # pragma: no cover
 
 
 class BaseSahiLogger(logging.Logger, ABC):
     @abstractmethod
-    def pkg_info(self, message: str, *args, **kws) -> None:
+    def pkg_info(self, message: str, *args: object, **kws: object) -> None:
         """Log a package info message at PKG_INFO level."""
         raise NotImplementedError
 
 
 class SahiLogger(BaseSahiLogger):
-    def pkg_info(self, message: str, *args, **kws) -> None:
+    def pkg_info(self, message: str, *args: object, **kws: object) -> None:
         if self.isEnabledFor(PKG_INFO_LEVEL):
             self._log(PKG_INFO_LEVEL, message, args, **kws)
 
@@ -52,7 +52,7 @@ class SahiLoggerFormatter(logging.Formatter):
 
     pkg_info_pattern = re.compile(r"^(?P<name>\S+)\s+version\s+(?P<version>\S+)\s+(?P<rest>.*)$")
 
-    def format(self, record):  # type: ignore[override]
+    def format(self, record: logging.LogRecord) -> str:  # type: ignore[override]
         if record.levelno == PKG_INFO_LEVEL:
             # Custom minimal line without timestamp/file info
             msg = record.getMessage()
