@@ -32,7 +32,7 @@ class ObjectPredictionList(Sequence):
         self.list: list[ObjectPrediction] = prediction_list
         super().__init__()
 
-    def __getitem__(self, i) -> ObjectPredictionList:
+    def __getitem__(self, i: int | list[int] | tuple[int, ...] | Any) -> ObjectPredictionList:
         """Retrieve predictions by index, list of indices, or tensor-like.
 
         Args:
@@ -52,7 +52,7 @@ class ObjectPredictionList(Sequence):
         else:
             raise NotImplementedError(f"{type(i)}")
 
-    def __setitem__(self, i, elem) -> None:
+    def __setitem__(self, i: int | list[int] | tuple[int, ...] | Any, elem: ObjectPrediction | ObjectPredictionList | list[ObjectPrediction]) -> None:
         """Set predictions at the given index or indices.
 
         Args:
