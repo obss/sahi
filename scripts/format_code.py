@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 
-def run_command(cmd):
+def run_command(cmd: str) -> int:
     """Run a command and return exit code."""
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     result = subprocess.run(cmd, shell=True, cwd=repo_root)

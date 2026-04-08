@@ -10,7 +10,7 @@ from pathlib import Path
 from sahi.utils.file import download_from_url
 
 
-def mmdet_version_as_integer():
+def mmdet_version_as_integer() -> int:
     import mmdet
 
     return int(mmdet.__version__.replace(".", ""))

@@ -48,14 +48,14 @@ def load_images() -> tuple[np.ndarray, np.ndarray]:
     return img1, img2
 
 
-def test_single_inference(model, img: np.ndarray) -> list:
+def test_single_inference(model: object, img: np.ndarray) -> list:
     model.perform_inference(img)
     model.convert_original_predictions()
     preds = model.object_prediction_list_per_image[0]
     return preds
 
 
-def test_batch_inference(model, images: list[np.ndarray]) -> list[list]:
+def test_batch_inference(model: object, images: list[np.ndarray]) -> list[list]:
     model.perform_batch_inference(images)
     model.convert_original_predictions(
         shift_amount=[[0, 0]] * len(images),
