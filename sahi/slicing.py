@@ -147,7 +147,7 @@ def process_coco_annotations(
 
 
 class SlicedImage:
-    def __init__(self, image, coco_image, starting_pixel) -> None:
+    def __init__(self, image: np.ndarray, coco_image: CocoImage, starting_pixel: list[int]) -> None:
         """
         image: np.array
             Sliced image.
@@ -182,7 +182,7 @@ class SliceImageResult:
         self._sliced_image_list.append(sliced_image)
 
     @property
-    def sliced_image_list(self):
+    def sliced_image_list(self) -> list[SlicedImage]:
         return self._sliced_image_list
 
     @property
@@ -233,8 +233,8 @@ class SliceImageResult:
             filenames.append(sliced_image.coco_image.file_name)
         return filenames
 
-    def __getitem__(self, i):
-        def _prepare_ith_dict(i):
+    def __getitem__(self, i: int | slice | list | tuple) -> dict | list:
+        def _prepare_ith_dict(i: int) -> dict:
             return {
                 "image": self.images[i],
                 "coco_image": self.coco_images[i],
@@ -658,7 +658,7 @@ def get_auto_slice_params(height: int, width: int) -> tuple[int, int, int, int]:
         return get_resolution_selector("ultra-high", height=height, width=width)
 
 
-def shift_bboxes(bboxes, offset: Sequence[int]):
+def shift_bboxes(bboxes: object, offset: Sequence[int]) -> object:
     """Shift bboxes w.r.t offset.
 
     Suppo
