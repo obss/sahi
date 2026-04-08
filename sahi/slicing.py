@@ -121,7 +121,7 @@ def annotation_inside_slice(annotation: dict, slice_bbox: list[int]) -> bool:
 
 
 def process_coco_annotations(
-    coco_annotation_list: list[CocoAnnotation], slice_bbox: list[int], min_area_ratio
+    coco_annotation_list: list[CocoAnnotation], slice_bbox: list[int], min_area_ratio: float
 ) -> list[CocoAnnotation]:
     """Slices and filters given list of CocoAnnotation objects with given 'slice_bbox' and 'min_area_ratio'.
 
@@ -186,7 +186,7 @@ class SliceImageResult:
         return self._sliced_image_list
 
     @property
-    def images(self):
+    def images(self) -> list[np.ndarray]:
         """Returns sliced images.
 
         Returns:
@@ -508,7 +508,7 @@ def slice_coco(
     return coco_dict, save_path
 
 
-def calc_ratio_and_slice(orientation: Literal["vertical", "horizontal", "square"], slide: int = 1, ratio: float = 0.1):
+def calc_ratio_and_slice(orientation: Literal["vertical", "horizontal", "square"], slide: int = 1, ratio: float = 0.1) -> tuple[int, int, float, float]:
     """
     According to image resolution calculation overlap params
     Args:
