@@ -33,7 +33,7 @@ class PostprocessPredictions:
         return threshold_condition and category_condition
 
     @staticmethod
-    def get_score_func(object_prediction: ObjectPrediction):
+    def get_score_func(object_prediction: ObjectPrediction) -> float:
         """Used for sorting predictions."""
         return object_prediction.score.value
 
@@ -62,7 +62,7 @@ class PostprocessPredictions:
         smaller_area = np.minimum(area1, area2)
         return intersect / smaller_area
 
-    def __call__(self):
+    def __call__(self) -> None:
         raise NotImplementedError()
 
 
@@ -70,7 +70,7 @@ class NMSPostprocess(PostprocessPredictions):
     def __call__(
         self,
         object_predictions: list[ObjectPrediction],
-    ):
+    ) -> list[ObjectPrediction]:
         source_object_predictions: list[ObjectPrediction] = copy.deepcopy(object_predictions)
         selected_object_predictions: list[ObjectPrediction] = []
         while len(source_object_predictions) > 0:
@@ -96,7 +96,7 @@ class UnionMergePostprocess(PostprocessPredictions):
     def __call__(
         self,
         object_predictions: list[ObjectPrediction],
-    ):
+    ) -> list[ObjectPrediction]:
         source_object_predictions: list[ObjectPrediction] = copy.deepcopy(object_predictions)
         selected_object_predictions: list[ObjectPrediction] = []
         while len(source_object_predictions) > 0:
