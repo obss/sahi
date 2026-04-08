@@ -53,55 +53,45 @@ Detectron2, MMDetection, and YOLOv5 models.
 
 <div class="grid cards" markdown>
 
-- :material-clock-fast:{ .lg .middle } &nbsp; **Getting Started**
+-   :material-clock-fast:{ .lg .middle } __Getting Started__
 
-  ***
+    ---
 
-  Install `sahi` with pip and get up and running in minutes.
+    Install `sahi` with pip and get up and running in minutes.
 
-  ***
+    [:octicons-arrow-right-24: Quickstart](quick-start.md)
 
-  [:octicons-arrow-right-24: Quickstart](quick-start.md)
+-   :material-image:{ .lg .middle } __Predict__
 
-- :material-image:{ .lg .middle } &nbsp; **Predict**
+    ---
 
-  ***
+    Predict on new images, videos and streams with SAHI.
 
-  Predict on new images, videos and streams with SAHI.
+    [:octicons-arrow-right-24: Learn more](predict.md)
 
-  ***
+-   :material-content-cut:{ .lg .middle } __Slicing__
 
-  [:octicons-arrow-right-24: Learn more](predict.md)
+    ---
 
-- :material-content-cut:{ .lg .middle } &nbsp; **Slicing**
+    Learn how to slice large images and datasets for inference.
 
-  ***
+    [:octicons-arrow-right-24: Learn more](slicing.md)
 
-  Learn how to slice large images and datasets for inference.
+-   :material-database:{ .lg .middle } __COCO Utilities__
 
-  ***
+    ---
 
-  [:octicons-arrow-right-24: Learn more](slicing.md)
+    Work with COCO format datasets, including creation, splitting, and filtering.
 
-- :material-database:{ .lg .middle } &nbsp; **COCO Utilities**
+    [:octicons-arrow-right-24: Learn more](coco.md)
 
-  ***
+-   :material-console:{ .lg .middle } __CLI Commands__
 
-  Work with COCO format datasets, including creation, splitting, and filtering.
+    ---
 
-  ***
+    Use SAHI from the command-line for prediction and dataset operations.
 
-  [:octicons-arrow-right-24: Learn more](coco.md)
-
-- :material-console:{ .lg .middle } &nbsp; **CLI Commands**
-
-  ***
-
-  Use SAHI from the command-line for prediction and dataset operations.
-
-  ***
-
-  [:octicons-arrow-right-24: Learn more](cli.md)
+    [:octicons-arrow-right-24: Learn more](cli.md)
 
 </div>
 
@@ -112,74 +102,60 @@ All documentation files are complemented by interactive Jupyter notebooks in the
 
 <div class="grid cards" markdown>
 
-- :material-notebook:{ .lg .middle } &nbsp; **Slicing**
+-   :material-notebook:{ .lg .middle } __Slicing__
 
-  ***
+    ---
 
-  Slicing operations demonstration.
+    Slicing operations demonstration.
 
-  ***
+    [:octicons-arrow-right-24: Open Notebook](notebooks/slicing.ipynb)
 
-  [:octicons-arrow-right-24: Open Notebook](notebooks/slicing.ipynb)
+-   :material-notebook:{ .lg .middle } __Ultralytics__
 
-- :material-notebook:{ .lg .middle } &nbsp; **Ultralytics**
+    ---
 
-  ***
+    YOLOv8/YOLO11/YOLO12 integration.
 
-  YOLOv8/YOLO11/YOLO12 integration.
+    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_ultralytics.ipynb)
 
-  ***
+-   :material-notebook:{ .lg .middle } __YOLOv5__
 
-  [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_ultralytics.ipynb)
+    ---
 
-- :material-notebook:{ .lg .middle } &nbsp; **YOLOv5**
+    YOLOv5 integration.
 
-  ***
+    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_yolov5.ipynb)
 
-  YOLOv5 integration.
+-   :material-notebook:{ .lg .middle } __MMDetection__
 
-  ***
+    ---
 
-  [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_yolov5.ipynb)
+    MMDetection integration.
 
-- :material-notebook:{ .lg .middle } &nbsp; **MMDetection**
+    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_mmdetection.ipynb)
 
-  ***
+-   :material-notebook:{ .lg .middle } __HuggingFace__
 
-  MMDetection integration.
+    ---
 
-  ***
+    HuggingFace models integration.
 
-  [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_mmdetection.ipynb)
+    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_huggingface.ipynb)
 
-- :material-notebook:{ .lg .middle } &nbsp; **HuggingFace**
+-   :material-notebook:{ .lg .middle } __TorchVision__
 
-  ***
+    ---
 
-  HuggingFace models integration.
+    TorchVision models integration.
 
-  ***
+    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_torchvision.ipynb)
 
-  [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_huggingface.ipynb)
+-   :material-notebook:{ .lg .middle } __RT-DETR__
 
-- :material-notebook:{ .lg .middle } &nbsp; **TorchVision**
+    ---
 
-  ***
+    RT-DETR integration.
 
-  TorchVision models integration.
-
-  ***
-
-  [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_torchvision.ipynb)
-
-- :material-notebook:{ .lg .middle } &nbsp; **RT-DETR**
-
-  ***
-
-  RT-DETR integration.
-
-  ***
-
-  [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_rtdetr.ipynb)
+    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_rtdetr.ipynb)
 
 </div>

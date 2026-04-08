@@ -1,1 +1,4 @@
-::: sahi options: show_submodules: true
+<!-- prettier-ignore -->
+::: sahi
+    options:
+      show_submodules: true
