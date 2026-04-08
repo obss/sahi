@@ -1,4 +1,5 @@
 import importlib.util
+from collections.abc import Iterable
 from typing import Any, Generator
 
 from sahi.logger import logger
@@ -14,8 +15,8 @@ def get_package_info(package_name: str, verbose: bool = True) -> tuple[bool, str
         verbose: If True, log the package version when available.
 
     Returns:
-        A tuple of (is_available, version_string). If the package is not
-        installed, version_string is "N/A".
+        is_available (bool): Whether the package is installed.
+        version_string (str): Version string, or "N/A" if not installed.
     """
     _is_available = is_available(package_name)
 
@@ -67,7 +68,7 @@ def is_available(module_name: str) -> bool:
     return importlib.util.find_spec(module_name) is not None
 
 
-def check_requirements(package_names) -> Generator[Any, Any, Any]:
+def check_requirements(package_names: Iterable[str]) -> Generator[Any, Any, Any]:
     """Verify that all required packages are importable.
 
     Args:
@@ -88,7 +89,7 @@ def check_requirements(package_names) -> Generator[Any, Any, Any]:
     yield
 
 
-def check_package_minimum_version(package_name: str, minimum_version: str, verbose=False) -> bool:
+def check_package_minimum_version(package_name: str, minimum_version: str, verbose: bool = False) -> bool:
     """Check whether an installed package meets a minimum version requirement.
 
     Args:
@@ -116,7 +117,7 @@ def check_package_minimum_version(package_name: str, minimum_version: str, verbo
 
 
 def ensure_package_minimum_version(
-    package_name: str, minimum_version: str, verbose=False
+    package_name: str, minimum_version: str, verbose: bool = False
 ) -> Generator[None, Any, None]:
     """Ensure a package meets a minimum version, raising on failure.
 
