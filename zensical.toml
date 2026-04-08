@@ -64,6 +64,7 @@ nav = [
 ]
 
 [project.theme]
+language = "en"
 variant = "material"
 features = [
   "navigation.tracking",
@@ -91,6 +92,18 @@ scheme = "slate"
 primary = "custom"
 toggle.icon = "material/brightness-4"
 toggle.name = "Switch to light mode"
+
+# --- Alternate languages ---
+
+[[project.extra.alternate]]
+name = "English"
+link = "/"
+lang = "en"
+
+[[project.extra.alternate]]
+name = "中文"
+link = "/zh/"
+lang = "zh"
 
 # --- Social links ---
 
