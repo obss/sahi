@@ -9,7 +9,7 @@ from sahi.utils.file import load_json
 def main(
     image_dir: str,
     dataset_json_path: str,
-    *result_json_paths,
+    *result_json_paths: str,
     iou_thresh: float = 0.5,
 ) -> None:
     """

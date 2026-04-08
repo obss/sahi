@@ -13,7 +13,7 @@ def main(
     project: str = "runs/coco2yolo",
     name: str = "exp",
     seed: int = 1,
-    disable_symlink=False,
+    disable_symlink: bool = False,
 ) -> None:
     """
     Args:

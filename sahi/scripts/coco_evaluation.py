@@ -14,8 +14,15 @@ from sahi.utils.table import create_ascii_table
 
 
 def _cocoeval_summarize(
-    cocoeval, ap=1, iouThr=None, catIdx=None, areaRng="all", maxDets=100, catName="", nameStrLen=None
-):
+    cocoeval: object,
+    ap: int = 1,
+    iouThr: float | None = None,
+    catIdx: int | None = None,
+    areaRng: str = "all",
+    maxDets: int = 100,
+    catName: str = "",
+    nameStrLen: int | None = None,
+) -> float:
     p = cocoeval.params
     if catName:
         iStr = " {:<18} {} {:<{nameStrLen}} @[ IoU={:<9} | area={:>6s} | maxDets={:>3d} ] = {:0.3f}"
@@ -68,11 +75,11 @@ def evaluate_core(
     metric: str = "bbox",
     classwise: bool = False,
     max_detections: int = 500,
-    iou_thrs=None,
-    metric_items=None,
+    iou_thrs: list[float] | float | None = None,
+    metric_items: list[str] | None = None,
     out_dir: str | Path | None = None,
     areas: list[int] = [1024, 9216, 10000000000],
-):
+) -> dict:
     """Evaluation in COCO protocol.
 
     Args:
@@ -360,7 +367,7 @@ def evaluate(
     iou_thrs: list[float] | float | None = None,
     areas: list[int] = [1024, 9216, 10000000000],
     return_dict: bool = False,
-):
+) -> dict:
     """
     Args:
         dataset_json_path (str): file path for the coco dataset json file
