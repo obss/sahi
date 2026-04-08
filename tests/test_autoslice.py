@@ -6,7 +6,7 @@ from sahi.utils.cv import read_image
 
 
 class TestAutoSlicing:
-    def test_auto_slice_image(self):
+    def test_auto_slice_image(self) -> None:
         # read coco file
         coco_path = "tests/data/coco_utils/terrain1_coco.json"
         coco = Coco.from_coco_dict_or_path(coco_path)
@@ -64,7 +64,7 @@ class TestAutoSlicing:
         assert slice_image_result.coco_images[15].annotations[1].area == 7296
         assert slice_image_result.coco_images[15].annotations[1].bbox == [17, 356, 48, 152]
 
-    def test_auto_slice_coco(self):
+    def test_auto_slice_coco(self) -> None:
         import shutil
 
         coco_annotation_file_path = "tests/data/coco_utils/terrain1_coco.json"

@@ -4,7 +4,7 @@ from sahi.models.ultralytics import UltralyticsDetectionModel
 
 
 class YOLOWorldDetectionModel(UltralyticsDetectionModel):
-    def load_model(self):
+    def load_model(self) -> None:
         """Detection model is initialized and set to self.model."""
 
         from ultralytics import YOLOWorld

@@ -4,7 +4,7 @@ from sahi.logger import logger
 
 
 class TestAnnotation:
-    def test_bounding_box(self):
+    def test_bounding_box(self) -> None:
         from sahi.annotation import BoundingBox
 
         bbox_minmax = [30.0, 30.0, 100.0, 150.0]
@@ -21,7 +21,7 @@ class TestAnnotation:
         assert expanded_bbox.to_xyxy() == [23.0, 18.0, 107.0, 162.0]
         assert shifted_bbox.to_xyxy() == [80.0, 70.0, 150.0, 190.0]
 
-    def test_bounding_box_immutability(self):
+    def test_bounding_box_immutability(self) -> None:
         import dataclasses
 
         from sahi.annotation import BoundingBox
@@ -49,7 +49,7 @@ class TestAnnotation:
         assert bbox.box == bbox_tuple
         assert bbox.shift_amount == (0, 0)
 
-    def test_category(self):
+    def test_category(self) -> None:
         from sahi.annotation import Category
 
         category_id = 1
@@ -66,7 +66,7 @@ class TestAnnotation:
         with pytest.raises(TypeError):
             Category(id=1, name=123)
 
-    def test_category_immutability(self):
+    def test_category_immutability(self) -> None:
         import dataclasses
 
         from sahi.annotation import Category
@@ -85,7 +85,7 @@ class TestAnnotation:
         assert category.id == 5
         assert category.name == "person"
 
-    def test_mask(self):
+    def test_mask(self) -> None:
         from sahi.annotation import Mask
 
         coco_segmentation = [[1.0, 1.0, 325.0, 125.0, 250.0, 200.0, 5.0, 200.0]]
@@ -99,7 +99,7 @@ class TestAnnotation:
         logger.debug(f"{type(mask.bool_mask[11, 2])=} {mask.bool_mask[11, 2]=}")
         assert mask.bool_mask[11, 2]
 
-    def test_object_annotation(self):
+    def test_object_annotation(self) -> None:
         from sahi.annotation import ObjectAnnotation
 
         bbox = [100, 200, 150, 230]

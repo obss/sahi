@@ -17,7 +17,7 @@ class PostprocessPredictions:
         match_threshold: float = 0.5,
         match_metric: str = "IOU",
         class_agnostic: bool = True,
-    ):
+    ) -> None:
         self.match_threshold = match_threshold
         self.class_agnostic = class_agnostic
         if match_metric == "IOU":

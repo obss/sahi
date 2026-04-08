@@ -14,7 +14,7 @@ def slicer(
     ignore_negative_samples: bool = False,
     output_dir: str = "runs/slice_coco",
     min_area_ratio: float = 0.1,
-):
+) -> None:
     """
     Args:
         image_dir (str): directory for coco images

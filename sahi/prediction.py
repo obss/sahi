@@ -19,7 +19,7 @@ class PredictionScore:
     native Python floats for serialization safety.
     """
 
-    def __init__(self, value: float | np.ndarray):
+    def __init__(self, value: float | np.ndarray) -> None:
         """
         Args:
             score: prediction score between 0 and 1
@@ -43,7 +43,7 @@ class PredictionScore:
     def __lt__(self, threshold):
         return self.value < threshold
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"PredictionScore: <value: {self.value}>"
 
 
@@ -59,7 +59,7 @@ class ObjectPrediction(ObjectAnnotation):
         score: float = 0.0,
         shift_amount: list[int] | None = [0, 0],
         full_shape: list[int] | None = None,
-    ):
+    ) -> None:
         """Creates ObjectPrediction from bbox, score, category_id, category_name, segmentation.
 
         Args:
@@ -153,7 +153,7 @@ class ObjectPrediction(ObjectAnnotation):
         fiftyone_detection = fo.Detection(label=self.category.name, bounding_box=rel_box, confidence=self.score.value)
         return fiftyone_detection
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"""ObjectPrediction<
     bbox: {self.bbox},
     mask: {self.mask},
@@ -174,7 +174,7 @@ class PredictionResult:
         object_prediction_list: list[ObjectPrediction],
         image: Image.Image | str | np.ndarray,
         durations_in_seconds: dict[str, Any] = dict(),
-    ):
+    ) -> None:
         """Initialize a PredictionResult.
 
         Args:
@@ -198,7 +198,7 @@ class PredictionResult:
         hide_labels: bool = False,
         hide_conf: bool = False,
         file_name: str = "prediction_visual",
-    ):
+    ) -> None:
         """
 
         Args:

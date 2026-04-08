@@ -147,7 +147,7 @@ def process_coco_annotations(
 
 
 class SlicedImage:
-    def __init__(self, image, coco_image, starting_pixel):
+    def __init__(self, image, coco_image, starting_pixel) -> None:
         """
         image: np.array
             Sliced image.
@@ -162,7 +162,7 @@ class SlicedImage:
 
 
 class SliceImageResult:
-    def __init__(self, original_image_size: list[int], image_dir: str | None = None):
+    def __init__(self, original_image_size: list[int], image_dir: str | None = None) -> None:
         """
         image_dir: str
             Directory of the sliced image exports.
@@ -175,7 +175,7 @@ class SliceImageResult:
 
         self._sliced_image_list: list[SlicedImage] = []
 
-    def add_sliced_image(self, sliced_image: SlicedImage):
+    def add_sliced_image(self, sliced_image: SlicedImage) -> None:
         if not isinstance(sliced_image, SlicedImage):
             raise TypeError("sliced_image must be a SlicedImage instance")
 
@@ -256,7 +256,7 @@ class SliceImageResult:
         else:
             raise NotImplementedError(f"{type(i)}")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._sliced_image_list)
 
 
@@ -313,7 +313,7 @@ def slice_image(
     # define verboseprint
     verboselog = logger.info if verbose else lambda *a, **k: None
 
-    def _export_single_slice(image: np.ndarray, output_dir: str, slice_file_name: str):
+    def _export_single_slice(image: np.ndarray, output_dir: str, slice_file_name: str) -> None:
         image_pil = read_image_as_pil(image, exif_fix=exif_fix)
         slice_file_path = str(Path(output_dir) / slice_file_name)
         # export sliced image

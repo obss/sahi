@@ -7,7 +7,7 @@ from sahi.utils.cv import read_image
 
 
 class TestSlicing:
-    def test_slice_image(self):
+    def test_slice_image(self) -> None:
         # read coco file
         coco_path = "tests/data/coco_utils/terrain1_coco.json"
         coco = Coco.from_coco_dict_or_path(coco_path)
@@ -83,7 +83,7 @@ class TestSlicing:
         assert slice_image_result.coco_images[15].annotations[1].area == 7296
         assert slice_image_result.coco_images[15].annotations[1].bbox == [17, 186, 48, 152]
 
-    def test_slice_coco(self):
+    def test_slice_coco(self) -> None:
         import shutil
 
         coco_annotation_file_path = "tests/data/coco_utils/terrain1_coco.json"
@@ -150,7 +150,7 @@ class TestSlicing:
 
         shutil.rmtree(output_dir, ignore_errors=True)
 
-    def test_shift_bboxes(self):
+    def test_shift_bboxes(self) -> None:
         import torch
 
         bboxes = [[1, 2, 3, 4]]
@@ -170,7 +170,7 @@ class TestSlicing:
         assert shifted_bboxes.tolist() == [[11, 22, 13, 24]]
         assert isinstance(shifted_bboxes, torch.Tensor)
 
-    def test_shift_masks(self):
+    def test_shift_masks(self) -> None:
         masks = np.zeros((3, 30, 30), dtype=bool)
         shift_x = 10
         shift_y = 20

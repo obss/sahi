@@ -101,30 +101,30 @@ class BoundingBox:
         box: list[float] = [minx, miny, maxx, maxy]
         return BoundingBox(box)
 
-    def to_xywh(self):
+    def to_xywh(self) -> list[float]:
         """Returns [xmin, ymin, width, height]
 
         Returns:
-            List[float]: A list containing the bounding box in the format [xmin, ymin, width, height].
+            list[float]: A list containing the bounding box in the format [xmin, ymin, width, height].
         """
 
         return [self.minx, self.miny, self.maxx - self.minx, self.maxy - self.miny]
 
-    def to_coco_bbox(self):
+    def to_coco_bbox(self) -> list[float]:
         """
         Returns the bounding box in COCO format: [xmin, ymin, width, height]
 
         Returns:
-            List[float]: A list containing the bounding box in COCO format.
+            list[float]: A list containing the bounding box in COCO format.
         """
         return self.to_xywh()
 
-    def to_xyxy(self):
+    def to_xyxy(self) -> list[float]:
         """
         Returns: [xmin, ymin, xmax, ymax]
 
         Returns:
-            List[float]: A list containing the bounding box in the format [xmin, ymin, xmax, ymax].
+            list[float]: A list containing the bounding box in the format [xmin, ymin, xmax, ymax].
         """
         return [self.minx, self.miny, self.maxx, self.maxy]
 
@@ -137,7 +137,7 @@ class BoundingBox:
         """
         return self.to_xyxy()
 
-    def get_shifted_box(self):
+    def get_shifted_box(self) -> BoundingBox:
         """Returns shifted BoundingBox.
 
         Returns:
@@ -151,7 +151,7 @@ class BoundingBox:
         ]
         return BoundingBox(box)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"BoundingBox: <{(self.minx, self.miny, self.maxx, self.maxy)}, "
             f"w: {self.maxx - self.minx}, h: {self.maxy - self.miny}>"
@@ -176,7 +176,7 @@ class Category:
         if not isinstance(self.name, str):
             raise TypeError("name should be string")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Category: <id: {self.id}, name: {self.name}>"
 
 
@@ -202,7 +202,7 @@ class Mask:
         segmentation: list[list[float]],
         full_shape: list[int],
         shift_amount: list = [0, 0],
-    ):
+    ) -> None:
         if full_shape is None:
             raise ValueError("full_shape must be provided")  # pyright: ignore[reportUnreachable]
 
@@ -310,7 +310,7 @@ class ObjectAnnotation:
         category_name: str | None = None,
         shift_amount: list[int] | None = [0, 0],
         full_shape: list[int] | None = None,
-    ):
+    ) -> None:
         """
         Args:
             bbox: List
@@ -680,7 +680,7 @@ class ObjectAnnotation:
                 full_shape=None,
             )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"""ObjectAnnotation<
     bbox: {self.bbox},
     mask: {self.mask},

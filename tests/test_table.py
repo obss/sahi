@@ -6,7 +6,7 @@ from sahi.utils.table import create_ascii_table
 
 
 class TestTable(unittest.TestCase):
-    def test_create_ascii_table_basic(self):
+    def test_create_ascii_table_basic(self) -> None:
         data = [
             ["Model", "Params(M)", "Dataset"],
             ["ResNet50", 25.6, "ImageNet"],
@@ -25,11 +25,11 @@ class TestTable(unittest.TestCase):
         # Content row should contain the full model name padded correctly.
         self.assertIn("| Swin-Transformer |", table)
 
-    def test_empty_data(self):
+    def test_empty_data(self) -> None:
         self.assertEqual(create_ascii_table([]), "")
         self.assertEqual(create_ascii_table([[]]), "")
 
-    def test_none_values(self):
+    def test_none_values(self) -> None:
         data = [["ID", "Value"], [1, None]]
         table = create_ascii_table(data)
         self.assertIn("| 1  |       |", table)

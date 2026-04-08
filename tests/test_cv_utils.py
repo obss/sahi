@@ -12,17 +12,17 @@ from sahi.utils.cv import (
 
 
 class TestCvUtils:
-    def test_hex_to_rgb(self):
+    def test_hex_to_rgb(self) -> None:
         colors = Colors()
         assert colors.hex_to_rgb("#FF3838") == (255, 56, 56)
 
-    def test_hex_to_rgb_retrieve(self):
+    def test_hex_to_rgb_retrieve(self) -> None:
         colors = Colors()
         assert colors(0) == (255, 56, 56)
 
     @patch("sahi.utils.cv.cv2.cvtColor")
     @patch("sahi.utils.cv.cv2.imread")
-    def test_read_image(self, mock_imread, mock_cvtColor):
+    def test_read_image(self, mock_imread, mock_cvtColor) -> None:
         fake_image = "test.jpg"
         fake_image_val = np.array([[[10, 20, 30]]], dtype=np.uint8)
         fake_image_rbg_val = np.array([[[10, 20, 30]]], dtype=np.uint8)
@@ -35,7 +35,7 @@ class TestCvUtils:
         mock_imread.assert_called_once_with(fake_image)
         np.testing.assert_array_equal(result, fake_image_rbg_val)
 
-    def test_apply_color_mask(self):
+    def test_apply_color_mask(self) -> None:
         image = np.array([[0, 1]], dtype=np.uint8)
         color = (255, 0, 0)
 
@@ -45,19 +45,19 @@ class TestCvUtils:
 
         np.testing.assert_array_equal(result, expected_output)
 
-    def test_get_coco_segmentation_from_bool_mask_simple(self):
+    def test_get_coco_segmentation_from_bool_mask_simple(self) -> None:
         mask = np.zeros((10, 10), dtype=bool)
         result = get_coco_segmentation_from_bool_mask(mask)
         assert result == []
 
-    def test_get_coco_segmentation_from_bool_mask_polygon(self):
+    def test_get_coco_segmentation_from_bool_mask_polygon(self) -> None:
         mask = np.zeros((10, 20), dtype=bool)
         mask[1:4, 1:4] = True
         mask[5:8, 5:8] = True
         result = get_coco_segmentation_from_bool_mask(mask)
         assert len(result) == 2
 
-    def test_get_bbox_from_bool_mask(self):
+    def test_get_bbox_from_bool_mask(self) -> None:
         mask = np.array(
             [
                 [False, False, False],

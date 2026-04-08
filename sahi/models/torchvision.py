@@ -14,12 +14,12 @@ from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
 
 
 class TorchVisionDetectionModel(DetectionModel):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "torchvision"]
         super().__init__(*args, **kwargs)
 
-    def load_model(self):
+    def load_model(self) -> None:
         import torch
 
         # read config params
@@ -61,7 +61,7 @@ class TorchVisionDetectionModel(DetectionModel):
 
         self.set_model(model)
 
-    def set_model(self, model: Any):
+    def set_model(self, model: Any) -> None:
         """Sets the underlying TorchVision model.
 
         Args:
@@ -78,7 +78,7 @@ class TorchVisionDetectionModel(DetectionModel):
             category_names = {str(i): COCO_CLASSES[i] for i in range(len(COCO_CLASSES))}
             self.category_mapping = category_names
 
-    def perform_inference(self, image: np.ndarray, image_size: int | None = None):
+    def perform_inference(self, image: np.ndarray, image_size: int | None = None) -> None:
         """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
 
         Args:
@@ -123,7 +123,7 @@ class TorchVisionDetectionModel(DetectionModel):
         self,
         shift_amount_list: list[list[int]] | None = [[0, 0]],
         full_shape_list: list[list[int]] | None = None,
-    ):
+    ) -> None:
         """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 

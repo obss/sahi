@@ -26,7 +26,6 @@ try:
 except ImportError:
     has_matplotlib = False
 
-
 COLOR_PALETTE = np.vstack(
     [
         np.array([0.8, 0.8, 0.8]),
@@ -92,7 +91,7 @@ def _makeplot(rs, ps, outDir: str | Path, class_name: str, iou_type: str) -> lis
     return export_path_list
 
 
-def _autolabel(ax, rects, is_percent=True):
+def _autolabel(ax, rects, is_percent=True) -> None:
     """Attach a text label above each bar in *rects*, displaying its height."""
     for rect in rects:
         height = rect.get_height()

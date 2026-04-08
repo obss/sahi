@@ -17,7 +17,7 @@ if is_available("fiftyone"):
     from fiftyone.utils.coco import _get_matching_image_ids, load_coco_detection_annotations
 
     class COCODetectionDatasetImporter(BaseCOCODetectionDatasetImporter):
-        def setup(self):
+        def setup(self) -> None:
             if self.labels_path is not None and os.path.isfile(self.labels_path):
                 (
                     info,

@@ -12,12 +12,12 @@ from sahi.utils.import_utils import check_package_minimum_version
 
 
 class Yolov5DetectionModel(DetectionModel):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "yolov5", "torch"]
         super().__init__(*args, **kwargs)
 
-    def load_model(self):
+    def load_model(self) -> None:
         """Detection model is initialized and set to self.model."""
         import yolov5
 
@@ -27,7 +27,7 @@ class Yolov5DetectionModel(DetectionModel):
         except Exception as e:
             raise TypeError("model_path is not a valid yolov5 model path: ", e)
 
-    def set_model(self, model: Any):
+    def set_model(self, model: Any) -> None:
         """Sets the underlying YOLOv5 model.
 
         Args:
@@ -46,7 +46,7 @@ class Yolov5DetectionModel(DetectionModel):
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, image: np.ndarray) -> None:
         """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
 
         Args:
@@ -70,7 +70,7 @@ class Yolov5DetectionModel(DetectionModel):
         return len(self.model.names)
 
     @property
-    def has_mask(self):
+    def has_mask(self) -> bool:
         """Returns if model output contains segmentation mask."""
 
         return False  # fix when yolov5 supports segmentation models
@@ -86,7 +86,7 @@ class Yolov5DetectionModel(DetectionModel):
         self,
         shift_amount_list: list[list[int]] | None = [[0, 0]],
         full_shape_list: list[list[int]] | None = None,
-    ):
+    ) -> None:
         """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 

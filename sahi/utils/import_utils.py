@@ -1,4 +1,5 @@
 import importlib.util
+from typing import Any, Generator
 
 from sahi.logger import logger
 
@@ -36,7 +37,7 @@ def get_package_info(package_name: str, verbose: bool = True):
     return _is_available, _version
 
 
-def print_environment_info():
+def print_environment_info() -> None:
     """Log version info for all commonly used SAHI dependency packages."""
     get_package_info("torch")
     get_package_info("torchvision")
@@ -54,7 +55,7 @@ def print_environment_info():
     get_package_info("opencv-python")
 
 
-def is_available(module_name: str):
+def is_available(module_name: str) -> bool:
     """Check whether a Python module is importable.
 
     Args:
@@ -66,7 +67,7 @@ def is_available(module_name: str):
     return importlib.util.find_spec(module_name) is not None
 
 
-def check_requirements(package_names):
+def check_requirements(package_names) -> Generator[Any, Any, Any]:
     """Verify that all required packages are importable.
 
     Args:
@@ -87,7 +88,7 @@ def check_requirements(package_names):
     yield
 
 
-def check_package_minimum_version(package_name: str, minimum_version: str, verbose=False):
+def check_package_minimum_version(package_name: str, minimum_version: str, verbose=False) -> bool:
     """Check whether an installed package meets a minimum version requirement.
 
     Args:
@@ -97,8 +98,8 @@ def check_package_minimum_version(package_name: str, minimum_version: str, verbo
 
     Returns:
         True if the package is missing (assumed compatible), its version
-        is unknown, or its version meets the minimum. False if the
-        installed version is below the minimum.
+            is unknown, or its version meets the minimum. False if the
+            installed version is below the minimum.
     """
     from packaging import version
 
@@ -114,7 +115,9 @@ def check_package_minimum_version(package_name: str, minimum_version: str, verbo
     return True
 
 
-def ensure_package_minimum_version(package_name: str, minimum_version: str, verbose=False):
+def ensure_package_minimum_version(
+    package_name: str, minimum_version: str, verbose=False
+) -> Generator[None, Any, None]:
     """Ensure a package meets a minimum version, raising on failure.
 
     Args:

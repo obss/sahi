@@ -21,7 +21,7 @@ VIDEO_EXTENSIONS = [".mp4", ".mkv", ".flv", ".avi", ".ts", ".mpg", ".mov", "wmv"
 
 
 class Colors:
-    def __init__(self):
+    def __init__(self) -> None:
         hex_colors = (
             "FF3838 2C99A8 FF701F 6473FF CFD231 48F90A 92CC17 3DDB86 1A9334 00D4BB "
             "FF9D97 00C2FF 344593 FFB21D 0018EC 8438FF 520085 CB38FF FF95C8 FF37C7"
@@ -65,7 +65,7 @@ def crop_object_predictions(
     output_dir: str = "",
     file_name: str = "prediction_visual",
     export_format: str = "png",
-):
+) -> None:
     """Crops bounding boxes over the source image and exports it to the output folder.
 
     Args:
@@ -100,7 +100,7 @@ def crop_object_predictions(
         cv2.imwrite(save_path, cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR))
 
 
-def convert_image_to(read_path, extension: str = "jpg", grayscale: bool = False):
+def convert_image_to(read_path, extension: str = "jpg", grayscale: bool = False) -> None:
     """Reads an image from the given path and saves it with the specified extension.
 
     Args:
@@ -742,7 +742,7 @@ def normalize_numpy_image(image: np.ndarray):
     return image / np.max(image)
 
 
-def ipython_display(image: np.ndarray):
+def ipython_display(image: np.ndarray) -> None:
     """Displays numpy image in notebook.
 
     If input image is in range 0..1, please first multiply img by 255

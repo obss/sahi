@@ -25,7 +25,7 @@ class RoboflowDetectionModel(DetectionModel):
         load_at_init: bool = True,
         image_size: int | None = None,
         api_key: str | None = None,
-    ):
+    ) -> None:
         """Initialize the RoboflowDetectionModel with the given parameters.
 
         Args:
@@ -75,7 +75,7 @@ class RoboflowDetectionModel(DetectionModel):
         if load_at_init:
             self.load_model()
 
-    def set_model(self, model: Any, **kwargs):
+    def set_model(self, model: Any, **kwargs) -> None:
         """
         This function should be implemented to instantiate a DetectionModel out of an already loaded model
         Args:
@@ -84,7 +84,7 @@ class RoboflowDetectionModel(DetectionModel):
         """
         self.model = model
 
-    def load_model(self):
+    def load_model(self) -> None:
         """This function should be implemented in a way that detection model should be initialized and set to
         self.model.
 
@@ -173,7 +173,7 @@ class RoboflowDetectionModel(DetectionModel):
     def perform_inference(
         self,
         image: np.ndarray,
-    ):
+    ) -> None:
         """This function should be implemented in a way that prediction should be performed using self.model and the
         prediction result should be set to self._original_predictions.
 
@@ -198,7 +198,7 @@ class RoboflowDetectionModel(DetectionModel):
         self,
         shift_amount_list: list[list[int]] | None = [[0, 0]],
         full_shape_list: list[list[int]] | None = None,
-    ):
+    ) -> None:
         """This function should be implemented in a way that self._original_predictions should be converted to a list of
         prediction.ObjectPrediction and set to self._object_prediction_list.
 

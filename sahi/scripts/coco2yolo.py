@@ -14,7 +14,7 @@ def main(
     name: str = "exp",
     seed: int = 1,
     disable_symlink=False,
-):
+) -> None:
     """
     Args:
         images_dir (str): directory for coco images

@@ -9,12 +9,12 @@ from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bo
 
 
 class Detectron2DetectionModel(DetectionModel):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "detectron2"]
         super().__init__(*args, **kwargs)
 
-    def load_model(self):
+    def load_model(self) -> None:
         from detectron2.config import get_cfg
         from detectron2.data import MetadataCatalog
         from detectron2.engine import DefaultPredictor
@@ -68,7 +68,7 @@ class Detectron2DetectionModel(DetectionModel):
         else:
             self.category_names = list(self.category_mapping.values())
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, image: np.ndarray) -> None:
         """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
 
         Args:
@@ -98,7 +98,7 @@ class Detectron2DetectionModel(DetectionModel):
         self,
         shift_amount_list: list[list[int]] | None = [[0, 0]],
         full_shape_list: list[list[int]] | None = None,
-    ):
+    ) -> None:
         """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 

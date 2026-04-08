@@ -27,7 +27,6 @@ _FUNC_NAME_MAP = {
     "nmm": {"numpy": "nmm_numpy", "numba": "nmm_numba", "torchvision": "nmm_torchvision"},
 }
 
-
 _dispatch_cache: dict[tuple[str, str], Callable[..., Any]] = {}
 
 
@@ -278,7 +277,7 @@ class PostprocessPredictions(ABC):
         match_threshold: float = 0.5,
         match_metric: str = "IOU",
         class_agnostic: bool = True,
-    ):
+    ) -> None:
         self.match_threshold = match_threshold
         self.class_agnostic = class_agnostic
         self.match_metric = match_metric

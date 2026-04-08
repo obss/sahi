@@ -11,7 +11,7 @@ def main(
     dataset_json_path: str,
     *result_json_paths,
     iou_thresh: float = 0.5,
-):
+) -> None:
     """
     Args:
         image_dir (str): directory for coco images

@@ -26,7 +26,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         load_at_init: bool = True,
         image_size: int | None = None,
         token: str | None = None,
-    ):
+    ) -> None:
         self._processor = processor
         self._original_shapes: list = []
         self._token = token
@@ -60,7 +60,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         """Returns number of categories."""
         return self.model.config.num_labels
 
-    def load_model(self):
+    def load_model(self) -> None:
         from transformers import AutoModelForObjectDetection, AutoProcessor
 
         hf_token = os.getenv("HF_TOKEN", self._token)
@@ -79,7 +79,7 @@ class HuggingfaceDetectionModel(DetectionModel):
             processor = AutoProcessor.from_pretrained(self.model_path, use_fast=False, token=hf_token)
         self.set_model(model, processor)
 
-    def set_model(self, model: Any, processor: Any = None, **kwargs):
+    def set_model(self, model: Any, processor: Any = None, **kwargs) -> None:
         processor = processor or self.processor
         if processor is None:
             raise ValueError(f"'processor' is required to be set, got {processor}.")
@@ -92,7 +92,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         self._processor = processor
         self.category_mapping = self.model.config.id2label
 
-    def perform_inference(self, image: list | np.ndarray):
+    def perform_inference(self, image: list | np.ndarray) -> None:
         """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
 
         Args:
@@ -116,7 +116,7 @@ class HuggingfaceDetectionModel(DetectionModel):
             self._original_shapes = [image.shape]
         self._original_predictions = outputs
 
-    def perform_batch_inference(self, images: list[np.ndarray]):
+    def perform_batch_inference(self, images: list[np.ndarray]) -> None:
         """Native batch inference: process all images in a single processor + model call.
 
         Unlike the base-class default (which runs images sequentially), this
@@ -177,7 +177,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         self,
         shift_amount_list: list[list[int]] | None = [[0, 0]],
         full_shape_list: list[list[int]] | None = None,
-    ):
+    ) -> None:
         """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 

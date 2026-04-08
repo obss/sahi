@@ -85,7 +85,7 @@ class YOLOEDetectionModel(UltralyticsDetectionModel):
         - GitHub: https://github.com/THU-MIG/yoloe
     """
 
-    def load_model(self):
+    def load_model(self) -> None:
         """Loads the YOLOE detection model from the specified path.
 
         Initializes the YOLOE model with the given model path or uses the default

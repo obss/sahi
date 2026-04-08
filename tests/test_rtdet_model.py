@@ -8,7 +8,7 @@ IMAGE_SIZE = 640
 
 
 class TestRTDetrDetectionModel:
-    def test_load_model(self):
+    def test_load_model(self) -> None:
         from sahi.models.rtdetr import RTDetrDetectionModel
 
         download_rtdetrl_model()
@@ -23,7 +23,7 @@ class TestRTDetrDetectionModel:
 
         assert rtdetr_detection_model.model is not None
 
-    def test_set_model(self):
+    def test_set_model(self) -> None:
         from ultralytics import RTDETR
 
         from sahi.models.rtdetr import RTDetrDetectionModel
@@ -42,7 +42,7 @@ class TestRTDetrDetectionModel:
 
         assert rtdetr_detection_model.model is not None
 
-    def test_perform_inference(self):
+    def test_perform_inference(self) -> None:
         from sahi.models.rtdetr import RTDetrDetectionModel
 
         # init model
@@ -84,7 +84,7 @@ class TestRTDetrDetectionModel:
         for box in boxes[0]:  # type: ignore
             assert box[4].item() >= CONFIDENCE_THRESHOLD
 
-    def test_convert_original_predictions(self):
+    def test_convert_original_predictions(self) -> None:
         from sahi.models.rtdetr import RTDetrDetectionModel
 
         # init model

@@ -13,7 +13,7 @@ class RTDETRTestConstants:
     RTDETRX_MODEL_PATH = "tests/data/models/rtdetr/rtdetr-x.pt"
 
 
-def download_rtdetrl_model(destination_path: str | None = None):
+def download_rtdetrl_model(destination_path: str | None = None) -> None:
     if destination_path is None:
         destination_path = RTDETRTestConstants.RTDETRL_MODEL_PATH
 
@@ -26,7 +26,7 @@ def download_rtdetrl_model(destination_path: str | None = None):
         )
 
 
-def download_rtdetrx_model(destination_path: str | None = None):
+def download_rtdetrx_model(destination_path: str | None = None) -> None:
     if destination_path is None:
         destination_path = RTDETRTestConstants.RTDETRX_MODEL_PATH
 

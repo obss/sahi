@@ -25,7 +25,7 @@ CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
 
 
-def test_load_model():
+def test_load_model() -> None:
     huggingface_detection_model = HuggingfaceDetectionModel(
         model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -37,7 +37,7 @@ def test_load_model():
     assert huggingface_detection_model.model is not None
 
 
-def test_set_model():
+def test_set_model() -> None:
     huggingface_model = AutoModelForObjectDetection.from_pretrained(HuggingfaceConstants.RTDETRV2_MODEL_PATH)
     huggingface_processor = AutoProcessor.from_pretrained(HuggingfaceConstants.RTDETRV2_MODEL_PATH)
 
@@ -53,7 +53,7 @@ def test_set_model():
     assert huggingface_detection_model.model is not None
 
 
-def test_perform_inference():
+def test_perform_inference() -> None:
     huggingface_detection_model = HuggingfaceDetectionModel(
         model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -99,7 +99,7 @@ def test_perform_inference():
         assert score.item() >= CONFIDENCE_THRESHOLD
 
 
-def test_convert_original_predictions():
+def test_convert_original_predictions() -> None:
     huggingface_detection_model = HuggingfaceDetectionModel(
         model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -144,7 +144,7 @@ def test_convert_original_predictions():
         assert object_prediction.score.value >= CONFIDENCE_THRESHOLD
 
 
-def test_get_prediction_huggingface():
+def test_get_prediction_huggingface() -> None:
     huggingface_detection_model = HuggingfaceDetectionModel(
         model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -184,7 +184,7 @@ def test_get_prediction_huggingface():
     assert num_car == 14
 
 
-def test_get_prediction_automodel_huggingface():
+def test_get_prediction_automodel_huggingface() -> None:
     from sahi.auto_model import AutoDetectionModel
     from sahi.predict import get_prediction
     from tests.utils.huggingface import HuggingfaceConstants
@@ -229,7 +229,7 @@ def test_get_prediction_automodel_huggingface():
     assert num_car == 14
 
 
-def test_get_sliced_prediction_huggingface():
+def test_get_sliced_prediction_huggingface() -> None:
     huggingface_detection_model = HuggingfaceDetectionModel(
         model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,

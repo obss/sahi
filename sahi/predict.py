@@ -871,7 +871,7 @@ def predict_fiftyone(
     exclude_classes_by_id: list[int] | None = None,
     progress_bar: bool = False,
     batch_size: int = 1,
-):
+) -> None:
     """Performs prediction for all present images in given folder.
 
     Args:

@@ -93,7 +93,7 @@ class MmdetDetectionModel(DetectionModel):
         load_at_init: bool = True,
         image_size: int | None = None,
         scope: str = "mmdet",
-    ):
+    ) -> None:
         self.scope = scope
         self.image_size = image_size
         existing_packages = getattr(self, "required_packages", None) or []
@@ -111,7 +111,7 @@ class MmdetDetectionModel(DetectionModel):
             image_size,
         )
 
-    def load_model(self):
+    def load_model(self) -> None:
         """Detection model is initialized and set to self.model."""
 
         # create model
@@ -121,7 +121,7 @@ class MmdetDetectionModel(DetectionModel):
 
         self.set_model(model)
 
-    def set_model(self, model: Any):
+    def set_model(self, model: Any) -> None:
         """Sets the underlying MMDetection model.
 
         Args:
@@ -137,7 +137,7 @@ class MmdetDetectionModel(DetectionModel):
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, image: np.ndarray) -> None:
         """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
 
         Args:
@@ -168,7 +168,7 @@ class MmdetDetectionModel(DetectionModel):
         return len(self.category_names)
 
     @property
-    def has_mask(self):
+    def has_mask(self) -> bool:
         """Returns if model output contains segmentation mask.
 
         Considers both single dataset and ConcatDataset scenarios.
@@ -209,7 +209,7 @@ class MmdetDetectionModel(DetectionModel):
         self,
         shift_amount_list: list[list[int]] | None = [[0, 0]],
         full_shape_list: list[list[int]] | None = None,
-    ):
+    ) -> None:
         """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 

@@ -7,7 +7,7 @@ class Detectron2TestConstants:
     MASKRCNN_MODEL_ZOO_NAME = "COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"
 
 
-def export_cfg_as_yaml(cfg, export_path: str = "config.yaml"):
+def export_cfg_as_yaml(cfg, export_path: str = "config.yaml") -> None:
     """Exports Detectron2 config object in yaml format so that it can be used later.
 
     Args:

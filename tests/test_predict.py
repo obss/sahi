@@ -18,7 +18,7 @@ CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
 
 
-def test_prediction_score():
+def test_prediction_score() -> None:
     from sahi.prediction import PredictionScore
 
     prediction_score = PredictionScore(np.array(0.6))  # type: ignore
@@ -33,7 +33,7 @@ def test_prediction_score():
 
 
 @pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
-def test_get_prediction_mmdet():
+def test_get_prediction_mmdet() -> None:
     # Skip if mmdet is not installed
     pytest.importorskip("mmdet", reason="MMDet is not installed")
     pytest.importorskip("mmcv", reason="MMCV is not installed")
@@ -85,7 +85,7 @@ def test_get_prediction_mmdet():
     assert num_car == 2
 
 
-def test_get_prediction_automodel_yolo11():
+def test_get_prediction_automodel_yolo11() -> None:
     from sahi.auto_model import AutoDetectionModel
     from sahi.predict import get_prediction
 
@@ -125,7 +125,7 @@ def test_get_prediction_automodel_yolo11():
     assert result_counts["person"] == 0
 
 
-def test_prediction_category_remapping():
+def test_prediction_category_remapping() -> None:
     from sahi.auto_model import AutoDetectionModel
     from sahi.predict import get_prediction
 
@@ -166,7 +166,7 @@ def test_prediction_category_remapping():
 
 
 @pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
-def test_get_sliced_prediction_mmdet():
+def test_get_sliced_prediction_mmdet() -> None:
     # Skip if mmdet is not installed
     pytest.importorskip("mmdet", reason="MMDet is not installed")
     pytest.importorskip("mmcv", reason="MMCV is not installed")
@@ -239,7 +239,7 @@ def test_get_sliced_prediction_mmdet():
     assert num_car == 15
 
 
-def test_get_prediction_yolo11():
+def test_get_prediction_yolo11() -> None:
     # init model
     download_yolo11n_model()
 
@@ -282,7 +282,7 @@ def test_get_prediction_yolo11():
     assert num_car > 0
 
 
-def test_get_sliced_prediction_yolo11():
+def test_get_sliced_prediction_yolo11() -> None:
     # init model
     download_yolo11n_model()
 
@@ -343,7 +343,7 @@ def test_get_sliced_prediction_yolo11():
     assert num_car > 0
 
 
-def test_get_sliced_prediction_batch_size():
+def test_get_sliced_prediction_batch_size() -> None:
     """Verifies that batch_size > 1 produces identical results to batch_size=1."""
     download_yolo11n_model()
 
@@ -397,7 +397,7 @@ def test_get_sliced_prediction_batch_size():
 
 
 @pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
-def test_mmdet_yolox_tiny_prediction():
+def test_mmdet_yolox_tiny_prediction() -> None:
     # Skip if mmdet is not installed
     pytest.importorskip("mmdet", reason="MMDet is not installed")
     pytest.importorskip("mmcv", reason="MMCV is not installed")
@@ -451,7 +451,7 @@ def test_mmdet_yolox_tiny_prediction():
     )
 
 
-def test_ultralytics_yolo11n_prediction():
+def test_ultralytics_yolo11n_prediction() -> None:
     from sahi.predict import predict
 
     # init model
@@ -499,7 +499,7 @@ def test_ultralytics_yolo11n_prediction():
     )
 
 
-def test_video_prediction():
+def test_video_prediction() -> None:
     # download video file
     source_url = "https://github.com/obss/sahi/releases/download/0.9.2/test.mp4"
     destination_path = "tests/data/test.mp4"

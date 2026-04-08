@@ -31,7 +31,7 @@ class MmdetTestConstants:
     MMDET_YOLOX_TINY_CONFIG_PATH = "tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py"
 
 
-def download_mmdet_cascade_mask_rcnn_model(destination_path: str | None = None):
+def download_mmdet_cascade_mask_rcnn_model(destination_path: str | None = None) -> None:
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH
 
@@ -40,7 +40,7 @@ def download_mmdet_cascade_mask_rcnn_model(destination_path: str | None = None):
     download_from_url(MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_URL, destination_path)
 
 
-def download_mmdet_retinanet_model(destination_path: str | None = None):
+def download_mmdet_retinanet_model(destination_path: str | None = None) -> None:
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_RETINANET_MODEL_PATH
 
@@ -49,7 +49,7 @@ def download_mmdet_retinanet_model(destination_path: str | None = None):
     download_from_url(MmdetTestConstants.MMDET_RETINANET_MODEL_URL, destination_path)
 
 
-def download_mmdet_yolox_tiny_model(destination_path: str | None = None):
+def download_mmdet_yolox_tiny_model(destination_path: str | None = None) -> None:
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH
 

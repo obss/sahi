@@ -1,5 +1,5 @@
 class TestHighLevelApi:
-    def test_bounding_box(self):
+    def test_bounding_box(self) -> None:
         from sahi import BoundingBox
 
         bbox_minmax = [30.0, 30.0, 100.0, 150.0]
@@ -16,7 +16,7 @@ class TestHighLevelApi:
         assert expanded_bbox.to_xyxy() == [23.0, 18.0, 107.0, 162.0]
         assert shifted_bbox.to_xyxy() == [80.0, 70.0, 150.0, 190.0]
 
-    def test_category(self):
+    def test_category(self) -> None:
         from sahi import Category
 
         category_id = 1
@@ -25,7 +25,7 @@ class TestHighLevelApi:
         assert category.id == category_id
         assert category.name == category_name
 
-    def test_mask(self):
+    def test_mask(self) -> None:
         from sahi import Mask
 
         coco_segmentation = [[1.0, 1.0, 325.0, 125.0, 250.0, 200.0, 5.0, 200.0]]
@@ -38,7 +38,7 @@ class TestHighLevelApi:
         assert mask.full_shape_width == full_shape_width
         assert mask.bool_mask[11, 2]
 
-    def test_object_prediction(self):
+    def test_object_prediction(self) -> None:
         from sahi import ObjectPrediction
 
         bbox = [100, 200, 150, 230]
@@ -94,7 +94,7 @@ class TestHighLevelApi:
         assert object_annotation3.category.id == category_id
         assert object_annotation3.category.name == category_name
 
-    def test_detection_model(self):
+    def test_detection_model(self) -> None:
         from sahi import DetectionModel
 
         MODEL_PATH = "model_path"

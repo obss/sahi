@@ -97,7 +97,7 @@ class ShapelyAnnotation:
         shapely_multipolygon = MultiPolygon([shapely_polygon])
         return cls(multipolygon=shapely_multipolygon, slice_bbox=slice_bbox)
 
-    def __init__(self, multipolygon: MultiPolygon, slice_bbox=None):
+    def __init__(self, multipolygon: MultiPolygon, slice_bbox=None) -> None:
         self.multipolygon = multipolygon
         self.slice_bbox = slice_bbox
 
@@ -110,7 +110,7 @@ class ShapelyAnnotation:
         return int(self.__area)
 
     @multipolygon.setter
-    def multipolygon(self, multipolygon: MultiPolygon):
+    def multipolygon(self, multipolygon: MultiPolygon) -> None:
         self.__multipolygon = multipolygon
         # calculate areas of all polygons
         area = 0

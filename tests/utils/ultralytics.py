@@ -77,7 +77,7 @@ def download_yolo11n_obb_model(destination_path: str | None = None) -> str:
 def download_yolo11n_onnx_model(
     destination_path: str | Path = UltralyticsConstants.YOLO11N_ONNX_MODEL_PATH,
     image_size: int | None = 640,
-):
+) -> None:
     destination_path = Path(destination_path)
     model_path = destination_path.parent / (destination_path.stem + ".pt")
     download_yolo11n_model(str(model_path))

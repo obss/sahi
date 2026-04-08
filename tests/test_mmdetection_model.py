@@ -22,7 +22,7 @@ IMAGE_PATH = "tests/data/small-vehicles1.jpeg"
 
 
 class TestMmdetDetectionModel:
-    def test_load_model(self):
+    def test_load_model(self) -> None:
         from sahi.models.mmdet import MmdetDetectionModel
 
         download_mmdet_cascade_mask_rcnn_model()
@@ -38,7 +38,7 @@ class TestMmdetDetectionModel:
 
         assert mmdet_detection_model.model is not None
 
-    def test_perform_inference_with_mask_output(self):
+    def test_perform_inference_with_mask_output(self) -> None:
         from sahi.models.mmdet import MmdetDetectionModel
 
         # init model
@@ -85,7 +85,7 @@ class TestMmdetDetectionModel:
         # compare
         assert [446, 304, 490, 346] in boxes[idx].astype(int)
 
-    def test_perform_inference_without_mask_output(self):
+    def test_perform_inference_without_mask_output(self) -> None:
         from sahi.models.mmdet import MmdetDetectionModel
 
         # init model
@@ -125,7 +125,7 @@ class TestMmdetDetectionModel:
         # compare
         assert boxes[idx].astype(int).tolist() == [320, 323, 380, 365]
 
-    def test_convert_original_predictions_with_mask_output(self):
+    def test_convert_original_predictions_with_mask_output(self) -> None:
         from sahi.models.mmdet import MmdetDetectionModel
 
         # init model
@@ -162,7 +162,7 @@ class TestMmdetDetectionModel:
         for object_prediction in object_predictions:
             assert object_prediction.score.value >= CONFIDENCE_THRESHOLD
 
-    def test_convert_original_predictions_without_mask_output(self):
+    def test_convert_original_predictions_without_mask_output(self) -> None:
         from sahi.models.mmdet import MmdetDetectionModel
 
         # init model
@@ -208,7 +208,7 @@ class TestMmdetDetectionModel:
             assert isinstance(object_prediction, ObjectPrediction)
             assert object_prediction.score.value >= CONFIDENCE_THRESHOLD
 
-    def test_perform_inference_without_mask_output_with_automodel(self):
+    def test_perform_inference_without_mask_output_with_automodel(self) -> None:
         from sahi import AutoDetectionModel
 
         # init model

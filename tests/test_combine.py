@@ -49,29 +49,29 @@ PREDS_BATCHED_NMM = [
 
 
 class TestEdgeCases:
-    def test_nms_empty(self):
+    def test_nms_empty(self) -> None:
         preds = np.array([], dtype=np.float32).reshape(0, 6)
         assert nms(preds) == []
 
-    def test_nms_single(self):
+    def test_nms_single(self) -> None:
         preds = np.array([make_pred(0, 0, 10, 10, 0.9, 1)], dtype=np.float32)
         assert nms(preds) == [0]
 
-    def test_greedy_nmm_empty(self):
+    def test_greedy_nmm_empty(self) -> None:
         preds = np.array([], dtype=np.float32).reshape(0, 6)
         assert greedy_nmm(preds) == {}
 
-    def test_greedy_nmm_single(self):
+    def test_greedy_nmm_single(self) -> None:
         preds = np.array([make_pred(0, 0, 10, 10, 0.9, 1)], dtype=np.float32)
         result = greedy_nmm(preds)
         assert result == {0: []}
 
-    def test_nmm_single(self):
+    def test_nmm_single(self) -> None:
         preds = np.array([make_pred(0, 0, 10, 10, 0.9, 1)], dtype=np.float32)
         result = nmm(preds)
         assert result == {0: []}
 
-    def test_nms_identical_boxes(self):
+    def test_nms_identical_boxes(self) -> None:
         preds = np.array(
             [
                 make_pred(0, 0, 10, 10, 0.9, 1),
@@ -83,7 +83,7 @@ class TestEdgeCases:
         assert len(keep) == 1
         assert 0 in keep
 
-    def test_nms_non_overlapping(self):
+    def test_nms_non_overlapping(self) -> None:
         preds = np.array(
             [
                 make_pred(0, 0, 10, 10, 0.9, 1),
@@ -95,7 +95,7 @@ class TestEdgeCases:
         keep = nms(preds, match_threshold=0.5)
         assert len(keep) == 3  # all kept — no overlap
 
-    def test_nms_equal_scores_deterministic(self):
+    def test_nms_equal_scores_deterministic(self) -> None:
         preds = np.array(
             [
                 make_pred(0, 0, 10, 10, 0.9, 1),
@@ -114,7 +114,7 @@ class TestEdgeCases:
 
 
 class TestIOSMetric:
-    def test_nms_ios_small_inside_large(self):
+    def test_nms_ios_small_inside_large(self) -> None:
         """Small box fully inside large box: IOS=1.0 (suppressed), IOU < 1.0."""
         preds = np.array(
             [
@@ -126,7 +126,7 @@ class TestIOSMetric:
         keep_ios = nms(preds, match_metric="IOS", match_threshold=0.5)
         assert len(keep_ios) == 1  # small box suppressed (IOS = 1.0)
 
-    def test_nms_iou_vs_ios_differ(self):
+    def test_nms_iou_vs_ios_differ(self) -> None:
         """IOU and IOS give different results for asymmetric overlap."""
         preds = np.array(
             [
@@ -142,7 +142,7 @@ class TestIOSMetric:
         assert len(keep_iou) == 2  # both kept with IOU
         assert len(keep_ios) == 1  # small suppressed with IOS
 
-    def test_greedy_nmm_ios(self):
+    def test_greedy_nmm_ios(self) -> None:
         preds = np.array(
             [
                 make_pred(0, 0, 100, 100, 0.9, 1),
@@ -154,7 +154,7 @@ class TestIOSMetric:
         assert 0 in result
         assert 1 in result[0]
 
-    def test_nmm_ios(self):
+    def test_nmm_ios(self) -> None:
         preds = np.array(
             [
                 make_pred(0, 0, 100, 100, 0.9, 1),
@@ -166,7 +166,7 @@ class TestIOSMetric:
         assert 0 in result
         assert 1 in result[0]
 
-    def test_batched_nms_ios(self):
+    def test_batched_nms_ios(self) -> None:
         preds = np.array(
             [
                 make_pred(0, 0, 100, 100, 0.9, 1),
@@ -186,32 +186,32 @@ class TestIOSMetric:
 
 
 class TestNMS:
-    def test_basic(self):
+    def test_basic(self) -> None:
         preds = np.array(PREDS_NMS, dtype=np.float32)
         keep = nms(preds, match_metric="IOU", match_threshold=0.5)
         assert 0 in keep and 2 in keep
         assert 1 not in keep
 
-    def test_batched_class_aware(self):
+    def test_batched_class_aware(self) -> None:
         preds = np.array(PREDS_BATCHED_NMS, dtype=np.float32)
         keep = batched_nms(preds, match_metric="IOU", match_threshold=0.5)
         assert 0 in keep and 1 in keep
         assert 2 not in keep
 
-    def test_high_threshold_keeps_all(self):
+    def test_high_threshold_keeps_all(self) -> None:
         preds = np.array(PREDS_NMS, dtype=np.float32)
         keep = nms(preds, match_metric="IOU", match_threshold=0.99)
         assert len(keep) == 3  # threshold too high, nothing suppressed
 
 
 class TestNMM:
-    def test_merge_mapping(self):
+    def test_merge_mapping(self) -> None:
         preds = np.array(PREDS_NMM, dtype=np.float32)
         result = nmm(preds, match_metric="IOU", match_threshold=0.1)
         assert 0 in result
         assert 1 in result[0] and 2 in result[0]
 
-    def test_batched_class_aware(self):
+    def test_batched_class_aware(self) -> None:
         preds = np.array(PREDS_BATCHED_NMM, dtype=np.float32)
         result = batched_nmm(preds, match_metric="IOU", match_threshold=0.1)
         merged_any = any(2 in v for v in result.values())
@@ -219,13 +219,13 @@ class TestNMM:
 
 
 class TestGreedyNMM:
-    def test_basic(self):
+    def test_basic(self) -> None:
         preds = np.array(PREDS_NMM, dtype=np.float32)
         result = greedy_nmm(preds, match_metric="IOU", match_threshold=0.1)
         assert 0 in result
         assert set(result[0]) == {1, 2}
 
-    def test_batched(self):
+    def test_batched(self) -> None:
         preds = np.array(PREDS_NMM, dtype=np.float32)
         result = batched_greedy_nmm(preds, match_metric="IOU", match_threshold=0.1)
         assert any(len(v) > 0 for v in result.values())
@@ -254,31 +254,31 @@ def _make_object_predictions(preds_data):
 
 
 class TestPostprocessClasses:
-    def test_nms_postprocess(self):
+    def test_nms_postprocess(self) -> None:
         obj_preds = _make_object_predictions(PREDS_NMS)
         pp = NMSPostprocess(match_threshold=0.5, match_metric="IOU")
         result = pp(obj_preds)
         assert len(result) == 2  # 3 input → 2 after suppression
 
-    def test_nms_postprocess_class_agnostic_false(self):
+    def test_nms_postprocess_class_agnostic_false(self) -> None:
         obj_preds = _make_object_predictions(PREDS_BATCHED_NMS)
         pp = NMSPostprocess(match_threshold=0.5, match_metric="IOU", class_agnostic=False)
         result = pp(obj_preds)
         assert len(result) == 2  # class 1: keep 1, class 2: keep 1
 
-    def test_nmm_postprocess(self):
+    def test_nmm_postprocess(self) -> None:
         obj_preds = _make_object_predictions(PREDS_NMM)
         pp = NMMPostprocess(match_threshold=0.1, match_metric="IOU")
         result = pp(obj_preds)
         assert len(result) >= 1  # at least the keeper survives
 
-    def test_greedy_nmm_postprocess(self):
+    def test_greedy_nmm_postprocess(self) -> None:
         obj_preds = _make_object_predictions(PREDS_NMM)
         pp = GreedyNMMPostprocess(match_threshold=0.1, match_metric="IOU")
         result = pp(obj_preds)
         assert len(result) >= 1
 
-    def test_nms_postprocess_single(self):
+    def test_nms_postprocess_single(self) -> None:
         obj_preds = _make_object_predictions([make_pred(0, 0, 10, 10, 0.9, 1)])
         pp = NMSPostprocess(match_threshold=0.5)
         result = pp(obj_preds)
@@ -291,7 +291,7 @@ class TestPostprocessClasses:
 
 
 class TestBackendRegistry:
-    def test_set_and_get(self):
+    def test_set_and_get(self) -> None:
         from sahi.postprocess.backends import get_postprocess_backend, set_postprocess_backend
 
         original = get_postprocess_backend()
@@ -302,13 +302,13 @@ class TestBackendRegistry:
         finally:
             set_postprocess_backend(original)
 
-    def test_invalid_backend_raises(self):
+    def test_invalid_backend_raises(self) -> None:
         from sahi.postprocess.backends import set_postprocess_backend
 
         with pytest.raises(ValueError, match="Unknown backend"):
             set_postprocess_backend("invalid_backend")
 
-    def test_resolve_cache_invalidation(self):
+    def test_resolve_cache_invalidation(self) -> None:
         from sahi.postprocess.backends import resolve_backend, set_postprocess_backend
 
         original = get_postprocess_backend()
@@ -322,7 +322,7 @@ class TestBackendRegistry:
         finally:
             set_postprocess_backend(original)
 
-    def test_forced_numpy_backend_dispatch(self):
+    def test_forced_numpy_backend_dispatch(self) -> None:
         """Force numpy backend and verify NMS dispatches correctly."""
         from sahi.postprocess.backends import set_postprocess_backend
 
@@ -348,7 +348,7 @@ def get_postprocess_backend():
 
 
 class TestNumpyBackend:
-    def test_nms(self):
+    def test_nms(self) -> None:
         from sahi.postprocess._numpy_backend import nms_numpy
 
         preds = np.array(PREDS_NMS, dtype=np.float32)
@@ -356,7 +356,7 @@ class TestNumpyBackend:
         assert 0 in keep and 2 in keep
         assert 1 not in keep
 
-    def test_greedy_nmm(self):
+    def test_greedy_nmm(self) -> None:
         from sahi.postprocess._numpy_backend import greedy_nmm_numpy
 
         preds = np.array(PREDS_NMM, dtype=np.float32)
@@ -364,7 +364,7 @@ class TestNumpyBackend:
         assert 0 in result
         assert set(result[0]) == {1, 2}
 
-    def test_nmm(self):
+    def test_nmm(self) -> None:
         from sahi.postprocess._numpy_backend import nmm_numpy
 
         preds = np.array(PREDS_NMM, dtype=np.float32)
@@ -372,7 +372,7 @@ class TestNumpyBackend:
         assert 0 in result
         assert 1 in result[0] and 2 in result[0]
 
-    def test_metric_matrix_iou(self):
+    def test_metric_matrix_iou(self) -> None:
         from sahi.postprocess._numpy_backend import compute_metric_matrix
 
         boxes = np.array([[0, 0, 10, 10], [0, 0, 10, 10]], dtype=np.float32)
@@ -382,7 +382,7 @@ class TestNumpyBackend:
         assert matrix[0, 1] == pytest.approx(1.0, abs=1e-5)  # identical boxes
         assert matrix[0, 0] == pytest.approx(1.0, abs=1e-5)  # self
 
-    def test_metric_matrix_ios(self):
+    def test_metric_matrix_ios(self) -> None:
         from sahi.postprocess._numpy_backend import compute_metric_matrix
 
         boxes = np.array([[0, 0, 100, 100], [10, 10, 20, 20]], dtype=np.float32)
@@ -391,7 +391,7 @@ class TestNumpyBackend:
         # Small box fully inside large: IOS = 100/100 = 1.0
         assert matrix[0, 1] == pytest.approx(1.0, abs=1e-5)
 
-    def test_metric_matrix_no_overlap(self):
+    def test_metric_matrix_no_overlap(self) -> None:
         from sahi.postprocess._numpy_backend import compute_metric_matrix
 
         boxes = np.array([[0, 0, 10, 10], [50, 50, 60, 60]], dtype=np.float32)
@@ -407,31 +407,31 @@ class TestNumpyBackend:
 
 class TestNumbaBackend:
     @pytest.fixture(autouse=True)
-    def _skip_no_numba(self):
+    def _skip_no_numba(self) -> None:
         pytest.importorskip("numba")
 
-    def test_nms_parity(self):
+    def test_nms_parity(self) -> None:
         from sahi.postprocess._numba_backend import nms_numba
         from sahi.postprocess._numpy_backend import nms_numpy
 
         preds = np.array(PREDS_NMS, dtype=np.float32)
         assert nms_numpy(preds, "IOU", 0.5) == nms_numba(preds, "IOU", 0.5)
 
-    def test_greedy_nmm_parity(self):
+    def test_greedy_nmm_parity(self) -> None:
         from sahi.postprocess._numba_backend import greedy_nmm_numba
         from sahi.postprocess._numpy_backend import greedy_nmm_numpy
 
         preds = np.array(PREDS_NMM, dtype=np.float32)
         assert greedy_nmm_numpy(preds, "IOU", 0.1) == greedy_nmm_numba(preds, "IOU", 0.1)
 
-    def test_nmm_parity(self):
+    def test_nmm_parity(self) -> None:
         from sahi.postprocess._numba_backend import nmm_numba
         from sahi.postprocess._numpy_backend import nmm_numpy
 
         preds = np.array(PREDS_NMM, dtype=np.float32)
         assert nmm_numpy(preds, "IOU", 0.1) == nmm_numba(preds, "IOU", 0.1)
 
-    def test_nms_ios_parity(self):
+    def test_nms_ios_parity(self) -> None:
         from sahi.postprocess._numba_backend import nms_numba
         from sahi.postprocess._numpy_backend import nms_numpy
 
@@ -444,7 +444,7 @@ class TestNumbaBackend:
         )
         assert nms_numpy(preds, "IOS", 0.5) == nms_numba(preds, "IOS", 0.5)
 
-    def test_random_parity(self):
+    def test_random_parity(self) -> None:
         """Verify numpy and numba agree on random data."""
         from sahi.postprocess._numba_backend import greedy_nmm_numba, nms_numba
         from sahi.postprocess._numpy_backend import greedy_nmm_numpy, nms_numpy
@@ -470,7 +470,7 @@ class TestNumbaBackend:
 
 class TestTorchParity:
     @pytest.fixture(autouse=True)
-    def _skip_no_torch(self):
+    def _skip_no_torch(self) -> None:
         pytest.importorskip("torch")
 
     def _to_tensor(self, data):
@@ -478,13 +478,13 @@ class TestTorchParity:
 
         return torch.tensor(data, dtype=torch.float32)
 
-    def test_nms_torch_input(self):
+    def test_nms_torch_input(self) -> None:
         preds = self._to_tensor(PREDS_NMS).numpy()
         keep = nms(preds, match_metric="IOU", match_threshold=0.5)
         assert 0 in keep and 2 in keep
         assert 1 not in keep
 
-    def test_numpy_torch_parity(self):
+    def test_numpy_torch_parity(self) -> None:
         for preds_data, func, kwargs in [
             (PREDS_NMS, nms, {"match_metric": "IOU", "match_threshold": 0.5}),
             (PREDS_BATCHED_NMS, batched_nms, {"match_metric": "IOU", "match_threshold": 0.5}),

@@ -19,7 +19,7 @@ class UltralyticsDetectionModel(DetectionModel):
     NCNN (.param or _ncnn_model/), and TorchScript (.torchscript) models.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Initialize the Ultralytics detection model.
 
         Accepts all arguments from ``DetectionModel.__init__`` plus the
@@ -61,7 +61,7 @@ class UltralyticsDetectionModel(DetectionModel):
         except Exception as e:
             raise TypeError("model_path is not a valid Ultralytics model path: ", e)
 
-    def set_model(self, model: Any, **kwargs):
+    def set_model(self, model: Any, **kwargs) -> None:
         """Sets the underlying Ultralytics model.
 
         Args:
@@ -75,7 +75,7 @@ class UltralyticsDetectionModel(DetectionModel):
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, image: np.ndarray) -> None:
         """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
 
         Args:
@@ -131,7 +131,7 @@ class UltralyticsDetectionModel(DetectionModel):
         else:
             return [result.boxes.data for result in prediction_result]
 
-    def perform_batch_inference(self, images: list[np.ndarray]):
+    def perform_batch_inference(self, images: list[np.ndarray]) -> None:
         """Performs inference on a batch of images using native YOLO batch support.
 
         Args:
@@ -213,7 +213,7 @@ class UltralyticsDetectionModel(DetectionModel):
         self,
         shift_amount_list: list[list[int]] | None = [[0, 0]],
         full_shape_list: list[list[int]] | None = None,
-    ):
+    ) -> None:
         """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 

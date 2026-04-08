@@ -3,7 +3,7 @@ import fire
 from sahi.predict import predict_fiftyone
 
 
-def main():
+def main() -> None:
     fire.Fire(predict_fiftyone)
 
 

@@ -6,7 +6,6 @@ try:
 except importlib_metadata.PackageNotFoundError:
     __version__ = "development"
 
-
 # Lazy imports — heavy modules (cv2, shapely, requests, tqdm) are only
 # loaded when the user actually accesses one of these names.
 _LAZY_IMPORTS = {

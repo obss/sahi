@@ -2,14 +2,14 @@ from unittest.mock import patch
 
 
 class TestFileUtils:
-    def test_list_files(self):
+    def test_list_files(self) -> None:
         from sahi.utils.file import list_files
 
         directory = "tests/data/coco_utils/"
         filepath_list = list_files(directory, contains=["json"], verbose=False)
         assert len(filepath_list) == 11
 
-    def test_list_files_recursively(self, tmp_path):
+    def test_list_files_recursively(self, tmp_path) -> None:
         import shutil
         from pathlib import Path
 
@@ -28,7 +28,7 @@ class TestFileUtils:
         assert len(relative_filepath_list) == 7
         assert len(abs_filepath_list) == 7
 
-    def test_increment_path(self):
+    def test_increment_path(self) -> None:
         from sahi.utils.file import increment_path
 
         with patch("sahi.utils.file.Path.exists", return_value=False):

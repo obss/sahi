@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, NoReturn
 
 import numpy as np
 
@@ -34,7 +34,7 @@ class DetectionModel:
         category_remapping: dict | None = None,
         load_at_init: bool = True,
         image_size: int | None = None,
-    ):
+    ) -> None:
         """Init object detection/instance segmentation model.
 
         Args:
@@ -90,7 +90,7 @@ class DetectionModel:
         if pkgs:
             check_requirements(pkgs)
 
-    def load_model(self):
+    def load_model(self) -> NoReturn:
         """Load the detection model from disk and assign it to ``self.model``.
 
         Subclasses must override this method. The implementation should use
@@ -99,7 +99,7 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
-    def set_model(self, model: Any, **kwargs):
+    def set_model(self, model: Any, **kwargs) -> NoReturn:
         """Set an already-instantiated model as the underlying detection model.
 
         Subclasses must override this method to assign ``model`` to
@@ -111,7 +111,7 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
-    def set_device(self, device: str | None = None):
+    def set_device(self, device: str | None = None) -> None:
         """Sets the device pytorch should use for the model.
 
         Args:
@@ -120,12 +120,12 @@ class DetectionModel:
 
         self.device = select_device(device)
 
-    def unload_model(self):
+    def unload_model(self) -> None:
         """Unloads the model from CPU/GPU."""
         self.model = None
         empty_cuda_cache()
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, image: np.ndarray) -> NoReturn:
         """Run inference on a single image and store raw predictions.
 
         Subclasses must override this method. The implementation should run
@@ -138,7 +138,7 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
-    def perform_batch_inference(self, images: list[np.ndarray]):
+    def perform_batch_inference(self, images: list[np.ndarray]) -> None:
         """Performs inference on a batch of images.
 
         Subclasses can override this for native batch support (e.g.
@@ -163,7 +163,7 @@ class DetectionModel:
         self,
         shift_amount_list: list[list[int]] | None = [[0, 0]],
         full_shape_list: list[list[int]] | None = None,
-    ):
+    ) -> NoReturn:
         """Convert raw predictions to a list of ObjectPrediction instances.
 
         Subclasses must override this method. The implementation should read
@@ -182,7 +182,7 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
-    def _apply_category_remapping(self):
+    def _apply_category_remapping(self) -> None:
         """Applies category remapping based on mapping given in self.category_remapping."""
         # confirm self.category_remapping is not None
         if self.category_remapping is None:
@@ -204,7 +204,7 @@ class DetectionModel:
         self,
         shift_amount: list[list[int]] | None = [[0, 0]],
         full_shape: list[list[int]] | None = None,
-    ):
+    ) -> None:
         """Convert raw predictions to ObjectPrediction lists.
 
         Should be called after ``perform_inference`` or ``perform_batch_inference``.

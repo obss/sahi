@@ -10,7 +10,7 @@ def run_command(cmd):
     return result.returncode
 
 
-def check_formatting():
+def check_formatting() -> int:
     """Check code formatting without making changes."""
     print("Checking code formatting...")
 
@@ -30,7 +30,7 @@ def check_formatting():
         return 1
 
 
-def fix_formatting():
+def fix_formatting() -> int:
     """Fix code formatting issues."""
     print("Fixing code formatting...")
 
@@ -46,7 +46,7 @@ def fix_formatting():
     return 0
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     if len(sys.argv) < 2:
         print("Usage: python scripts/format_code.py [check|fix]")

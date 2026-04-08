@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 
 
-def unzip(file_path: str, dest_dir: str):
+def unzip(file_path: str, dest_dir: str) -> None:
     """Unzips compressed .zip file.
 
     Example inputs:
@@ -25,7 +25,7 @@ def unzip(file_path: str, dest_dir: str):
         zf.extractall(dest_dir)
 
 
-def save_json(data, save_path, indent: int | None = None):
+def save_json(data, save_path, indent: int | None = None) -> None:
     """
     Saves json formatted data (given as "data") as save_path
 
@@ -202,7 +202,7 @@ def load_pickle(load_path):
     return data
 
 
-def save_pickle(data, save_path):
+def save_pickle(data, save_path) -> None:
     """
     Saves pickle formatted data (given as "data") as save_path
 
@@ -271,7 +271,7 @@ def increment_path(path: str | Path, exist_ok: bool = True, sep: str = "") -> st
         return f"{path}{sep}{n}"  # update path
 
 
-def download_from_url(from_url: str, to_path: str):
+def download_from_url(from_url: str, to_path: str) -> None:
     """Downloads a file from the given URL and saves it to the specified path.
 
     Args:

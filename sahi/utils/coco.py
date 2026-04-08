@@ -23,7 +23,7 @@ from sahi.utils.shapely import ShapelyAnnotation, box, get_shapely_multipolygon
 class CocoCategory:
     """COCO formatted category."""
 
-    def __init__(self, id: int = 0, name: str | None = None, supercategory: str | None = None):
+    def __init__(self, id: int = 0, name: str | None = None, supercategory: str | None = None) -> None:
         self.id = int(id)
         self.name = name
         self.supercategory = supercategory if supercategory else name
@@ -50,7 +50,7 @@ class CocoCategory:
             "supercategory": self.supercategory,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"""CocoCategory<
     id: {self.id},
     name: {self.name},
@@ -173,7 +173,7 @@ class CocoAnnotation:
         bbox: list[int] | None = None,
         image_id=None,
         iscrowd=0,
-    ):
+    ) -> None:
         """Creates coco annotation object using bbox or segmentation.
 
         Args:
@@ -241,7 +241,7 @@ class CocoAnnotation:
         return self._category_id
 
     @category_id.setter
-    def category_id(self, i):
+    def category_id(self, i) -> None:
         if not isinstance(i, int):
             raise Exception("category_id must be an integer")
         self._category_id = i
@@ -252,7 +252,7 @@ class CocoAnnotation:
         return self._image_id
 
     @image_id.setter
-    def image_id(self, i):
+    def image_id(self, i) -> None:
         if not isinstance(i, int):
             raise Exception("image_id must be an integer")
         self._image_id = i
@@ -263,7 +263,7 @@ class CocoAnnotation:
         return self._category_name
 
     @category_name.setter
-    def category_name(self, n):
+    def category_name(self, n) -> None:
         if not isinstance(n, str):
             raise Exception("category_name must be a string")
         self._category_name = n
@@ -284,7 +284,7 @@ class CocoAnnotation:
             "area": self.area,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"""CocoAnnotation<
     image_id: {self.image_id},
     bbox: {self.bbox},
@@ -386,7 +386,7 @@ class CocoPrediction(CocoAnnotation):
         image_id=None,
         score=None,
         iscrowd=0,
-    ):
+    ) -> None:
         """
 
         Args:
@@ -428,7 +428,7 @@ class CocoPrediction(CocoAnnotation):
             "area": self.area,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"""CocoPrediction<
     image_id: {self.image_id},
     bbox: {self.bbox},
@@ -455,7 +455,7 @@ class CocoVidAnnotation(CocoAnnotation):
         instance_id=None,
         iscrowd=0,
         id=None,
-    ):
+    ) -> None:
         """
         Args:
             bbox: List
@@ -497,7 +497,7 @@ class CocoVidAnnotation(CocoAnnotation):
             "area": self.area,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"""CocoAnnotation<
     id: {self.id},
     image_id: {self.image_id},
@@ -527,7 +527,7 @@ class CocoImage:
             width=image_dict["width"],
         )
 
-    def __init__(self, file_name: str, height: int, width: int, id: int | None = None):
+    def __init__(self, file_name: str, height: int, width: int, id: int | None = None) -> None:
         """Creates CocoImage object.
 
         Args:
@@ -547,7 +547,7 @@ class CocoImage:
         self.annotations = []  # list of CocoAnnotation that belong to this image
         self.predictions = []  # list of CocoPrediction that belong to this image
 
-    def add_annotation(self, annotation):
+    def add_annotation(self, annotation) -> None:
         """Adds annotation to this CocoImage instance.
 
         annotation : CocoAnnotation
@@ -557,7 +557,7 @@ class CocoImage:
             raise TypeError("annotation must be a CocoAnnotation instance")
         self.annotations.append(annotation)
 
-    def add_prediction(self, prediction):
+    def add_prediction(self, prediction) -> None:
         """Adds prediction to this CocoImage instance.
 
         prediction : CocoPrediction
@@ -576,7 +576,7 @@ class CocoImage:
             "width": self.width,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"""CocoImage<
     id: {self.id},
     file_name: {self.file_name},
@@ -600,7 +600,7 @@ class CocoVidImage(CocoImage):
         video_id=None,
         frame_id=None,
         id=None,
-    ):
+    ) -> None:
         """Creates CocoVidImage object.
 
         Args:
@@ -641,7 +641,7 @@ class CocoVidImage(CocoImage):
             frame_id=frame_id,
         )
 
-    def add_annotation(self, annotation):
+    def add_annotation(self, annotation) -> None:
         """
         Adds annotation to this CocoImage instance
         annotation : CocoVidAnnotation
@@ -662,7 +662,7 @@ class CocoVidImage(CocoImage):
             "frame_id": self.frame_id,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"""CocoVidImage<
     file_name: {self.file_name},
     height: {self.height},
@@ -686,7 +686,7 @@ class CocoVideo:
         fps: float | None = None,
         height: int | None = None,
         width: int | None = None,
-    ):
+    ) -> None:
         """Creates CocoVideo object.
 
         Args:
@@ -708,7 +708,7 @@ class CocoVideo:
         self.width = width
         self.images = []  # list of CocoImage that belong to this video
 
-    def add_image(self, image):
+    def add_image(self, image) -> None:
         """
         Adds image to this CocoVideo instance
         Args:
@@ -719,7 +719,7 @@ class CocoVideo:
             raise TypeError("image must be a CocoImage instance")
         self.images.append(CocoVidImage.from_coco_image(image))
 
-    def add_cocovidimage(self, cocovidimage):
+    def add_cocovidimage(self, cocovidimage) -> None:
         """
         Adds CocoVidImage to this CocoVideo instance
         Args:
@@ -740,7 +740,7 @@ class CocoVideo:
             "width": self.width,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"""CocoVideo<
     id: {self.id},
     name: {self.name},
@@ -759,7 +759,7 @@ class Coco:
         ignore_negative_samples: bool = False,
         clip_bboxes_to_img_dims: bool = False,
         image_id_setting: Literal["auto", "manual"] = "auto",
-    ):
+    ) -> None:
         """Creates Coco object.
 
         Args:
@@ -788,7 +788,7 @@ class Coco:
         self.clip_bboxes_to_img_dims = clip_bboxes_to_img_dims
         self.image_id_setting = image_id_setting
 
-    def add_categories_from_coco_category_list(self, coco_category_list):
+    def add_categories_from_coco_category_list(self, coco_category_list) -> None:
         """Creates CocoCategory object using coco category list.
 
         Args:
@@ -808,7 +808,7 @@ class Coco:
 
             self.add_category(CocoCategory.from_coco_category(coco_category))
 
-    def add_category(self, category):
+    def add_category(self, category) -> None:
         """Adds category to this Coco instance.
 
         Args:
@@ -820,7 +820,7 @@ class Coco:
             raise TypeError("category must be a CocoCategory instance")
         self.categories.append(category)
 
-    def add_image(self, image):
+    def add_image(self, image) -> None:
         """Adds image to this Coco instance.
 
         Args:
@@ -831,7 +831,7 @@ class Coco:
             raise ValueError("image id should be manually set for image_id_setting='manual'")
         self.images.append(image)
 
-    def update_categories(self, desired_name2id: dict[str, int], update_image_filenames: bool = False):
+    def update_categories(self, desired_name2id: dict[str, int], update_image_filenames: bool = False) -> None:
         """Rearranges category mapping of given COCO object based on given desired_name2id. Can also be used to filter
         some of the categories.
 
@@ -892,7 +892,7 @@ class Coco:
         # overwrite instance
         self.__dict__ = updated_coco.__dict__
 
-    def merge(self, coco, desired_name2id=None, verbose=1):
+    def merge(self, coco, desired_name2id=None, verbose=1) -> None:
         """Combines the images/annotations/categories of given coco object with current one.
 
         Args:
@@ -1003,7 +1003,9 @@ class Coco:
 
         lock = Lock()
 
-        def fill_image_id_set(start, finish, image_list, _image_id_set, _image_id_to_annotation_list, _coco, lock):
+        def fill_image_id_set(
+            start, finish, image_list, _image_id_set, _image_id_to_annotation_list, _coco, lock
+        ) -> None:
             for coco_image_dict in tqdm(
                 image_list[start:finish], f"Loading coco annotations between {start} and {finish}"
             ):
@@ -1129,7 +1131,7 @@ class Coco:
             self.calculate_stats()
         return self._stats
 
-    def calculate_stats(self):
+    def calculate_stats(self) -> None:
         """Iterates over all annotations and calculates total number of."""
         # init all stats
         num_annotations = 0
@@ -1250,7 +1252,7 @@ class Coco:
         numpy_seed: int = 0,
         mp: bool = False,
         disable_symlink: bool = False,
-    ):
+    ) -> None:
         """Exports current COCO dataset in ultralytics/yolo format. Creates train val folders with image symlinks and
         txt files and a data yaml file.
 
@@ -1525,7 +1527,7 @@ class Coco:
 
 def export_yolo_images_and_txts_from_coco_object(
     output_dir, coco, ignore_negative_samples=False, mp=False, disable_symlink=False
-):
+) -> None:
     """Creates image symlinks and annotation txts in yolo format from coco dataset.
 
     Args:
@@ -1565,7 +1567,7 @@ def export_yolo_images_and_txts_from_coco_object(
 
 def export_single_yolo_image_and_corresponding_txt(
     coco_image, coco_image_dir, output_dir, ignore_negative_samples=False, disable_symlink=False
-):
+) -> None:
     """Generates YOLO formatted image symlink and annotation txt file.
 
     Args:
@@ -1826,7 +1828,7 @@ def merge_from_list(coco_dict_list, desired_name2id=None, verbose=1):
     return merged_coco_dict
 
 
-def merge_from_file(coco_path1: str, coco_path2: str, save_path: str):
+def merge_from_file(coco_path1: str, coco_path2: str, save_path: str) -> None:
     """Combines 2 coco formatted annotations files given their paths, and saves the combined file to save_path.
 
     Args:
@@ -2120,7 +2122,7 @@ def count_images_with_category(coco_file_path):
 
 
 class CocoVid:
-    def __init__(self, name=None, remapping_dict=None):
+    def __init__(self, name=None, remapping_dict=None) -> None:
         """Creates CocoVid object.
 
         Args:
@@ -2134,7 +2136,7 @@ class CocoVid:
         self.categories = []
         self.videos = []
 
-    def add_categories_from_coco_category_list(self, coco_category_list):
+    def add_categories_from_coco_category_list(self, coco_category_list) -> None:
         """Creates CocoCategory object using coco category list.
 
         Args:
@@ -2154,7 +2156,7 @@ class CocoVid:
 
             self.add_category(CocoCategory.from_coco_category(coco_category))
 
-    def add_category(self, category: CocoCategory):
+    def add_category(self, category: CocoCategory) -> None:
         """Adds category to this CocoVid instance.
 
         Args:
@@ -2179,7 +2181,7 @@ class CocoVid:
             category_mapping[category.id] = category.name
         return category_mapping
 
-    def add_video(self, video: CocoVideo):
+    def add_video(self, video: CocoVideo) -> None:
         """Adds video to this CocoVid instance.
 
         Args:

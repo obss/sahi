@@ -15,7 +15,7 @@ torch_version = get_package_info("torch", verbose=False)[1]
 if "1.10." in torch_version:
 
     class TestDetectron2DetectionModel:
-        def test_load_model(self):
+        def test_load_model(self) -> None:
             detector2_detection_model = Detectron2DetectionModel(
                 model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
                 config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
@@ -27,7 +27,7 @@ if "1.10." in torch_version:
             )
             assert detector2_detection_model.model is not None
 
-        def test_perform_inference_without_mask_output(self):
+        def test_perform_inference_without_mask_output(self) -> None:
             detectron2_detection_model = Detectron2DetectionModel(
                 model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
                 config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
@@ -59,7 +59,7 @@ if "1.10." in torch_version:
             assert boxes[ind].astype("int").tolist() == [831, 303, 873, 346]
             assert len(boxes) == 35
 
-        def test_convert_original_predictions_without_mask_output(self):
+        def test_convert_original_predictions_without_mask_output(self) -> None:
             detectron2_detection_model = Detectron2DetectionModel(
                 model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
                 config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
@@ -105,7 +105,7 @@ if "1.10." in torch_version:
                 if not (point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin):
                     raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
-        def test_convert_original_predictions_with_mask_output(self):
+        def test_convert_original_predictions_with_mask_output(self) -> None:
             detectron2_detection_model = Detectron2DetectionModel(
                 model_path=Detectron2TestConstants.MASKRCNN_MODEL_ZOO_NAME,
                 config_path=Detectron2TestConstants.MASKRCNN_MODEL_ZOO_NAME,
@@ -148,7 +148,7 @@ if "1.10." in torch_version:
                 if not (point < desired_bbox[ind] + margin and point > desired_bbox[ind] - margin):
                     raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
-        def test_get_prediction_detectron2(self):
+        def test_get_prediction_detectron2(self) -> None:
             from sahi.models.detectron2 import Detectron2DetectionModel
             from sahi.predict import get_prediction
             from sahi.utils.detectron2 import Detectron2TestConstants
@@ -197,7 +197,7 @@ if "1.10." in torch_version:
                     num_car += 1
             assert num_car == 16
 
-        def test_get_sliced_prediction_detectron2(self):
+        def test_get_sliced_prediction_detectron2(self) -> None:
             from sahi.models.detectron2 import Detectron2DetectionModel
             from sahi.predict import get_sliced_prediction
             from sahi.utils.detectron2 import Detectron2TestConstants
