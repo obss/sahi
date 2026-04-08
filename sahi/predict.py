@@ -412,7 +412,7 @@ def bbox_sort(a: tuple, b: tuple, thresh: int | float) -> int | float:
     return bbox_a[1] - bbox_b[1]
 
 
-def agg_prediction(result: PredictionResult, thresh):
+def agg_prediction(result: PredictionResult, thresh: float) -> list:
     coord_list = []
     res = result.to_coco_annotations()
     for ann in res:
@@ -472,8 +472,8 @@ def predict(
     exclude_classes_by_id: list[int] | None = None,
     progress_bar: bool = False,
     batch_size: int = 1,
-    **kwargs,
-):
+    **kwargs: object,
+) -> dict | None:
     """Performs prediction for all present images in given folder.
 
     Args:
