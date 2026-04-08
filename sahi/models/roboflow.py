@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from itertools import chain, zip_longest
-from typing import Any
 
 import numpy as np
 
@@ -14,7 +13,7 @@ from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bo
 class RoboflowDetectionModel(DetectionModel):
     def __init__(
         self,
-        model: Any | None = None,
+        model: object | None = None,
         model_path: str | None = None,
         config_path: str | None = None,
         device: str | None = None,
@@ -75,7 +74,7 @@ class RoboflowDetectionModel(DetectionModel):
         if load_at_init:
             self.load_model()
 
-    def set_model(self, model: Any, **kwargs) -> None:
+    def set_model(self, model: object, **kwargs: object) -> None:
         """
         This function should be implemented to instantiate a DetectionModel out of an already loaded model
         Args:
@@ -187,7 +186,7 @@ class RoboflowDetectionModel(DetectionModel):
             self._original_predictions = [self.model.predict(image, threshold=self.confidence_threshold)]
 
     @property
-    def has_mask(self):
+    def has_mask(self) -> bool:
         """Returns if model output contains segmentation mask."""
         if self._use_universe:
             return self.model.task_type == "instance-segmentation"
