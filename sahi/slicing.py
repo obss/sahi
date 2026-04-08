@@ -508,7 +508,9 @@ def slice_coco(
     return coco_dict, save_path
 
 
-def calc_ratio_and_slice(orientation: Literal["vertical", "horizontal", "square"], slide: int = 1, ratio: float = 0.1) -> tuple[int, int, float, float]:
+def calc_ratio_and_slice(
+    orientation: Literal["vertical", "horizontal", "square"], slide: int = 1, ratio: float = 0.1
+) -> tuple[int, int, float, float]:
     """
     According to image resolution calculation overlap params
     Args:
