@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from typing import Any
 
 import numpy as np
 
@@ -15,8 +14,8 @@ class HuggingfaceDetectionModel(DetectionModel):
     def __init__(
         self,
         model_path: str | None = None,
-        model: Any | None = None,
-        processor: Any | None = None,
+        model: object | None = None,
+        processor: object | None = None,
         config_path: str | None = None,
         device: str | None = None,
         mask_threshold: float = 0.5,
@@ -47,11 +46,11 @@ class HuggingfaceDetectionModel(DetectionModel):
         )
 
     @property
-    def processor(self):
+    def processor(self) -> object:
         return self._processor
 
     @property
-    def image_shapes(self):
+    def image_shapes(self) -> list:
         # TODO: remove this property in a future release; use _original_shapes directly
         return self._original_shapes
 
@@ -79,7 +78,7 @@ class HuggingfaceDetectionModel(DetectionModel):
             processor = AutoProcessor.from_pretrained(self.model_path, use_fast=False, token=hf_token)
         self.set_model(model, processor)
 
-    def set_model(self, model: Any, processor: Any = None, **kwargs) -> None:
+    def set_model(self, model: object, processor: object | None = None, **kwargs: object) -> None:
         processor = processor or self.processor
         if processor is None:
             raise ValueError(f"'processor' is required to be set, got {processor}.")
@@ -142,7 +141,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         cls_name = self.model.__class__.__name__
         return any(cls_name.startswith(p) for p in self._SIGMOID_CLS_PREFIXES)
 
-    def get_valid_predictions(self, logits: Any, pred_boxes: Any) -> tuple:
+    def get_valid_predictions(self, logits: object, pred_boxes: object) -> tuple:
         """
         Args:
             logits: torch.Tensor
