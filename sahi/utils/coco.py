@@ -10,7 +10,9 @@ from dataclasses import dataclass
 from multiprocessing import Pool
 from pathlib import Path
 from threading import Lock, Thread
-from typing import Literal, Self
+from typing import Literal, TypeVar
+
+_T = TypeVar("_T")
 
 import numpy as np
 from tqdm import tqdm
@@ -29,7 +31,7 @@ class CocoCategory:
         self.supercategory = supercategory if supercategory else name
 
     @classmethod
-    def from_coco_category(cls, category: dict) -> Self:
+    def from_coco_category(cls: type[_T], category: dict) -> _T:
         """Creates CocoCategory object using coco category.
 
         Args:
@@ -62,8 +64,8 @@ class CocoAnnotation:
 
     @classmethod
     def from_coco_segmentation(
-        cls, segmentation: list[list[float]], category_id: int, category_name: str, iscrowd: int = 0
-    ) -> Self:
+        cls: type[_T], segmentation: list[list[float]], category_id: int, category_name: str, iscrowd: int = 0
+    ) -> _T:
         """Creates CocoAnnotation object using coco segmentation.
 
         Args:
@@ -84,7 +86,7 @@ class CocoAnnotation:
         )
 
     @classmethod
-    def from_coco_bbox(cls, bbox: list[int], category_id: int, category_name: str, iscrowd: int = 0) -> Self:
+    def from_coco_bbox(cls: type[_T], bbox: list[int], category_id: int, category_name: str, iscrowd: int = 0) -> _T:
         """Creates CocoAnnotation object using coco bbox.
 
         Args:
@@ -105,7 +107,7 @@ class CocoAnnotation:
         )
 
     @classmethod
-    def from_coco_annotation_dict(cls, annotation_dict: dict, category_name: str | None = None) -> Self:
+    def from_coco_annotation_dict(cls: type[_T], annotation_dict: dict, category_name: str | None = None) -> _T:
         """Creates CocoAnnotation object from category name and COCO formatted annotation dict (with fields "bbox",
         "segmentation", "category_id").
 
@@ -143,12 +145,12 @@ class CocoAnnotation:
 
     @classmethod
     def from_shapely_annotation(
-        cls,
+        cls: type[_T],
         shapely_annotation: ShapelyAnnotation,
         category_id: int,
         category_name: str,
         iscrowd: int,
-    ) -> Self:
+    ) -> _T:
         """Creates CocoAnnotation object from ShapelyAnnotation object.
 
         Args:
@@ -302,14 +304,14 @@ class CocoPrediction(CocoAnnotation):
 
     @classmethod
     def from_coco_segmentation(
-        cls,
+        cls: type[_T],
         segmentation: list[list[float]],
         category_id: int,
         category_name: str,
         score: float,
         iscrowd: int = 0,
         image_id: int | None = None,
-    ) -> Self:
+    ) -> _T:
         """Creates CocoAnnotation object using coco segmentation.
 
         Args:
@@ -335,14 +337,14 @@ class CocoPrediction(CocoAnnotation):
 
     @classmethod
     def from_coco_bbox(
-        cls,
+        cls: type[_T],
         bbox: list[int],
         category_id: int,
         category_name: str,
         score: float,
         iscrowd: int = 0,
         image_id: int | None = None,
-    ) -> Self:
+    ) -> _T:
         """Creates CocoAnnotation object using coco bbox.
 
         Args:
@@ -368,8 +370,8 @@ class CocoPrediction(CocoAnnotation):
 
     @classmethod
     def from_coco_annotation_dict(
-        cls, category_name: str, annotation_dict: dict, score: float, image_id: int | None = None
-    ) -> Self:
+        cls: type[_T], category_name: str, annotation_dict: dict, score: float, image_id: int | None = None
+    ) -> _T:
         """Creates CocoAnnotation object from category name and COCO formatted annotation dict (with fields "bbox",
         "segmentation", "category_id").
 
@@ -532,7 +534,7 @@ class CocoVidAnnotation(CocoAnnotation):
 
 class CocoImage:
     @classmethod
-    def from_coco_image_dict(cls, image_dict: dict) -> Self:
+    def from_coco_image_dict(cls: type[_T], image_dict: dict) -> _T:
         """Creates CocoImage object from COCO formatted image dict (with fields "id", "file_name", "height" and
         "weight").
 
@@ -642,7 +644,9 @@ class CocoVidImage(CocoImage):
         self.video_id = video_id
 
     @classmethod
-    def from_coco_image(cls, coco_image: CocoImage, video_id: int | None = None, frame_id: int | None = None) -> Self:
+    def from_coco_image(
+        cls: type[_T], coco_image: CocoImage, video_id: int | None = None, frame_id: int | None = None
+    ) -> _T:
         """Creates CocoVidImage object using CocoImage object.
 
         Args:
@@ -962,7 +966,7 @@ class Coco:
 
     @classmethod
     def from_coco_dict_or_path(
-        cls,
+        cls: type[_T],
         coco_dict_or_path: dict | str,
         image_dir: str | None = None,
         remapping_dict: dict | None = None,
@@ -970,7 +974,7 @@ class Coco:
         clip_bboxes_to_img_dims: bool = False,
         use_threads: bool = False,
         num_threads: int = 10,
-    ) -> Self:
+    ) -> _T:
         """Creates coco object from COCO formatted dict or COCO dataset file path.
 
         Args:
