@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import patch
 
 
@@ -9,7 +10,7 @@ class TestFileUtils:
         filepath_list = list_files(directory, contains=["json"], verbose=False)
         assert len(filepath_list) == 11
 
-    def test_list_files_recursively(self, tmp_path) -> None:
+    def test_list_files_recursively(self, tmp_path: Path) -> None:
         import shutil
         from pathlib import Path
 

@@ -383,7 +383,7 @@ def test_get_sliced_prediction_batch_size() -> None:
         f"batch_size=1 gave {len(preds_bs1)} predictions, batch_size=4 gave {len(preds_bs4)}"
     )
 
-    def serialize_pred(pred):
+    def serialize_pred(pred: object) -> tuple:
         return (
             pred.category.id,
             pred.category.name,

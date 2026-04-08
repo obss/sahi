@@ -128,7 +128,7 @@ class TestShapelyUtils:
 
         assert intersection_shapely_annotation.to_xywh() == []
 
-    def test_get_shapely_multipolygon_make_valid_returns_geometry_collection(self, monkeypatch) -> None:
+    def test_get_shapely_multipolygon_make_valid_returns_geometry_collection(self, monkeypatch: object) -> None:
         # Prepare simple polygons to be returned by make_valid inside a GeometryCollection
         poly1 = Polygon([(0, 0), (1, 0), (1, 1), (0, 1)])
         poly2 = Polygon([(2, 2), (3, 2), (3, 3), (2, 3)])
@@ -137,7 +137,7 @@ class TestShapelyUtils:
         # Monkeypatch make_valid to return a GeometryCollection containing a Polygon and a MultiPolygon
         import sahi.utils.shapely as shapely_module
 
-        def fake_make_valid(_):
+        def fake_make_valid(_: object) -> object:
             return GeometryCollection([poly1, multi])
 
         monkeypatch.setattr(shapely_module, "make_valid", fake_make_valid)

@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 
@@ -22,7 +22,7 @@ class TestCvUtils:
 
     @patch("sahi.utils.cv.cv2.cvtColor")
     @patch("sahi.utils.cv.cv2.imread")
-    def test_read_image(self, mock_imread, mock_cvtColor) -> None:
+    def test_read_image(self, mock_imread: MagicMock, mock_cvtColor: MagicMock) -> None:
         fake_image = "test.jpg"
         fake_image_val = np.array([[[10, 20, 30]]], dtype=np.uint8)
         fake_image_rbg_val = np.array([[[10, 20, 30]]], dtype=np.uint8)

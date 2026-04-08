@@ -14,7 +14,7 @@ from sahi.postprocess.combine import (
 )
 
 
-def make_pred(x1, y1, x2, y2, score, cid):
+def make_pred(x1: float, y1: float, x2: float, y2: float, score: float, cid: int) -> list:
     return [x1, y1, x2, y2, score, cid]
 
 
@@ -236,7 +236,7 @@ class TestGreedyNMM:
 # ===========================================================================
 
 
-def _make_object_predictions(preds_data):
+def _make_object_predictions(preds_data: list) -> list:
     """Create ObjectPrediction objects for testing postprocess classes."""
     from sahi.prediction import ObjectPrediction
 
@@ -336,7 +336,7 @@ class TestBackendRegistry:
             set_postprocess_backend(original)
 
 
-def get_postprocess_backend():
+def get_postprocess_backend() -> str:
     from sahi.postprocess.backends import get_postprocess_backend
 
     return get_postprocess_backend()
@@ -473,7 +473,7 @@ class TestTorchParity:
     def _skip_no_torch(self) -> None:
         pytest.importorskip("torch")
 
-    def _to_tensor(self, data):
+    def _to_tensor(self, data: np.ndarray) -> object:
         import torch
 
         return torch.tensor(data, dtype=torch.float32)

@@ -413,7 +413,7 @@ class TestCocoUtils:
         imageid2annotationlist_mapping = get_imageid2annotationlist_mapping(coco_dict)
         assert len(imageid2annotationlist_mapping) == 2
 
-        def check_image_id(image_id) -> None:
+        def check_image_id(image_id: int) -> None:
             logger.debug(f"{type(imageid2annotationlist_mapping[image_id][0])}")
             image_ids = []
             for annotationlist in imageid2annotationlist_mapping[image_id]:
