@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 import numpy as np
 
 from sahi.logger import logger
@@ -83,7 +81,7 @@ class MmdetDetectionModel(DetectionModel):
     def __init__(
         self,
         model_path: str | None = None,
-        model: Any | None = None,
+        model: object | None = None,
         config_path: str | None = None,
         device: str | None = None,
         mask_threshold: float = 0.5,
@@ -121,7 +119,7 @@ class MmdetDetectionModel(DetectionModel):
 
         self.set_model(model)
 
-    def set_model(self, model: Any) -> None:
+    def set_model(self, model: object) -> None:
         """Sets the underlying MMDetection model.
 
         Args:
@@ -163,7 +161,7 @@ class MmdetDetectionModel(DetectionModel):
         self._original_predictions = prediction_result["predictions"]
 
     @property
-    def num_categories(self):
+    def num_categories(self) -> int:
         """Returns number of categories."""
         return len(self.category_names)
 
@@ -174,7 +172,7 @@ class MmdetDetectionModel(DetectionModel):
         Considers both single dataset and ConcatDataset scenarios.
         """
 
-        def check_pipeline_for_mask(pipeline):
+        def check_pipeline_for_mask(pipeline: list) -> bool:
             return any(
                 isinstance(item, dict) and any("mask" in key and value is True for key, value in item.items())
                 for item in pipeline
@@ -197,7 +195,7 @@ class MmdetDetectionModel(DetectionModel):
         return False
 
     @property
-    def category_names(self):
+    def category_names(self) -> tuple | list:
         classes = self.model.model.dataset_meta["classes"]
         if isinstance(classes, str):
             # https://github.com/open-mmlab/mmdetection/pull/4973
