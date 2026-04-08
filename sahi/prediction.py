@@ -30,17 +30,17 @@ class PredictionScore:
         # set score
         self.value = value
 
-    def is_greater_than_threshold(self, threshold):
+    def is_greater_than_threshold(self, threshold: float) -> bool:
         """Check if score is greater than threshold."""
         return self.value > threshold
 
-    def __eq__(self, threshold):
+    def __eq__(self, threshold: float) -> bool:
         return self.value == threshold
 
-    def __gt__(self, threshold):
+    def __gt__(self, threshold: float) -> bool:
         return self.value > threshold
 
-    def __lt__(self, threshold):
+    def __lt__(self, threshold: float) -> bool:
         return self.value < threshold
 
     def __repr__(self) -> str:
@@ -94,7 +94,7 @@ class ObjectPrediction(ObjectAnnotation):
             full_shape=full_shape,
         )
 
-    def get_shifted_object_prediction(self):
+    def get_shifted_object_prediction(self) -> ObjectPrediction:
         """Returns shifted version ObjectPrediction.
 
         Shifts bbox and mask coords. Used for mapping sliced predictions over full image.
@@ -121,7 +121,7 @@ class ObjectPrediction(ObjectAnnotation):
                 full_shape=None,
             )
 
-    def to_coco_prediction(self, image_id=None):
+    def to_coco_prediction(self, image_id: int | None = None) -> CocoPrediction:
         """Returns sahi.utils.coco.CocoPrediction representation of ObjectAnnotation."""
         if self.mask:
             coco_prediction = CocoPrediction.from_coco_segmentation(
@@ -141,7 +141,7 @@ class ObjectPrediction(ObjectAnnotation):
             )
         return coco_prediction
 
-    def to_fiftyone_detection(self, image_height: int, image_width: int):
+    def to_fiftyone_detection(self, image_height: int, image_width: int) -> object:
         """Returns fiftyone.Detection representation of ObjectPrediction."""
         try:
             import fiftyone as fo
@@ -226,25 +226,25 @@ class PredictionResult:
             export_format="png",
         )
 
-    def to_coco_annotations(self):
+    def to_coco_annotations(self) -> list:
         coco_annotation_list = []
         for object_prediction in self.object_prediction_list:
             coco_annotation_list.append(object_prediction.to_coco_prediction().json)
         return coco_annotation_list
 
-    def to_coco_predictions(self, image_id: int | None = None):
+    def to_coco_predictions(self, image_id: int | None = None) -> list:
         coco_prediction_list = []
         for object_prediction in self.object_prediction_list:
             coco_prediction_list.append(object_prediction.to_coco_prediction(image_id=image_id).json)
         return coco_prediction_list
 
-    def to_imantics_annotations(self):
+    def to_imantics_annotations(self) -> list:
         imantics_annotation_list = []
         for object_prediction in self.object_prediction_list:
             imantics_annotation_list.append(object_prediction.to_imantics_annotation())
         return imantics_annotation_list
 
-    def to_fiftyone_detections(self):
+    def to_fiftyone_detections(self) -> list:
         try:
             import fiftyone as fo
         except ImportError:
