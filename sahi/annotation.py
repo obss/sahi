@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass
-from typing import Any
 
 import numpy as np
 
@@ -13,6 +12,13 @@ from sahi.utils.cv import (
     get_coco_segmentation_from_bool_mask,
 )
 from sahi.utils.shapely import ShapelyAnnotation
+
+try:
+    import imantics
+
+    ImaneticsAnnotationType = imantics.annotation.Annotation
+except ImportError:
+    ImaneticsAnnotationType = object  # type: ignore[misc, assignment]
 
 
 @dataclass(frozen=True)
@@ -41,38 +47,38 @@ class BoundingBox:
     box: tuple[float, float, float, float] | list[float]
     shift_amount: tuple[int, int] = (0, 0)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if len(self.box) != 4 or any(coord < 0 for coord in self.box):
             raise ValueError("box must be 4 non-negative floats: [minx, miny, maxx, maxy]")
         if len(self.shift_amount) != 2:
             raise ValueError("shift_amount must be 2 integers: [shift_x, shift_y]")
 
     @property
-    def minx(self):
+    def minx(self) -> float:
         return self.box[0]
 
     @property
-    def miny(self):
+    def miny(self) -> float:
         return self.box[1]
 
     @property
-    def maxx(self):
+    def maxx(self) -> float:
         return self.box[2]
 
     @property
-    def maxy(self):
+    def maxy(self) -> float:
         return self.box[3]
 
     @property
-    def shift_x(self):
+    def shift_x(self) -> int:
         return self.shift_amount[0]
 
     @property
-    def shift_y(self):
+    def shift_y(self) -> int:
         return self.shift_amount[1]
 
     @property
-    def area(self):
+    def area(self) -> float:
         return (self.maxx - self.minx) * (self.maxy - self.miny)
 
     def get_expanded_box(self, ratio: float = 0.1, max_x: int | None = None, max_y: int | None = None) -> BoundingBox:
@@ -171,7 +177,7 @@ class Category:
     id: int
     name: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not isinstance(self.id, int):
             raise TypeError("id should be integer")
         if not isinstance(self.name, str):
@@ -220,7 +226,7 @@ class Mask:
         full_shape: list[int],
         mask_threshold: float = 0.5,
         shift_amount: list[int] = [0, 0],
-    ):
+    ) -> Mask:
         """
         Args:
             mask: np.ndarray of np.float elements
@@ -245,8 +251,8 @@ class Mask:
         cls,
         bool_mask: np.ndarray,
         full_shape: list[int],
-        shift_amount: list = [0, 0],
-    ):
+        shift_amount: list[int] = [0, 0],
+    ) -> Mask:
         """
         Args:
             bool_mask: np.ndarray with bool elements
@@ -280,7 +286,7 @@ class Mask:
         return [self.full_shape_height, self.full_shape_width]
 
     @property
-    def shift_amount(self):
+    def shift_amount(self) -> list[int]:
         """Returns the shift amount of the mask slice as [shift_x, shift_y]"""
         return [self.shift_x, self.shift_y]
 
@@ -385,7 +391,7 @@ class ObjectAnnotation:
         category_name: str | None = None,
         shift_amount: list[int] | None = [0, 0],
         full_shape: list[int] | None = None,
-    ):
+    ) -> ObjectAnnotation:
         """Creates ObjectAnnotation from bool_mask (2D np.ndarray)
 
         Args:
@@ -418,7 +424,7 @@ class ObjectAnnotation:
         category_id: int | None = None,
         category_name: str | None = None,
         shift_amount: list[int] | None = [0, 0],
-    ):
+    ) -> ObjectAnnotation:
         """
         Creates ObjectAnnotation from coco segmentation:
         [
@@ -460,7 +466,7 @@ class ObjectAnnotation:
         category_name: str | None = None,
         shift_amount: list[int] | None = [0, 0],
         full_shape: list[int] | None = None,
-    ):
+    ) -> ObjectAnnotation:
         """Creates ObjectAnnotation from coco bbox [minx, miny, width, height]
 
         Args:
@@ -496,7 +502,7 @@ class ObjectAnnotation:
         full_shape: list[int],
         category_name: str | None = None,
         shift_amount: list[int] | None = [0, 0],
-    ):
+    ) -> ObjectAnnotation:
         """Creates ObjectAnnotation object from category name and COCO formatted annotation dict (with fields "bbox",
         "segmentation", "category_id").
 
@@ -536,7 +542,7 @@ class ObjectAnnotation:
         category_id: int | None = None,
         category_name: str | None = None,
         shift_amount: list[int] | None = [0, 0],
-    ):
+    ) -> ObjectAnnotation:
         """Creates ObjectAnnotation from shapely_utils.ShapelyAnnotation.
 
         Args:
@@ -562,10 +568,10 @@ class ObjectAnnotation:
     @classmethod
     def from_imantics_annotation(
         cls,
-        annotation: Any,
+        annotation: ImaneticsAnnotationType,
         shift_amount: list[int] | None = [0, 0],
         full_shape: list[int] | None = None,
-    ):
+    ) -> ObjectAnnotation:
         """Creates ObjectAnnotation from imantics.annotation.Annotation.
 
         Args:
@@ -630,7 +636,7 @@ class ObjectAnnotation:
             )
         return shapely_annotation
 
-    def to_imantics_annotation(self):
+    def to_imantics_annotation(self) -> ImaneticsAnnotationType:
         """Returns imantics.annotation.Annotation representation of ObjectAnnotation."""
         try:
             import imantics
@@ -650,17 +656,17 @@ class ObjectAnnotation:
             )
         return imantics_annotation
 
-    def deepcopy(self):
+    def deepcopy(self) -> ObjectAnnotation:
         """
         Returns: deepcopy of current ObjectAnnotation instance
         """
         return copy.deepcopy(self)
 
     @classmethod
-    def get_empty_mask(cls):
+    def get_empty_mask(cls) -> Mask:
         return Mask(bool_mask=None)
 
-    def get_shifted_object_annotation(self):
+    def get_shifted_object_annotation(self) -> ObjectAnnotation:
         if self.mask:
             shifted_mask = self.mask.get_shifted_mask()
             return ObjectAnnotation(
