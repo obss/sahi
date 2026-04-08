@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, NoReturn
+from typing import NoReturn
 
 import numpy as np
 
@@ -25,7 +25,7 @@ class DetectionModel:
     def __init__(
         self,
         model_path: str | None = None,
-        model: Any | None = None,
+        model: object | None = None,
         config_path: str | None = None,
         device: str | None = None,
         mask_threshold: float = 0.5,
@@ -99,7 +99,7 @@ class DetectionModel:
         """
         raise NotImplementedError()
 
-    def set_model(self, model: Any, **kwargs) -> NoReturn:
+    def set_model(self, model: object, **kwargs: object) -> NoReturn:
         """Set an already-instantiated model as the underlying detection model.
 
         Subclasses must override this method to assign ``model`` to
@@ -274,7 +274,7 @@ class DetectionModel:
         return self._object_prediction_list_per_image or []
 
     @property
-    def original_predictions(self):
+    def original_predictions(self) -> object:
         """Returns the raw predictions from the underlying model.
 
         The format is model-specific and is set by ``perform_inference`` or
