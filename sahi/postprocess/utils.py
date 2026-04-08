@@ -52,7 +52,11 @@ class ObjectPredictionList(Sequence):
         else:
             raise NotImplementedError(f"{type(i)}")
 
-    def __setitem__(self, i: int | list[int] | tuple[int, ...] | Any, elem: ObjectPrediction | ObjectPredictionList | list[ObjectPrediction]) -> None:
+    def __setitem__(
+        self,
+        i: int | list[int] | tuple[int, ...] | Any,
+        elem: ObjectPrediction | ObjectPredictionList | list[ObjectPrediction],
+    ) -> None:
         """Set predictions at the given index or indices.
 
         Args:
