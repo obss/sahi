@@ -142,7 +142,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         cls_name = self.model.__class__.__name__
         return any(cls_name.startswith(p) for p in self._SIGMOID_CLS_PREFIXES)
 
-    def get_valid_predictions(self, logits, pred_boxes) -> tuple:
+    def get_valid_predictions(self, logits: Any, pred_boxes: Any) -> tuple:
         """
         Args:
             logits: torch.Tensor
