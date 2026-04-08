@@ -1,4 +1,3 @@
-# Modified by Sinan O Altinuc, 2020.
 from __future__ import annotations
 
 import copy
@@ -12,14 +11,14 @@ from pathlib import Path
 from threading import Lock, Thread
 from typing import Literal, TypeVar
 
-_T = TypeVar("_T")
-
 import numpy as np
 from tqdm import tqdm
 
 from sahi.logger import logger
 from sahi.utils.file import is_colab, load_json, save_json
 from sahi.utils.shapely import ShapelyAnnotation, box, get_shapely_multipolygon
+
+_T = TypeVar("_T")
 
 
 class CocoCategory:
