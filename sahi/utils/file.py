@@ -8,7 +8,6 @@ import pickle
 import re
 import zipfile
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 
@@ -26,7 +25,7 @@ def unzip(file_path: str, dest_dir: str) -> None:
         zf.extractall(dest_dir)
 
 
-def save_json(data: Any, save_path: str | Path, indent: int | None = None) -> None:
+def save_json(data: object, save_path: str | Path, indent: int | None = None) -> None:
     """
     Saves json formatted data (given as "data") as save_path
 
@@ -55,7 +54,7 @@ def save_json(data: Any, save_path: str | Path, indent: int | None = None) -> No
 
 # type check when save json files
 class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
+    def default(self, obj: object) -> object:
         if isinstance(obj, np.integer):
             return int(obj)
         elif isinstance(obj, np.floating):
@@ -66,7 +65,7 @@ class NumpyEncoder(json.JSONEncoder):
             return super().default(obj)
 
 
-def load_json(load_path: str, encoding: str = "utf-8"):
+def load_json(load_path: str, encoding: str = "utf-8") -> object:
     """Loads json formatted data (given as "data") from load_path Encoding type can be specified with 'encoding'
     argument.
 
@@ -124,7 +123,9 @@ def list_files(
     return filepath_list
 
 
-def list_files_recursively(directory: str, contains: list[str] = [".json"], verbose: bool = True) -> tuple[list[str], list[str]]:
+def list_files_recursively(
+    directory: str, contains: list[str] = [".json"], verbose: bool = True
+) -> tuple[list[str], list[str]]:
     """Walk given directory recursively and return a list of file path with desired extension.
 
     Args:
@@ -167,7 +168,7 @@ def list_files_recursively(directory: str, contains: list[str] = [".json"], verb
     return relative_filepath_list, abs_filepath_list
 
 
-def get_base_filename(path: str):
+def get_base_filename(path: str) -> tuple[str, str]:
     """Takes a file path, returns (base_filename_with_extension, base_filename_without_extension)"""
     base_filename_with_extension = ntpath.basename(path)
     base_filename_without_extension, _ = os.path.splitext(base_filename_with_extension)
@@ -187,7 +188,7 @@ def get_file_extension(path: str) -> str:
     return file_extension
 
 
-def load_pickle(load_path: str | Path) -> Any:
+def load_pickle(load_path: str | Path) -> object:
     """
     Loads pickle formatted data (given as "data") from load_path
 
@@ -203,7 +204,7 @@ def load_pickle(load_path: str | Path) -> Any:
     return data
 
 
-def save_pickle(data: Any, save_path: str | Path) -> None:
+def save_pickle(data: object, save_path: str | Path) -> None:
     """
     Saves pickle formatted data (given as "data") as save_path
 
