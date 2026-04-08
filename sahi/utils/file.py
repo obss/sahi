@@ -8,6 +8,7 @@ import pickle
 import re
 import zipfile
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -25,7 +26,7 @@ def unzip(file_path: str, dest_dir: str) -> None:
         zf.extractall(dest_dir)
 
 
-def save_json(data, save_path, indent: int | None = None) -> None:
+def save_json(data: Any, save_path: str | Path, indent: int | None = None) -> None:
     """
     Saves json formatted data (given as "data") as save_path
 
@@ -123,7 +124,7 @@ def list_files(
     return filepath_list
 
 
-def list_files_recursively(directory: str, contains: list = [".json"], verbose: bool = True) -> tuple[list, list]:
+def list_files_recursively(directory: str, contains: list[str] = [".json"], verbose: bool = True) -> tuple[list[str], list[str]]:
     """Walk given directory recursively and return a list of file path with desired extension.
 
     Args:
@@ -173,7 +174,7 @@ def get_base_filename(path: str):
     return base_filename_with_extension, base_filename_without_extension
 
 
-def get_file_extension(path: str):
+def get_file_extension(path: str) -> str:
     """Get the file extension from a given file path.
 
     Args:
@@ -186,7 +187,7 @@ def get_file_extension(path: str):
     return file_extension
 
 
-def load_pickle(load_path):
+def load_pickle(load_path: str | Path) -> Any:
     """
     Loads pickle formatted data (given as "data") from load_path
 
@@ -202,7 +203,7 @@ def load_pickle(load_path):
     return data
 
 
-def save_pickle(data, save_path) -> None:
+def save_pickle(data: Any, save_path: str | Path) -> None:
     """
     Saves pickle formatted data (given as "data") as save_path
 
@@ -224,7 +225,7 @@ def save_pickle(data, save_path) -> None:
         pickle.dump(data, outfile)
 
 
-def import_model_class(model_type, class_name):
+def import_model_class(model_type: str, class_name: str) -> type:
     """Imports a predefined detection class by class name.
 
     Args:
@@ -289,7 +290,7 @@ def download_from_url(from_url: str, to_path: str) -> None:
         urllib.request.urlretrieve(from_url, to_path)
 
 
-def is_colab():
+def is_colab() -> bool:
     """Check if the current environment is a Google Colab instance.
 
     Returns:
