@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 import cv2
 import numpy as np
 
@@ -19,7 +17,7 @@ class UltralyticsDetectionModel(DetectionModel):
     NCNN (.param or _ncnn_model/), and TorchScript (.torchscript) models.
     """
 
-    def __init__(self, *args: Any, fuse: bool = False, task: str | None = None, **kwargs: Any) -> None:
+    def __init__(self, *args: object, fuse: bool = False, task: str | None = None, **kwargs: object) -> None:
         """Initialize the Ultralytics detection model.
 
         Accepts all arguments from ``DetectionModel.__init__`` plus the
@@ -59,7 +57,7 @@ class UltralyticsDetectionModel(DetectionModel):
         except Exception as e:
             raise TypeError("model_path is not a valid Ultralytics model path: ", e)
 
-    def set_model(self, model: Any, **kwargs) -> None:
+    def set_model(self, model: object, **kwargs: object) -> None:
         """Sets the underlying Ultralytics model.
 
         Args:
@@ -82,7 +80,7 @@ class UltralyticsDetectionModel(DetectionModel):
         """
         self.perform_batch_inference([image])
 
-    def _extract_predictions(self, prediction_result):
+    def _extract_predictions(self, prediction_result: object) -> list:
         """Extracts predictions from YOLO result objects into the internal format.
 
         Args:
@@ -152,7 +150,7 @@ class UltralyticsDetectionModel(DetectionModel):
         self._original_shapes = [img.shape for img in images]
 
     @property
-    def category_names(self):
+    def category_names(self) -> list:
         """Returns the list of category names from the model.
 
         Falls back to ``category_mapping`` values when model metadata is
@@ -170,7 +168,7 @@ class UltralyticsDetectionModel(DetectionModel):
             raise ValueError("Category names not available. Please provide category_mapping for ONNX models.")
 
     @property
-    def num_categories(self):
+    def num_categories(self) -> int:
         """Returns number of categories."""
         if hasattr(self.model, "names") and self.model.names:
             return len(self.model.names)
@@ -180,7 +178,7 @@ class UltralyticsDetectionModel(DetectionModel):
             raise ValueError("Cannot determine number of categories. Please provide category_mapping for ONNX models.")
 
     @property
-    def has_mask(self):
+    def has_mask(self) -> bool:
         """Returns if model output contains segmentation mask."""
         # Check if model has 'task' attribute (for both .pt and .onnx models)
         if hasattr(self.model, "overrides") and "task" in self.model.overrides:
@@ -194,7 +192,7 @@ class UltralyticsDetectionModel(DetectionModel):
         return False
 
     @property
-    def is_obb(self):
+    def is_obb(self) -> bool:
         """Returns if model output contains oriented bounding boxes."""
         # Check if model has 'task' attribute (for both .pt and .onnx models)
         if hasattr(self.model, "overrides") and "task" in self.model.overrides:
