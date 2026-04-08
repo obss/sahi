@@ -19,23 +19,21 @@ class UltralyticsDetectionModel(DetectionModel):
     NCNN (.param or _ncnn_model/), and TorchScript (.torchscript) models.
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, fuse: bool = False, task: str | None = None, **kwargs: Any) -> None:
         """Initialize the Ultralytics detection model.
 
         Accepts all arguments from ``DetectionModel.__init__`` plus the
         following keyword arguments.
 
         Args:
-            fuse: bool
-                If True, fuse Conv2d and BatchNorm2d layers for faster
+            fuse: If True, fuse Conv2d and BatchNorm2d layers for faster
                 inference. Default: False.
-            task: str or None
-                Ultralytics task type (e.g. ``"detect"``, ``"segment"``,
+            task: Ultralytics task type (e.g. ``"detect"``, ``"segment"``,
                 ``"obb"``). When None, the task is inferred from the model.
                 Default: None.
         """
-        self.fuse: bool = kwargs.pop("fuse", False)
-        self.task: str | None = kwargs.pop("task", None)
+        self.fuse: bool = fuse
+        self.task: str | None = task
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "ultralytics"]
         super().__init__(*args, **kwargs)
