@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import time
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from functools import cmp_to_key
 
 import numpy as np
@@ -44,7 +44,11 @@ POSTPROCESS_NAME_TO_CLASS = {
 LOW_MODEL_CONFIDENCE = 0.1
 
 
-def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id):
+def filter_predictions(
+    object_prediction_list: list[ObjectPrediction],
+    exclude_classes_by_name: list[str] | None,
+    exclude_classes_by_id: list[int] | None,
+) -> list[ObjectPrediction]:
     """Filter out predictions whose category matches an exclusion list.
 
     Args:
@@ -67,10 +71,10 @@ def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_
 
 
 def get_prediction(
-    image,
-    detection_model,
-    shift_amount: list | None = None,
-    full_shape=None,
+    image: str | np.ndarray,
+    detection_model: DetectionModel,
+    shift_amount: list[int] | None = None,
+    full_shape: list[int] | None = None,
     postprocess: PostprocessPredictions | None = None,
     verbose: int = 0,
     exclude_classes_by_name: list[str] | None = None,
@@ -149,8 +153,8 @@ def get_prediction(
 
 
 def get_sliced_prediction(
-    image,
-    detection_model=None,
+    image: str | np.ndarray,
+    detection_model: DetectionModel | None = None,
     slice_height: int | None = None,
     slice_width: int | None = None,
     overlap_height_ratio: float = 0.2,
@@ -168,7 +172,7 @@ def get_sliced_prediction(
     exclude_classes_by_name: list[str] | None = None,
     exclude_classes_by_id: list[int] | None = None,
     progress_bar: bool = False,
-    progress_callback=None,
+    progress_callback: Callable | None = None,
     batch_size: int = 1,
 ) -> PredictionResult:
     """Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -378,7 +382,7 @@ def get_sliced_prediction(
     )
 
 
-def bbox_sort(a, b, thresh):
+def bbox_sort(a: tuple, b: tuple, thresh: int | float) -> int | float:
     """Compare two bounding boxes for reading-order sorting.
 
     Boxes whose Y-coordinates differ by no more than ``thresh`` are
