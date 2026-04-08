@@ -30,7 +30,7 @@ class Colors:
         self.palette = [self.hex_to_rgb(f"#{c}") for c in hex_colors.split()]
         self.n = len(self.palette)
 
-    def __call__(self, ind, bgr: bool = False):
+    def __call__(self, ind: int, bgr: bool = False) -> tuple[int, int, int]:
         """Convert an index to a color code.
 
         Args:
@@ -44,7 +44,7 @@ class Colors:
         return (color_codes[2], color_codes[1], color_codes[0]) if bgr else color_codes
 
     @staticmethod
-    def hex_to_rgb(hex_code):
+    def hex_to_rgb(hex_code: str) -> tuple[int, ...]:
         """Converts a hexadecimal color code to RGB format.
 
         Args:
@@ -61,7 +61,7 @@ class Colors:
 
 def crop_object_predictions(
     image: np.ndarray,
-    object_prediction_list,
+    object_prediction_list: list,
     output_dir: str = "",
     file_name: str = "prediction_visual",
     export_format: str = "png",
@@ -117,7 +117,7 @@ def convert_image_to(read_path, extension: str = "jpg", grayscale: bool = False)
     cv2.imwrite(save_path, image)
 
 
-def read_large_image(image_path: str):
+def read_large_image(image_path: str) -> tuple[np.ndarray, bool]:
     """Reads a large image from the specified image path.
 
     Args:
@@ -217,7 +217,7 @@ def read_image_as_pil(image: Image.Image | str | np.ndarray, exif_fix: bool = Tr
     return image_pil
 
 
-def select_random_color():
+def select_random_color() -> list[int]:
     """Selects a random color from a predefined list of colors.
 
     Returns:
@@ -239,7 +239,7 @@ def select_random_color():
     return colors[random.randrange(0, 10)]
 
 
-def apply_color_mask(image: np.ndarray, color: tuple[int, int, int]):
+def apply_color_mask(image: np.ndarray, color: tuple[int, int, int]) -> np.ndarray:
     """Applies color mask to given input image.
 
     Args:
@@ -369,7 +369,7 @@ def visualize_prediction(
     hide_labels: bool = False,
     output_dir: str | None = None,
     file_name: str | None = "prediction_visual",
-):
+) -> dict:
     """Visualizes prediction classes, bounding boxes over the source image and exports it to output folder.
 
     Args:
@@ -473,7 +473,7 @@ def visualize_prediction(
 
 def visualize_object_predictions(
     image: np.ndarray,
-    object_prediction_list,
+    object_prediction_list: list,
     rect_th: int | None = None,
     text_size: float | None = None,
     text_th: int | None = None,
@@ -483,7 +483,7 @@ def visualize_object_predictions(
     output_dir: str | None = None,
     file_name: str | None = "prediction_visual",
     export_format: str | None = "png",
-):
+) -> dict:
     """Visualizes prediction category names, bounding boxes over the source image and exports it to output folder.
 
     Args:
