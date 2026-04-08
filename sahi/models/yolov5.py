@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 import numpy as np
 
 from sahi.logger import logger
@@ -12,7 +10,7 @@ from sahi.utils.import_utils import check_package_minimum_version
 
 
 class Yolov5DetectionModel(DetectionModel):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: object, **kwargs: object) -> None:
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "yolov5", "torch"]
         super().__init__(*args, **kwargs)
@@ -27,7 +25,7 @@ class Yolov5DetectionModel(DetectionModel):
         except Exception as e:
             raise TypeError("model_path is not a valid yolov5 model path: ", e)
 
-    def set_model(self, model: Any) -> None:
+    def set_model(self, model: object) -> None:
         """Sets the underlying YOLOv5 model.
 
         Args:
@@ -65,7 +63,7 @@ class Yolov5DetectionModel(DetectionModel):
         self._original_predictions = prediction_result
 
     @property
-    def num_categories(self):
+    def num_categories(self) -> int:
         """Returns number of categories."""
         return len(self.model.names)
 
@@ -76,7 +74,7 @@ class Yolov5DetectionModel(DetectionModel):
         return False  # fix when yolov5 supports segmentation models
 
     @property
-    def category_names(self):
+    def category_names(self) -> list:
         if check_package_minimum_version("yolov5", "6.2.0"):
             return list(self.model.names.values())
         else:
