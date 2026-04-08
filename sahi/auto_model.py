@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 from sahi.models.base import DetectionModel
 from sahi.utils.file import import_model_class
 
@@ -26,7 +24,7 @@ class AutoDetectionModel:
     def from_pretrained(
         model_type: str,
         model_path: str | None = None,
-        model: Any | None = None,
+        model: object | None = None,
         config_path: str | None = None,
         device: str | None = None,
         mask_threshold: float = 0.5,
@@ -35,7 +33,7 @@ class AutoDetectionModel:
         category_remapping: dict | None = None,
         load_at_init: bool = True,
         image_size: int | None = None,
-        **kwargs,
+        **kwargs: object,
     ) -> DetectionModel:
         """Loads a DetectionModel from given path.
 
