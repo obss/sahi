@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -74,7 +75,7 @@ class BoundingBox:
     def area(self):
         return (self.maxx - self.minx) * (self.maxy - self.miny)
 
-    def get_expanded_box(self, ratio: float = 0.1, max_x: int | None = None, max_y: int | None = None):
+    def get_expanded_box(self, ratio: float = 0.1, max_x: int | None = None, max_y: int | None = None) -> BoundingBox:
         """Returns an expanded bounding box by increasing its size by a given ratio. The expansion is applied equally in
         all directions. Optionally, the expanded box can be clipped to maximum x and y boundaries.
 
@@ -128,7 +129,7 @@ class BoundingBox:
         """
         return [self.minx, self.miny, self.maxx, self.maxy]
 
-    def to_voc_bbox(self):
+    def to_voc_bbox(self) -> list[float]:
         """
         Returns the bounding box in VOC format: [xmin, ymin, xmax, ymax]
 
@@ -184,7 +185,7 @@ class Mask:
     """Init Mask from coco segmentation representation.
 
     Args:
-        segmentation : List[List]
+        segmentation: List[List]
             [
                 [x1, y1, x2, y2, x3, y3, ...],
                 [x1, y1, x2, y2, x3, y3, ...],
@@ -201,7 +202,7 @@ class Mask:
         self,
         segmentation: list[list[float]],
         full_shape: list[int],
-        shift_amount: list = [0, 0],
+        shift_amount: list[int] = [0, 0],
     ) -> None:
         if full_shape is None:
             raise ValueError("full_shape must be provided")  # pyright: ignore[reportUnreachable]
@@ -218,7 +219,7 @@ class Mask:
         mask: np.ndarray,
         full_shape: list[int],
         mask_threshold: float = 0.5,
-        shift_amount: list = [0, 0],
+        shift_amount: list[int] = [0, 0],
     ):
         """
         Args:
@@ -379,7 +380,7 @@ class ObjectAnnotation:
     @classmethod
     def from_bool_mask(
         cls,
-        bool_mask,
+        bool_mask: np.ndarray,
         category_id: int | None = None,
         category_name: str | None = None,
         shift_amount: list[int] | None = [0, 0],
@@ -412,7 +413,7 @@ class ObjectAnnotation:
     @classmethod
     def from_coco_segmentation(
         cls,
-        segmentation,
+        segmentation: list[list[float]],
         full_shape: list[int],
         category_id: int | None = None,
         category_name: str | None = None,
@@ -561,7 +562,7 @@ class ObjectAnnotation:
     @classmethod
     def from_imantics_annotation(
         cls,
-        annotation,
+        annotation: Any,
         shift_amount: list[int] | None = [0, 0],
         full_shape: list[int] | None = None,
     ):
