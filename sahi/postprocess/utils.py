@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
 
 import numpy as np
 from shapely.geometry import MultiPolygon, Polygon
@@ -13,7 +12,7 @@ from sahi.utils.import_utils import is_available
 from sahi.utils.shapely import ShapelyAnnotation, get_shapely_multipolygon
 
 
-def _is_tensor_like(obj: Any) -> bool:
+def _is_tensor_like(obj: object) -> bool:
     """Check if an object is a torch Tensor or numpy array (without importing torch)."""
     return isinstance(obj, np.ndarray) or (hasattr(obj, "tolist") and not isinstance(obj, (int, float, list, tuple)))
 
@@ -32,7 +31,7 @@ class ObjectPredictionList(Sequence):
         self.list: list[ObjectPrediction] = prediction_list
         super().__init__()
 
-    def __getitem__(self, i: int | list[int] | tuple[int, ...] | Any) -> ObjectPredictionList:
+    def __getitem__(self, i: int | list[int] | tuple[int, ...] | object) -> ObjectPredictionList:
         """Retrieve predictions by index, list of indices, or tensor-like.
 
         Args:
@@ -54,7 +53,7 @@ class ObjectPredictionList(Sequence):
 
     def __setitem__(
         self,
-        i: int | list[int] | tuple[int, ...] | Any,
+        i: int | list[int] | tuple[int, ...] | object,
         elem: ObjectPrediction | ObjectPredictionList | list[ObjectPrediction],
     ) -> None:
         """Set predictions at the given index or indices.
@@ -94,7 +93,7 @@ class ObjectPredictionList(Sequence):
         """
         self.list.extend(object_prediction_list.list)
 
-    def totensor(self):
+    def totensor(self) -> object:
         """Convert to torch.Tensor. Requires torch to be installed."""
         return object_prediction_list_to_torch(self)
 
@@ -194,7 +193,7 @@ def coco_segmentation_to_shapely(segmentation: list | list[list]) -> MultiPolygo
     return shapely_multipolygon
 
 
-def object_prediction_list_to_torch(object_prediction_list: ObjectPredictionList) -> Any:
+def object_prediction_list_to_torch(object_prediction_list: ObjectPredictionList) -> object:
     """Convert to torch.Tensor. Requires torch to be installed.
 
     Returns:
