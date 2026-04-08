@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import numba
 import numpy as np
+from numpy.typing import NDArray
 
 from sahi.postprocess._numpy_backend import (
     _score_tiebreak_order,
@@ -21,7 +22,16 @@ from sahi.postprocess._numpy_backend import (
 
 
 @numba.njit(cache=True)
-def _compute_intersection(x1_a, y1_a, x2_a, y2_a, x1_b, y1_b, x2_b, y2_b):
+def _compute_intersection(
+    x1_a: float,
+    y1_a: float,
+    x2_a: float,
+    y2_a: float,
+    x1_b: float,
+    y1_b: float,
+    x2_b: float,
+    y2_b: float,
+) -> float:
     """Compute intersection area of two axis-aligned boxes."""
     ix1 = max(x1_a, x1_b)
     iy1 = max(y1_a, y1_b)
@@ -33,7 +43,19 @@ def _compute_intersection(x1_a, y1_a, x2_a, y2_a, x1_b, y1_b, x2_b, y2_b):
 
 
 @numba.njit(cache=True)
-def _compute_metric(x1_a, y1_a, x2_a, y2_a, area_a, x1_b, y1_b, x2_b, y2_b, area_b, use_iou):
+def _compute_metric(
+    x1_a: float,
+    y1_a: float,
+    x2_a: float,
+    y2_a: float,
+    area_a: float,
+    x1_b: float,
+    y1_b: float,
+    x2_b: float,
+    y2_b: float,
+    area_b: float,
+    use_iou: bool,
+) -> float:
     """Compute IoU or IoS between two boxes."""
     inter = _compute_intersection(x1_a, y1_a, x2_a, y2_a, x1_b, y1_b, x2_b, y2_b)
     if use_iou:
@@ -45,7 +67,7 @@ def _compute_metric(x1_a, y1_a, x2_a, y2_a, area_a, x1_b, y1_b, x2_b, y2_b, area
 
 
 @numba.njit(cache=True)
-def _argsort_descending(scores, x1, y1, x2, y2):
+def _argsort_descending(scores: NDArray, x1: NDArray, y1: NDArray, x2: NDArray, y2: NDArray) -> NDArray:
     """Sort indices by score descending with deterministic coordinate tie-breaking."""
     n = len(scores)
     indices = np.arange(n)
@@ -66,7 +88,16 @@ def _argsort_descending(scores, x1, y1, x2, y2):
 
 
 @numba.njit(cache=True)
-def _nms_numba_inner(x1, y1, x2, y2, scores, areas, match_threshold, use_iou):
+def _nms_numba_inner(
+    x1: NDArray,
+    y1: NDArray,
+    x2: NDArray,
+    y2: NDArray,
+    scores: NDArray,
+    areas: NDArray,
+    match_threshold: float,
+    use_iou: bool,
+) -> list[int]:
     """Core NMS loop — fully JIT-compiled."""
     n = len(scores)
     sorted_idxs = _argsort_descending(scores, x1, y1, x2, y2)
@@ -103,7 +134,16 @@ def _nms_numba_inner(x1, y1, x2, y2, scores, areas, match_threshold, use_iou):
 
 
 @numba.njit(cache=True)
-def _greedy_nmm_numba_inner(x1, y1, x2, y2, scores, areas, match_threshold, use_iou):
+def _greedy_nmm_numba_inner(
+    x1: NDArray,
+    y1: NDArray,
+    x2: NDArray,
+    y2: NDArray,
+    scores: NDArray,
+    areas: NDArray,
+    match_threshold: float,
+    use_iou: bool,
+) -> tuple[list[int], NDArray]:
     """Core greedy NMM loop — fully JIT-compiled.
 
     Returns (keep_order, keeper_of) where keeper_of[i] = keeper index for box i, or -1 if keeper.
@@ -145,7 +185,7 @@ def _greedy_nmm_numba_inner(x1, y1, x2, y2, scores, areas, match_threshold, use_
 
 
 @numba.njit(cache=True)
-def _compute_metric_matrix_numba(boxes, areas, use_iou):
+def _compute_metric_matrix_numba(boxes: NDArray, areas: NDArray, use_iou: bool) -> NDArray:
     """Compute full metric matrix with numba — symmetric, only compute upper triangle."""
     n = len(boxes)
     matrix = np.zeros((n, n), dtype=np.float64)
