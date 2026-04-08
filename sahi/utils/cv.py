@@ -100,7 +100,7 @@ def crop_object_predictions(
         cv2.imwrite(save_path, cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR))
 
 
-def convert_image_to(read_path, extension: str = "jpg", grayscale: bool = False) -> None:
+def convert_image_to(read_path: str, extension: str = "jpg", grayscale: bool = False) -> None:
     """Reads an image from the given path and saves it with the specified extension.
 
     Args:
@@ -289,7 +289,7 @@ def get_video_reader(
         num_frames /= frame_skip_interval + 1
         num_frames = int(num_frames)
 
-    def read_video_frame(video_capture, frame_skip_interval) -> Generator[Image.Image]:
+    def read_video_frame(video_capture: object, frame_skip_interval: int) -> Generator[Image.Image]:  # type: ignore[type-arg]
         if view_visual:
             window_name = f"Prediction of {video_file_name!s}"
             cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
@@ -677,7 +677,7 @@ def get_bbox_from_bool_mask(bool_mask: np.ndarray) -> list[int] | None:
     return [xmin, ymin, xmax, ymax]
 
 
-def get_bbox_from_coco_segmentation(coco_segmentation):
+def get_bbox_from_coco_segmentation(coco_segmentation: list) -> list | None:
     """Generate voc box ([xmin, ymin, xmax, ymax]) from given coco segmentation."""
     xs = []
     ys = []
@@ -737,7 +737,7 @@ def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> list[list[f
     return polygons
 
 
-def normalize_numpy_image(image: np.ndarray):
+def normalize_numpy_image(image: np.ndarray) -> np.ndarray:
     """Normalizes numpy image."""
     return image / np.max(image)
 
