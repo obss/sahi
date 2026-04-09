@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from os import environ
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from PIL.Image import Image
@@ -49,7 +49,7 @@ def to_float_tensor(img: np.ndarray | Image) -> torch.Tensor:
     return tensor
 
 
-def torch_to_numpy(img: object) -> np.ndarray:
+def torch_to_numpy(img: Any) -> np.ndarray:
     """Convert a torch image tensor to a numpy array in HWC format.
 
     Pixel values greater than 1 are rescaled to [0, 1] by dividing by 255.
