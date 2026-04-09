@@ -124,19 +124,35 @@ class BoundingBox:
         return BoundingBox(box)
 
     def to_xywh(self) -> list[float]:
-        """Convert to [xmin, ymin, width, height] format."""
+        """Convert to [xmin, ymin, width, height] format.
+
+        Returns:
+            list[float]: A list containing the bounding box in the format [xmin, ymin, width, height].
+        """
         return [self.minx, self.miny, self.maxx - self.minx, self.maxy - self.miny]
 
     def to_coco_bbox(self) -> list[float]:
-        """Convert to COCO format: [xmin, ymin, width, height]."""
+        """Convert to COCO format: [xmin, ymin, width, height].
+
+        Returns:
+            list[float]: A list containing the bounding box in COCO format.
+        """
         return self.to_xywh()
 
     def to_xyxy(self) -> list[float]:
-        """Convert to [xmin, ymin, xmax, ymax] format."""
+        """Convert to [xmin, ymin, xmax, ymax] format.
+
+        Returns:
+            list[float]: A list containing the bounding box in the format [xmin, ymin, xmax, ymax].
+        """
         return [self.minx, self.miny, self.maxx, self.maxy]
 
     def to_voc_bbox(self) -> list[float]:
-        """Convert to VOC format: [xmin, ymin, xmax, ymax]."""
+        """Convert to VOC format: [xmin, ymin, xmax, ymax].
+
+        Returns:
+            list[float]: A list containing the bounding box in VOC format.
+        """
         return self.to_xyxy()
 
     def get_shifted_box(self) -> BoundingBox:
@@ -685,7 +701,11 @@ class ObjectAnnotation:
         return imantics_annotation
 
     def deepcopy(self) -> ObjectAnnotation:
-        """Get deepcopy of current ObjectAnnotation instance."""
+        """Get deepcopy of current ObjectAnnotation instance.
+
+        Returns:
+            ObjectAnnotation: A deep copy of this ObjectAnnotation.
+        """
         return copy.deepcopy(self)
 
     @classmethod
