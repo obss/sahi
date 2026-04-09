@@ -1,3 +1,4 @@
+"""Automatic model loading utilities."""
 from __future__ import annotations
 
 from sahi.models.base import DetectionModel
@@ -20,6 +21,8 @@ ULTRALYTICS_MODEL_NAMES = ["yolov8", "yolov11", "yolo11", "yolo26", "ultralytics
 
 
 class AutoDetectionModel:
+    """Automatic detection model loader."""
+
     @staticmethod
     def from_pretrained(
         model_type: str,
@@ -35,7 +38,7 @@ class AutoDetectionModel:
         image_size: int | None = None,
         **kwargs: object,
     ) -> DetectionModel:
-        """Loads a DetectionModel from given path.
+        """Load a DetectionModel from given path.
 
         Args:
             model_type: str
@@ -60,6 +63,8 @@ class AutoDetectionModel:
                 If True, automatically loads the model at initialization
             image_size: int
                 Inference input size.
+            **kwargs: object
+                Additional keyword arguments to pass to the model.
 
         Returns:
             Returns an instance of a DetectionModel

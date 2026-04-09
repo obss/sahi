@@ -1,3 +1,4 @@
+"""Image slicing utilities for splitting large images into tiles."""
 from __future__ import annotations
 
 import concurrent.futures
@@ -126,7 +127,8 @@ def process_coco_annotations(
     """Slices and filters given list of CocoAnnotation objects with given 'slice_bbox' and 'min_area_ratio'.
 
     Args:
-        coco_annotation_list (List[CocoAnnotation])
+        coco_annotation_list: List[CocoAnnotation]
+            Annotations to slice and filter.
         slice_bbox (List[int]): Generated from `get_slice_bboxes`.
             Format for each slice bbox: [x_min, y_min, x_max, y_max].
         min_area_ratio (float): If the cropped annotation area to original
@@ -136,7 +138,6 @@ def process_coco_annotations(
     Returns:
         (List[CocoAnnotation]): Sliced annotations.
     """
-
     sliced_coco_annotation_list: list[CocoAnnotation] = []
     for coco_annotation in coco_annotation_list:
         if annotation_inside_slice(coco_annotation.json, slice_bbox):
@@ -147,14 +148,18 @@ def process_coco_annotations(
 
 
 class SlicedImage:
+    """Container for a sliced image and its metadata."""
+
     def __init__(self, image: np.ndarray, coco_image: CocoImage, starting_pixel: list[int]) -> None:
-        """
-        image: np.array
-            Sliced image.
-        coco_image: CocoImage
-            Coco styled image object that belong to sliced image.
-        starting_pixel: list of list of int
-            Starting pixel coordinates of the sliced image.
+        """Initialize SlicedImage.
+
+        Args:
+            image: np.array
+                Sliced image.
+            coco_image: CocoImage
+                Coco styled image object that belong to sliced image.
+            starting_pixel: list of list of int
+                Starting pixel coordinates of the sliced image.
         """
         self.image = image
         self.coco_image = coco_image
@@ -162,12 +167,16 @@ class SlicedImage:
 
 
 class SliceImageResult:
+    """Container for sliced image results."""
+
     def __init__(self, original_image_size: list[int], image_dir: str | None = None) -> None:
-        """
-        image_dir: str
-            Directory of the sliced image exports.
-        original_image_size: list of int
-            Size of the unsliced original image in [height, width]
+        """Initialize SliceImageResult.
+
+        Args:
+            image_dir: str
+                Directory of the sliced image exports.
+            original_image_size: list of int
+                Size of the unsliced original image in [height, width].
         """
         self.original_image_height = original_image_size[0]
         self.original_image_width = original_image_size[1]
@@ -176,6 +185,7 @@ class SliceImageResult:
         self._sliced_image_list: list[SlicedImage] = []
 
     def add_sliced_image(self, sliced_image: SlicedImage) -> None:
+        """Add a sliced image to the result."""
         if not isinstance(sliced_image, SlicedImage):
             raise TypeError("sliced_image must be a SlicedImage instance")
 
@@ -183,6 +193,7 @@ class SliceImageResult:
 
     @property
     def sliced_image_list(self) -> list[SlicedImage]:
+        """Return list of sliced images."""
         return self._sliced_image_list
 
     @property
@@ -234,6 +245,7 @@ class SliceImageResult:
         return filenames
 
     def __getitem__(self, i: int | slice | list | tuple) -> dict | list:
+        """Get sliced image(s) by index or slice."""
         def _prepare_ith_dict(i: int) -> dict:
             return {
                 "image": self.images[i],
@@ -257,6 +269,7 @@ class SliceImageResult:
             raise NotImplementedError(f"{type(i)}")
 
     def __len__(self) -> int:
+        """Return number of sliced images."""
         return len(self._sliced_image_list)
 
 
@@ -309,7 +322,6 @@ def slice_image(
                                 original_image_size: list of int
                                     Size of the unsliced original image in [height, width]
     """
-
     # define verboseprint
     verboselog = logger.info if verbose else lambda *a, **k: None
 
@@ -433,8 +445,9 @@ def slice_coco(
     verbose: bool | None = False,
     exif_fix: bool = True,
 ) -> tuple[dict, str]:
-    """Slice large images given in a directory, into smaller windows. If output_dir is given, export sliced images and
-    coco file.
+    """Slice large images given in a directory into smaller windows.
+
+    If output_dir is given, export sliced images and coco file.
 
     Args:
         coco_annotation_file_path (str): Location of the coco annotation file
@@ -465,7 +478,6 @@ def slice_coco(
         save_path: str
             Path to the saved coco file
     """
-
     # read coco file
     coco_dict: dict = load_json(coco_annotation_file_path)  # type: ignore[assignment]
     # create image_id_to_annotation_list mapping
@@ -515,15 +527,15 @@ def slice_coco(
 def calc_ratio_and_slice(
     orientation: Literal["vertical", "horizontal", "square"], slide: int = 1, ratio: float = 0.1
 ) -> tuple[int, int, float, float]:
-    """
-    According to image resolution calculation overlap params
+    """Calculate overlap params according to image resolution.
+
     Args:
-        orientation: image capture angle
-        slide: sliding window
-        ratio: buffer value
+        orientation: image capture angle.
+        slide: sliding window.
+        ratio: buffer value.
 
     Returns:
-        overlap params
+        overlap params.
     """
     if orientation == "vertical":
         slice_row, slice_col, overlap_height_ratio, overlap_width_ratio = slide, slide * 2, ratio, ratio
@@ -538,13 +550,13 @@ def calc_ratio_and_slice(
 
 
 def calc_resolution_factor(resolution: int) -> int:
-    """
-    According to image resolution calculate power(2,n) and return the closest smaller `n`.
+    """Calculate power(2,n) and return the closest smaller `n` for resolution.
+
     Args:
-        resolution: the width and height of the image multiplied. such as 1024x720 = 737280
+        resolution: the width and height of the image multiplied. such as 1024x720 = 737280.
 
     Returns:
-
+        Power value of 2 closest to the resolution.
     """
     expo = 0
     while np.power(2, expo) < resolution:
@@ -554,16 +566,15 @@ def calc_resolution_factor(resolution: int) -> int:
 
 
 def calc_aspect_ratio_orientation(width: int, height: int) -> Literal["vertical", "horizontal", "square"]:
-    """
+    """Calculate image capture orientation from aspect ratio.
 
     Args:
-        width:
-        height:
+        width: image width.
+        height: image height.
 
     Returns:
-        image capture orientation
+        image capture orientation.
     """
-
     if width < height:
         return "vertical"
     elif width > height:
@@ -575,18 +586,17 @@ def calc_aspect_ratio_orientation(width: int, height: int) -> Literal["vertical"
 def calc_slice_and_overlap_params(
     resolution: str, height: int, width: int, orientation: Literal["vertical", "horizontal", "square"]
 ) -> tuple[int, int, int, int]:
-    """
-    This function calculate according to image resolution slice and overlap params.
+    """Calculate slice and overlap params according to image resolution.
+
     Args:
         resolution: str
         height: int
         width: int
-        orientation: str
+        orientation: str.
 
     Returns:
         x_overlap, y_overlap, slice_width, slice_height
     """
-
     if resolution == "medium":
         split_row, split_col, overlap_height_ratio, overlap_width_ratio = calc_ratio_and_slice(
             orientation, slide=1, ratio=0.8
@@ -617,15 +627,15 @@ def calc_slice_and_overlap_params(
 
 
 def get_resolution_selector(res: str, height: int, width: int) -> tuple[int, int, int, int]:
-    """
+    """Get slicing parameters based on resolution.
 
     Args:
-        res: resolution of image such as low, medium
-        height:
-        width:
+        res: resolution of image such as low, medium.
+        height: image height.
+        width: image width.
 
     Returns:
-        trigger slicing params function and return overlap params
+        overlap params from slicing params function.
     """
     orientation = calc_aspect_ratio_orientation(width=width, height=height)
     x_overlap, y_overlap, slice_width, slice_height = calc_slice_and_overlap_params(
@@ -636,20 +646,20 @@ def get_resolution_selector(res: str, height: int, width: int) -> tuple[int, int
 
 
 def get_auto_slice_params(height: int, width: int) -> tuple[int, int, int, int]:
-    """
-    According to Image HxW calculate overlap sliding window and buffer params
-    factor is the power value of 2 closest to the image resolution.
-        factor <= 18: low resolution image such as 300x300, 640x640
-        18 < factor <= 21: medium resolution image such as 1024x1024, 1336x960
-        21 < factor <= 24: high resolution image such as 2048x2048, 2048x4096, 4096x4096
-        factor > 24: ultra-high resolution image such as 6380x6380, 4096x8192
+    """Calculate overlap sliding window and buffer params from image dimensions.
+
+    Factor is the power value of 2 closest to the image resolution:
+        - factor <= 18: low resolution image such as 300x300, 640x640
+        - 18 < factor <= 21: medium resolution image such as 1024x1024, 1336x960
+        - 21 < factor <= 24: high resolution image such as 2048x2048, 2048x4096, 4096x4096
+        - factor > 24: ultra-high resolution image such as 6380x6380, 4096x8192.
 
     Args:
-        height: image height
-        width: image width
+        height: image height.
+        width: image width.
 
     Returns:
-        slicing overlap params x_overlap, y_overlap, slice_width, slice_height
+        slicing overlap params x_overlap, y_overlap, slice_width, slice_height.
     """
     resolution = height * width
     factor = calc_resolution_factor(resolution)
@@ -672,6 +682,7 @@ def shift_bboxes(bboxes: Any, offset: Sequence[int]) -> Any:
         bboxes (Tensor, np.ndarray, list): The bboxes need to be translated. Its shape can
             be (n, 4), which means (x, y, x, y).
         offset (Sequence[int]): The translation offsets with shape of (2, ).
+
     Returns:
         Tensor, np.ndarray, list: Shifted bboxes.
     """
@@ -707,6 +718,7 @@ def shift_masks(masks: np.ndarray, offset: Sequence[int], full_shape: Sequence[i
         masks (np.ndarray): masks that need to be shifted.
         offset (Sequence[int]): The offset to translate with shape of (2, ).
         full_shape (Sequence[int]): A (height, width) tuple of the huge image's shape.
+
     Returns:
         np.ndarray: Shifted masks.
     """

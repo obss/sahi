@@ -1,3 +1,4 @@
+"""Prediction classes for object detection results."""
 from __future__ import annotations
 
 import copy
@@ -22,9 +23,10 @@ class PredictionScore:
     value: float
 
     def __init__(self, value: float | np.ndarray) -> None:
-        """
+        """Initialize PredictionScore.
+
         Args:
-            value: prediction score between 0 and 1
+            value: prediction score between 0 and 1.
         """
         # if score is a numpy object, convert it to python variable
         if isinstance(value, np.ndarray):
@@ -37,21 +39,25 @@ class PredictionScore:
         return self.value > threshold
 
     def __eq__(self, other: object) -> bool:  # type: ignore[override]
+        """Check equality with another value."""
         if isinstance(other, (float, int)):
             return self.value == other
         return NotImplemented
 
     def __gt__(self, other: object) -> bool:  # type: ignore[override]
+        """Check if greater than another value."""
         if isinstance(other, (float, int)):
             return self.value > other
         return NotImplemented
 
     def __lt__(self, other: object) -> bool:  # type: ignore[override]
+        """Check if less than another value."""
         if isinstance(other, (float, int)):
             return self.value < other
         return NotImplemented
 
     def __repr__(self) -> str:
+        """Return string representation of prediction score."""
         return f"PredictionScore: <value: {self.value}>"
 
 
@@ -68,7 +74,7 @@ class ObjectPrediction(ObjectAnnotation):
         shift_amount: list[int] | list[int | float] | None = None,
         full_shape: list[int] | list[int | float] | None = None,
     ) -> None:
-        """Creates ObjectPrediction from bbox, score, category_id, category_name, segmentation.
+        """Initialize ObjectPrediction from bbox, score, category_id, category_name, segmentation.
 
         Args:
             bbox: list
@@ -103,7 +109,7 @@ class ObjectPrediction(ObjectAnnotation):
         )
 
     def get_shifted_object_prediction(self) -> ObjectPrediction:
-        """Returns shifted version ObjectPrediction.
+        """Get shifted version of ObjectPrediction.
 
         Shifts bbox and mask coords. Used for mapping sliced predictions over full image.
         """
@@ -130,7 +136,7 @@ class ObjectPrediction(ObjectAnnotation):
             )
 
     def to_coco_prediction(self, image_id: int | None = None) -> CocoPrediction:
-        """Returns sahi.utils.coco.CocoPrediction representation of ObjectAnnotation."""
+        """Convert to sahi.utils.coco.CocoPrediction representation."""
         bbox_xywh = self.bbox.to_xywh()
         if self.mask:
             coco_prediction = CocoPrediction.from_coco_segmentation(  # type: ignore[arg-type]
@@ -151,7 +157,7 @@ class ObjectPrediction(ObjectAnnotation):
         return coco_prediction
 
     def to_fiftyone_detection(self, image_height: int, image_width: int) -> object:
-        """Returns fiftyone.Detection representation of ObjectPrediction."""
+        """Convert to fiftyone.Detection representation."""
         try:
             import fiftyone as fo
         except ImportError:
@@ -163,6 +169,7 @@ class ObjectPrediction(ObjectAnnotation):
         return fiftyone_detection
 
     def __repr__(self) -> str:
+        """Return string representation of ObjectPrediction."""
         return f"""ObjectPrediction<
     bbox: {self.bbox},
     mask: {self.mask},
@@ -208,17 +215,15 @@ class PredictionResult:
         hide_conf: bool = False,
         file_name: str = "prediction_visual",
     ) -> None:
-        """
+        """Export prediction visualizations to directory.
 
         Args:
-            export_dir: directory for resulting visualization to be exported
-            text_size: size of the category name over box
-            rect_th: rectangle thickness
-            hide_labels: hide labels
-            hide_conf: hide confidence
-            file_name: saving name
-        Returns:
-
+            export_dir: directory for resulting visualization to be exported.
+            text_size: size of the category name over box.
+            rect_th: rectangle thickness.
+            hide_labels: hide labels.
+            hide_conf: hide confidence.
+            file_name: saving name.
         """
         Path(export_dir).mkdir(parents=True, exist_ok=True)
         visualize_object_predictions(
@@ -236,24 +241,28 @@ class PredictionResult:
         )
 
     def to_coco_annotations(self) -> list:
+        """Convert predictions to COCO annotation format."""
         coco_annotation_list = []
         for object_prediction in self.object_prediction_list:
             coco_annotation_list.append(object_prediction.to_coco_prediction().json)
         return coco_annotation_list
 
     def to_coco_predictions(self, image_id: int | None = None) -> list:
+        """Convert predictions to COCO prediction format."""
         coco_prediction_list = []
         for object_prediction in self.object_prediction_list:
             coco_prediction_list.append(object_prediction.to_coco_prediction(image_id=image_id).json)
         return coco_prediction_list
 
     def to_imantics_annotations(self) -> list:
+        """Convert predictions to imantics annotation format."""
         imantics_annotation_list = []
         for object_prediction in self.object_prediction_list:
             imantics_annotation_list.append(object_prediction.to_imantics_annotation())
         return imantics_annotation_list
 
     def to_fiftyone_detections(self) -> list:
+        """Convert predictions to FiftyOne detection format."""
         try:
             import fiftyone as fo
         except ImportError:

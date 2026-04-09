@@ -1,3 +1,4 @@
+"""Logger configuration for SAHI."""
 from __future__ import annotations
 
 import logging
@@ -11,10 +12,16 @@ logging.addLevelName(PKG_INFO_LEVEL, "PKG_INFO")
 
 
 class SupportsPkgInfo(Protocol):
-    def pkg_info(self, message: str, *args: object, **kws: object) -> None: ...  # pragma: no cover
+    """Protocol for loggers supporting pkg_info method."""
+
+    def pkg_info(self, message: str, *args: object, **kws: object) -> None:
+        """Log a package info message."""
+        ...  # pragma: no cover
 
 
 class BaseSahiLogger(logging.Logger, ABC):
+    """Base logger class for SAHI."""
+
     @abstractmethod
     def pkg_info(self, message: str, *args: object, **kws: object) -> None:
         """Log a package info message at PKG_INFO level."""
@@ -22,7 +29,10 @@ class BaseSahiLogger(logging.Logger, ABC):
 
 
 class SahiLogger(BaseSahiLogger):
+    """SAHI logger implementation."""
+
     def pkg_info(self, message: str, *args: object, **kws: object) -> None:
+        """Log a package info message at PKG_INFO level."""
         if self.isEnabledFor(PKG_INFO_LEVEL):
             self._log(PKG_INFO_LEVEL, message, args, **kws)  # type: ignore[arg-type]
 
@@ -32,6 +42,8 @@ logging.setLoggerClass(SahiLogger)
 
 
 class SahiLoggerFormatter(logging.Formatter):
+    """Custom formatter for SAHI logs."""
+
     grey = "\x1b[38;20m"
     yellow = "\x1b[33;20m"
     red = "\x1b[31;20m"
