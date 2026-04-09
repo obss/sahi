@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.rtdetr import RTDETRTestConstants, download_rtdetrl_model

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 
 from sahi.utils.torch_utils import empty_cuda_cache, to_float_tensor, torch_to_numpy

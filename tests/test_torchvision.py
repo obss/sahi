@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 import torchvision
 from torchvision.models.detection.faster_rcnn import RoIHeads

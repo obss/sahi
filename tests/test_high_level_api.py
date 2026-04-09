@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 class TestHighLevelApi:
     def test_bounding_box(self) -> None:
         from sahi import BoundingBox
