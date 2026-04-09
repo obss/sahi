@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 
-def fix_shift_amount_list(shift_amount_list: list) -> list[list[int | float]]:
+def fix_shift_amount_list(shift_amount_list: list | None) -> list[list[int | float]]:
     # compatibility for sahi v0.8.15
+    if shift_amount_list is None:
+        return [[0, 0]]
     if isinstance(shift_amount_list[0], (int, float)):
         shift_amount_list = [shift_amount_list]
     return shift_amount_list
