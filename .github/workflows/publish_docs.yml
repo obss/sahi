@@ -48,9 +48,16 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: 📚 Build and Publish Docs
+      - name: 📚 Build Docs
+        run: |
+          uv run zensical build
+
+      - name: 🚀 Deploy to GitHub Pages
         if:
           (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
           github.event_name == 'workflow_dispatch'
-        run: |
-          uv run mkdocs gh-deploy --force
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          force_orphan: true

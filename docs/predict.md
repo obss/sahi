@@ -18,7 +18,7 @@ from sahi import AutoDetectionModel
 
 # init any model
 detection_model = AutoDetectionModel.from_pretrained(model_type='mmdet',...) # for MMDetection models
-detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',...) # for YOLOv8/YOLO11/YOLO12/YOLO26 models
+detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',...) # for YOLOv8/YOLO11/YOLO26 models
 detection_model = AutoDetectionModel.from_pretrained(model_type='huggingface',...) # for HuggingFace detection models
 detection_model = AutoDetectionModel.from_pretrained(model_type='torchvision',...) # for Torchvision detection models
 detection_model = AutoDetectionModel.from_pretrained(model_type='rtdetr',...) # for RT-DETR models
@@ -253,15 +253,7 @@ fiftyone_detections = result.to_fiftyone_detections()
 # For use with FiftyOne: https://github.com/voxel51/fiftyone
 ```
 
-!!! tips "Interactive Demos and Examples" Want to see these prediction utilities
-in action? We have several interactive notebooks that demonstrate different
-model integrations:
-
-    - For YOLOv8/YOLO11/YOLO12/YOLO26 models, explore our [Ultralytics integration notebook](../demo/inference_for_ultralytics.ipynb)
-    - For YOLOv5 models, check out our [YOLOv5 integration notebook](../demo/inference_for_yolov5.ipynb)
-    - For MMDetection models, try our [MMDetection integration notebook](../demo/inference_for_mmdetection.ipynb)
-    - For HuggingFace models, see our [HuggingFace integration notebook](../demo/inference_for_huggingface.ipynb)
-    - For TorchVision models, explore our [TorchVision integration notebook](../demo/inference_for_torchvision.ipynb)
-    - For RT-DETR models, check out our [RT-DETR integration notebook](../demo/inference_for_rtdetr.ipynb)
-
-    These notebooks provide hands-on examples and allow you to experiment with different parameters and settings.
+!!! tip "Interactive Demos"
+    Want to see these prediction utilities in action? Check out our
+    [interactive notebooks](notebooks.md) with hands-on examples for every
+    supported framework.

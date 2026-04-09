@@ -388,18 +388,8 @@ python script_name.py
 
 ## Additional Resources
 
-Looking to dive deeper? Here are some helpful resources:
-
-- **[Prediction Utilities Documentation](predict.md)** - Detailed walkthrough of
-  prediction parameters and visualization
-- **[Slicing Utilities Guide](slicing.md)** - In-depth exploration of slicing
-  operations
-- **[COCO Utilities Documentation](coco.md)** - Comprehensive examples with COCO
-  format operations
-- **[Interactive Demo Notebooks](../demo/)** - Hands-on examples of CLI commands
-  in action
-- **[Model Documentation](models/)** - Framework-specific model integration
-  guides
-
-These resources provide comprehensive examples and explanations to help you make
-the most of SAHI's command-line interface.
+- [Prediction Utilities](predict.md) -- Python API for prediction parameters and
+  visualization
+- [COCO Utilities](coco.md) -- Python API for COCO dataset operations
+- [Model Integrations](guides/models.md) -- Framework-specific setup guides
+- [Interactive Notebooks](notebooks.md) -- Hands-on examples for all frameworks

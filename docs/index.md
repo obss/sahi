@@ -55,7 +55,9 @@ SAHI can increase object detection AP by up to 6.8% for FCOS, 5.1% for VFNet,
 and 5.3% for TOOD detectors. With slicing-aided fine-tuning, the accuracy can be
 further improved, resulting in a cumulative increase of 12.7%, 13.4%, and 14.5%
 AP, respectively. The technique has been successfully integrated with
-Detectron2, MMDetection, and YOLOv5 models.
+Ultralytics (YOLOv8, YOLO11, YOLO26), HuggingFace Transformers,
+RT-DETR, TorchVision, MMDetection, Detectron2, YOLOv5, YOLOE, YOLO-World, and
+Roboflow RF-DETR models.
 
 <div class="grid cards" markdown>
 
@@ -67,11 +69,27 @@ Detectron2, MMDetection, and YOLOv5 models.
 
     [:octicons-arrow-right-24: Quickstart](quick-start.md)
 
+-   :material-lightbulb-outline:{ .lg .middle } __How It Works__
+
+    ---
+
+    Understand the slicing algorithm, when to use it, and how to tune it.
+
+    [:octicons-arrow-right-24: Sliced Inference](guides/sliced-inference.md)
+
+-   :material-puzzle-outline:{ .lg .middle } __Model Integrations__
+
+    ---
+
+    Use SAHI with Ultralytics, HuggingFace, MMDetection, TorchVision, and more.
+
+    [:octicons-arrow-right-24: All models](guides/models.md)
+
 -   :material-image:{ .lg .middle } __Predict__
 
     ---
 
-    Predict on new images, videos and streams with SAHI.
+    Predict on new images, videos, and streams with SAHI.
 
     [:octicons-arrow-right-24: Learn more](predict.md)
 
@@ -99,69 +117,20 @@ Detectron2, MMDetection, and YOLOv5 models.
 
     [:octicons-arrow-right-24: Learn more](cli.md)
 
-</div>
-
-## Interactive Examples
-
-All documentation files are complemented by interactive Jupyter notebooks in the
-[demo directory](notebooks/):
-
-<div class="grid cards" markdown>
-
--   :material-notebook:{ .lg .middle } __Slicing__
+-   :material-eye:{ .lg .middle } __FiftyOne__
 
     ---
 
-    Slicing operations demonstration.
+    Interactively explore and compare detection results.
 
-    [:octicons-arrow-right-24: Open Notebook](notebooks/slicing.ipynb)
+    [:octicons-arrow-right-24: Learn more](fiftyone.md)
 
--   :material-notebook:{ .lg .middle } __Ultralytics__
-
-    ---
-
-    YOLOv8/YOLO11/YOLO12 integration.
-
-    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_ultralytics.ipynb)
-
--   :material-notebook:{ .lg .middle } __YOLOv5__
+-   :material-notebook:{ .lg .middle } __Notebooks__
 
     ---
 
-    YOLOv5 integration.
+    Hands-on Colab notebooks for every supported framework.
 
-    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_yolov5.ipynb)
-
--   :material-notebook:{ .lg .middle } __MMDetection__
-
-    ---
-
-    MMDetection integration.
-
-    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_mmdetection.ipynb)
-
--   :material-notebook:{ .lg .middle } __HuggingFace__
-
-    ---
-
-    HuggingFace models integration.
-
-    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_huggingface.ipynb)
-
--   :material-notebook:{ .lg .middle } __TorchVision__
-
-    ---
-
-    TorchVision models integration.
-
-    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_torchvision.ipynb)
-
--   :material-notebook:{ .lg .middle } __RT-DETR__
-
-    ---
-
-    RT-DETR integration.
-
-    [:octicons-arrow-right-24: Open Notebook](notebooks/inference_for_rtdetr.ipynb)
+    [:octicons-arrow-right-24: Browse notebooks](notebooks.md)
 
 </div>

@@ -10,18 +10,17 @@ site_dir = "site"
 nav = [
   {Home = "index.md"},
   {"Quick Start" = "quick-start.md"},
-  {Notebooks = [
-    {"Inference Ultralytics" = "notebooks/inference_for_ultralytics.ipynb"},
-    {"Inference YOLOv5" = "notebooks/inference_for_yolov5.ipynb"},
-    {"Inference MMDetection" = "notebooks/inference_for_mmdetection.ipynb"},
-    {"Inference Detectron2" = "notebooks/inference_for_detectron2.ipynb"},
-    {"Inference HuggingFace" = "notebooks/inference_for_huggingface.ipynb"},
-    {"Inference RTDETR" = "notebooks/inference_for_rtdetr.ipynb"},
-    {"Inference Roboflow" = "notebooks/inference_for_roboflow.ipynb"},
-    {"Inference TorchVision" = "notebooks/inference_for_torchvision.ipynb"},
-    {"Inference YOLOE" = "notebooks/inference_for_ultralytics_yoloe.ipynb"},
-    {Slicing = "notebooks/slicing.ipynb"},
+  {Guides = [
+    {"How Sliced Inference Works" = "guides/sliced-inference.md"},
+    {"Model Integrations" = "guides/models.md"},
+    {"Prediction Utilities" = "predict.md"},
+    {"COCO Dataset Operations" = "coco.md"},
+    {"Slicing Utilities" = "slicing.md"},
+    {"Postprocessing Backends" = "postprocess/backends.md"},
+    {"FiftyOne Visualization" = "fiftyone.md"},
+    {"CLI Commands" = "cli.md"},
   ]},
+  {Notebooks = "notebooks.md"},
   {"Code Reference" = [
     {"High-level API" = [
       "predict.md",
@@ -55,7 +54,6 @@ nav = [
       {"Computer Vision Utils" = "utils/cv.md"},
       {"File Utils" = "utils/file.md"},
     ]},
-    {"Command Line Interface" = "cli.md"},
   ]},
   {"API Reference Index" = "api.md"},
   {Contributing = "contributing.md"},
