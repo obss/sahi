@@ -27,6 +27,7 @@ from mmengine.infer.infer import ModelType  # noqa: E402
 
 class DetInferencerWrapper(DetInferencer):
     """Wrapper around MMDetection DetInferencer for custom inference pipeline."""
+
     def __init__(
         self,
         model: ModelType | str | None = None,

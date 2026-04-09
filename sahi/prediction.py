@@ -1,4 +1,5 @@
 """Prediction classes for object detection results."""
+
 from __future__ import annotations
 
 import copy

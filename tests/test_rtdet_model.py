@@ -1,4 +1,5 @@
 """Tests for RT-DETR detection model integration."""
+
 from __future__ import annotations
 
 from sahi.prediction import ObjectPrediction

@@ -1,4 +1,5 @@
 """Tests for table utility functions."""
+
 from __future__ import annotations
 
 import unittest

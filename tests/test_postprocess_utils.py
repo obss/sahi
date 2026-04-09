@@ -1,4 +1,5 @@
 """Tests for postprocessing utilities."""
+
 from __future__ import annotations
 
 from sahi.postprocess.utils import ObjectPredictionList

@@ -15,6 +15,7 @@ YOLO11N_OBB_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/downlo
 
 class UltralyticsConstants:
     """Constants for Ultralytics/YOLO model paths."""
+
     YOLO11N_MODEL_PATH = "tests/data/models/yolo11n.pt"
     YOLO11N_SEG_MODEL_PATH = "tests/data/models/yolo11n-seg.pt"
     YOLO11N_OBB_MODEL_PATH = "tests/data/models/yolo11n-obb.pt"

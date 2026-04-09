@@ -1,4 +1,5 @@
 """Tests for Detectron2 detection model integration."""
+
 from __future__ import annotations
 
 from sahi.models.detectron2 import Detectron2DetectionModel

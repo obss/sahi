@@ -206,7 +206,7 @@ class ShapelyAnnotation:
         return coco_segmentation
 
     def to_opencv_contours(self) -> list[list[list[list[int]]]]:
-        """[ [[[1, 1]], [[325, 125]], [[250, 200]], [[5, 200]]], [[[1, 1]], [[325, 125]], [[250, 200]], [[5, 200]]] ]."""
+        """Convert to OpenCV contours format."""
         opencv_contours: list = []
         for shapely_polygon in self.multipolygon.geoms:
             # create opencv_contour for selected shapely_polygon

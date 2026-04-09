@@ -22,6 +22,7 @@ class RoboflowDetectionModel(DetectionModel):
 
     Supports both Roboflow Universe models (API-based) and local RF-DETR models.
     """
+
     def __init__(
         self,
         model: object | None = None,
@@ -95,6 +96,7 @@ class RoboflowDetectionModel(DetectionModel):
         Args:
             model: Any
                 Loaded model.
+            **kwargs: Additional keyword arguments.
         """
         self.model = model
 

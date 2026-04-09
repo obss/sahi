@@ -13,6 +13,7 @@ class YOLOWorldDetectionModel(UltralyticsDetectionModel):
 
     An open-vocabulary object detector that can detect custom classes at test-time.
     """
+
     def load_model(self) -> None:
         """Detection model is initialized and set to self.model."""
         from ultralytics import YOLOWorld

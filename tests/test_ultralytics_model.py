@@ -1,4 +1,5 @@
 """Tests for Ultralytics detection model integration."""
+
 from __future__ import annotations
 
 import sys

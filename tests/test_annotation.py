@@ -1,4 +1,5 @@
 """Tests for annotation module."""
+
 from __future__ import annotations
 
 import pytest
@@ -9,8 +10,8 @@ from sahi.logger import logger
 class TestAnnotation:
     """Test cases for SAHI annotation classes."""
 
-
     def test_bounding_box(self) -> None:
+        """Test BoundingBox creation and property access."""
         from sahi.annotation import BoundingBox
 
         bbox_minmax = [30.0, 30.0, 100.0, 150.0]

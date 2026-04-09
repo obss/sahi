@@ -1,4 +1,5 @@
 """Automatic model loading utilities."""
+
 from __future__ import annotations
 
 from sahi.models.base import DetectionModel

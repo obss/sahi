@@ -9,6 +9,7 @@ from pathlib import Path
 
 class RTDETRTestConstants:
     """RT-DETR test model configurations."""
+
     RTDETRL_MODEL_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0/rtdetr-l.pt"
     RTDETRL_MODEL_PATH = "tests/data/models/rtdetr/rtdetr-l.pt"
 

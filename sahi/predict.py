@@ -601,6 +601,7 @@ def predict(
             Whether to show a progress bar. Default is False.
         batch_size: int
             Batch size for processing images. Default is 1.
+        **kwargs: Additional keyword arguments passed to the prediction pipeline.
     """
     # assert prediction type
     if no_standard_prediction and no_sliced_prediction:

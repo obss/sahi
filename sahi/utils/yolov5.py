@@ -9,6 +9,7 @@ from pathlib import Path
 
 class Yolov5TestConstants:
     """YOLOv5 test model configurations."""
+
     YOLOV5N_MODEL_URL = "https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5n.pt"
     YOLOV5N_MODEL_PATH = "tests/data/models/yolov5/yolov5n.pt"
 

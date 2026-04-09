@@ -1,4 +1,5 @@
 """Tests for TorchVision detection model integration."""
+
 from __future__ import annotations
 
 import numpy as np

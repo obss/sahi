@@ -1,4 +1,5 @@
 """Tests for high-level SAHI API."""
+
 from __future__ import annotations
 
 

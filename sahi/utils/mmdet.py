@@ -21,6 +21,7 @@ def mmdet_version_as_integer() -> int:
 
 class MmdetTestConstants:
     """MMDetection test model configurations."""
+
     MMDET_CASCADEMASKRCNN_MODEL_URL = "http://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
     MMDET_CASCADEMASKRCNN_MODEL_PATH = (
         "tests/data/models/mmdet/cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"

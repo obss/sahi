@@ -1,4 +1,5 @@
 """Tests for computer vision utility functions."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch

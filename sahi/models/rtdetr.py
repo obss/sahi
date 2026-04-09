@@ -13,6 +13,7 @@ class RTDetrDetectionModel(UltralyticsDetectionModel):
 
     Wraps Ultralytics RT-DETR for real-time detection inference.
     """
+
     def load_model(self) -> None:
         """Detection model is initialized and set to self.model."""
         from ultralytics import RTDETR

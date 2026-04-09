@@ -1,4 +1,5 @@
 """Tests for NMS/NMM postprocessing and backend registry."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -218,6 +219,7 @@ class TestNMS:
         assert 1 not in keep
 
     def test_batched_class_aware(self) -> None:
+        """Test batched NMS with class-aware filtering."""
         preds = np.array(PREDS_BATCHED_NMS, dtype=np.float32)
         keep = batched_nms(preds, match_metric="IOU", match_threshold=0.5)
         assert 0 in keep and 1 in keep

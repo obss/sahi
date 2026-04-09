@@ -1,4 +1,5 @@
 """Tests for image and COCO auto-slicing functionality."""
+
 from __future__ import annotations
 
 from PIL import Image

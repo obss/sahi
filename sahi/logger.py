@@ -1,4 +1,5 @@
 """Logger configuration for SAHI."""
+
 from __future__ import annotations
 
 import logging

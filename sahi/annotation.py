@@ -2,6 +2,7 @@
 
 Contains classes for handling bounding boxes, categories, masks, and annotations.
 """
+
 from __future__ import annotations
 
 import copy

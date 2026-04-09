@@ -1,4 +1,5 @@
 """Image slicing utilities for splitting large images into tiles."""
+
 from __future__ import annotations
 
 import concurrent.futures
@@ -246,6 +247,7 @@ class SliceImageResult:
 
     def __getitem__(self, i: int | slice | list | tuple) -> dict | list:
         """Get sliced image(s) by index or slice."""
+
         def _prepare_ith_dict(i: int) -> dict:
             return {
                 "image": self.images[i],

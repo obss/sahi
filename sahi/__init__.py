@@ -2,6 +2,7 @@
 
 A framework for performing object detection on large images using slicing.
 """
+
 from __future__ import annotations
 
 import importlib.metadata as importlib_metadata
