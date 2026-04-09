@@ -44,7 +44,7 @@ class Colors:
         return (color_codes[2], color_codes[1], color_codes[0]) if bgr else color_codes
 
     @staticmethod
-    def hex_to_rgb(hex_code: str) -> tuple[int, ...]:
+    def hex_to_rgb(hex_code: str) -> tuple[int, int, int]:
         """Converts a hexadecimal color code to RGB format.
 
         Args:
@@ -56,7 +56,7 @@ class Colors:
         rgb = []
         for i in (0, 2, 4):
             rgb.append(int(hex_code[1 + i : 1 + i + 2], 16))
-        return tuple(rgb)
+        return (rgb[0], rgb[1], rgb[2])
 
 
 def crop_object_predictions(
@@ -109,6 +109,7 @@ def convert_image_to(read_path: str, extension: str = "jpg", grayscale: bool = F
         grayscale (bool, optional): Whether to convert the image to grayscale. Defaults to False.
     """
     image = cv2.imread(read_path)
+    assert image is not None, f"Failed to read image: {read_path}"
     pre, _ = os.path.splitext(read_path)
     if grayscale:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -133,11 +134,12 @@ def read_large_image(image_path: str) -> tuple[np.ndarray, bool]:
     try:
         # convert to rgb (cv2 reads in bgr)
         img_cv2 = cv2.imread(image_path, 1)
+        assert img_cv2 is not None, f"Failed to read image: {image_path}"
         image0 = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
     except Exception as e:
         logger.error(f"OpenCV failed reading image with error {e}, trying skimage instead")
         try:
-            import skimage.io
+            import skimage.io  # type: ignore[import-not-found]
         except ImportError:
             raise ImportError(
                 'Please run "pip install -U scikit-image" to install scikit-image first for large image handling.'
@@ -158,6 +160,7 @@ def read_image(image_path: str) -> np.ndarray:
     """
     # read image
     image = cv2.imread(image_path)
+    assert image is not None, f"Failed to read image: {image_path}"
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # return image
     return image
@@ -286,17 +289,16 @@ def get_video_reader(
 
     num_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
     if view_visual:
-        num_frames /= frame_skip_interval + 1
-        num_frames = int(num_frames)
+        num_frames = int(num_frames / (frame_skip_interval + 1))
 
-    def read_video_frame(video_capture: object, frame_skip_interval: int) -> Generator[Image.Image]:  # type: ignore[type-arg]
+    def read_video_frame(video_capture: cv2.VideoCapture, frame_skip_interval: int) -> Generator[Image.Image]:  # type: ignore[type-arg]
         if view_visual:
             window_name = f"Prediction of {video_file_name!s}"
             cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
             default_image = np.zeros((480, 640, 3), dtype=np.uint8)
             cv2.imshow(window_name, default_image)
 
-            while video_capture.isOpened:
+            while video_capture.isOpened():
                 frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
                 video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + frame_skip_interval)
 
@@ -325,7 +327,7 @@ def get_video_reader(
                 yield Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
         else:
-            while video_capture.isOpened:
+            while video_capture.isOpened():
                 frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
                 video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + frame_skip_interval)
 
@@ -349,7 +351,7 @@ def get_video_reader(
         w = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         size = (w, h)
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # pyright: ignore[reportAttributeAccessIssue]
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore[attr-defined]  # pyright: ignore[reportAttributeAccessIssue]
         video_writer = cv2.VideoWriter(os.path.join(save_dir, video_file_name), fourcc, fps, size)
     else:
         video_writer = None
@@ -423,7 +425,7 @@ def visualize_prediction(
 
         # set color
         if colors is not None:
-            mycolor = colors(class_)
+            mycolor = colors(int(class_))
         elif color is not None:
             mycolor = color
         else:
@@ -448,7 +450,7 @@ def visualize_prediction(
                 0
             ]  # label width, height
             outside = point1[1] - box_height - 3 >= 0  # label fits outside box
-            point2 = point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3
+            point2 = [point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3]
             # add bounding box text
             cv2.rectangle(image, point1, point2, color or (0, 0, 0), -1, cv2.LINE_AA)  # filled
             cv2.putText(
@@ -582,7 +584,7 @@ def visualize_object_predictions(
                     0
                 ]  # label width, height
                 outside = point1[1] - box_height - 3 >= 0  # label fits outside box
-                point2 = point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3
+                point2 = (point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3)
                 # add bounding box text
                 cv2.rectangle(image, point1, point2, color or (0, 0, 0), -1, cv2.LINE_AA)  # filled
                 cv2.putText(
@@ -620,8 +622,8 @@ def get_coco_segmentation_from_bool_mask(bool_mask: np.ndarray) -> list[list[flo
     mask = np.squeeze(bool_mask)
     mask = mask.astype(np.uint8)
     mask = cv2.copyMakeBorder(mask, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=(0, 0, 0))
-    polygons = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE, offset=(-1, -1))
-    polygons = polygons[0] if len(polygons) == 2 else polygons[1]
+    contour_result = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE, offset=(-1, -1))
+    polygons = contour_result[0] if len(contour_result) == 2 else contour_result[1]  # type: ignore[index]
     # Convert polygon to coco segmentation
     coco_segmentation = []
     for polygon in polygons:
@@ -646,7 +648,7 @@ def get_bool_mask_from_coco_segmentation(coco_segmentation: list[list[float]], w
     size = [height, width]
     points = [np.array(point).reshape(-1, 2).round().astype(int) for point in coco_segmentation]
     bool_mask = np.zeros(size)
-    bool_mask = cv2.fillPoly(bool_mask, points, (1.0,))
+    bool_mask = cv2.fillPoly(bool_mask, points, (1.0,))  # type: ignore[assignment]
     bool_mask.astype(bool)
     return bool_mask
 
@@ -748,9 +750,9 @@ def ipython_display(image: np.ndarray) -> None:
     If input image is in range 0..1, please first multiply img by 255
     Assumes image is ndarray of shape [height, width, channels] where channels can be 1, 3 or 4
     """
-    import IPython
+    import IPython  # type: ignore[import-not-found]
 
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     _, ret = cv2.imencode(".png", image)
-    i = IPython.display.Image(data=ret)  # type: ignore
-    IPython.display.display(i)  # type: ignore
+    i = IPython.display.Image(data=ret)  # type: ignore[attr-defined]
+    IPython.display.display(i)  # type: ignore[attr-defined]
