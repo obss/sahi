@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from itertools import chain, zip_longest
+from typing import Any
 
 import numpy as np
 
@@ -74,7 +75,7 @@ class RoboflowDetectionModel(DetectionModel):
         if load_at_init:
             self.load_model()
 
-    def set_model(self, model: object, **kwargs: object) -> None:
+    def set_model(self, model: Any, **kwargs: Any) -> None:
         """
         This function should be implemented to instantiate a DetectionModel out of an already loaded model
         Args:
@@ -159,7 +160,7 @@ class RoboflowDetectionModel(DetectionModel):
                 if model_path:
                     model_params["pretrain_weights"] = model_path
 
-                model = model(**model_params)
+                model = model(**model_params)  # type: ignore[operator]
             elif isinstance(model, model_types):
                 model = model
             else:
@@ -195,8 +196,8 @@ class RoboflowDetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: list[list[int]] | None = [[0, 0]],
-        full_shape_list: list[list[int]] | None = None,
+        shift_amount_list: list[list[int | float]] | None = [[0, 0]],
+        full_shape_list: list[list[int | float]] | None = None,
     ) -> None:
         """This function should be implemented in a way that self._original_predictions should be converted to a list of
         prediction.ObjectPrediction and set to self._object_prediction_list.
@@ -211,8 +212,8 @@ class RoboflowDetectionModel(DetectionModel):
                 List[[height, width],[height, width],...]
         """
         # compatibility for sahi v0.8.15
-        shift_amount_list = fix_shift_amount_list(shift_amount_list)
-        full_shape_list = fix_full_shape_list(full_shape_list)
+        shift_amount_list_typed: list[list[int | float]] = fix_shift_amount_list(shift_amount_list)
+        full_shape_list_typed: list[list[int | float]] | None = fix_full_shape_list(full_shape_list)
 
         object_prediction_list: list[ObjectPrediction] = []
 
@@ -226,14 +227,14 @@ class RoboflowDetectionModel(DetectionModel):
 
             original_reponses = self._original_predictions
 
-            assert len(original_reponses) == len(shift_amount_list) == len(full_shape_list), (
+            assert len(original_reponses) == len(shift_amount_list_typed) == len(full_shape_list_typed or []), (
                 "Length mismatch between original responses, shift amounts, and full shapes."
             )
 
             for original_reponse, shift_amount, full_shape in zip(
                 original_reponses,
-                shift_amount_list,
-                full_shape_list,
+                shift_amount_list_typed,
+                full_shape_list_typed or [],
             ):
                 for prediction in original_reponse.predictions:
                     bbox = [
@@ -275,16 +276,15 @@ class RoboflowDetectionModel(DetectionModel):
 
             original_detections: list[Detections] = self._original_predictions
 
-            assert len(original_detections) == len(shift_amount_list) == len(full_shape_list), (
+            assert len(original_detections) == len(shift_amount_list_typed) == len(full_shape_list_typed or []), (
                 "Length mismatch between original responses, shift amounts, and full shapes."
             )
 
             for original_detection, shift_amount, full_shape in zip(
                 original_detections,
-                shift_amount_list,
-                full_shape_list,
+                shift_amount_list_typed,
+                full_shape_list_typed or [],
             ):
-                original_detection: Detections
                 for xyxy, mask, confidence, class_id in zip_longest(
                     original_detection.xyxy,
                     original_detection.mask if original_detection.mask is not None else [],
@@ -297,7 +297,7 @@ class RoboflowDetectionModel(DetectionModel):
                         bbox=xyxy,
                         segmentation=segmentation,
                         category_id=int(class_id),
-                        category_name=self.category_mapping.get(int(class_id), None),
+                        category_name=self.category_mapping.get(int(class_id), None) if self.category_mapping else None,
                         score=float(confidence),
                         shift_amount=shift_amount,
                         full_shape=full_shape,

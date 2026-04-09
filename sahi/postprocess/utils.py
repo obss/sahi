@@ -27,7 +27,7 @@ class ObjectPredictionList(Sequence):
         prediction_list: List of ObjectPrediction instances to wrap.
     """
 
-    def __init__(self, prediction_list: list[ObjectPrediction]) -> None:
+    def __init__(self, prediction_list: list) -> None:
         self.list: list[ObjectPrediction] = prediction_list
         super().__init__()
 
@@ -42,7 +42,7 @@ class ObjectPredictionList(Sequence):
             A new ObjectPredictionList containing the selected predictions.
         """
         if _is_tensor_like(i):
-            i = i.tolist()
+            i = i.tolist()  # type: ignore[union-attr]
         if isinstance(i, int):
             return ObjectPredictionList([self.list[i]])
         elif isinstance(i, (tuple, list)):
@@ -64,18 +64,25 @@ class ObjectPredictionList(Sequence):
                 ObjectPrediction instances to assign.
         """
         if _is_tensor_like(i):
-            i = i.tolist()
+            i = i.tolist()  # type: ignore[union-attr]
         if isinstance(i, int):
-            self.list[i] = elem
+            if isinstance(elem, ObjectPrediction):
+                self.list[i] = elem
+            else:
+                raise ValueError("Single index requires ObjectPrediction value")
         elif isinstance(i, (tuple, list)):
-            if len(i) != len(elem):
-                raise ValueError()
             if isinstance(elem, ObjectPredictionList):
+                elem_len = len(elem.list)
                 for ind, el in enumerate(elem.list):
                     self.list[i[ind]] = el
+            elif isinstance(elem, ObjectPrediction):
+                raise ValueError("Single prediction value cannot be used with multiple indices")
             else:
+                elem_len = len(elem)
                 for ind, el in enumerate(elem):
                     self.list[i[ind]] = el
+            if len(i) != elem_len:
+                raise ValueError()
         else:
             raise NotImplementedError(f"{type(i)}")
 
@@ -231,7 +238,9 @@ def object_prediction_list_to_numpy(object_prediction_list: ObjectPredictionList
     return numpy_predictions
 
 
-def calculate_box_union(box1: list[int] | np.ndarray, box2: list[int] | np.ndarray) -> list[int]:
+def calculate_box_union(
+    box1: list[int] | list[float] | np.ndarray, box2: list[int] | list[float] | np.ndarray
+) -> list[int]:
     """Compute the smallest bounding box enclosing both input boxes.
 
     Args:
@@ -248,7 +257,7 @@ def calculate_box_union(box1: list[int] | np.ndarray, box2: list[int] | np.ndarr
     return list(np.concatenate((left_top, right_bottom)))
 
 
-def calculate_area(box: list[int] | np.ndarray) -> float:
+def calculate_area(box: list[int] | list[float] | np.ndarray) -> float:
     """Compute the area of an axis-aligned bounding box.
 
     Args:
@@ -354,6 +363,9 @@ def get_merged_mask(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Mask:
     mask1 = pred1.mask
     mask2 = pred2.mask
 
+    if mask1 is None or mask2 is None:
+        raise ValueError("Both predictions must have masks to merge them")
+
     # buffer(0) is a quickhack to fix invalid polygons most of the time
     poly1 = get_shapely_multipolygon(mask1.segmentation).buffer(0)
     poly2 = get_shapely_multipolygon(mask2.segmentation).buffer(0)
@@ -370,7 +382,7 @@ def get_merged_mask(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Mask:
         union_poly = MultiPolygon([g.buffer(0) for g in union_poly.geoms if isinstance(g, Polygon)])
     union = ShapelyAnnotation(multipolygon=union_poly).to_coco_segmentation()
     return Mask(
-        segmentation=union,
+        segmentation=union,  # type: ignore[arg-type]
         full_shape=mask1.full_shape,
         shift_amount=mask1.shift_amount,
     )
@@ -403,8 +415,8 @@ def get_merged_bbox(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Boundin
     Returns:
         A BoundingBox enclosing both input bounding boxes.
     """
-    box1: list[int] = pred1.bbox.to_xyxy()
-    box2: list[int] = pred2.bbox.to_xyxy()
+    box1: list[float] = pred1.bbox.to_xyxy()
+    box2: list[float] = pred2.bbox.to_xyxy()
     bbox = BoundingBox(box=calculate_box_union(box1, box2))
     return bbox
 
@@ -441,7 +453,7 @@ def merge_object_prediction_pair(
     Returns:
         A new ObjectPrediction with merged attributes.
     """
-    shift_amount = pred1.bbox.shift_amount
+    shift_amount = list(pred1.bbox.shift_amount)
     merged_bbox: BoundingBox = get_merged_bbox(pred1, pred2)
     merged_score: float = get_merged_score(pred1, pred2)
     merged_category: Category = get_merged_category(pred1, pred2)

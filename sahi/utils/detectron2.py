@@ -18,4 +18,4 @@ def export_cfg_as_yaml(cfg: object, export_path: str = "config.yaml") -> None:
     Path(export_path).parent.mkdir(exist_ok=True, parents=True)
 
     with open(export_path, "w") as f:
-        f.write(cfg.dump())
+        f.write(cfg.dump())  # type: ignore[attr-defined]

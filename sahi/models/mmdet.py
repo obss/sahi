@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 
 from sahi.logger import logger
@@ -40,7 +42,7 @@ class DetInferencerWrapper(DetInferencer):
                 Inference batch size. Defaults to 1.
         """
         inputs = self.preprocess(images, batch_size=batch_size)
-        results_dict = {"predictions": [], "visualization": []}
+        results_dict: dict[str, list] = {"predictions": [], "visualization": []}
         for _, data in inputs:
             preds = self.forward(data)
             results = self.postprocess(
@@ -114,12 +116,12 @@ class MmdetDetectionModel(DetectionModel):
 
         # create model
         model = DetInferencerWrapper(
-            self.config_path, self.model_path, device=self.device, scope=self.scope, image_size=self.image_size
+            self.config_path, self.model_path, device=str(self.device), scope=self.scope, image_size=self.image_size
         )
 
         self.set_model(model)
 
-    def set_model(self, model: object) -> None:
+    def set_model(self, model: Any, **kwargs: Any) -> None:
         """Sets the underlying MMDetection model.
 
         Args:
@@ -179,7 +181,7 @@ class MmdetDetectionModel(DetectionModel):
             )
 
         # Access the dataset from the configuration
-        dataset_config = self.model.cfg["train_dataloader"]["dataset"]
+        dataset_config = self.model.cfg["train_dataloader"]["dataset"]  # type: ignore[attr-defined]
 
         if dataset_config["type"] == "ConcatDataset":
             # If using ConcatDataset, check each dataset individually
@@ -196,7 +198,7 @@ class MmdetDetectionModel(DetectionModel):
 
     @property
     def category_names(self) -> tuple | list:
-        classes = self.model.model.dataset_meta["classes"]
+        classes = self.model.model.dataset_meta["classes"]  # type: ignore[attr-defined]
         if isinstance(classes, str):
             # https://github.com/open-mmlab/mmdetection/pull/4973
             return (classes,)
@@ -205,8 +207,8 @@ class MmdetDetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: list[list[int]] | None = [[0, 0]],
-        full_shape_list: list[list[int]] | None = None,
+        shift_amount_list: list[list[int | float]] | None = [[0, 0]],
+        full_shape_list: list[list[int | float]] | None = None,
     ) -> None:
         """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
@@ -225,18 +227,20 @@ class MmdetDetectionModel(DetectionModel):
             can_decode_rle = True
         except ImportError:
             can_decode_rle = False
-        original_predictions = self._original_predictions
+        assert self._original_predictions is not None
+        original_predictions: list = self._original_predictions
+        assert self.category_mapping is not None
         category_mapping = self.category_mapping
 
         # compatilibty for sahi v0.8.15
-        shift_amount_list = fix_shift_amount_list(shift_amount_list)
-        full_shape_list = fix_full_shape_list(full_shape_list)
+        shift_amount_list_typed: list[list[int | float]] = fix_shift_amount_list(shift_amount_list)
+        full_shape_list_typed: list[list[int | float]] | None = fix_full_shape_list(full_shape_list)
 
         # parse boxes and masks from predictions
         object_prediction_list_per_image = []
         for image_ind, original_prediction in enumerate(original_predictions):
-            shift_amount = shift_amount_list[image_ind]
-            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+            shift_amount = [int(x) for x in shift_amount_list_typed[image_ind]]
+            full_shape = None if full_shape_list_typed is None else [int(x) for x in full_shape_list_typed[image_ind]]
 
             boxes = original_prediction["bboxes"]
             scores = original_prediction["scores"]

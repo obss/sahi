@@ -1,10 +1,17 @@
 from __future__ import annotations
 
-from shapely.geometry import CAP_STYLE, JOIN_STYLE, GeometryCollection, MultiPolygon, Polygon, box
+from shapely.geometry import (
+    CAP_STYLE,
+    JOIN_STYLE,
+    GeometryCollection,
+    MultiPolygon,
+    Polygon,
+    box,
+)
 from shapely.validation import make_valid
 
 
-def get_shapely_box(x: int, y: int, width: int, height: int) -> Polygon:
+def get_shapely_box(x: int | float, y: int | float, width: int | float, height: int | float) -> Polygon:
     """Accepts coco style bbox coords and converts it to shapely box object."""
     minx = x
     miny = y
@@ -75,7 +82,7 @@ class ShapelyAnnotation:
 
     @classmethod
     def from_coco_segmentation(
-        cls, segmentation: list[list[float]], slice_bbox: list[float] | None = None
+        cls, segmentation: list[list[float]] | list[list[int]], slice_bbox: list[float] | None = None
     ) -> ShapelyAnnotation:
         """Init ShapelyAnnotation from coco segmentation.
 
@@ -89,7 +96,7 @@ class ShapelyAnnotation:
         return cls(multipolygon=shapely_multipolygon, slice_bbox=slice_bbox)
 
     @classmethod
-    def from_coco_bbox(cls, bbox: list[int], slice_bbox: list[float] | None = None) -> ShapelyAnnotation:
+    def from_coco_bbox(cls, bbox: list[int] | list[float], slice_bbox: list[float] | None = None) -> ShapelyAnnotation:
         """Init ShapelyAnnotation from coco bbox.
 
         bbox (List[int]): [xmin, ymin, width, height] slice_bbox (List[int]): [x_min, y_min, x_max, y_max] Is used
@@ -107,10 +114,6 @@ class ShapelyAnnotation:
     def multipolygon(self) -> MultiPolygon:
         return self.__multipolygon
 
-    @property
-    def area(self) -> int:
-        return int(self.__area)
-
     @multipolygon.setter
     def multipolygon(self, multipolygon: MultiPolygon) -> None:
         self.__multipolygon = multipolygon
@@ -120,6 +123,10 @@ class ShapelyAnnotation:
             area += shapely_polygon.area
         # set instance area
         self.__area = area
+
+    @property
+    def area(self) -> int:
+        return int(self.__area)
 
     def to_list(self) -> list[list[tuple[float, float]]]:
         """
@@ -199,7 +206,7 @@ class ShapelyAnnotation:
                     y_coords = [y_coord - miny for y_coord in y_coords]
                 opencv_contour = [[[int(x_coords[ind]), int(y_coords[ind])]] for ind in range(len(x_coords))]
             else:
-                opencv_contour: list = []
+                opencv_contour = []
             # append opencv_contour to opencv_contours
             opencv_contours.append(opencv_contour)
         # return result
@@ -216,7 +223,7 @@ class ShapelyAnnotation:
                 coco_bbox[0] = coco_bbox[0] - minx
                 coco_bbox[1] = coco_bbox[1] - miny
         else:
-            coco_bbox: list = []
+            coco_bbox = []
         return coco_bbox
 
     def to_coco_bbox(self) -> list[float]:

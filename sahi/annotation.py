@@ -214,10 +214,10 @@ class Mask:
         if full_shape is None:
             raise ValueError("full_shape must be provided")  # pyright: ignore[reportUnreachable]
 
-        self.shift_x = shift_amount[0]
-        self.shift_y = shift_amount[1]
-        self.full_shape_height = full_shape[0]
-        self.full_shape_width = full_shape[1]
+        self.shift_x = int(shift_amount[0])
+        self.shift_y = int(shift_amount[1])
+        self.full_shape_height = int(full_shape[0])
+        self.full_shape_width = int(full_shape[1])
         # Ensure segmentation is a list
         if isinstance(segmentation, np.ndarray):
             self.segmentation: list[list[float]] = segmentation.tolist()

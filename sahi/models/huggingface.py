@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from typing import Any
 
 import numpy as np
 
@@ -27,7 +28,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         token: str | None = None,
     ) -> None:
         self._processor = processor
-        self._original_shapes: list = []
+        self._original_shapes: list[tuple[int, ...]] = []
         self._token = token
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "transformers"]
@@ -46,7 +47,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         )
 
     @property
-    def processor(self) -> object:
+    def processor(self) -> Any:
         return self._processor
 
     @property
@@ -57,17 +58,18 @@ class HuggingfaceDetectionModel(DetectionModel):
     @property
     def num_categories(self) -> int:
         """Returns number of categories."""
-        return self.model.config.num_labels
+        return self.model.config.num_labels  # type: ignore[attr-defined]
 
     def load_model(self) -> None:
         from transformers import AutoModelForObjectDetection, AutoProcessor
 
         hf_token = os.getenv("HF_TOKEN", self._token)
+        assert self.model_path is not None, "model_path must be provided for HuggingFace models"
         model = AutoModelForObjectDetection.from_pretrained(self.model_path, token=hf_token)
         if self.image_size is not None:
             # RT-DETR family expects explicit height/width; other models use shortest_edge
             if model.__class__.__name__.startswith("RTDetr"):
-                size = {"height": self.image_size, "width": self.image_size}
+                size: dict[str, int | None] = {"height": self.image_size, "width": self.image_size}
             else:
                 size = {"shortest_edge": self.image_size, "longest_edge": None}
             # use_fast=True raises error: AttributeError: 'SizeDict' object has no attribute 'keys'
@@ -78,7 +80,7 @@ class HuggingfaceDetectionModel(DetectionModel):
             processor = AutoProcessor.from_pretrained(self.model_path, use_fast=False, token=hf_token)
         self.set_model(model, processor)
 
-    def set_model(self, model: object, processor: object | None = None, **kwargs: object) -> None:
+    def set_model(self, model: Any, processor: Any | None = None, **kwargs: Any) -> None:
         processor = processor or self.processor
         if processor is None:
             raise ValueError(f"'processor' is required to be set, got {processor}.")
@@ -87,9 +89,9 @@ class HuggingfaceDetectionModel(DetectionModel):
                 "Given 'model' is not an ObjectDetectionModel or 'processor' is not a valid ImageProcessor."
             )
         self.model = model
-        self.model.to(self.device)
+        self.model.to(self.device)  # type: ignore[attr-defined]
         self._processor = processor
-        self.category_mapping = self.model.config.id2label
+        self.category_mapping = self.model.config.id2label  # type: ignore[attr-defined]
 
     def perform_inference(self, image: list | np.ndarray) -> None:
         """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
@@ -141,7 +143,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         cls_name = self.model.__class__.__name__
         return any(cls_name.startswith(p) for p in self._SIGMOID_CLS_PREFIXES)
 
-    def get_valid_predictions(self, logits: object, pred_boxes: object) -> tuple:
+    def get_valid_predictions(self, logits: Any, pred_boxes: Any) -> tuple:
         """
         Args:
             logits: torch.Tensor
@@ -174,8 +176,8 @@ class HuggingfaceDetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: list[list[int]] | None = [[0, 0]],
-        full_shape_list: list[list[int]] | None = None,
+        shift_amount_list: list[list[int | float]] | None = [[0, 0]],
+        full_shape_list: list[list[int | float]] | None = None,
     ) -> None:
         """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
@@ -188,11 +190,12 @@ class HuggingfaceDetectionModel(DetectionModel):
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
-        original_predictions = self._original_predictions
+        assert self._original_predictions is not None
+        original_predictions: Any = self._original_predictions
 
         # compatibility for sahi v0.8.15
-        shift_amount_list = fix_shift_amount_list(shift_amount_list)
-        full_shape_list = fix_full_shape_list(full_shape_list)
+        shift_amount_list_typed: list[list[int | float]] = fix_shift_amount_list(shift_amount_list)
+        full_shape_list_typed: list[list[int | float]] | None = fix_full_shape_list(full_shape_list)
 
         n_image = original_predictions.logits.shape[0]
         object_prediction_list_per_image = []
@@ -205,8 +208,8 @@ class HuggingfaceDetectionModel(DetectionModel):
             # create object_prediction_list
             object_prediction_list = []
 
-            shift_amount = shift_amount_list[image_ind]
-            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+            shift_amount = [int(x) for x in shift_amount_list_typed[image_ind]]
+            full_shape = None if full_shape_list_typed is None else [int(x) for x in full_shape_list_typed[image_ind]]
 
             for ind in range(len(boxes)):
                 category_id = cat_ids[ind].item()
@@ -229,7 +232,7 @@ class HuggingfaceDetectionModel(DetectionModel):
                     bbox=bbox,
                     segmentation=None,
                     category_id=category_id,
-                    category_name=self.category_mapping[category_id],
+                    category_name=self.category_mapping[category_id] if self.category_mapping else "",  # type: ignore[index]
                     shift_amount=shift_amount,
                     score=scores[ind].item(),
                     full_shape=full_shape,

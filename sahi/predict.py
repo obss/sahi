@@ -8,7 +8,7 @@ from typing import Any
 
 import numpy as np
 from PIL import Image
-from tqdm import tqdm  # type: ignore[import-untyped]
+from tqdm import tqdm
 
 from sahi.annotation import ObjectAnnotation
 from sahi.auto_model import AutoDetectionModel
@@ -298,7 +298,7 @@ def get_sliced_prediction(
     else:
         slice_iterator = range(num_batches)
 
-    full_shape = [
+    full_shape: list[int | float] = [
         slice_image_result.original_image_height,
         slice_image_result.original_image_width,
     ]
@@ -309,7 +309,9 @@ def get_sliced_prediction(
         batch_start = batch_ind * batch_size
         batch_end = min(batch_start + batch_size, num_slices)
         batch_images = [slice_image_result.images[i] for i in range(batch_start, batch_end)]
-        batch_shifts = [slice_image_result.starting_pixels[i] for i in range(batch_start, batch_end)]
+        batch_shifts: list[list[int | float]] = [
+            list(slice_image_result.starting_pixels[i]) for i in range(batch_start, batch_end)
+        ]
         current_batch_size = len(batch_images)
 
         # perform batch inference
@@ -429,6 +431,7 @@ def agg_prediction(result: PredictionResult, thresh: float) -> list:
         h = current_bbox[3]
 
         coord_list.append((x, y, w, h))
+
     def _cmp(a: tuple[Any, ...], b: tuple[Any, ...]) -> int:
         return bbox_sort(a, b, thresh)
 

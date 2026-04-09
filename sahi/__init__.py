@@ -1,4 +1,15 @@
+from __future__ import annotations
+
 import importlib.metadata as importlib_metadata
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sahi.annotation import BoundingBox as BoundingBox
+    from sahi.annotation import Category as Category
+    from sahi.annotation import Mask as Mask
+    from sahi.auto_model import AutoDetectionModel as AutoDetectionModel
+    from sahi.models.base import DetectionModel as DetectionModel
+    from sahi.prediction import ObjectPrediction as ObjectPrediction
 
 try:
     # This will read version from pyproject.toml

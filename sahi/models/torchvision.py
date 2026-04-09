@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 import yaml
 
@@ -15,7 +17,7 @@ class TorchVisionDetectionModel(DetectionModel):
     def __init__(self, *args: object, **kwargs: object) -> None:
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "torchvision"]
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)  # type: ignore[misc, arg-type]
 
     def load_model(self) -> None:
         import torch
@@ -59,7 +61,7 @@ class TorchVisionDetectionModel(DetectionModel):
 
         self.set_model(model)
 
-    def set_model(self, model: object) -> None:
+    def set_model(self, model: Any, **kwargs: Any) -> None:
         """Sets the underlying TorchVision model.
 
         Args:
@@ -67,8 +69,8 @@ class TorchVisionDetectionModel(DetectionModel):
                 A TorchVision model
         """
 
-        model.eval()
-        self.model = model.to(self.device)
+        model.eval()  # type: ignore[attr-defined]
+        self.model = model.to(self.device)  # type: ignore[attr-defined]
 
         # set category_mapping
 
@@ -88,6 +90,7 @@ class TorchVisionDetectionModel(DetectionModel):
         from sahi.utils.torch_utils import to_float_tensor
 
         # arrange model input size
+        assert self.model is not None
         if self.image_size is not None:
             # get min and max of image height and width
             min_shape, max_shape = min(image.shape[:2]), max(image.shape[:2])
@@ -97,30 +100,32 @@ class TorchVisionDetectionModel(DetectionModel):
             self.model.transform.min_size = (image_size,)  # default is (800,)
             self.model.transform.max_size = image_size  # default is 1333
 
-        image = to_float_tensor(image)
-        image = image.to(self.device)
-        prediction_result = self.model([image])
+        image_tensor = to_float_tensor(image)
+        image_tensor = image_tensor.to(self.device)
+        prediction_result = self.model([image_tensor])
 
         self._original_predictions = prediction_result
 
     @property
     def num_categories(self) -> int:
         """Returns number of categories."""
+        assert self.category_mapping is not None
         return len(self.category_mapping)
 
     @property
     def has_mask(self) -> bool:
         """Returns if model output contains segmentation mask."""
-        return hasattr(self.model, "roi_heads") and hasattr(self.model.roi_heads, "mask_predictor")
+        return hasattr(self.model, "roi_heads") and hasattr(self.model.roi_heads, "mask_predictor")  # type: ignore[attr-defined]
 
     @property
     def category_names(self) -> list:
+        assert self.category_mapping is not None
         return list(self.category_mapping.values())
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: list[list[int]] | None = [[0, 0]],
-        full_shape_list: list[list[int]] | None = None,
+        shift_amount_list: list[list[int | float]] | None = [[0, 0]],
+        full_shape_list: list[list[int | float]] | None = None,
     ) -> None:
         """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
@@ -136,10 +141,10 @@ class TorchVisionDetectionModel(DetectionModel):
         original_predictions = self._original_predictions
 
         # compatilibty for sahi v0.8.20
-        if isinstance(shift_amount_list[0], int):
-            shift_amount_list = [shift_amount_list]
+        if shift_amount_list is not None and isinstance(shift_amount_list[0], int):
+            shift_amount_list = [shift_amount_list]  # type: ignore[list-item]
         if full_shape_list is not None and isinstance(full_shape_list[0], int):
-            full_shape_list = [full_shape_list]
+            full_shape_list = [full_shape_list]  # type: ignore[list-item]
 
         for image_predictions in original_predictions:
             object_prediction_list_per_image = []
@@ -165,7 +170,7 @@ class TorchVisionDetectionModel(DetectionModel):
             # create object_prediction_list
             object_prediction_list = []
 
-            shift_amount = shift_amount_list[0]
+            shift_amount = shift_amount_list[0] if shift_amount_list else [0, 0]
             full_shape = None if full_shape_list is None else full_shape_list[0]
 
             for ind in range(len(boxes)):
@@ -178,7 +183,7 @@ class TorchVisionDetectionModel(DetectionModel):
                     bbox=boxes[ind],
                     segmentation=segmentation,
                     category_id=int(category_ids[ind]),
-                    category_name=self.category_mapping[str(int(category_ids[ind]))],
+                    category_name=self.category_mapping[str(int(category_ids[ind]))] if self.category_mapping else "",  # type: ignore[index]
                     shift_amount=shift_amount,
                     score=scores[ind],
                     full_shape=full_shape,

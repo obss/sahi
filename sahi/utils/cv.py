@@ -139,7 +139,7 @@ def read_large_image(image_path: str) -> tuple[np.ndarray, bool]:
     except Exception as e:
         logger.error(f"OpenCV failed reading image with error {e}, trying skimage instead")
         try:
-            import skimage.io  # type: ignore[import-not-found]
+            import skimage.io
         except ImportError:
             raise ImportError(
                 'Please run "pip install -U scikit-image" to install scikit-image first for large image handling.'
@@ -750,7 +750,7 @@ def ipython_display(image: np.ndarray) -> None:
     If input image is in range 0..1, please first multiply img by 255
     Assumes image is ndarray of shape [height, width, channels] where channels can be 1, 3 or 4
     """
-    import IPython  # type: ignore[import-not-found]
+    import IPython
 
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     _, ret = cv2.imencode(".png", image)

@@ -4,7 +4,7 @@ import concurrent.futures
 import os
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 from PIL import Image
@@ -663,7 +663,7 @@ def get_auto_slice_params(height: int, width: int) -> tuple[int, int, int, int]:
         return get_resolution_selector("ultra-high", height=height, width=width)
 
 
-def shift_bboxes(bboxes: object, offset: Sequence[int]) -> object:
+def shift_bboxes(bboxes: Any, offset: Sequence[int]) -> Any:
     """Shift bboxes w.r.t offset.
 
     Supports Tensor, np.ndarray, and list inputs.

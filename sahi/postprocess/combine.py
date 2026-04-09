@@ -93,7 +93,7 @@ def _batched_apply(
     scores = predictions[:, 4]
 
     # Collect results from each category
-    all_results = {}
+    all_results: dict[int, list[int] | None] = {}
     for category_id in np.unique(category_ids):
         curr_indices = np.where(category_ids == category_id)[0]
         result = func(predictions[curr_indices], match_metric, match_threshold)
@@ -120,7 +120,7 @@ def _batched_apply(
         keep.sort(key=lambda i: scores[i], reverse=True)
         return keep
     else:
-        return all_results
+        return {k: v for k, v in all_results.items() if v is not None}  # type: ignore[return-value]
 
 
 # ---------------------------------------------------------------------------
@@ -167,7 +167,7 @@ def batched_nms(
     Returns:
         List of indices of the kept predictions, sorted by score descending.
     """
-    return _batched_apply(predictions, nms, match_metric, match_threshold)
+    return _batched_apply(predictions, nms, match_metric, match_threshold)  # type: ignore[return-value]
 
 
 def greedy_nmm(
@@ -208,7 +208,7 @@ def batched_greedy_nmm(
     Returns:
         Dict mapping each kept index to a list of indices merged into it.
     """
-    return _batched_apply(predictions, greedy_nmm, match_metric, match_threshold)
+    return _batched_apply(predictions, greedy_nmm, match_metric, match_threshold)  # type: ignore[return-value]
 
 
 def nmm(
@@ -250,7 +250,7 @@ def batched_nmm(
     Returns:
         Dict mapping each kept index to a list of indices merged into it.
     """
-    return _batched_apply(predictions, nmm, match_metric, match_threshold)
+    return _batched_apply(predictions, nmm, match_metric, match_threshold)  # type: ignore[return-value]
 
 
 # ---------------------------------------------------------------------------
@@ -310,20 +310,29 @@ def _apply_merge(
     Returns:
         List of merged ObjectPrediction instances.
     """
-    selected = []
+    selected: list[ObjectPrediction] = []
     for keep_ind, merge_ind_list in keep_to_merge_list.items():
+        keep_pred_wrapped = object_prediction_list[keep_ind]
+        keep_pred = keep_pred_wrapped.tolist()
+        if not isinstance(keep_pred, ObjectPrediction):
+            raise TypeError("Expected ObjectPrediction from single-item list")
+
         for merge_ind in merge_ind_list:
+            merge_pred_wrapped = object_prediction_list[merge_ind]
+            merge_pred = merge_pred_wrapped.tolist()
+            if not isinstance(merge_pred, ObjectPrediction):
+                raise TypeError("Expected ObjectPrediction from single-item list")
+
             if has_match(
-                object_prediction_list[keep_ind].tolist(),
-                object_prediction_list[merge_ind].tolist(),
+                keep_pred,
+                merge_pred,
                 match_metric,
                 match_threshold,
             ):
-                object_prediction_list[keep_ind] = merge_object_prediction_pair(
-                    object_prediction_list[keep_ind].tolist(),
-                    object_prediction_list[merge_ind].tolist(),
-                )
-        selected.append(object_prediction_list[keep_ind].tolist())
+                keep_pred = merge_object_prediction_pair(keep_pred, merge_pred)
+                object_prediction_list[keep_ind] = keep_pred
+
+        selected.append(keep_pred)
     return selected
 
 

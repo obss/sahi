@@ -62,7 +62,10 @@ class PostprocessPredictions:
         smaller_area = np.minimum(area1, area2)
         return intersect / smaller_area
 
-    def __call__(self) -> None:
+    def __call__(
+        self,
+        object_predictions: list[ObjectPrediction],
+    ) -> list[ObjectPrediction]:
         raise NotImplementedError()
 
 
@@ -124,23 +127,23 @@ class UnionMergePostprocess(PostprocessPredictions):
         pred1: ObjectPrediction,
         pred2: ObjectPrediction,
     ) -> ObjectPrediction:
-        shift_amount = pred1.bbox.shift_amount
+        shift_amount = list(pred1.bbox.shift_amount)
         merged_bbox: BoundingBox = self._get_merged_bbox(pred1, pred2)
         merged_score: float = self._get_merged_score(pred1, pred2)
         merged_category: Category = self._get_merged_category(pred1, pred2)
         if pred1.mask and pred2.mask:
             merged_mask: Mask = self._get_merged_mask(pred1, pred2)
-            bool_mask = merged_mask.bool_mask
+            segmentation = merged_mask.segmentation
             full_shape = merged_mask.full_shape
         else:
-            bool_mask = None
+            segmentation = None
             full_shape = None
         return ObjectPrediction(
             bbox=merged_bbox.to_xyxy(),
             score=merged_score,
             category_id=merged_category.id,
             category_name=merged_category.name,
-            bool_mask=bool_mask,
+            segmentation=segmentation,
             shift_amount=shift_amount,
             full_shape=full_shape,
         )
@@ -154,8 +157,8 @@ class UnionMergePostprocess(PostprocessPredictions):
 
     @staticmethod
     def _get_merged_bbox(pred1: ObjectPrediction, pred2: ObjectPrediction) -> BoundingBox:
-        box1: list[int] = pred1.bbox.to_xyxy()
-        box2: list[int] = pred2.bbox.to_xyxy()
+        box1: list[float] = pred1.bbox.to_xyxy()
+        box2: list[float] = pred2.bbox.to_xyxy()
         bbox = BoundingBox(box=calculate_box_union(box1, box2))
         return bbox
 
@@ -171,9 +174,13 @@ class UnionMergePostprocess(PostprocessPredictions):
     def _get_merged_mask(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Mask:
         mask1 = pred1.mask
         mask2 = pred2.mask
+        if mask1 is None or mask2 is None:
+            raise ValueError("Both predictions must have masks to merge them")
         union_mask = np.logical_or(mask1.bool_mask, mask2.bool_mask)
+        from sahi.utils.cv import get_coco_segmentation_from_bool_mask
+
         return Mask(
-            bool_mask=union_mask,
+            segmentation=get_coco_segmentation_from_bool_mask(union_mask),
             full_shape=mask1.full_shape,
             shift_amount=mask1.shift_amount,
         )

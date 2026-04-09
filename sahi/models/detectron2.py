@@ -12,7 +12,7 @@ class Detectron2DetectionModel(DetectionModel):
     def __init__(self, *args: object, **kwargs: object) -> None:
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "detectron2"]
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)  # type: ignore[misc, arg-type]
 
     def load_model(self) -> None:
         from detectron2.config import get_cfg
@@ -35,7 +35,7 @@ class Detectron2DetectionModel(DetectionModel):
             cfg.MODEL.WEIGHTS = self.model_path
 
         # set model device
-        cfg.MODEL.DEVICE = self.device.type
+        cfg.MODEL.DEVICE = self.device.type if hasattr(self.device, "type") else str(self.device)  # type: ignore[union-attr]
         # set input image size
         if self.image_size is not None:
             cfg.INPUT.MIN_SIZE_TEST = self.image_size
@@ -91,13 +91,14 @@ class Detectron2DetectionModel(DetectionModel):
     @property
     def num_categories(self) -> int:
         """Returns number of categories."""
+        assert self.category_mapping is not None
         num_categories = len(self.category_mapping)
         return num_categories
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: list[list[int]] | None = [[0, 0]],
-        full_shape_list: list[list[int]] | None = None,
+        shift_amount_list: list[list[int | float]] | None = [[0, 0]],
+        full_shape_list: list[list[int | float]] | None = None,
     ) -> None:
         """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
@@ -114,13 +115,13 @@ class Detectron2DetectionModel(DetectionModel):
         original_predictions = self._original_predictions
 
         # compatilibty for sahi v0.8.15
-        if isinstance(shift_amount_list[0], int):
-            shift_amount_list = [shift_amount_list]
+        if shift_amount_list is not None and isinstance(shift_amount_list[0], int):
+            shift_amount_list = [shift_amount_list]  # type: ignore[list-item]
         if full_shape_list is not None and isinstance(full_shape_list[0], int):
-            full_shape_list = [full_shape_list]
+            full_shape_list = [full_shape_list]  # type: ignore[list-item]
 
         # detectron2 DefaultPredictor supports single image
-        shift_amount = shift_amount_list[0]
+        shift_amount = shift_amount_list[0] if shift_amount_list else [0, 0]
         full_shape = None if full_shape_list is None else full_shape_list[0]
 
         # parse boxes, masks, scores, category_ids from predictions
@@ -149,7 +150,7 @@ class Detectron2DetectionModel(DetectionModel):
                         get_coco_segmentation_from_bool_mask(mask.detach().cpu().numpy()) if mask is not None else None
                     ),
                     category_id=category_id.item(),
-                    category_name=self.category_mapping[str(category_id.item())],
+                    category_name=self.category_mapping[str(category_id.item())] if self.category_mapping else "",  # type: ignore[index]
                     shift_amount=shift_amount,
                     score=score.item(),
                     full_shape=full_shape,
@@ -170,7 +171,7 @@ class Detectron2DetectionModel(DetectionModel):
                     bbox=box.tolist(),
                     segmentation=None,
                     category_id=category_id.item(),
-                    category_name=self.category_mapping[str(category_id.item())],
+                    category_name=self.category_mapping[str(category_id.item())] if self.category_mapping else "",  # type: ignore[index]
                     shift_amount=shift_amount,
                     score=score.item(),
                     full_shape=full_shape,
