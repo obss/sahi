@@ -439,7 +439,7 @@ class ObjectAnnotation:
     @classmethod
     def from_coco_segmentation(
         cls,
-        segmentation: list[list[float]],
+        segmentation: list[list[float]] | list[list[int]],
         full_shape: list[int],
         category_id: int | None = None,
         category_name: str | None = None,
@@ -481,7 +481,7 @@ class ObjectAnnotation:
     @classmethod
     def from_coco_bbox(
         cls,
-        bbox: list[float],
+        bbox: list[float] | list[int],
         category_id: int | None = None,
         category_name: str | None = None,
         shift_amount: list[int] | None = None,
