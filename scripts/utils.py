@@ -1,3 +1,5 @@
+"""Utility functions for scripts."""
+
 import shutil
 
 

@@ -1,3 +1,9 @@
+"""Ultralytics detection model wrapper for SAHI.
+
+Provides integration with Ultralytics YOLO models for object detection,
+instance segmentation, and oriented bounding box detection.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -26,11 +32,13 @@ class UltralyticsDetectionModel(DetectionModel):
         following keyword arguments.
 
         Args:
+            *args: Variable length argument list passed to DetectionModel.
             fuse: If True, fuse Conv2d and BatchNorm2d layers for faster
                 inference. Default: False.
             task: Ultralytics task type (e.g. ``"detect"``, ``"segment"``,
                 ``"obb"``). When None, the task is inferred from the model.
                 Default: None.
+            **kwargs: Arbitrary keyword arguments passed to DetectionModel.
         """
         self.fuse: bool = fuse
         self.task: str | None = task
@@ -40,7 +48,6 @@ class UltralyticsDetectionModel(DetectionModel):
 
     def load_model(self) -> None:
         """Detection model is initialized and set to self.model."""
-
         from ultralytics import YOLO
 
         try:
@@ -66,8 +73,9 @@ class UltralyticsDetectionModel(DetectionModel):
         Args:
             model: Any
                 A Ultralytics model
+            **kwargs: Any
+                Additional keyword arguments for model setup.
         """
-
         self.model = model
         # set category_mapping
         if not self.category_mapping:
@@ -217,7 +225,9 @@ class UltralyticsDetectionModel(DetectionModel):
         shift_amount_list: list[list[int | float]] | None = [[0, 0]],
         full_shape_list: list[list[int | float]] | None = None,
     ) -> None:
-        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        """Convert predictions to ObjectPrediction list.
+
+        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 
         Args:

@@ -1,3 +1,4 @@
+"""Tests for Detectron2 detection model integration."""
 from __future__ import annotations
 
 from sahi.models.detectron2 import Detectron2DetectionModel
@@ -17,7 +18,10 @@ torch_version = get_package_info("torch", verbose=False)[1]
 if "1.10." in torch_version:
 
     class TestDetectron2DetectionModel:
+        """Test Detectron2 detection model functionality."""
+
         def test_load_model(self) -> None:
+            """Test loading a Detectron2 detection model."""
             detector2_detection_model = Detectron2DetectionModel(
                 model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
                 config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
@@ -30,6 +34,7 @@ if "1.10." in torch_version:
             assert detector2_detection_model.model is not None
 
         def test_perform_inference_without_mask_output(self) -> None:
+            """Test inference without mask output."""
             detectron2_detection_model = Detectron2DetectionModel(
                 model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
                 config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
@@ -62,6 +67,7 @@ if "1.10." in torch_version:
             assert len(boxes) == 35
 
         def test_convert_original_predictions_without_mask_output(self) -> None:
+            """Test converting predictions without mask output."""
             detectron2_detection_model = Detectron2DetectionModel(
                 model_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
                 config_path=Detectron2TestConstants.FASTERCNN_MODEL_ZOO_NAME,
@@ -108,6 +114,7 @@ if "1.10." in torch_version:
                     raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
         def test_convert_original_predictions_with_mask_output(self) -> None:
+            """Test converting predictions with mask output."""
             detectron2_detection_model = Detectron2DetectionModel(
                 model_path=Detectron2TestConstants.MASKRCNN_MODEL_ZOO_NAME,
                 config_path=Detectron2TestConstants.MASKRCNN_MODEL_ZOO_NAME,
@@ -151,6 +158,7 @@ if "1.10." in torch_version:
                     raise AssertionError(f"desired_bbox: {desired_bbox}, predicted_bbox: {predicted_bbox}")
 
         def test_get_prediction_detectron2(self) -> None:
+            """Test getting full-image predictions with Detectron2."""
             from sahi.models.detectron2 import Detectron2DetectionModel
             from sahi.predict import get_prediction
             from sahi.utils.detectron2 import Detectron2TestConstants
@@ -200,6 +208,7 @@ if "1.10." in torch_version:
             assert num_car == 16
 
         def test_get_sliced_prediction_detectron2(self) -> None:
+            """Test getting sliced predictions with Detectron2."""
             from sahi.models.detectron2 import Detectron2DetectionModel
             from sahi.predict import get_sliced_prediction
             from sahi.utils.detectron2 import Detectron2TestConstants

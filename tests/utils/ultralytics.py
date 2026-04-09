@@ -1,3 +1,5 @@
+"""Ultralytics/YOLO model constants and utilities for testing."""
+
 from __future__ import annotations
 
 import os
@@ -12,6 +14,7 @@ YOLO11N_OBB_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/downlo
 
 
 class UltralyticsConstants:
+    """Constants for Ultralytics/YOLO model paths."""
     YOLO11N_MODEL_PATH = "tests/data/models/yolo11n.pt"
     YOLO11N_SEG_MODEL_PATH = "tests/data/models/yolo11n-seg.pt"
     YOLO11N_OBB_MODEL_PATH = "tests/data/models/yolo11n-obb.pt"
@@ -78,6 +81,12 @@ def download_yolo11n_onnx_model(
     destination_path: str | Path = UltralyticsConstants.YOLO11N_ONNX_MODEL_PATH,
     image_size: int | None = 640,
 ) -> None:
+    """Download YOLO11n ONNX model and convert if needed.
+
+    Args:
+        destination_path: Path where the ONNX model will be saved.
+        image_size: Image size for model export.
+    """
     destination_path = Path(destination_path)
     model_path = destination_path.parent / (destination_path.stem + ".pt")
     download_yolo11n_model(str(model_path))

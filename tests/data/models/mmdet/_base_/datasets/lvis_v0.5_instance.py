@@ -1,3 +1,5 @@
+"""MMDetection configuration file for lvis_v0.5_instance.py."""
+
 # dataset settings
 dataset_type = "LVISV05Dataset"
 data_root = "data/lvis_v0.5/"

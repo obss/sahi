@@ -1,3 +1,9 @@
+"""Detectron2 detection model wrapper for SAHI.
+
+Provides integration with Facebook's Detectron2 framework for object detection
+and instance segmentation.
+"""
+
 from __future__ import annotations
 
 import numpy as np
@@ -9,12 +15,24 @@ from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bo
 
 
 class Detectron2DetectionModel(DetectionModel):
+    """Detectron2 object detection model.
+
+    Wraps Detectron2's DefaultPredictor for detection and instance segmentation.
+    """
+
     def __init__(self, *args: object, **kwargs: object) -> None:
+        """Initialize Detectron2 detection model.
+
+        Args:
+            *args: Variable length argument list passed to DetectionModel.
+            **kwargs: Arbitrary keyword arguments passed to DetectionModel.
+        """
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "detectron2"]
         super().__init__(*args, **kwargs)  # type: ignore[misc, arg-type]
 
     def load_model(self) -> None:
+        """Load Detectron2 model from configuration."""
         from detectron2.config import get_cfg
         from detectron2.data import MetadataCatalog
         from detectron2.engine import DefaultPredictor
@@ -75,7 +93,6 @@ class Detectron2DetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-
         # Confirm model is loaded
         if self.model is None:
             raise RuntimeError("Model is not loaded, load it by calling .load_model()")
@@ -100,7 +117,9 @@ class Detectron2DetectionModel(DetectionModel):
         shift_amount_list: list[list[int | float]] | None = [[0, 0]],
         full_shape_list: list[list[int | float]] | None = None,
     ) -> None:
-        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        """Convert predictions to ObjectPrediction list.
+
+        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 
         Args:
@@ -111,7 +130,6 @@ class Detectron2DetectionModel(DetectionModel):
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
-
         original_predictions = self._original_predictions
 
         # compatilibty for sahi v0.8.15

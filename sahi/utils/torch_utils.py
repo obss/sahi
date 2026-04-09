@@ -1,3 +1,5 @@
+"""Torch-related utilities for tensor operations."""
+
 from __future__ import annotations
 
 import re
@@ -27,8 +29,10 @@ def empty_cuda_cache() -> None:
 
 
 def to_float_tensor(img: np.ndarray | Image) -> torch.Tensor:
-    """Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range [0, 255] to a torch.FloatTensor of shape (C
-    x H x W).
+    """Convert PIL.Image or numpy array to torch.FloatTensor.
+
+    Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range [0, 255]
+    to a torch.FloatTensor of shape (C x H x W).
 
     Args:
         img: PIL.Image or numpy array

@@ -1,3 +1,9 @@
+"""YOLOE detection model wrapper for SAHI.
+
+Provides integration with YOLOE (Real-Time Seeing Anything) open-vocabulary
+detection and segmentation models.
+"""
+
 from __future__ import annotations
 
 from sahi.models.ultralytics import UltralyticsDetectionModel

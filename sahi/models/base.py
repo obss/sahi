@@ -1,3 +1,9 @@
+"""Base class for all detection models in SAHI.
+
+Provides a unified interface for loading, inference, and prediction conversion
+across different detection frameworks.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -40,6 +46,8 @@ class DetectionModel:
         Args:
             model_path: str
                 Path for the instance segmentation model weight
+            model: Any
+                A pre-loaded detection model instance.
             config_path: str
                 Path for the mmdetection instance segmentation model config file
             device: Torch device, "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.
@@ -56,7 +64,6 @@ class DetectionModel:
             image_size: int
                 Inference input size.
         """
-
         self.model_path = model_path
         self.config_path = config_path
         self.model: Any = None
@@ -109,6 +116,8 @@ class DetectionModel:
         Args:
             model: Any
                 A pre-loaded detection model instance.
+            **kwargs: Any
+                Additional keyword arguments for subclass-specific setup.
         """
         raise NotImplementedError()
 
@@ -118,7 +127,6 @@ class DetectionModel:
         Args:
             device: Torch device, "cpu", "mps", "cuda", "cuda:0", "cuda:1", etc.
         """
-
         self.device = select_device(device)
 
     def unload_model(self) -> None:
@@ -220,7 +228,6 @@ class DetectionModel:
             full_shape: Per-image full image sizes ``[[height, width], ...]``
                 or a single ``[height, width]`` for one image.
         """
-
         batch_images = getattr(self, "_batch_images", None)
         if batch_images is not None:
             from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list

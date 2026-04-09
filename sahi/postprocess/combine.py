@@ -1,3 +1,5 @@
+"""Postprocessing strategies for combining predictions from sliced inference."""
+
 from __future__ import annotations
 
 import importlib
@@ -278,12 +280,29 @@ class PostprocessPredictions(ABC):
         match_metric: str = "IOU",
         class_agnostic: bool = True,
     ) -> None:
+        """Initialize the postprocessor with configuration parameters.
+
+        Args:
+            match_threshold: Minimum overlap value (IoU or IoS) to consider
+                two predictions as matching.
+            match_metric: Overlap metric, "IOU" or "IOS".
+            class_agnostic: If True, apply postprocessing across all
+                categories. If False, apply per category independently.
+        """
         self.match_threshold = match_threshold
         self.class_agnostic = class_agnostic
         self.match_metric = match_metric
 
     @abstractmethod
     def __call__(self, predictions: list[ObjectPrediction]) -> list[ObjectPrediction]:
+        """Apply postprocessing to the list of predictions.
+
+        Args:
+            predictions: List of ObjectPrediction instances to postprocess.
+
+        Returns:
+            List of postprocessed ObjectPrediction instances.
+        """
         pass
 
 
@@ -344,6 +363,14 @@ class NMSPostprocess(PostprocessPredictions):
     """
 
     def __call__(self, object_predictions: list[ObjectPrediction]) -> list[ObjectPrediction]:
+        """Apply Non-Maximum Suppression to suppress overlapping predictions.
+
+        Args:
+            object_predictions: List of ObjectPrediction instances to suppress.
+
+        Returns:
+            List of suppressed ObjectPrediction instances.
+        """
         object_prediction_list = ObjectPredictionList(object_predictions)
         preds_np = object_prediction_list.tonumpy()
         func = nms if self.class_agnostic else batched_nms
@@ -368,6 +395,14 @@ class NMMPostprocess(PostprocessPredictions):
     _batched_func = staticmethod(batched_nmm)
 
     def __call__(self, object_predictions: list[ObjectPrediction]) -> list[ObjectPrediction]:
+        """Apply Non-Maximum Merging to merge overlapping predictions.
+
+        Args:
+            object_predictions: List of ObjectPrediction instances to merge.
+
+        Returns:
+            List of merged ObjectPrediction instances.
+        """
         object_prediction_list = ObjectPredictionList(object_predictions)
         preds_np = object_prediction_list.tonumpy()
         func = self._agnostic_func if self.class_agnostic else self._batched_func
@@ -400,6 +435,18 @@ class LSNMSPostprocess(PostprocessPredictions):
     """
 
     def __call__(self, object_predictions: list[ObjectPrediction]) -> list[ObjectPrediction]:
+        """Apply Locality-Sensitive NMS to suppress overlapping predictions.
+
+        Args:
+            object_predictions: List of ObjectPrediction instances to suppress.
+
+        Returns:
+            List of suppressed ObjectPrediction instances.
+
+        Raises:
+            ModuleNotFoundError: If the lsnms package is not installed.
+            NotImplementedError: If match_metric is not "IOU".
+        """
         try:
             from lsnms import nms
         except ModuleNotFoundError:

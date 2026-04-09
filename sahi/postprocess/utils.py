@@ -1,3 +1,5 @@
+"""Utilities for postprocessing object predictions."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -28,6 +30,11 @@ class ObjectPredictionList(Sequence):
     """
 
     def __init__(self, prediction_list: list) -> None:
+        """Initialize with a list of object predictions.
+
+        Args:
+            prediction_list: List of ObjectPrediction instances.
+        """
         self.list: list[ObjectPrediction] = prediction_list
         super().__init__()
 
@@ -87,9 +94,11 @@ class ObjectPredictionList(Sequence):
             raise NotImplementedError(f"{type(i)}")
 
     def __len__(self) -> int:
+        """Return the number of predictions in this list."""
         return len(self.list)
 
     def __str__(self) -> str:
+        """Return string representation of the prediction list."""
         return str(self.list)
 
     def extend(self, object_prediction_list: ObjectPredictionList) -> None:
@@ -181,7 +190,7 @@ def repair_multipolygon(shapely_multipolygon: MultiPolygon) -> MultiPolygon:
 
 
 def coco_segmentation_to_shapely(segmentation: list | list[list]) -> MultiPolygon:
-    """Fix segment data in COCO format :param segmentation: segment data in COCO format :return:"""
+    """Convert COCO segmentation format to a Shapely MultiPolygon."""
     if isinstance(segmentation, list) and all([not isinstance(seg, list) for seg in segmentation]):
         segmentation = [segmentation]
     elif isinstance(segmentation, list) and all([isinstance(seg, list) for seg in segmentation]):

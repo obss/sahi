@@ -1,8 +1,12 @@
+"""Tests for high-level SAHI API."""
 from __future__ import annotations
 
 
 class TestHighLevelApi:
+    """Test high-level SAHI API classes."""
+
     def test_bounding_box(self) -> None:
+        """Test BoundingBox functionality."""
         from sahi import BoundingBox
 
         bbox_minmax = [30.0, 30.0, 100.0, 150.0]
@@ -20,6 +24,7 @@ class TestHighLevelApi:
         assert shifted_bbox.to_xyxy() == [80.0, 70.0, 150.0, 190.0]
 
     def test_category(self) -> None:
+        """Test Category class."""
         from sahi import Category
 
         category_id = 1
@@ -29,6 +34,7 @@ class TestHighLevelApi:
         assert category.name == category_name
 
     def test_mask(self) -> None:
+        """Test Mask class."""
         from sahi import Mask
 
         coco_segmentation = [[1.0, 1.0, 325.0, 125.0, 250.0, 200.0, 5.0, 200.0]]
@@ -42,6 +48,7 @@ class TestHighLevelApi:
         assert mask.bool_mask[11, 2]
 
     def test_object_prediction(self) -> None:
+        """Test ObjectPrediction class and factory methods."""
         from sahi import ObjectPrediction
 
         bbox = [100.0, 200.0, 150.0, 230.0]
@@ -98,6 +105,7 @@ class TestHighLevelApi:
         assert object_annotation3.category.name == category_name
 
     def test_detection_model(self) -> None:
+        """Test DetectionModel base class."""
         from sahi import DetectionModel
 
         MODEL_PATH = "model_path"

@@ -1,3 +1,8 @@
+"""YOLOv5 detection model wrapper for SAHI.
+
+Provides integration with Ultralytics YOLOv5 for object detection.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,7 +17,13 @@ from sahi.utils.import_utils import check_package_minimum_version
 
 
 class Yolov5DetectionModel(DetectionModel):
+    """YOLOv5 object detection model.
+
+    Wraps Ultralytics YOLOv5 for fast object detection.
+    """
+
     def __init__(self, *args: object, **kwargs: object) -> None:
+        """Initialize YOLOv5 detection model."""
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "yolov5", "torch"]
         super().__init__(*args, **kwargs)  # type: ignore[misc, arg-type]
@@ -33,8 +44,9 @@ class Yolov5DetectionModel(DetectionModel):
         Args:
             model: Any
                 A YOLOv5 model
+            **kwargs: Any
+                Additional keyword arguments for model setup.
         """
-
         if model.__class__.__module__ not in ["yolov5.models.common", "models.common"]:
             raise Exception(f"Not a yolov5 model: {type(model)}")
 
@@ -53,7 +65,6 @@ class Yolov5DetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
@@ -73,11 +84,11 @@ class Yolov5DetectionModel(DetectionModel):
     @property
     def has_mask(self) -> bool:
         """Returns if model output contains segmentation mask."""
-
         return False  # fix when yolov5 supports segmentation models
 
     @property
     def category_names(self) -> list:
+        """Return category names from model."""
         assert self.model is not None
         if check_package_minimum_version("yolov5", "6.2.0"):
             return list(self.model.names.values())
@@ -89,7 +100,9 @@ class Yolov5DetectionModel(DetectionModel):
         shift_amount_list: list[list[int | float]] | None = [[0, 0]],
         full_shape_list: list[list[int | float]] | None = None,
     ) -> None:
-        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        """Convert predictions to ObjectPrediction list.
+
+        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 
         Args:

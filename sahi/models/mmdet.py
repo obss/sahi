@@ -1,3 +1,9 @@
+"""MMDetection detection model wrapper for SAHI.
+
+Provides integration with OpenMMLab's MMDetection framework for object detection
+and instance segmentation.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -20,6 +26,7 @@ from mmengine.infer.infer import ModelType  # noqa: E402
 
 
 class DetInferencerWrapper(DetInferencer):
+    """Wrapper around MMDetection DetInferencer for custom inference pipeline."""
     def __init__(
         self,
         model: ModelType | str | None = None,
@@ -29,12 +36,13 @@ class DetInferencerWrapper(DetInferencer):
         palette: str = "none",
         image_size: int | None = None,
     ) -> None:
+        """Initialize the DetInferencer wrapper."""
         self.image_size = image_size
         super().__init__(model, weights, device, scope, palette)
 
     def __call__(self, images: list[np.ndarray], batch_size: int = 1) -> dict:
-        """
-        Emulate DetInferencer(images) without progressbar
+        """Emulate DetInferencer(images) without progressbar.
+
         Args:
             images: list of np.ndarray
                 A list of numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
@@ -80,6 +88,11 @@ class DetInferencerWrapper(DetInferencer):
 
 
 class MmdetDetectionModel(DetectionModel):
+    """MMDetection object detection model.
+
+    Wraps MMDetection's DetInferencer for detection and instance segmentation.
+    """
+
     def __init__(
         self,
         model_path: str | None = None,
@@ -94,6 +107,7 @@ class MmdetDetectionModel(DetectionModel):
         image_size: int | None = None,
         scope: str = "mmdet",
     ) -> None:
+        """Initialize MMDetection detection model."""
         self.scope = scope
         self.image_size = image_size
         existing_packages = getattr(self, "required_packages", None) or []
@@ -113,7 +127,6 @@ class MmdetDetectionModel(DetectionModel):
 
     def load_model(self) -> None:
         """Detection model is initialized and set to self.model."""
-
         # create model
         model = DetInferencerWrapper(
             self.config_path, self.model_path, device=str(self.device), scope=self.scope, image_size=self.image_size
@@ -127,8 +140,9 @@ class MmdetDetectionModel(DetectionModel):
         Args:
             model: Any
                 A MMDetection model
+            **kwargs: Any
+                Additional keyword arguments for model setup.
         """
-
         # set self.model
         self.model = model
 
@@ -144,7 +158,6 @@ class MmdetDetectionModel(DetectionModel):
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
@@ -198,6 +211,7 @@ class MmdetDetectionModel(DetectionModel):
 
     @property
     def category_names(self) -> tuple | list:
+        """Return category names from model metadata."""
         classes = self.model.model.dataset_meta["classes"]  # type: ignore[attr-defined]
         if isinstance(classes, str):
             # https://github.com/open-mmlab/mmdetection/pull/4973
@@ -210,7 +224,9 @@ class MmdetDetectionModel(DetectionModel):
         shift_amount_list: list[list[int | float]] | None = [[0, 0]],
         full_shape_list: list[list[int | float]] | None = None,
     ) -> None:
-        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        """Convert predictions to ObjectPrediction list.
+
+        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 
         Args:

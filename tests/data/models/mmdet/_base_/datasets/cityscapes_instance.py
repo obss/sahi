@@ -1,3 +1,5 @@
+"""MMDetection configuration file for cityscapes_instance.py."""
+
 # dataset settings
 dataset_type = "CityscapesDataset"
 data_root = "data/cityscapes/"

@@ -1,3 +1,5 @@
+"""File I/O utilities for SAHI."""
+
 from __future__ import annotations
 
 import glob
@@ -19,15 +21,13 @@ def unzip(file_path: str, dest_dir: str) -> None:
         file_path: 'data/01_alb_id.zip'
         dest_dir: 'data/'
     """
-
     # unzip file
     with zipfile.ZipFile(file_path) as zf:
         zf.extractall(dest_dir)
 
 
 def save_json(data: object, save_path: str | Path, indent: int | None = None) -> None:
-    """
-    Saves json formatted data (given as "data") as save_path
+    """Saves json formatted data (given as "data") as save_path.
 
     Args:
         data: dict
@@ -54,7 +54,10 @@ def save_json(data: object, save_path: str | Path, indent: int | None = None) ->
 
 # type check when save json files
 class NumpyEncoder(json.JSONEncoder):
+    """JSON encoder for numpy types."""
+
     def default(self, obj: object) -> object:
+        """Encode numpy types as JSON-serializable Python types."""
         if isinstance(obj, np.integer):
             return int(obj)
         elif isinstance(obj, np.floating):
@@ -66,8 +69,9 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 def load_json(load_path: str, encoding: str = "utf-8") -> object:
-    """Loads json formatted data (given as "data") from load_path Encoding type can be specified with 'encoding'
-    argument.
+    """Load JSON formatted data from file.
+
+    Encoding type can be specified with 'encoding' argument.
 
     Args:
         load_path: str
@@ -142,7 +146,6 @@ def list_files_recursively(
         abs_filepath_list : list
             List of absolute file paths
     """
-
     # define verboseprint
     verboseprint = print if verbose else lambda *a, **k: None
 
@@ -169,7 +172,7 @@ def list_files_recursively(
 
 
 def get_base_filename(path: str) -> tuple[str, str]:
-    """Takes a file path, returns (base_filename_with_extension, base_filename_without_extension)"""
+    """Takes a file path, returns (base_filename_with_extension, base_filename_without_extension)."""
     base_filename_with_extension = ntpath.basename(path)
     base_filename_without_extension, _ = os.path.splitext(base_filename_with_extension)
     return base_filename_with_extension, base_filename_without_extension
@@ -189,8 +192,7 @@ def get_file_extension(path: str) -> str:
 
 
 def load_pickle(load_path: str | Path) -> object:
-    """
-    Loads pickle formatted data (given as "data") from load_path
+    """Loads pickle formatted data (given as "data") from load_path.
 
     Args:
         load_path: str
@@ -205,8 +207,7 @@ def load_pickle(load_path: str | Path) -> object:
 
 
 def save_pickle(data: object, save_path: str | Path) -> None:
-    """
-    Saves pickle formatted data (given as "data") as save_path
+    """Saves pickle formatted data (given as "data") as save_path.
 
     Args:
         data: dict
@@ -227,13 +228,12 @@ def save_pickle(data: object, save_path: str | Path) -> None:
 
 
 def import_model_class(model_type: str, class_name: str) -> type:
-    """Imports a predefined detection class by class name.
+    """Import a predefined detection model class by name.
 
     Args:
-        model_type: str
-            "yolov5", "detectron2", "mmdet", "huggingface" etc
-        model_name: str
-            Name of the detection model class (example: "MmdetDetectionModel")
+        model_type: Framework type ("yolov5", "detectron2", "mmdet", etc).
+        class_name: Name of the detection model class (e.g., "MmdetDetectionModel").
+
     Returns:
         class_: class with given path
     """

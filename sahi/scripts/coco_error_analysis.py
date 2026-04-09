@@ -1,3 +1,5 @@
+"""Error analysis utilities for COCO detection results."""
+
 from __future__ import annotations
 
 import copy
@@ -463,16 +465,21 @@ def analyse(
     max_detections: int = 500,
     return_dict: bool = False,
 ) -> dict | None:
-    """
+    """Analyze COCO detection results and generate error analysis plots.
+
     Args:
-        dataset_json_path (str): file path for the coco dataset json file
-        result_json_paths (str): file path for the coco result json file
-        out_dir (str): dir to save analyse result images
-        no_extraplots (bool): dont export export extra bar/stat plots
-        type (str): 'bbox' or 'mask'
-        areas (List[int]): area regions for coco evaluation calculations
-        max_detections (int): Maximum number of detections to consider for AP alculation. Default: 500
-        return_dict (bool): If True, returns a dict export paths.
+        dataset_json_path: File path for the COCO dataset JSON file.
+        result_json_path: File path for the COCO result JSON file.
+        out_dir: Directory to save analysis result images.
+        no_extraplots: If True, do not export extra bar/stat plots.
+        type: Detection type, either 'bbox' or 'mask'.
+        areas: Area regions for COCO evaluation calculations.
+        max_detections: Maximum number of detections to consider for AP calculation.
+            Default is 500.
+        return_dict: If True, returns a dict of export paths.
+
+    Returns:
+        Dict of export paths if return_dict is True, otherwise None.
     """
     if not has_matplotlib:
         logger.error("Please run 'uv pip install -U matplotlib' first for visualization.")

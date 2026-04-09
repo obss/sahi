@@ -1,3 +1,4 @@
+"""Tests for image and COCO auto-slicing functionality."""
 from __future__ import annotations
 
 from PIL import Image
@@ -8,7 +9,10 @@ from sahi.utils.cv import read_image
 
 
 class TestAutoSlicing:
+    """Test cases for image slicing operations."""
+
     def test_auto_slice_image(self) -> None:
+        """Test slicing images with various input formats."""
         # read coco file
         coco_path = "tests/data/coco_utils/terrain1_coco.json"
         coco = Coco.from_coco_dict_or_path(coco_path)
@@ -67,6 +71,7 @@ class TestAutoSlicing:
         assert slice_image_result.coco_images[15].annotations[1].bbox == [17, 356, 48, 152]
 
     def test_auto_slice_coco(self) -> None:
+        """Test slicing COCO dataset with various configurations."""
         import shutil
 
         coco_annotation_file_path = "tests/data/coco_utils/terrain1_coco.json"

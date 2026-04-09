@@ -1,3 +1,5 @@
+"""Convert COCO dataset annotations to YOLO format."""
+
 from __future__ import annotations
 
 import fire
@@ -15,17 +17,17 @@ def main(
     seed: int = 1,
     disable_symlink: bool = False,
 ) -> None:
-    """
-    Args:
-        images_dir (str): directory for coco images
-        dataset_json_path (str): file path for the coco json file to be converted
-        train_split (float or int): set the training split ratio
-        project (str): save results to project/name
-        name (str): save results to project/name"
-        seed (int): fix the seed for reproducibility
-        disable_symlink (bool): required in google colab env
-    """
+    """Convert COCO dataset annotations to YOLO format.
 
+    Args:
+        image_dir: Directory containing COCO images.
+        dataset_json_path: Path to the COCO JSON file to be converted.
+        train_split: Training/validation split ratio.
+        project: Project directory for results.
+        name: Experiment name within project.
+        seed: Random seed for reproducibility.
+        disable_symlink: Disable symlinks (needed for Google Colab).
+    """
     # increment run
     save_dir = Path(increment_path(Path(project) / name, exist_ok=False))
     # load coco dict

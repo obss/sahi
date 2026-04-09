@@ -1,3 +1,5 @@
+"""High-level prediction API for object detection."""
+
 from __future__ import annotations
 
 import os
@@ -239,6 +241,7 @@ def get_sliced_prediction(
             Number of slices to process in a single batch inference call.
             Increasing this value can improve GPU utilization and throughput.
             Default: 1 (sequential, same as previous behavior).
+
     Returns:
         A Dict with fields:
             object_prediction_list: a list of sahi.prediction.ObjectPrediction
@@ -408,7 +411,6 @@ def bbox_sort(a: tuple, b: tuple, thresh: int | float) -> int:
         int: Negative if ``a`` should come first, positive if ``b``
         should come first, zero if equal.
     """
-
     bbox_a = a
     bbox_b = b
 
@@ -421,6 +423,15 @@ def bbox_sort(a: tuple, b: tuple, thresh: int | float) -> int:
 
 
 def agg_prediction(result: PredictionResult, thresh: float) -> list:
+    """Aggregate predictions by merging overlapping bounding boxes.
+
+    Args:
+        result: Prediction result object containing detections.
+        thresh: Threshold for bounding box overlap merging.
+
+    Returns:
+        List of aggregated bounding boxes and associated data.
+    """
     coord_list = []
     res = result.to_coco_annotations()
     for ann in res:
@@ -588,6 +599,8 @@ def predict(
             List[int]: set of classes to exclude using one or more IDs
         progress_bar: bool
             Whether to show a progress bar. Default is False.
+        batch_size: int
+            Batch size for processing images. Default is 1.
     """
     # assert prediction type
     if no_standard_prediction and no_sliced_prediction:
@@ -955,6 +968,8 @@ def predict_fiftyone(
             List[int]: set of classes to exclude using one or more IDs
         progress_bar: bool
             Whether to show progress bar for slice processing. Default: False.
+        batch_size: int
+            Batch size for processing images. Default is 1.
     """
     check_requirements(["fiftyone"])
 

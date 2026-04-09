@@ -1,3 +1,4 @@
+"""Tests for MMDetection model integration."""
 from __future__ import annotations
 
 import sys
@@ -24,7 +25,10 @@ IMAGE_PATH = "tests/data/small-vehicles1.jpeg"
 
 
 class TestMmdetDetectionModel:
+    """Test MMDetection detection model functionality."""
+
     def test_load_model(self) -> None:
+        """Test loading an MMDetection model."""
         from sahi.models.mmdet import MmdetDetectionModel
 
         download_mmdet_cascade_mask_rcnn_model()
@@ -41,6 +45,7 @@ class TestMmdetDetectionModel:
         assert mmdet_detection_model.model is not None
 
     def test_perform_inference_with_mask_output(self) -> None:
+        """Test inference with mask output."""
         from sahi.models.mmdet import MmdetDetectionModel
 
         # init model
@@ -88,6 +93,7 @@ class TestMmdetDetectionModel:
         assert [446, 304, 490, 346] in boxes[idx].astype(int)
 
     def test_perform_inference_without_mask_output(self) -> None:
+        """Test inference without mask output."""
         from sahi.models.mmdet import MmdetDetectionModel
 
         # init model
@@ -128,6 +134,7 @@ class TestMmdetDetectionModel:
         assert boxes[idx].astype(int).tolist() == [320, 323, 380, 365]
 
     def test_convert_original_predictions_with_mask_output(self) -> None:
+        """Test converting predictions with mask output."""
         from sahi.models.mmdet import MmdetDetectionModel
 
         # init model
@@ -165,6 +172,7 @@ class TestMmdetDetectionModel:
             assert object_prediction.score.value >= CONFIDENCE_THRESHOLD
 
     def test_convert_original_predictions_without_mask_output(self) -> None:
+        """Test converting predictions without mask output."""
         from sahi.models.mmdet import MmdetDetectionModel
 
         # init model
@@ -211,6 +219,7 @@ class TestMmdetDetectionModel:
             assert object_prediction.score.value >= CONFIDENCE_THRESHOLD
 
     def test_perform_inference_without_mask_output_with_automodel(self) -> None:
+        """Test inference via AutoDetectionModel."""
         from sahi import AutoDetectionModel
 
         # init model

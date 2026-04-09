@@ -1,11 +1,12 @@
+"""Table formatting utilities."""
+
 from __future__ import annotations
 
 from typing import Any
 
 
 def create_ascii_table(data: list[list[Any]]) -> str:
-    """
-    Creates a clean, properly padded ASCII string grid from a list of lists.
+    """Creates a clean, properly padded ASCII string grid from a list of lists.
 
     Args:
         data (List[List[Any]]): A list of lists representing headers and rows.

@@ -1,3 +1,9 @@
+"""TorchVision detection model wrapper for SAHI.
+
+Provides integration with PyTorch's TorchVision library for object detection
+and instance segmentation models.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,12 +20,19 @@ from sahi.utils.torchvision import MODEL_NAME_TO_CONSTRUCTOR
 
 
 class TorchVisionDetectionModel(DetectionModel):
+    """TorchVision object detection model.
+
+    Supports various TorchVision detection models like Faster R-CNN, Mask R-CNN, etc.
+    """
+
     def __init__(self, *args: object, **kwargs: object) -> None:
+        """Initialize TorchVision detection model."""
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "torchvision"]
         super().__init__(*args, **kwargs)  # type: ignore[misc, arg-type]
 
     def load_model(self) -> None:
+        """Load TorchVision model from config and weights."""
         import torch
 
         # read config params
@@ -67,8 +80,9 @@ class TorchVisionDetectionModel(DetectionModel):
         Args:
             model: Any
                 A TorchVision model
+            **kwargs: Any
+                Additional keyword arguments for model setup.
         """
-
         model.eval()  # type: ignore[attr-defined]
         self.model = model.to(self.device)  # type: ignore[attr-defined]
 
@@ -119,6 +133,7 @@ class TorchVisionDetectionModel(DetectionModel):
 
     @property
     def category_names(self) -> list:
+        """Return category names from mapping."""
         assert self.category_mapping is not None
         return list(self.category_mapping.values())
 
@@ -127,7 +142,9 @@ class TorchVisionDetectionModel(DetectionModel):
         shift_amount_list: list[list[int | float]] | None = [[0, 0]],
         full_shape_list: list[list[int | float]] | None = None,
     ) -> None:
-        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        """Convert predictions to ObjectPrediction list.
+
+        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 
         Args:

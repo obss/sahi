@@ -1,3 +1,5 @@
+"""COCO dataset evaluation and analysis utilities."""
+
 from __future__ import annotations
 
 import itertools
@@ -80,12 +82,13 @@ def evaluate_core(
     out_dir: str | Path | None = None,
     areas: list[int] = [1024, 9216, 10000000000],
 ) -> dict:
-    """Evaluation in COCO protocol.
+    """Evaluate detection results using COCO protocol.
 
     Args:
-        dataset_path (str): COCO dataset json path.
-        result_path (str): COCO result json path.
-        COCO, COCOeval: Pass COCO and COCOeval class after safely imported
+        dataset_path: COCO dataset JSON path.
+        result_path: COCO result JSON path.
+        COCO: COCO class after safely imported.
+        COCOeval: COCOeval class after safely imported.
         metric (str | list[str]): Metrics to be evaluated. Options are
             'bbox', 'segm', 'proposal'.
         classwise (bool): Whether to evaluating the AP for each class.
@@ -110,7 +113,6 @@ def evaluate_core(
             eval_results (dict[str, float]): COCO style evaluation metric.
             export_path (str): Path for the exported eval result json.
     """
-
     metrics = metric if isinstance(metric, list) else [metric]
     allowed_metrics = ["bbox", "segm"]
     for metric in metrics:
@@ -368,17 +370,23 @@ def evaluate(
     areas: list[int] = [1024, 9216, 10000000000],
     return_dict: bool = False,
 ) -> dict:
-    """
+    """Evaluate COCO object detection results and compute metrics.
+
     Args:
-        dataset_json_path (str): file path for the coco dataset json file
-        result_json_path (str): file path for the coco result json file
-        out_dir (str): dir to save eval result
-        type (bool): 'bbox' or 'segm'
-        classwise (bool): whether to evaluate the AP for each class
-        max_detections (int): Maximum number of detections to consider for AP alculation. Default: 500
-        iou_thrs (float): IoU threshold used for evaluating recalls/mAPs
-        areas (List[int]): area regions for coco evaluation calculations
-        return_dict (bool): If True, returns a dict with 'eval_results' 'export_path' fields.
+        dataset_json_path: File path for the COCO dataset JSON file.
+        result_json_path: File path for the COCO result JSON file.
+        out_dir: Directory to save evaluation results.
+        type: Detection type, either 'bbox' or 'segm'.
+        classwise: If True, evaluate AP for each class separately.
+        max_detections: Maximum number of detections to consider for AP calculation.
+            Default is 500.
+        iou_thrs: IoU threshold(s) used for evaluating recalls and mAPs.
+        areas: Area regions for COCO evaluation calculations.
+        return_dict: If True, returns a dict with 'eval_results' and 'export_path' fields.
+
+    Returns:
+        Dict containing evaluation results and export path if return_dict is True,
+        otherwise None.
     """
     try:
         from pycocotools.coco import COCO

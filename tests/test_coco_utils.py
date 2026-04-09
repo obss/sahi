@@ -1,3 +1,4 @@
+"""Tests for COCO utility functions and classes."""
 from __future__ import annotations
 
 import os
@@ -10,7 +11,10 @@ from sahi.utils.file import load_json
 
 
 class TestCocoUtils:
+    """Test cases for COCO format utilities."""
+
     def test_coco_categories(self) -> None:
+        """Test CocoCategory creation and manipulation."""
         from sahi.utils.coco import CocoCategory
 
         category_id = 0
@@ -53,6 +57,7 @@ class TestCocoUtils:
         assert coco_category4.supercategory == category_name
 
     def test_coco_annotation(self) -> None:
+        """Test CocoAnnotation creation from segmentation and bounding box."""
         from sahi.utils.coco import CocoAnnotation
 
         coco_segmentation = [[1, 1, 325, 125, 250, 200, 5, 200]]
@@ -81,6 +86,7 @@ class TestCocoUtils:
         assert coco_annotation.segmentation == []
 
     def test_cocovid_annotation(self) -> None:
+        """Test CocoVidAnnotation for video datasets."""
         from sahi.utils.coco import CocoVidAnnotation
 
         bbox = [1, 1, 324, 199]
@@ -106,6 +112,7 @@ class TestCocoUtils:
         assert cocovid_annotation.json["iscrowd"] == iscrowd
 
     def test_coco_image(self) -> None:
+        """Test CocoImage with annotations and predictions."""
         from sahi.utils.coco import CocoAnnotation, CocoImage, CocoPrediction
 
         # init coco image
@@ -175,6 +182,7 @@ class TestCocoUtils:
         assert coco_image.predictions[1].score == 0.683465
 
     def test_cocovid_image(self) -> None:
+        """Test CocoVidImage for video frames."""
         from sahi.utils.coco import CocoVidAnnotation, CocoVidImage
 
         # init coco image
@@ -236,6 +244,7 @@ class TestCocoUtils:
         assert cocovid_image.annotations[1].bbox == bbox2
 
     def test_coco_video(self) -> None:
+        """Test CocoVideo creation and image management."""
         from sahi.utils.coco import CocoVidAnnotation, CocoVideo, CocoVidImage
 
         # init coco image
@@ -288,6 +297,7 @@ class TestCocoUtils:
         assert coco_video.images[0].annotations[0].json["bbox"] == bbox1
 
     def test_coco(self) -> None:
+        """Test Coco dataset loading from dict and file paths."""
         from sahi.utils.coco import Coco
 
         category_mapping = {1: "human", 2: "car"}
@@ -312,6 +322,7 @@ class TestCocoUtils:
         assert coco1.stats["num_annotations"] == len(coco1.json["annotations"])
 
     def test_split_coco_as_train_val(self) -> None:
+        """Test splitting COCO dataset into train and validation sets."""
         from sahi.utils.coco import Coco
 
         coco_dict_path = "tests/data/coco_utils/combined_coco.json"
@@ -340,6 +351,7 @@ class TestCocoUtils:
         assert result["val_coco"].stats["num_annotations"] == len(result["val_coco"].json["annotations"])
 
     def test_coco2yolo(self) -> None:
+        """Test exporting COCO format to YOLO format."""
         from sahi.utils.coco import Coco
 
         coco_dict_path = "tests/data/coco_utils/combined_coco.json"
@@ -351,6 +363,7 @@ class TestCocoUtils:
         coco.export_as_yolo(output_dir=output_dir, train_split_rate=0.5, numpy_seed=0)
 
     def test_update_categories(self) -> None:
+        """Test updating categories in COCO dataset."""
         coco_path = "tests/data/coco_utils/terrain2_coco.json"
         source_coco_dict: dict[Any, Any] = load_json(coco_path)  # type: ignore[assignment]
 
@@ -375,6 +388,7 @@ class TestCocoUtils:
         assert target_coco_dict["annotations"][1]["category_id"] == 2
 
     def test_coco_update_categories(self) -> None:
+        """Test category update method on Coco instance."""
         from sahi.utils.coco import Coco
 
         coco_path = "tests/data/coco_utils/terrain2_coco.json"
@@ -409,6 +423,7 @@ class TestCocoUtils:
         assert coco.stats["num_annotations"] == len(coco.json["annotations"])
 
     def test_get_imageid2annotationlist_mapping(self) -> None:
+        """Test mapping of image IDs to annotation lists."""
         from sahi.utils.coco import get_imageid2annotationlist_mapping
 
         coco_path = "tests/data/coco_utils/combined_coco.json"
@@ -429,6 +444,7 @@ class TestCocoUtils:
         check_image_id(image_id=2)
 
     def test_merge(self) -> None:
+        """Test merging two COCO dictionaries."""
         # load coco files to be combined
         coco_path1 = "tests/data/coco_utils/terrain1_coco.json"
         coco_path2 = "tests/data/coco_utils/terrain2_coco.json"
@@ -462,6 +478,7 @@ class TestCocoUtils:
         assert merged_coco_dict["annotations"][7]["id"] == 9
 
     def test_merge_from_list(self) -> None:
+        """Test merging multiple COCO dictionaries from a list."""
         from sahi.utils.coco import merge_from_list
 
         # load coco files to be combined
@@ -495,6 +512,7 @@ class TestCocoUtils:
         assert merged_coco_dict["annotations"][9]["image_id"] == 3
 
     def test_coco_merge(self) -> None:
+        """Test merge method on Coco instances."""
         from sahi.utils.coco import Coco
 
         # load coco files to be combined
@@ -523,6 +541,7 @@ class TestCocoUtils:
         assert coco2.stats["num_annotations"] == len(coco2.json["annotations"])
 
     def test_get_subsampled_coco(self) -> None:
+        """Test subsampling COCO dataset by ratio and category."""
         from sahi.utils.coco import Coco
 
         coco_path = "tests/data/coco_utils/visdrone2019-det-train-first50image.json"
@@ -560,6 +579,7 @@ class TestCocoUtils:
         )
 
     def test_get_upsampled_coco(self) -> None:
+        """Test upsampling COCO dataset by ratio and category."""
         from sahi.utils.coco import Coco
 
         coco_path = "tests/data/coco_utils/visdrone2019-det-train-first50image.json"
@@ -603,6 +623,7 @@ class TestCocoUtils:
         )
 
     def test_get_area_filtered_coco(self) -> None:
+        """Test filtering COCO dataset by annotation area."""
         from sahi.utils.coco import Coco
 
         coco_path = "tests/data/coco_utils/visdrone2019-det-train-first50image.json"
@@ -659,6 +680,7 @@ class TestCocoUtils:
         assert area_filtered_coco.stats["num_annotations"] == len(area_filtered_coco.json["annotations"])
 
     def test_export_coco_as_yolo(self) -> None:
+        """Test exporting COCO dataset as YOLO format."""
         from sahi.utils.coco import Coco, export_coco_as_yolo
 
         coco_dict_path = "tests/data/coco_utils/combined_coco.json"
@@ -670,11 +692,13 @@ class TestCocoUtils:
         export_coco_as_yolo(output_dir=output_dir, train_coco=coco, val_coco=coco, numpy_seed=0)
 
     def test_cocovid(self) -> None:
+        """Test CocoVid class (placeholder)."""
         # from sahi.utils.coco import CocoVid
         # TODO
         pass
 
     def test_bbox_clipping(self) -> None:
+        """Test bounding box clipping to image boundaries."""
         from sahi.utils.coco import Coco, CocoAnnotation, CocoCategory, CocoImage
 
         coco = Coco()

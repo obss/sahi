@@ -1,3 +1,9 @@
+"""Roboflow detection model wrapper for SAHI.
+
+Provides integration with Roboflow's inference SDK for object detection and
+instance segmentation models.
+"""
+
 from __future__ import annotations
 
 from itertools import chain, zip_longest
@@ -12,6 +18,10 @@ from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bo
 
 
 class RoboflowDetectionModel(DetectionModel):
+    """Roboflow object detection model.
+
+    Supports both Roboflow Universe models (API-based) and local RF-DETR models.
+    """
     def __init__(
         self,
         model: object | None = None,
@@ -29,6 +39,10 @@ class RoboflowDetectionModel(DetectionModel):
         """Initialize the RoboflowDetectionModel with the given parameters.
 
         Args:
+            model: object
+                Either a Roboflow model string identifier or an RF-DETR model class.
+            api_key: str
+                Roboflow API key for authentication.
             model_path: str
                 Path for the instance segmentation model weight
             config_path: str
@@ -76,19 +90,19 @@ class RoboflowDetectionModel(DetectionModel):
             self.load_model()
 
     def set_model(self, model: Any, **kwargs: Any) -> None:
-        """
-        This function should be implemented to instantiate a DetectionModel out of an already loaded model
+        """Set the detection model.
+
         Args:
             model: Any
-                Loaded model
+                Loaded model.
         """
         self.model = model
 
     def load_model(self) -> None:
-        """This function should be implemented in a way that detection model should be initialized and set to
-        self.model.
+        """Load detection model from Roboflow.
 
-        (self.model_path, self.config_path, and self.device should be utilized)
+        This function initializes detection model and sets to self.model.
+        Uses self.model_path, self.config_path, and self.device.
         """
         if self._use_universe:
             from inference import get_model
@@ -174,8 +188,7 @@ class RoboflowDetectionModel(DetectionModel):
         self,
         image: np.ndarray,
     ) -> None:
-        """This function should be implemented in a way that prediction should be performed using self.model and the
-        prediction result should be set to self._original_predictions.
+        """Run inference on image and store predictions.
 
         Args:
             image: np.ndarray
@@ -199,10 +212,11 @@ class RoboflowDetectionModel(DetectionModel):
         shift_amount_list: list[list[int | float]] | None = [[0, 0]],
         full_shape_list: list[list[int | float]] | None = None,
     ) -> None:
-        """This function should be implemented in a way that self._original_predictions should be converted to a list of
-        prediction.ObjectPrediction and set to self._object_prediction_list.
+        """Convert predictions to ObjectPrediction list.
 
-        self.mask_threshold can also be utilized.
+        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        self._object_prediction_list_per_image. self.mask_threshold can also be utilized.
+
         Args:
             shift_amount_list: list of list
                 To shift the box and mask predictions from sliced image to full sized image, should

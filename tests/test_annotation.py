@@ -1,3 +1,4 @@
+"""Tests for annotation module."""
 from __future__ import annotations
 
 import pytest
@@ -6,6 +7,9 @@ from sahi.logger import logger
 
 
 class TestAnnotation:
+    """Test cases for SAHI annotation classes."""
+
+
     def test_bounding_box(self) -> None:
         from sahi.annotation import BoundingBox
 
@@ -24,6 +28,7 @@ class TestAnnotation:
         assert shifted_bbox.to_xyxy() == [80.0, 70.0, 150.0, 190.0]
 
     def test_bounding_box_immutability(self) -> None:
+        """Test that BoundingBox instances are immutable."""
         import dataclasses
 
         from sahi.annotation import BoundingBox
@@ -52,6 +57,7 @@ class TestAnnotation:
         assert bbox.shift_amount == (0, 0)
 
     def test_category(self) -> None:
+        """Test Category creation and type validation."""
         from sahi.annotation import Category
 
         category_id = 1
@@ -69,6 +75,7 @@ class TestAnnotation:
             Category(id=1, name=123)  # type: ignore[arg-type]
 
     def test_category_immutability(self) -> None:
+        """Test that Category instances are immutable."""
         import dataclasses
 
         from sahi.annotation import Category
@@ -88,6 +95,7 @@ class TestAnnotation:
         assert category.name == "person"
 
     def test_mask(self) -> None:
+        """Test Mask creation from COCO segmentation format."""
         from sahi.annotation import Mask
 
         coco_segmentation = [[1.0, 1.0, 325.0, 125.0, 250.0, 200.0, 5.0, 200.0]]
@@ -102,6 +110,7 @@ class TestAnnotation:
         assert mask.bool_mask[11, 2]
 
     def test_object_annotation(self) -> None:
+        """Test ObjectAnnotation creation from various formats."""
         from sahi.annotation import ObjectAnnotation
 
         bbox = [100, 200, 150, 230]

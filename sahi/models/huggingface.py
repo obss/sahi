@@ -1,3 +1,9 @@
+"""HuggingFace Transformers detection model wrapper for SAHI.
+
+Provides integration with Hugging Face Transformers library for object detection
+and instance segmentation models like DETR variants.
+"""
+
 from __future__ import annotations
 
 import os
@@ -12,6 +18,11 @@ from sahi.utils.import_utils import ensure_package_minimum_version
 
 
 class HuggingfaceDetectionModel(DetectionModel):
+    """HuggingFace Transformers object detection model.
+
+    Supports various DETR-based models from the HuggingFace Model Hub.
+    """
+
     def __init__(
         self,
         model_path: str | None = None,
@@ -27,6 +38,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         image_size: int | None = None,
         token: str | None = None,
     ) -> None:
+        """Initialize HuggingFace detection model."""
         self._processor = processor
         self._original_shapes: list[tuple[int, ...]] = []
         self._token = token
@@ -48,10 +60,12 @@ class HuggingfaceDetectionModel(DetectionModel):
 
     @property
     def processor(self) -> Any:
+        """Return the image processor."""
         return self._processor
 
     @property
     def image_shapes(self) -> list:
+        """Return original image shapes."""
         # TODO: remove this property in a future release; use _original_shapes directly
         return self._original_shapes
 
@@ -61,6 +75,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         return self.model.config.num_labels  # type: ignore[attr-defined]
 
     def load_model(self) -> None:
+        """Load model from HuggingFace."""
         from transformers import AutoModelForObjectDetection, AutoProcessor
 
         hf_token = os.getenv("HF_TOKEN", self._token)
@@ -81,6 +96,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         self.set_model(model, processor)
 
     def set_model(self, model: Any, processor: Any | None = None, **kwargs: Any) -> None:
+        """Set the detection model and processor."""
         processor = processor or self.processor
         if processor is None:
             raise ValueError(f"'processor' is required to be set, got {processor}.")
@@ -144,14 +160,16 @@ class HuggingfaceDetectionModel(DetectionModel):
         return any(cls_name.startswith(p) for p in self._SIGMOID_CLS_PREFIXES)
 
     def get_valid_predictions(self, logits: Any, pred_boxes: Any) -> tuple:
-        """
+        """Get predictions above confidence threshold.
+
         Args:
             logits: torch.Tensor
             pred_boxes: torch.Tensor
+
         Returns:
             scores: torch.Tensor
             cat_ids: torch.Tensor
-            boxes: torch.Tensor
+            boxes: torch.Tensor.
         """
         import torch
 
@@ -179,7 +197,9 @@ class HuggingfaceDetectionModel(DetectionModel):
         shift_amount_list: list[list[int | float]] | None = [[0, 0]],
         full_shape_list: list[list[int | float]] | None = None,
     ) -> None:
-        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        """Convert predictions to ObjectPrediction list.
+
+        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 
         Args:

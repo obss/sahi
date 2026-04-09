@@ -1,3 +1,4 @@
+"""Tests for image slicing functionality."""
 from __future__ import annotations
 
 import numpy as np
@@ -9,7 +10,10 @@ from sahi.utils.cv import read_image
 
 
 class TestSlicing:
+    """Test image slicing functionality."""
+
     def test_slice_image(self) -> None:
+        """Test slicing an image with multiple input formats."""
         # read coco file
         coco_path = "tests/data/coco_utils/terrain1_coco.json"
         coco = Coco.from_coco_dict_or_path(coco_path)
@@ -86,6 +90,7 @@ class TestSlicing:
         assert slice_image_result.coco_images[15].annotations[1].bbox == [17, 186, 48, 152]
 
     def test_slice_coco(self) -> None:
+        """Test slicing COCO annotations and images."""
         import shutil
 
         coco_annotation_file_path = "tests/data/coco_utils/terrain1_coco.json"
@@ -153,6 +158,7 @@ class TestSlicing:
         shutil.rmtree(output_dir, ignore_errors=True)
 
     def test_shift_bboxes(self) -> None:
+        """Test shifting bounding boxes with different input types."""
         import torch
 
         bboxes = [[1, 2, 3, 4]]
@@ -173,6 +179,7 @@ class TestSlicing:
         assert isinstance(shifted_torch_bboxes, torch.Tensor)
 
     def test_shift_masks(self) -> None:
+        """Test shifting mask arrays."""
         masks = np.zeros((3, 30, 30), dtype=bool)
         shift_x = 10
         shift_y = 20

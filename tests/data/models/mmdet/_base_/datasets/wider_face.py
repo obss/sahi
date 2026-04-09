@@ -1,3 +1,5 @@
+"""MMDetection configuration file for wider_face.py."""
+
 # dataset settings
 dataset_type = "WIDERFaceDataset"
 data_root = "data/WIDERFace/"

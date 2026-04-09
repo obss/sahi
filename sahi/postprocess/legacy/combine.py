@@ -1,3 +1,5 @@
+"""Legacy postprocessing implementations for object prediction merging."""
+
 from __future__ import annotations
 
 import copy
@@ -18,6 +20,13 @@ class PostprocessPredictions:
         match_metric: str = "IOU",
         class_agnostic: bool = True,
     ) -> None:
+        """Initialize the postprocessor with matching configuration.
+
+        Args:
+            match_threshold: Minimum overlap value to consider predictions matching.
+            match_metric: Metric for overlap computation, "IOU" or "IOS".
+            class_agnostic: If True, apply postprocessing across all categories.
+        """
         self.match_threshold = match_threshold
         self.class_agnostic = class_agnostic
         if match_metric == "IOU":
@@ -39,6 +48,15 @@ class PostprocessPredictions:
 
     @staticmethod
     def has_same_category_id(pred1: ObjectPrediction, pred2: ObjectPrediction) -> bool:
+        """Check if two predictions belong to the same category.
+
+        Args:
+            pred1: First ObjectPrediction instance.
+            pred2: Second ObjectPrediction instance.
+
+        Returns:
+            True if both predictions have the same category ID.
+        """
         return pred1.category.id == pred2.category.id
 
     @staticmethod
@@ -66,14 +84,25 @@ class PostprocessPredictions:
         self,
         object_predictions: list[ObjectPrediction],
     ) -> list[ObjectPrediction]:
+        """Apply postprocessing to object predictions.
+
+        Args:
+            object_predictions: List of object predictions to postprocess.
+
+        Returns:
+            List of postprocessed object predictions.
+        """
         raise NotImplementedError()
 
 
 class NMSPostprocess(PostprocessPredictions):
+    """Non-Maximum Suppression postprocessor for legacy usage."""
+
     def __call__(
         self,
         object_predictions: list[ObjectPrediction],
     ) -> list[ObjectPrediction]:
+        """Apply NMS to object predictions."""
         source_object_predictions: list[ObjectPrediction] = copy.deepcopy(object_predictions)
         selected_object_predictions: list[ObjectPrediction] = []
         while len(source_object_predictions) > 0:
@@ -96,10 +125,13 @@ class NMSPostprocess(PostprocessPredictions):
 
 
 class UnionMergePostprocess(PostprocessPredictions):
+    """Union merging postprocessor for overlapping predictions."""
+
     def __call__(
         self,
         object_predictions: list[ObjectPrediction],
     ) -> list[ObjectPrediction]:
+        """Apply union merging to overlapping object predictions."""
         source_object_predictions: list[ObjectPrediction] = copy.deepcopy(object_predictions)
         selected_object_predictions: list[ObjectPrediction] = []
         while len(source_object_predictions) > 0:

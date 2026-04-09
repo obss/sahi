@@ -1,5 +1,4 @@
-"""
-Local test script for HuggingFace batch inference.
+"""Local test script for HuggingFace batch inference.
 
 Tests:
 - RT-DETRv2 sigmoid classification path
@@ -41,6 +40,7 @@ MODELS = [
 
 
 def load_images() -> tuple[np.ndarray, np.ndarray]:
+    """Load test images from disk."""
     img1 = read_image(IMAGE1)
     img2 = read_image(IMAGE2)
     print(f"  img1 shape: {img1.shape}")
@@ -49,6 +49,7 @@ def load_images() -> tuple[np.ndarray, np.ndarray]:
 
 
 def test_single_inference(model: object, img: np.ndarray) -> list:
+    """Run single image inference on the model."""
     model.perform_inference(img)
     model.convert_original_predictions()
     preds = model.object_prediction_list_per_image[0]
@@ -56,6 +57,7 @@ def test_single_inference(model: object, img: np.ndarray) -> list:
 
 
 def test_batch_inference(model: object, images: list[np.ndarray]) -> list[list]:
+    """Run batch inference on the model."""
     model.perform_batch_inference(images)
     model.convert_original_predictions(
         shift_amount=[[0, 0]] * len(images),
@@ -65,6 +67,7 @@ def test_batch_inference(model: object, images: list[np.ndarray]) -> list[list]:
 
 
 def run_model_tests(cfg: dict) -> bool:
+    """Run all tests for a given model configuration."""
     print(f"\n{'=' * 60}")
     print(f"  {cfg['name']}")
     print(f"  model: {cfg['model_path']}")

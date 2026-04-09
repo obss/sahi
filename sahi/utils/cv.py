@@ -1,3 +1,5 @@
+"""Computer vision utilities for image processing and visualization."""
+
 from __future__ import annotations
 
 import copy
@@ -21,7 +23,10 @@ VIDEO_EXTENSIONS = [".mp4", ".mkv", ".flv", ".avi", ".ts", ".mpg", ".mov", "wmv"
 
 
 class Colors:
+    """Color palette for visualization."""
+
     def __init__(self) -> None:
+        """Initialize the color palette from hex color codes."""
         hex_colors = (
             "FF3838 2C99A8 FF701F 6473FF CFD231 48F90A 92CC17 3DDB86 1A9334 00D4BB "
             "FF9D97 00C2FF 344593 FFB21D 0018EC 8438FF 520085 CB38FF FF95C8 FF37C7"
@@ -75,7 +80,6 @@ def crop_object_predictions(
         file_name (str): The name of the exported file. The exported file will be saved as `output_dir + file_name + ".png"`. Defaults to "prediction_visual".
         export_format (str): The format of the exported file. Can be specified as 'jpg' or 'png'. Defaults to "png".
     """  # noqa
-
     # create output folder if not present
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     # add bbox and mask to image if present
@@ -390,7 +394,6 @@ def visualize_prediction(
     Returns:
         dict: A dictionary containing the visualized image and the elapsed time for the visualization process.
     """  # noqa
-
     elapsed_time = time.time()
     # deepcopy image so that original is not altered
     image = copy.deepcopy(image)
@@ -486,10 +489,11 @@ def visualize_object_predictions(
     file_name: str | None = "prediction_visual",
     export_format: str | None = "png",
 ) -> dict:
-    """Visualizes prediction category names, bounding boxes over the source image and exports it to output folder.
+    """Visualize object predictions with bounding boxes and category names.
 
     Args:
-        object_prediction_list: a list of prediction.ObjectPrediction
+        image: Input image as numpy array.
+        object_prediction_list: List of prediction.ObjectPrediction instances.
         rect_th: rectangle thickness
         text_size: size of the category name over box
         text_th: text thickness
@@ -610,13 +614,14 @@ def visualize_object_predictions(
 
 
 def get_coco_segmentation_from_bool_mask(bool_mask: np.ndarray) -> list[list[float]]:
-    """
-    Convert boolean mask to coco segmentation format
+    """Convert boolean mask to COCO segmentation format.
+
+    Converts a 2D boolean mask to COCO polygon format:
     [
         [x1, y1, x2, y2, x3, y3, ...],
         [x1, y1, x2, y2, x3, y3, ...],
         ...
-    ]
+    ].
     """
     # Generate polygons from mask
     mask = np.squeeze(bool_mask)
@@ -635,15 +640,15 @@ def get_coco_segmentation_from_bool_mask(bool_mask: np.ndarray) -> list[list[flo
 
 
 def get_bool_mask_from_coco_segmentation(coco_segmentation: list[list[float]], width: int, height: int) -> np.ndarray:
-    """Convert coco segmentation to 2D boolean mask of given height and width.
+    """Convert COCO segmentation to a 2D boolean mask.
 
-    Parameters:
-    - coco_segmentation: list of points representing the coco segmentation
-    - width: width of the boolean mask
-    - height: height of the boolean mask
+    Args:
+        coco_segmentation: List of polygons representing the COCO segmentation.
+        width: Width of the boolean mask.
+        height: Height of the boolean mask.
 
     Returns:
-    - bool_mask: 2D boolean mask of size (height, width)
+        2D boolean mask of size (height, width).
     """
     size = [height, width]
     points = [np.array(point).reshape(-1, 2).round().astype(int) for point in coco_segmentation]
@@ -696,8 +701,10 @@ def get_bbox_from_coco_segmentation(coco_segmentation: list) -> list | None:
 
 
 def yolo_bbox_to_voc_bbox(yolo_bbox: list[float], image_width: int, image_height: int) -> list[float]:
-    """Convert a YOLO format bounding box [x_center, y_center, width, height] (normalized)
-    to VOC format [xmin, ymin, xmax, ymax] (absolute pixel coordinates).
+    """Convert YOLO format bounding box to VOC format.
+
+    Converts normalized YOLO format [x_center, y_center, width, height] to absolute
+    VOC format [xmin, ymin, xmax, ymax] pixel coordinates.
 
     Args:
         yolo_bbox: list of [x_center, y_center, width, height]

@@ -1,3 +1,4 @@
+"""Tests for table utility functions."""
 from __future__ import annotations
 
 import unittest
@@ -7,7 +8,10 @@ from sahi.utils.table import create_ascii_table
 
 
 class TestTable(unittest.TestCase):
+    """Test table creation utility."""
+
     def test_create_ascii_table_basic(self) -> None:
+        """Test creating a basic ASCII table."""
         data: list[list[Any]] = [
             ["Model", "Params(M)", "Dataset"],
             ["ResNet50", 25.6, "ImageNet"],
@@ -27,10 +31,12 @@ class TestTable(unittest.TestCase):
         self.assertIn("| Swin-Transformer |", table)
 
     def test_empty_data(self) -> None:
+        """Test ASCII table with empty data."""
         self.assertEqual(create_ascii_table([]), "")
         self.assertEqual(create_ascii_table([[]]), "")
 
     def test_none_values(self) -> None:
+        """Test ASCII table with None values."""
         data: list[list[Any]] = [["ID", "Value"], [1, None]]
         table = create_ascii_table(data)
         self.assertIn("| 1  |       |", table)

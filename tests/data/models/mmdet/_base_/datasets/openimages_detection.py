@@ -1,3 +1,5 @@
+"""MMDetection configuration file for openimages_detection.py."""
+
 # dataset settings
 dataset_type = "OpenImagesDataset"
 data_root = "data/OpenImages/"

@@ -1,3 +1,4 @@
+"""Tests for file utilities."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -5,7 +6,10 @@ from unittest.mock import patch
 
 
 class TestFileUtils:
+    """Test file utility functions."""
+
     def test_list_files(self) -> None:
+        """Test listing files with filters."""
         from sahi.utils.file import list_files
 
         directory = "tests/data/coco_utils/"
@@ -13,6 +17,7 @@ class TestFileUtils:
         assert len(filepath_list) == 11
 
     def test_list_files_recursively(self, tmp_path: Path) -> None:
+        """Test recursive file listing."""
         import shutil
         from pathlib import Path
 
@@ -32,6 +37,7 @@ class TestFileUtils:
         assert len(abs_filepath_list) == 7
 
     def test_increment_path(self) -> None:
+        """Test path incrementing for duplicate filenames."""
         from sahi.utils.file import increment_path
 
         with patch("sahi.utils.file.Path.exists", return_value=False):

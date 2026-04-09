@@ -1,5 +1,4 @@
-"""
-Batch inference detection script — multiple HuggingFace architectures
+"""Batch inference detection script — multiple HuggingFace architectures.
 
 Tests sigmoid (RT-DETRv2, Conditional DETR) and softmax+background (DETR, YOLOS)
 classification heads. Runs single-image and batch inference, saves annotated
@@ -54,6 +53,7 @@ MODELS = [
 
 
 def sep(title: str = "") -> None:
+    """Print a separator line with optional title."""
     width = 70
     if title:
         pad = (width - len(title) - 2) // 2
@@ -63,6 +63,7 @@ def sep(title: str = "") -> None:
 
 
 def print_top_preds(preds: list, n: int = 5) -> None:
+    """Print top N predictions sorted by score."""
     for p in sorted(preds, key=lambda x: x.score.value, reverse=True)[:n]:
         print(f"    {p.category.name:<20} score={p.score.value:.3f}  box={[round(v) for v in p.bbox.to_xyxy()]}")
     if len(preds) > n:
@@ -70,6 +71,7 @@ def print_top_preds(preds: list, n: int = 5) -> None:
 
 
 def run(cfg: dict, img1: np.ndarray, img2: np.ndarray) -> bool:
+    """Run batch detection inference."""
     name = cfg["name"]
     out = OUTPUT_DIR / name
     out.mkdir(parents=True, exist_ok=True)

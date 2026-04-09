@@ -1,3 +1,5 @@
+"""MMDetection configuration file for deepfashion.py."""
+
 # dataset settings
 dataset_type = "DeepFashionDataset"
 data_root = "data/DeepFashion/In-shop/"

@@ -1,3 +1,5 @@
+"""Code formatting and linting utilities."""
+
 import os
 import subprocess
 import sys

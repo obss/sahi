@@ -1,3 +1,5 @@
+"""FiftyOne dataset and visualization utilities."""
+
 from __future__ import annotations
 
 import os
@@ -25,7 +27,10 @@ if is_available("fiftyone"):
     )
 
     class COCODetectionDatasetImporter(BaseCOCODetectionDatasetImporter):
+        """Custom COCO detection dataset importer for FiftyOne."""
+
         def setup(self) -> None:
+            """Set up the importer with COCO dataset information."""
             if self.labels_path is not None and os.path.isfile(self.labels_path):
                 (
                     info,
@@ -73,6 +78,7 @@ if is_available("fiftyone"):
             self._filenames = filenames
 
     def create_fiftyone_dataset_from_coco_file(coco_image_dir: str, coco_json_path: str) -> Any:
+        """Create a FiftyOne dataset from COCO format files."""
         coco_importer = COCODetectionDatasetImporter(
             data_path=coco_image_dir, labels_path=coco_json_path, include_id=True
         )
@@ -80,6 +86,7 @@ if is_available("fiftyone"):
         return dataset
 
     def launch_fiftyone_app(coco_image_dir: str, coco_json_path: str) -> Any:
+        """Launch FiftyOne app with COCO dataset."""
         dataset = create_fiftyone_dataset_from_coco_file(coco_image_dir, coco_json_path)
         session = fo.launch_app()
         session.dataset = dataset

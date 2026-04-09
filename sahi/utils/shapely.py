@@ -1,3 +1,5 @@
+"""Shapely-based geometry utilities for polygon and segmentation handling."""
+
 from __future__ import annotations
 
 from shapely.geometry import (
@@ -107,15 +109,23 @@ class ShapelyAnnotation:
         return cls(multipolygon=shapely_multipolygon, slice_bbox=slice_bbox)
 
     def __init__(self, multipolygon: MultiPolygon, slice_bbox: list[float] | None = None) -> None:
+        """Initialize ShapelyAnnotation with a multipolygon.
+
+        Args:
+            multipolygon: A Shapely MultiPolygon object.
+            slice_bbox: Optional slice bounding box for coordinate adjustment.
+        """
         self.multipolygon = multipolygon
         self.slice_bbox = slice_bbox
 
     @property
     def multipolygon(self) -> MultiPolygon:
+        """Get the underlying Shapely MultiPolygon object."""
         return self.__multipolygon
 
     @multipolygon.setter
     def multipolygon(self, multipolygon: MultiPolygon) -> None:
+        """Set multipolygon and compute total area."""
         self.__multipolygon = multipolygon
         # calculate areas of all polygons
         area = 0
@@ -126,15 +136,18 @@ class ShapelyAnnotation:
 
     @property
     def area(self) -> int:
+        """Get the total area of all polygons."""
         return int(self.__area)
 
     def to_list(self) -> list[list[tuple[float, float]]]:
-        """
-        [
-            [(x1, y1), (x2, y2), (x3, y3), ...],
-            [(x1, y1), (x2, y2), (x3, y3), ...],
-            ...
-        ]
+        """Convert to nested list of coordinate tuples.
+
+        Returns:
+            List format: [
+                [(x1, y1), (x2, y2), (x3, y3), ...],
+                [(x1, y1), (x2, y2), (x3, y3), ...],
+                ...
+            ].
         """
         list_of_list_of_points: list = []
         for shapely_polygon in self.multipolygon.geoms:
@@ -157,12 +170,14 @@ class ShapelyAnnotation:
         return list_of_list_of_points
 
     def to_coco_segmentation(self) -> list[list[int]]:
-        """
-        [
-            [x1, y1, x2, y2, x3, y3, ...],
-            [x1, y1, x2, y2, x3, y3, ...],
-            ...
-        ]
+        """Convert to COCO segmentation format.
+
+        Returns:
+            List format: [
+                [x1, y1, x2, y2, x3, y3, ...],
+                [x1, y1, x2, y2, x3, y3, ...],
+                ...
+            ].
         """
         coco_segmentation: list = []
         for shapely_polygon in self.multipolygon.geoms:
@@ -191,7 +206,7 @@ class ShapelyAnnotation:
         return coco_segmentation
 
     def to_opencv_contours(self) -> list[list[list[list[int]]]]:
-        """[ [[[1, 1]], [[325, 125]], [[250, 200]], [[5, 200]]], [[[1, 1]], [[325, 125]], [[250, 200]], [[5, 200]]] ]"""
+        """[ [[[1, 1]], [[325, 125]], [[250, 200]], [[5, 200]]], [[[1, 1]], [[325, 125]], [[250, 200]], [[5, 200]]] ]."""
         opencv_contours: list = []
         for shapely_polygon in self.multipolygon.geoms:
             # create opencv_contour for selected shapely_polygon
@@ -213,7 +228,7 @@ class ShapelyAnnotation:
         return opencv_contours
 
     def to_xywh(self) -> list[float]:
-        """[xmin, ymin, width, height]"""
+        """[xmin, ymin, width, height]."""
         if self.multipolygon.area != 0:
             coco_bbox, _ = get_bbox_from_shapely(self.multipolygon)
             # fix coord by slice box
@@ -227,11 +242,11 @@ class ShapelyAnnotation:
         return coco_bbox
 
     def to_coco_bbox(self) -> list[float]:
-        """[xmin, ymin, width, height]"""
+        """[xmin, ymin, width, height]."""
         return self.to_xywh()
 
     def to_xyxy(self) -> list[float]:
-        """[xmin, ymin, xmax, ymax]"""
+        """[xmin, ymin, xmax, ymax]."""
         if self.multipolygon.area != 0:
             _, voc_bbox = get_bbox_from_shapely(self.multipolygon)
             # fix coord by slice box
@@ -247,15 +262,17 @@ class ShapelyAnnotation:
         return voc_bbox
 
     def to_voc_bbox(self) -> list[float]:
-        """[xmin, ymin, xmax, ymax]"""
+        """[xmin, ymin, xmax, ymax]."""
         return self.to_xyxy()
 
     def get_convex_hull_shapely_annotation(self) -> ShapelyAnnotation:
+        """Return convex hull of this annotation as a new ShapelyAnnotation."""
         shapely_multipolygon = MultiPolygon([self.multipolygon.convex_hull])
         shapely_annotation = ShapelyAnnotation(shapely_multipolygon)
         return shapely_annotation
 
     def get_simplified_shapely_annotation(self, tolerance: float = 1) -> ShapelyAnnotation:
+        """Return simplified version of this annotation as a new ShapelyAnnotation."""
         shapely_multipolygon = MultiPolygon([self.multipolygon.simplify(tolerance)])
         shapely_annotation = ShapelyAnnotation(shapely_multipolygon)
         return shapely_annotation
