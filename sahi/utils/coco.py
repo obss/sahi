@@ -1053,7 +1053,7 @@ class Coco:
 
         # load coco dict if path is given
         if isinstance(coco_dict_or_path, str):
-            coco_dict = cast(dict[Any, Any], load_json(coco_dict_or_path))
+            coco_dict = cast("dict[Any, Any]", load_json(coco_dict_or_path))
         else:
             coco_dict = coco_dict_or_path
 
@@ -1800,7 +1800,7 @@ def update_categories_from_file(desired_name2id: dict, coco_path: str, save_path
         save_path: Path where the updated COCO JSON will be saved.
     """
     # load source coco dict
-    coco_source = cast(dict[Any, Any], load_json(coco_path))
+    coco_source = cast("dict[Any, Any]", load_json(coco_path))
 
     # update categories
     coco_target = update_categories(desired_name2id, coco_source)
@@ -1916,8 +1916,8 @@ def merge_from_file(coco_path1: str, coco_path2: str, save_path: str) -> None:
             "dirname/coco.json"
     """
     # load coco files to be combined
-    coco_dict1 = cast(dict[Any, Any], load_json(coco_path1))
-    coco_dict2 = cast(dict[Any, Any], load_json(coco_path2))
+    coco_dict1 = cast("dict[Any, Any]", load_json(coco_path1))
+    coco_dict2 = cast("dict[Any, Any]", load_json(coco_path2))
 
     # merge coco dicts
     merged_coco_dict = merge(coco_dict1, coco_dict2)
@@ -2117,7 +2117,7 @@ def add_bbox_and_area_to_coco(
     coco_dict : dict
         Updated coco dict
     """
-    coco_dict = cast(dict[Any, Any], load_json(source_coco_path))
+    coco_dict = cast("dict[Any, Any]", load_json(source_coco_path))
     coco_dict = copy.deepcopy(coco_dict)
 
     annotations = coco_dict["annotations"]
@@ -2186,7 +2186,7 @@ def count_images_with_category(coco_file_path: str) -> DatasetClassCounts:
         DatasetClassCounts object storing counts.
     """
     image_id_2_category_2_count: defaultdict[Any, defaultdict[Any, int]] = defaultdict(lambda: defaultdict(int))
-    coco = cast(dict[Any, Any], load_json(coco_file_path))
+    coco = cast("dict[Any, Any]", load_json(coco_file_path))
     for annotation in coco["annotations"]:
         image_id = annotation["image_id"]
         cid = annotation["category_id"]
@@ -2332,7 +2332,7 @@ def remove_invalid_coco_results(
     """
     # prepare coco results
     if isinstance(result_list_or_path, str):
-        result_list = cast(list[dict], load_json(result_list_or_path))
+        result_list = cast("list[dict]", load_json(result_list_or_path))
     elif isinstance(result_list_or_path, list):
         result_list = result_list_or_path
     else:
@@ -2341,7 +2341,7 @@ def remove_invalid_coco_results(
     # prepare image info from coco dataset
     if dataset_dict_or_path is not None:
         if isinstance(dataset_dict_or_path, str):
-            dataset_dict = cast(dict[Any, Any], load_json(dataset_dict_or_path))
+            dataset_dict = cast("dict[Any, Any]", load_json(dataset_dict_or_path))
         elif isinstance(dataset_dict_or_path, dict):
             dataset_dict = dataset_dict_or_path
         else:
