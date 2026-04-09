@@ -8,7 +8,7 @@ class TestTorchUtils:
         import torch
 
         if torch.cuda.is_available():
-            assert empty_cuda_cache() is None
+            empty_cuda_cache()  # should not raise
 
     def test_to_float_tensor(self) -> None:
         img = to_float_tensor(np.random.randint(0, 256, (10, 10, 3), dtype=np.uint8))

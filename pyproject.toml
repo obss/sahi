@@ -182,6 +182,93 @@ exclude = [
   "docs",
 ]
 
+[tool.ty.environment]
+python-version = "3.8"
+
+[tool.ty.src]
+
+# List of paths to check
+include = ["sahi", "tests"]
+
+# Ignore specific directories
+exclude = [
+    "typings",
+    "__pycache__",
+    "build",
+    "dist",
+    "venv",
+    ".venv",
+    "docs",
+    ".ruff_cache",
+    ".mypy_cache",
+    ".git",
+    ".vscode",
+    ".venv",
+    "site",
+    ".github"
+]
+
+[tool.mypy]
+python_version = "3.10"
+
+[[tool.mypy.overrides]]
+module = [
+    "requests",
+    "torch",
+    "torch.*",
+    "torchvision",
+    "torchvision.*",
+    "ultralytics.*",
+    "yolov5.*",
+    "mmdet.*",
+    "mmengine.*",
+    "mmcv.*",
+    "transformers",
+    "transformers.*",
+    "inference.*",
+    "rfdetr.*",
+    "supervision.*",
+    "onnx",
+    "onnxruntime",
+    "numba",
+    "numba.*",
+    "fiftyone",
+    "fiftyone.*",
+    "pycocotools",
+    "pycocotools.*",
+    "imantics",
+    "imantics.*",
+    "fire",
+    "tqdm",
+    "cv2",
+    "cv2.*",
+    "shapely",
+    "shapely.*",
+    "skimage",
+    "skimage.*",
+    "lsnms",
+    "lsnms.*",
+    "yaml",
+    "detectron2",
+    "detectron2.*",
+    "pytest",
+    "pytest.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "scripts.*",
+    "sahi.scripts.*",
+    "tests.test_huggingface_model",
+    "tests.test_detectron2_model",
+    "tests.test_roboflow",
+    "tests.test_mmdetection_model",
+    "tests.data.models.*",
+]
+disable_error_code = ["attr-defined", "operator", "return", "assignment", "arg-type", "misc", "index", "var-annotated"]
+
+
 [tool.ruff.lint]
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
 select = ["E", "F", "I", "A", "Q", "W", "RUF", "UP", "FA", "ANN"]

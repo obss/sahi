@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Any
+
 import numpy as np
 import pytest
 
@@ -473,7 +477,7 @@ class TestTorchParity:
     def _skip_no_torch(self) -> None:
         pytest.importorskip("torch")
 
-    def _to_tensor(self, data: np.ndarray) -> object:
+    def _to_tensor(self, data: np.ndarray | list) -> Any:
         import torch
 
         return torch.tensor(data, dtype=torch.float32)
@@ -485,14 +489,15 @@ class TestTorchParity:
         assert 1 not in keep
 
     def test_numpy_torch_parity(self) -> None:
-        for preds_data, func, kwargs in [
+        test_cases: list[tuple[Any, Any, dict[str, Any]]] = [
             (PREDS_NMS, nms, {"match_metric": "IOU", "match_threshold": 0.5}),
             (PREDS_BATCHED_NMS, batched_nms, {"match_metric": "IOU", "match_threshold": 0.5}),
             (PREDS_NMM, nmm, {"match_metric": "IOU", "match_threshold": 0.1}),
             (PREDS_NMM, greedy_nmm, {"match_metric": "IOU", "match_threshold": 0.1}),
             (PREDS_NMM, batched_greedy_nmm, {"match_metric": "IOU", "match_threshold": 0.1}),
             (PREDS_BATCHED_NMM, batched_nmm, {"match_metric": "IOU", "match_threshold": 0.1}),
-        ]:
+        ]
+        for preds_data, func, kwargs in test_cases:
             np_result = func(np.array(preds_data, dtype=np.float32), **kwargs)
             torch_result = func(self._to_tensor(preds_data).numpy(), **kwargs)
             assert np_result == torch_result, f"{func.__name__}: mismatch"

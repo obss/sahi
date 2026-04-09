@@ -1,3 +1,4 @@
+import pytest
 from shapely.geometry import GeometryCollection, Polygon
 
 from sahi.utils.shapely import MultiPolygon, ShapelyAnnotation, get_shapely_box, get_shapely_multipolygon
@@ -128,7 +129,9 @@ class TestShapelyUtils:
 
         assert intersection_shapely_annotation.to_xywh() == []
 
-    def test_get_shapely_multipolygon_make_valid_returns_geometry_collection(self, monkeypatch: object) -> None:
+    def test_get_shapely_multipolygon_make_valid_returns_geometry_collection(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         # Prepare simple polygons to be returned by make_valid inside a GeometryCollection
         poly1 = Polygon([(0, 0), (1, 0), (1, 1), (0, 1)])
         poly2 = Polygon([(2, 2), (3, 2), (3, 3), (2, 3)])

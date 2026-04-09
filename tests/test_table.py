@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import unittest
+from typing import Any
 
 from sahi.utils.table import create_ascii_table
 
 
 class TestTable(unittest.TestCase):
     def test_create_ascii_table_basic(self) -> None:
-        data = [
+        data: list[list[Any]] = [
             ["Model", "Params(M)", "Dataset"],
             ["ResNet50", 25.6, "ImageNet"],
             ["YOLOv8n", 4.5, "COCO"],
@@ -30,6 +31,6 @@ class TestTable(unittest.TestCase):
         self.assertEqual(create_ascii_table([[]]), "")
 
     def test_none_values(self) -> None:
-        data = [["ID", "Value"], [1, None]]
+        data: list[list[Any]] = [["ID", "Value"], [1, None]]
         table = create_ascii_table(data)
         self.assertIn("| 1  |       |", table)

@@ -13,7 +13,7 @@ class TestAnnotation:
         bbox = BoundingBox(bbox_minmax)
         expanded_bbox = bbox.get_expanded_box(ratio=0.1)
 
-        bbox = BoundingBox(bbox_minmax, shift_amount=shift_amount)
+        bbox = BoundingBox(bbox_minmax, shift_amount=shift_amount)  # type: ignore[arg-type]
         shifted_bbox = bbox.get_shifted_box()
 
         # compare
@@ -31,19 +31,19 @@ class TestAnnotation:
 
         # Attempt to mutate the box tuple directly
         with pytest.raises(TypeError):
-            bbox.box[0] = 99.0
+            bbox.box[0] = 99.0  # type: ignore[index, call-overload]
 
         # Attempt to mutate the shift_amount tuple directly
         with pytest.raises(TypeError):
-            bbox.shift_amount[0] = 99
+            bbox.shift_amount[0] = 99  # type: ignore[index]
 
         # Attempt to assign a new value to an attribute
         with pytest.raises(dataclasses.FrozenInstanceError):
-            bbox.box = (1.0, 2.0, 3.0, 4.0)
+            bbox.box = (1.0, 2.0, 3.0, 4.0)  # type: ignore[misc]
 
         # Attempt to assign a new value to a property
         with pytest.raises(dataclasses.FrozenInstanceError):
-            bbox.minx = 123.0
+            bbox.minx = 123.0  # type: ignore[misc]
 
         # Confirm the values remain unchanged
         assert bbox.box == bbox_tuple
@@ -60,11 +60,11 @@ class TestAnnotation:
 
         # id must be int
         with pytest.raises(TypeError):
-            Category(id="not-an-int", name="car")
+            Category(id="not-an-int", name="car")  # type: ignore[arg-type]
 
         # name must be str
         with pytest.raises(TypeError):
-            Category(id=1, name=123)
+            Category(id=1, name=123)  # type: ignore[arg-type]
 
     def test_category_immutability(self) -> None:
         import dataclasses
@@ -75,11 +75,11 @@ class TestAnnotation:
 
         # Attempt to mutate the id directly
         with pytest.raises(dataclasses.FrozenInstanceError):
-            category.id = 10
+            category.id = 10  # type: ignore[misc]
 
         # Attempt to mutate the name directly
         with pytest.raises(dataclasses.FrozenInstanceError):
-            category.name = "cat"
+            category.name = "cat"  # type: ignore[misc]
 
         # Confirm the values remain unchanged
         assert category.id == 5
@@ -112,7 +112,7 @@ class TestAnnotation:
         full_shape = [image_height, image_width]
 
         object_annotation1 = ObjectAnnotation(
-            bbox=bbox,
+            bbox=bbox,  # type: ignore[arg-type]
             category_id=category_id,
             category_name=category_name,
             shift_amount=shift_amount,
@@ -127,7 +127,7 @@ class TestAnnotation:
         )
 
         object_annotation3 = ObjectAnnotation.from_coco_bbox(
-            bbox=coco_bbox,
+            bbox=coco_bbox,  # type: ignore[arg-type]
             category_id=category_id,
             category_name=category_name,
             full_shape=full_shape,

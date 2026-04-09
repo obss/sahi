@@ -5,10 +5,10 @@ class TestHighLevelApi:
         bbox_minmax = [30.0, 30.0, 100.0, 150.0]
         shift_amount = [50, 40]
 
-        bbox = BoundingBox(bbox_minmax, shift_amount=[0, 0])
+        bbox = BoundingBox(bbox_minmax, shift_amount=(0, 0))
         expanded_bbox = bbox.get_expanded_box(ratio=0.1)
 
-        bbox = BoundingBox(bbox_minmax, shift_amount=shift_amount)
+        bbox = BoundingBox(bbox_minmax, shift_amount=(shift_amount[0], shift_amount[1]))
         shifted_bbox = bbox.get_shifted_box()
 
         # compare
@@ -41,7 +41,7 @@ class TestHighLevelApi:
     def test_object_prediction(self) -> None:
         from sahi import ObjectPrediction
 
-        bbox = [100, 200, 150, 230]
+        bbox = [100.0, 200.0, 150.0, 230.0]
         coco_bbox = [bbox[0], bbox[1], bbox[2] - bbox[0], bbox[3] - bbox[1]]
         category_id = 2
         category_name = "car"

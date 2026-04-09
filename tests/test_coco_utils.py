@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import os
 import shutil
+from typing import Any
 
 from sahi.logger import logger
 from sahi.utils.coco import merge, update_categories
@@ -229,7 +232,7 @@ class TestCocoUtils:
 
         assert cocovid_image.annotations[1].category_id == category_id2
         assert cocovid_image.annotations[1].category_name == category_name2
-        assert cocovid_image.annotations[1].instance_id == instance_id2
+        assert cocovid_image.annotations[1].instance_id == instance_id2  # type: ignore[attr-defined]
         assert cocovid_image.annotations[1].bbox == bbox2
 
     def test_coco_video(self) -> None:
@@ -290,7 +293,7 @@ class TestCocoUtils:
         category_mapping = {1: "human", 2: "car"}
         # init coco
         coco_path = "tests/data/coco_utils/terrain_all_coco.json"
-        coco_dict = load_json(coco_path)
+        coco_dict: dict[Any, Any] = load_json(coco_path)  # type: ignore[assignment]
         coco1 = Coco.from_coco_dict_or_path(coco_dict)
         coco2 = Coco.from_coco_dict_or_path(coco_path)
 
@@ -349,7 +352,7 @@ class TestCocoUtils:
 
     def test_update_categories(self) -> None:
         coco_path = "tests/data/coco_utils/terrain2_coco.json"
-        source_coco_dict = load_json(coco_path)
+        source_coco_dict: dict[Any, Any] = load_json(coco_path)  # type: ignore[assignment]
 
         assert len(source_coco_dict["annotations"]) == 5
         assert len(source_coco_dict["images"]) == 1
@@ -409,7 +412,7 @@ class TestCocoUtils:
         from sahi.utils.coco import get_imageid2annotationlist_mapping
 
         coco_path = "tests/data/coco_utils/combined_coco.json"
-        coco_dict = load_json(coco_path)
+        coco_dict: dict[Any, Any] = load_json(coco_path)  # type: ignore[assignment]
         imageid2annotationlist_mapping = get_imageid2annotationlist_mapping(coco_dict)
         assert len(imageid2annotationlist_mapping) == 2
 
@@ -429,12 +432,12 @@ class TestCocoUtils:
         # load coco files to be combined
         coco_path1 = "tests/data/coco_utils/terrain1_coco.json"
         coco_path2 = "tests/data/coco_utils/terrain2_coco.json"
-        coco_dict1 = load_json(coco_path1)
+        coco_dict1: dict[Any, Any] = load_json(coco_path1)  # type: ignore[assignment]
         assert len(coco_dict1["images"]) == 1
         assert len(coco_dict1["annotations"]) == 7
         assert len(coco_dict1["categories"]) == 1
 
-        coco_dict2 = load_json(coco_path2)
+        coco_dict2: dict[Any, Any] = load_json(coco_path2)  # type: ignore[assignment]
         assert len(coco_dict2["images"]) == 1
         assert len(coco_dict2["annotations"]) == 5
         assert len(coco_dict2["categories"]) == 1
@@ -465,17 +468,17 @@ class TestCocoUtils:
         coco_path1 = "tests/data/coco_utils/terrain1_coco.json"
         coco_path2 = "tests/data/coco_utils/terrain2_coco.json"
         coco_path3 = "tests/data/coco_utils/terrain3_coco.json"
-        coco_dict1 = load_json(coco_path1)
+        coco_dict1: dict[Any, Any] = load_json(coco_path1)  # type: ignore[assignment]
         assert len(coco_dict1["images"]) == 1
         assert len(coco_dict1["annotations"]) == 7
         assert len(coco_dict1["categories"]) == 1
 
-        coco_dict2 = load_json(coco_path2)
+        coco_dict2: dict[Any, Any] = load_json(coco_path2)  # type: ignore[assignment]
         assert len(coco_dict2["images"]) == 1
         assert len(coco_dict2["annotations"]) == 5
         assert len(coco_dict2["categories"]) == 1
 
-        coco_dict3 = load_json(coco_path3)
+        coco_dict3: dict[Any, Any] = load_json(coco_path3)  # type: ignore[assignment]
         assert len(coco_dict3["images"]) == 1
         assert len(coco_dict3["annotations"]) == 10
         assert len(coco_dict3["categories"]) == 1

@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import shutil
 import sys
 from collections import Counter
 from os import path
+from typing import Any
 
 import numpy as np
 import pytest
@@ -358,7 +361,7 @@ def test_get_sliced_prediction_batch_size() -> None:
     yolo11_detection_model.load_model()
 
     image_path = "tests/data/small-vehicles1.jpeg"
-    common_kwargs = dict(
+    common_kwargs: dict[str, Any] = dict(
         image=image_path,
         detection_model=yolo11_detection_model,
         slice_height=512,
@@ -383,7 +386,7 @@ def test_get_sliced_prediction_batch_size() -> None:
         f"batch_size=1 gave {len(preds_bs1)} predictions, batch_size=4 gave {len(preds_bs4)}"
     )
 
-    def serialize_pred(pred: object) -> tuple:
+    def serialize_pred(pred: Any) -> tuple[Any, ...]:
         return (
             pred.category.id,
             pred.category.name,
