@@ -19,29 +19,37 @@ class PredictionScore:
     native Python floats for serialization safety.
     """
 
+    value: float
+
     def __init__(self, value: float | np.ndarray) -> None:
         """
         Args:
             value: prediction score between 0 and 1
         """
         # if score is a numpy object, convert it to python variable
-        if type(value).__module__ == "numpy":
+        if isinstance(value, np.ndarray):
             value = copy.deepcopy(value).tolist()
         # set score
-        self.value = value
+        self.value: float = value  # type: ignore[assignment]
 
     def is_greater_than_threshold(self, threshold: float) -> bool:
         """Check if score is greater than threshold."""
         return self.value > threshold
 
-    def __eq__(self, threshold: float) -> bool:
-        return self.value == threshold
+    def __eq__(self, other: object) -> bool:  # type: ignore[override]
+        if isinstance(other, (float, int)):
+            return self.value == other
+        return NotImplemented
 
-    def __gt__(self, threshold: float) -> bool:
-        return self.value > threshold
+    def __gt__(self, other: object) -> bool:  # type: ignore[override]
+        if isinstance(other, (float, int)):
+            return self.value > other
+        return NotImplemented
 
-    def __lt__(self, threshold: float) -> bool:
-        return self.value < threshold
+    def __lt__(self, other: object) -> bool:  # type: ignore[override]
+        if isinstance(other, (float, int)):
+            return self.value < other
+        return NotImplemented
 
     def __repr__(self) -> str:
         return f"PredictionScore: <value: {self.value}>"
@@ -52,13 +60,13 @@ class ObjectPrediction(ObjectAnnotation):
 
     def __init__(
         self,
-        bbox: list[int] | None = None,
+        bbox: list[float] | None = None,
         category_id: int | None = None,
         category_name: str | None = None,
         segmentation: list[list[float]] | None = None,
         score: float = 0.0,
-        shift_amount: list[int] | None = [0, 0],
-        full_shape: list[int] | None = None,
+        shift_amount: list[int] | list[int | float] | None = None,
+        full_shape: list[int] | list[int | float] | None = None,
     ) -> None:
         """Creates ObjectPrediction from bbox, score, category_id, category_name, segmentation.
 
@@ -123,8 +131,9 @@ class ObjectPrediction(ObjectAnnotation):
 
     def to_coco_prediction(self, image_id: int | None = None) -> CocoPrediction:
         """Returns sahi.utils.coco.CocoPrediction representation of ObjectAnnotation."""
+        bbox_xywh = self.bbox.to_xywh()
         if self.mask:
-            coco_prediction = CocoPrediction.from_coco_segmentation(
+            coco_prediction = CocoPrediction.from_coco_segmentation(  # type: ignore[arg-type]
                 segmentation=self.mask.segmentation,
                 category_id=self.category.id,
                 category_name=self.category.name,
@@ -133,7 +142,7 @@ class ObjectPrediction(ObjectAnnotation):
             )
         else:
             coco_prediction = CocoPrediction.from_coco_bbox(
-                bbox=self.bbox.to_xywh(),
+                bbox=bbox_xywh,  # type: ignore[arg-type]
                 category_id=self.category.id,
                 category_name=self.category.name,
                 score=self.score.value,
