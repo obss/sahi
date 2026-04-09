@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -44,7 +45,7 @@ class BoundingBox:
         ```
     """
 
-    box: tuple[float, float, float, float] | list[float]
+    box: tuple[float, float, float, float] | list[float] | list[int]
     shift_amount: tuple[int, int] = (0, 0)
 
     def __post_init__(self) -> None:
@@ -206,8 +207,8 @@ class Mask:
 
     def __init__(
         self,
-        segmentation: list[list[float]],
-        full_shape: list[int],
+        segmentation: list[list[float]] | np.ndarray,
+        full_shape: list[int] | None,
         shift_amount: list[int] = [0, 0],
     ) -> None:
         if full_shape is None:
@@ -217,7 +218,11 @@ class Mask:
         self.shift_y = shift_amount[1]
         self.full_shape_height = full_shape[0]
         self.full_shape_width = full_shape[1]
-        self.segmentation = segmentation
+        # Ensure segmentation is a list
+        if isinstance(segmentation, np.ndarray):
+            self.segmentation: list[list[float]] = segmentation.tolist()
+        else:
+            self.segmentation = segmentation
 
     @classmethod
     def from_float_mask(
@@ -225,7 +230,7 @@ class Mask:
         mask: np.ndarray,
         full_shape: list[int],
         mask_threshold: float = 0.5,
-        shift_amount: list[int] = [0, 0],
+        shift_amount: list[int] | None = None,
     ) -> Mask:
         """
         Args:
@@ -240,6 +245,8 @@ class Mask:
                 Size of the full image after shifting, should be in the form of [height, width]
         """
         bool_mask = mask > mask_threshold
+        if shift_amount is None:
+            shift_amount = [0, 0]
         return cls(
             segmentation=get_coco_segmentation_from_bool_mask(bool_mask),
             shift_amount=shift_amount,
@@ -251,7 +258,7 @@ class Mask:
         cls,
         bool_mask: np.ndarray,
         full_shape: list[int],
-        shift_amount: list[int] = [0, 0],
+        shift_amount: list[int] | None = None,
     ) -> Mask:
         """
         Args:
@@ -263,6 +270,8 @@ class Mask:
                 To shift the box and mask predictions from sliced image to full
                 sized image, should be in the form of [shift_x, shift_y]
         """
+        if shift_amount is None:
+            shift_amount = [0, 0]
         return cls(
             segmentation=get_coco_segmentation_from_bool_mask(bool_mask),
             shift_amount=shift_amount,
@@ -271,9 +280,11 @@ class Mask:
 
     @property
     def bool_mask(self) -> np.ndarray:
-        return get_bool_mask_from_coco_segmentation(
-            self.segmentation, width=self.full_shape[1], height=self.full_shape[0]
-        )
+        # Ensure segmentation is list[list[float]] for the utility function
+        seg = self.segmentation
+        if isinstance(seg, np.ndarray):
+            seg = seg.tolist()
+        return get_bool_mask_from_coco_segmentation(seg, width=self.full_shape_width, height=self.full_shape_height)
 
     @property
     def shape(self) -> list[int]:
@@ -311,12 +322,12 @@ class ObjectAnnotation:
 
     def __init__(
         self,
-        bbox: list[int] | None = None,
-        segmentation: np.ndarray | None = None,
+        bbox: list[float] | None = None,
+        segmentation: np.ndarray | list[list[float]] | None = None,
         category_id: int | None = None,
         category_name: str | None = None,
-        shift_amount: list[int] | None = [0, 0],
-        full_shape: list[int] | None = None,
+        shift_amount: list[int] | list[int | float] | None = None,
+        full_shape: list[int] | list[int | float] | None = None,
     ) -> None:
         """
         Args:
@@ -344,6 +355,9 @@ class ObjectAnnotation:
         if (bbox is None) and (segmentation is None):
             raise ValueError("you must provide a bbox or segmentation")
 
+        if shift_amount is None:
+            shift_amount = [0, 0]
+
         self.mask: Mask | None = None
         if segmentation is not None:
             self.mask = Mask(
@@ -351,7 +365,9 @@ class ObjectAnnotation:
                 shift_amount=shift_amount,
                 full_shape=full_shape,
             )
-            bbox_from_segmentation = get_bbox_from_coco_segmentation(segmentation)
+            # Convert to list if ndarray for get_bbox_from_coco_segmentation
+            seg_for_bbox = segmentation if not isinstance(segmentation, np.ndarray) else segmentation.tolist()
+            bbox_from_segmentation = get_bbox_from_coco_segmentation(seg_for_bbox)  # type: ignore[arg-type]
             # https://github.com/obss/sahi/issues/235
             if bbox_from_segmentation is not None:
                 bbox = bbox_from_segmentation
@@ -359,8 +375,11 @@ class ObjectAnnotation:
                 raise ValueError("Invalid segmentation mask.")
 
         # if bbox is a numpy object, convert it to python List[float]
-        if type(bbox).__module__ == "numpy":
+        if isinstance(bbox, np.ndarray):
             bbox = copy.deepcopy(bbox).tolist()
+
+        # bbox must not be None at this point
+        assert bbox is not None
 
         # make sure bbox coords lie inside [0, image_size]
         xmin = max(bbox[0], 0)
@@ -372,8 +391,9 @@ class ObjectAnnotation:
             xmax = bbox[2]
             ymax = bbox[3]
         bbox = [xmin, ymin, xmax, ymax]
-        # set bbox
-        self.bbox = BoundingBox(bbox, shift_amount)
+        # set bbox - convert shift_amount to tuple for BoundingBox
+        shift_amount_tuple: tuple[int, int] = (shift_amount[0], shift_amount[1])
+        self.bbox = BoundingBox(bbox, shift_amount_tuple)
 
         category_name = category_name if category_name else str(category_id)
         self.category = Category(
@@ -389,7 +409,7 @@ class ObjectAnnotation:
         bool_mask: np.ndarray,
         category_id: int | None = None,
         category_name: str | None = None,
-        shift_amount: list[int] | None = [0, 0],
+        shift_amount: list[int] | None = None,
         full_shape: list[int] | None = None,
     ) -> ObjectAnnotation:
         """Creates ObjectAnnotation from bool_mask (2D np.ndarray)
@@ -410,7 +430,7 @@ class ObjectAnnotation:
         segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
         return cls(
             category_id=category_id,
-            segmentation=segmentation,
+            segmentation=segmentation,  # type: ignore[arg-type]
             category_name=category_name,
             shift_amount=shift_amount,
             full_shape=full_shape,
@@ -423,7 +443,7 @@ class ObjectAnnotation:
         full_shape: list[int],
         category_id: int | None = None,
         category_name: str | None = None,
-        shift_amount: list[int] | None = [0, 0],
+        shift_amount: list[int] | None = None,
     ) -> ObjectAnnotation:
         """
         Creates ObjectAnnotation from coco segmentation:
@@ -452,7 +472,7 @@ class ObjectAnnotation:
         """
         return cls(
             category_id=category_id,
-            segmentation=segmentation,
+            segmentation=segmentation,  # type: ignore[arg-type]
             category_name=category_name,
             shift_amount=shift_amount,
             full_shape=full_shape,
@@ -461,10 +481,10 @@ class ObjectAnnotation:
     @classmethod
     def from_coco_bbox(
         cls,
-        bbox: list[int],
+        bbox: list[float],
         category_id: int | None = None,
         category_name: str | None = None,
-        shift_amount: list[int] | None = [0, 0],
+        shift_amount: list[int] | None = None,
         full_shape: list[int] | None = None,
     ) -> ObjectAnnotation:
         """Creates ObjectAnnotation from coco bbox [minx, miny, width, height]
@@ -501,7 +521,7 @@ class ObjectAnnotation:
         annotation_dict: dict,
         full_shape: list[int],
         category_name: str | None = None,
-        shift_amount: list[int] | None = [0, 0],
+        shift_amount: list[int] | None = None,
     ) -> ObjectAnnotation:
         """Creates ObjectAnnotation object from category name and COCO formatted annotation dict (with fields "bbox",
         "segmentation", "category_id").
@@ -541,7 +561,7 @@ class ObjectAnnotation:
         full_shape: list[int],
         category_id: int | None = None,
         category_name: str | None = None,
-        shift_amount: list[int] | None = [0, 0],
+        shift_amount: list[int] | None = None,
     ) -> ObjectAnnotation:
         """Creates ObjectAnnotation from shapely_utils.ShapelyAnnotation.
 
@@ -559,7 +579,7 @@ class ObjectAnnotation:
         """
         return cls(
             category_id=category_id,
-            segmentation=annotation.to_coco_segmentation(),
+            segmentation=annotation.to_coco_segmentation(),  # type: ignore[arg-type]
             category_name=category_name,
             shift_amount=shift_amount,
             full_shape=full_shape,
@@ -568,8 +588,8 @@ class ObjectAnnotation:
     @classmethod
     def from_imantics_annotation(
         cls,
-        annotation: ImaneticsAnnotationType,
-        shift_amount: list[int] | None = [0, 0],
+        annotation: Any,
+        shift_amount: list[int] | None = None,
         full_shape: list[int] | None = None,
     ) -> ObjectAnnotation:
         """Creates ObjectAnnotation from imantics.annotation.Annotation.
@@ -582,9 +602,11 @@ class ObjectAnnotation:
             full_shape: List
                 Size of the full image, should be in the form of [height, width]
         """
+        if shift_amount is None:
+            shift_amount = [0, 0]
         return cls(
             category_id=annotation.category.id,
-            bool_mask=annotation.mask.array,
+            segmentation=get_coco_segmentation_from_bool_mask(annotation.mask.array),
             category_name=annotation.category.name,
             shift_amount=shift_amount,
             full_shape=full_shape,
@@ -594,13 +616,13 @@ class ObjectAnnotation:
         """Returns sahi.utils.coco.CocoAnnotation representation of ObjectAnnotation."""
         if self.mask:
             coco_annotation = CocoAnnotation.from_coco_segmentation(
-                segmentation=self.mask.segmentation,
+                segmentation=self.mask.segmentation,  # type: ignore[arg-type]
                 category_id=self.category.id,
                 category_name=self.category.name,
             )
         else:
             coco_annotation = CocoAnnotation.from_coco_bbox(
-                bbox=self.bbox.to_xywh(),
+                bbox=self.bbox.to_xywh(),  # type: ignore[arg-type]
                 category_id=self.category.id,
                 category_name=self.category.name,
             )
@@ -610,14 +632,14 @@ class ObjectAnnotation:
         """Returns sahi.utils.coco.CocoPrediction representation of ObjectAnnotation."""
         if self.mask:
             coco_prediction = CocoPrediction.from_coco_segmentation(
-                segmentation=self.mask.segmentation,
+                segmentation=self.mask.segmentation,  # type: ignore[arg-type]
                 category_id=self.category.id,
                 category_name=self.category.name,
                 score=1,
             )
         else:
             coco_prediction = CocoPrediction.from_coco_bbox(
-                bbox=self.bbox.to_xywh(),
+                bbox=self.bbox.to_xywh(),  # type: ignore[arg-type]
                 category_id=self.category.id,
                 category_name=self.category.name,
                 score=1,
@@ -628,15 +650,15 @@ class ObjectAnnotation:
         """Returns sahi.utils.shapely.ShapelyAnnotation representation of ObjectAnnotation."""
         if self.mask:
             shapely_annotation = ShapelyAnnotation.from_coco_segmentation(
-                segmentation=self.mask.segmentation,
+                segmentation=self.mask.segmentation,  # type: ignore[arg-type]
             )
         else:
             shapely_annotation = ShapelyAnnotation.from_coco_bbox(
-                bbox=self.bbox.to_xywh(),
+                bbox=self.bbox.to_xywh(),  # type: ignore[arg-type]
             )
         return shapely_annotation
 
-    def to_imantics_annotation(self) -> ImaneticsAnnotationType:
+    def to_imantics_annotation(self) -> Any:
         """Returns imantics.annotation.Annotation representation of ObjectAnnotation."""
         try:
             import imantics
@@ -664,7 +686,7 @@ class ObjectAnnotation:
 
     @classmethod
     def get_empty_mask(cls) -> Mask:
-        return Mask(bool_mask=None)
+        return Mask(segmentation=[], full_shape=[0, 0])
 
     def get_shifted_object_annotation(self) -> ObjectAnnotation:
         if self.mask:
@@ -681,7 +703,7 @@ class ObjectAnnotation:
             return ObjectAnnotation(
                 bbox=self.bbox.get_shifted_box().to_xyxy(),
                 category_id=self.category.id,
-                bool_mask=None,
+                segmentation=None,
                 category_name=self.category.name,
                 shift_amount=[0, 0],
                 full_shape=None,
