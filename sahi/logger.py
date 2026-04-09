@@ -24,7 +24,7 @@ class BaseSahiLogger(logging.Logger, ABC):
 class SahiLogger(BaseSahiLogger):
     def pkg_info(self, message: str, *args: object, **kws: object) -> None:
         if self.isEnabledFor(PKG_INFO_LEVEL):
-            self._log(PKG_INFO_LEVEL, message, args, **kws)
+            self._log(PKG_INFO_LEVEL, message, args, **kws)  # type: ignore[arg-type]
 
 
 # ensure subsequent getLogger returns SahiLogger instances
