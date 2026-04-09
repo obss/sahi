@@ -208,8 +208,8 @@ class Mask:
     def __init__(
         self,
         segmentation: list[list[float]] | np.ndarray,
-        full_shape: list[int] | None,
-        shift_amount: list[int] = [0, 0],
+        full_shape: list[int] | list[int | float] | None,
+        shift_amount: list[int] | list[int | float] = [0, 0],
     ) -> None:
         if full_shape is None:
             raise ValueError("full_shape must be provided")  # pyright: ignore[reportUnreachable]
@@ -392,7 +392,7 @@ class ObjectAnnotation:
             ymax = bbox[3]
         bbox = [xmin, ymin, xmax, ymax]
         # set bbox - convert shift_amount to tuple for BoundingBox
-        shift_amount_tuple: tuple[int, int] = (shift_amount[0], shift_amount[1])
+        shift_amount_tuple: tuple[int, int] = (int(shift_amount[0]), int(shift_amount[1]))
         self.bbox = BoundingBox(bbox, shift_amount_tuple)
 
         category_name = category_name if category_name else str(category_id)
