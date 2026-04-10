@@ -104,9 +104,9 @@ class DALISlicer(BaseSlicer):
     ) -> list[np.ndarray]:
         """Run a DALI pipeline that decodes + crops each slice on the GPU.
 
-        One pipeline iteration is executed per slice.  The image bytes
-        are read once and reused for every ROI crop via
-        ``fn.decoders.image_slice``.
+        Builds one pipeline and feeds each slice's ROI coordinates via
+        ``external_source`` callbacks.  The encoded image bytes are read
+        once and reused for every crop.
         """
         import nvidia.dali.fn as fn
         import nvidia.dali.types as types
@@ -114,41 +114,61 @@ class DALISlicer(BaseSlicer):
 
         raw_bytes = np.fromfile(image_path, dtype=np.uint8)
 
-        crops: list[np.ndarray] = []
+        # Pre-compute all ROI coordinates as int32 arrays.
+        # DALI image_slice expects (start, shape) with layout matching
+        # the decoded image: [y, x] for 2-D ROI specification.
+        roi_starts = []
+        roi_shapes = []
         for bbox in slice_bboxes:
             x_min, y_min, x_max, y_max = bbox
-            begin = np.array([y_min, x_min, 0], dtype=np.float32)
-            size = np.array([y_max - y_min, x_max - x_min, -1], dtype=np.float32)
+            roi_starts.append(np.array([y_min, x_min], dtype=np.int32))
+            roi_shapes.append(np.array([y_max - y_min, x_max - x_min], dtype=np.int32))
 
-            @pipeline_def(
-                batch_size=1,
-                num_threads=self.num_threads,
-                device_id=self.device_id,
-                prefetch_queue_depth=self.prefetch_queue_depth,
+        # Iterator index — shared between the external_source callbacks
+        # so the pipeline pulls the correct ROI for each run() call.
+        self._roi_idx = 0
+
+        def _feed_encoded():
+            return [raw_bytes]
+
+        def _feed_start():
+            return [roi_starts[self._roi_idx]]
+
+        def _feed_shape():
+            return [roi_shapes[self._roi_idx]]
+
+        @pipeline_def(
+            batch_size=1,
+            num_threads=self.num_threads,
+            device_id=self.device_id,
+            prefetch_queue_depth=1,
+        )
+        def roi_pipe():
+            encoded = fn.external_source(
+                source=_feed_encoded, dtype=types.UINT8, batch=True,
             )
-            def roi_pipe():
-                encoded = fn.external_source(
-                    source=[[raw_bytes]], dtype=types.UINT8, batch=True
-                )
-                decoded = fn.decoders.image_slice(
-                    encoded,
-                    start=fn.external_source(
-                        source=[[begin]], dtype=types.FLOAT, batch=True
-                    ),
-                    shape=fn.external_source(
-                        source=[[size]], dtype=types.FLOAT, batch=True
-                    ),
-                    device="mixed",
-                    hw_decoder_load=self.hw_decoder_load,
-                    output_type=types.RGB,
-                )
-                return decoded
+            decoded = fn.decoders.image_slice(
+                encoded,
+                start=fn.external_source(
+                    source=_feed_start, dtype=types.INT32, batch=True,
+                ),
+                shape=fn.external_source(
+                    source=_feed_shape, dtype=types.INT32, batch=True,
+                ),
+                device="mixed",
+                hw_decoder_load=self.hw_decoder_load,
+                output_type=types.RGB,
+            )
+            return decoded
 
-            pipe = roi_pipe()
-            pipe.build()
+        pipe = roi_pipe()
+        pipe.build()
+
+        crops: list[np.ndarray] = []
+        for i in range(len(slice_bboxes)):
+            self._roi_idx = i
             (output,) = pipe.run()
-            # output is a TensorListGPU – move to CPU as HWC uint8 ndarray
-            crop_arr = np.array(output.as_cpu()[0])
-            crops.append(crop_arr)
+            # output is a TensorListGPU — move to CPU as HWC uint8 ndarray
+            crops.append(np.array(output.as_cpu()[0]))
 
         return crops
