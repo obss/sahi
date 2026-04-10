@@ -13,13 +13,13 @@ from sahi.utils.import_utils import check_requirements
 class DALISlicer(BaseSlicer):
     """NVIDIA DALI-based GPU image slicing backend.
 
-    Uses DALI's ``fn.decoders.image_slice`` with hardware-accelerated
-    NVDEC decoding to perform fused decode+crop on the GPU.  When a file
-    path is provided the image bytes are sent through NVDEC directly,
-    avoiding a CPU decode round-trip.
+    For **file-path** input, uses ``fn.decoders.image_slice`` with
+    hardware-accelerated NVDEC to perform fused decode+crop on the GPU —
+    all slices are decoded in a single batched pipeline run.
 
-    Falls back to CPU-side NumPy slicing when the input is not a file
-    path (e.g. an already-decoded numpy array or PIL image).
+    For **numpy/PIL** input (e.g. video frames already in memory), uploads
+    the full image to the GPU once and uses ``fn.crop`` to extract all
+    slices in one batched run.
     """
 
     def __init__(
@@ -31,7 +31,6 @@ class DALISlicer(BaseSlicer):
         auto_slice_resolution: bool = True,
         device_id: int = 0,
         num_threads: int = 4,
-        prefetch_queue_depth: int = 2,
         hw_decoder_load: float = 0.65,
     ) -> None:
         super().__init__(
@@ -44,7 +43,6 @@ class DALISlicer(BaseSlicer):
         check_requirements(["nvidia.dali"])
         self.device_id = device_id
         self.num_threads = num_threads
-        self.prefetch_queue_depth = prefetch_queue_depth
         self.hw_decoder_load = hw_decoder_load
 
     # -- public API (overrides BaseSlicer) ------------------------------------
@@ -55,18 +53,11 @@ class DALISlicer(BaseSlicer):
         verbose: bool = False,
         exif_fix: bool = True,
     ) -> SliceImageResult:
-        """Slice an image using DALI GPU pipeline.
-
-        When *image* is a file path, DALI decodes and crops in a single
-        fused GPU operation.  Otherwise, falls back to reading the image
-        on the CPU and slicing with NumPy (DALI still benefits from GPU
-        transpose/cast if needed downstream).
+        """Slice an image using a batched DALI GPU pipeline.
 
         Returns:
-            SliceImageResult – same type as all other backends.
+            SliceImageResult -- same type as all other backends.
         """
-        # We need image dimensions to compute slice bboxes.  For file
-        # paths we do a cheap PIL open (header only) to get the size.
         image_pil = read_image_as_pil(image, exif_fix=exif_fix)
         image_width, image_height = image_pil.size
 
@@ -81,11 +72,9 @@ class DALISlicer(BaseSlicer):
         )
 
         if isinstance(image, str):
-            crops = self._dali_slice_from_path(image, slice_bboxes)
+            crops = self._dali_decode_and_slice(image, slice_bboxes)
         else:
-            # Fallback: image already decoded – use plain NumPy slicing.
-            image_arr = np.asarray(image_pil)
-            crops = [image_arr[tly:bry, tlx:brx] for tlx, tly, brx, bry in slice_bboxes]
+            crops = self._dali_crop_array(np.asarray(image_pil), slice_bboxes)
 
         result = SliceImageResult(original_image_size=[image_height, image_width])
         for bbox, crop in zip(slice_bboxes, crops):
@@ -97,78 +86,122 @@ class DALISlicer(BaseSlicer):
 
         return result
 
-    # -- DALI pipeline --------------------------------------------------------
+    # -- DALI pipelines -------------------------------------------------------
 
-    def _dali_slice_from_path(
+    def _dali_decode_and_slice(
         self, image_path: str, slice_bboxes: list[list[int]]
     ) -> list[np.ndarray]:
-        """Run a DALI pipeline that decodes + crops each slice on the GPU.
+        """Fused NVDEC decode + crop: one batched pipeline run for all slices.
 
-        Builds one pipeline and feeds each slice's ROI coordinates via
-        ``external_source`` callbacks.  The encoded image bytes are read
-        once and reused for every crop.
+        Each sample in the batch receives the same encoded bytes but a
+        different ROI, so NVDEC only decodes the requested region.
         """
         import nvidia.dali.fn as fn
         import nvidia.dali.types as types
         from nvidia.dali import pipeline_def
 
         raw_bytes = np.fromfile(image_path, dtype=np.uint8)
+        num_slices = len(slice_bboxes)
 
-        # Pre-compute all ROI coordinates as int32 arrays.
-        # DALI image_slice expects (start, shape) with layout matching
-        # the decoded image: [y, x] for 2-D ROI specification.
-        roi_starts = []
-        roi_shapes = []
-        for bbox in slice_bboxes:
-            x_min, y_min, x_max, y_max = bbox
-            roi_starts.append(np.array([y_min, x_min], dtype=np.int32))
-            roi_shapes.append(np.array([y_max - y_min, x_max - x_min], dtype=np.int32))
+        # Replicate encoded bytes for each sample in the batch
+        encoded_batch = [raw_bytes] * num_slices
 
-        # Iterator index — shared between the external_source callbacks
-        # so the pipeline pulls the correct ROI for each run() call.
-        self._roi_idx = 0
-
-        def _feed_encoded():
-            return [raw_bytes]
-
-        def _feed_start():
-            return [roi_starts[self._roi_idx]]
-
-        def _feed_shape():
-            return [roi_shapes[self._roi_idx]]
+        # Build ROI coordinate arrays (int32, [y, x])
+        start_batch = []
+        shape_batch = []
+        for x_min, y_min, x_max, y_max in slice_bboxes:
+            start_batch.append(np.array([y_min, x_min], dtype=np.int32))
+            shape_batch.append(np.array([y_max - y_min, x_max - x_min], dtype=np.int32))
 
         @pipeline_def(
-            batch_size=1,
+            batch_size=num_slices,
             num_threads=self.num_threads,
             device_id=self.device_id,
             prefetch_queue_depth=1,
         )
-        def roi_pipe():
+        def decode_slice_pipe():
             encoded = fn.external_source(
-                source=_feed_encoded, dtype=types.UINT8, batch=True,
+                source=[encoded_batch], dtype=types.UINT8, batch=True,
+            )
+            roi_start = fn.external_source(
+                source=[start_batch], dtype=types.INT32, batch=True,
+            )
+            roi_shape = fn.external_source(
+                source=[shape_batch], dtype=types.INT32, batch=True,
             )
             decoded = fn.decoders.image_slice(
                 encoded,
-                start=fn.external_source(
-                    source=_feed_start, dtype=types.INT32, batch=True,
-                ),
-                shape=fn.external_source(
-                    source=_feed_shape, dtype=types.INT32, batch=True,
-                ),
+                start=roi_start,
+                shape=roi_shape,
                 device="mixed",
                 hw_decoder_load=self.hw_decoder_load,
                 output_type=types.RGB,
             )
             return decoded
 
-        pipe = roi_pipe()
+        pipe = decode_slice_pipe()
         pipe.build()
+        (output,) = pipe.run()
 
-        crops: list[np.ndarray] = []
-        for i in range(len(slice_bboxes)):
-            self._roi_idx = i
-            (output,) = pipe.run()
-            # output is a TensorListGPU — move to CPU as HWC uint8 ndarray
-            crops.append(np.array(output.as_cpu()[0]))
+        # TensorListGPU -> list of CPU ndarrays (HWC uint8)
+        output_cpu = output.as_cpu()
+        return [np.array(output_cpu[i]) for i in range(num_slices)]
 
-        return crops
+    def _dali_crop_array(
+        self, image_arr: np.ndarray, slice_bboxes: list[list[int]]
+    ) -> list[np.ndarray]:
+        """GPU crop for already-decoded images (video frames, numpy arrays).
+
+        Uploads the full image to GPU once, then extracts all crops in a
+        single batched pipeline run using ``fn.crop``.
+        """
+        import nvidia.dali.fn as fn
+        import nvidia.dali.types as types
+        from nvidia.dali import pipeline_def
+
+        num_slices = len(slice_bboxes)
+
+        # Replicate the full image for each sample in the batch
+        image_batch = [image_arr] * num_slices
+
+        # fn.crop uses (y, x) anchor and (h, w) shape -- float32 normalized
+        # or absolute pixel coords.  We use absolute int coords.
+        anchor_batch = []
+        shape_batch = []
+        for x_min, y_min, x_max, y_max in slice_bboxes:
+            anchor_batch.append(np.array([y_min, x_min], dtype=np.int32))
+            shape_batch.append(np.array([y_max - y_min, x_max - x_min], dtype=np.int32))
+
+        @pipeline_def(
+            batch_size=num_slices,
+            num_threads=self.num_threads,
+            device_id=self.device_id,
+            prefetch_queue_depth=1,
+        )
+        def crop_pipe():
+            images = fn.external_source(
+                source=[image_batch], dtype=types.UINT8, batch=True,
+            )
+            images_gpu = images.gpu()
+            crop_anchor = fn.external_source(
+                source=[anchor_batch], dtype=types.INT32, batch=True,
+            )
+            crop_shape = fn.external_source(
+                source=[shape_batch], dtype=types.INT32, batch=True,
+            )
+            cropped = fn.crop(
+                images_gpu,
+                crop_pos_x=fn.element_extract(crop_anchor, element_map=[1]),
+                crop_pos_y=fn.element_extract(crop_anchor, element_map=[0]),
+                crop_w=fn.element_extract(crop_shape, element_map=[1]),
+                crop_h=fn.element_extract(crop_shape, element_map=[0]),
+                out_of_bounds_policy="error",
+            )
+            return cropped
+
+        pipe = crop_pipe()
+        pipe.build()
+        (output,) = pipe.run()
+
+        output_cpu = output.as_cpu()
+        return [np.array(output_cpu[i]) for i in range(num_slices)]
