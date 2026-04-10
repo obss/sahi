@@ -1,11 +1,26 @@
+"""SAHI: Sliced Aided Hyper Inference.
+
+A framework for performing object detection on large images using slicing.
+"""
+
+from __future__ import annotations
+
 import importlib.metadata as importlib_metadata
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sahi.annotation import BoundingBox as BoundingBox
+    from sahi.annotation import Category as Category
+    from sahi.annotation import Mask as Mask
+    from sahi.auto_model import AutoDetectionModel as AutoDetectionModel
+    from sahi.models.base import DetectionModel as DetectionModel
+    from sahi.prediction import ObjectPrediction as ObjectPrediction
 
 try:
     # This will read version from pyproject.toml
     __version__ = importlib_metadata.version(__package__ or __name__)
 except importlib_metadata.PackageNotFoundError:
     __version__ = "development"
-
 
 # Lazy imports — heavy modules (cv2, shapely, requests, tqdm) are only
 # loaded when the user actually accesses one of these names.
@@ -19,7 +34,7 @@ _LAZY_IMPORTS = {
 }
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> object:
     """Lazily import public symbols on first access.
 
     When a name listed in ``_LAZY_IMPORTS`` is accessed on the ``sahi``

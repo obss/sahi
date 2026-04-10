@@ -1,20 +1,30 @@
+---
+tags:
+  - postprocessing
+  - nms
+  - nmm
+  - gpu
+  - api-reference
+---
+
 # Postprocessing Backends
 
-SAHI's postprocessing (NMS, NMM) can run on three interchangeable backends. The right backend depends on your hardware and installed packages.
+SAHI's postprocessing (NMS, NMM) can run on three interchangeable backends. The
+right backend depends on your hardware and installed packages.
 
 ## Backend overview
 
-| Backend | Best for | Extra dependency |
-|---------|----------|-----------------|
-| **numpy** | CPU-only environments, small/medium prediction counts | None (always available) |
-| **numba** | CPU with large prediction counts; ~1 s JIT warmup on first call, then fast | `pip install numba` |
-| **torchvision** | CUDA GPU available; fastest for large batches | `pip install torch torchvision` + CUDA |
+| Backend         | Best for                                                                   | Extra dependency                       |
+| --------------- | -------------------------------------------------------------------------- | -------------------------------------- |
+| **numpy**       | CPU-only environments, small/medium prediction counts                      | None (always available)                |
+| **numba**       | CPU with large prediction counts; ~1 s JIT warmup on first call, then fast | `pip install numba`                    |
+| **torchvision** | CUDA GPU available; fastest for large batches                              | `pip install torch torchvision` + CUDA |
 
 ## Auto-detection (default)
 
 By default SAHI automatically picks the best available backend at runtime:
 
-1. **torchvision** — if `torchvision` is installed *and* a CUDA GPU is present.
+1. **torchvision** — if `torchvision` is installed _and_ a CUDA GPU is present.
 2. **numba** — if the `numba` package is installed.
 3. **numpy** — always available as the final fallback.
 
@@ -45,7 +55,8 @@ set_postprocess_backend("torchvision")
 set_postprocess_backend("auto")
 ```
 
-This call affects all subsequent NMS/NMM operations in the current process, including those triggered internally by `get_sliced_prediction`.
+This call affects all subsequent NMS/NMM operations in the current process,
+including those triggered internally by `get_sliced_prediction`.
 
 ### Example: pinning the backend for a full inference run
 
@@ -76,7 +87,8 @@ result = get_sliced_prediction(
 
 ## Using postprocessing functions directly
 
-All three backends share the same array convention: an `(N, 6)` numpy array with columns `[x1, y1, x2, y2, score, category_id]`.
+All three backends share the same array convention: an `(N, 6)` numpy array with
+columns `[x1, y1, x2, y2, score, category_id]`.
 
 ### NMS (suppression)
 
@@ -119,7 +131,8 @@ keep_to_merge = batched_greedy_nmm(predictions, match_threshold=0.5)
 
 ### IoS metric
 
-Both NMS and NMM support `match_metric="IOS"` (Intersection over Smaller area), which is useful when one box is much smaller than another:
+Both NMS and NMM support `match_metric="IOS"` (Intersection over Smaller area),
+which is useful when one box is much smaller than another:
 
 ```python
 keep = nms(predictions, match_metric="IOS", match_threshold=0.5)
@@ -127,7 +140,8 @@ keep = nms(predictions, match_metric="IOS", match_threshold=0.5)
 
 ## Postprocess classes
 
-High-level classes integrate with SAHI's `ObjectPrediction` lists and are used by `get_sliced_prediction` via the `postprocess_type` argument:
+High-level classes integrate with SAHI's `ObjectPrediction` lists and are used
+by `get_sliced_prediction` via the `postprocess_type` argument:
 
 ```python
 from sahi.postprocess.combine import NMSPostprocess, NMMPostprocess, GreedyNMMPostprocess
@@ -149,7 +163,8 @@ postprocessor = NMMPostprocess(match_threshold=0.5)
 merged = postprocessor(object_prediction_list)
 ```
 
-Passing `class_agnostic=False` makes each postprocessor run independently per category, so a "car" prediction will never suppress a "person" prediction.
+Passing `class_agnostic=False` makes each postprocessor run independently per
+category, so a "car" prediction will never suppress a "person" prediction.
 
 ## API reference
 

@@ -1,6 +1,7 @@
 # Contributing to SAHI
 
-Thank you for your interest in contributing to SAHI! This guide will help you get started.
+Thank you for your interest in contributing to SAHI! This guide will help you
+get started.
 
 ## Setting Up Development Environment
 
@@ -108,13 +109,16 @@ To add support for a new detection framework:
 
 1. Create a new file under `sahi/models/your_framework.py`
 2. Implement a class that inherits from `DetectionModel`
-3. Add your framework to `MODEL_TYPE_TO_MODEL_CLASS_NAME` in `sahi/auto_model.py`
+3. Add your framework to `MODEL_TYPE_TO_MODEL_CLASS_NAME` in
+   `sahi/auto_model.py`
 4. Add tests under `tests/test_yourframework.py`
 5. Add a demo notebook under `docs/notebooks/inference_for_your_framework.ipynb`
-6. Update [`README.md`](README.md) and related docs under `docs/` to include your new model
+6. Update [`README.md`](README.md) and related docs under `docs/` to include
+   your new model
 
 See existing implementations like `sahi/models/ultralytics.py` for reference.
 
 ## Questions?
 
-Feel free to [start a discussion](https://github.com/obss/sahi/discussions) if you have questions!
+Feel free to [start a discussion](https://github.com/obss/sahi/discussions) if
+you have questions!

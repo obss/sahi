@@ -1,3 +1,5 @@
+"""MMDetection configuration file for yolox_tiny_8xb8-300e_coco.py."""
+
 _base_ = "./yolox_s_8xb8-300e_coco.py"
 
 # model settings

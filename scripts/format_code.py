@@ -1,16 +1,18 @@
+"""Code formatting and linting utilities."""
+
 import os
 import subprocess
 import sys
 
 
-def run_command(cmd):
+def run_command(cmd: str) -> int:
     """Run a command and return exit code."""
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     result = subprocess.run(cmd, shell=True, cwd=repo_root)
     return result.returncode
 
 
-def check_formatting():
+def check_formatting() -> int:
     """Check code formatting without making changes."""
     print("Checking code formatting...")
 
@@ -30,7 +32,7 @@ def check_formatting():
         return 1
 
 
-def fix_formatting():
+def fix_formatting() -> int:
     """Fix code formatting issues."""
     print("Fixing code formatting...")
 
@@ -46,7 +48,7 @@ def fix_formatting():
     return 0
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     if len(sys.argv) < 2:
         print("Usage: python scripts/format_code.py [check|fix]")

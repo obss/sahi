@@ -1,3 +1,5 @@
+"""Torchvision model utilities."""
+
 import torchvision
 
 MODEL_NAME_TO_CONSTRUCTOR = {

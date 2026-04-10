@@ -1,3 +1,5 @@
+"""MMDetection configuration file for cascade_mask_rcnn_r50_fpn.py."""
+
 # model settings
 model = dict(
     type="CascadeRCNN",

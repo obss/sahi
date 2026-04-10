@@ -1,3 +1,5 @@
+"""MMDetection configuration file for coco_instance_semantic.py."""
+
 # dataset settings
 dataset_type = "CocoDataset"
 data_root = "data/coco/"

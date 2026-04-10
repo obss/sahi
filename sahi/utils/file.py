@@ -1,3 +1,5 @@
+"""File I/O utilities for SAHI."""
+
 from __future__ import annotations
 
 import glob
@@ -12,22 +14,20 @@ from pathlib import Path
 import numpy as np
 
 
-def unzip(file_path: str, dest_dir: str):
+def unzip(file_path: str, dest_dir: str) -> None:
     """Unzips compressed .zip file.
 
     Example inputs:
         file_path: 'data/01_alb_id.zip'
         dest_dir: 'data/'
     """
-
     # unzip file
     with zipfile.ZipFile(file_path) as zf:
         zf.extractall(dest_dir)
 
 
-def save_json(data, save_path, indent: int | None = None):
-    """
-    Saves json formatted data (given as "data") as save_path
+def save_json(data: object, save_path: str | Path, indent: int | None = None) -> None:
+    """Saves json formatted data (given as "data") as save_path.
 
     Args:
         data: dict
@@ -54,7 +54,10 @@ def save_json(data, save_path, indent: int | None = None):
 
 # type check when save json files
 class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
+    """JSON encoder for numpy types."""
+
+    def default(self, obj: object) -> object:
+        """Encode numpy types as JSON-serializable Python types."""
         if isinstance(obj, np.integer):
             return int(obj)
         elif isinstance(obj, np.floating):
@@ -65,9 +68,10 @@ class NumpyEncoder(json.JSONEncoder):
             return super().default(obj)
 
 
-def load_json(load_path: str, encoding: str = "utf-8"):
-    """Loads json formatted data (given as "data") from load_path Encoding type can be specified with 'encoding'
-    argument.
+def load_json(load_path: str, encoding: str = "utf-8") -> object:
+    """Load JSON formatted data from file.
+
+    Encoding type can be specified with 'encoding' argument.
 
     Args:
         load_path: str
@@ -123,7 +127,9 @@ def list_files(
     return filepath_list
 
 
-def list_files_recursively(directory: str, contains: list = [".json"], verbose: bool = True) -> tuple[list, list]:
+def list_files_recursively(
+    directory: str, contains: list[str] = [".json"], verbose: bool = True
+) -> tuple[list[str], list[str]]:
     """Walk given directory recursively and return a list of file path with desired extension.
 
     Args:
@@ -140,7 +146,6 @@ def list_files_recursively(directory: str, contains: list = [".json"], verbose: 
         abs_filepath_list : list
             List of absolute file paths
     """
-
     # define verboseprint
     verboseprint = print if verbose else lambda *a, **k: None
 
@@ -166,14 +171,14 @@ def list_files_recursively(directory: str, contains: list = [".json"], verbose: 
     return relative_filepath_list, abs_filepath_list
 
 
-def get_base_filename(path: str):
-    """Takes a file path, returns (base_filename_with_extension, base_filename_without_extension)"""
+def get_base_filename(path: str) -> tuple[str, str]:
+    """Takes a file path, returns (base_filename_with_extension, base_filename_without_extension)."""
     base_filename_with_extension = ntpath.basename(path)
     base_filename_without_extension, _ = os.path.splitext(base_filename_with_extension)
     return base_filename_with_extension, base_filename_without_extension
 
 
-def get_file_extension(path: str):
+def get_file_extension(path: str) -> str:
     """Get the file extension from a given file path.
 
     Args:
@@ -186,9 +191,8 @@ def get_file_extension(path: str):
     return file_extension
 
 
-def load_pickle(load_path):
-    """
-    Loads pickle formatted data (given as "data") from load_path
+def load_pickle(load_path: str | Path) -> object:
+    """Loads pickle formatted data (given as "data") from load_path.
 
     Args:
         load_path: str
@@ -202,9 +206,8 @@ def load_pickle(load_path):
     return data
 
 
-def save_pickle(data, save_path):
-    """
-    Saves pickle formatted data (given as "data") as save_path
+def save_pickle(data: object, save_path: str | Path) -> None:
+    """Saves pickle formatted data (given as "data") as save_path.
 
     Args:
         data: dict
@@ -224,14 +227,13 @@ def save_pickle(data, save_path):
         pickle.dump(data, outfile)
 
 
-def import_model_class(model_type, class_name):
-    """Imports a predefined detection class by class name.
+def import_model_class(model_type: str, class_name: str) -> type:
+    """Import a predefined detection model class by name.
 
     Args:
-        model_type: str
-            "yolov5", "detectron2", "mmdet", "huggingface" etc
-        model_name: str
-            Name of the detection model class (example: "MmdetDetectionModel")
+        model_type: Framework type ("yolov5", "detectron2", "mmdet", etc).
+        class_name: Name of the detection model class (e.g., "MmdetDetectionModel").
+
     Returns:
         class_: class with given path
     """
@@ -271,7 +273,7 @@ def increment_path(path: str | Path, exist_ok: bool = True, sep: str = "") -> st
         return f"{path}{sep}{n}"  # update path
 
 
-def download_from_url(from_url: str, to_path: str):
+def download_from_url(from_url: str, to_path: str) -> None:
     """Downloads a file from the given URL and saves it to the specified path.
 
     Args:
@@ -289,7 +291,7 @@ def download_from_url(from_url: str, to_path: str):
         urllib.request.urlretrieve(from_url, to_path)
 
 
-def is_colab():
+def is_colab() -> bool:
     """Check if the current environment is a Google Colab instance.
 
     Returns:

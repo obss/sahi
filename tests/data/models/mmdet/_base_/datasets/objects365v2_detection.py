@@ -1,3 +1,5 @@
+"""MMDetection configuration file for objects365v2_detection.py."""
+
 # dataset settings
 dataset_type = "Objects365V2Dataset"
 data_root = "data/Objects365/Obj365_v2/"

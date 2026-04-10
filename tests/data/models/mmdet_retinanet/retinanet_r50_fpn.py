@@ -1,3 +1,5 @@
+"""MMDetection configuration file for retinanet_r50_fpn.py."""
+
 # model settings
 model = dict(
     type="RetinaNet",

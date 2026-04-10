@@ -1,3 +1,5 @@
+"""MMDetection configuration file for rpn_r50_fpn.py."""
+
 # model settings
 model = dict(
     type="RPN",

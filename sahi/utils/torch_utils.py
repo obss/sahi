@@ -1,8 +1,10 @@
+"""Torch-related utilities for tensor operations."""
+
 from __future__ import annotations
 
 import re
 from os import environ
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 from PIL.Image import Image
@@ -27,8 +29,10 @@ def empty_cuda_cache() -> None:
 
 
 def to_float_tensor(img: np.ndarray | Image) -> torch.Tensor:
-    """Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range [0, 255] to a torch.FloatTensor of shape (C
-    x H x W).
+    """Convert PIL.Image or numpy array to torch.FloatTensor.
+
+    Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range [0, 255]
+    to a torch.FloatTensor of shape (C x H x W).
 
     Args:
         img: PIL.Image or numpy array
@@ -49,7 +53,7 @@ def to_float_tensor(img: np.ndarray | Image) -> torch.Tensor:
     return tensor
 
 
-def torch_to_numpy(img: Any) -> np.ndarray:
+def torch_to_numpy(img: torch.Tensor) -> np.ndarray:
     """Convert a torch image tensor to a numpy array in HWC format.
 
     Pixel values greater than 1 are rescaled to [0, 1] by dividing by 255.
@@ -60,10 +64,10 @@ def torch_to_numpy(img: Any) -> np.ndarray:
     Returns:
         A numpy array of shape (H, W, C) with values in [0, 1].
     """
-    img = img.numpy()
-    if img.max() > 1:
-        img /= 255
-    return img.transpose((1, 2, 0))
+    arr = img.cpu().numpy()
+    if arr.max() > 1:
+        arr /= 255
+    return arr.transpose((1, 2, 0))
 
 
 def select_device(device: str | None = None) -> str | torch.device:

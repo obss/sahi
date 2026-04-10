@@ -1,3 +1,5 @@
+"""Legacy postprocessing implementations for object prediction merging."""
+
 from __future__ import annotations
 
 import copy
@@ -17,7 +19,14 @@ class PostprocessPredictions:
         match_threshold: float = 0.5,
         match_metric: str = "IOU",
         class_agnostic: bool = True,
-    ):
+    ) -> None:
+        """Initialize the postprocessor with matching configuration.
+
+        Args:
+            match_threshold: Minimum overlap value to consider predictions matching.
+            match_metric: Metric for overlap computation, "IOU" or "IOS".
+            class_agnostic: If True, apply postprocessing across all categories.
+        """
         self.match_threshold = match_threshold
         self.class_agnostic = class_agnostic
         if match_metric == "IOU":
@@ -33,12 +42,21 @@ class PostprocessPredictions:
         return threshold_condition and category_condition
 
     @staticmethod
-    def get_score_func(object_prediction: ObjectPrediction):
+    def get_score_func(object_prediction: ObjectPrediction) -> float:
         """Used for sorting predictions."""
         return object_prediction.score.value
 
     @staticmethod
     def has_same_category_id(pred1: ObjectPrediction, pred2: ObjectPrediction) -> bool:
+        """Check if two predictions belong to the same category.
+
+        Args:
+            pred1: First ObjectPrediction instance.
+            pred2: Second ObjectPrediction instance.
+
+        Returns:
+            True if both predictions have the same category ID.
+        """
         return pred1.category.id == pred2.category.id
 
     @staticmethod
@@ -62,15 +80,29 @@ class PostprocessPredictions:
         smaller_area = np.minimum(area1, area2)
         return intersect / smaller_area
 
-    def __call__(self):
+    def __call__(
+        self,
+        object_predictions: list[ObjectPrediction],
+    ) -> list[ObjectPrediction]:
+        """Apply postprocessing to object predictions.
+
+        Args:
+            object_predictions: List of object predictions to postprocess.
+
+        Returns:
+            List of postprocessed object predictions.
+        """
         raise NotImplementedError()
 
 
 class NMSPostprocess(PostprocessPredictions):
+    """Non-Maximum Suppression postprocessor for legacy usage."""
+
     def __call__(
         self,
         object_predictions: list[ObjectPrediction],
-    ):
+    ) -> list[ObjectPrediction]:
+        """Apply NMS to object predictions."""
         source_object_predictions: list[ObjectPrediction] = copy.deepcopy(object_predictions)
         selected_object_predictions: list[ObjectPrediction] = []
         while len(source_object_predictions) > 0:
@@ -93,10 +125,13 @@ class NMSPostprocess(PostprocessPredictions):
 
 
 class UnionMergePostprocess(PostprocessPredictions):
+    """Union merging postprocessor for overlapping predictions."""
+
     def __call__(
         self,
         object_predictions: list[ObjectPrediction],
-    ):
+    ) -> list[ObjectPrediction]:
+        """Apply union merging to overlapping object predictions."""
         source_object_predictions: list[ObjectPrediction] = copy.deepcopy(object_predictions)
         selected_object_predictions: list[ObjectPrediction] = []
         while len(source_object_predictions) > 0:
@@ -124,23 +159,23 @@ class UnionMergePostprocess(PostprocessPredictions):
         pred1: ObjectPrediction,
         pred2: ObjectPrediction,
     ) -> ObjectPrediction:
-        shift_amount = pred1.bbox.shift_amount
+        shift_amount = list(pred1.bbox.shift_amount)
         merged_bbox: BoundingBox = self._get_merged_bbox(pred1, pred2)
         merged_score: float = self._get_merged_score(pred1, pred2)
         merged_category: Category = self._get_merged_category(pred1, pred2)
         if pred1.mask and pred2.mask:
             merged_mask: Mask = self._get_merged_mask(pred1, pred2)
-            bool_mask = merged_mask.bool_mask
+            segmentation = merged_mask.segmentation
             full_shape = merged_mask.full_shape
         else:
-            bool_mask = None
+            segmentation = None
             full_shape = None
         return ObjectPrediction(
             bbox=merged_bbox.to_xyxy(),
             score=merged_score,
             category_id=merged_category.id,
             category_name=merged_category.name,
-            bool_mask=bool_mask,
+            segmentation=segmentation,
             shift_amount=shift_amount,
             full_shape=full_shape,
         )
@@ -154,8 +189,8 @@ class UnionMergePostprocess(PostprocessPredictions):
 
     @staticmethod
     def _get_merged_bbox(pred1: ObjectPrediction, pred2: ObjectPrediction) -> BoundingBox:
-        box1: list[int] = pred1.bbox.to_xyxy()
-        box2: list[int] = pred2.bbox.to_xyxy()
+        box1: list[float] = pred1.bbox.to_xyxy()
+        box2: list[float] = pred2.bbox.to_xyxy()
         bbox = BoundingBox(box=calculate_box_union(box1, box2))
         return bbox
 
@@ -171,9 +206,13 @@ class UnionMergePostprocess(PostprocessPredictions):
     def _get_merged_mask(pred1: ObjectPrediction, pred2: ObjectPrediction) -> Mask:
         mask1 = pred1.mask
         mask2 = pred2.mask
+        if mask1 is None or mask2 is None:
+            raise ValueError("Both predictions must have masks to merge them")
         union_mask = np.logical_or(mask1.bool_mask, mask2.bool_mask)
+        from sahi.utils.cv import get_coco_segmentation_from_bool_mask
+
         return Mask(
-            bool_mask=union_mask,
+            segmentation=get_coco_segmentation_from_bool_mask(union_mask),
             full_shape=mask1.full_shape,
             shift_amount=mask1.shift_amount,
         )

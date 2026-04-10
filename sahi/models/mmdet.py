@@ -1,3 +1,9 @@
+"""MMDetection detection model wrapper for SAHI.
+
+Provides integration with OpenMMLab's MMDetection framework for object detection
+and instance segmentation.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -20,6 +26,8 @@ from mmengine.infer.infer import ModelType  # noqa: E402
 
 
 class DetInferencerWrapper(DetInferencer):
+    """Wrapper around MMDetection DetInferencer for custom inference pipeline."""
+
     def __init__(
         self,
         model: ModelType | str | None = None,
@@ -29,12 +37,13 @@ class DetInferencerWrapper(DetInferencer):
         palette: str = "none",
         image_size: int | None = None,
     ) -> None:
+        """Initialize the DetInferencer wrapper."""
         self.image_size = image_size
         super().__init__(model, weights, device, scope, palette)
 
     def __call__(self, images: list[np.ndarray], batch_size: int = 1) -> dict:
-        """
-        Emulate DetInferencer(images) without progressbar
+        """Emulate DetInferencer(images) without progressbar.
+
         Args:
             images: list of np.ndarray
                 A list of numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
@@ -42,7 +51,7 @@ class DetInferencerWrapper(DetInferencer):
                 Inference batch size. Defaults to 1.
         """
         inputs = self.preprocess(images, batch_size=batch_size)
-        results_dict = {"predictions": [], "visualization": []}
+        results_dict: dict[str, list] = {"predictions": [], "visualization": []}
         for _, data in inputs:
             preds = self.forward(data)
             results = self.postprocess(
@@ -80,10 +89,15 @@ class DetInferencerWrapper(DetInferencer):
 
 
 class MmdetDetectionModel(DetectionModel):
+    """MMDetection object detection model.
+
+    Wraps MMDetection's DetInferencer for detection and instance segmentation.
+    """
+
     def __init__(
         self,
         model_path: str | None = None,
-        model: Any | None = None,
+        model: object | None = None,
         config_path: str | None = None,
         device: str | None = None,
         mask_threshold: float = 0.5,
@@ -93,7 +107,8 @@ class MmdetDetectionModel(DetectionModel):
         load_at_init: bool = True,
         image_size: int | None = None,
         scope: str = "mmdet",
-    ):
+    ) -> None:
+        """Initialize MMDetection detection model."""
         self.scope = scope
         self.image_size = image_size
         existing_packages = getattr(self, "required_packages", None) or []
@@ -111,24 +126,24 @@ class MmdetDetectionModel(DetectionModel):
             image_size,
         )
 
-    def load_model(self):
+    def load_model(self) -> None:
         """Detection model is initialized and set to self.model."""
-
         # create model
         model = DetInferencerWrapper(
-            self.config_path, self.model_path, device=self.device, scope=self.scope, image_size=self.image_size
+            self.config_path, self.model_path, device=str(self.device), scope=self.scope, image_size=self.image_size
         )
 
         self.set_model(model)
 
-    def set_model(self, model: Any):
+    def set_model(self, model: Any, **kwargs: Any) -> None:
         """Sets the underlying MMDetection model.
 
         Args:
             model: Any
                 A MMDetection model
+            **kwargs: Any
+                Additional keyword arguments for model setup.
         """
-
         # set self.model
         self.model = model
 
@@ -137,14 +152,13 @@ class MmdetDetectionModel(DetectionModel):
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, image: np.ndarray) -> None:
         """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
 
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
@@ -163,25 +177,25 @@ class MmdetDetectionModel(DetectionModel):
         self._original_predictions = prediction_result["predictions"]
 
     @property
-    def num_categories(self):
+    def num_categories(self) -> int:
         """Returns number of categories."""
         return len(self.category_names)
 
     @property
-    def has_mask(self):
+    def has_mask(self) -> bool:
         """Returns if model output contains segmentation mask.
 
         Considers both single dataset and ConcatDataset scenarios.
         """
 
-        def check_pipeline_for_mask(pipeline):
+        def check_pipeline_for_mask(pipeline: list) -> bool:
             return any(
                 isinstance(item, dict) and any("mask" in key and value is True for key, value in item.items())
                 for item in pipeline
             )
 
         # Access the dataset from the configuration
-        dataset_config = self.model.cfg["train_dataloader"]["dataset"]
+        dataset_config = self.model.cfg["train_dataloader"]["dataset"]  # type: ignore[attr-defined]
 
         if dataset_config["type"] == "ConcatDataset":
             # If using ConcatDataset, check each dataset individually
@@ -197,8 +211,9 @@ class MmdetDetectionModel(DetectionModel):
         return False
 
     @property
-    def category_names(self):
-        classes = self.model.model.dataset_meta["classes"]
+    def category_names(self) -> tuple | list:
+        """Return category names from model metadata."""
+        classes = self.model.model.dataset_meta["classes"]  # type: ignore[attr-defined]
         if isinstance(classes, str):
             # https://github.com/open-mmlab/mmdetection/pull/4973
             return (classes,)
@@ -207,10 +222,12 @@ class MmdetDetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: list[list[int]] | None = [[0, 0]],
-        full_shape_list: list[list[int]] | None = None,
-    ):
-        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        shift_amount_list: list[list[int | float]] | None = [[0, 0]],
+        full_shape_list: list[list[int | float]] | None = None,
+    ) -> None:
+        """Convert predictions to ObjectPrediction list.
+
+        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 
         Args:
@@ -227,18 +244,20 @@ class MmdetDetectionModel(DetectionModel):
             can_decode_rle = True
         except ImportError:
             can_decode_rle = False
-        original_predictions = self._original_predictions
+        assert self._original_predictions is not None
+        original_predictions: list = self._original_predictions
+        assert self.category_mapping is not None
         category_mapping = self.category_mapping
 
         # compatilibty for sahi v0.8.15
-        shift_amount_list = fix_shift_amount_list(shift_amount_list)
-        full_shape_list = fix_full_shape_list(full_shape_list)
+        shift_amount_list_typed: list[list[int | float]] = fix_shift_amount_list(shift_amount_list)
+        full_shape_list_typed: list[list[int | float]] | None = fix_full_shape_list(full_shape_list)
 
         # parse boxes and masks from predictions
         object_prediction_list_per_image = []
         for image_ind, original_prediction in enumerate(original_predictions):
-            shift_amount = shift_amount_list[image_ind]
-            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+            shift_amount = [int(x) for x in shift_amount_list_typed[image_ind]]
+            full_shape = None if full_shape_list_typed is None else [int(x) for x in full_shape_list_typed[image_ind]]
 
             boxes = original_prediction["bboxes"]
             scores = original_prediction["scores"]

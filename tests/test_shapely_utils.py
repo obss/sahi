@@ -1,10 +1,18 @@
+"""Tests for Shapely utility functions."""
+
+from __future__ import annotations
+
+import pytest
 from shapely.geometry import GeometryCollection, Polygon
 
 from sahi.utils.shapely import MultiPolygon, ShapelyAnnotation, get_shapely_box, get_shapely_multipolygon
 
 
 class TestShapelyUtils:
-    def test_get_shapely_box(self):
+    """Test Shapely utility functions."""
+
+    def test_get_shapely_box(self) -> None:
+        """Test creating a Shapely box."""
         x, y, width, height = 1, 1, 256, 256
         shapely_box = get_shapely_box(x, y, width, height)
 
@@ -12,7 +20,8 @@ class TestShapelyUtils:
         assert shapely_box.area == 65536
         assert shapely_box.bounds == (1, 1, 257, 257)
 
-    def test_get_shapely_multipolygon(self):
+    def test_get_shapely_multipolygon(self) -> None:
+        """Test creating a Shapely MultiPolygon from COCO segmentation."""
         coco_segmentation = [[1, 1, 325, 125, 250, 200, 5, 200]]
         shapely_multipolygon = get_shapely_multipolygon(coco_segmentation)
 
@@ -20,13 +29,15 @@ class TestShapelyUtils:
         assert shapely_multipolygon.area == 41177.5
         assert shapely_multipolygon.bounds == (1, 1, 325, 200)
 
-    def test_get_shapely_multipolygon_naughty(self):
+    def test_get_shapely_multipolygon_naughty(self) -> None:
+        """Test handling self-intersecting polygons."""
         # self-intersection case
         coco_segmentation = [[3559.0, 2046.86, 3.49, 2060.0, 3540.9, 3249.7, 2060.0, 3239.61, 2052.87]]
         shapely_multipolygon = get_shapely_multipolygon(coco_segmentation)
         assert shapely_multipolygon.is_valid
 
-    def test_shapely_annotation(self):
+    def test_shapely_annotation(self) -> None:
+        """Test ShapelyAnnotation conversions and properties."""
         # init shapely_annotation from coco segmentation
         segmentation = [[1, 1, 325, 125.2, 250, 200, 5, 200]]
         shapely_multipolygon = get_shapely_multipolygon(segmentation)
@@ -81,7 +92,8 @@ class TestShapelyUtils:
         assert shapely_annotation.area == MultiPolygon([shapely_polygon]).area
         assert shapely_annotation.multipolygon == MultiPolygon([shapely_polygon])
 
-    def test_get_intersection(self):
+    def test_get_intersection(self) -> None:
+        """Test intersection between annotations and boxes."""
         x, y, width, height = 1, 1, 256, 256
         shapely_box = get_shapely_box(x, y, width, height)
 
@@ -115,7 +127,8 @@ class TestShapelyUtils:
 
         assert intersection_shapely_annotation.to_xyxy() == [0, 0, 256, 199]
 
-    def test_get_empty_intersection(self):
+    def test_get_empty_intersection(self) -> None:
+        """Test empty intersection when boxes don't overlap."""
         x, y, width, height = 300, 300, 256, 256
         shapely_box = get_shapely_box(x, y, width, height)
 
@@ -128,7 +141,10 @@ class TestShapelyUtils:
 
         assert intersection_shapely_annotation.to_xywh() == []
 
-    def test_get_shapely_multipolygon_make_valid_returns_geometry_collection(self, monkeypatch):
+    def test_get_shapely_multipolygon_make_valid_returns_geometry_collection(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Test handling GeometryCollection returned by make_valid."""
         # Prepare simple polygons to be returned by make_valid inside a GeometryCollection
         poly1 = Polygon([(0, 0), (1, 0), (1, 1), (0, 1)])
         poly2 = Polygon([(2, 2), (3, 2), (3, 3), (2, 3)])
@@ -137,7 +153,7 @@ class TestShapelyUtils:
         # Monkeypatch make_valid to return a GeometryCollection containing a Polygon and a MultiPolygon
         import sahi.utils.shapely as shapely_module
 
-        def fake_make_valid(_):
+        def fake_make_valid(_: object) -> object:
             return GeometryCollection([poly1, multi])
 
         monkeypatch.setattr(shapely_module, "make_valid", fake_make_valid)

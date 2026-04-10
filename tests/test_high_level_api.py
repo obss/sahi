@@ -1,14 +1,22 @@
+"""Tests for high-level SAHI API."""
+
+from __future__ import annotations
+
+
 class TestHighLevelApi:
-    def test_bounding_box(self):
+    """Test high-level SAHI API classes."""
+
+    def test_bounding_box(self) -> None:
+        """Test BoundingBox functionality."""
         from sahi import BoundingBox
 
         bbox_minmax = [30.0, 30.0, 100.0, 150.0]
         shift_amount = [50, 40]
 
-        bbox = BoundingBox(bbox_minmax, shift_amount=[0, 0])
+        bbox = BoundingBox(bbox_minmax, shift_amount=(0, 0))
         expanded_bbox = bbox.get_expanded_box(ratio=0.1)
 
-        bbox = BoundingBox(bbox_minmax, shift_amount=shift_amount)
+        bbox = BoundingBox(bbox_minmax, shift_amount=(shift_amount[0], shift_amount[1]))
         shifted_bbox = bbox.get_shifted_box()
 
         # compare
@@ -16,7 +24,8 @@ class TestHighLevelApi:
         assert expanded_bbox.to_xyxy() == [23.0, 18.0, 107.0, 162.0]
         assert shifted_bbox.to_xyxy() == [80.0, 70.0, 150.0, 190.0]
 
-    def test_category(self):
+    def test_category(self) -> None:
+        """Test Category class."""
         from sahi import Category
 
         category_id = 1
@@ -25,7 +34,8 @@ class TestHighLevelApi:
         assert category.id == category_id
         assert category.name == category_name
 
-    def test_mask(self):
+    def test_mask(self) -> None:
+        """Test Mask class."""
         from sahi import Mask
 
         coco_segmentation = [[1.0, 1.0, 325.0, 125.0, 250.0, 200.0, 5.0, 200.0]]
@@ -38,10 +48,11 @@ class TestHighLevelApi:
         assert mask.full_shape_width == full_shape_width
         assert mask.bool_mask[11, 2]
 
-    def test_object_prediction(self):
+    def test_object_prediction(self) -> None:
+        """Test ObjectPrediction class and factory methods."""
         from sahi import ObjectPrediction
 
-        bbox = [100, 200, 150, 230]
+        bbox = [100.0, 200.0, 150.0, 230.0]
         coco_bbox = [bbox[0], bbox[1], bbox[2] - bbox[0], bbox[3] - bbox[1]]
         category_id = 2
         category_name = "car"
@@ -94,7 +105,8 @@ class TestHighLevelApi:
         assert object_annotation3.category.id == category_id
         assert object_annotation3.category.name == category_name
 
-    def test_detection_model(self):
+    def test_detection_model(self) -> None:
+        """Test DetectionModel base class."""
         from sahi import DetectionModel
 
         MODEL_PATH = "model_path"

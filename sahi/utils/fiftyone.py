@@ -1,6 +1,11 @@
+"""FiftyOne dataset and visualization utilities."""
+
+from __future__ import annotations
+
 import os
 import subprocess
 import sys
+from typing import Any
 
 from sahi.utils.import_utils import is_available
 
@@ -13,11 +18,19 @@ if is_available("fiftyone"):
 
     # import fo utilities
     import fiftyone as fo
-    from fiftyone.utils.coco import COCODetectionDatasetImporter as BaseCOCODetectionDatasetImporter
-    from fiftyone.utils.coco import _get_matching_image_ids, load_coco_detection_annotations
+    from fiftyone.utils.coco import (
+        COCODetectionDatasetImporter as BaseCOCODetectionDatasetImporter,
+    )
+    from fiftyone.utils.coco import (
+        _get_matching_image_ids,
+        load_coco_detection_annotations,
+    )
 
     class COCODetectionDatasetImporter(BaseCOCODetectionDatasetImporter):
-        def setup(self):
+        """Custom COCO detection dataset importer for FiftyOne."""
+
+        def setup(self) -> None:
+            """Set up the importer with COCO dataset information."""
             if self.labels_path is not None and os.path.isfile(self.labels_path):
                 (
                     info,
@@ -64,14 +77,16 @@ if is_available("fiftyone"):
             self._annotations = annotations
             self._filenames = filenames
 
-    def create_fiftyone_dataset_from_coco_file(coco_image_dir: str, coco_json_path: str):
+    def create_fiftyone_dataset_from_coco_file(coco_image_dir: str, coco_json_path: str) -> Any:
+        """Create a FiftyOne dataset from COCO format files."""
         coco_importer = COCODetectionDatasetImporter(
             data_path=coco_image_dir, labels_path=coco_json_path, include_id=True
         )
         dataset = fo.Dataset.from_importer(coco_importer, label_field="gt")
         return dataset
 
-    def launch_fiftyone_app(coco_image_dir: str, coco_json_path: str):
+    def launch_fiftyone_app(coco_image_dir: str, coco_json_path: str) -> Any:
+        """Launch FiftyOne app with COCO dataset."""
         dataset = create_fiftyone_dataset_from_coco_file(coco_image_dir, coco_json_path)
         session = fo.launch_app()
         session.dataset = dataset

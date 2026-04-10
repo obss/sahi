@@ -1,7 +1,13 @@
+"""Annotation classes for object detection.
+
+Contains classes for handling bounding boxes, categories, masks, and annotations.
+"""
+
 from __future__ import annotations
 
 import copy
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -12,6 +18,13 @@ from sahi.utils.cv import (
     get_coco_segmentation_from_bool_mask,
 )
 from sahi.utils.shapely import ShapelyAnnotation
+
+try:
+    import imantics
+
+    ImaneticsAnnotationType = imantics.annotation.Annotation
+except ImportError:
+    ImaneticsAnnotationType = object  # type: ignore[misc, assignment]
 
 
 @dataclass(frozen=True)
@@ -37,46 +50,56 @@ class BoundingBox:
         ```
     """
 
-    box: tuple[float, float, float, float] | list[float]
+    box: tuple[float, float, float, float] | list[float] | list[int]
     shift_amount: tuple[int, int] = (0, 0)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
+        """Validate bounding box coordinates and shift amount."""
         if len(self.box) != 4 or any(coord < 0 for coord in self.box):
             raise ValueError("box must be 4 non-negative floats: [minx, miny, maxx, maxy]")
         if len(self.shift_amount) != 2:
             raise ValueError("shift_amount must be 2 integers: [shift_x, shift_y]")
 
     @property
-    def minx(self):
+    def minx(self) -> float:
+        """Return minimum x-coordinate."""
         return self.box[0]
 
     @property
-    def miny(self):
+    def miny(self) -> float:
+        """Return minimum y-coordinate."""
         return self.box[1]
 
     @property
-    def maxx(self):
+    def maxx(self) -> float:
+        """Return maximum x-coordinate."""
         return self.box[2]
 
     @property
-    def maxy(self):
+    def maxy(self) -> float:
+        """Return maximum y-coordinate."""
         return self.box[3]
 
     @property
-    def shift_x(self):
+    def shift_x(self) -> int:
+        """Return x-coordinate shift."""
         return self.shift_amount[0]
 
     @property
-    def shift_y(self):
+    def shift_y(self) -> int:
+        """Return y-coordinate shift."""
         return self.shift_amount[1]
 
     @property
-    def area(self):
+    def area(self) -> float:
+        """Return bounding box area."""
         return (self.maxx - self.minx) * (self.maxy - self.miny)
 
-    def get_expanded_box(self, ratio: float = 0.1, max_x: int | None = None, max_y: int | None = None):
-        """Returns an expanded bounding box by increasing its size by a given ratio. The expansion is applied equally in
-        all directions. Optionally, the expanded box can be clipped to maximum x and y boundaries.
+    def get_expanded_box(self, ratio: float = 0.1, max_x: int | None = None, max_y: int | None = None) -> BoundingBox:
+        """Get an expanded bounding box by increasing its size by a given ratio.
+
+        The expansion is applied equally in all directions. Optionally, the expanded box can be
+        clipped to maximum x and y boundaries.
 
         Args:
             ratio (float, optional): The proportion by which to expand the box size.
@@ -89,7 +112,6 @@ class BoundingBox:
         Returns:
             BoundingBox: A new BoundingBox instance representing the expanded box.
         """
-
         w = self.maxx - self.minx
         h = self.maxy - self.miny
         y_mar = int(h * ratio)
@@ -101,44 +123,40 @@ class BoundingBox:
         box: list[float] = [minx, miny, maxx, maxy]
         return BoundingBox(box)
 
-    def to_xywh(self):
-        """Returns [xmin, ymin, width, height]
+    def to_xywh(self) -> list[float]:
+        """Convert to [xmin, ymin, width, height] format.
 
         Returns:
-            List[float]: A list containing the bounding box in the format [xmin, ymin, width, height].
+            list[float]: A list containing the bounding box in the format [xmin, ymin, width, height].
         """
-
         return [self.minx, self.miny, self.maxx - self.minx, self.maxy - self.miny]
 
-    def to_coco_bbox(self):
-        """
-        Returns the bounding box in COCO format: [xmin, ymin, width, height]
+    def to_coco_bbox(self) -> list[float]:
+        """Convert to COCO format: [xmin, ymin, width, height].
 
         Returns:
-            List[float]: A list containing the bounding box in COCO format.
+            list[float]: A list containing the bounding box in COCO format.
         """
         return self.to_xywh()
 
-    def to_xyxy(self):
-        """
-        Returns: [xmin, ymin, xmax, ymax]
+    def to_xyxy(self) -> list[float]:
+        """Convert to [xmin, ymin, xmax, ymax] format.
 
         Returns:
-            List[float]: A list containing the bounding box in the format [xmin, ymin, xmax, ymax].
+            list[float]: A list containing the bounding box in the format [xmin, ymin, xmax, ymax].
         """
         return [self.minx, self.miny, self.maxx, self.maxy]
 
-    def to_voc_bbox(self):
-        """
-        Returns the bounding box in VOC format: [xmin, ymin, xmax, ymax]
+    def to_voc_bbox(self) -> list[float]:
+        """Convert to VOC format: [xmin, ymin, xmax, ymax].
 
         Returns:
-            List[float]: A list containing the bounding box in VOC format.
+            list[float]: A list containing the bounding box in VOC format.
         """
         return self.to_xyxy()
 
-    def get_shifted_box(self):
-        """Returns shifted BoundingBox.
+    def get_shifted_box(self) -> BoundingBox:
+        """Get shifted BoundingBox.
 
         Returns:
             BoundingBox: A new BoundingBox instance representing the shifted box.
@@ -151,7 +169,8 @@ class BoundingBox:
         ]
         return BoundingBox(box)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return string representation of bounding box."""
         return (
             f"BoundingBox: <{(self.minx, self.miny, self.maxx, self.maxy)}, "
             f"w: {self.maxx - self.minx}, h: {self.maxy - self.miny}>"
@@ -170,13 +189,15 @@ class Category:
     id: int
     name: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
+        """Validate category id and name types."""
         if not isinstance(self.id, int):
             raise TypeError("id should be integer")
         if not isinstance(self.name, str):
             raise TypeError("name should be string")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return string representation of category."""
         return f"Category: <id: {self.id}, name: {self.name}>"
 
 
@@ -184,7 +205,7 @@ class Mask:
     """Init Mask from coco segmentation representation.
 
     Args:
-        segmentation : List[List]
+        segmentation: List[List]
             [
                 [x1, y1, x2, y2, x3, y3, ...],
                 [x1, y1, x2, y2, x3, y3, ...],
@@ -199,18 +220,23 @@ class Mask:
 
     def __init__(
         self,
-        segmentation: list[list[float]],
-        full_shape: list[int],
-        shift_amount: list = [0, 0],
-    ):
+        segmentation: list[list[float]] | np.ndarray,
+        full_shape: list[int] | list[int | float] | None,
+        shift_amount: list[int] | list[int | float] = [0, 0],
+    ) -> None:
+        """Initialize Mask object."""
         if full_shape is None:
             raise ValueError("full_shape must be provided")  # pyright: ignore[reportUnreachable]
 
-        self.shift_x = shift_amount[0]
-        self.shift_y = shift_amount[1]
-        self.full_shape_height = full_shape[0]
-        self.full_shape_width = full_shape[1]
-        self.segmentation = segmentation
+        self.shift_x = int(shift_amount[0])
+        self.shift_y = int(shift_amount[1])
+        self.full_shape_height = int(full_shape[0])
+        self.full_shape_width = int(full_shape[1])
+        # Ensure segmentation is a list
+        if isinstance(segmentation, np.ndarray):
+            self.segmentation: list[list[float]] = segmentation.tolist()
+        else:
+            self.segmentation = segmentation
 
     @classmethod
     def from_float_mask(
@@ -218,9 +244,10 @@ class Mask:
         mask: np.ndarray,
         full_shape: list[int],
         mask_threshold: float = 0.5,
-        shift_amount: list = [0, 0],
-    ):
-        """
+        shift_amount: list[int] | None = None,
+    ) -> Mask:
+        """Create Mask from float mask array.
+
         Args:
             mask: np.ndarray of np.float elements
                 Mask values between 0 and 1 (should have a shape of height*width)
@@ -230,9 +257,11 @@ class Mask:
                 To shift the box and mask predictions from sliced image
                 to full sized image, should be in the form of [shift_x, shift_y]
             full_shape: List[int]
-                Size of the full image after shifting, should be in the form of [height, width]
+                Size of the full image after shifting, should be in the form of [height, width].
         """
         bool_mask = mask > mask_threshold
+        if shift_amount is None:
+            shift_amount = [0, 0]
         return cls(
             segmentation=get_coco_segmentation_from_bool_mask(bool_mask),
             shift_amount=shift_amount,
@@ -244,9 +273,10 @@ class Mask:
         cls,
         bool_mask: np.ndarray,
         full_shape: list[int],
-        shift_amount: list = [0, 0],
-    ):
-        """
+        shift_amount: list[int] | None = None,
+    ) -> Mask:
+        """Create Mask from boolean mask array.
+
         Args:
             bool_mask: np.ndarray with bool elements
                 2D mask of object, should have a shape of height*width
@@ -254,8 +284,10 @@ class Mask:
                 Size of the full image, should be in the form of [height, width]
             shift_amount: List[int]
                 To shift the box and mask predictions from sliced image to full
-                sized image, should be in the form of [shift_x, shift_y]
+                sized image, should be in the form of [shift_x, shift_y].
         """
+        if shift_amount is None:
+            shift_amount = [0, 0]
         return cls(
             segmentation=get_coco_segmentation_from_bool_mask(bool_mask),
             shift_amount=shift_amount,
@@ -264,26 +296,30 @@ class Mask:
 
     @property
     def bool_mask(self) -> np.ndarray:
-        return get_bool_mask_from_coco_segmentation(
-            self.segmentation, width=self.full_shape[1], height=self.full_shape[0]
-        )
+        """Return boolean mask representation."""
+        # Ensure segmentation is list[list[float]] for the utility function
+        seg = self.segmentation
+        if isinstance(seg, np.ndarray):
+            seg = seg.tolist()
+        return get_bool_mask_from_coco_segmentation(seg, width=self.full_shape_width, height=self.full_shape_height)
 
     @property
     def shape(self) -> list[int]:
-        """Returns mask shape as [height, width]"""
+        """Returns mask shape as [height, width]."""
         return [self.bool_mask.shape[0], self.bool_mask.shape[1]]
 
     @property
     def full_shape(self) -> list[int]:
-        """Returns full mask shape after shifting as [height, width]"""
+        """Returns full mask shape after shifting as [height, width]."""
         return [self.full_shape_height, self.full_shape_width]
 
     @property
-    def shift_amount(self):
-        """Returns the shift amount of the mask slice as [shift_x, shift_y]"""
+    def shift_amount(self) -> list[int]:
+        """Returns the shift amount of the mask slice as [shift_x, shift_y]."""
         return [self.shift_x, self.shift_y]
 
     def get_shifted_mask(self) -> Mask:
+        """Return shifted mask."""
         # Confirm full_shape is specified
         if (self.full_shape_height is None) or (self.full_shape_width is None):
             raise ValueError("full_shape is None")
@@ -304,14 +340,15 @@ class ObjectAnnotation:
 
     def __init__(
         self,
-        bbox: list[int] | None = None,
-        segmentation: np.ndarray | None = None,
+        bbox: list[float] | None = None,
+        segmentation: np.ndarray | list[list[float]] | None = None,
         category_id: int | None = None,
         category_name: str | None = None,
-        shift_amount: list[int] | None = [0, 0],
-        full_shape: list[int] | None = None,
-    ):
-        """
+        shift_amount: list[int] | list[int | float] | None = None,
+        full_shape: list[int] | list[int | float] | None = None,
+    ) -> None:
+        """Initialize ObjectAnnotation.
+
         Args:
             bbox: List
                 [minx, miny, maxx, maxy]
@@ -330,12 +367,15 @@ class ObjectAnnotation:
                 to full sized image, should be in the form of [shift_x, shift_y]
             full_shape: List
                 Size of the full image after shifting, should be in
-                the form of [height, width]
+                the form of [height, width].
         """
         if not isinstance(category_id, int):
             raise ValueError("category_id must be an integer")
         if (bbox is None) and (segmentation is None):
             raise ValueError("you must provide a bbox or segmentation")
+
+        if shift_amount is None:
+            shift_amount = [0, 0]
 
         self.mask: Mask | None = None
         if segmentation is not None:
@@ -344,7 +384,9 @@ class ObjectAnnotation:
                 shift_amount=shift_amount,
                 full_shape=full_shape,
             )
-            bbox_from_segmentation = get_bbox_from_coco_segmentation(segmentation)
+            # Convert to list if ndarray for get_bbox_from_coco_segmentation
+            seg_for_bbox = segmentation if not isinstance(segmentation, np.ndarray) else segmentation.tolist()
+            bbox_from_segmentation = get_bbox_from_coco_segmentation(seg_for_bbox)  # type: ignore[arg-type]
             # https://github.com/obss/sahi/issues/235
             if bbox_from_segmentation is not None:
                 bbox = bbox_from_segmentation
@@ -352,8 +394,11 @@ class ObjectAnnotation:
                 raise ValueError("Invalid segmentation mask.")
 
         # if bbox is a numpy object, convert it to python List[float]
-        if type(bbox).__module__ == "numpy":
+        if isinstance(bbox, np.ndarray):
             bbox = copy.deepcopy(bbox).tolist()
+
+        # bbox must not be None at this point
+        assert bbox is not None
 
         # make sure bbox coords lie inside [0, image_size]
         xmin = max(bbox[0], 0)
@@ -365,8 +410,9 @@ class ObjectAnnotation:
             xmax = bbox[2]
             ymax = bbox[3]
         bbox = [xmin, ymin, xmax, ymax]
-        # set bbox
-        self.bbox = BoundingBox(bbox, shift_amount)
+        # set bbox - convert shift_amount to tuple for BoundingBox
+        shift_amount_tuple: tuple[int, int] = (int(shift_amount[0]), int(shift_amount[1]))
+        self.bbox = BoundingBox(bbox, shift_amount_tuple)
 
         category_name = category_name if category_name else str(category_id)
         self.category = Category(
@@ -379,13 +425,13 @@ class ObjectAnnotation:
     @classmethod
     def from_bool_mask(
         cls,
-        bool_mask,
+        bool_mask: np.ndarray,
         category_id: int | None = None,
         category_name: str | None = None,
-        shift_amount: list[int] | None = [0, 0],
+        shift_amount: list[int] | None = None,
         full_shape: list[int] | None = None,
-    ):
-        """Creates ObjectAnnotation from bool_mask (2D np.ndarray)
+    ) -> ObjectAnnotation:
+        """Create ObjectAnnotation from bool_mask (2D np.ndarray).
 
         Args:
             bool_mask: np.ndarray with bool elements
@@ -403,7 +449,7 @@ class ObjectAnnotation:
         segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
         return cls(
             category_id=category_id,
-            segmentation=segmentation,
+            segmentation=segmentation,  # type: ignore[arg-type]
             category_name=category_name,
             shift_amount=shift_amount,
             full_shape=full_shape,
@@ -412,14 +458,15 @@ class ObjectAnnotation:
     @classmethod
     def from_coco_segmentation(
         cls,
-        segmentation,
+        segmentation: list[list[float]] | list[list[int]],
         full_shape: list[int],
         category_id: int | None = None,
         category_name: str | None = None,
-        shift_amount: list[int] | None = [0, 0],
-    ):
-        """
-        Creates ObjectAnnotation from coco segmentation:
+        shift_amount: list[int] | None = None,
+    ) -> ObjectAnnotation:
+        """Create ObjectAnnotation from coco segmentation format.
+
+        The segmentation format is:
         [
             [x1, y1, x2, y2, x3, y3, ...],
             [x1, y1, x2, y2, x3, y3, ...],
@@ -445,7 +492,7 @@ class ObjectAnnotation:
         """
         return cls(
             category_id=category_id,
-            segmentation=segmentation,
+            segmentation=segmentation,  # type: ignore[arg-type]
             category_name=category_name,
             shift_amount=shift_amount,
             full_shape=full_shape,
@@ -454,13 +501,13 @@ class ObjectAnnotation:
     @classmethod
     def from_coco_bbox(
         cls,
-        bbox: list[int],
+        bbox: list[float] | list[int],
         category_id: int | None = None,
         category_name: str | None = None,
-        shift_amount: list[int] | None = [0, 0],
+        shift_amount: list[int] | None = None,
         full_shape: list[int] | None = None,
-    ):
-        """Creates ObjectAnnotation from coco bbox [minx, miny, width, height]
+    ) -> ObjectAnnotation:
+        """Create ObjectAnnotation from coco bbox [minx, miny, width, height].
 
         Args:
             bbox: List
@@ -494,10 +541,12 @@ class ObjectAnnotation:
         annotation_dict: dict,
         full_shape: list[int],
         category_name: str | None = None,
-        shift_amount: list[int] | None = [0, 0],
-    ):
-        """Creates ObjectAnnotation object from category name and COCO formatted annotation dict (with fields "bbox",
-        "segmentation", "category_id").
+        shift_amount: list[int] | None = None,
+    ) -> ObjectAnnotation:
+        """Create ObjectAnnotation from COCO annotation dict.
+
+        Converts a COCO formatted annotation dict (with fields "bbox",
+        "segmentation", "category_id") to ObjectAnnotation.
 
         Args:
             annotation_dict: dict
@@ -534,9 +583,9 @@ class ObjectAnnotation:
         full_shape: list[int],
         category_id: int | None = None,
         category_name: str | None = None,
-        shift_amount: list[int] | None = [0, 0],
-    ):
-        """Creates ObjectAnnotation from shapely_utils.ShapelyAnnotation.
+        shift_amount: list[int] | None = None,
+    ) -> ObjectAnnotation:
+        """Create ObjectAnnotation from shapely_utils.ShapelyAnnotation.
 
         Args:
             annotation: shapely_utils.ShapelyAnnotation
@@ -552,7 +601,7 @@ class ObjectAnnotation:
         """
         return cls(
             category_id=category_id,
-            segmentation=annotation.to_coco_segmentation(),
+            segmentation=annotation.to_coco_segmentation(),  # type: ignore[arg-type]
             category_name=category_name,
             shift_amount=shift_amount,
             full_shape=full_shape,
@@ -561,11 +610,11 @@ class ObjectAnnotation:
     @classmethod
     def from_imantics_annotation(
         cls,
-        annotation,
-        shift_amount: list[int] | None = [0, 0],
+        annotation: Any,
+        shift_amount: list[int] | None = None,
         full_shape: list[int] | None = None,
-    ):
-        """Creates ObjectAnnotation from imantics.annotation.Annotation.
+    ) -> ObjectAnnotation:
+        """Create ObjectAnnotation from imantics.annotation.Annotation.
 
         Args:
             annotation: imantics.annotation.Annotation
@@ -575,42 +624,44 @@ class ObjectAnnotation:
             full_shape: List
                 Size of the full image, should be in the form of [height, width]
         """
+        if shift_amount is None:
+            shift_amount = [0, 0]
         return cls(
             category_id=annotation.category.id,
-            bool_mask=annotation.mask.array,
+            segmentation=get_coco_segmentation_from_bool_mask(annotation.mask.array),
             category_name=annotation.category.name,
             shift_amount=shift_amount,
             full_shape=full_shape,
         )
 
     def to_coco_annotation(self) -> CocoAnnotation:
-        """Returns sahi.utils.coco.CocoAnnotation representation of ObjectAnnotation."""
+        """Convert to sahi.utils.coco.CocoAnnotation representation."""
         if self.mask:
             coco_annotation = CocoAnnotation.from_coco_segmentation(
-                segmentation=self.mask.segmentation,
+                segmentation=self.mask.segmentation,  # type: ignore[arg-type]
                 category_id=self.category.id,
                 category_name=self.category.name,
             )
         else:
             coco_annotation = CocoAnnotation.from_coco_bbox(
-                bbox=self.bbox.to_xywh(),
+                bbox=self.bbox.to_xywh(),  # type: ignore[arg-type]
                 category_id=self.category.id,
                 category_name=self.category.name,
             )
         return coco_annotation
 
     def to_coco_prediction(self) -> CocoPrediction:
-        """Returns sahi.utils.coco.CocoPrediction representation of ObjectAnnotation."""
+        """Convert to sahi.utils.coco.CocoPrediction representation."""
         if self.mask:
             coco_prediction = CocoPrediction.from_coco_segmentation(
-                segmentation=self.mask.segmentation,
+                segmentation=self.mask.segmentation,  # type: ignore[arg-type]
                 category_id=self.category.id,
                 category_name=self.category.name,
                 score=1,
             )
         else:
             coco_prediction = CocoPrediction.from_coco_bbox(
-                bbox=self.bbox.to_xywh(),
+                bbox=self.bbox.to_xywh(),  # type: ignore[arg-type]
                 category_id=self.category.id,
                 category_name=self.category.name,
                 score=1,
@@ -618,19 +669,19 @@ class ObjectAnnotation:
         return coco_prediction
 
     def to_shapely_annotation(self) -> ShapelyAnnotation:
-        """Returns sahi.utils.shapely.ShapelyAnnotation representation of ObjectAnnotation."""
+        """Convert to sahi.utils.shapely.ShapelyAnnotation representation."""
         if self.mask:
             shapely_annotation = ShapelyAnnotation.from_coco_segmentation(
-                segmentation=self.mask.segmentation,
+                segmentation=self.mask.segmentation,  # type: ignore[arg-type]
             )
         else:
             shapely_annotation = ShapelyAnnotation.from_coco_bbox(
-                bbox=self.bbox.to_xywh(),
+                bbox=self.bbox.to_xywh(),  # type: ignore[arg-type]
             )
         return shapely_annotation
 
-    def to_imantics_annotation(self):
-        """Returns imantics.annotation.Annotation representation of ObjectAnnotation."""
+    def to_imantics_annotation(self) -> Any:
+        """Convert to imantics.annotation.Annotation representation."""
         try:
             import imantics
         except ImportError:
@@ -649,17 +700,21 @@ class ObjectAnnotation:
             )
         return imantics_annotation
 
-    def deepcopy(self):
-        """
-        Returns: deepcopy of current ObjectAnnotation instance
+    def deepcopy(self) -> ObjectAnnotation:
+        """Get deepcopy of current ObjectAnnotation instance.
+
+        Returns:
+            ObjectAnnotation: A deep copy of this ObjectAnnotation.
         """
         return copy.deepcopy(self)
 
     @classmethod
-    def get_empty_mask(cls):
-        return Mask(bool_mask=None)
+    def get_empty_mask(cls) -> Mask:
+        """Return an empty mask."""
+        return Mask(segmentation=[], full_shape=[0, 0])
 
-    def get_shifted_object_annotation(self):
+    def get_shifted_object_annotation(self) -> ObjectAnnotation:
+        """Return shifted object annotation."""
         if self.mask:
             shifted_mask = self.mask.get_shifted_mask()
             return ObjectAnnotation(
@@ -674,13 +729,14 @@ class ObjectAnnotation:
             return ObjectAnnotation(
                 bbox=self.bbox.get_shifted_box().to_xyxy(),
                 category_id=self.category.id,
-                bool_mask=None,
+                segmentation=None,
                 category_name=self.category.name,
                 shift_amount=[0, 0],
                 full_shape=None,
             )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return string representation of object annotation."""
         return f"""ObjectAnnotation<
     bbox: {self.bbox},
     mask: {self.mask},

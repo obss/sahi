@@ -1,68 +1,90 @@
-# Fiftyone Utilities
+---
+tags:
+  - fiftyone
+  - visualization
+  - coco
+  - dataset
+---
 
-## Explore COCO dataset via FiftyOne app
+# FiftyOne Visualization
 
-Supported version: `pip install fiftyone>=0.14.2<0.15.0`
+[FiftyOne](https://github.com/voxel51/fiftyone) provides an interactive UI for
+exploring detection results, comparing predictions, and debugging model
+performance.
 
-```python
-from sahi.utils.fiftyone import launch_fiftyone_app
+Supported version: `pip install fiftyone>=0.14.2,<0.15.0`
 
-# launch fiftyone app:
-session = launch_fiftyone_app(coco_image_dir, coco_json_path)
-
-# close fiftyone app:
-session.close()
-```
-
-## Convert predictions to FiftyOne detection:
-
-```python
-from sahi import get_sliced_prediction
-
-# perform sliced prediction
-result = get_sliced_prediction(
-image,
-# Fiftyone Utilities
-
-- Explore COCO dataset via FiftyOne app:
-
-Supported version: `pip install fiftyone>=0.14.2<0.15.0`
+## Explore a COCO Dataset
 
 ```python
 from sahi.utils.fiftyone import launch_fiftyone_app
 
-# launch fiftyone app:
+# Launch the FiftyOne app with your COCO dataset
 session = launch_fiftyone_app(coco_image_dir, coco_json_path)
 
-# close fiftyone app:
+# When done, close the session
 session.close()
 ```
 
-## Convert predictions to FiftyOne detection:
+## Visualize SAHI Predictions
+
+Run sliced inference and convert results to FiftyOne format:
 
 ```python
-from sahi import get_sliced_prediction
+from sahi import AutoDetectionModel
+from sahi.predict import get_sliced_prediction
 
-# perform sliced prediction
-result = get_sliced_prediction(
-    image,
-    detection_model,
-    slice_height = 256,
-    slice_width = 256,
-    overlap_height_ratio = 0.2,
-    overlap_width_ratio = 0.2
+detection_model = AutoDetectionModel.from_pretrained(
+    model_type="ultralytics",
+    model_path="yolo26n.pt",
+    confidence_threshold=0.25,
 )
 
-# convert detections into fiftyone detection format
+result = get_sliced_prediction(
+    "image.jpg",
+    detection_model,
+    slice_height=512,
+    slice_width=512,
+    overlap_height_ratio=0.2,
+    overlap_width_ratio=0.2,
+)
+
+# Convert to FiftyOne detection format
 fiftyone_detections = result.to_fiftyone_detections()
 ```
 
-- Explore detection results in Fiftyone UI:
+## Compare Multiple Detection Results
+
+Use the CLI to visualize a dataset alongside multiple prediction results, ordered
+by misdetections:
 
 ```bash
-sahi coco fiftyone --image_dir dir/to/images --dataset_json_path dataset.json cocoresult1.json cocoresult2.json
+sahi coco fiftyone \
+  --image_dir dir/to/images \
+  --dataset_json_path dataset.json \
+  cocoresult1.json cocoresult2.json
 ```
 
-will open a FiftyOne app that visualizes the given dataset and 2 detection results.
+Set the IOU threshold for FP/TP classification:
 
-Specify IOU threshold for FP/TP by `--iou_threshold 0.5` argument
+```bash
+sahi coco fiftyone --iou_threshold 0.5 \
+  --image_dir dir/to/images \
+  --dataset_json_path dataset.json \
+  cocoresult1.json
+```
+
+## Predict and Explore in One Step
+
+The `predict-fiftyone` CLI command runs sliced inference and opens results in
+FiftyOne directly:
+
+```bash
+sahi predict-fiftyone \
+  --image_dir images/ \
+  --dataset_json_path dataset.json \
+  --model_path yolo26n.pt \
+  --model_type ultralytics \
+  --slice_height 512 \
+  --slice_width 512
+```

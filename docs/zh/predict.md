@@ -79,8 +79,10 @@ result = predict(
 
 提供了两个选项来控制和接收切片推理过程中的进度更新：
 
-- `progress_bar` (bool)：设为 True 时，在切片处理过程中显示 tqdm 进度条。适用于终端和 notebook 中的可视化反馈。默认为 False。
-- `progress_callback` (callable)：一个回调函数，在每个切片（或切片组）处理完成后被调用。该回调接收两个整数参数：`(current_slice_index, total_slices)`。可用于集成自定义进度报告（例如，更新 GUI 元素或将进度记录到文件）。
+- `progress_bar`
+  (bool)：设为 True 时，在切片处理过程中显示 tqdm 进度条。适用于终端和 notebook 中的可视化反馈。默认为 False。
+- `progress_callback`
+  (callable)：一个回调函数，在每个切片（或切片组）处理完成后被调用。该回调接收两个整数参数：`(current_slice_index, total_slices)`。可用于集成自定义进度报告（例如，更新 GUI 元素或将进度记录到文件）。
 
 使用回调的示例：
 
@@ -106,9 +108,9 @@ result = get_sliced_prediction(
 )
 ```
 
-!!! tip "提示"
-    - `progress_bar` 和 `progress_callback` 可以同时使用。当两者都提供时，tqdm 进度条会显示，同时回调函数也会在每个切片组处理后被调用。
-    - `progress_callback` 使用从 1 开始的索引（即第一次调用为 `(1, total)`）。
+!!! tip "提示" - `progress_bar` 和 `progress_callback`
+可以同时使用。当两者都提供时，tqdm 进度条会显示，同时回调函数也会在每个切片组处理后被调用。-
+`progress_callback` 使用从 1 开始的索引（即第一次调用为 `(1, total)`）。
 
 - 在推理时排除自定义类别:
 
@@ -185,13 +187,20 @@ fiftyone_detections = result.to_fiftyone_detections()
 ```
 
 # 交互式示例和演示
+
 想要马上看到这些预测工具在使用中的表现？我们有几个集成了不同模型的交互式的notebook：
 
-- 对于 YOLOv8/YOLO11/YOLO12 模型，探索我们的 [Ultralytics集成 notebook](../../demo/inference_for_ultralytics.ipynb)
-- 对于 YOLOv5 模型，查看我们的 [YOLOv5集成 notebook](../../demo/inference_for_yolov5.ipynb)
-- 对于 MMDetection 模型，尝试我们的 [MMDetection集成 notebook](../../demo/inference_for_mmdetection.ipynb)
-- 对于 HuggingFace 模型，查看我们的 [HuggingFace集成 notebook](../../demo/inference_for_huggingface.ipynb)
-- 对于 TorchVision 模型, 探索我们的 [TorchVision集成 notebook](../../demo/inference_for_torchvision.ipynb)
-- 对于 RT-DETR 模型，查看我们的 [RT-DETR集成 notebook](../../demo/inference_for_rtdetr.ipynb)
+- 对于 YOLOv8/YOLO11/YOLO12 模型，探索我们的
+  [Ultralytics集成 notebook](../../demo/inference_for_ultralytics.ipynb)
+- 对于 YOLOv5 模型，查看我们的
+  [YOLOv5集成 notebook](../../demo/inference_for_yolov5.ipynb)
+- 对于 MMDetection 模型，尝试我们的
+  [MMDetection集成 notebook](../../demo/inference_for_mmdetection.ipynb)
+- 对于 HuggingFace 模型，查看我们的
+  [HuggingFace集成 notebook](../../demo/inference_for_huggingface.ipynb)
+- 对于 TorchVision 模型, 探索我们的
+  [TorchVision集成 notebook](../../demo/inference_for_torchvision.ipynb)
+- 对于 RT-DETR 模型，查看我们的
+  [RT-DETR集成 notebook](../../demo/inference_for_rtdetr.ipynb)
 
 这些示例提供了快速上手的例子并且让你能够体验不同的参数和设置。

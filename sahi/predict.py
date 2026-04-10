@@ -1,14 +1,18 @@
+"""High-level prediction API for object detection."""
+
 from __future__ import annotations
 
 import os
 import time
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from functools import cmp_to_key
+from typing import Any
 
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
+from sahi.annotation import ObjectAnnotation
 from sahi.auto_model import AutoDetectionModel
 from sahi.logger import logger
 from sahi.models.base import DetectionModel
@@ -34,7 +38,7 @@ from sahi.utils.cv import (
 from sahi.utils.file import Path, increment_path, list_files, save_json, save_pickle
 from sahi.utils.import_utils import check_requirements
 
-POSTPROCESS_NAME_TO_CLASS = {
+POSTPROCESS_NAME_TO_CLASS: dict[str, Callable[..., PostprocessPredictions]] = {
     "GREEDYNMM": GreedyNMMPostprocess,
     "NMM": NMMPostprocess,
     "NMS": NMSPostprocess,
@@ -44,7 +48,11 @@ POSTPROCESS_NAME_TO_CLASS = {
 LOW_MODEL_CONFIDENCE = 0.1
 
 
-def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id):
+def filter_predictions(
+    object_prediction_list: list[ObjectPrediction],
+    exclude_classes_by_name: list[str] | None,
+    exclude_classes_by_id: list[int] | None,
+) -> list[ObjectPrediction]:
     """Filter out predictions whose category matches an exclusion list.
 
     Args:
@@ -67,10 +75,10 @@ def filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_
 
 
 def get_prediction(
-    image,
-    detection_model,
-    shift_amount: list | None = None,
-    full_shape=None,
+    image: str | np.ndarray | Image.Image,
+    detection_model: DetectionModel,
+    shift_amount: list[int] | None = None,
+    full_shape: list[int] | None = None,
     postprocess: PostprocessPredictions | None = None,
     verbose: int = 0,
     exclude_classes_by_name: list[str] | None = None,
@@ -123,8 +131,8 @@ def get_prediction(
     time_start = time.perf_counter()
     # works only with 1 batch
     detection_model.convert_original_predictions(
-        shift_amount=shift_amount,
-        full_shape=full_shape,
+        shift_amount=shift_amount,  # type: ignore[arg-type]
+        full_shape=full_shape,  # type: ignore[arg-type]
     )
     object_prediction_list: list[ObjectPrediction] = detection_model.object_prediction_list
     object_prediction_list = filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id)
@@ -149,8 +157,8 @@ def get_prediction(
 
 
 def get_sliced_prediction(
-    image,
-    detection_model=None,
+    image: str | np.ndarray | Image.Image,
+    detection_model: DetectionModel | None = None,
     slice_height: int | None = None,
     slice_width: int | None = None,
     overlap_height_ratio: float = 0.2,
@@ -168,7 +176,7 @@ def get_sliced_prediction(
     exclude_classes_by_name: list[str] | None = None,
     exclude_classes_by_id: list[int] | None = None,
     progress_bar: bool = False,
-    progress_callback=None,
+    progress_callback: Callable | None = None,
     batch_size: int = 1,
 ) -> PredictionResult:
     """Function for slice image + get predicion for each slice + combine predictions in full image.
@@ -233,6 +241,7 @@ def get_sliced_prediction(
             Number of slices to process in a single batch inference call.
             Increasing this value can improve GPU utilization and throughput.
             Default: 1 (sequential, same as previous behavior).
+
     Returns:
         A Dict with fields:
             object_prediction_list: a list of sahi.prediction.ObjectPrediction
@@ -240,6 +249,8 @@ def get_sliced_prediction(
     """
     if batch_size < 1:
         raise ValueError(f"batch_size must be >= 1, got {batch_size}")
+    if detection_model is None:
+        raise ValueError("detection_model must be provided for sliced prediction")
 
     # for profiling
     durations_in_seconds = dict()
@@ -279,7 +290,7 @@ def get_sliced_prediction(
         class_agnostic=postprocess_class_agnostic,
     )
 
-    postprocess_time = 0
+    postprocess_time = 0.0
     time_start = time.perf_counter()
     num_batches = (num_slices + batch_size - 1) // batch_size
     if verbose == 1 or verbose == 2:
@@ -290,7 +301,7 @@ def get_sliced_prediction(
     else:
         slice_iterator = range(num_batches)
 
-    full_shape = [
+    full_shape: list[int | float] = [
         slice_image_result.original_image_height,
         slice_image_result.original_image_width,
     ]
@@ -301,7 +312,9 @@ def get_sliced_prediction(
         batch_start = batch_ind * batch_size
         batch_end = min(batch_start + batch_size, num_slices)
         batch_images = [slice_image_result.images[i] for i in range(batch_start, batch_end)]
-        batch_shifts = [slice_image_result.starting_pixels[i] for i in range(batch_start, batch_end)]
+        batch_shifts: list[list[int | float]] = [
+            list(slice_image_result.starting_pixels[i]) for i in range(batch_start, batch_end)
+        ]
         current_batch_size = len(batch_images)
 
         # perform batch inference
@@ -378,7 +391,7 @@ def get_sliced_prediction(
     )
 
 
-def bbox_sort(a, b, thresh):
+def bbox_sort(a: tuple, b: tuple, thresh: int | float) -> int:
     """Compare two bounding boxes for reading-order sorting.
 
     Boxes whose Y-coordinates differ by no more than ``thresh`` are
@@ -395,20 +408,30 @@ def bbox_sort(a, b, thresh):
             on the same row.
 
     Returns:
-        int or float: Negative if ``a`` should come first, positive if ``b``
+        int: Negative if ``a`` should come first, positive if ``b``
         should come first, zero if equal.
     """
-
     bbox_a = a
     bbox_b = b
 
     if abs(bbox_a[1] - bbox_b[1]) <= thresh:
-        return bbox_a[0] - bbox_b[0]
+        diff = bbox_a[0] - bbox_b[0]
+        return -1 if diff < 0 else (1 if diff > 0 else 0)
 
-    return bbox_a[1] - bbox_b[1]
+    diff = bbox_a[1] - bbox_b[1]
+    return -1 if diff < 0 else (1 if diff > 0 else 0)
 
 
-def agg_prediction(result: PredictionResult, thresh):
+def agg_prediction(result: PredictionResult, thresh: float) -> list:
+    """Aggregate predictions by merging overlapping bounding boxes.
+
+    Args:
+        result: Prediction result object containing detections.
+        thresh: Threshold for bounding box overlap merging.
+
+    Returns:
+        List of aggregated bounding boxes and associated data.
+    """
     coord_list = []
     res = result.to_coco_annotations()
     for ann in res:
@@ -419,7 +442,11 @@ def agg_prediction(result: PredictionResult, thresh):
         h = current_bbox[3]
 
         coord_list.append((x, y, w, h))
-    cnts = sorted(coord_list, key=cmp_to_key(lambda a, b: bbox_sort(a, b, thresh)))
+
+    def _cmp(a: tuple[Any, ...], b: tuple[Any, ...]) -> int:
+        return bbox_sort(a, b, thresh)
+
+    cnts = sorted(coord_list, key=cmp_to_key(_cmp))
     for pred in range(len(res) - 1):
         res[pred]["image_id"] = cnts.index(tuple(res[pred]["bbox"]))
 
@@ -468,8 +495,8 @@ def predict(
     exclude_classes_by_id: list[int] | None = None,
     progress_bar: bool = False,
     batch_size: int = 1,
-    **kwargs,
-):
+    **kwargs: Any,
+) -> dict | None:
     """Performs prediction for all present images in given folder.
 
     Args:
@@ -572,6 +599,9 @@ def predict(
             List[int]: set of classes to exclude using one or more IDs
         progress_bar: bool
             Whether to show a progress bar. Default is False.
+        batch_size: int
+            Batch size for processing images. Default is 1.
+        **kwargs: Additional keyword arguments passed to the prediction pipeline.
     """
     # assert prediction type
     if no_standard_prediction and no_sliced_prediction:
@@ -619,7 +649,7 @@ def predict(
         image_iterator = [source]
     else:
         logger.error("No valid input given to predict function")
-        return
+        return None
 
     # init model instance
     time_start = time.time()
@@ -718,14 +748,16 @@ def predict(
             # append predictions in coco format
             for object_prediction in object_prediction_list:
                 coco_prediction = object_prediction.to_coco_prediction()
-                coco_prediction.image_id = coco.images[ind].id
+                image_id = coco.images[ind].id
+                if image_id is not None:
+                    coco_prediction.image_id = image_id
                 coco_prediction_json = coco_prediction.json
                 if coco_prediction_json["bbox"]:
                     coco_json.append(coco_prediction_json)
             if not novisual:
                 # convert ground truth annotations to object_prediction_list
                 coco_image: CocoImage = coco.images[ind]
-                object_prediction_gt_list: list[ObjectPrediction] = []
+                object_prediction_gt_list: list[ObjectAnnotation] = []
                 for coco_annotation in coco_image.annotations:
                     coco_annotation_dict = coco_annotation.json
                     category_name = coco_annotation.category_name
@@ -843,6 +875,7 @@ def predict(
 
     if return_dict:
         return {"export_dir": save_dir}
+    return None
 
 
 def predict_fiftyone(
@@ -871,7 +904,7 @@ def predict_fiftyone(
     exclude_classes_by_id: list[int] | None = None,
     progress_bar: bool = False,
     batch_size: int = 1,
-):
+) -> None:
     """Performs prediction for all present images in given folder.
 
     Args:
@@ -936,6 +969,8 @@ def predict_fiftyone(
             List[int]: set of classes to exclude using one or more IDs
         progress_bar: bool
             Whether to show progress bar for slice processing. Default: False.
+        batch_size: int
+            Batch size for processing images. Default is 1.
     """
     check_requirements(["fiftyone"])
 

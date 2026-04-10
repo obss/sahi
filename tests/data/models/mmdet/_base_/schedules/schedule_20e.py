@@ -1,3 +1,5 @@
+"""MMDetection configuration file for schedule_20e.py."""
+
 # training schedule for 20e
 train_cfg = dict(type="EpochBasedTrainLoop", max_epochs=20, val_interval=1)
 val_cfg = dict(type="ValLoop")

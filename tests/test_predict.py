@@ -1,7 +1,12 @@
+"""Tests for prediction and model inference."""
+
+from __future__ import annotations
+
 import shutil
 import sys
 from collections import Counter
 from os import path
+from typing import Any
 
 import numpy as np
 import pytest
@@ -18,7 +23,8 @@ CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
 
 
-def test_prediction_score():
+def test_prediction_score() -> None:
+    """Test PredictionScore value and comparison operations."""
     from sahi.prediction import PredictionScore
 
     prediction_score = PredictionScore(np.array(0.6))  # type: ignore
@@ -33,7 +39,8 @@ def test_prediction_score():
 
 
 @pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
-def test_get_prediction_mmdet():
+def test_get_prediction_mmdet() -> None:
+    """Test full-image prediction with MMDet model."""
     # Skip if mmdet is not installed
     pytest.importorskip("mmdet", reason="MMDet is not installed")
     pytest.importorskip("mmcv", reason="MMCV is not installed")
@@ -85,7 +92,8 @@ def test_get_prediction_mmdet():
     assert num_car == 2
 
 
-def test_get_prediction_automodel_yolo11():
+def test_get_prediction_automodel_yolo11() -> None:
+    """Test full-image prediction with auto-loaded YOLO11 model."""
     from sahi.auto_model import AutoDetectionModel
     from sahi.predict import get_prediction
 
@@ -125,7 +133,8 @@ def test_get_prediction_automodel_yolo11():
     assert result_counts["person"] == 0
 
 
-def test_prediction_category_remapping():
+def test_prediction_category_remapping() -> None:
+    """Test category remapping during prediction."""
     from sahi.auto_model import AutoDetectionModel
     from sahi.predict import get_prediction
 
@@ -166,7 +175,8 @@ def test_prediction_category_remapping():
 
 
 @pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
-def test_get_sliced_prediction_mmdet():
+def test_get_sliced_prediction_mmdet() -> None:
+    """Test sliced prediction with MMDet model."""
     # Skip if mmdet is not installed
     pytest.importorskip("mmdet", reason="MMDet is not installed")
     pytest.importorskip("mmcv", reason="MMCV is not installed")
@@ -239,7 +249,8 @@ def test_get_sliced_prediction_mmdet():
     assert num_car == 15
 
 
-def test_get_prediction_yolo11():
+def test_get_prediction_yolo11() -> None:
+    """Test full-image prediction with YOLO11 model."""
     # init model
     download_yolo11n_model()
 
@@ -282,7 +293,8 @@ def test_get_prediction_yolo11():
     assert num_car > 0
 
 
-def test_get_sliced_prediction_yolo11():
+def test_get_sliced_prediction_yolo11() -> None:
+    """Test sliced prediction with YOLO11 model."""
     # init model
     download_yolo11n_model()
 
@@ -343,8 +355,8 @@ def test_get_sliced_prediction_yolo11():
     assert num_car > 0
 
 
-def test_get_sliced_prediction_batch_size():
-    """Verifies that batch_size > 1 produces identical results to batch_size=1."""
+def test_get_sliced_prediction_batch_size() -> None:
+    """Test that different batch sizes produce identical results."""
     download_yolo11n_model()
 
     yolo11_detection_model = UltralyticsDetectionModel(
@@ -358,7 +370,7 @@ def test_get_sliced_prediction_batch_size():
     yolo11_detection_model.load_model()
 
     image_path = "tests/data/small-vehicles1.jpeg"
-    common_kwargs = dict(
+    common_kwargs: dict[str, Any] = dict(
         image=image_path,
         detection_model=yolo11_detection_model,
         slice_height=512,
@@ -383,7 +395,7 @@ def test_get_sliced_prediction_batch_size():
         f"batch_size=1 gave {len(preds_bs1)} predictions, batch_size=4 gave {len(preds_bs4)}"
     )
 
-    def serialize_pred(pred):
+    def serialize_pred(pred: Any) -> tuple[Any, ...]:
         return (
             pred.category.id,
             pred.category.name,
@@ -397,7 +409,8 @@ def test_get_sliced_prediction_batch_size():
 
 
 @pytest.mark.skipif(sys.version_info[:2] != (3, 11), reason="MMDet tests only run on Python 3.11")
-def test_mmdet_yolox_tiny_prediction():
+def test_mmdet_yolox_tiny_prediction() -> None:
+    """Test MMDet YOLOX tiny model prediction and export."""
     # Skip if mmdet is not installed
     pytest.importorskip("mmdet", reason="MMDet is not installed")
     pytest.importorskip("mmcv", reason="MMCV is not installed")
@@ -451,7 +464,8 @@ def test_mmdet_yolox_tiny_prediction():
     )
 
 
-def test_ultralytics_yolo11n_prediction():
+def test_ultralytics_yolo11n_prediction() -> None:
+    """Test Ultralytics YOLO11n model prediction and export."""
     from sahi.predict import predict
 
     # init model
@@ -499,7 +513,8 @@ def test_ultralytics_yolo11n_prediction():
     )
 
 
-def test_video_prediction():
+def test_video_prediction() -> None:
+    """Test video file prediction with various configurations."""
     # download video file
     source_url = "https://github.com/obss/sahi/releases/download/0.9.2/test.mp4"
     destination_path = "tests/data/test.mp4"

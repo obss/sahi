@@ -1,126 +1,84 @@
+---
+tags:
+  - coco
+  - dataset
+  - annotation
+  - slicing
+  - evaluation
+---
+
 # COCO Utilities
 
-<details closed>
-<summary>
-<big><b>COCO dataset creation:</b></big>
-</summary>
+SAHI provides a full suite of tools for creating, manipulating, and converting
+COCO format datasets.
 
-## import required classes
+## Creating a Dataset
 
 ```python
-from sahi.utils.coco import Coco, CocoCategory, CocoImage, CocoAnnotation
-```
+from sahi.utils.coco import Coco, CocoCategory, CocoImage, CocoAnnotation, CocoPrediction
+from sahi.utils.file import save_json
 
-- init Coco object:
-
-```python
+# Initialize a COCO dataset and add categories
 coco = Coco()
-```
+coco.add_category(CocoCategory(id=0, name="human"))
+coco.add_category(CocoCategory(id=1, name="vehicle"))
 
-- add categories starting from id 0:
-
-```python
-coco.add_category(CocoCategory(id=0, name='human'))
-coco.add_category(CocoCategory(id=1, name='vehicle'))
-```
-
-## create a coco image
-
-```python
+# Create an image entry
 coco_image = CocoImage(file_name="image1.jpg", height=1080, width=1920)
-```
 
-## add annotations to coco image
-
-```python
+# Add ground-truth annotations
 coco_image.add_annotation(
-  CocoAnnotation(
-    bbox=[x_min, y_min, width, height],
-    category_id=0,
-    category_name='human'
-  )
+    CocoAnnotation(bbox=[x_min, y_min, width, height], category_id=0, category_name="human")
 )
 coco_image.add_annotation(
-  CocoAnnotation(
-    bbox=[x_min, y_min, width, height],
-    category_id=1,
-    category_name='vehicle'
-  )
+    CocoAnnotation(bbox=[x_min, y_min, width, height], category_id=1, category_name="vehicle")
 )
-```
 
-## Add predictions to coco image
-
-```python
+# Add model predictions (with confidence scores)
 coco_image.add_prediction(
-  CocoPrediction(
-    score=0.864434,
-    bbox=[x_min, y_min, width, height],
-    category_id=0,
-    category_name='human'
-  )
+    CocoPrediction(score=0.86, bbox=[x_min, y_min, width, height], category_id=0, category_name="human")
 )
-coco_image.add_prediction(
-  CocoPrediction(
-    score=0.653424,
-    bbox=[x_min, y_min, width, height],
-    category_id=1,
-    category_name='vehicle'
-  )
-)
-```
 
-## Add coco image to Coco object
-
-```python
+# Add the image to the dataset
 coco.add_image(coco_image)
+
+# Export as JSON
+save_json(coco.json, "coco_dataset.json")
+
+# Export predictions in COCO result format
+save_json(coco.prediction_array, "coco_predictions.json")
 ```
 
-### After adding all images, convert coco object to coco json
+### Evaluating with pycocotools
 
 ```python
-coco_json = coco.json
-```
-
-### You can export it as json file:
-
-```python
-from sahi.utils.file import save_json
-
-save_json(coco_json, "coco_dataset.json")
-```
-
-### You can also export prediction array in coco prediction format and save it as json :
-
-```python
-from sahi.utils.file import save_json
-
-predictions_array = coco.prediction_array
-save_json = save_json(predictions_array, "coco_predictions.json")
-```
-
-### This prediction array can be used to get standard coco metrics for the predictions using official pycocotool api :
-
-```python
-# note:- pycocotools need to be installed separately
 from pycocotools.cocoeval import COCOeval
 from pycocotools.coco import COCO
 
-coco_ground_truth = COCO(annotation_file="coco_dataset.json")
-coco_predictions = coco_ground_truth.loadRes("coco_predictions.json")
+coco_gt = COCO(annotation_file="coco_dataset.json")
+coco_dt = coco_gt.loadRes("coco_predictions.json")
 
-coco_evaluator = COCOeval(coco_ground_truth, coco_predictions, "bbox")
-coco_evaluator.evaluate()
-coco_evaluator.accumulate()
-coco_evaluator.summarize()
+evaluator = COCOeval(coco_gt, coco_dt, "bbox")
+evaluator.evaluate()
+evaluator.accumulate()
+evaluator.summarize()
 ```
 
-</details>
+---
 
-<details closed>
-<summary>
-<big><b>Slice COCO dataset images and annotations into grids:</b></big>
-</summary>
+## Loading a Dataset
+
+```python
+from sahi.utils.coco import Coco
+
+coco = Coco.from_coco_dict_or_path("coco.json")
+```
+
+---
+
+## Slicing Images and Annotations
+
+Slice large images and their COCO annotations into a grid of smaller tiles:
 
 ```python
 from sahi.slicing import slice_coco
@@ -135,314 +93,219 @@ coco_dict, coco_path = slice_coco(
 )
 ```
 
-</details>
+---
 
-<details closed>
-<summary>
-<big><b>Split COCO dataset into train/val:</b></big>
-</summary>
+## Splitting into Train/Val
 
 ```python
 from sahi.utils.coco import Coco
 from sahi.utils.file import save_json
 
-# specify coco dataset path
-coco_path = "coco.json"
+coco = Coco.from_coco_dict_or_path("coco.json")
 
-# init Coco object
-coco = Coco.from_coco_dict_or_path(coco_path)
+result = coco.split_coco_as_train_val(train_split_rate=0.85)
 
-# split COCO dataset with a 85% train/15% val split
-result = coco.split_coco_as_train_val(
-  train_split_rate=0.85
-)
-
-# export train val split files
 save_json(result["train_coco"].json, "train_split.json")
 save_json(result["val_coco"].json, "val_split.json")
 ```
 
-</details>
+---
 
-<details closed>
-<summary>
-<big><b>Filter/Update COCO dataset by categories:</b></big>
-</summary>
+## Merging Datasets
 
 ```python
 from sahi.utils.coco import Coco
 from sahi.utils.file import save_json
 
-# init Coco objects by specifying coco dataset paths and image folder directories
-coco = Coco.from_coco_dict_or_path("coco.json")
-
-# select only 3 categories; and map them to ids 1, 2 and 3
-desired_name2id = {
-  "big_vehicle": 1,
-  "car": 2,
-  "human": 3
-}
-coco.update_categories(desired_name2id)
-
-# export updated/filtered COCO dataset
-save_json(coco.json, "updated_coco.json")
-```
-
-</details>
-
-<details closed>
-<summary>
-<big><b>Filter COCO dataset by annotation area:</b></big>
-</summary>
-
-```python
-from sahi.utils.coco import Coco
-from sahi.utils.file import save_json
-
-# init Coco objects by specifying coco dataset paths and image folder directories
-coco = Coco.from_coco_dict_or_path("coco.json")
-
-# filter out images that contain annotations with smaller area than 50
-area_filtered_coco = coco.get_area_filtered_coco(min=50)
-# filter out images that contain annotations with smaller area than 50 and larger area than 10000
-area_filtered_coco = coco.get_area_filtered_coco(min=50, max_val=10000)
-# filter out images with separate area intervals per category
-intervals_per_category = {
-  "human": {"min": 20, "max": 10000},
-  "vehicle": {"min": 50, "max": 15000},
-}
-area_filtered_coco = coco.get_area_filtered_coco(intervals_per_category=intervals_per_category)
-
-# export filtered COCO dataset
-save_json(area_filtered_coco.json, "area_filtered_coco.json")
-```
-
-</details>
-
-<details closed>
-<summary>
-<big><b>Filter out images that do not contain any annotation:</b></big>
-</summary>
-
-```python
-from sahi.utils.coco import Coco
-
-# set ignore_negative_samples as False if you want images without annotations present in json and YOLO exports
-coco = Coco.from_coco_dict_or_path("coco.json", ignore_negative_samples=False)
-
-```
-
-</details>
-
-<details closed>
-<summary>
-<big><b>Merge COCO dataset files:</b></big>
-</summary>
-
-```python
-from sahi.utils.coco import Coco
-from sahi.utils.file import save_json
-
-# init Coco objects by specifying coco dataset paths and image folder directories
 coco_1 = Coco.from_coco_dict_or_path("coco1.json", image_dir="images_1/")
 coco_2 = Coco.from_coco_dict_or_path("coco2.json", image_dir="images_2/")
 
-# merge Coco datasets
 coco_1.merge(coco_2)
 
-# export merged COCO dataset
 save_json(coco_1.json, "merged_coco.json")
 ```
 
-</details>
+---
 
-<details closed>
-<summary>
-<big><b>Convert COCO dataset to ultralytics/YOLO format:</b></big>
-</summary>
+## Filtering and Updating
+
+### By categories
+
+Select specific categories and remap their IDs:
+
+```python
+from sahi.utils.coco import Coco
+from sahi.utils.file import save_json
+
+coco = Coco.from_coco_dict_or_path("coco.json")
+
+desired_name2id = {"big_vehicle": 1, "car": 2, "human": 3}
+coco.update_categories(desired_name2id)
+
+save_json(coco.json, "updated_coco.json")
+```
+
+### By annotation area
+
+```python
+from sahi.utils.coco import Coco
+from sahi.utils.file import save_json
+
+coco = Coco.from_coco_dict_or_path("coco.json")
+
+# Filter by minimum area
+area_filtered = coco.get_area_filtered_coco(min=50)
+
+# Filter by min and max area
+area_filtered = coco.get_area_filtered_coco(min=50, max_val=10000)
+
+# Per-category area intervals
+intervals = {
+    "human": {"min": 20, "max": 10000},
+    "vehicle": {"min": 50, "max": 15000},
+}
+area_filtered = coco.get_area_filtered_coco(intervals_per_category=intervals)
+
+save_json(area_filtered.json, "area_filtered_coco.json")
+```
+
+### Keep images without annotations
+
+By default, images without annotations are excluded. To keep them:
+
+```python
+coco = Coco.from_coco_dict_or_path("coco.json", ignore_negative_samples=False)
+```
+
+### Clip bounding boxes to image dimensions
+
+```python
+# On load
+coco = Coco.from_coco_dict_or_path("coco.json", clip_bboxes_to_img_dims=True)
+
+# Or on an existing object
+coco = coco.get_coco_with_clipped_bboxes()
+```
+
+---
+
+## Sampling
+
+### Subsample
+
+```python
+from sahi.utils.coco import Coco
+from sahi.utils.file import save_json
+
+coco = Coco.from_coco_dict_or_path("coco.json")
+
+# Keep 1/10 of images
+subsampled = coco.get_subsampled_coco(subsample_ratio=10)
+
+# Subsample only images containing a specific category
+subsampled = coco.get_subsampled_coco(subsample_ratio=10, category_id=0)
+
+# Reduce negative samples (images without annotations) to 1/10
+subsampled = coco.get_subsampled_coco(subsample_ratio=10, category_id=-1)
+
+save_json(subsampled.json, "subsampled_coco.json")
+```
+
+### Upsample
+
+```python
+from sahi.utils.coco import Coco
+from sahi.utils.file import save_json
+
+coco = Coco.from_coco_dict_or_path("coco.json")
+
+# Repeat each sample 10 times
+upsampled = coco.get_upsampled_coco(upsample_ratio=10)
+
+# Upsample only images containing a specific category
+upsampled = coco.get_upsampled_coco(upsample_ratio=10, category_id=0)
+
+save_json(upsampled.json, "upsampled_coco.json")
+```
+
+---
+
+## Converting to YOLO Format
+
+### Single dataset with auto-split
 
 ```python
 from sahi.utils.coco import Coco
 
-# init Coco object
 coco = Coco.from_coco_dict_or_path("coco.json", image_dir="coco_images/")
 
-# export converted YOLO formatted dataset into given output_dir with a 85% train/15% val split
-coco.export_as_yolo(
-  output_dir="output/folder/dir",
-  train_split_rate=0.85
-)
+coco.export_as_yolo(output_dir="output/folder/dir", train_split_rate=0.85)
 ```
 
-</details>
-
-<details closed>
-<summary>
-<big><b>Convert train/val COCO dataset to ultralytics/YOLO format:</b></big>
-</summary>
+### Pre-split train/val datasets
 
 ```python
 from sahi.utils.coco import Coco, export_coco_as_yolo
 
-# init Coco object
 train_coco = Coco.from_coco_dict_or_path("train_coco.json", image_dir="coco_images/")
 val_coco = Coco.from_coco_dict_or_path("val_coco.json", image_dir="coco_images/")
 
-# export converted YOLO formatted dataset into given output_dir with given train/val split
 data_yml_path = export_coco_as_yolo(
-  output_dir="output/folder/dir",
-  train_coco=train_coco,
-  val_coco=val_coco
+    output_dir="output/folder/dir",
+    train_coco=train_coco,
+    val_coco=val_coco,
 )
 ```
 
-</details>
+---
 
-<details closed>
-<summary>
-<big><b>Subsample COCO dataset file:</b></big>
-</summary>
+## Dataset Statistics
 
 ```python
 from sahi.utils.coco import Coco
 
-# specify coco dataset path
-coco_path = "coco.json"
-
-# init Coco object
-coco = Coco.from_coco_dict_or_path(coco_path)
-
-# create a Coco object with 1/10 of total images
-subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10)
-
-# export subsampled COCO dataset
-save_json(subsampled_coco.json, "subsampled_coco.json")
-
-# bonus: create a Coco object with 1/10 of total images that contain first category
-subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10, category_id=0)
-
-# bonus2: create a Coco object with negative samples reduced to 1/10
-subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10, category_id=-1)
-```
-</details>
-
-<details closed>
-<summary>
-<big><b>Upsample COCO dataset file:</b></big>
-</summary>
-
-```python
-from sahi.utils.coco import Coco
-
-# specify coco dataset path
-coco_path = "coco.json"
-
-# init Coco object
-coco = Coco.from_coco_dict_or_path(coco_path)
-
-# create a Coco object with each sample is repeated 10 times
-upsampled_coco = coco.get_upsampled_coco(upsample_ratio=10)
-
-# export upsampled COCO dataset
-save_json(upsampled_coco.json, "upsampled_coco.json")
-
-# bonus: create a Coco object with images that contain first category repeated 10 times
-subsampled_coco = coco.get_subsampled_coco(upsample_ratio=10, category_id=0)
-
-# bonus2: create a Coco object with negative samples upsampled by 10 times
-upsampled_coco = coco.get_upsampled_coco(upsample_ratio=10, category_id=-1)
-```
-</details>
-
-<details closed>
-<summary>
-<big><b>Get dataset stats:</b></big>
-</summary>
-
-```python
-from sahi.utils.coco import Coco
-
-# init Coco object
 coco = Coco.from_coco_dict_or_path("coco.json")
 
-# get dataset stats
-coco.stats
-{
-  'num_images': 6471,
-  'num_annotations': 343204,
-  'num_categories': 2,
-  'num_negative_images': 0,
-  'num_images_per_category': {'human': 5684, 'vehicle': 6323},
-  'num_annotations_per_category': {'human': 106396, 'vehicle': 236808},
-  'min_num_annotations_in_image': 1,
-  'max_num_annotations_in_image': 902,
-  'avg_num_annotations_in_image': 53.037243084530985,
-  'min_annotation_area': 3,
-  'max_annotation_area': 328640,
-  'avg_annotation_area': 2448.405738278109,
-  'min_annotation_area_per_category': {'human': 3, 'vehicle': 3},
-  'max_annotation_area_per_category': {'human': 72670, 'vehicle': 328640},
-}
-
+print(coco.stats)
+# {
+#   'num_images': 6471,
+#   'num_annotations': 343204,
+#   'num_categories': 2,
+#   'num_negative_images': 0,
+#   'num_images_per_category': {'human': 5684, 'vehicle': 6323},
+#   'num_annotations_per_category': {'human': 106396, 'vehicle': 236808},
+#   'min_num_annotations_in_image': 1,
+#   'max_num_annotations_in_image': 902,
+#   'avg_num_annotations_in_image': 53.04,
+#   'min_annotation_area': 3,
+#   'max_annotation_area': 328640,
+#   'avg_annotation_area': 2448.41,
+#   'min_annotation_area_per_category': {'human': 3, 'vehicle': 3},
+#   'max_annotation_area_per_category': {'human': 72670, 'vehicle': 328640},
+# }
 ```
-</details>
 
-<details closed>
-<summary>
-<big><b>Remove invalid coco results:</b></big>
-</summary>
+---
+
+## Cleaning Invalid Results
+
+Remove invalid predictions from a COCO results JSON:
 
 ```python
-from sahi.utils.file import save_json
 from sahi.utils.coco import remove_invalid_coco_results
+from sahi.utils.file import save_json
 
-# remove invalid predictions from COCO results JSON
 coco_results = remove_invalid_coco_results("coco_result.json")
-
-# export processed COCO results
 save_json(coco_results, "fixed_coco_result.json")
 
-# bonus: remove invalid predictions from COCO results JSON by giving COCO
-# dataset path to also filter out bbox results exceeding image height&width
+# Also filter out bboxes exceeding image dimensions
 coco_results = remove_invalid_coco_results("coco_result.json", "coco_dataset.json")
 ```
-</details>
 
-<details closed>
-<summary>
-<big><b>Get COCO with clipped bounding boxes:</b></big>
-</summary>
+---
 
-- import required classes:
+## Additional Resources
 
-```python
-from sahi.utils.coco import Coco
-from sahi.utils.file import save_json
-```
-Usage:
-
-```python
-# Clip overflowing bounding boxes to image width & height
-coco = Coco.from_coco_dict_or_path(coco_path, clip_bboxes_to_img_dims=True)
-```
-or,
-
-```python
-# apply to your already created coco object
-coco = coco.get_coco_with_clipped_bboxes()
-```
-- Export your clipped_bboxed_coco:
-```python
-save_json(coco.json, "coco.json")
-```
-</details>
-
-# Interactive Examples and Additional Resources
-
-Want to see these COCO utilities in action? Here are some helpful resources:
-
-- For hands-on examples of COCO dataset slicing, check out our [slicing demo notebook](../demo/slicing.ipynb)
-- To learn about prediction and visualization with COCO datasets, explore our model-specific notebooks in the [demo directory](../demo/)
-- For command-line operations with COCO datasets, refer to our [CLI documentation](cli.md)
-
-These resources provide practical examples and detailed explanations to help you work effectively with COCO datasets using SAHI.
+- [Interactive notebooks](notebooks.md) -- Hands-on examples including COCO
+  dataset slicing
+- [CLI documentation](cli.md) -- Command-line operations for COCO datasets

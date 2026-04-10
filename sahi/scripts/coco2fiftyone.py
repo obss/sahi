@@ -1,3 +1,5 @@
+"""Convert COCO dataset annotations to FiftyOne format."""
+
 import time
 from pathlib import Path
 
@@ -9,17 +11,17 @@ from sahi.utils.file import load_json
 def main(
     image_dir: str,
     dataset_json_path: str,
-    *result_json_paths,
+    *result_json_paths: str,
     iou_thresh: float = 0.5,
-):
-    """
-    Args:
-        image_dir (str): directory for coco images
-        dataset_json_path (str): file path for the coco dataset json file
-        result_json_paths (str): one or more paths for the coco result json file
-        iou_thresh (float): iou threshold for coco evaluation
-    """
+) -> None:
+    """Convert COCO dataset to FiftyOne and optionally evaluate detection results.
 
+    Args:
+        image_dir: Directory containing COCO images.
+        dataset_json_path: Path to the COCO dataset JSON file.
+        result_json_paths: Paths to COCO result JSON files.
+        iou_thresh: IoU threshold for COCO evaluation.
+    """
     from fiftyone.utils.coco import add_coco_labels
 
     from sahi.utils.fiftyone import create_fiftyone_dataset_from_coco_file, fo

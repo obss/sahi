@@ -11,7 +11,8 @@ We release patches for security vulnerabilities for the following versions:
 
 ## Reporting a Vulnerability
 
-We take the security of SAHI seriously. If you believe you have found a security vulnerability in SAHI, please report it to us as described below.
+We take the security of SAHI seriously. If you believe you have found a security
+vulnerability in SAHI, please report it to us as described below.
 
 ### Where to Report
 
@@ -20,7 +21,9 @@ We take the security of SAHI seriously. If you believe you have found a security
 Instead, please report them via one of the following methods:
 
 1. **GitHub Security Advisories** (Preferred)
-   - Go to the [Security Advisories](https://github.com/obss/sahi/security/advisories) page
+   - Go to the
+     [Security Advisories](https://github.com/obss/sahi/security/advisories)
+     page
    - Click "Report a vulnerability"
    - Fill in the details of the vulnerability
 
@@ -33,7 +36,8 @@ Instead, please report them via one of the following methods:
 
 Please include the following information in your report:
 
-- Type of vulnerability (e.g., remote code execution, information disclosure, etc.)
+- Type of vulnerability (e.g., remote code execution, information disclosure,
+  etc.)
 - Full paths of source file(s) related to the vulnerability
 - The location of the affected source code (tag/branch/commit or direct URL)
 - Any special configuration required to reproduce the issue
@@ -44,8 +48,10 @@ Please include the following information in your report:
 ### Response Timeline
 
 - We will acknowledge your report within **3 business days**
-- We will provide a detailed response within **7 business days** indicating the next steps
-- We will keep you informed about the progress towards a fix and full announcement
+- We will provide a detailed response within **7 business days** indicating the
+  next steps
+- We will keep you informed about the progress towards a fix and full
+  announcement
 - We may ask for additional information or guidance
 
 ### Disclosure Policy
@@ -70,10 +76,14 @@ When using SAHI, we recommend:
 
 ### Known Security Considerations
 
-- **Model Loading**: Be cautious when loading model weights from untrusted sources
-- **Image Processing**: Validate and sanitize image inputs, especially from untrusted sources
-- **File Operations**: SAHI performs file I/O operations; ensure proper permissions and path validation
-- **Dependencies**: Some optional dependencies (PyTorch, TensorFlow, etc.) may have their own security considerations
+- **Model Loading**: Be cautious when loading model weights from untrusted
+  sources
+- **Image Processing**: Validate and sanitize image inputs, especially from
+  untrusted sources
+- **File Operations**: SAHI performs file I/O operations; ensure proper
+  permissions and path validation
+- **Dependencies**: Some optional dependencies (PyTorch, TensorFlow, etc.) may
+  have their own security considerations
 
 ### Security Updates
 
@@ -91,11 +101,13 @@ Security updates will be announced through:
 
 ## Bug Bounty Program
 
-Currently, we do not have a bug bounty program. However, we greatly appreciate security researchers who responsibly disclose vulnerabilities to us.
+Currently, we do not have a bug bounty program. However, we greatly appreciate
+security researchers who responsibly disclose vulnerabilities to us.
 
 ## Contact
 
-For any security-related questions or concerns, please contact the maintainers through GitHub.
+For any security-related questions or concerns, please contact the maintainers
+through GitHub.
 
 ---
 
