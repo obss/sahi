@@ -13,7 +13,7 @@ tags:
 
 SAHI (Slicing Aided Hyper Inference) detects small objects in large images by
 slicing them into overlapping tiles, running your detector on each tile, and
-merging the results. It works with any detection model -- no retraining needed.
+merging the results. It works with any detection model no retraining needed.
 
 <div align="center">
   <img width="700" alt="sliced inference" src="https://raw.githubusercontent.com/obss/sahi/main/resources/sliced_inference.gif">

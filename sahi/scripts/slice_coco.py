@@ -26,9 +26,9 @@ def slicer(
         overlap_ratio: Overlap ratio between slices.
         ignore_negative_samples: Skip images without annotations.
         output_dir: Output directory for sliced results.
-        min_area_ratio: Minimum area ratio for cropped annotations.
-        annotation ratio is smaller than this value, the annotation
-        is filtered out. Default 0.1.
+        min_area_ratio: Minimum area ratio for cropped annotations. If the
+            annotation ratio is smaller than this value, the annotation
+            is filtered out. Default 0.1.
     """
     # assure slice_size is list
     slice_size_list = slice_size
