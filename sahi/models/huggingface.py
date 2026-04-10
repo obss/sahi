@@ -169,7 +169,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         Returns:
             scores: torch.Tensor
             cat_ids: torch.Tensor
-            boxes: torch.Tensor.
+            boxes: torch.Tensor
         """
         import torch
 
