@@ -178,6 +178,7 @@ def get_sliced_prediction(
     progress_bar: bool = False,
     progress_callback: Callable | None = None,
     batch_size: int = 1,
+    slicer_backend: str = "numpy",
 ) -> PredictionResult:
     """Function for slice image + get predicion for each slice + combine predictions in full image.
 
@@ -241,6 +242,8 @@ def get_sliced_prediction(
             Number of slices to process in a single batch inference call.
             Increasing this value can improve GPU utilization and throughput.
             Default: 1 (sequential, same as previous behavior).
+        slicer_backend: str
+            Slicing backend to use. Options are 'numpy', 'numba', 'dali'. Default is 'numpy'.
 
     Returns:
         A Dict with fields:
@@ -257,21 +260,23 @@ def get_sliced_prediction(
 
     # create slices from full image
     time_start = time.perf_counter()
-    slice_image_result = slice_image(
-        image=image,
-        output_file_name=slice_export_prefix,
-        output_dir=slice_dir,
+
+    from sahi.slicers import get_slicer
+
+    slicer = get_slicer(
+        backend=slicer_backend,
         slice_height=slice_height,
         slice_width=slice_width,
         overlap_height_ratio=overlap_height_ratio,
         overlap_width_ratio=overlap_width_ratio,
         auto_slice_resolution=auto_slice_resolution,
     )
-    from sahi.models.ultralytics import UltralyticsDetectionModel
-
+    slice_image_result = slicer.slice_image(image, verbose=verbose > 1)
     num_slices = len(slice_image_result)
+
     time_end = time.perf_counter() - time_start
     durations_in_seconds["slice"] = time_end
+
 
     if isinstance(detection_model, UltralyticsDetectionModel) and detection_model.is_obb:
         # Only NMS is supported for OBB model outputs
@@ -305,17 +310,19 @@ def get_sliced_prediction(
         slice_image_result.original_image_height,
         slice_image_result.original_image_width,
     ]
+
     object_prediction_list = []
     slices_processed = 0
     # perform sliced prediction
     for batch_ind in slice_iterator:
         batch_start = batch_ind * batch_size
         batch_end = min(batch_start + batch_size, num_slices)
+        current_batch_size = batch_end - batch_start
+
         batch_images = [slice_image_result.images[i] for i in range(batch_start, batch_end)]
-        batch_shifts: list[list[int | float]] = [
+        batch_shifts = [
             list(slice_image_result.starting_pixels[i]) for i in range(batch_start, batch_end)
         ]
-        current_batch_size = len(batch_images)
 
         # perform batch inference
         detection_model.perform_batch_inference([np.ascontiguousarray(img) for img in batch_images])
@@ -349,10 +356,7 @@ def get_sliced_prediction(
             image=image,
             detection_model=detection_model,
             shift_amount=[0, 0],
-            full_shape=[
-                slice_image_result.original_image_height,
-                slice_image_result.original_image_width,
-            ],
+            full_shape=full_shape,
             postprocess=None,
             exclude_classes_by_name=exclude_classes_by_name,
             exclude_classes_by_id=exclude_classes_by_id,
@@ -495,6 +499,7 @@ def predict(
     exclude_classes_by_id: list[int] | None = None,
     progress_bar: bool = False,
     batch_size: int = 1,
+    slicer_backend: str = "numpy",
     **kwargs: Any,
 ) -> dict | None:
     """Performs prediction for all present images in given folder.
@@ -716,6 +721,7 @@ def predict(
                 exclude_classes_by_id=exclude_classes_by_id,
                 progress_bar=progress_bar,
                 batch_size=batch_size,
+                slicer_backend=slicer_backend,
             )
             object_prediction_list = prediction_result.object_prediction_list
             if prediction_result.durations_in_seconds:
@@ -853,7 +859,7 @@ def predict(
     if verbose == 2:
         print(
             "Model loaded in",
-            durations_in_seconds["model_load"],
+            durations_in_seconds.get("model_load", 0),
             "seconds.",
         )
         print(
@@ -869,7 +875,7 @@ def predict(
         if not novisual:
             print(
                 "Exporting performed in",
-                durations_in_seconds["export_files"],
+                durations_in_seconds.get("export_files", 0),
                 "seconds.",
             )
 
@@ -904,6 +910,7 @@ def predict_fiftyone(
     exclude_classes_by_id: list[int] | None = None,
     progress_bar: bool = False,
     batch_size: int = 1,
+    slicer_backend: str = "numpy",
 ) -> None:
     """Performs prediction for all present images in given folder.
 
@@ -1027,6 +1034,7 @@ def predict_fiftyone(
                     exclude_classes_by_id=exclude_classes_by_id,
                     progress_bar=progress_bar,
                     batch_size=batch_size,
+                    slicer_backend=slicer_backend,
                 )
                 durations_in_seconds["slice"] += prediction_result.durations_in_seconds["slice"]
             else:
