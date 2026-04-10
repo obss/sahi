@@ -1289,11 +1289,7 @@ class Coco:
                 from the standard library, but it is called numpy for compatibility.
 
         Returns:
-            result : dict
-                {
-                    "train_coco": "",
-                    "val_coco": "",
-                }
+            result: Dict with keys "train_coco" and "val_coco".
         """
         # divide images
         num_images = len(self.images)
@@ -1734,14 +1730,12 @@ def update_categories(desired_name2id: dict, coco_dict: dict) -> dict:
     Can also be used to filter some of the categories.
 
     Args:
-        desired_name2id : dict
-            {"big_vehicle": 1, "car": 2, "human": 3}
-        coco_dict : dict
-            COCO formatted dictionary.
+        desired_name2id: Desired category name to id mapping,
+            e.g. {"big_vehicle": 1, "car": 2, "human": 3}.
+        coco_dict: COCO formatted dictionary.
 
     Returns:
-        coco_target : dict
-            COCO dict with updated/filtered categories.
+        coco_target: COCO dict with updated/filtered categories.
     """
     # so that original variable doesn't get affected
     coco_source = copy.deepcopy(coco_dict)
@@ -1821,8 +1815,7 @@ def merge(coco_dict1: dict, coco_dict2: dict, desired_name2id: dict | None = Non
             {"human": 1, "car": 2, "big_vehicle": 3}
 
     Returns:
-        merged_coco_dict : dict
-            Merged COCO dict.
+        merged_coco_dict: Merged COCO dict.
     """
     # copy input dicts so that original dicts are not affected
     temp_coco_dict1 = copy.deepcopy(coco_dict1)
@@ -1908,12 +1901,9 @@ def merge_from_file(coco_path1: str, coco_path2: str, save_path: str) -> None:
     """Combine 2 coco formatted annotations files given their paths, and saves the combined file to save_path.
 
     Args:
-        coco_path1 : str
-            Path for the first coco file.
-        coco_path2 : str
-            Path for the second coco file.
-        save_path : str
-            "dirname/coco.json"
+        coco_path1: Path for the first coco file.
+        coco_path2: Path for the second coco file.
+        save_path: Path to save the merged file, e.g. "dirname/coco.json".
     """
     # load coco files to be combined
     coco_dict1 = cast("dict[Any, Any]", load_json(coco_path1))
@@ -1930,26 +1920,10 @@ def get_imageid2annotationlist_mapping(coco_dict: dict) -> dict[int, list[dict]]
     """Get image_id to annotationlist mapping for faster indexing.
 
     Args:
-        coco_dict : dict
-            coco dict with fields "images", "annotations", "categories"
-    Returns
+        coco_dict: COCO dict with fields "images", "annotations", "categories".
 
-        image_id_to_annotation_list : dict
-        {
-            1: [CocoAnnotation, CocoAnnotation, CocoAnnotation],
-            2: [CocoAnnotation]
-        }
-
-        where
-        CocoAnnotation = {
-            'area': 2795520,
-            'bbox': [491.0, 1035.0, 153.0, 182.0],
-            'category_id': 1,
-            'id': 1,
-            'image_id': 1,
-            'iscrowd': 0,
-            'segmentation': [[491.0, 1035.0, 644.0, 1035.0, 644.0, 1217.0, 491.0, 1217.0]]
-        }
+    Returns:
+        image_id_to_annotation_list: Mapping from image id to list of annotation dicts.
     """
     image_id_to_annotation_list: dict = defaultdict(list)
     logger.debug("indexing coco dataset annotations...")
@@ -1969,19 +1943,16 @@ def create_coco_dict(
     """Create COCO dict with fields "images", "annotations", "categories".
 
     Args:
-        images : List of CocoImage containing a list of CocoAnnotation
-        categories : List of Dict
-            COCO categories
-        ignore_negative_samples : Bool
-            If True, images without annotations are ignored
-        image_id_setting: str
-            how to assign image ids while exporting can be
-                auto --> will assign id from scratch (<CocoImage>.id will be ignored)
-                manual --> you will need to provide image ids in <CocoImage> instances (<CocoImage>.id can not be None)
+        images: List of CocoImage containing a list of CocoAnnotation.
+        categories: List of Dict
+            COCO categories.
+        ignore_negative_samples: If True, images without annotations are ignored.
+        image_id_setting: How to assign image ids while exporting can be
+            auto --> will assign id from scratch (<CocoImage>.id will be ignored)
+            manual --> you will need to provide image ids in <CocoImage> instances (<CocoImage>.id can not be None)
 
     Returns:
-        coco_dict : Dict
-            COCO dict with fields "images", "annotations", "categories"
+        coco_dict: COCO dict with fields "images", "annotations", "categories".
     """
     # assertion of parameters
     if image_id_setting not in ["auto", "manual"]:
@@ -2044,17 +2015,14 @@ def create_coco_prediction_array(
     """Create COCO prediction array which is list of predictions.
 
     Args:
-        images : List of CocoImage containing a list of CocoAnnotation
-        ignore_negative_samples : Bool
-            If True, images without predictions are ignored
-        image_id_setting: str
-            how to assign image ids while exporting can be
-                auto --> will assign id from scratch (<CocoImage>.id will be ignored)
-                manual --> you will need to provide image ids in <CocoImage> instances (<CocoImage>.id can not be None)
+        images: List of CocoImage containing a list of CocoAnnotation.
+        ignore_negative_samples: If True, images without predictions are ignored.
+        image_id_setting: How to assign image ids while exporting can be
+            auto --> will assign id from scratch (<CocoImage>.id will be ignored)
+            manual --> you will need to provide image ids in <CocoImage> instances (<CocoImage>.id can not be None)
 
     Returns:
-        coco_prediction_array : List
-            COCO predictions array
+        coco_prediction_array: COCO predictions array.
     """
     # assertion of parameters
     if image_id_setting not in ["auto", "manual"]:
@@ -2114,8 +2082,7 @@ def add_bbox_and_area_to_coco(
     Takes a COCO dataset file, calculates bbox and area fields, and exports updated dict.
 
     Returns:
-    coco_dict : dict
-        Updated coco dict
+        coco_dict: Updated COCO dict.
     """
     coco_dict = cast("dict[Any, Any]", load_json(source_coco_path))
     coco_dict = copy.deepcopy(coco_dict)

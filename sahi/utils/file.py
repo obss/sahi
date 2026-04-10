@@ -105,8 +105,7 @@ def list_files(
             1: print number of files
 
     Returns:
-        filepath_list : list
-            List of file paths
+        filepath_list: List of file paths.
     """
     # define verboseprint
     verboseprint = print if verbose else lambda *a, **k: None
@@ -133,18 +132,14 @@ def list_files_recursively(
     """Walk given directory recursively and return a list of file path with desired extension.
 
     Args:
-        directory : str
-            "data/coco/"
-        contains : list
-            A list of strings to check if the target file contains them, example: ["coco.png", ".jpg", "jpeg"]
-        verbose : bool
-            If true, prints some results
+        directory: Directory path to walk, e.g. "data/coco/".
+        contains: A list of strings to check if the target file contains them,
+            example: ["coco.png", ".jpg", "jpeg"].
+        verbose: If true, prints some results.
 
     Returns:
-        relative_filepath_list : list
-            List of file paths relative to given directory
-        abs_filepath_list : list
-            List of absolute file paths
+        relative_filepath_list: List of file paths relative to given directory.
+        abs_filepath_list: List of absolute file paths.
     """
     # define verboseprint
     verboseprint = print if verbose else lambda *a, **k: None

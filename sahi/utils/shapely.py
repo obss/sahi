@@ -88,11 +88,12 @@ class ShapelyAnnotation:
     ) -> ShapelyAnnotation:
         """Init ShapelyAnnotation from coco segmentation.
 
-        segmentation : List[List]
-            [[1, 1, 325, 125, 250, 200, 5, 200]]
-        slice_bbox (List[int]): [xmin, ymin, width, height]
-            Should have the same format as the output of the get_bbox_from_shapely function.
-            Is used to calculate sliced coco coordinates.
+        Args:
+            segmentation: COCO segmentation format,
+                e.g. [[1, 1, 325, 125, 250, 200, 5, 200]].
+            slice_bbox: Bounding box as [xmin, ymin, width, height].
+                Should have the same format as the output of the get_bbox_from_shapely function.
+                Is used to calculate sliced coco coordinates.
         """
         shapely_multipolygon = get_shapely_multipolygon(segmentation)
         return cls(multipolygon=shapely_multipolygon, slice_bbox=slice_bbox)
