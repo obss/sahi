@@ -366,10 +366,7 @@ python script_name.py
 
 ## 更多资源
 
-想要深入了解？以下是一些有用的资源：
-
-- **[预测工具文档](predict.md)** - 预测参数和可视化的详细说明
-- **[切片工具指南](slicing.md)** - 切片操作的深入探索
-- **[COCO 工具文档](coco.md)** - COCO 格式操作的全面示例
-- **[交互式示例 Notebook](../../demo/)** - CLI 命令的实践示例
-- **[模型文档](../models/)** - 各框架的模型集成指南
+- [预测工具](predict.md) -- 预测参数和可视化的 Python API
+- [COCO 工具](coco.md) -- COCO 数据集操作的 Python API
+- [模型集成](guides/models.md) -- 各框架的模型集成指南
+- [交互式 Notebooks](notebooks.md) -- 所有框架的动手实践示例

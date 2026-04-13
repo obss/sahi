@@ -1,23 +1,33 @@
+---
+tags:
+  - inference
+  - slicing
+  - batch-inference
+  - visualization
+  - object-detection
+  - small-object-detection
+---
+
 # 预测工具
 
-- 切片推理：
+## 切片推理
 
 ```python
 from sahi.predict import get_sliced_prediction
 from sahi import AutoDetectionModel
 
-# init any model
-detection_model = AutoDetectionModel.from_pretrained(model_type='mmdet',...) # for MMDetection models
-detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',...) # for YOLOv8/YOLO11/YOLO12 models
-detection_model = AutoDetectionModel.from_pretrained(model_type='huggingface',...) # for HuggingFace detection models
-detection_model = AutoDetectionModel.from_pretrained(model_type='torchvision',...) # for Torchvision detection models
-detection_model = AutoDetectionModel.from_pretrained(model_type='rtdetr',...) # for RT-DETR models
-detection_model = AutoDetectionModel.from_pretrained(model_type='yoloe',...) # for YOLOE models
-detection_model = AutoDetectionModel.from_pretrained(model_type='yolov5',...) # for YOLOv5 models
-detection_model = AutoDetectionModel.from_pretrained(model_type='yolo-world',...) # for YOLOWorld models
-detection_model = AutoDetectionModel.from_pretrained(model_type='roboflow',...) # for Roboflow RFDETR detection/segmentation models
+# 初始化任意模型
+detection_model = AutoDetectionModel.from_pretrained(model_type='mmdet',...) # MMDetection 模型
+detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',...) # YOLOv8/YOLO11/YOLO26 模型
+detection_model = AutoDetectionModel.from_pretrained(model_type='huggingface',...) # HuggingFace 检测模型
+detection_model = AutoDetectionModel.from_pretrained(model_type='torchvision',...) # Torchvision 检测模型
+detection_model = AutoDetectionModel.from_pretrained(model_type='rtdetr',...) # RT-DETR 模型
+detection_model = AutoDetectionModel.from_pretrained(model_type='yoloe',...) # YOLOE 模型
+detection_model = AutoDetectionModel.from_pretrained(model_type='yolov5',...) # YOLOv5 模型
+detection_model = AutoDetectionModel.from_pretrained(model_type='yolo-world',...) # YOLOWorld 模型
+detection_model = AutoDetectionModel.from_pretrained(model_type='roboflow',...) # Roboflow RFDETR 检测/分割模型
 
-# get sliced prediction result
+# 获取切片预测结果
 result = get_sliced_prediction(
     image,
     detection_model,
@@ -29,16 +39,16 @@ result = get_sliced_prediction(
 
 ```
 
-- 基础推理：
+## 基础推理
 
 ```python
 from sahi.predict import get_prediction
 from sahi import AutoDetectionModel
 
-# init a model
+# 初始化模型
 detection_model = AutoDetectionModel.from_pretrained(...)
 
-# get standard prediction result
+# 获取标准预测结果
 result = get_prediction(
     image,
     detection_model,
@@ -46,23 +56,27 @@ result = get_prediction(
 
 ```
 
-- 批量推理:
+## 批量推理
+
+### 对文件夹或文件列表进行批量预测
+
+使用高级 `predict` 函数对多张图像一次性执行切片推理，并自动导出结果：
 
 ```python
 from sahi.predict import predict
 from sahi import AutoDetectionModel
 
-# init a model
+# 初始化模型
 detection_model = AutoDetectionModel.from_pretrained(...)
 
-# get batch predict result
+# 获取批量预测结果
 result = predict(
-    model_type=..., # one of 'ultralytics', 'mmdet', 'huggingface'
-    model_path=..., # path to model weight file
-    model_config_path=..., # for mmdet models
+    model_type=..., # 'ultralytics', 'mmdet', 'huggingface' 之一
+    model_path=..., # 模型权重文件路径
+    model_config_path=..., # 用于 mmdet 模型
     model_confidence_threshold=0.5,
-    model_device='cpu', # or 'cuda:0'
-    source=..., # image or folder path
+    model_device='cpu', # 或 'cuda:0'
+    source=..., # 图像或文件夹路径
     no_standard_prediction=True,
     no_sliced_prediction=False,
     slice_height=512,
@@ -73,8 +87,47 @@ result = predict(
     export_crop=False,
     progress_bar=False,
 )
-
 ```
+
+### 底层批量推理 API
+
+`perform_batch_inference` 允许你在单次调用中对多张图像运行模型，并获取每张图像的预测列表。Ultralytics YOLO 模型使用原生 GPU 批处理；所有其他模型回退到逐张图像的顺序推理，但使用相同的 API。
+
+```python
+import cv2
+from sahi import AutoDetectionModel
+
+detection_model = AutoDetectionModel.from_pretrained(
+    model_type="ultralytics",
+    model_path="yolo26n.pt",
+    confidence_threshold=0.25,
+    device="cuda:0",
+)
+
+# 加载一批图像为 numpy 数组 (H, W, C)，RGB 格式
+images = [cv2.cvtColor(cv2.imread(p), cv2.COLOR_BGR2RGB) for p in image_paths]
+
+# 运行批量推理（Ultralytics 使用原生 GPU 批处理）
+detection_model.perform_batch_inference(images)
+
+# 提供每张图像的偏移量和完整图像尺寸（当图像不是切片时使用 [[0, 0]] 默认值）
+shift_amount_list = [[0, 0]] * len(images)
+full_shape_list   = [[img.shape[0], img.shape[1]] for img in images]
+
+detection_model.convert_original_predictions(
+    shift_amount=shift_amount_list,
+    full_shape=full_shape_list,
+)
+
+# 访问每张图像的预测结果
+for i, preds in enumerate(detection_model.object_prediction_list_per_image):
+    print(f"Image {i}: {len(preds)} detections")
+    for pred in preds:
+        print(pred.category.name, pred.score.value, pred.bbox.to_xyxy())
+```
+
+!!! note "单图像兼容性"
+    现有的 `object_prediction_list` 属性保持不变，返回第一张图像的预测结果，因此使用 `perform_inference` + `convert_original_predictions` + `object_prediction_list` 的代码无需修改即可继续工作。
 
 ## 进度条
 
@@ -109,23 +162,23 @@ result = get_sliced_prediction(
 )
 ```
 
-!!! tip "提示" - `progress_bar` 和 `progress_callback`
-可以同时使用。当两者都提供时，tqdm 进度条会显示，同时回调函数也会在每个切片组处理后被调用。-
-`progress_callback` 使用从 1 开始的索引（即第一次调用为 `(1, total)`）。
+!!! tip "提示"
+    - `progress_bar` 和 `progress_callback` 可以同时使用。当两者都提供时，tqdm 进度条会显示，同时回调函数也会在每个切片组处理后被调用。
+    - `progress_callback` 使用从 1 开始的索引（即第一次调用为 `(1, total)`）。
 
-- 在推理时排除自定义类别:
+## 在推理时排除自定义类别
 
 ```python
 from sahi.predict import get_sliced_prediction
 from sahi import AutoDetectionModel
 
-# init a model
+# 初始化模型
 detection_model = AutoDetectionModel.from_pretrained(...)
 
-# define the class names to exclude from custom model inference
+# 定义要排除的类别名称
 exclude_classes_by_name = ["car"]
 
-# or exclude classes by its custom id
+# 或通过自定义 id 排除类别
 exclude_classes_by_id = [0]
 
 result = get_sliced_prediction(
@@ -141,67 +194,51 @@ result = get_sliced_prediction(
 
 ```
 
-- 可视化参数与导出格式:
+## 可视化参数与导出格式
 
 ```python
 from sahi.predict import get_prediction
 from sahi import AutoDetectionModel
 from PIL import Image
 
-# init a model
+# 初始化模型
 detection_model = AutoDetectionModel.from_pretrained(...)
 
-# get prediction result
+# 获取预测结果
 result = get_prediction(
     image,
     detection_model,
 )
 
-# Export with custom visualization parameters
+# 使用自定义可视化参数导出
 result.export_visuals(
     export_dir="outputs/",
-    text_size=1.0,  # Size of the class label text
-    rect_th=2,      # Thickness of bounding box lines
-    text_th=2,      # Thickness of the text
-    hide_labels=False,  # Set True to hide class labels
-    hide_conf=False,    # Set True to hide confidence scores
-    color=(255, 0, 0),  # Custom color in RGB format (red in this example)
+    text_size=1.0,  # 类别标签文字大小
+    rect_th=2,      # 边界框线条粗细
+    text_th=2,      # 文字粗细
+    hide_labels=False,  # 设为 True 隐藏类别标签
+    hide_conf=False,    # 设为 True 隐藏置信度分数
+    color=(255, 0, 0),  # 自定义 RGB 颜色（此例为红色）
     file_name="custom_visualization",
-    export_format="jpg"  # Supports 'jpg' and 'png'
+    export_format="jpg"  # 支持 'jpg' 和 'png'
 )
 
-# Export as COCO format annotations
+# 导出为 COCO 格式标注
 coco_annotations = result.to_coco_annotations()
-# Example output: [{'image_id': None, 'bbox': [x, y, width, height], 'category_id': 0, 'area': width*height, ...}]
+# 示例输出: [{'image_id': None, 'bbox': [x, y, width, height], 'category_id': 0, 'area': width*height, ...}]
 
-# Export as COCO predictions (includes confidence scores)
+# 导出为 COCO 预测格式（包含置信度分数）
 coco_predictions = result.to_coco_predictions(image_id=1)
-# Example output: [{'image_id': 1, 'bbox': [x, y, width, height], 'score': 0.98, 'category_id': 0, ...}]
+# 示例输出: [{'image_id': 1, 'bbox': [x, y, width, height], 'score': 0.98, 'category_id': 0, ...}]
 
-# Export as imantics format
+# 导出为 imantics 格式
 imantics_annotations = result.to_imantics_annotations()
-# For use with imantics library: https://github.com/jsbroks/imantics
+# 用于 imantics 库: https://github.com/jsbroks/imantics
 
-# Export for FiftyOne visualization
+# 导出用于 FiftyOne 可视化
 fiftyone_detections = result.to_fiftyone_detections()
-# For use with FiftyOne: https://github.com/voxel51/fiftyone
+# 用于 FiftyOne: https://github.com/voxel51/fiftyone
 ```
 
-# 交互式示例和演示
-
-想要马上看到这些预测工具在使用中的表现？我们有几个集成了不同模型的交互式的notebook：
-
-- 对于 YOLOv8/YOLO11/YOLO12 模型，探索我们的
-  [Ultralytics集成 notebook](../../demo/inference_for_ultralytics.ipynb)
-- 对于 YOLOv5 模型，查看我们的
-  [YOLOv5集成 notebook](../../demo/inference_for_yolov5.ipynb)
-- 对于 MMDetection 模型，尝试我们的
-  [MMDetection集成 notebook](../../demo/inference_for_mmdetection.ipynb)
-- 对于 HuggingFace 模型，查看我们的
-  [HuggingFace集成 notebook](../../demo/inference_for_huggingface.ipynb)
-- 对于 TorchVision 模型, 探索我们的
-  [TorchVision集成 notebook](../../demo/inference_for_torchvision.ipynb)
-- 对于 RT-DETR 模型，查看我们的
-  [RT-DETR集成 notebook](../../demo/inference_for_rtdetr.ipynb)
-
-这些示例提供了快速上手的例子并且让你能够体验不同的参数和设置。
+!!! tip "交互式示例"
+    想要查看这些预测工具的实际效果？请查阅我们的[交互式 notebooks](notebooks.md)，其中包含每个支持框架的动手实践示例。

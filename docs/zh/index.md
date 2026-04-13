@@ -2,6 +2,12 @@
 hide:
   - navigation
   - toc
+tags:
+  - getting-started
+  - object-detection
+  - small-object-detection
+  - slicing
+  - instance-segmentation
 ---
 
 <div align="center">
@@ -36,139 +42,82 @@ hide:
 
 ## 什么是 SAHI？
 
-SAHI（Slicing Aided Hyper
-Inference，切片辅助超推理）是一个提供了通用的切片辅助推理与微调流程，专门用于小目标检测的开源框架。在监控等应用场景中，检测小目标或远处物体是一项重大挑战，因为它们仅由少量像素表示，缺乏足够的细节，传统检测器难以识别。
+SAHI（Slicing Aided Hyper Inference，切片辅助超推理）是一个提供了通用的切片辅助推理与微调流程，专门用于小目标检测的开源框架。在监控等应用场景中，检测小目标或远处物体是一项重大挑战，因为它们仅由少量像素表示，缺乏足够的细节，传统检测器难以识别。
 
-SAHI 通过一种独特的方法解决了这一问题，该方法可以与任意目标检测器结合使用，而无需额外的微调。在 Visdrone 和 xView 航拍目标检测数据集上的实验评估表明，SAHI 可以使 FCOS、VFNet 和 TOOD 检测器的 AP 分别提高 6.8%、5.1% 和 5.3%。在结合切片辅助微调后，精度可进一步提升，累计提升分别达到 12.7%、13.4% 和 14.5%。该技术已成功集成到 Detectron2、MMDetection 和 YOLOv5 等模型中。
-
-<div class="grid cards" markdown>
-
-- :material-clock-fast:{ .lg .middle } &nbsp; **快速开始**
-
-  ***
-
-  使用 pip 安装 `sahi`，几分钟即可上手。
-
-  ***
-
-  [:octicons-arrow-right-24: 快速开始](quick-start.md)
-
-- :material-image:{ .lg .middle } &nbsp; **预测**
-
-  ***
-
-  使用 SAHI 对新图片、视频和流进行预测。
-
-  ***
-
-  [:octicons-arrow-right-24: 了解更多](predict.md)
-
-- :material-content-cut:{ .lg .middle } &nbsp; **切片**
-
-  ***
-
-  学习如何对大图像和数据集进行切片以进行推理。
-
-  ***
-
-  [:octicons-arrow-right-24: 了解更多](slicing.md)
-
-- :material-database:{ .lg .middle } &nbsp; **COCO 工具**
-
-  ***
-
-  处理 COCO 格式数据集，包括创建、拆分和过滤。
-
-  ***
-
-  [:octicons-arrow-right-24: 了解更多](coco.md)
-
-- :material-console:{ .lg .middle } &nbsp; **命令行工具**
-
-  ***
-
-  通过命令行使用 SAHI 进行预测和数据集操作。
-
-  ***
-
-  [:octicons-arrow-right-24: 了解更多](cli.md)
-
-</div>
-
-## 交互式示例
-
-所有文档文件都配有 [demo 目录](../notebooks/) 中的交互式 Jupyter notebook：
+SAHI 通过一种独特的方法解决了这一问题，该方法可以与任意目标检测器结合使用，而无需额外的微调。在 Visdrone 和 xView 航拍目标检测数据集上的实验评估表明，SAHI 可以使 FCOS、VFNet 和 TOOD 检测器的 AP 分别提高 6.8%、5.1% 和 5.3%。在结合切片辅助微调后，精度可进一步提升，累计提升分别达到 12.7%、13.4% 和 14.5%。该技术已成功集成到 Ultralytics (YOLOv8, YOLO11, YOLO26)、HuggingFace Transformers、RT-DETR、TorchVision、MMDetection、Detectron2、YOLOv5、YOLOE、YOLO-World 和 Roboflow RF-DETR 等模型中。
 
 <div class="grid cards" markdown>
 
-- :material-notebook:{ .lg .middle } &nbsp; **切片**
+-   :material-clock-fast:{ .lg .middle } **快速开始**
 
-  ***
+    ---
 
-  切片操作演示。
+    使用 pip 安装 `sahi`，几分钟即可上手。
 
-  ***
+    [:octicons-arrow-right-24: 快速开始](quick-start.md)
 
-  [:octicons-arrow-right-24: 打开 Notebook](../notebooks/slicing.ipynb)
+-   :material-lightbulb-outline:{ .lg .middle } **工作原理**
 
-- :material-notebook:{ .lg .middle } &nbsp; **Ultralytics**
+    ---
 
-  ***
+    了解切片算法、使用场景和调优方法。
 
-  YOLOv8/YOLO11/YOLO12 集成。
+    [:octicons-arrow-right-24: 切片推理](guides/sliced-inference.md)
 
-  ***
+-   :material-puzzle-outline:{ .lg .middle } **模型集成**
 
-  [:octicons-arrow-right-24: 打开 Notebook](../notebooks/inference_for_ultralytics.ipynb)
+    ---
 
-- :material-notebook:{ .lg .middle } &nbsp; **YOLOv5**
+    将 SAHI 与 Ultralytics、HuggingFace、MMDetection、TorchVision 等框架配合使用。
 
-  ***
+    [:octicons-arrow-right-24: 所有模型](guides/models.md)
 
-  YOLOv5 集成。
+-   :material-image:{ .lg .middle } **预测**
 
-  ***
+    ---
 
-  [:octicons-arrow-right-24: 打开 Notebook](../notebooks/inference_for_yolov5.ipynb)
+    使用 SAHI 对新图片、视频和流进行预测。
 
-- :material-notebook:{ .lg .middle } &nbsp; **MMDetection**
+    [:octicons-arrow-right-24: 了解更多](predict.md)
 
-  ***
+-   :material-content-cut:{ .lg .middle } **切片**
 
-  MMDetection 集成。
+    ---
 
-  ***
+    学习如何对大图像和数据集进行切片以进行推理。
 
-  [:octicons-arrow-right-24: 打开 Notebook](../notebooks/inference_for_mmdetection.ipynb)
+    [:octicons-arrow-right-24: 了解更多](slicing.md)
 
-- :material-notebook:{ .lg .middle } &nbsp; **HuggingFace**
+-   :material-database:{ .lg .middle } **COCO 工具**
 
-  ***
+    ---
 
-  HuggingFace 模型集成。
+    处理 COCO 格式数据集，包括创建、拆分和过滤。
 
-  ***
+    [:octicons-arrow-right-24: 了解更多](coco.md)
 
-  [:octicons-arrow-right-24: 打开 Notebook](../notebooks/inference_for_huggingface.ipynb)
+-   :material-console:{ .lg .middle } **命令行工具**
 
-- :material-notebook:{ .lg .middle } &nbsp; **TorchVision**
+    ---
 
-  ***
+    通过命令行使用 SAHI 进行预测和数据集操作。
 
-  TorchVision 模型集成。
+    [:octicons-arrow-right-24: 了解更多](cli.md)
 
-  ***
+-   :material-eye:{ .lg .middle } **FiftyOne**
 
-  [:octicons-arrow-right-24: 打开 Notebook](../notebooks/inference_for_torchvision.ipynb)
+    ---
 
-- :material-notebook:{ .lg .middle } &nbsp; **RT-DETR**
+    交互式探索和比较检测结果。
 
-  ***
+    [:octicons-arrow-right-24: 了解更多](fiftyone.md)
 
-  RT-DETR 集成。
+-   :material-notebook:{ .lg .middle } **Notebooks**
 
-  ***
+    ---
 
-  [:octicons-arrow-right-24: 打开 Notebook](../notebooks/inference_for_rtdetr.ipynb)
+    为所有支持的框架提供动手实践的 Colab notebooks。
+
+    [:octicons-arrow-right-24: 浏览 notebooks](notebooks.md)
 
 </div>
