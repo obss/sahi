@@ -305,5 +305,5 @@ coco_results = remove_invalid_coco_results("coco_result.json", "coco_dataset.jso
 
 ## 更多资源
 
-- [交互式 notebooks](notebooks.md) -- 包含 COCO 数据集切片的动手实践示例
+- [交互式 notebooks](../notebooks.md) -- 包含 COCO 数据集切片的动手实践示例
 - [CLI 文档](cli.md) -- COCO 数据集的命令行操作

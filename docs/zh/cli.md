@@ -378,5 +378,5 @@ python script_name.py
 
 - [预测工具](predict.md) -- 预测参数和可视化的 Python API
 - [COCO 工具](coco.md) -- COCO 数据集操作的 Python API
-- [模型集成](guides/models.md) -- 各框架的模型集成指南
-- [交互式 Notebooks](notebooks.md) -- 所有框架的动手实践示例
+- [模型集成](../guides/models.md) -- 各框架的模型集成指南
+- [交互式 Notebooks](../notebooks.md) -- 所有框架的动手实践示例
