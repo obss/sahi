@@ -241,4 +241,4 @@ fiftyone_detections = result.to_fiftyone_detections()
 ```
 
 !!! tip "交互式示例"
-    想要查看这些预测工具的实际效果？请查阅我们的[交互式 notebooks](notebooks.md)，其中包含每个支持框架的动手实践示例。
+    想要查看这些预测工具的实际效果？请查阅我们的[交互式 notebooks](../notebooks.md)，其中包含每个支持框架的动手实践示例。
