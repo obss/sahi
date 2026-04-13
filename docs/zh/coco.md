@@ -325,6 +325,7 @@ subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10, category_id=0)
 # bonus2: 构建 COCO 对象，并将负样本（无标注图像）数量抽样 1/10
 subsampled_coco = coco.get_subsampled_coco(subsample_ratio=10, category_id=-1)
 ```
+
 </details>
 
 <details closed>
@@ -353,6 +354,7 @@ subsampled_coco = coco.get_subsampled_coco(upsample_ratio=10, category_id=0)
 # bonus2: 构建 COCO 对象，并将负样本上采样 10 倍
 upsampled_coco = coco.get_upsampled_coco(upsample_ratio=10, category_id=-1)
 ```
+
 </details>
 
 <details closed>
@@ -386,6 +388,7 @@ coco.stats
 }
 
 ```
+
 </details>
 
 <details closed>
@@ -407,6 +410,7 @@ save_json(coco_results, "fixed_coco_result.json")
 # 同时过滤掉超出图像高度和宽度范围的 bbox 结果
 coco_results = remove_invalid_coco_results("coco_result.json", "coco_dataset.json")
 ```
+
 </details>
 
 <details closed>
@@ -420,12 +424,14 @@ coco_results = remove_invalid_coco_results("coco_result.json", "coco_dataset.jso
 from sahi.utils.coco import Coco
 from sahi.utils.file import save_json
 ```
+
 用法：
 
 ```python
 # 将越界的边界框裁剪到图像的宽度和高度范围内
 coco = Coco.from_coco_dict_or_path(coco_path, clip_bboxes_to_img_dims=True)
 ```
+
 或者，
 
 ```python
@@ -438,14 +444,17 @@ coco = coco.get_coco_with_clipped_bboxes()
 ```python
 save_json(coco.json, "coco.json")
 ```
+
 </details>
 
 # 交互式示例和附加资源
 
 想要马上看到 COCO 工具在使用中的表现？这里有一些有用的资源：
 
-- 关于 COCO 数据集切片的动手实践示例，查看我们的 [切片示例 notebook](../../demo/slicing.ipynb)
-- 要了解如何使用 COCO 数据集进行预测与可视化，探索我们在 [demo 目录](../../demo/) 中特定模型的notebook
+- 关于 COCO 数据集切片的动手实践示例，查看我们的
+  [切片示例 notebook](../../demo/slicing.ipynb)
+- 要了解如何使用 COCO 数据集进行预测与可视化，探索我们在
+  [demo 目录](../../demo/) 中特定模型的notebook
 - 关于 COCO 数据集的命令行操作, 参考我们的 [CLI 文档](cli.md)
 
 这些资源提供了实用的例子和详细的解释，来帮助你用 SAHI 来高效的处理 COCO 数据集。

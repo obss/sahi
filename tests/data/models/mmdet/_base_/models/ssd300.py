@@ -1,3 +1,5 @@
+"""MMDetection configuration file for ssd300.py."""
+
 # model settings
 input_size = 300
 model = dict(

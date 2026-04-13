@@ -1,3 +1,7 @@
+"""Tests for image slicing functionality."""
+
+from __future__ import annotations
+
 import numpy as np
 from PIL import Image
 
@@ -7,7 +11,10 @@ from sahi.utils.cv import read_image
 
 
 class TestSlicing:
-    def test_slice_image(self):
+    """Test image slicing functionality."""
+
+    def test_slice_image(self) -> None:
+        """Test slicing an image with multiple input formats."""
         # read coco file
         coco_path = "tests/data/coco_utils/terrain1_coco.json"
         coco = Coco.from_coco_dict_or_path(coco_path)
@@ -37,7 +44,7 @@ class TestSlicing:
         assert slice_image_result.coco_images[15].annotations[1].bbox == [17, 186, 48, 152]
         assert isinstance(slice_image_result[0], dict)
         assert slice_image_result[0]["image"].shape == (512, 512, 3)
-        assert slice_image_result[3]["starting_pixel"] == [924, 0]
+        assert slice_image_result[3]["starting_pixel"] == [924, 0]  # type: ignore[call-overload]
         assert isinstance(slice_image_result[0:4], list)
         assert len(slice_image_result[0:4]) == 4
 
@@ -83,7 +90,8 @@ class TestSlicing:
         assert slice_image_result.coco_images[15].annotations[1].area == 7296
         assert slice_image_result.coco_images[15].annotations[1].bbox == [17, 186, 48, 152]
 
-    def test_slice_coco(self):
+    def test_slice_coco(self) -> None:
+        """Test slicing COCO annotations and images."""
         import shutil
 
         coco_annotation_file_path = "tests/data/coco_utils/terrain1_coco.json"
@@ -150,7 +158,8 @@ class TestSlicing:
 
         shutil.rmtree(output_dir, ignore_errors=True)
 
-    def test_shift_bboxes(self):
+    def test_shift_bboxes(self) -> None:
+        """Test shifting bounding boxes with different input types."""
         import torch
 
         bboxes = [[1, 2, 3, 4]]
@@ -160,17 +169,18 @@ class TestSlicing:
         assert shifted_bboxes == [[11, 22, 13, 24]]
         assert isinstance(shifted_bboxes, list)
 
-        bboxes = np.array([[1, 2, 3, 4]])
-        shifted_bboxes = shift_bboxes(bboxes=bboxes, offset=[shift_x, shift_y])
-        assert shifted_bboxes.tolist() == [[11, 22, 13, 24]]
-        assert isinstance(shifted_bboxes, np.ndarray)
+        np_bboxes = np.array([[1, 2, 3, 4]])
+        shifted_np_bboxes = shift_bboxes(bboxes=np_bboxes, offset=[shift_x, shift_y])
+        assert shifted_np_bboxes.tolist() == [[11, 22, 13, 24]]
+        assert isinstance(shifted_np_bboxes, np.ndarray)
 
-        bboxes = torch.tensor([[1, 2, 3, 4]])
-        shifted_bboxes = shift_bboxes(bboxes=bboxes, offset=[shift_x, shift_y])
-        assert shifted_bboxes.tolist() == [[11, 22, 13, 24]]
-        assert isinstance(shifted_bboxes, torch.Tensor)
+        torch_bboxes = torch.tensor([[1, 2, 3, 4]])
+        shifted_torch_bboxes = shift_bboxes(bboxes=torch_bboxes, offset=[shift_x, shift_y])
+        assert shifted_torch_bboxes.tolist() == [[11, 22, 13, 24]]
+        assert isinstance(shifted_torch_bboxes, torch.Tensor)
 
-    def test_shift_masks(self):
+    def test_shift_masks(self) -> None:
+        """Test shifting mask arrays."""
         masks = np.zeros((3, 30, 30), dtype=bool)
         shift_x = 10
         shift_y = 20

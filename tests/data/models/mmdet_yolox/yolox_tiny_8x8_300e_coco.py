@@ -1,3 +1,5 @@
+"""MMDetection configuration file for yolox_tiny_8x8_300e_coco.py."""
+
 optimizer = dict(
     type="SGD",
     lr=0.01,

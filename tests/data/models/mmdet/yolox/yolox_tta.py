@@ -1,3 +1,5 @@
+"""MMDetection configuration file for yolox_tta.py."""
+
 tta_model = dict(type="DetTTAModel", tta_cfg=dict(nms=dict(type="nms", iou_threshold=0.65), max_per_img=100))
 
 img_scales = [(640, 640), (320, 320), (960, 960)]

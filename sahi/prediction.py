@@ -1,3 +1,5 @@
+"""Prediction classes for object detection results."""
+
 from __future__ import annotations
 
 import copy
@@ -13,31 +15,50 @@ from sahi.utils.file import Path
 
 
 class PredictionScore:
-    def __init__(self, value: float | np.ndarray):
-        """
+    """Wrapper around a numeric prediction confidence score.
+
+    Provides comparison operators and conversion from numpy scalars to
+    native Python floats for serialization safety.
+    """
+
+    value: float
+
+    def __init__(self, value: float | np.ndarray) -> None:
+        """Initialize PredictionScore.
+
         Args:
-            score: prediction score between 0 and 1
+            value: prediction score between 0 and 1.
         """
         # if score is a numpy object, convert it to python variable
-        if type(value).__module__ == "numpy":
+        if isinstance(value, np.ndarray):
             value = copy.deepcopy(value).tolist()
         # set score
-        self.value = value
+        self.value: float = value  # type: ignore[assignment]
 
-    def is_greater_than_threshold(self, threshold):
+    def is_greater_than_threshold(self, threshold: float) -> bool:
         """Check if score is greater than threshold."""
         return self.value > threshold
 
-    def __eq__(self, threshold):
-        return self.value == threshold
+    def __eq__(self, other: object) -> bool:  # type: ignore[override]
+        """Check equality with another value."""
+        if isinstance(other, (float, int)):
+            return self.value == other
+        return NotImplemented
 
-    def __gt__(self, threshold):
-        return self.value > threshold
+    def __gt__(self, other: object) -> bool:  # type: ignore[override]
+        """Check if greater than another value."""
+        if isinstance(other, (float, int)):
+            return self.value > other
+        return NotImplemented
 
-    def __lt__(self, threshold):
-        return self.value < threshold
+    def __lt__(self, other: object) -> bool:  # type: ignore[override]
+        """Check if less than another value."""
+        if isinstance(other, (float, int)):
+            return self.value < other
+        return NotImplemented
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return string representation of prediction score."""
         return f"PredictionScore: <value: {self.value}>"
 
 
@@ -46,15 +67,15 @@ class ObjectPrediction(ObjectAnnotation):
 
     def __init__(
         self,
-        bbox: list[int] | None = None,
+        bbox: list[float] | None = None,
         category_id: int | None = None,
         category_name: str | None = None,
         segmentation: list[list[float]] | None = None,
         score: float = 0.0,
-        shift_amount: list[int] | None = [0, 0],
-        full_shape: list[int] | None = None,
-    ):
-        """Creates ObjectPrediction from bbox, score, category_id, category_name, segmentation.
+        shift_amount: list[int] | list[int | float] | None = None,
+        full_shape: list[int] | list[int | float] | None = None,
+    ) -> None:
+        """Initialize ObjectPrediction from bbox, score, category_id, category_name, segmentation.
 
         Args:
             bbox: list
@@ -88,8 +109,8 @@ class ObjectPrediction(ObjectAnnotation):
             full_shape=full_shape,
         )
 
-    def get_shifted_object_prediction(self):
-        """Returns shifted version ObjectPrediction.
+    def get_shifted_object_prediction(self) -> ObjectPrediction:
+        """Get shifted version of ObjectPrediction.
 
         Shifts bbox and mask coords. Used for mapping sliced predictions over full image.
         """
@@ -115,10 +136,11 @@ class ObjectPrediction(ObjectAnnotation):
                 full_shape=None,
             )
 
-    def to_coco_prediction(self, image_id=None):
-        """Returns sahi.utils.coco.CocoPrediction representation of ObjectAnnotation."""
+    def to_coco_prediction(self, image_id: int | None = None) -> CocoPrediction:
+        """Convert to sahi.utils.coco.CocoPrediction representation."""
+        bbox_xywh = self.bbox.to_xywh()
         if self.mask:
-            coco_prediction = CocoPrediction.from_coco_segmentation(
+            coco_prediction = CocoPrediction.from_coco_segmentation(  # type: ignore[arg-type]
                 segmentation=self.mask.segmentation,
                 category_id=self.category.id,
                 category_name=self.category.name,
@@ -127,7 +149,7 @@ class ObjectPrediction(ObjectAnnotation):
             )
         else:
             coco_prediction = CocoPrediction.from_coco_bbox(
-                bbox=self.bbox.to_xywh(),
+                bbox=bbox_xywh,  # type: ignore[arg-type]
                 category_id=self.category.id,
                 category_name=self.category.name,
                 score=self.score.value,
@@ -135,8 +157,8 @@ class ObjectPrediction(ObjectAnnotation):
             )
         return coco_prediction
 
-    def to_fiftyone_detection(self, image_height: int, image_width: int):
-        """Returns fiftyone.Detection representation of ObjectPrediction."""
+    def to_fiftyone_detection(self, image_height: int, image_width: int) -> object:
+        """Convert to fiftyone.Detection representation."""
         try:
             import fiftyone as fo
         except ImportError:
@@ -147,7 +169,8 @@ class ObjectPrediction(ObjectAnnotation):
         fiftyone_detection = fo.Detection(label=self.category.name, bounding_box=rel_box, confidence=self.score.value)
         return fiftyone_detection
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return string representation of ObjectPrediction."""
         return f"""ObjectPrediction<
     bbox: {self.bbox},
     mask: {self.mask},
@@ -156,12 +179,29 @@ class ObjectPrediction(ObjectAnnotation):
 
 
 class PredictionResult:
+    """Container for detection results on a single image.
+
+    Holds the list of ``ObjectPrediction`` instances together with the
+    source image and optional profiling durations. Provides helpers for
+    exporting results to COCO, FiftyOne, and visual formats.
+    """
+
     def __init__(
         self,
         object_prediction_list: list[ObjectPrediction],
         image: Image.Image | str | np.ndarray,
         durations_in_seconds: dict[str, Any] = dict(),
-    ):
+    ) -> None:
+        """Initialize a PredictionResult.
+
+        Args:
+            object_prediction_list: list[ObjectPrediction]
+                Detected objects for this image.
+            image: Image.Image or str or np.ndarray
+                The source image as a PIL Image, file path, or numpy array.
+            durations_in_seconds: dict[str, Any]
+                Elapsed times for profiling (e.g. inference, postprocess).
+        """
         self.image: Image.Image = read_image_as_pil(image)
         self.image_width, self.image_height = self.image.size
         self.object_prediction_list: list[ObjectPrediction] = object_prediction_list
@@ -175,18 +215,16 @@ class PredictionResult:
         hide_labels: bool = False,
         hide_conf: bool = False,
         file_name: str = "prediction_visual",
-    ):
-        """
+    ) -> None:
+        """Export prediction visualizations to directory.
 
         Args:
-            export_dir: directory for resulting visualization to be exported
-            text_size: size of the category name over box
-            rect_th: rectangle thickness
-            hide_labels: hide labels
-            hide_conf: hide confidence
-            file_name: saving name
-        Returns:
-
+            export_dir: directory for resulting visualization to be exported.
+            text_size: size of the category name over box.
+            rect_th: rectangle thickness.
+            hide_labels: hide labels.
+            hide_conf: hide confidence.
+            file_name: saving name.
         """
         Path(export_dir).mkdir(parents=True, exist_ok=True)
         visualize_object_predictions(
@@ -203,25 +241,29 @@ class PredictionResult:
             export_format="png",
         )
 
-    def to_coco_annotations(self):
+    def to_coco_annotations(self) -> list:
+        """Convert predictions to COCO annotation format."""
         coco_annotation_list = []
         for object_prediction in self.object_prediction_list:
             coco_annotation_list.append(object_prediction.to_coco_prediction().json)
         return coco_annotation_list
 
-    def to_coco_predictions(self, image_id: int | None = None):
+    def to_coco_predictions(self, image_id: int | None = None) -> list:
+        """Convert predictions to COCO prediction format."""
         coco_prediction_list = []
         for object_prediction in self.object_prediction_list:
             coco_prediction_list.append(object_prediction.to_coco_prediction(image_id=image_id).json)
         return coco_prediction_list
 
-    def to_imantics_annotations(self):
+    def to_imantics_annotations(self) -> list:
+        """Convert predictions to imantics annotation format."""
         imantics_annotation_list = []
         for object_prediction in self.object_prediction_list:
             imantics_annotation_list.append(object_prediction.to_imantics_annotation())
         return imantics_annotation_list
 
-    def to_fiftyone_detections(self):
+    def to_fiftyone_detections(self) -> list:
+        """Convert predictions to FiftyOne detection format."""
         try:
             import fiftyone as fo
         except ImportError:

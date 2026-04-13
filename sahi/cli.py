@@ -1,3 +1,5 @@
+"""Command-line interface for SAHI."""
+
 import fire
 
 from sahi import __version__ as sahi_version

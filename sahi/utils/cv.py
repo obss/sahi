@@ -1,3 +1,5 @@
+"""Computer vision utilities for image processing and visualization."""
+
 from __future__ import annotations
 
 import copy
@@ -9,7 +11,6 @@ from io import BytesIO
 
 import cv2
 import numpy as np
-import requests
 from PIL import Image, ImageOps
 
 from sahi.logger import logger
@@ -22,7 +23,10 @@ VIDEO_EXTENSIONS = [".mp4", ".mkv", ".flv", ".avi", ".ts", ".mpg", ".mov", "wmv"
 
 
 class Colors:
-    def __init__(self):
+    """Color palette for visualization."""
+
+    def __init__(self) -> None:
+        """Initialize the color palette from hex color codes."""
         hex_colors = (
             "FF3838 2C99A8 FF701F 6473FF CFD231 48F90A 92CC17 3DDB86 1A9334 00D4BB "
             "FF9D97 00C2FF 344593 FFB21D 0018EC 8438FF 520085 CB38FF FF95C8 FF37C7"
@@ -31,7 +35,7 @@ class Colors:
         self.palette = [self.hex_to_rgb(f"#{c}") for c in hex_colors.split()]
         self.n = len(self.palette)
 
-    def __call__(self, ind, bgr: bool = False):
+    def __call__(self, ind: int, bgr: bool = False) -> tuple[int, int, int]:
         """Convert an index to a color code.
 
         Args:
@@ -45,7 +49,7 @@ class Colors:
         return (color_codes[2], color_codes[1], color_codes[0]) if bgr else color_codes
 
     @staticmethod
-    def hex_to_rgb(hex_code):
+    def hex_to_rgb(hex_code: str) -> tuple[int, int, int]:
         """Converts a hexadecimal color code to RGB format.
 
         Args:
@@ -57,16 +61,16 @@ class Colors:
         rgb = []
         for i in (0, 2, 4):
             rgb.append(int(hex_code[1 + i : 1 + i + 2], 16))
-        return tuple(rgb)
+        return (rgb[0], rgb[1], rgb[2])
 
 
 def crop_object_predictions(
     image: np.ndarray,
-    object_prediction_list,
+    object_prediction_list: list,
     output_dir: str = "",
     file_name: str = "prediction_visual",
     export_format: str = "png",
-):
+) -> None:
     """Crops bounding boxes over the source image and exports it to the output folder.
 
     Args:
@@ -76,7 +80,6 @@ def crop_object_predictions(
         file_name (str): The name of the exported file. The exported file will be saved as `output_dir + file_name + ".png"`. Defaults to "prediction_visual".
         export_format (str): The format of the exported file. Can be specified as 'jpg' or 'png'. Defaults to "png".
     """  # noqa
-
     # create output folder if not present
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     # add bbox and mask to image if present
@@ -101,7 +104,7 @@ def crop_object_predictions(
         cv2.imwrite(save_path, cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR))
 
 
-def convert_image_to(read_path, extension: str = "jpg", grayscale: bool = False):
+def convert_image_to(read_path: str, extension: str = "jpg", grayscale: bool = False) -> None:
     """Reads an image from the given path and saves it with the specified extension.
 
     Args:
@@ -110,6 +113,7 @@ def convert_image_to(read_path, extension: str = "jpg", grayscale: bool = False)
         grayscale (bool, optional): Whether to convert the image to grayscale. Defaults to False.
     """
     image = cv2.imread(read_path)
+    assert image is not None, f"Failed to read image: {read_path}"
     pre, _ = os.path.splitext(read_path)
     if grayscale:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -118,7 +122,7 @@ def convert_image_to(read_path, extension: str = "jpg", grayscale: bool = False)
     cv2.imwrite(save_path, image)
 
 
-def read_large_image(image_path: str):
+def read_large_image(image_path: str) -> tuple[np.ndarray, bool]:
     """Reads a large image from the specified image path.
 
     Args:
@@ -134,6 +138,7 @@ def read_large_image(image_path: str):
     try:
         # convert to rgb (cv2 reads in bgr)
         img_cv2 = cv2.imread(image_path, 1)
+        assert img_cv2 is not None, f"Failed to read image: {image_path}"
         image0 = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
     except Exception as e:
         logger.error(f"OpenCV failed reading image with error {e}, trying skimage instead")
@@ -159,6 +164,7 @@ def read_image(image_path: str) -> np.ndarray:
     """
     # read image
     image = cv2.imread(image_path)
+    assert image is not None, f"Failed to read image: {image_path}"
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # return image
     return image
@@ -183,6 +189,8 @@ def read_image_as_pil(image: Image.Image | str | np.ndarray, exif_fix: bool = Tr
     elif isinstance(image, str):
         # read image if str image path is provided
         try:
+            import requests
+
             image_pil = Image.open(
                 BytesIO(requests.get(image, stream=True).content) if str(image).startswith("http") else image
             ).convert("RGB")
@@ -216,7 +224,7 @@ def read_image_as_pil(image: Image.Image | str | np.ndarray, exif_fix: bool = Tr
     return image_pil
 
 
-def select_random_color():
+def select_random_color() -> list[int]:
     """Selects a random color from a predefined list of colors.
 
     Returns:
@@ -238,7 +246,7 @@ def select_random_color():
     return colors[random.randrange(0, 10)]
 
 
-def apply_color_mask(image: np.ndarray, color: tuple[int, int, int]):
+def apply_color_mask(image: np.ndarray, color: tuple[int, int, int]) -> np.ndarray:
     """Applies color mask to given input image.
 
     Args:
@@ -285,17 +293,16 @@ def get_video_reader(
 
     num_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
     if view_visual:
-        num_frames /= frame_skip_interval + 1
-        num_frames = int(num_frames)
+        num_frames = int(num_frames / (frame_skip_interval + 1))
 
-    def read_video_frame(video_capture, frame_skip_interval) -> Generator[Image.Image]:
+    def read_video_frame(video_capture: cv2.VideoCapture, frame_skip_interval: int) -> Generator[Image.Image]:  # type: ignore[type-arg]
         if view_visual:
             window_name = f"Prediction of {video_file_name!s}"
             cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
             default_image = np.zeros((480, 640, 3), dtype=np.uint8)
             cv2.imshow(window_name, default_image)
 
-            while video_capture.isOpened:
+            while video_capture.isOpened():
                 frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
                 video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + frame_skip_interval)
 
@@ -324,7 +331,7 @@ def get_video_reader(
                 yield Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
         else:
-            while video_capture.isOpened:
+            while video_capture.isOpened():
                 frame_num = video_capture.get(cv2.CAP_PROP_POS_FRAMES)
                 video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_num + frame_skip_interval)
 
@@ -348,7 +355,7 @@ def get_video_reader(
         w = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         size = (w, h)
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # pyright: ignore[reportAttributeAccessIssue]
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore[attr-defined]  # pyright: ignore[reportAttributeAccessIssue]
         video_writer = cv2.VideoWriter(os.path.join(save_dir, video_file_name), fourcc, fps, size)
     else:
         video_writer = None
@@ -368,7 +375,7 @@ def visualize_prediction(
     hide_labels: bool = False,
     output_dir: str | None = None,
     file_name: str | None = "prediction_visual",
-):
+) -> dict:
     """Visualizes prediction classes, bounding boxes over the source image and exports it to output folder.
 
     Args:
@@ -387,7 +394,6 @@ def visualize_prediction(
     Returns:
         dict: A dictionary containing the visualized image and the elapsed time for the visualization process.
     """  # noqa
-
     elapsed_time = time.time()
     # deepcopy image so that original is not altered
     image = copy.deepcopy(image)
@@ -422,7 +428,7 @@ def visualize_prediction(
 
         # set color
         if colors is not None:
-            mycolor = colors(class_)
+            mycolor = colors(int(class_))
         elif color is not None:
             mycolor = color
         else:
@@ -447,7 +453,7 @@ def visualize_prediction(
                 0
             ]  # label width, height
             outside = point1[1] - box_height - 3 >= 0  # label fits outside box
-            point2 = point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3
+            point2 = [point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3]
             # add bounding box text
             cv2.rectangle(image, point1, point2, color or (0, 0, 0), -1, cv2.LINE_AA)  # filled
             cv2.putText(
@@ -472,7 +478,7 @@ def visualize_prediction(
 
 def visualize_object_predictions(
     image: np.ndarray,
-    object_prediction_list,
+    object_prediction_list: list,
     rect_th: int | None = None,
     text_size: float | None = None,
     text_th: int | None = None,
@@ -482,11 +488,12 @@ def visualize_object_predictions(
     output_dir: str | None = None,
     file_name: str | None = "prediction_visual",
     export_format: str | None = "png",
-):
-    """Visualizes prediction category names, bounding boxes over the source image and exports it to output folder.
+) -> dict:
+    """Visualize object predictions with bounding boxes and category names.
 
     Args:
-        object_prediction_list: a list of prediction.ObjectPrediction
+        image: Input image as numpy array.
+        object_prediction_list: List of prediction.ObjectPrediction instances.
         rect_th: rectangle thickness
         text_size: size of the category name over box
         text_th: text thickness
@@ -581,7 +588,7 @@ def visualize_object_predictions(
                     0
                 ]  # label width, height
                 outside = point1[1] - box_height - 3 >= 0  # label fits outside box
-                point2 = point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3
+                point2 = (point1[0] + box_width, point1[1] - box_height - 3 if outside else point1[1] + box_height + 3)
                 # add bounding box text
                 cv2.rectangle(image, point1, point2, color or (0, 0, 0), -1, cv2.LINE_AA)  # filled
                 cv2.putText(
@@ -607,20 +614,21 @@ def visualize_object_predictions(
 
 
 def get_coco_segmentation_from_bool_mask(bool_mask: np.ndarray) -> list[list[float]]:
-    """
-    Convert boolean mask to coco segmentation format
+    """Convert boolean mask to COCO segmentation format.
+
+    Converts a 2D boolean mask to COCO polygon format:
     [
         [x1, y1, x2, y2, x3, y3, ...],
         [x1, y1, x2, y2, x3, y3, ...],
         ...
-    ]
+    ].
     """
     # Generate polygons from mask
     mask = np.squeeze(bool_mask)
     mask = mask.astype(np.uint8)
     mask = cv2.copyMakeBorder(mask, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=(0, 0, 0))
-    polygons = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE, offset=(-1, -1))
-    polygons = polygons[0] if len(polygons) == 2 else polygons[1]
+    contour_result = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE, offset=(-1, -1))
+    polygons = contour_result[0] if len(contour_result) == 2 else contour_result[1]  # type: ignore[index]
     # Convert polygon to coco segmentation
     coco_segmentation = []
     for polygon in polygons:
@@ -632,20 +640,20 @@ def get_coco_segmentation_from_bool_mask(bool_mask: np.ndarray) -> list[list[flo
 
 
 def get_bool_mask_from_coco_segmentation(coco_segmentation: list[list[float]], width: int, height: int) -> np.ndarray:
-    """Convert coco segmentation to 2D boolean mask of given height and width.
+    """Convert COCO segmentation to a 2D boolean mask.
 
-    Parameters:
-    - coco_segmentation: list of points representing the coco segmentation
-    - width: width of the boolean mask
-    - height: height of the boolean mask
+    Args:
+        coco_segmentation: List of polygons representing the COCO segmentation.
+        width: Width of the boolean mask.
+        height: Height of the boolean mask.
 
     Returns:
-    - bool_mask: 2D boolean mask of size (height, width)
+        2D boolean mask of size (height, width).
     """
     size = [height, width]
     points = [np.array(point).reshape(-1, 2).round().astype(int) for point in coco_segmentation]
     bool_mask = np.zeros(size)
-    bool_mask = cv2.fillPoly(bool_mask, points, (1.0,))
+    bool_mask = cv2.fillPoly(bool_mask, points, (1.0,))  # type: ignore[assignment]
     bool_mask.astype(bool)
     return bool_mask
 
@@ -676,7 +684,7 @@ def get_bbox_from_bool_mask(bool_mask: np.ndarray) -> list[int] | None:
     return [xmin, ymin, xmax, ymax]
 
 
-def get_bbox_from_coco_segmentation(coco_segmentation):
+def get_bbox_from_coco_segmentation(coco_segmentation: list) -> list | None:
     """Generate voc box ([xmin, ymin, xmax, ymax]) from given coco segmentation."""
     xs = []
     ys = []
@@ -693,8 +701,10 @@ def get_bbox_from_coco_segmentation(coco_segmentation):
 
 
 def yolo_bbox_to_voc_bbox(yolo_bbox: list[float], image_width: int, image_height: int) -> list[float]:
-    """Convert a YOLO format bounding box [x_center, y_center, width, height] (normalized)
-    to VOC format [xmin, ymin, xmax, ymax] (absolute pixel coordinates).
+    """Convert YOLO format bounding box to VOC format.
+
+    Converts normalized YOLO format [x_center, y_center, width, height] to absolute
+    VOC format [xmin, ymin, xmax, ymax] pixel coordinates.
 
     Args:
         yolo_bbox: list of [x_center, y_center, width, height]
@@ -736,12 +746,12 @@ def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> list[list[f
     return polygons
 
 
-def normalize_numpy_image(image: np.ndarray):
+def normalize_numpy_image(image: np.ndarray) -> np.ndarray:
     """Normalizes numpy image."""
     return image / np.max(image)
 
 
-def ipython_display(image: np.ndarray):
+def ipython_display(image: np.ndarray) -> None:
     """Displays numpy image in notebook.
 
     If input image is in range 0..1, please first multiply img by 255
@@ -751,5 +761,5 @@ def ipython_display(image: np.ndarray):
 
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     _, ret = cv2.imencode(".png", image)
-    i = IPython.display.Image(data=ret)  # type: ignore
-    IPython.display.display(i)  # type: ignore
+    i = IPython.display.Image(data=ret)  # type: ignore[attr-defined]
+    IPython.display.display(i)  # type: ignore[attr-defined]

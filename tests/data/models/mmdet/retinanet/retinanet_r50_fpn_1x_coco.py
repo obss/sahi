@@ -1,3 +1,5 @@
+"""MMDetection configuration file for retinanet_r50_fpn_1x_coco.py."""
+
 _base_ = [
     "../_base_/models/retinanet_r50_fpn.py",
     "../_base_/datasets/coco_detection.py",

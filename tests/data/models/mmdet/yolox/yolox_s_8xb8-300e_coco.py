@@ -1,3 +1,5 @@
+"""MMDetection configuration file for yolox_s_8xb8-300e_coco.py."""
+
 _base_ = ["../_base_/schedules/schedule_1x.py", "../_base_/default_runtime.py", "./yolox_tta.py"]
 
 img_scale = (640, 640)  # width, height

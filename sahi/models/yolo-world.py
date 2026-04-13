@@ -1,12 +1,21 @@
+"""YOLO-World detection model wrapper for SAHI.
+
+Provides integration with Ultralytics YOLO-World open-vocabulary detection models.
+"""
+
 from __future__ import annotations
 
 from sahi.models.ultralytics import UltralyticsDetectionModel
 
 
 class YOLOWorldDetectionModel(UltralyticsDetectionModel):
-    def load_model(self):
-        """Detection model is initialized and set to self.model."""
+    """YOLO-World object detection model.
 
+    An open-vocabulary object detector that can detect custom classes at test-time.
+    """
+
+    def load_model(self) -> None:
+        """Detection model is initialized and set to self.model."""
         from ultralytics import YOLOWorld
 
         try:

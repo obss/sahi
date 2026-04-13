@@ -1,3 +1,5 @@
+"""MMDetection configuration file for default_runtime.py."""
+
 checkpoint_config = dict(interval=1)
 # yapf:disable
 log_config = dict(

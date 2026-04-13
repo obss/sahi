@@ -1,3 +1,5 @@
+"""Logger configuration for SAHI."""
+
 from __future__ import annotations
 
 import logging
@@ -11,20 +13,29 @@ logging.addLevelName(PKG_INFO_LEVEL, "PKG_INFO")
 
 
 class SupportsPkgInfo(Protocol):
-    def pkg_info(self, message: str, *args, **kws) -> None: ...  # pragma: no cover
+    """Protocol for loggers supporting pkg_info method."""
+
+    def pkg_info(self, message: str, *args: object, **kws: object) -> None:
+        """Log a package info message."""
+        ...  # pragma: no cover
 
 
 class BaseSahiLogger(logging.Logger, ABC):
+    """Base logger class for SAHI."""
+
     @abstractmethod
-    def pkg_info(self, message: str, *args, **kws) -> None:
+    def pkg_info(self, message: str, *args: object, **kws: object) -> None:
         """Log a package info message at PKG_INFO level."""
         raise NotImplementedError
 
 
 class SahiLogger(BaseSahiLogger):
-    def pkg_info(self, message: str, *args, **kws) -> None:
+    """SAHI logger implementation."""
+
+    def pkg_info(self, message: str, *args: object, **kws: object) -> None:
+        """Log a package info message at PKG_INFO level."""
         if self.isEnabledFor(PKG_INFO_LEVEL):
-            self._log(PKG_INFO_LEVEL, message, args, **kws)
+            self._log(PKG_INFO_LEVEL, message, args, **kws)  # type: ignore[arg-type]
 
 
 # ensure subsequent getLogger returns SahiLogger instances
@@ -32,6 +43,8 @@ logging.setLoggerClass(SahiLogger)
 
 
 class SahiLoggerFormatter(logging.Formatter):
+    """Custom formatter for SAHI logs."""
+
     grey = "\x1b[38;20m"
     yellow = "\x1b[33;20m"
     red = "\x1b[31;20m"
@@ -52,7 +65,7 @@ class SahiLoggerFormatter(logging.Formatter):
 
     pkg_info_pattern = re.compile(r"^(?P<name>\S+)\s+version\s+(?P<version>\S+)\s+(?P<rest>.*)$")
 
-    def format(self, record):  # type: ignore[override]
+    def format(self, record: logging.LogRecord) -> str:  # type: ignore[override]
         if record.levelno == PKG_INFO_LEVEL:
             # Custom minimal line without timestamp/file info
             msg = record.getMessage()

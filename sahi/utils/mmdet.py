@@ -1,3 +1,5 @@
+"""MMDetection model utilities and helpers."""
+
 from __future__ import annotations
 
 import shutil
@@ -10,13 +12,16 @@ from pathlib import Path
 from sahi.utils.file import download_from_url
 
 
-def mmdet_version_as_integer():
+def mmdet_version_as_integer() -> int:
+    """Get the MMDetection version as an integer."""
     import mmdet
 
     return int(mmdet.__version__.replace(".", ""))
 
 
 class MmdetTestConstants:
+    """MMDetection test model configurations."""
+
     MMDET_CASCADEMASKRCNN_MODEL_URL = "http://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
     MMDET_CASCADEMASKRCNN_MODEL_PATH = (
         "tests/data/models/mmdet/cascade_mask_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco_20200203-9d4dcb24.pth"
@@ -31,7 +36,8 @@ class MmdetTestConstants:
     MMDET_YOLOX_TINY_CONFIG_PATH = "tests/data/models/mmdet/yolox/yolox_tiny_8xb8-300e_coco.py"
 
 
-def download_mmdet_cascade_mask_rcnn_model(destination_path: str | None = None):
+def download_mmdet_cascade_mask_rcnn_model(destination_path: str | None = None) -> None:
+    """Download the Cascade Mask R-CNN model for testing."""
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH
 
@@ -40,7 +46,8 @@ def download_mmdet_cascade_mask_rcnn_model(destination_path: str | None = None):
     download_from_url(MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_URL, destination_path)
 
 
-def download_mmdet_retinanet_model(destination_path: str | None = None):
+def download_mmdet_retinanet_model(destination_path: str | None = None) -> None:
+    """Download the RetinaNet model for testing."""
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_RETINANET_MODEL_PATH
 
@@ -49,7 +56,8 @@ def download_mmdet_retinanet_model(destination_path: str | None = None):
     download_from_url(MmdetTestConstants.MMDET_RETINANET_MODEL_URL, destination_path)
 
 
-def download_mmdet_yolox_tiny_model(destination_path: str | None = None):
+def download_mmdet_yolox_tiny_model(destination_path: str | None = None) -> None:
+    """Download the YOLOX-Tiny model for testing."""
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH
 
@@ -73,7 +81,6 @@ def download_mmdet_config(
     Returns:
         (str) abs path of the downloaded config file.
     """
-
     # get mmdet version
     from mmdet import __version__
 

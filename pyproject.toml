@@ -11,11 +11,11 @@ dependencies = [
   "shapely>=2.0.0",
   "tqdm>=4.48.2",
   "pillow>=8.2.0",
+  "numpy",
   "pyyaml",
   "fire",
   "requests",
   "click",
-  "torch>=2.4.1",
 ]
 
 classifiers = [
@@ -62,13 +62,9 @@ dev = [
   "pywinpty!=2.0.14; os_name == 'nt'",
 ]
 docs = [
-  "mkdocs-material[imaging]>=9.6.15,<=10.0.0",
-  "mkdocstrings>=0.25.2,<1.1.0",
-  "mkdocstrings-python>=1.10.9",
-  "mike>=2.0.0",
-  "mkdocs-jupyter>=0.24.3",
-  "mkdocs-git-committers-plugin-2>=2.4.1; python_version >= '3.9' and python_version < '4'",
-  "mkdocs-git-revision-date-localized-plugin>=1.2.4",
+    "zensical",
+    "mkdocstrings[python]",
+    "pymdown-extensions",
 ]
 build = [
   "twine>=5.1.1,<7.0.0",
@@ -78,6 +74,7 @@ build = [
 ]
 
 [project.optional-dependencies]
+torch = ["torch>=2.4.1"]
 yolov5 = ["yolov5>=6.0.0,<8.0.0"]
 ultralytics = ["ultralytics>=8.0.0"]
 transformers = ["transformers>=4.49.0;python_version>='3.9'"]
@@ -86,6 +83,8 @@ roboflow = [
   "rfdetr>=1.6.2;python_version>='3.12'",
 ]
 onnx = ["onnx;python_version>='3.10'", "onnxruntime;python_version>='3.10'"]
+numba = ["numba>=0.59.0;python_version>='3.10'"]
+torchvision = ["torch>=2.4.1", "torchvision>=0.19.0"]
 all = [
   "yolov5>=6.0.0,<8.0.0",
   "ultralytics>=8.0.0",
@@ -111,7 +110,7 @@ ci = [
   # CPU versions for Linux/Windows CI
   "torch==2.8.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
   "torch==2.4.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
-  "torchvision==0.23.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
+  "torchvision==0.23.0;python_version>='3.9' and platform_system!='Darwin'",
   "torchvision==0.19.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
   # Regular versions for macOS
   "torch==2.8.0;python_version>='3.9' and platform_system=='Darwin'",
@@ -183,10 +182,97 @@ exclude = [
   "docs",
 ]
 
+[tool.ty.environment]
+python-version = "3.8"
+
+[tool.ty.src]
+
+# List of paths to check
+include = ["sahi", "tests"]
+
+# Ignore specific directories
+exclude = [
+    "typings",
+    "__pycache__",
+    "build",
+    "dist",
+    "venv",
+    ".venv",
+    "docs",
+    ".ruff_cache",
+    ".mypy_cache",
+    ".git",
+    ".vscode",
+    ".venv",
+    "site",
+    ".github"
+]
+
+[tool.mypy]
+python_version = "3.10"
+
+[[tool.mypy.overrides]]
+module = [
+    "requests",
+    "torch",
+    "torch.*",
+    "torchvision",
+    "torchvision.*",
+    "ultralytics.*",
+    "yolov5.*",
+    "mmdet.*",
+    "mmengine.*",
+    "mmcv.*",
+    "transformers",
+    "transformers.*",
+    "inference.*",
+    "rfdetr.*",
+    "supervision.*",
+    "onnx",
+    "onnxruntime",
+    "numba",
+    "numba.*",
+    "fiftyone",
+    "fiftyone.*",
+    "pycocotools",
+    "pycocotools.*",
+    "imantics",
+    "imantics.*",
+    "fire",
+    "tqdm",
+    "cv2",
+    "cv2.*",
+    "shapely",
+    "shapely.*",
+    "skimage",
+    "skimage.*",
+    "lsnms",
+    "lsnms.*",
+    "yaml",
+    "detectron2",
+    "detectron2.*",
+    "pytest",
+    "pytest.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "scripts.*",
+    "sahi.scripts.*",
+    "tests.test_huggingface_model",
+    "tests.test_detectron2_model",
+    "tests.test_roboflow",
+    "tests.test_mmdetection_model",
+    "tests.data.models.*",
+]
+disable_error_code = ["attr-defined", "operator", "return", "assignment", "arg-type", "misc", "index", "var-annotated"]
+
+
 [tool.ruff.lint]
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
-select = ["E", "F", "I", "A", "Q", "W", "RUF", "UP", "FA"]
-ignore = ["A002", "A001"]
+select = ["E", "F", "I", "A", "Q", "W", "RUF", "UP", "FA", "ANN"]
+ignore = ["A002", "A001", "ANN401"]
 # Allow autofix for all enabled rules (when `--fix`) is provided.
 fixable = [
   "A",

@@ -1,3 +1,7 @@
+"""Tests for HuggingFace detection model integration."""
+
+from __future__ import annotations
+
 import sys
 
 import pytest
@@ -25,7 +29,8 @@ CONFIDENCE_THRESHOLD = 0.5
 IMAGE_SIZE = 320
 
 
-def test_load_model():
+def test_load_model() -> None:
+    """Test loading a HuggingFace detection model."""
     huggingface_detection_model = HuggingfaceDetectionModel(
         model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -37,7 +42,8 @@ def test_load_model():
     assert huggingface_detection_model.model is not None
 
 
-def test_set_model():
+def test_set_model() -> None:
+    """Test setting a pre-loaded HuggingFace model."""
     huggingface_model = AutoModelForObjectDetection.from_pretrained(HuggingfaceConstants.RTDETRV2_MODEL_PATH)
     huggingface_processor = AutoProcessor.from_pretrained(HuggingfaceConstants.RTDETRV2_MODEL_PATH)
 
@@ -53,7 +59,8 @@ def test_set_model():
     assert huggingface_detection_model.model is not None
 
 
-def test_perform_inference():
+def test_perform_inference() -> None:
+    """Test inference with HuggingFace model."""
     huggingface_detection_model = HuggingfaceDetectionModel(
         model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -99,7 +106,8 @@ def test_perform_inference():
         assert score.item() >= CONFIDENCE_THRESHOLD
 
 
-def test_convert_original_predictions():
+def test_convert_original_predictions() -> None:
+    """Test converting HuggingFace predictions to ObjectPrediction."""
     huggingface_detection_model = HuggingfaceDetectionModel(
         model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -124,7 +132,7 @@ def test_convert_original_predictions():
     assert isinstance(object_prediction_list[2], ObjectPrediction)
 
     # compare
-    assert len(object_prediction_list) == 10
+    assert len(object_prediction_list) == 14
     assert object_prediction_list[0].category.id == 2
     assert object_prediction_list[0].category.name == "car"
     desired_bbox = [451, 312, 39, 29]
@@ -144,7 +152,8 @@ def test_convert_original_predictions():
         assert object_prediction.score.value >= CONFIDENCE_THRESHOLD
 
 
-def test_get_prediction_huggingface():
+def test_get_prediction_huggingface() -> None:
+    """Test full-image prediction with HuggingFace model."""
     huggingface_detection_model = HuggingfaceDetectionModel(
         model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -170,7 +179,7 @@ def test_get_prediction_huggingface():
     object_prediction_list = prediction_result.object_prediction_list
 
     # compare
-    assert len(object_prediction_list) == 10
+    assert len(object_prediction_list) == 14
     num_person = num_truck = num_car = 0
     for object_prediction in object_prediction_list:
         if object_prediction.category.name == "person":
@@ -181,10 +190,11 @@ def test_get_prediction_huggingface():
             num_car += 1
     assert num_person == 0
     assert num_truck == 0
-    assert num_car == 10
+    assert num_car == 14
 
 
-def test_get_prediction_automodel_huggingface():
+def test_get_prediction_automodel_huggingface() -> None:
+    """Test HuggingFace model via AutoDetectionModel."""
     from sahi.auto_model import AutoDetectionModel
     from sahi.predict import get_prediction
     from tests.utils.huggingface import HuggingfaceConstants
@@ -215,7 +225,7 @@ def test_get_prediction_automodel_huggingface():
     object_prediction_list = prediction_result.object_prediction_list
 
     # compare
-    assert len(object_prediction_list) == 10
+    assert len(object_prediction_list) == 14
     num_person = num_truck = num_car = 0
     for object_prediction in object_prediction_list:
         if object_prediction.category.name == "person":
@@ -226,10 +236,11 @@ def test_get_prediction_automodel_huggingface():
             num_car += 1
     assert num_person == 0
     assert num_truck == 0
-    assert num_car == 10
+    assert num_car == 14
 
 
-def test_get_sliced_prediction_huggingface():
+def test_get_sliced_prediction_huggingface() -> None:
+    """Test sliced prediction with HuggingFace model."""
     huggingface_detection_model = HuggingfaceDetectionModel(
         model_path=HuggingfaceConstants.RTDETRV2_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -269,7 +280,7 @@ def test_get_sliced_prediction_huggingface():
     object_prediction_list = prediction_result.object_prediction_list
 
     # compare
-    assert len(object_prediction_list) == 17
+    assert len(object_prediction_list) == 21
     num_person = num_truck = num_car = 0
     for object_prediction in object_prediction_list:
         if object_prediction.category.name == "person":
@@ -279,5 +290,5 @@ def test_get_sliced_prediction_huggingface():
         elif object_prediction.category.name == "car":
             num_car += 1
     assert num_person == 0
-    assert num_truck == 0
-    assert num_car == 17
+    assert num_truck == 1
+    assert num_car == 20

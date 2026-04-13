@@ -1,3 +1,7 @@
+"""Tests for RT-DETR detection model integration."""
+
+from __future__ import annotations
+
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.rtdetr import RTDETRTestConstants, download_rtdetrl_model
@@ -8,7 +12,10 @@ IMAGE_SIZE = 640
 
 
 class TestRTDetrDetectionModel:
-    def test_load_model(self):
+    """Test RT-DETR detection model functionality."""
+
+    def test_load_model(self) -> None:
+        """Test loading an RT-DETR detection model."""
         from sahi.models.rtdetr import RTDetrDetectionModel
 
         download_rtdetrl_model()
@@ -23,7 +30,8 @@ class TestRTDetrDetectionModel:
 
         assert rtdetr_detection_model.model is not None
 
-    def test_set_model(self):
+    def test_set_model(self) -> None:
+        """Test setting a pre-loaded RT-DETR model."""
         from ultralytics import RTDETR
 
         from sahi.models.rtdetr import RTDetrDetectionModel
@@ -42,7 +50,8 @@ class TestRTDetrDetectionModel:
 
         assert rtdetr_detection_model.model is not None
 
-    def test_perform_inference(self):
+    def test_perform_inference(self) -> None:
+        """Test inference with RT-DETR model."""
         from sahi.models.rtdetr import RTDetrDetectionModel
 
         # init model
@@ -84,7 +93,8 @@ class TestRTDetrDetectionModel:
         for box in boxes[0]:  # type: ignore
             assert box[4].item() >= CONFIDENCE_THRESHOLD
 
-    def test_convert_original_predictions(self):
+    def test_convert_original_predictions(self) -> None:
+        """Test converting RT-DETR predictions to ObjectPrediction."""
         from sahi.models.rtdetr import RTDetrDetectionModel
 
         # init model

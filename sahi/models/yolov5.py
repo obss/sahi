@@ -1,3 +1,8 @@
+"""YOLOv5 detection model wrapper for SAHI.
+
+Provides integration with Ultralytics YOLOv5 for object detection.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,12 +17,18 @@ from sahi.utils.import_utils import check_package_minimum_version
 
 
 class Yolov5DetectionModel(DetectionModel):
-    def __init__(self, *args, **kwargs):
+    """YOLOv5 object detection model.
+
+    Wraps Ultralytics YOLOv5 for fast object detection.
+    """
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        """Initialize YOLOv5 detection model."""
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "yolov5", "torch"]
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)  # type: ignore[misc, arg-type]
 
-    def load_model(self):
+    def load_model(self) -> None:
         """Detection model is initialized and set to self.model."""
         import yolov5
 
@@ -27,18 +38,19 @@ class Yolov5DetectionModel(DetectionModel):
         except Exception as e:
             raise TypeError("model_path is not a valid yolov5 model path: ", e)
 
-    def set_model(self, model: Any):
+    def set_model(self, model: Any, **kwargs: Any) -> None:
         """Sets the underlying YOLOv5 model.
 
         Args:
             model: Any
                 A YOLOv5 model
+            **kwargs: Any
+                Additional keyword arguments for model setup.
         """
-
         if model.__class__.__module__ not in ["yolov5.models.common", "models.common"]:
             raise Exception(f"Not a yolov5 model: {type(model)}")
 
-        model.conf = self.confidence_threshold
+        model.conf = self.confidence_threshold  # type: ignore[attr-defined]
         self.model = model
 
         # set category_mapping
@@ -46,14 +58,13 @@ class Yolov5DetectionModel(DetectionModel):
             category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
             self.category_mapping = category_mapping
 
-    def perform_inference(self, image: np.ndarray):
+    def perform_inference(self, image: np.ndarray) -> None:
         """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
 
         Args:
             image: np.ndarray
                 A numpy array that contains the image to be predicted. 3 channel image should be in RGB order.
         """
-
         # Confirm model is loaded
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
@@ -65,18 +76,20 @@ class Yolov5DetectionModel(DetectionModel):
         self._original_predictions = prediction_result
 
     @property
-    def num_categories(self):
+    def num_categories(self) -> int:
         """Returns number of categories."""
+        assert self.model is not None
         return len(self.model.names)
 
     @property
-    def has_mask(self):
+    def has_mask(self) -> bool:
         """Returns if model output contains segmentation mask."""
-
         return False  # fix when yolov5 supports segmentation models
 
     @property
-    def category_names(self):
+    def category_names(self) -> list:
+        """Return category names from model."""
+        assert self.model is not None
         if check_package_minimum_version("yolov5", "6.2.0"):
             return list(self.model.names.values())
         else:
@@ -84,10 +97,12 @@ class Yolov5DetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: list[list[int]] | None = [[0, 0]],
-        full_shape_list: list[list[int]] | None = None,
-    ):
-        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        shift_amount_list: list[list[int | float]] | None = [[0, 0]],
+        full_shape_list: list[list[int | float]] | None = None,
+    ) -> None:
+        """Convert predictions to ObjectPrediction list.
+
+        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 
         Args:
@@ -98,17 +113,18 @@ class Yolov5DetectionModel(DetectionModel):
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
+        assert self._original_predictions is not None
         original_predictions = self._original_predictions
 
         # compatilibty for sahi v0.8.15
-        shift_amount_list = fix_shift_amount_list(shift_amount_list)
-        full_shape_list = fix_full_shape_list(full_shape_list)
+        shift_amount_list_typed: list[list[int | float]] = fix_shift_amount_list(shift_amount_list)
+        full_shape_list_typed: list[list[int | float]] | None = fix_full_shape_list(full_shape_list)
 
         # handle all predictions
         object_prediction_list_per_image = []
-        for image_ind, image_predictions_in_xyxy_format in enumerate(original_predictions.xyxy):
-            shift_amount = shift_amount_list[image_ind]
-            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+        for image_ind, image_predictions_in_xyxy_format in enumerate(original_predictions.xyxy):  # type: ignore[attr-defined]
+            shift_amount = [int(x) for x in shift_amount_list_typed[image_ind]]
+            full_shape = None if full_shape_list_typed is None else [int(x) for x in full_shape_list_typed[image_ind]]
             object_prediction_list = []
 
             # process predictions
@@ -120,6 +136,7 @@ class Yolov5DetectionModel(DetectionModel):
                 bbox = [x1, y1, x2, y2]
                 score = prediction[4]
                 category_id = int(prediction[5])
+                assert self.category_mapping is not None
                 category_name = self.category_mapping[str(category_id)]
 
                 # fix negative box coords

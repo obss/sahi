@@ -1,0 +1,166 @@
+[project]
+site_name = "SAHI Documentation"
+site_url = "https://sahi.readthedocs.io/"
+repo_url = "https://github.com/obss/sahi"
+repo_name = "obss/sahi"
+edit_uri = "https://github.com/obss/sahi/tree/main/docs"
+docs_dir = "docs"
+site_dir = "site"
+
+nav = [
+  {Home = "index.md"},
+  {"Quick Start" = "quick-start.md"},
+  {Guides = [
+    {"How Sliced Inference Works" = "guides/sliced-inference.md"},
+    {"Model Integrations" = "guides/models.md"},
+    {"Prediction Utilities" = "predict.md"},
+    {"COCO Dataset Operations" = "coco.md"},
+    {"Slicing Utilities" = "slicing.md"},
+    {"Postprocessing Backends" = "postprocess/backends.md"},
+    {"FiftyOne Visualization" = "fiftyone.md"},
+    {"CLI Commands" = "cli.md"},
+  ]},
+  {Notebooks = "notebooks.md"},
+  {"Code Reference" = [
+    {"High-level API" = [
+      "predict.md",
+      "slicing.md",
+    ]},
+    {Core = [
+      "annotation.md",
+      "prediction.md",
+      "auto_model.md",
+    ]},
+    {Models = [
+      "models/base.md",
+      "models/ultralytics.md",
+      "models/yolov5.md",
+      "models/yoloe.md",
+      "models/yolo-world.md",
+      "models/mmdet.md",
+      "models/detectron2.md",
+      "models/huggingface.md",
+      "models/torchvision.md",
+      "models/rtdetr.md",
+      "models/roboflow.md",
+    ]},
+    {"Post-processing" = [
+      "postprocess/backends.md",
+      "postprocess/combine.md",
+      "postprocess/utils.md",
+    ]},
+    {Utils = [
+      {"COCO Utils" = "utils/coco.md"},
+      {"Computer Vision Utils" = "utils/cv.md"},
+      {"File Utils" = "utils/file.md"},
+    ]},
+  ]},
+  {"API Reference Index" = "api.md"},
+  {Contributing = "contributing.md"},
+  {License = "license.md"},
+  {Changelog = "changelog.md"},
+]
+
+[project.theme]
+language = "en"
+variant = "material"
+features = [
+  "navigation.tracking",
+  "content.code.copy",
+  "content.action.edit",
+  "content.tooltips",
+  "content.code.annotate",
+  "navigation.tabs",
+  "navigation.tabs.sticky",
+  "navigation.top",
+  "navigation.indexes",
+]
+font.text = "Inter"
+font.code = "IBM Plex Mono"
+icon.edit = "material/pencil"
+
+[[project.theme.palette]]
+scheme = "default"
+primary = "custom"
+toggle.icon = "material/brightness-7"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+scheme = "slate"
+primary = "custom"
+toggle.icon = "material/brightness-4"
+toggle.name = "Switch to light mode"
+
+# --- Alternate languages ---
+
+[[project.extra.alternate]]
+name = "English"
+link = "/"
+lang = "en"
+
+[[project.extra.alternate]]
+name = "中文"
+link = "/zh/"
+lang = "zh"
+
+# --- Social links ---
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/obss/sahi"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/python"
+link = "https://pypi.org/project/sahi"
+
+# --- Plugins ---
+
+[project.plugins.search]
+
+[project.plugins.mkdocstrings]
+default_handler = "python"
+
+
+[project.plugins.mkdocstrings.handlers.python.options]
+parameter_headings = true
+allow_inspection = true
+show_bases = true
+group_by_category = true
+docstring_style = "google"
+show_symbol_type_heading = true
+show_root_heading = true
+show_symbol_type_toc = true
+show_category_heading = true
+
+
+# --- Python Markdown extensions ---
+
+[project.markdown_extensions.admonition]
+[project.markdown_extensions.attr_list]
+[project.markdown_extensions.md_in_html]
+
+[project.markdown_extensions.toc]
+permalink = true
+
+# --- PyMdown extensions ---
+
+[project.markdown_extensions.pymdownx.details]
+[project.markdown_extensions.pymdownx.superfences]
+
+[project.markdown_extensions.pymdownx.tabbed]
+alternate_style = true
+
+[project.markdown_extensions.pymdownx.snippets]
+check_paths = true
+
+[project.markdown_extensions.pymdownx.highlight]
+anchor_linenums = true
+line_spans = "__span"
+pygments_lang_class = true
+
+[project.markdown_extensions.pymdownx.arithmatex]
+generic = true
+
+[project.markdown_extensions.pymdownx.emoji]
+emoji_index = "zensical.extensions.emoji.twemoji"
+emoji_generator = "zensical.extensions.emoji.to_svg"

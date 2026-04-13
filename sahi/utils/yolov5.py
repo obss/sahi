@@ -1,3 +1,5 @@
+"""YOLOv5 model utilities and constants."""
+
 from __future__ import annotations
 
 import urllib.request
@@ -6,6 +8,8 @@ from pathlib import Path
 
 
 class Yolov5TestConstants:
+    """YOLOv5 test model configurations."""
+
     YOLOV5N_MODEL_URL = "https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5n.pt"
     YOLOV5N_MODEL_PATH = "tests/data/models/yolov5/yolov5n.pt"
 
@@ -16,7 +20,8 @@ class Yolov5TestConstants:
     YOLOV5M6_MODEL_PATH = "tests/data/models/yolov5/yolov5m6.pt"
 
 
-def download_yolov5n_model(destination_path: str | None = None):
+def download_yolov5n_model(destination_path: str | None = None) -> None:
+    """Download the YOLOv5-Nano model for testing."""
     if destination_path is None:
         destination_path = Yolov5TestConstants.YOLOV5N_MODEL_PATH
 
@@ -29,7 +34,8 @@ def download_yolov5n_model(destination_path: str | None = None):
         )
 
 
-def download_yolov5s6_model(destination_path: str | None = None):
+def download_yolov5s6_model(destination_path: str | None = None) -> None:
+    """Download the YOLOv5s6 model for testing."""
     if destination_path is None:
         destination_path = Yolov5TestConstants.YOLOV5S6_MODEL_PATH
 

@@ -1,97 +1,87 @@
 ---
 hide:
   - navigation
+tags:
+  - getting-started
+  - installation
+  - inference
+  - slicing
+  - postprocessing
 ---
 
 # Quick Start
 
-Welcome to SAHI! This guide will get you up and running with the core features of the library, including installation, performing predictions, and using the command-line interface.
+SAHI (Slicing Aided Hyper Inference) detects small objects in large images by
+slicing them into overlapping tiles, running your detector on each tile, and
+merging the results. It works with any detection model no retraining needed.
 
-## 1. Installation
+<div align="center">
+  <img width="700" alt="sliced inference" src="https://raw.githubusercontent.com/obss/sahi/main/resources/sliced_inference.gif">
+</div>
 
-Install SAHI using pip. For object detection, it's recommended to also install `ultralytics`.
+## Installation
 
-!!! example "Install"
+[![PyPI - Version](https://img.shields.io/pypi/v/sahi?logo=pypi&logoColor=white)](https://pypi.org/project/sahi/)
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/sahi?logo=condaforge)](https://anaconda.org/conda-forge/sahi)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/sahi?logo=python&logoColor=gold)](https://pypi.org/project/sahi/)
 
-    <p align="left" style="margin-bottom: -20px;">![PyPI - Python Version](https://img.shields.io/pypi/pyversions/sahi?logo=python&logoColor=gold)<p>
+```bash
+pip install sahi
+```
 
-    === "Pip install (recommended)"
+For object detection you also need a framework. The most common choice is
+Ultralytics:
 
-        Install or update the `sahi` package using pip by running `pip install -U sahi`. For more details on the `sahi` package, visit the [Python Package Index (PyPI)](https://pypi.org/project/sahi/).
+```bash
+pip install ultralytics
+```
 
-        [![PyPI - Version](https://img.shields.io/pypi/v/sahi?logo=pypi&logoColor=white)](https://pypi.org/project/sahi/)
-        [![Downloads](https://static.pepy.tech/badge/sahi)](https://www.pepy.tech/projects/sahi)
+??? note "Other install methods"
 
+    **Conda:**
+
+    [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
+    [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
+
+    ```bash
+    conda install -c conda-forge sahi
+    ```
+
+    !!! note
+        If you are installing in a CUDA environment, it is best practice to install
+        `ultralytics`, `pytorch`, and `pytorch-cuda` in the same command:
         ```bash
-        # Install the sahi package from PyPI
-        pip install sahi
+        conda install -c pytorch -c nvidia -c conda-forge pytorch torchvision pytorch-cuda=11.8 ultralytics
         ```
 
-        You can also install `sahi` directly from the [Sahi GitHub repository](https://github.com/obss/sahi). This can be useful if you want the latest development version. Ensure you have the Git command-line tool installed, and then run:
+    **From source:**
+    ```bash
+    pip install git+https://github.com/obss/sahi.git@main
+    ```
 
-        ```bash
-        # Install the sahi package from GitHub
-        pip install git+https://github.com/obss/sahi.git@main
-        ```
+    **Development (editable):**
+    ```bash
+    git clone https://github.com/obss/sahi
+    cd sahi
+    pip install -e .
+    ```
 
-    === "Conda install"
+See the
+[pyproject.toml](https://github.com/obss/sahi/blob/main/pyproject.toml) for the
+full list of dependencies.
 
-        Conda can be used as an alternative package manager to pip. For more details, visit [Anaconda](https://anaconda.org/conda-forge/sahi). The Sahi feedstock repository for updating the conda package is available at [GitHub](https://github.com/conda-forge/sahi-feedstock/).
-
-        [![Conda Version](https://img.shields.io/conda/vn/conda-forge/sahi?logo=condaforge)](https://anaconda.org/conda-forge/sahi)
-        [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
-        [![Conda Recipe](https://img.shields.io/badge/recipe-sahi-green.svg)](https://anaconda.org/conda-forge/sahi)
-        [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
-
-        ```bash
-        # Install the sahi package using conda
-        conda install -c conda-forge sahi
-        ```
-
-        !!! note
-
-            If you are installing in a CUDA environment, it is best practice to install `ultralytics`, `pytorch`, and `pytorch-cuda` in the same command. This allows the conda package manager to resolve any conflicts. Alternatively, install `pytorch-cuda` last to override the CPU-specific `pytorch` package if necessary.
-            ```bash
-            # Install all packages together using conda
-            conda install -c pytorch -c nvidia -c conda-forge pytorch torchvision pytorch-cuda=11.8 ultralytics
-            ```
-
-    === "Git clone"
-
-        Clone the [Sahi GitHub repository](https://github.com/obss/sahi) if you are interested in contributing to development or wish to experiment with the latest source code. After cloning, navigate into the directory and install the package in editable mode `-e` using pip.
-
-        [![GitHub last commit](https://img.shields.io/github/last-commit/obss/sahi?logo=github)](https://github.com/obss/sahi)
-        [![GitHub commit activity](https://img.shields.io/github/commit-activity/t/obss/sahi)](https://github.com/obss/sahi/commits/main)
-        [![GitHub contributors](https://img.shields.io/github/contributors/obss/sahi)](https://github.com/obss/sahi/graphs/contributors)
-
-        ```bash
-        # Clone the sahi repository
-        git clone https://github.com/obss/sahi
-
-        # Navigate to the cloned directory
-        cd sahi
-
-        # Install the package in editable mode for development
-        pip install -e .
-        ```
-
-
-See the `sahi` [pyproject.toml](https://github.com/obss/sahi/blob/main/pyproject.toml) file for a list of dependencies.
-
-## 2. Sliced Prediction with Python
-
-Sliced inference is the core feature of SAHI, allowing you to detect small objects in large images. Here's a simple example using the Python API:
+## Sliced Prediction with Python
 
 ```python
 from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
 
-# Initialize a YOLO26 model
+# Load a model (works with any supported framework)
 detection_model = AutoDetectionModel.from_pretrained(
-    model_type='ultralytics',
-    model_path='yolo26n.pt', # or any other Ultralytics model
+    model_type="ultralytics",
+    model_path="yolo26n.pt",
     confidence_threshold=0.25,
-    device="cuda:0", # or "cpu"
+    device="cuda:0",  # or "cpu"
 )
 
 # Run sliced prediction
@@ -101,31 +91,63 @@ result = get_sliced_prediction(
     slice_height=512,
     slice_width=512,
     overlap_height_ratio=0.2,
-    overlap_width_ratio=0.2
+    overlap_width_ratio=0.2,
 )
 
 # Export visualizations
 result.export_visuals(export_dir="demo_data/")
 
-# Get predictions as a list of objects
-predictions = result.object_prediction_list
+# Access individual predictions
+for pred in result.object_prediction_list:
+    print(pred.category.name, pred.score.value, pred.bbox.to_xyxy())
 ```
 
-## 3. Prediction with the CLI
+## Prediction with the CLI
 
-SAHI also provides a powerful command-line interface for quick predictions without writing any Python code.
+Run sliced inference without writing Python code:
 
 ```bash
-sahi predict --model_path yolo26n.pt --model_type ultralytics --source /path/to/images/ --slice_height 512 --slice_width 512
+sahi predict \
+  --model_path yolo26n.pt \
+  --model_type ultralytics \
+  --source /path/to/images/ \
+  --slice_height 512 \
+  --slice_width 512
 ```
 
-This command will run sliced inference on all images in the specified directory and save the results.
+Results are saved to `runs/predict/exp` by default.
+
+## Choosing a Postprocessing Backend
+
+After slicing, SAHI merges overlapping predictions with NMS or NMM. The best
+available backend is selected automatically:
+
+| Backend | When selected | Install |
+|---------|--------------|---------|
+| **torchvision** | CUDA GPU + torchvision available | `pip install torch torchvision` |
+| **numba** | numba installed, no GPU | `pip install numba` |
+| **numpy** | Always available (fallback) | -- |
+
+Override the choice manually:
+
+```python
+from sahi.postprocess.backends import set_postprocess_backend
+
+set_postprocess_backend("numpy")       # always available
+set_postprocess_backend("numba")       # JIT-compiled
+set_postprocess_backend("torchvision") # GPU-accelerated
+set_postprocess_backend("auto")        # restore auto-detection
+```
 
 ## Next Steps
 
-You've now seen the basics of SAHI! To dive deeper, check out these resources:
-
-* **Prediction In-Depth**: For advanced prediction options, see the [Prediction Utilities guide](predict.md).
-* **Demos**: Explore our interactive notebooks in the [demo directory](../demo/) for hands-on examples with different models.
-* **COCO Tools**: Learn how to create, manipulate, and convert datasets in the [COCO Utilities guide](coco.md).
-* **All CLI Commands**: See the full list of commands in the [CLI documentation](cli.md).
+- [How Sliced Inference Works](guides/sliced-inference.md) -- Understand the
+  algorithm, tuning tips, and when to use it
+- [Model Integrations](guides/models.md) -- Use SAHI with Ultralytics, HuggingFace,
+  MMDetection, TorchVision, Detectron2, and more
+- [Prediction Utilities](predict.md) -- Batch inference, progress tracking,
+  visualization options
+- [COCO Utilities](coco.md) -- Create, slice, merge, and convert COCO datasets
+- [CLI Commands](cli.md) -- Full CLI reference
+- [Interactive Notebooks](notebooks.md) -- Hands-on Colab notebooks for every
+  framework

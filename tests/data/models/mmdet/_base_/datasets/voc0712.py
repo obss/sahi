@@ -1,3 +1,5 @@
+"""MMDetection configuration file for voc0712.py."""
+
 # dataset settings
 dataset_type = "VOCDataset"
 data_root = "data/VOCdevkit/"

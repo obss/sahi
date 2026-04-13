@@ -1,3 +1,5 @@
+"""MMDetection configuration file for coco_panoptic.py."""
+
 # dataset settings
 dataset_type = "CocoPanopticDataset"
 # data_root = 'data/coco/'

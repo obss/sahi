@@ -1,3 +1,7 @@
+"""Tests for Roboflow Universe model integration."""
+
+from __future__ import annotations
+
 import sys
 
 import pytest
@@ -15,7 +19,7 @@ pytestmark = [
 ]
 
 
-def test_roboflow_universe():
+def test_roboflow_universe() -> None:
     """Test the Roboflow Universe model for object detection."""
     model = AutoDetectionModel.from_pretrained(
         model_type="roboflow",
@@ -45,7 +49,7 @@ def test_roboflow_universe():
     assert len(sliced_predictions) > len(predictions)
 
 
-def test_roboflow_universe_segmentation():
+def test_roboflow_universe_segmentation() -> None:
     """Test the Roboflow Universe model for instance segmentation."""
     model = AutoDetectionModel.from_pretrained(
         model_type="roboflow",
@@ -78,9 +82,8 @@ def test_roboflow_universe_segmentation():
     assert len(sliced_predictions) > len(predictions)
 
 
-def test_rfdetr():
+def test_rfdetr() -> None:
     """Test the RFDETR model classes and instances for object detection."""
-
     from rfdetr.assets.coco_classes import COCO_CLASSES
     from rfdetr.detr import RFDETRBase
 
@@ -118,9 +121,8 @@ def test_rfdetr():
         assert len(sliced_predictions) > len(predictions)
 
 
-def test_rfdetr_seg():
+def test_rfdetr_seg() -> None:
     """Test the RFDETR model classes and instances for instance segmentation."""
-
     from rfdetr.assets.coco_classes import COCO_CLASSES
     from rfdetr.detr import RFDETRSegMedium
 

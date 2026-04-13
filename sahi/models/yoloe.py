@@ -1,3 +1,9 @@
+"""YOLOE detection model wrapper for SAHI.
+
+Provides integration with YOLOE (Real-Time Seeing Anything) open-vocabulary
+detection and segmentation models.
+"""
+
 from __future__ import annotations
 
 from sahi.models.ultralytics import UltralyticsDetectionModel
@@ -85,7 +91,7 @@ class YOLOEDetectionModel(UltralyticsDetectionModel):
         - GitHub: https://github.com/THU-MIG/yoloe
     """
 
-    def load_model(self):
+    def load_model(self) -> None:
         """Loads the YOLOE detection model from the specified path.
 
         Initializes the YOLOE model with the given model path or uses the default

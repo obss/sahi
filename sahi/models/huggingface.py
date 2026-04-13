@@ -1,3 +1,9 @@
+"""HuggingFace Transformers detection model wrapper for SAHI.
+
+Provides integration with Hugging Face Transformers library for object detection
+and instance segmentation models like DETR variants.
+"""
+
 from __future__ import annotations
 
 import os
@@ -12,11 +18,16 @@ from sahi.utils.import_utils import ensure_package_minimum_version
 
 
 class HuggingfaceDetectionModel(DetectionModel):
+    """HuggingFace Transformers object detection model.
+
+    Supports various DETR-based models from the HuggingFace Model Hub.
+    """
+
     def __init__(
         self,
         model_path: str | None = None,
-        model: Any | None = None,
-        processor: Any | None = None,
+        model: object | None = None,
+        processor: object | None = None,
         config_path: str | None = None,
         device: str | None = None,
         mask_threshold: float = 0.5,
@@ -26,9 +37,10 @@ class HuggingfaceDetectionModel(DetectionModel):
         load_at_init: bool = True,
         image_size: int | None = None,
         token: str | None = None,
-    ):
+    ) -> None:
+        """Initialize HuggingFace detection model."""
         self._processor = processor
-        self._image_shapes: list = []
+        self._original_shapes: list[tuple[int, ...]] = []
         self._token = token
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "transformers"]
@@ -47,26 +59,32 @@ class HuggingfaceDetectionModel(DetectionModel):
         )
 
     @property
-    def processor(self):
+    def processor(self) -> Any:
+        """Return the image processor."""
         return self._processor
 
     @property
-    def image_shapes(self):
-        return self._image_shapes
+    def image_shapes(self) -> list:
+        """Return original image shapes."""
+        # TODO: remove this property in a future release; use _original_shapes directly
+        return self._original_shapes
 
     @property
     def num_categories(self) -> int:
         """Returns number of categories."""
-        return self.model.config.num_labels
+        return self.model.config.num_labels  # type: ignore[attr-defined]
 
-    def load_model(self):
+    def load_model(self) -> None:
+        """Load model from HuggingFace."""
         from transformers import AutoModelForObjectDetection, AutoProcessor
 
         hf_token = os.getenv("HF_TOKEN", self._token)
+        assert self.model_path is not None, "model_path must be provided for HuggingFace models"
         model = AutoModelForObjectDetection.from_pretrained(self.model_path, token=hf_token)
         if self.image_size is not None:
-            if model.base_model_prefix == "rt_detr_v2":
-                size = {"height": self.image_size, "width": self.image_size}
+            # RT-DETR family expects explicit height/width; other models use shortest_edge
+            if model.__class__.__name__.startswith("RTDetr"):
+                size: dict[str, int | None] = {"height": self.image_size, "width": self.image_size}
             else:
                 size = {"shortest_edge": self.image_size, "longest_edge": None}
             # use_fast=True raises error: AttributeError: 'SizeDict' object has no attribute 'keys'
@@ -77,7 +95,8 @@ class HuggingfaceDetectionModel(DetectionModel):
             processor = AutoProcessor.from_pretrained(self.model_path, use_fast=False, token=hf_token)
         self.set_model(model, processor)
 
-    def set_model(self, model: Any, processor: Any = None, **kwargs):
+    def set_model(self, model: Any, processor: Any | None = None, **kwargs: Any) -> None:
+        """Set the detection model and processor."""
         processor = processor or self.processor
         if processor is None:
             raise ValueError(f"'processor' is required to be set, got {processor}.")
@@ -86,11 +105,11 @@ class HuggingfaceDetectionModel(DetectionModel):
                 "Given 'model' is not an ObjectDetectionModel or 'processor' is not a valid ImageProcessor."
             )
         self.model = model
-        self.model.to(self.device)
+        self.model.to(self.device)  # type: ignore[attr-defined]
         self._processor = processor
-        self.category_mapping = self.model.config.id2label
+        self.category_mapping = self.model.config.id2label  # type: ignore[attr-defined]
 
-    def perform_inference(self, image: list | np.ndarray):
+    def perform_inference(self, image: list | np.ndarray) -> None:
         """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
 
         Args:
@@ -105,22 +124,48 @@ class HuggingfaceDetectionModel(DetectionModel):
 
         with torch.no_grad():
             inputs = self.processor(images=image, return_tensors="pt")
-            inputs["pixel_values"] = inputs.pixel_values.to(self.device)
-            if hasattr(inputs, "pixel_mask"):
-                inputs["pixel_mask"] = inputs.pixel_mask.to(self.device)
+            inputs = {k: v.to(self.device) if hasattr(v, "to") else v for k, v in inputs.items()}
             outputs = self.model(**inputs)
 
         if isinstance(image, list):
-            self._image_shapes = [img.shape for img in image]
+            self._original_shapes = [img.shape for img in image]
         else:
-            self._image_shapes = [image.shape]
+            self._original_shapes = [image.shape]
         self._original_predictions = outputs
 
-    def get_valid_predictions(self, logits, pred_boxes) -> tuple:
+    def perform_batch_inference(self, images: list[np.ndarray]) -> None:
+        """Native batch inference: process all images in a single processor + model call.
+
+        Unlike the base-class default (which runs images sequentially), this
+        feeds the entire list to the HuggingFace processor at once and executes
+        one batched forward pass.  The processor pads images to a uniform size
+        internally, so images of different resolutions are handled correctly.
+
+        This avoids setting ``_batch_images`` so
+        ``convert_original_predictions`` uses the standard multi-image path
+        rather than the sequential fallback.
+
+        Args:
+            images: List of numpy arrays (H, W, C) in RGB order.
         """
+        self.perform_inference(images)
+
+    # Models using per-class sigmoid (no background class in logits)
+    _SIGMOID_CLS_PREFIXES = ("RTDetr", "ConditionalDetr", "DeformableDetr", "Deta", "GroundingDino")
+
+    @property
+    def _uses_sigmoid_cls(self) -> bool:
+        """True for models that use per-class sigmoid instead of softmax+background."""
+        cls_name = self.model.__class__.__name__
+        return any(cls_name.startswith(p) for p in self._SIGMOID_CLS_PREFIXES)
+
+    def get_valid_predictions(self, logits: Any, pred_boxes: Any) -> tuple:
+        """Get predictions above confidence threshold.
+
         Args:
             logits: torch.Tensor
             pred_boxes: torch.Tensor
+
         Returns:
             scores: torch.Tensor
             cat_ids: torch.Tensor
@@ -128,12 +173,20 @@ class HuggingfaceDetectionModel(DetectionModel):
         """
         import torch
 
-        probs = logits.softmax(-1)
-        scores = probs.max(-1).values
-        cat_ids = probs.argmax(-1)
-        valid_detections = torch.where(cat_ids < self.num_categories, 1, 0)
-        valid_confidences = torch.where(scores >= self.confidence_threshold, 1, 0)
-        valid_mask = valid_detections.logical_and(valid_confidences)
+        if self._uses_sigmoid_cls:
+            # RT-DETR family: per-class sigmoid, logits shape (Q, num_classes) — no background class
+            probs = logits.sigmoid()
+            scores, cat_ids = probs.max(-1)
+            valid_mask = scores >= self.confidence_threshold
+        else:
+            # DETR family: softmax over (num_classes + 1), last index is no-object/background
+            probs = logits.softmax(-1)
+            scores = probs.max(-1).values
+            cat_ids = probs.argmax(-1)
+            valid_detections = torch.where(cat_ids < self.num_categories, 1, 0)
+            valid_confidences = torch.where(scores >= self.confidence_threshold, 1, 0)
+            valid_mask = valid_detections.logical_and(valid_confidences).bool()
+
         scores = scores[valid_mask]
         cat_ids = cat_ids[valid_mask]
         boxes = pred_boxes[valid_mask]
@@ -141,10 +194,12 @@ class HuggingfaceDetectionModel(DetectionModel):
 
     def _create_object_prediction_list_from_original_predictions(
         self,
-        shift_amount_list: list[list[int]] | None = [[0, 0]],
-        full_shape_list: list[list[int]] | None = None,
-    ):
-        """self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
+        shift_amount_list: list[list[int | float]] | None = [[0, 0]],
+        full_shape_list: list[list[int | float]] | None = None,
+    ) -> None:
+        """Convert predictions to ObjectPrediction list.
+
+        self._original_predictions is converted to a list of prediction.ObjectPrediction and set to
         self._object_prediction_list_per_image.
 
         Args:
@@ -155,11 +210,12 @@ class HuggingfaceDetectionModel(DetectionModel):
                 Size of the full image after shifting, should be in the form of
                 List[[height, width],[height, width],...]
         """
-        original_predictions = self._original_predictions
+        assert self._original_predictions is not None
+        original_predictions: Any = self._original_predictions
 
         # compatibility for sahi v0.8.15
-        shift_amount_list = fix_shift_amount_list(shift_amount_list)
-        full_shape_list = fix_full_shape_list(full_shape_list)
+        shift_amount_list_typed: list[list[int | float]] = fix_shift_amount_list(shift_amount_list)
+        full_shape_list_typed: list[list[int | float]] | None = fix_full_shape_list(full_shape_list)
 
         n_image = original_predictions.logits.shape[0]
         object_prediction_list_per_image = []
@@ -172,8 +228,8 @@ class HuggingfaceDetectionModel(DetectionModel):
             # create object_prediction_list
             object_prediction_list = []
 
-            shift_amount = shift_amount_list[image_ind]
-            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+            shift_amount = [int(x) for x in shift_amount_list_typed[image_ind]]
+            full_shape = None if full_shape_list_typed is None else [int(x) for x in full_shape_list_typed[image_ind]]
 
             for ind in range(len(boxes)):
                 category_id = cat_ids[ind].item()
@@ -196,7 +252,7 @@ class HuggingfaceDetectionModel(DetectionModel):
                     bbox=bbox,
                     segmentation=None,
                     category_id=category_id,
-                    category_name=self.category_mapping[category_id],
+                    category_name=self.category_mapping[category_id] if self.category_mapping else "",  # type: ignore[index]
                     shift_amount=shift_amount,
                     score=scores[ind].item(),
                     full_shape=full_shape,

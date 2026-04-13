@@ -1,3 +1,5 @@
+"""MMDetection configuration file for faster-rcnn_r50-caffe-dc5.py."""
+
 # model settings
 norm_cfg = dict(type="BN", requires_grad=False)
 model = dict(

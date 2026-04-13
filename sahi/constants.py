@@ -1,3 +1,5 @@
+"""Constants for COCO dataset."""
+
 COCO_CLASSES = [
     "__background__",
     "person",

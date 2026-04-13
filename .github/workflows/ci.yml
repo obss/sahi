@@ -1,4 +1,4 @@
-name: "Python CI (uv)"
+name: "CI"
 on:
   push:
     branches: [main]
@@ -10,6 +10,7 @@ on:
       - "demo/**"
       - "context7.json"
       - "mkdocs.yml"
+      - "zensical.toml"
 
   pull_request:
     branches: [main]
@@ -21,6 +22,7 @@ on:
       - "demo/**"
       - "context7.json"
       - "mkdocs.yml"
+      - "zensical.toml"
 
   schedule:
     - cron: "0 0 * * *" # Runs at 00:00 UTC every day
@@ -30,7 +32,9 @@ on:
 jobs:
   ci:
     name: "Tests (OS: ${{ matrix.os }}, Python: ${{ matrix.python-version }})"
-    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
+    if:
+      github.event_name != 'schedule' && github.event_name !=
+      'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -45,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Setup uv python package manager
-        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
@@ -58,7 +62,10 @@ jobs:
         uses: actions/cache@v5
         with:
           path: tests/data/models
-          key: ${{ runner.os }}-models-${{ hashFiles('sahi/utils/huggingface.py', 'sahi/utils/yolov5.py', 'sahi/utils/ultralytics.py', 'sahi/utils/rtdetr.py', 'sahi/utils/torchvision.py') }}
+          key:
+            ${{ runner.os }}-models-${{ hashFiles('sahi/utils/huggingface.py',
+            'sahi/utils/yolov5.py', 'sahi/utils/ultralytics.py',
+            'sahi/utils/rtdetr.py', 'sahi/utils/torchvision.py') }}
           restore-keys: |
             ${{ runner.os }}-models-
 
@@ -93,8 +100,12 @@ jobs:
           uv run sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
 
   schedule-test:
-    name: "Schedule/PyPI check (OS: ${{ matrix.os }}, Python: ${{ matrix.python-version }})"
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    name:
+      "Schedule/PyPI check (OS: ${{ matrix.os }}, Python: ${{
+      matrix.python-version }})"
+    if:
+      github.event_name == 'schedule' || github.event_name ==
+      'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -108,7 +119,7 @@ jobs:
             python-version: "3.12"
     steps:
       - name: Setup uv python package manager
-        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true

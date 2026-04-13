@@ -1,3 +1,7 @@
+"""Tests for Ultralytics detection model integration."""
+
+from __future__ import annotations
+
 import sys
 
 import pytest
@@ -19,7 +23,8 @@ CONFIDENCE_THRESHOLD = 0.3
 IMAGE_SIZE = 640
 
 
-def test_load_yolo11_model():
+def test_load_yolo11_model() -> None:
+    """Test loading a YOLO11 detection model."""
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
     download_yolo11n_model()
@@ -38,7 +43,8 @@ def test_load_yolo11_model():
 
 
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="ONNX model tests require Python 3.10 or higher")
-def test_load_yolo11_onnx_model():
+def test_load_yolo11_onnx_model() -> None:
+    """Test loading a YOLO11 ONNX model."""
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
     download_yolo11n_onnx_model()
@@ -53,7 +59,8 @@ def test_load_yolo11_onnx_model():
     assert detection_model.model is not None
 
 
-def test_perform_inference_yolo11():
+def test_perform_inference_yolo11() -> None:
+    """Test inference with YOLO11 model."""
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
     # init model
@@ -84,7 +91,8 @@ def test_perform_inference_yolo11():
         assert box[4].item() >= CONFIDENCE_THRESHOLD
 
 
-def test_yolo11_segmentation():
+def test_yolo11_segmentation() -> None:
+    """Test YOLO11 segmentation model."""
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
     # init model
@@ -120,7 +128,8 @@ def test_yolo11_segmentation():
     assert len(masks.shape) == 3  # (num_predictions, height, width)
 
 
-def test_yolo11_obb():
+def test_yolo11_obb() -> None:
+    """Test YOLO11 oriented bounding box model."""
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
     # init model

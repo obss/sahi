@@ -1,3 +1,7 @@
+"""Tests for TorchVision detection model integration."""
+
+from __future__ import annotations
+
 import numpy as np
 import torchvision
 from torchvision.models.detection.faster_rcnn import RoIHeads
@@ -17,7 +21,10 @@ IMAGE_SIZE = 320
 
 
 class TestTorchVisionDetectionModel:
-    def test_load_model(self):
+    """Test TorchVision detection model functionality."""
+
+    def test_load_model(self) -> None:
+        """Test loading a TorchVision detection model."""
         torchvision_detection_model = TorchVisionDetectionModel(
             config_path=TorchVisionConstants.FASTERRCNN_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -27,7 +34,8 @@ class TestTorchVisionDetectionModel:
         )
         assert isinstance(torchvision_detection_model.model.roi_heads, RoIHeads)
 
-    def test_load_model_without_config_path(self):
+    def test_load_model_without_config_path(self) -> None:
+        """Test loading TorchVision model without config path."""
         torchvision_detection_model = TorchVisionDetectionModel(
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
@@ -36,7 +44,8 @@ class TestTorchVisionDetectionModel:
         )
         assert isinstance(torchvision_detection_model.model.roi_heads, RoIHeads)
 
-    def test_set_model(self):
+    def test_set_model(self) -> None:
+        """Test setting a pre-loaded TorchVision model."""
         NUM_CLASSES = 15
         WEIGHTS = None  # Using weights=None instead of deprecated pretrained=False
 
@@ -51,7 +60,8 @@ class TestTorchVisionDetectionModel:
 
         assert isinstance(torchvision_detection_model.model.head, SSDHead)
 
-    def test_perform_inference_without_mask_output(self):
+    def test_perform_inference_without_mask_output(self) -> None:
+        """Test inference without mask output."""
         from sahi.models.torchvision import TorchVisionDetectionModel
 
         # init model
@@ -101,7 +111,8 @@ class TestTorchVisionDetectionModel:
             assert scores[score_ind] <= 1
             assert scores[score_ind] >= 0
 
-    def test_convert_original_predictions_without_mask_output(self):
+    def test_convert_original_predictions_without_mask_output(self) -> None:
+        """Test converting predictions without mask output."""
         torchvision_detection_model = TorchVisionDetectionModel(
             config_path=TorchVisionConstants.FASTERRCNN_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -135,7 +146,8 @@ class TestTorchVisionDetectionModel:
             object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
         )
 
-    def test_convert_original_predictions_with_mask_output(self):
+    def test_convert_original_predictions_with_mask_output(self) -> None:
+        """Test converting predictions with mask output."""
         torchvision_detection_model = TorchVisionDetectionModel(
             config_path=TorchVisionConstants.MASKRCNN_CONFIG_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
@@ -167,7 +179,8 @@ class TestTorchVisionDetectionModel:
         assert object_prediction_list[0].category.name == "car"
         np.testing.assert_allclose(object_prediction_list[0].bbox.to_xywh(), [317, 312, 60, 50], atol=1)
 
-    def test_get_prediction_torchvision(self):
+    def test_get_prediction_torchvision(self) -> None:
+        """Test full-image prediction with TorchVision model."""
         # init model
         torchvision_detection_model = TorchVisionDetectionModel(
             config_path=TorchVisionConstants.FASTERRCNN_CONFIG_PATH,
@@ -201,7 +214,8 @@ class TestTorchVisionDetectionModel:
             object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
         )
 
-    def test_get_sliced_prediction_torchvision(self):
+    def test_get_sliced_prediction_torchvision(self) -> None:
+        """Test sliced prediction with TorchVision model."""
         # init model
         torchvision_detection_model = TorchVisionDetectionModel(
             config_path=TorchVisionConstants.FASTERRCNN_CONFIG_PATH,
@@ -225,7 +239,7 @@ class TestTorchVisionDetectionModel:
         match_threshold = 0.5
         class_agnostic = True
 
-        def progress_callback(progress, total):
+        def progress_callback(progress: int, total: int) -> None:
             print(f"Progress: {progress}/{total} slices processed.")
 
         # get sliced prediction

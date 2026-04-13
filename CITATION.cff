@@ -1,32 +1,35 @@
 cff-version: 1.2.0
 message: "If you use this package, please consider citing it."
 authors:
-- family-names: "Akyon"
-  given-names: "Fatih Cagatay"
-- family-names: "Cengiz"
-  given-names: "Cemil"
-- family-names: "Altinuc"
-  given-names: "Sinan Onur"
-- family-names: "Cavusoglu"
-  given-names: "Devrim"
-- family-names: "Sahin"
-  given-names: "Kadir"
-- family-names: "Eryuksel"
-  given-names: "Ogulcan"
-title: "SAHI: A lightweight vision library for performing large scale object detection and instance segmentation"
+  - family-names: "Akyon"
+    given-names: "Fatih Cagatay"
+  - family-names: "Cengiz"
+    given-names: "Cemil"
+  - family-names: "Altinuc"
+    given-names: "Sinan Onur"
+  - family-names: "Cavusoglu"
+    given-names: "Devrim"
+  - family-names: "Sahin"
+    given-names: "Kadir"
+  - family-names: "Eryuksel"
+    given-names: "Ogulcan"
+title:
+  "SAHI: A lightweight vision library for performing large scale object
+  detection and instance segmentation"
 preferred-citation:
   type: article
-  title: "Slicing Aided Hyper Inference and Fine-tuning for Small Object Detection"
+  title:
+    "Slicing Aided Hyper Inference and Fine-tuning for Small Object Detection"
   doi: 10.1109/ICIP46576.2022.9897990
   url: https://ieeexplore.ieee.org/document/9897990
   journal: 2022 IEEE International Conference on Image Processing (ICIP)
   authors:
-  - family-names: "Akyon"
-    given-names: "Fatih Cagatay"
-  - family-names: "Altinuc"
-    given-names: "Sinan Onur"
-  - family-names: "Temizel"
-    given-names: "Alptekin"
+    - family-names: "Akyon"
+      given-names: "Fatih Cagatay"
+    - family-names: "Altinuc"
+      given-names: "Sinan Onur"
+    - family-names: "Temizel"
+      given-names: "Alptekin"
   year: 2022
   start: 966
   end: 970

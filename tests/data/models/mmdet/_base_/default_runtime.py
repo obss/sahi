@@ -1,3 +1,5 @@
+"""MMDetection configuration file for default_runtime.py."""
+
 default_scope = "mmdet"
 
 default_hooks = dict(
