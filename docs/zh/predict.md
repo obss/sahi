@@ -39,7 +39,7 @@ result = get_sliced_prediction(
 
 ```
 
-## 基础推理
+## 全图推理
 
 ```python
 from sahi.predict import get_prediction

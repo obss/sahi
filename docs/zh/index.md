@@ -12,7 +12,7 @@ tags:
 
 <div align="center">
 <h1>
-  SAHI: 切片辅助超推理
+  SAHI: 切片辅助高效推理
 </h1>
 
 <h4>
@@ -42,7 +42,7 @@ tags:
 
 ## 什么是 SAHI？
 
-SAHI（Slicing Aided Hyper Inference，切片辅助超推理）是一个提供了通用的切片辅助推理与微调流程，专门用于小目标检测的开源框架。在监控等应用场景中，检测小目标或远处物体是一项重大挑战，因为它们仅由少量像素表示，缺乏足够的细节，传统检测器难以识别。
+SAHI（Slicing Aided Hyper Inference，切片辅助高效推理）是一个提供了通用的切片辅助推理与微调流程，专门用于小目标检测的开源框架。在监控等应用场景中，检测小目标或远处物体是一项重大挑战，因为它们仅由少量像素表示，缺乏足够的细节，传统检测器难以识别。
 
 SAHI 通过一种独特的方法解决了这一问题，该方法可以与任意目标检测器结合使用，而无需额外的微调。在 Visdrone 和 xView 航拍目标检测数据集上的实验评估表明，SAHI 可以使 FCOS、VFNet 和 TOOD 检测器的 AP 分别提高 6.8%、5.1% 和 5.3%。在结合切片辅助微调后，精度可进一步提升，累计提升分别达到 12.7%、13.4% 和 14.5%。该技术已成功集成到 Ultralytics (YOLOv8, YOLO11, YOLO26)、HuggingFace Transformers、RT-DETR、TorchVision、MMDetection、Detectron2、YOLOv5、YOLOE、YOLO-World 和 Roboflow RF-DETR 等模型中。
 

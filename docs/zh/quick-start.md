@@ -11,7 +11,7 @@ tags:
 
 # 快速开始
 
-SAHI（Slicing Aided Hyper Inference，切片辅助超推理）通过将大图像切片为重叠的网格块，在每个块上运行检测器，然后合并结果，来检测大图像中的小目标。它适用于任何检测模型，无需重新训练。
+SAHI（Slicing Aided Hyper Inference，切片辅助高效推理）通过将大图像切片为重叠的网格块，在每个块上运行检测器，然后合并结果，来检测大图像中的小目标。它适用于任何检测模型，无需重新训练。
 
 <div align="center">
   <img width="700" alt="sliced inference" src="https://raw.githubusercontent.com/obss/sahi/main/resources/sliced_inference.gif">

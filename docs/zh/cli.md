@@ -1,3 +1,13 @@
+---
+tags:
+  - cli
+  - inference
+  - coco
+  - slicing
+  - evaluation
+  - fiftyone
+---
+
 # CLI 命令
 
 SAHI 提供了一套全面的命令行工具用于目标检测任务。本指南涵盖所有可用命令，附有详细的示例和选项说明。
@@ -99,10 +109,10 @@ sahi predict --slice_width 512 --slice_height 512 \
 
 #### 推理模式
 
-默认情况下，SAHI 执行多阶段推理（同时进行标准推理和切片推理）：
+默认情况下，SAHI 执行多阶段推理（同时进行全图推理和切片推理）：
 
-- `--no_sliced_prediction` - 禁用切片推理（仅标准推理）
-- `--no_standard_prediction` - 禁用标准推理（仅切片推理）
+- `--no_sliced_prediction` - 禁用切片推理（仅全图推理）
+- `--no_standard_prediction` - 禁用全图推理（仅切片推理）
 
 ### COCO 数据集评估
 
