@@ -135,9 +135,9 @@ set_postprocess_backend("auto")        # 恢复自动检测
 
 ## 下一步
 
-- [切片推理工作原理](../guides/sliced-inference.md) -- 了解算法、调优技巧和使用场景
-- [模型集成](../guides/models.md) -- 将 SAHI 与 Ultralytics、HuggingFace、MMDetection、TorchVision、Detectron2 等配合使用
+- [切片推理工作原理](guides/sliced-inference.md) -- 了解算法、调优技巧和使用场景
+- [模型集成](guides/models.md) -- 将 SAHI 与 Ultralytics、HuggingFace、MMDetection、TorchVision、Detectron2 等配合使用
 - [预测工具](predict.md) -- 批量推理、进度跟踪、可视化选项
 - [COCO 工具](coco.md) -- 创建、切片、合并和转换 COCO 数据集
 - [CLI 命令](cli.md) -- 完整 CLI 参考
-- [交互式 Notebooks](../notebooks.md) -- 每个框架的动手实践 Colab notebooks
+- [交互式 Notebooks](notebooks.md) -- 每个框架的动手实践 Colab notebooks

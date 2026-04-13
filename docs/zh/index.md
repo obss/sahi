@@ -62,7 +62,7 @@ SAHI 通过一种独特的方法解决了这一问题，该方法可以与任意
 
     了解切片算法、使用场景和调优方法。
 
-    [:octicons-arrow-right-24: 切片推理](../guides/sliced-inference.md)
+    [:octicons-arrow-right-24: 切片推理](guides/sliced-inference.md)
 
 -   :material-puzzle-outline:{ .lg .middle } **模型集成**
 
@@ -70,7 +70,7 @@ SAHI 通过一种独特的方法解决了这一问题，该方法可以与任意
 
     将 SAHI 与 Ultralytics、HuggingFace、MMDetection、TorchVision 等框架配合使用。
 
-    [:octicons-arrow-right-24: 所有模型](../guides/models.md)
+    [:octicons-arrow-right-24: 所有模型](guides/models.md)
 
 -   :material-image:{ .lg .middle } **预测**
 
@@ -118,6 +118,6 @@ SAHI 通过一种独特的方法解决了这一问题，该方法可以与任意
 
     为所有支持的框架提供动手实践的 Colab notebooks。
 
-    [:octicons-arrow-right-24: 浏览 notebooks](../notebooks.md)
+    [:octicons-arrow-right-24: 浏览 notebooks](notebooks.md)
 
 </div>
