@@ -178,6 +178,7 @@ def get_sliced_prediction(
     progress_bar: bool = False,
     progress_callback: Callable | None = None,
     batch_size: int = 1,
+    force_postprocess_type: bool = False,
 ) -> PredictionResult:
     """Function for slice image + get predicion for each slice + combine predictions in full image.
 
@@ -241,6 +242,12 @@ def get_sliced_prediction(
             Number of slices to process in a single batch inference call.
             Increasing this value can improve GPU utilization and throughput.
             Default: 1 (sequential, same as previous behavior).
+        force_postprocess_type: bool
+            If True, the auto postprocess type switch will be disabled.
+            When False (default) and the detection model's confidence threshold is
+            below LOW_MODEL_CONFIDENCE (0.1), the postprocess type will be
+            automatically switched to NMS/IOU to avoid bounding box enlargement
+            from merge operations. Default: False.
 
     Returns:
         A Dict with fields:
@@ -272,6 +279,19 @@ def get_sliced_prediction(
     num_slices = len(slice_image_result)
     time_end = time.perf_counter() - time_start
     durations_in_seconds["slice"] = time_end
+
+    # auto postprocess type switch for low confidence thresholds
+    if (
+        not force_postprocess_type
+        and detection_model.confidence_threshold < LOW_MODEL_CONFIDENCE
+        and postprocess_type != "NMS"
+    ):
+        logger.warning(
+            f"Switching postprocess type/metric to NMS/IOU since model confidence "
+            f"threshold is low ({detection_model.confidence_threshold})."
+        )
+        postprocess_type = "NMS"
+        postprocess_match_metric = "IOU"
 
     if isinstance(detection_model, UltralyticsDetectionModel) and detection_model.is_obb:
         # Only NMS is supported for OBB model outputs
@@ -607,15 +627,6 @@ def predict(
     if no_standard_prediction and no_sliced_prediction:
         raise ValueError("'no_standard_prediction' and 'no_sliced_prediction' cannot be True at the same time.")
 
-    # auto postprocess type
-    if not force_postprocess_type and model_confidence_threshold < LOW_MODEL_CONFIDENCE and postprocess_type != "NMS":
-        logger.warning(
-            f"Switching postprocess type/metric to NMS/IOU since confidence "
-            f"threshold is low ({model_confidence_threshold})."
-        )
-        postprocess_type = "NMS"
-        postprocess_match_metric = "IOU"
-
     # for profiling
     durations_in_seconds = dict()
 
@@ -716,6 +727,7 @@ def predict(
                 exclude_classes_by_id=exclude_classes_by_id,
                 progress_bar=progress_bar,
                 batch_size=batch_size,
+                force_postprocess_type=force_postprocess_type,
             )
             object_prediction_list = prediction_result.object_prediction_list
             if prediction_result.durations_in_seconds:
