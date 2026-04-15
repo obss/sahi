@@ -23,7 +23,7 @@
 <!-- CI & Quality -->
 <div>
   <a href="https://github.com/obss/sahi/actions/workflows/ci.yml"><img src="https://github.com/obss/sahi/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://snyk.io/test/github/obss/sahi"><img src="https://snyk.io/test/github/obss/sahi/badge.svg" alt="Known Vulnerabilities"></a>
+  <a href="https://security.snyk.io/package/pip/sahi"><img src="https://img.shields.io/badge/Snyk_security-monitored-8A2BE2" alt="Known Vulnerabilities"></a>
   <a href="https://www.codefactor.io/repository/github/onuralpszr/sahi"><img src="https://www.codefactor.io/repository/github/onuralpszr/sahi/badge" alt="CodeFactor"></a>
   <a href="https://ieeexplore.ieee.org/document/9897990"><img src="https://img.shields.io/badge/DOI-10.1109%2FICIP46576.2022.9897990-orange.svg" alt="DOI"></a>
 </div>
