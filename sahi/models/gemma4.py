@@ -85,6 +85,7 @@ class Gemma4DetectionModel(DetectionModel):
         torch_dtype: str | Any = None,
         quantization: str | None = None,
         verbose: bool = False,
+        instruction: str | None = None,
     ) -> None:
         """Initialize Gemma-4 detection model.
 
@@ -98,6 +99,12 @@ class Gemma4DetectionModel(DetectionModel):
             verbose: If True, log the raw generated text and per-detection
                 filter reasons — useful when ``perform_inference`` returns
                 zero detections and you want to see what the model actually said.
+            instruction: Optional prompt text that replaces the default
+                "Detect every instance of ..." instruction. The JSON schema
+                ``[{box_2d, label}, ...]`` is always appended, so focus this
+                string on scene context and detection intent (e.g. "This is an
+                aerial parking lot; find every car even if partially occluded").
+                May also be set/updated later via :py:meth:`set_instruction`.
         """
         self._processor = processor
         self._token = token
@@ -106,6 +113,7 @@ class Gemma4DetectionModel(DetectionModel):
         self._torch_dtype = torch_dtype
         self._quantization = quantization
         self._verbose = verbose
+        self._instruction = instruction
         self._original_shapes: list[tuple[int, ...]] = []
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "transformers"]
@@ -144,6 +152,15 @@ class Gemma4DetectionModel(DetectionModel):
             raise ValueError("classes must be a non-empty list of class names.")
         self._classes = list(classes)
         self.category_mapping = {i: name for i, name in enumerate(self._classes)}
+
+    def set_instruction(self, instruction: str | None) -> None:
+        """Override (or clear) the prompt instruction used for detection.
+
+        Pass ``None`` to restore the default instruction built from ``classes``.
+        The JSON schema is appended automatically; your text should describe
+        scene context and what to detect.
+        """
+        self._instruction = instruction
 
     def load_model(self) -> None:
         """Load the Gemma-4 model and processor from HuggingFace."""
@@ -225,22 +242,19 @@ class Gemma4DetectionModel(DetectionModel):
 
     def _build_messages(self, image: Image.Image) -> list[dict]:
         """Build the chat template messages for detection."""
-        if len(self._classes) == 1:
-            instruction = (
-                f"Detect every {self._classes[0]} in the image. "
-                "Return a JSON array where each item is "
-                '{"box_2d": [y_min, x_min, y_max, x_max], "label": "..."} '
-                "with coordinates normalized to 0-1000. Return only the JSON."
-            )
+        schema_suffix = (
+            " Return a JSON array where each item is "
+            '{"box_2d": [y_min, x_min, y_max, x_max], "label": "..."} '
+            "with coordinates normalized to 0-1000 and label matching one of "
+            f"the requested classes ({', '.join(self._classes)}). Return only the JSON."
+        )
+        if self._instruction:
+            instruction = self._instruction.rstrip() + schema_suffix
+        elif len(self._classes) == 1:
+            instruction = f"Detect every {self._classes[0]} in the image." + schema_suffix
         else:
             class_list = ", ".join(self._classes)
-            instruction = (
-                f"Detect every instance of the following classes in the image: {class_list}. "
-                "Return a JSON array where each item is "
-                '{"box_2d": [y_min, x_min, y_max, x_max], "label": "..."} '
-                "with coordinates normalized to 0-1000 and label matching one of the requested classes. "
-                "Return only the JSON."
-            )
+            instruction = f"Detect every instance of the following classes in the image: {class_list}." + schema_suffix
         return [
             {
                 "role": "user",
