@@ -83,6 +83,7 @@ def get_prediction(
     verbose: int = 0,
     exclude_classes_by_name: list[str] | None = None,
     exclude_classes_by_id: list[int] | None = None,
+    confidence_threshold: float | None = None,
 ) -> PredictionResult:
     """Function for performing prediction for given image using given detection_model.
 
@@ -105,31 +106,31 @@ def get_prediction(
         exclude_classes_by_id: Optional[List[int]]
             None: if no classes are excluded
             List[int]: set of classes to exclude using one or more IDs
+        confidence_threshold: float, optional
+            Override the model's confidence threshold for this call only.
+            The model's original threshold is restored after the call.
     Returns:
         A dict with fields:
             object_prediction_list: a list of ObjectPrediction
             durations_in_seconds: a dict containing elapsed times for profiling
     """
-    durations_in_seconds = dict()
+    original_confidence_threshold = detection_model.confidence_threshold
+    if confidence_threshold is not None:
+        detection_model.confidence_threshold = confidence_threshold
 
-    # read image as pil
+    durations_in_seconds = dict()
     image_as_pil = read_image_as_pil(image)
-    # get prediction
-    # ensure shift_amount is a list instance (avoid mutable default arg)
+
     if shift_amount is None:
         shift_amount = [0, 0]
-
-    time_start = time.perf_counter()
-    detection_model.perform_inference(np.ascontiguousarray(image_as_pil))
-    time_end = time.perf_counter() - time_start
-    durations_in_seconds["prediction"] = time_end
-
     if full_shape is None:
         full_shape = [image_as_pil.height, image_as_pil.width]
 
-    # process prediction
     time_start = time.perf_counter()
-    # works only with 1 batch
+    detection_model.perform_inference(np.ascontiguousarray(image_as_pil))
+    durations_in_seconds["prediction"] = time.perf_counter() - time_start
+
+    time_start = time.perf_counter()
     detection_model.convert_original_predictions(
         shift_amount=shift_amount,  # type: ignore[arg-type]
         full_shape=full_shape,  # type: ignore[arg-type]
@@ -137,19 +138,15 @@ def get_prediction(
     object_prediction_list: list[ObjectPrediction] = detection_model.object_prediction_list
     object_prediction_list = filter_predictions(object_prediction_list, exclude_classes_by_name, exclude_classes_by_id)
 
-    # postprocess matching predictions
     if postprocess is not None:
         object_prediction_list = postprocess(object_prediction_list)
 
-    time_end = time.perf_counter() - time_start
-    durations_in_seconds["postprocess"] = time_end
+    durations_in_seconds["postprocess"] = time.perf_counter() - time_start
 
     if verbose == 1:
-        print(
-            "Prediction performed in",
-            durations_in_seconds["prediction"],
-            "seconds.",
-        )
+        print("Prediction performed in", durations_in_seconds["prediction"], "seconds.")
+
+    detection_model.confidence_threshold = original_confidence_threshold
 
     return PredictionResult(
         image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
@@ -179,6 +176,7 @@ def get_sliced_prediction(
     progress_callback: Callable | None = None,
     batch_size: int = 1,
     force_postprocess_type: bool = False,
+    confidence_threshold: float | None = None,
 ) -> PredictionResult:
     """Function for slice image + get predicion for each slice + combine predictions in full image.
 
@@ -248,6 +246,9 @@ def get_sliced_prediction(
             below LOW_MODEL_CONFIDENCE (0.1), the postprocess type will be
             automatically switched to NMS/IOU to avoid bounding box enlargement
             from merge operations. Default: False.
+        confidence_threshold: float, optional
+            Override the model's confidence threshold for this call only.
+            The model's original threshold is restored after the call.
 
     Returns:
         A Dict with fields:
@@ -259,7 +260,10 @@ def get_sliced_prediction(
     if detection_model is None:
         raise ValueError("detection_model must be provided for sliced prediction")
 
-    # for profiling
+    original_confidence_threshold = detection_model.confidence_threshold
+    if confidence_threshold is not None:
+        detection_model.confidence_threshold = confidence_threshold
+
     durations_in_seconds = dict()
 
     # create slices from full image
@@ -277,8 +281,7 @@ def get_sliced_prediction(
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
     num_slices = len(slice_image_result)
-    time_end = time.perf_counter() - time_start
-    durations_in_seconds["slice"] = time_end
+    durations_in_seconds["slice"] = time.perf_counter() - time_start
 
     # auto postprocess type switch for low confidence thresholds
     if (
@@ -297,7 +300,6 @@ def get_sliced_prediction(
         # Only NMS is supported for OBB model outputs
         postprocess_type = "NMS"
 
-    # init match postprocess instance
     if postprocess_type not in POSTPROCESS_NAME_TO_CLASS.keys():
         raise ValueError(
             f"postprocess_type should be one of {list(POSTPROCESS_NAME_TO_CLASS.keys())} "
@@ -327,7 +329,6 @@ def get_sliced_prediction(
     ]
     object_prediction_list = []
     slices_processed = 0
-    # perform sliced prediction
     for batch_ind in slice_iterator:
         batch_start = batch_ind * batch_size
         batch_end = min(batch_start + batch_size, num_slices)
@@ -337,33 +338,28 @@ def get_sliced_prediction(
         ]
         current_batch_size = len(batch_images)
 
-        # perform batch inference
         detection_model.perform_batch_inference([np.ascontiguousarray(img) for img in batch_images])
         detection_model.convert_original_predictions(
             shift_amount=batch_shifts,
             full_shape=[full_shape] * current_batch_size,
         )
 
-        # collect and shift predictions from all images in this batch
         for image_preds in detection_model.object_prediction_list_per_image:
             filtered_preds = filter_predictions(image_preds, exclude_classes_by_name, exclude_classes_by_id)
             for object_prediction in filtered_preds:
-                if object_prediction:  # if not empty
+                if object_prediction:
                     object_prediction_list.append(object_prediction.get_shifted_object_prediction())
 
         slices_processed += current_batch_size
 
-        # merge matching predictions during sliced prediction
         if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
             postprocess_time_start = time.time()
             object_prediction_list = postprocess(object_prediction_list)
             postprocess_time += time.time() - postprocess_time_start
 
-        # Call progress callback if provided
         if progress_callback is not None:
             progress_callback(slices_processed, num_slices)
 
-    # perform standard prediction
     if num_slices > 1 and perform_standard_pred:
         prediction_result = get_prediction(
             image=image,
@@ -379,7 +375,6 @@ def get_sliced_prediction(
         )
         object_prediction_list.extend(prediction_result.object_prediction_list)
 
-    # merge matching predictions
     if len(object_prediction_list) > 1:
         postprocess_time_start = time.time()
         object_prediction_list = postprocess(object_prediction_list)
@@ -390,21 +385,11 @@ def get_sliced_prediction(
     durations_in_seconds["postprocess"] = postprocess_time
 
     if verbose == 2:
-        print(
-            "Slicing performed in",
-            durations_in_seconds["slice"],
-            "seconds.",
-        )
-        print(
-            "Prediction performed in",
-            durations_in_seconds["prediction"],
-            "seconds.",
-        )
-        print(
-            "Postprocessing performed in",
-            durations_in_seconds["postprocess"],
-            "seconds.",
-        )
+        print("Slicing performed in", durations_in_seconds["slice"], "seconds.")
+        print("Prediction performed in", durations_in_seconds["prediction"], "seconds.")
+        print("Postprocessing performed in", durations_in_seconds["postprocess"], "seconds.")
+
+    detection_model.confidence_threshold = original_confidence_threshold
 
     return PredictionResult(
         image=image, object_prediction_list=object_prediction_list, durations_in_seconds=durations_in_seconds
