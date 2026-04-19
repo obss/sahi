@@ -109,6 +109,19 @@ def get_prediction(
         confidence_threshold: float, optional
             Override the model's confidence threshold for this call only.
             The model's original threshold is restored after the call.
+
+    Example:
+        >>> from sahi import AutoDetectionModel
+        >>> from sahi.predict import get_prediction
+        >>> model = AutoDetectionModel.from_pretrained(
+        ...     model_type="ultralytics",
+        ...     model_path="yolo11n.pt",
+        ...     confidence_threshold=0.3,
+        ... )
+        >>> # run with a different threshold without changing the model
+        >>> result = get_prediction("image.jpg", model, confidence_threshold=0.7)
+        >>> print(model.confidence_threshold)  # still 0.3
+
     Returns:
         A dict with fields:
             object_prediction_list: a list of ObjectPrediction
@@ -249,6 +262,20 @@ def get_sliced_prediction(
         confidence_threshold: float, optional
             Override the model's confidence threshold for this call only.
             The model's original threshold is restored after the call.
+
+    Example:
+        >>> from sahi import AutoDetectionModel
+        >>> from sahi.predict import get_sliced_prediction
+        >>> model = AutoDetectionModel.from_pretrained(
+        ...     model_type="ultralytics",
+        ...     model_path="yolo11n.pt",
+        ...     confidence_threshold=0.3,
+        ... )
+        >>> # sweep thresholds without recreating the model
+        >>> for thresh in [0.3, 0.5, 0.7]:
+        ...     result = get_sliced_prediction("image.jpg", model, confidence_threshold=thresh)
+        ...     print(thresh, len(result.object_prediction_list))
+        >>> print(model.confidence_threshold)  # still 0.3
 
     Returns:
         A Dict with fields:
