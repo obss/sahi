@@ -16,7 +16,7 @@ from sahi.predict import get_prediction, get_sliced_prediction, predict
 from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
 
-from .utils.ultralytics import UltralyticsConstants, download_yolo11n_model
+from .utils.ultralytics import UltralyticsConstants, download_yolo11n_model, download_yolo26n_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -353,6 +353,61 @@ def test_get_sliced_prediction_yolo11() -> None:
         if object_prediction.category.name == "car":
             num_car += 1
     assert num_car > 0
+
+
+def test_confidence_threshold_override_yolo26() -> None:
+    """Per-call confidence_threshold override takes effect and is always restored."""
+    download_yolo26n_model()
+
+    model = UltralyticsDetectionModel(
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
+        confidence_threshold=0.3,
+        device=MODEL_DEVICE,
+        category_remapping=None,
+        load_at_init=False,
+        image_size=IMAGE_SIZE,
+    )
+    model.load_model()
+    original = model.confidence_threshold
+
+    image_path = "tests/data/small-vehicles1.jpeg"
+
+    # override filters more aggressively than the baseline
+    baseline = get_prediction(image=image_path, detection_model=model, postprocess=None)
+    high = get_prediction(image=image_path, detection_model=model, confidence_threshold=0.99, postprocess=None)
+    assert len(high.object_prediction_list) <= len(baseline.object_prediction_list)
+    assert model.confidence_threshold == original
+
+    # sliced path: threshold sweep should be monotonically non-increasing in count
+    counts = []
+    for thresh in (0.2, 0.5, 0.9):
+        res = get_sliced_prediction(
+            image=image_path,
+            detection_model=model,
+            confidence_threshold=thresh,
+            slice_height=512,
+            slice_width=512,
+            overlap_height_ratio=0.1,
+            overlap_width_ratio=0.2,
+            perform_standard_pred=False,
+        )
+        counts.append(len(res.object_prediction_list))
+        assert model.confidence_threshold == original
+    assert counts == sorted(counts, reverse=True)
+
+    # threshold must be restored even if inference raises
+    original_perform_inference = model.perform_inference
+
+    def boom(*_args: Any, **_kwargs: Any) -> None:
+        raise RuntimeError("inference failure")
+
+    model.perform_inference = boom  # type: ignore[assignment]
+    try:
+        with pytest.raises(RuntimeError):
+            get_prediction(image=image_path, detection_model=model, confidence_threshold=0.123, postprocess=None)
+        assert model.confidence_threshold == original
+    finally:
+        model.perform_inference = original_perform_inference  # type: ignore[assignment]
 
 
 def test_get_sliced_prediction_batch_size() -> None:
