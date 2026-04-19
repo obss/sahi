@@ -1,3 +1,13 @@
+---
+tags:
+  - cli
+  - inference
+  - coco
+  - slicing
+  - evaluation
+  - fiftyone
+---
+
 # CLI 命令
 
 SAHI 提供了一套全面的命令行工具用于目标检测任务。本指南涵盖所有可用命令，附有详细的示例和选项说明。
@@ -99,10 +109,10 @@ sahi predict --slice_width 512 --slice_height 512 \
 
 #### 推理模式
 
-默认情况下，SAHI 执行多阶段推理（同时进行标准推理和切片推理）：
+默认情况下，SAHI 执行多阶段推理（同时进行全图推理和切片推理）：
 
-- `--no_sliced_prediction` - 禁用切片推理（仅标准推理）
-- `--no_standard_prediction` - 禁用标准推理（仅切片推理）
+- `--no_sliced_prediction` - 禁用切片推理（仅全图推理）
+- `--no_standard_prediction` - 禁用全图推理（仅切片推理）
 
 ### COCO 数据集评估
 
@@ -366,10 +376,7 @@ python script_name.py
 
 ## 更多资源
 
-想要深入了解？以下是一些有用的资源：
-
-- **[预测工具文档](predict.md)** - 预测参数和可视化的详细说明
-- **[切片工具指南](slicing.md)** - 切片操作的深入探索
-- **[COCO 工具文档](coco.md)** - COCO 格式操作的全面示例
-- **[交互式示例 Notebook](../../demo/)** - CLI 命令的实践示例
-- **[模型文档](../models/)** - 各框架的模型集成指南
+- [预测工具](predict.md) -- 预测参数和可视化的 Python API
+- [COCO 工具](coco.md) -- COCO 数据集操作的 Python API
+- [模型集成](../guides/models.md) -- 各框架的模型集成指南
+- [交互式 Notebooks](../notebooks.md) -- 所有框架的动手实践示例
