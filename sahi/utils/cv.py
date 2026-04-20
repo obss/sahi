@@ -200,8 +200,8 @@ def read_image_as_pil(
     Args:
         image (Union[Image.Image, str, np.ndarray]): The image to be loaded. It can be an image path or URL (str),
             a numpy image (np.ndarray), or a PIL.Image object.
-        exif_fix (bool, optional): Whether to apply an EXIF fix to the image. Defaults to False.
-        return_arr (bool, optional): When True and the input is already a numpy array, skip the
+        exif_fix (bool): Whether to apply an EXIF fix to the image. Defaults to False.
+        return_arr (bool): When True and the input is already a numpy array, skip the
             costly PIL conversion and return an HWC RGB ndarray directly. For PIL/str inputs the
             PIL image is converted to ndarray before returning. Defaults to False.
 
