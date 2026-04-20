@@ -176,13 +176,13 @@ def _to_hwc(arr: np.ndarray) -> np.ndarray:
     Uses channel-count heuristic (1, 3, or 4) instead of a size threshold so
     small images (height < 5 px) are handled correctly. Channel order is NOT
     changed — callers are responsible for BGR/RGB correctness before passing in.
-    
+
     Args:
         arr (numpy.ndarray): The input array to be converted to HWC format.
-        
+
     Returns:
         numpy.ndarray: The input array converted to HWC format if necessary, otherwise the original array
-    
+
     """
     a = np.asarray(arr)
     if a.ndim == 3 and a.shape[0] in (1, 3, 4) and a.shape[-1] not in (1, 3, 4):
