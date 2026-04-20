@@ -170,22 +170,51 @@ def read_image(image_path: str) -> np.ndarray:
     return image
 
 
-def read_image_as_pil(image: Image.Image | str | np.ndarray, exif_fix: bool = True) -> Image.Image:
-    """Loads an image as PIL.Image.Image.
+def _to_hwc(arr: np.ndarray) -> np.ndarray:
+    """Return a HWC array, transposing CHW to HWC when necessary.
+
+    Uses channel-count heuristic (1, 3, or 4) instead of a size threshold so
+    small images (height < 5 px) are handled correctly. Channel order is NOT
+    changed — callers are responsible for BGR/RGB correctness before passing in.
+    
+    Args:
+        arr (numpy.ndarray): The input array to be converted to HWC format.
+        
+    Returns:
+        numpy.ndarray: The input array converted to HWC format if necessary, otherwise the original array
+    
+    """
+    a = np.asarray(arr)
+    if a.ndim == 3 and a.shape[0] in (1, 3, 4) and a.shape[-1] not in (1, 3, 4):
+        return np.transpose(a, (1, 2, 0))
+    return a
+
+
+def read_image_as_pil(
+    image: Image.Image | str | np.ndarray,
+    exif_fix: bool = True,
+    return_arr: bool = False,
+) -> Image.Image | np.ndarray:
+    """Loads an image as PIL.Image.Image (or np.ndarray when return_arr=True).
 
     Args:
         image (Union[Image.Image, str, np.ndarray]): The image to be loaded. It can be an image path or URL (str),
             a numpy image (np.ndarray), or a PIL.Image object.
         exif_fix (bool, optional): Whether to apply an EXIF fix to the image. Defaults to False.
+        return_arr (bool, optional): When True and the input is already a numpy array, skip the
+            costly PIL conversion and return an HWC RGB ndarray directly. For PIL/str inputs the
+            PIL image is converted to ndarray before returning. Defaults to False.
 
     Returns:
-        PIL.Image.Image: The loaded image as a PIL.Image object.
+        PIL.Image.Image | np.ndarray: The loaded image.
     """
     # https://stackoverflow.com/questions/56174099/how-to-load-images-larger-than-max-image-pixels-with-pil
     Image.MAX_IMAGE_PIXELS = None
 
     if isinstance(image, Image.Image):
-        image_pil = image
+        if return_arr:
+            return np.asarray(image)
+        return image
     elif isinstance(image, str):
         # read image if str image path is provided
         try:
@@ -211,17 +240,16 @@ def read_image_as_pil(image: Image.Image | str | np.ndarray, exif_fix: bool = Tr
                 image_pil = Image.fromarray(image_sk, mode="RGB")
             else:
                 raise TypeError(f"image with shape: {image_sk.shape[3]} is not supported.")
+        if return_arr:
+            return np.asarray(image_pil)
+        return image_pil
     elif isinstance(image, np.ndarray):
-        # check if image is in CHW format (Channels, Height, Width)
-        # heuristic: 3 dimensions, first dim (channels) < 5, last dim (width) > 4
-        if image.ndim == 3 and image.shape[0] < 5:  # image in CHW
-            if image.shape[2] > 4:
-                # convert CHW to HWC (Height, Width, Channels)
-                image = np.transpose(image, (1, 2, 0))
-        image_pil = Image.fromarray(image)
+        arr = _to_hwc(image)
+        if return_arr:
+            return arr
+        return Image.fromarray(arr)
     else:
         raise TypeError("read image with 'pillow' using 'Image.open()'")
-    return image_pil
 
 
 def select_random_color() -> list[int]:
