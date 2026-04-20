@@ -133,15 +133,19 @@ def get_prediction(
 
     try:
         durations_in_seconds = dict()
-        image_as_pil = read_image_as_pil(image)
+        image_as_arr = read_image_as_pil(image, return_arr=True)
 
         if shift_amount is None:
             shift_amount = [0, 0]
         if full_shape is None:
-            full_shape = [image_as_pil.height, image_as_pil.width]
+            if image_as_arr.ndim == 2:  # type: ignore[union-attr]
+                h, w = image_as_arr.shape  # type: ignore[misc]
+            else:
+                h, w = image_as_arr.shape[:2]  # type: ignore[union-attr]
+            full_shape = [h, w]
 
         time_start = time.perf_counter()
-        detection_model.perform_inference(np.ascontiguousarray(image_as_pil))
+        detection_model.perform_inference(np.ascontiguousarray(image_as_arr))
         durations_in_seconds["prediction"] = time.perf_counter() - time_start
 
         time_start = time.perf_counter()
