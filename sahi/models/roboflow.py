@@ -169,12 +169,13 @@ class RoboflowDetectionModel(DetectionModel):
             )
             if hasattr(model, "__name__") and model.__name__ in model_names:
                 model_params = dict(
-                    resolution=int(self.image_size) if self.image_size else 560,
                     device=self._device,
                     num_classes=len(self.category_mapping.keys()) if self.category_mapping else None,
                 )
                 if model_path:
                     model_params["pretrain_weights"] = model_path
+                    if self.image_size:
+                        model_params["resolution"] = int(self.image_size)
 
                 model = model(**model_params)  # type: ignore[operator]
             elif isinstance(model, model_types):
