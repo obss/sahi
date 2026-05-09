@@ -136,7 +136,7 @@ def test_rfdetr_seg() -> None:
             model=model_variant,
             confidence_threshold=0.5,
             category_mapping=COCO_CLASSES,
-            image_size=576,
+            image_size=432,
             device="cpu",
         )
 
