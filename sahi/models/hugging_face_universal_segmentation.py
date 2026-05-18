@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from enum import Enum
-from typing import Any
+from typing import Any, ClassVar
 
 import cv2
 import numpy as np
@@ -16,6 +16,7 @@ from transformers import (
     OneFormerForUniversalSegmentation,
     OneFormerProcessor,
 )
+from transformers.image_processing_base import BatchFeature
 
 from sahi import DetectionModel
 from sahi.prediction import ObjectPrediction
@@ -47,7 +48,7 @@ class HuggingFaceUniversalSegmentationModel(DetectionModel):
         Not all params are valid for all segmentation types, so if not valid they are simple ignored.
     """
 
-    supported_models_and_processors = {
+    supported_models_and_processors: ClassVar[dict] = {
         Mask2FormerForUniversalSegmentation: Mask2FormerImageProcessor,
         MaskFormerForInstanceSegmentation: MaskFormerImageProcessor,
         OneFormerForUniversalSegmentation: OneFormerProcessor,
@@ -94,11 +95,11 @@ class HuggingFaceUniversalSegmentationModel(DetectionModel):
         )
 
     @property
-    def processor(self):
+    def processor(self) -> Any:
         return self._processor
 
     @property
-    def image_shapes(self):
+    def image_shapes(self) -> list[list[int]]:
         return self._original_image_shapes
 
     @property
@@ -114,7 +115,8 @@ class HuggingFaceUniversalSegmentationModel(DetectionModel):
         processor_class = self.supported_models_and_processors.get(type(model), None)
 
         assert processor_class is not None, (
-            f"model of type {type(model)} is not supported. supported models are: {list(self.supported_models_and_processors.keys())}"
+            f"model of type {type(model)} is not supported."
+            f"supported models are: {list(self.supported_models_and_processors.keys())}."
         )
 
         if self.image_size is not None:
@@ -130,7 +132,7 @@ class HuggingFaceUniversalSegmentationModel(DetectionModel):
 
         self.set_model(model, processor)
 
-    def set_model(self, model: Any, processor: Any = None, **kwargs) -> None:
+    def set_model(self, model: Any, processor: Any = None, **kwargs: Any) -> None:
         processor = processor or self.processor
         if processor is None:
             raise ValueError(f"'processor' is required to be set, got {processor}.")
@@ -142,7 +144,8 @@ class HuggingFaceUniversalSegmentationModel(DetectionModel):
                 break
         if not is_valid_pair:
             raise ValueError(
-                f"Invalid model and processor pair: {type(model)} and {type(processor)}. Supported pairs are: {self.supported_models_and_processors}"
+                f"Invalid model and processor pair: {type(model)} and {type(processor)}."
+                f"Supported pairs are: {self.supported_models_and_processors}"
             )
 
         self.model = model
@@ -174,7 +177,7 @@ class HuggingFaceUniversalSegmentationModel(DetectionModel):
 
         self._original_predictions = outputs
 
-    def get_valid_predictions(self, post_processed_output) -> tuple:
+    def get_valid_predictions(self, post_processed_output: dict) -> tuple:
 
         scores = []
         category_ids = []
@@ -259,7 +262,8 @@ class HuggingFaceUniversalSegmentationModel(DetectionModel):
 
 class PrePostHandler:
     """
-    A Handler Base class that provides the ability for the universal segmentation models to add their own pre and post processing ability.
+    A Handler Base class that provides the ability for the universal segmentation models to add their own
+    pre and post processing ability.
     """
 
     def __init__(self, hugging_face_universal_segmentation_model: HuggingFaceUniversalSegmentationModel) -> None:
@@ -271,10 +275,12 @@ class PrePostHandler:
         """
         self.hf_universal_seg = hugging_face_universal_segmentation_model
 
-    def _convert_semantic_mask_to_binary_masks(self, class_masks: list[torch.Tensor]):
+    def _convert_semantic_mask_to_binary_masks(self, class_masks: list[torch.Tensor]) -> list[dict]:
         """
-        To have a common output format across segmention types, the segments of semantic are converted into a common format.
-        This method converts each segment into a binary mask and a separate segment_info for each of the binary mask.
+        To have a common output format across segmention types, the segments of semantic are converted into
+        a common format.
+        This method converts each segment into a binary mask and a separate segment_info for each of
+        the binary mask.
 
         Args:
         class_masks : tensor of shape [batch_size,H,W] with each value of the tensor corresponds to a label_id.
@@ -296,9 +302,10 @@ class PrePostHandler:
             outputs.append(output)
         return outputs
 
-    def _convert_panoptic_mask_to_binary_masks(self, post_processed_outputs: list[dict]):
+    def _convert_panoptic_mask_to_binary_masks(self, post_processed_outputs: list[dict]) -> list[dict]:
         """
-        To have a common output format across segmention types, the segments of panoptic are converted into a common format.
+        To have a common output format across segmention types, the segments of panoptic are converted into a
+        common format.
         This method converts each segment into a binary mask and a separate segment_info for each of the binary mask.
 
         Args:
@@ -332,7 +339,7 @@ class PrePostHandler:
             outputs.append(output)
         return outputs
 
-    def handle_pre_process(self, image: list | np.ndarray):
+    def handle_pre_process(self, image: list | np.ndarray) -> BatchFeature:
         """
         This method handles the pre processing logic of the model and moves the input tensors
         required by the model appropriately to the device as provided in the hugging_face_universal_segmentation_model.
@@ -374,7 +381,7 @@ class MaskFormerAndMask2FormerPrePostHandler(PrePostHandler):
     def __init__(self, hugging_face_universal_segmentation: HuggingFaceUniversalSegmentationModel) -> None:
         super().__init__(hugging_face_universal_segmentation_model=hugging_face_universal_segmentation)
 
-    def handle_pre_process(self, image: list | np.ndarray):
+    def handle_pre_process(self, image: list | np.ndarray) -> BatchFeature:
         processor = self.hf_universal_seg.processor
         assert processor, "processor is none"
         inputs = processor(images=image, return_tensors="pt")
@@ -426,13 +433,13 @@ class OneFormerPrePostHandler(PrePostHandler):
     def __init__(self, hugging_face_universal_segmentation: HuggingFaceUniversalSegmentationModel) -> None:
         super().__init__(hugging_face_universal_segmentation_model=hugging_face_universal_segmentation)
 
-    def _convert_instance_mask_to_binary_masks(self, post_processed_outputs: list[dict]):
+    def _convert_instance_mask_to_binary_masks(self, post_processed_outputs: list[dict]) -> list[dict]:
         """
         oneformer's instance segmentation post process returns masks in the same format as panoptic.
         """
         return self._convert_panoptic_mask_to_binary_masks(post_processed_outputs)
 
-    def handle_pre_process(self, image: list | np.ndarray):
+    def handle_pre_process(self, image: list | np.ndarray) -> BatchFeature:
         processor = self.hf_universal_seg.processor
         segmentation_type = self.hf_universal_seg.segmentation_type
         assert processor, "processor is none"
