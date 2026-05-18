@@ -73,7 +73,7 @@ class HuggingFaceUniversalSegmentationModel(DetectionModel):
         segmentation_type: SegmentationType = SegmentationType.INSTANCE_SEGMENTATION,
     ) -> None:
         self._processor = processor
-        self._output_image_shapes: list = []
+        self._original_image_shapes: list = []
         self._token = token
         self.segmentation_type = segmentation_type
         self.overlap_mask_area_threshold = overlap_mask_area_threshold
@@ -99,7 +99,7 @@ class HuggingFaceUniversalSegmentationModel(DetectionModel):
 
     @property
     def image_shapes(self):
-        return self._output_image_shapes
+        return self._original_image_shapes
 
     @property
     def num_categories(self) -> int:
@@ -168,9 +168,9 @@ class HuggingFaceUniversalSegmentationModel(DetectionModel):
             outputs = self.model(**inputs)
 
         if isinstance(image, list):
-            self._output_image_shapes = [(img.shape[0], img.shape[1]) for img in image]
+            self._original_image_shapes = [(img.shape[0], img.shape[1]) for img in image]
         else:
-            self._output_image_shapes = [(image.shape[0], image.shape[1])]
+            self._original_image_shapes = [(image.shape[0], image.shape[1])]
 
         self._original_predictions = outputs
 
@@ -216,7 +216,7 @@ class HuggingFaceUniversalSegmentationModel(DetectionModel):
     ) -> None:
 
         original_predictions = self._original_predictions
-        target_sizes = self._output_image_shapes
+        target_sizes = self._original_image_shapes
 
         post_processed_outputs = self.prepost_handler.handle_post_process(original_predictions, target_sizes)
 
@@ -227,11 +227,11 @@ class HuggingFaceUniversalSegmentationModel(DetectionModel):
         object_prediction_list_per_image = []
         for image_ind in range(n_image):
             scores, category_ids, segments = self.get_valid_predictions(post_processed_outputs[image_ind])
-
+            original_image_shape = self._original_image_shapes[image_ind]
             object_prediction_list = []
 
             shift_amount = shift_amount_list[image_ind]
-            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
+            full_shape = original_image_shape if full_shape_list is None else full_shape_list[image_ind]
 
             # iterate each polygonal segment
             for ind in range(len(segments)):
