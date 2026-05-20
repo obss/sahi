@@ -149,8 +149,8 @@ result = get_sliced_prediction(
 
 ## HuggingFace Transformers
 
-Use any object detection model from the HuggingFace Hub (DETR, Deformable DETR,
-DETA, etc.).
+Use object detection and zero-shot object detection models from the HuggingFace
+Hub (DETR, Deformable DETR, DETA, GroundingDINO, etc.).
 
 ```bash
 pip install transformers timm
@@ -172,7 +172,27 @@ result = get_sliced_prediction(
 )
 ```
 
+GroundingDINO models require text-conditioned inference. Use `text_labels` when
+the target categories are known, so SAHI can assign stable category ids to those
+labels. Additional grounded phrases returned by the processor are appended as
+new categories.
+
+```python
+detection_model = AutoDetectionModel.from_pretrained(
+    model_type="huggingface",
+    model_path="IDEA-Research/grounding-dino-tiny",
+    confidence_threshold=0.25,
+    text_threshold=0.20,
+    text_labels=["car", "truck", "person"],
+    device="cuda:0",
+)
+```
+
+HuggingFace object detection notebook:
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_huggingface.ipynb)
+
+GroundingDINO zero-shot detection notebook:
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_groundingdino.ipynb)
 
 ---
 
