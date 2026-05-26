@@ -19,13 +19,12 @@ except ImportError:
     Mask2FormerImageProcessor = None
 
 # Import transformers conditionally to avoid import errors in Python < 3.9
-pytestmark = [pytest.mark.skipif(
-        sys.version_info[:2] < (3, 9), reason="transformers>=4.49.0 requires Python 3.9 or higher"
-    ),
+pytestmark = [
+    pytest.mark.skipif(sys.version_info[:2] < (3, 9), reason="transformers>=4.49.0 requires Python 3.9 or higher"),
     pytest.mark.skipif(
-        AutoModelForUniversalSegmentation is None or Mask2FormerImageProcessor is None, 
-        reason="transformers not installed"
-    )
+        AutoModelForUniversalSegmentation is None or Mask2FormerImageProcessor is None,
+        reason="transformers not installed",
+    ),
 ]
 
 
@@ -38,7 +37,6 @@ IMAGE_PATH = "tests/data/small-vehicles1.jpeg"
 IMAGE_ARR = read_image(IMAGE_PATH)
 ORIGINAL_IMAGE_H = IMAGE_ARR.shape[0]
 ORIGINAL_IMAGE_W = IMAGE_ARR.shape[1]
-
 
 
 # this is minimum number of cars in the image that we required the model to detect
@@ -54,21 +52,24 @@ def test_load_model() -> None:
             device=MODEL_DEVICE,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             mask_threshold=MASK_THRESHOLD,
-            segmentation_type=segmentation_type
+            segmentation_type=segmentation_type,
         )
 
         assert huggingface_segmentation_model.model is not None
 
-    test_by_segmentation_type(SegmentationType.INSTANCE_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.SEMANTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.PANOPTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH)
+    test_by_segmentation_type(
+        SegmentationType.INSTANCE_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.SEMANTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.PANOPTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH
+    )
 
 
 def test_set_model() -> None:
-    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path:str) -> None:
+    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path: str) -> None:
         """Test setting a pre-loaded HuggingFace mask2former univeral segmentation model."""
         assert AutoModelForUniversalSegmentation
         assert Mask2FormerImageProcessor
@@ -82,28 +83,31 @@ def test_set_model() -> None:
             confidence_threshold=CONFIDENCE_THRESHOLD,
             mask_threshold=MASK_THRESHOLD,
             device=MODEL_DEVICE,
-            segmentation_type=segmentation_type
+            segmentation_type=segmentation_type,
         )
 
         assert huggingface_segmentation_model.model is not None
 
-    test_by_segmentation_type(SegmentationType.INSTANCE_SEGMENTATION,
-                            HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.SEMANTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.PANOPTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH)
+    test_by_segmentation_type(
+        SegmentationType.INSTANCE_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.SEMANTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.PANOPTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH
+    )
 
 
 def test_pre_process_handler() -> None:
-    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path:str) -> None:
+    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path: str) -> None:
         """Test pre_process prediction with HuggingFace mask2former univeral segmentation model."""
         assert AutoModelForUniversalSegmentation is not None and Mask2FormerImageProcessor is not None
 
         model = AutoModelForUniversalSegmentation.from_pretrained(model_path)
         processor = Mask2FormerImageProcessor.from_pretrained(model_path)
         processor.do_resize = False
-        
+
         huggingface_segmentation_model = HuggingFaceUniversalSegmentationModel(
             model=model,
             processor=processor,
@@ -118,22 +122,27 @@ def test_pre_process_handler() -> None:
         assert pre_process_output.get("pixel_values", None) is not None
         assert pre_process_output.get("pixel_mask", None) is not None
 
-        assert (pre_process_output["pixel_values"].shape[-2], 
-                pre_process_output["pixel_values"].shape[-1]) == (ORIGINAL_IMAGE_H,ORIGINAL_IMAGE_W)
+        assert (pre_process_output["pixel_values"].shape[-2], pre_process_output["pixel_values"].shape[-1]) == (
+            ORIGINAL_IMAGE_H,
+            ORIGINAL_IMAGE_W,
+        )
 
         assert pre_process_output["pixel_values"].device == huggingface_segmentation_model.device
         assert pre_process_output["pixel_mask"].device == huggingface_segmentation_model.device
 
-    test_by_segmentation_type(SegmentationType.INSTANCE_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.SEMANTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.PANOPTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH)
+    test_by_segmentation_type(
+        SegmentationType.INSTANCE_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.SEMANTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.PANOPTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH
+    )
 
 
 def test_post_process_handler() -> None:
-    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path:str) -> None:
+    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path: str) -> None:
         """Test post_process with HuggingFace mask2former univeral segmentation model."""
         assert AutoModelForUniversalSegmentation is not None and Mask2FormerImageProcessor is not None
 
@@ -147,7 +156,7 @@ def test_post_process_handler() -> None:
             confidence_threshold=CONFIDENCE_THRESHOLD,
             mask_threshold=MASK_THRESHOLD,
             device=MODEL_DEVICE,
-            segmentation_type=segmentation_type
+            segmentation_type=segmentation_type,
         )
 
         # perform inference
@@ -162,23 +171,27 @@ def test_post_process_handler() -> None:
         assert len(post_processed_outputs) > 0
         assert len(post_processed_outputs[0]["segmentation"]) == len(post_processed_outputs[0]["segments_info"])
 
-        assert (post_processed_outputs[0]["segmentation"][0].shape[-2],
-                post_processed_outputs[0]["segmentation"][0].shape[-1]) == (ORIGINAL_IMAGE_H, ORIGINAL_IMAGE_W)
-        
-        assert 'label_id' in post_processed_outputs[0]["segments_info"][0].keys()
-        assert 'score' in post_processed_outputs[0]["segments_info"][0].keys()
-        
-    
-    test_by_segmentation_type(SegmentationType.INSTANCE_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.SEMANTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.PANOPTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH)
+        assert (
+            post_processed_outputs[0]["segmentation"][0].shape[-2],
+            post_processed_outputs[0]["segmentation"][0].shape[-1],
+        ) == (ORIGINAL_IMAGE_H, ORIGINAL_IMAGE_W)
+
+        assert "label_id" in post_processed_outputs[0]["segments_info"][0].keys()
+        assert "score" in post_processed_outputs[0]["segments_info"][0].keys()
+
+    test_by_segmentation_type(
+        SegmentationType.INSTANCE_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.SEMANTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.PANOPTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH
+    )
 
 
 def test_perform_inference() -> None:
-    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path:str) -> None:
+    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path: str) -> None:
         """Test inference with HuggingFace mask2former univeral segmentation model."""
         assert AutoModelForUniversalSegmentation is not None and Mask2FormerImageProcessor is not None
 
@@ -192,7 +205,7 @@ def test_perform_inference() -> None:
             confidence_threshold=CONFIDENCE_THRESHOLD,
             mask_threshold=MASK_THRESHOLD,
             device=MODEL_DEVICE,
-            segmentation_type=segmentation_type
+            segmentation_type=segmentation_type,
         )
 
         # perform inference
@@ -204,9 +217,7 @@ def test_perform_inference() -> None:
             original_predictions, [(ORIGINAL_IMAGE_H, ORIGINAL_IMAGE_W)]
         )
 
-        scores, cat_ids, segments = huggingface_segmentation_model.get_valid_predictions(
-            post_processed_outputs[0]
-            )
+        scores, cat_ids, segments = huggingface_segmentation_model.get_valid_predictions(post_processed_outputs[0])
 
         # find all car segments
         car_segments = 0
@@ -220,15 +231,19 @@ def test_perform_inference() -> None:
 
         assert all(len(seg[0]) >= 8 for seg in segments)
 
-    test_by_segmentation_type(SegmentationType.INSTANCE_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.SEMANTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.PANOPTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH)
+    test_by_segmentation_type(
+        SegmentationType.INSTANCE_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.SEMANTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.PANOPTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH
+    )
+
 
 def test_convert_original_predictions() -> None:
-    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path:str) -> None:
+    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path: str) -> None:
         """Test converting HuggingFace mask2former univeral segmentation model predictions to ObjectPrediction."""
         assert AutoModelForUniversalSegmentation is not None and Mask2FormerImageProcessor is not None
 
@@ -241,7 +256,7 @@ def test_convert_original_predictions() -> None:
             processor=processor,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             mask_threshold=MASK_THRESHOLD,
-            segmentation_type=segmentation_type
+            segmentation_type=segmentation_type,
         )
 
         # perform inference
@@ -269,16 +284,19 @@ def test_convert_original_predictions() -> None:
 
         assert car_segments >= MINIMUM_CAR_SEGMENTS
 
-    test_by_segmentation_type(SegmentationType.INSTANCE_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.SEMANTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.PANOPTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH)
+    test_by_segmentation_type(
+        SegmentationType.INSTANCE_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.SEMANTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.PANOPTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH
+    )
 
 
 def test_get_prediction_huggingface() -> None:
-    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path:str) -> None:
+    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path: str) -> None:
         """Test full-image prediction with HuggingFace mask2former univeral segmentation model."""
         assert AutoModelForUniversalSegmentation is not None and Mask2FormerImageProcessor is not None
 
@@ -291,7 +309,7 @@ def test_get_prediction_huggingface() -> None:
             processor=processor,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             device=MODEL_DEVICE,
-            segmentation_type=segmentation_type
+            segmentation_type=segmentation_type,
         )
 
         # get full sized prediction
@@ -316,17 +334,20 @@ def test_get_prediction_huggingface() -> None:
         assert person_segments == 0
         assert car_segments >= MINIMUM_CAR_SEGMENTS
 
-    test_by_segmentation_type(SegmentationType.INSTANCE_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.SEMANTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.PANOPTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH)
+    test_by_segmentation_type(
+        SegmentationType.INSTANCE_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.SEMANTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.PANOPTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH
+    )
 
 
 def test_get_sliced_prediction_huggingface() -> None:
 
-    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path:str) -> None:
+    def test_by_segmentation_type(segmentation_type: SegmentationType, model_path: str) -> None:
         """Test sliced prediction with HuggingFace mask2former univeral segmentation model."""
         assert AutoModelForUniversalSegmentation is not None and Mask2FormerImageProcessor is not None
 
@@ -353,7 +374,7 @@ def test_get_sliced_prediction_huggingface() -> None:
             slice_height=slice_height,
             slice_width=slice_width,
             perform_standard_pred=False,
-            batch_size=9
+            batch_size=9,
         )
         object_prediction_list = prediction_result.object_prediction_list
 
@@ -369,10 +390,12 @@ def test_get_sliced_prediction_huggingface() -> None:
         assert person_segments == 0
         assert car_segments >= MINIMUM_CAR_SEGMENTS
 
-    test_by_segmentation_type(SegmentationType.INSTANCE_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.SEMANTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH)
-    test_by_segmentation_type(SegmentationType.PANOPTIC_SEGMENTATION, 
-                              HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH)
-
+    test_by_segmentation_type(
+        SegmentationType.INSTANCE_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_INSTANCE_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.SEMANTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_SEMANTIC_MODEL_PATH
+    )
+    test_by_segmentation_type(
+        SegmentationType.PANOPTIC_SEGMENTATION, HuggingfaceConstants.MASK2FORMER_PANOPTIC_MODEL_PATH
+    )
