@@ -176,6 +176,40 @@ result = get_sliced_prediction(
 
 ---
 
+## HuggingFace Segmentation
+
+Run instance, semantic, or panoptic segmentation models from the HuggingFace
+Hub (MaskFormer, Mask2Former, OneFormer).
+
+```bash
+pip install transformers timm
+```
+
+```python
+from sahi.models.huggingface_segmentation import SegmentationType
+
+detection_model = AutoDetectionModel.from_pretrained(
+    model_type="huggingface_segmentation",
+    model_path="facebook/mask2former-swin-tiny-coco-instance",
+    confidence_threshold=0.5,
+    device="cuda:0",
+    segmentation_type=SegmentationType.INSTANCE_SEGMENTATION,
+)
+
+result = get_sliced_prediction(
+    "image.jpg",
+    detection_model,
+    slice_height=512,
+    slice_width=512,
+)
+```
+
+Switch `segmentation_type` to `SEMANTIC_SEGMENTATION` or
+`PANOPTIC_SEGMENTATION` to use the matching head when the model supports it
+(e.g. OneFormer or Mask2Former panoptic checkpoints).
+
+---
+
 ## RT-DETR
 
 Real-Time Detection Transformer for high-accuracy real-time detection.
