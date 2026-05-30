@@ -178,8 +178,19 @@ result = get_sliced_prediction(
 
 ## HuggingFace Segmentation
 
-Run instance, semantic, or panoptic segmentation models from the HuggingFace
-Hub (MaskFormer, Mask2Former, OneFormer).
+Run segmentation models from the HuggingFace Hub. SAHI returns each segment as
+an `ObjectPrediction` with a polygon mask, so sliced inference and
+postprocessing work the same as for detection.
+
+| Architecture | `instance` | `semantic` | `panoptic` |
+|--------------|:----------:|:----------:|:----------:|
+| MaskFormer   | ✅ | ✅ | ✅ |
+| Mask2Former  | ✅ | ✅ | ✅ |
+| OneFormer    | ✅ | ✅ | ✅ |
+
+The available heads depend on the checkpoint (e.g.
+`facebook/mask2former-swin-tiny-coco-instance` is instance-only). OneFormer
+selects the head at inference time, so a single checkpoint serves all three.
 
 ```bash
 pip install transformers timm
@@ -205,8 +216,21 @@ result = get_sliced_prediction(
 ```
 
 Switch `segmentation_type` to `SEMANTIC_SEGMENTATION` or
-`PANOPTIC_SEGMENTATION` to use the matching head when the model supports it
-(e.g. OneFormer or Mask2Former panoptic checkpoints).
+`PANOPTIC_SEGMENTATION` to use the matching head. Note that semantic
+segmentation merges every instance of a class into a single mask, so one
+`ObjectPrediction` is returned per class rather than per instance.
+
+### Segmentation parameters
+
+In addition to the [common parameters](#common-parameters), this model accepts:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `segmentation_type` | `SegmentationType` | `INSTANCE_SEGMENTATION` (default), `SEMANTIC_SEGMENTATION`, or `PANOPTIC_SEGMENTATION` |
+| `min_segment_area` | int | Drop segments smaller than this many pixels (default: 100) |
+| `overlap_mask_area_threshold` | float | Merge/discard disconnected parts within a mask (default: 0.8) |
+| `label_ids_to_fuse` | list[int] | Panoptic only -- fuse all instances of these labels into one segment |
+| `token` | str | HuggingFace access token for gated/private models (falls back to `$HF_TOKEN`) |
 
 ---
 
