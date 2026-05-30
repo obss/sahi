@@ -5,8 +5,8 @@ from __future__ import annotations
 import sys
 
 import pytest
-
 from sahi.models.hugging_face_universal_segmentation import HuggingFaceUniversalSegmentationModel, SegmentationType
+
 from sahi.predict import get_prediction, get_sliced_prediction
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
