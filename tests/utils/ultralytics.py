@@ -8,9 +8,9 @@ from pathlib import Path
 import requests
 from tqdm import tqdm
 
-YOLO11N_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt"
-YOLO11N_SEG_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-seg.pt"
-YOLO11N_OBB_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n-obb.pt"
+YOLO11N_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n.pt"
+YOLO11N_SEG_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n-seg.pt"
+YOLO11N_OBB_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n-obb.pt"
 YOLO26N_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt"
 
 
@@ -32,7 +32,8 @@ def download_file(url: str, save_path: str, chunk_size: int = 8192) -> None:
         save_path: Path where the file will be saved
         chunk_size: Size of chunks for downloading
     """
-    response = requests.get(url, stream=True)
+    response = requests.get(url, stream=True, allow_redirects=True)
+    response.raise_for_status()
     total_size = int(response.headers.get("content-length", 0))
 
     # Ensure directory exists
