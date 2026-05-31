@@ -55,9 +55,8 @@ SAHI can increase object detection AP by up to 6.8% for FCOS, 5.1% for VFNet,
 and 5.3% for TOOD detectors. With slicing-aided fine-tuning, the accuracy can be
 further improved, resulting in a cumulative increase of 12.7%, 13.4%, and 14.5%
 AP, respectively. The technique has been successfully integrated with
-Ultralytics (YOLOv8, YOLO11, YOLO26), HuggingFace Transformers,
-RT-DETR, TorchVision, MMDetection, Detectron2, YOLOv5, YOLOE, YOLO-World, and
-Roboflow RF-DETR models.
+Ultralytics (YOLOv8, YOLO11, YOLO26), HuggingFace Transformers (detection,segmentation), RT-DETR, TorchVision,
+MMDetection, Detectron2, YOLOv5, YOLOE, YOLO-World, and Roboflow RF-DETR models.
 
 <div class="grid cards" markdown>
 
