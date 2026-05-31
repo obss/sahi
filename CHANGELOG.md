@@ -314,55 +314,50 @@ and @fcakyon!
 #### 📦 [Prediction Utilities](predict.md)
 
 - Detailed guide for performing object detection inference
-
-* Standard and sliced inference examples
-* Batch prediction usage
-* Class exclusion during inference
-* Visualization parameters and export formats
-* Interactive examples with various model integrations (YOLOv8, MMDetection,
+- Standard and sliced inference examples
+- Batch prediction usage
+- Class exclusion during inference
+- Visualization parameters and export formats
+- Interactive examples with various model integrations (YOLOv8, MMDetection,
   etc.)
 
 #### ✂️ [Slicing Utilities](slicing.md)
 
 - Guide for slicing large images and datasets
-
-* Image slicing examples
-* COCO dataset slicing examples
-* Interactive demo notebook reference
+- Image slicing examples
+- COCO dataset slicing examples
+- Interactive demo notebook reference
 
 #### 🐒 [COCO Utilities](coco.md)
 
 - Comprehensive guide for working with COCO format datasets
-
-* Dataset creation and manipulation
-* Slicing COCO datasets
-* Dataset splitting (train/val)
-* Category filtering and updates
-* Area-based filtering
-* Dataset merging
-* Format conversion (COCO ↔ YOLO)
-* Dataset sampling utilities
-* Statistics calculation
-* Result validation
+- Dataset creation and manipulation
+- Slicing COCO datasets
+- Dataset splitting (train/val)
+- Category filtering and updates
+- Area-based filtering
+- Dataset merging
+- Format conversion (COCO ↔ YOLO)
+- Dataset sampling utilities
+- Statistics calculation
+- Result validation
 
 #### 💻 [CLI Commands](cli.md)
 
 - Complete reference for SAHI command-line interface
-
-* Prediction commands
-* FiftyOne integration
-* COCO dataset operations
-* Environment information
-* Version checking
-* Custom script usage
+- Prediction commands
+- FiftyOne integration
+- COCO dataset operations
+- Environment information
+- Version checking
+- Custom script usage
 
 #### 👁️ [FiftyOne Integration](fiftyone.md)
 
 - Guide for visualizing and analyzing predictions with FiftyOne
-
-* Dataset visualization
-* Result exploration
-* Interactive analysis
+- Dataset visualization
+- Result exploration
+- Interactive analysis
 
 #### 📓 Interactive Examples
 
