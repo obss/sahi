@@ -2,10 +2,10 @@
 
 ## 🚀 SAHI v0.12.0 Release Notes
 
-One of the largest SAHI releases to date — **89 commits** since `0.11.36` —
-featuring a re-architected postprocessing engine, true batch inference, a
-torch-free core, new open-vocabulary and segmentation models, and a full
-documentation overhaul.
+One of the largest SAHI releases to date — **95 commits** since `0.11.34`
+(rolling in the `0.11.35`/`0.11.36` hotfixes) — featuring a re-architected
+postprocessing engine, true batch inference, a torch-free core, new
+open-vocabulary and segmentation models, and a full documentation overhaul.
 
 ### 🚀 Key Updates
 
@@ -62,6 +62,9 @@ documentation overhaul.
 
 ### ✨ Performance & Improvements
 
+- **Significantly faster post-processing** — NMS, NMM, and GREEDYNMM now use a
+  shapely `STRtree` spatial index, dramatically speeding up merging on images
+  with many slices/detections ([#1248](https://github.com/obss/sahi/pull/1248)).
 - Faster `read_image_as_pil` for quicker slicing throughput
   ([#1353](https://github.com/obss/sahi/pull/1353)).
 - Improved performance & resource management in prediction and slicing
@@ -75,6 +78,9 @@ documentation overhaul.
 
 ### 🐞 Bug Fixes
 
+- Fixed empty bounding boxes caused by an empty
+  `shapely_annotation.multipolygon`
+  ([#1140](https://github.com/obss/sahi/pull/1140)).
 - Fixed invalid segmentation masks for Detectron2 models
   ([#1262](https://github.com/obss/sahi/pull/1262)).
 - Corrected margin calculation in `BoundingBox`
@@ -111,12 +117,25 @@ documentation overhaul.
 
 ### 🙌 New Contributors
 
-- Haotian Gong (@ZephyrKeXiner), Yogendra Singh (@yogendrasinghx), @siromermer,
-  Ivan Buldakov (@ibuldakov), Christopher Field (@volks73), and Vignesh Suresh
-  (@srikrishnavignesh) made their first contributions in this release.
+- @vinnik-dmitry07 made their first contribution in
+  [#1140](https://github.com/obss/sahi/pull/1140)
+- @nikvo1 made their first contribution in
+  [#1248](https://github.com/obss/sahi/pull/1248)
+- Christopher Field (@volks73) made their first contribution in
+  [#1262](https://github.com/obss/sahi/pull/1262)
+- Haotian Gong (@ZephyrKeXiner) made their first contribution in
+  [#1253](https://github.com/obss/sahi/pull/1253)
+- Yogendra Singh (@yogendrasinghx) made their first contribution in
+  [#1326](https://github.com/obss/sahi/pull/1326)
+- Ivan Buldakov (@ibuldakov) made their first contribution in
+  [#1315](https://github.com/obss/sahi/pull/1315)
+- Vignesh Suresh (@srikrishnavignesh) made their first contribution in
+  [#1360](https://github.com/obss/sahi/pull/1360)
+- Ömer Günaydın (@siromermer) made their first contribution in
+  [#1361](https://github.com/obss/sahi/pull/1361)
 
 **Full Changelog**:
-<https://github.com/obss/sahi/compare/0.11.36...0.12.0>
+<https://github.com/obss/sahi/compare/0.11.34...0.12.0>
 
 ## 🚀 SAHI v0.11.31 Release Notes
 
