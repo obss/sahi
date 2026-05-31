@@ -149,8 +149,8 @@ result = get_sliced_prediction(
 
 ## HuggingFace Transformers
 
-Use any object detection model from the HuggingFace Hub (DETR, Deformable DETR,
-DETA, etc.).
+Use object detection and zero-shot object detection models from the HuggingFace
+Hub (DETR, Deformable DETR, DETA, GroundingDINO, etc.).
 
 ```bash
 pip install transformers timm
@@ -172,7 +172,38 @@ result = get_sliced_prediction(
 )
 ```
 
+GroundingDINO models require text-conditioned inference. Use `text_labels` when
+the target categories are known, so SAHI can assign stable category ids to those
+labels. Additional grounded phrases returned by the processor are appended as
+new categories.
+
+```python
+detection_model = AutoDetectionModel.from_pretrained(
+    model_type="huggingface",
+    model_path="IDEA-Research/grounding-dino-tiny",
+    confidence_threshold=0.25,
+    text_threshold=0.20,
+    text_labels=["car", "truck", "person"],
+    device="cuda:0",
+)
+```
+
+### Zero-shot parameters
+
+In addition to the [common parameters](#common-parameters), zero-shot
+(GroundingDINO) models accept:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `text_labels` | list[str] | Fixed categories to detect, e.g. `["car", "truck"]`. Each gets a stable category id; phrases outside this list are dropped |
+| `text_prompt` | str | Free-form prompt (e.g. `"a car. a truck."`) used when `text_labels` is not set; returned phrases become categories dynamically |
+| `text_threshold` | float | Minimum score for matching a box to a text token (default: 0.25) |
+
+HuggingFace object detection notebook:
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_huggingface.ipynb)
+
+GroundingDINO zero-shot detection notebook:
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_groundingdino.ipynb)
 
 ---
 
