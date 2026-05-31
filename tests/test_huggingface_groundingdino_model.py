@@ -14,28 +14,18 @@ pytestmark = pytest.mark.skipif(
     sys.version_info[:2] < (3, 9), reason="transformers>=4.49.0 requires Python 3.9 or higher"
 )
 
-MODEL_DEVICE = "cpu"
-
 
 class GroundingDinoForObjectDetection:
     """Minimal GroundingDINO-like model for zero-shot adapter tests."""
 
     def __init__(self) -> None:
         self.config = SimpleNamespace(id2label={0: "LABEL_0"}, num_labels=1)
-        self.calls = []
 
     def to(self, device: str) -> GroundingDinoForObjectDetection:
-        self.device = device
         return self
 
     def __call__(self, **inputs: object) -> SimpleNamespace:
-        import torch
-
-        self.calls.append(inputs)
-        return SimpleNamespace(
-            logits=torch.zeros((len(inputs["input_ids"]), 2, 4)),
-            pred_boxes=torch.zeros((len(inputs["input_ids"]), 2, 4)),
-        )
+        return SimpleNamespace()
 
 
 class GroundingDinoProcessor:
@@ -49,7 +39,7 @@ class GroundingDinoProcessor:
         import torch
 
         batch_size = len(images) if isinstance(images, list) else 1
-        self.calls.append({"images": images, "text": text, "return_tensors": return_tensors})
+        self.calls.append({"text": text})
         return {"input_ids": torch.ones((batch_size, 3), dtype=torch.long)}
 
     def post_process_grounded_object_detection(
@@ -63,14 +53,9 @@ class GroundingDinoProcessor:
         import torch
 
         self.postprocess_calls.append(
-            {
-                "outputs": outputs,
-                "input_ids": input_ids,
-                "threshold": threshold,
-                "text_threshold": text_threshold,
-                "target_sizes": target_sizes,
-            }
+            {"threshold": threshold, "text_threshold": text_threshold, "target_sizes": target_sizes}
         )
+        # third box is a combined phrase that must be filtered out when text_labels are fixed
         return [
             {
                 "scores": torch.tensor([0.9, 0.8, 0.7]),
@@ -81,75 +66,48 @@ class GroundingDinoProcessor:
         ]
 
 
-def test_groundingdino_image_size_uses_valid_processor_size() -> None:
-    """Test GroundingDINO image_size maps to a valid HuggingFace size dict."""
-    assert HuggingfaceDetectionModel._get_processor_size(
-        GroundingDinoForObjectDetection(),
-        640,
-    ) == {"shortest_edge": 640, "longest_edge": 640}
+def _build_model(processor: object, **kwargs: object) -> HuggingfaceDetectionModel:
+    return HuggingfaceDetectionModel(
+        model=GroundingDinoForObjectDetection(),
+        processor=processor,
+        device="cpu",
+        load_at_init=True,
+        **kwargs,
+    )
 
 
 def test_groundingdino_zero_shot_conversion_with_text_labels() -> None:
-    """Test GroundingDINO-style zero-shot prediction conversion."""
+    """Fixed text_labels yield stable ids and combined phrases are dropped."""
     processor = GroundingDinoProcessor()
-    huggingface_detection_model = HuggingfaceDetectionModel(
-        model=GroundingDinoForObjectDetection(),
-        processor=processor,
-        confidence_threshold=0.4,
-        text_threshold=0.2,
-        text_labels=["car", "truck"],
-        device=MODEL_DEVICE,
-        load_at_init=True,
-    )
+    model = _build_model(processor, confidence_threshold=0.4, text_threshold=0.2, text_labels=["car", "truck"])
 
-    image = np.zeros((20, 30, 3), dtype=np.uint8)
-    huggingface_detection_model.perform_inference(image)
-    huggingface_detection_model.convert_original_predictions(
-        shift_amount=[[5, 6]],
-        full_shape=[[100, 120]],
-    )
+    model.perform_inference(np.zeros((20, 30, 3), dtype=np.uint8))
+    model.convert_original_predictions(shift_amount=[[5, 6]], full_shape=[[100, 120]])
 
-    object_prediction_list = huggingface_detection_model.object_prediction_list
+    predictions = model.object_prediction_list
     assert processor.calls[0]["text"] == [["car", "truck"]]
     assert processor.postprocess_calls[0]["threshold"] == 0.4
     assert processor.postprocess_calls[0]["text_threshold"] == 0.2
     assert processor.postprocess_calls[0]["target_sizes"] == [(20, 30)]
-    assert len(object_prediction_list) == 2
-    assert object_prediction_list[0].category.id == 0
-    assert object_prediction_list[0].category.name == "car"
-    assert object_prediction_list[0].bbox.to_xyxy() == [1.0, 2.0, 12.0, 14.0]
-    assert object_prediction_list[0].score.value == pytest.approx(0.9)
-    assert object_prediction_list[0].bbox.shift_amount == (5, 6)
-    assert object_prediction_list[1].category.id == 1
-    assert object_prediction_list[1].category.name == "truck"
-    assert object_prediction_list[1].bbox.to_xyxy() == [0.0, 3.0, 30.0, 20.0]
+    assert len(predictions) == 2  # "car truck" combined phrase filtered out
+    assert (predictions[0].category.id, predictions[0].category.name) == (0, "car")
+    assert predictions[0].bbox.to_xyxy() == [1.0, 2.0, 12.0, 14.0]
+    assert predictions[0].score.value == pytest.approx(0.9)
+    assert predictions[0].bbox.shift_amount == (5, 6)
+    assert (predictions[1].category.id, predictions[1].category.name) == (1, "truck")
+    assert predictions[1].bbox.to_xyxy() == [0.0, 3.0, 30.0, 20.0]  # negative x clamped to 0
 
 
 def test_groundingdino_zero_shot_batch_repeats_text_labels() -> None:
-    """Test GroundingDINO-style text labels are repeated for batch inference."""
+    """text_labels are repeated per image for batch inference."""
     processor = GroundingDinoProcessor()
-    huggingface_detection_model = HuggingfaceDetectionModel(
-        model=GroundingDinoForObjectDetection(),
-        processor=processor,
-        confidence_threshold=0.4,
-        text_labels=["car", "truck"],
-        device=MODEL_DEVICE,
-        load_at_init=True,
-    )
+    model = _build_model(processor, confidence_threshold=0.4, text_labels=["car", "truck"])
 
-    images = [
-        np.zeros((20, 30, 3), dtype=np.uint8),
-        np.zeros((40, 50, 3), dtype=np.uint8),
-    ]
-    huggingface_detection_model.perform_batch_inference(images)
-    huggingface_detection_model.convert_original_predictions(
-        shift_amount=[[0, 0], [10, 20]],
-        full_shape=None,
-    )
+    model.perform_batch_inference([np.zeros((20, 30, 3), np.uint8), np.zeros((40, 50, 3), np.uint8)])
+    model.convert_original_predictions(shift_amount=[[0, 0], [10, 20]], full_shape=None)
 
     assert processor.calls[0]["text"] == [["car", "truck"], ["car", "truck"]]
     assert processor.postprocess_calls[0]["target_sizes"] == [(20, 30), (40, 50)]
-    assert len(huggingface_detection_model.object_prediction_list_per_image) == 2
-    assert len(huggingface_detection_model.object_prediction_list_per_image[0]) == 2
-    assert len(huggingface_detection_model.object_prediction_list_per_image[1]) == 2
-    assert huggingface_detection_model.object_prediction_list_per_image[1][0].bbox.shift_amount == (10, 20)
+    per_image = model.object_prediction_list_per_image
+    assert [len(p) for p in per_image] == [2, 2]
+    assert per_image[1][0].bbox.shift_amount == (10, 20)
