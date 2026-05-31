@@ -347,10 +347,8 @@ class HuggingfaceDetectionModel(DetectionModel):
         full_shape_list: list[list[int | float]] | None = None,
     ) -> None:
         """Convert HuggingFace zero-shot detection output to ObjectPrediction objects."""
-        if self.processor is None:
-            raise RuntimeError("Processor is not loaded, load it by calling .load_model()")
         if self._original_input_ids is None:
-            raise RuntimeError("GroundingDINO input ids are missing. Run .perform_inference() before conversion.")
+            raise RuntimeError("Zero-shot text input ids are missing. Run .perform_inference() before conversion.")
 
         target_sizes = [(image_shape[0], image_shape[1]) for image_shape in self.image_shapes]
         results = self.processor.post_process_grounded_object_detection(
@@ -367,22 +365,20 @@ class HuggingfaceDetectionModel(DetectionModel):
             shift_amount, full_shape = self._shift_and_full_shape(shift_amount_list, full_shape_list, image_ind)
             labels = image_predictions.get("text_labels") or image_predictions.get("labels", [])
 
-            object_prediction_list = []
-            for score, bbox, category_name in zip(image_predictions["scores"], image_predictions["boxes"], labels):
-                category_name = str(category_name)
-                # when fixed text_labels are given, drop combined phrases (e.g. "car truck")
-                if self.text_labels and category_name not in self.text_labels:
-                    continue
-                object_prediction = ObjectPrediction(
+            object_prediction_list = [
+                ObjectPrediction(
                     bbox=self._clamp_bbox(bbox.tolist(), image_width, image_height),
                     segmentation=None,
-                    category_id=self._get_zero_shot_category_id(category_name),
-                    category_name=category_name,
+                    category_id=self._get_zero_shot_category_id(str(name)),
+                    category_name=str(name),
                     shift_amount=shift_amount,
-                    score=score.item() if hasattr(score, "item") else float(score),
+                    score=float(score),
                     full_shape=full_shape,
                 )
-                object_prediction_list.append(object_prediction)
+                for score, bbox, name in zip(image_predictions["scores"], image_predictions["boxes"], labels)
+                # when fixed text_labels are given, drop combined phrases (e.g. "car truck")
+                if not self.text_labels or str(name) in self.text_labels
+            ]
             object_prediction_list_per_image.append(object_prediction_list)
 
         self._object_prediction_list_per_image = object_prediction_list_per_image

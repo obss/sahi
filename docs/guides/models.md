@@ -188,6 +188,17 @@ detection_model = AutoDetectionModel.from_pretrained(
 )
 ```
 
+### Zero-shot parameters
+
+In addition to the [common parameters](#common-parameters), zero-shot
+(GroundingDINO) models accept:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `text_labels` | list[str] | Fixed categories to detect, e.g. `["car", "truck"]`. Each gets a stable category id; phrases outside this list are dropped |
+| `text_prompt` | str | Free-form prompt (e.g. `"a car. a truck."`) used when `text_labels` is not set; returned phrases become categories dynamically |
+| `text_threshold` | float | Minimum score for matching a box to a text token (default: 0.25) |
+
 HuggingFace object detection notebook:
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_huggingface.ipynb)
 
