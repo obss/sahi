@@ -132,6 +132,7 @@ for i, preds in enumerate(detection_model.object_prediction_list_per_image):
 ```
 
 !!! note "Single-image compatibility" The existing `object_prediction_list`
+
 property is unchanged and returns predictions for the first image, so code that
 uses `perform_inference` + `convert_original_predictions` +
 `object_prediction_list` continues to work without modification.
@@ -175,6 +176,7 @@ result = get_sliced_prediction(
 ```
 
 !!! tip "Notes" - `progress_bar` and `progress_callback` can be used together.
+
 When both are provided, the tqdm bar will display and the callback will be
 called after each slice group is processed. - The `progress_callback` is called
 with 1-based indices (i.e. first call will be `(1, total)`).

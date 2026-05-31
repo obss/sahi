@@ -32,7 +32,7 @@ retain enough pixel detail for reliable detection.
 Overlapping regions between tiles ensure that objects sitting on a tile boundary
 are fully visible in at least one patch.
 
-```
+```text
 +--------+--------+--------+
 |        |overlap |        |
 |  tile  |<------>|  tile  |
