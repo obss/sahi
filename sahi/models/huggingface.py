@@ -95,16 +95,20 @@ class HuggingfaceDetectionModel(DetectionModel):
         hf_token = os.getenv("HF_TOKEN", self._token)
         assert self.model_path is not None, "model_path must be provided for HuggingFace models"
         config = AutoConfig.from_pretrained(self.model_path, token=hf_token)
-        if self._is_zero_shot_config(config):
+        if self._is_zero_shot(config):
             ensure_package_minimum_version("transformers", _TRANSFORMERS_ZERO_SHOT_MIN_VERSION)
             from transformers import AutoModelForZeroShotObjectDetection
 
-            model_class = AutoModelForZeroShotObjectDetection
+            model_class: Any = AutoModelForZeroShotObjectDetection
         else:
             model_class = AutoModelForObjectDetection
         model = model_class.from_pretrained(self.model_path, token=hf_token)
         if self.image_size is not None:
-            size = self._get_processor_size(model, self.image_size)
+            # RT-DETR family expects explicit height/width; other models use shortest_edge
+            if model.__class__.__name__.startswith("RTDetr"):
+                size: dict[str, int | None] = {"height": self.image_size, "width": self.image_size}
+            else:
+                size = {"shortest_edge": self.image_size, "longest_edge": None}
             # use_fast=True raises error: AttributeError: 'SizeDict' object has no attribute 'keys'
             processor = AutoProcessor.from_pretrained(
                 self.model_path, size=size, do_resize=True, use_fast=False, token=hf_token
@@ -118,8 +122,8 @@ class HuggingfaceDetectionModel(DetectionModel):
         processor = processor or self.processor
         if processor is None:
             raise ValueError(f"'processor' is required to be set, got {processor}.")
-        self._is_zero_shot_model = self._is_zero_shot_model_instance(model)
-        valid_processor = "ImageProcessor" in processor.__class__.__name__ or self._is_zero_shot_processor(processor)
+        self._is_zero_shot_model = self._is_zero_shot(model)
+        valid_processor = "ImageProcessor" in processor.__class__.__name__ or self._is_zero_shot(processor)
         if "ObjectDetection" not in model.__class__.__name__ or not valid_processor:
             raise ValueError(
                 "Given 'model' is not an ObjectDetectionModel or 'processor' is not a valid ImageProcessor."
@@ -128,7 +132,8 @@ class HuggingfaceDetectionModel(DetectionModel):
         self.model.to(self.device)  # type: ignore[attr-defined]
         self._processor = processor
         if self._is_zero_shot_model:
-            self._set_zero_shot_category_mapping()
+            self.category_mapping = {i: name for i, name in enumerate(self.text_labels or [])}
+            self._category_name_to_id = {name: i for i, name in self.category_mapping.items()}
         else:
             self.category_mapping = self.model.config.id2label  # type: ignore[attr-defined]
 
@@ -188,58 +193,27 @@ class HuggingfaceDetectionModel(DetectionModel):
         return any(cls_name.startswith(p) for p in self._SIGMOID_CLS_PREFIXES)
 
     @staticmethod
-    def _is_zero_shot_config(config: Any) -> bool:
-        """Return whether a HuggingFace config belongs to a zero-shot detector."""
-        model_type = getattr(config, "model_type", "")
-        architectures = getattr(config, "architectures", []) or []
-        return model_type == "grounding-dino" or any(str(arch).startswith("GroundingDino") for arch in architectures)
+    def _is_zero_shot(obj: Any) -> bool:
+        """Return whether a HuggingFace config/model/processor is a GroundingDINO-style zero-shot detector."""
+        if hasattr(obj, "post_process_grounded_object_detection"):
+            return True
+        return obj.__class__.__name__.startswith("GroundingDino") or getattr(obj, "model_type", "") == "grounding-dino"
 
-    @staticmethod
-    def _is_zero_shot_model_instance(model: Any) -> bool:
-        """Return whether a HuggingFace model instance needs text-conditioned inference."""
-        return model.__class__.__name__.startswith("GroundingDino")
-
-    @staticmethod
-    def _is_zero_shot_processor(processor: Any) -> bool:
-        """Return whether the processor exposes zero-shot post-processing."""
-        return hasattr(processor, "post_process_grounded_object_detection")
-
-    @staticmethod
-    def _get_processor_size(model: Any, image_size: int) -> dict[str, int]:
-        """Return HuggingFace processor resize arguments."""
-        if model.__class__.__name__.startswith("RTDetr"):
-            return {"height": image_size, "width": image_size}
-        return {"shortest_edge": image_size, "longest_edge": image_size}
-
-    def _set_zero_shot_category_mapping(self) -> None:
-        """Initialize deterministic category ids for prompt labels."""
-        if self.category_mapping is None:
-            self.category_mapping = {}
-        self.category_mapping = {int(category_id): name for category_id, name in self.category_mapping.items()}
-        self._category_name_to_id = {name: category_id for category_id, name in self.category_mapping.items()}
-        if self.text_labels:
-            for category_name in self.text_labels:
-                self._get_zero_shot_category_id(category_name)
-
-    def _get_zero_shot_text_input(self, num_images: int) -> str | list[str] | list[list[str]]:
-        """Return text input for the HuggingFace zero-shot processor."""
-        if self.text_labels:
-            return [self.text_labels for _ in range(num_images)]
-        if self.text_prompt:
-            return self.text_prompt if num_images == 1 else [self.text_prompt for _ in range(num_images)]
-        if self.category_mapping:
-            text_labels = [self.category_mapping[key] for key in sorted(self.category_mapping)]
-            self.text_labels = text_labels
-            self._category_name_to_id = {name: category_id for category_id, name in self.category_mapping.items()}
-            return [text_labels for _ in range(num_images)]
-        raise ValueError("'text_labels' or 'text_prompt' is required for zero-shot HuggingFace detection models.")
+    def _get_zero_shot_text_input(self, num_images: int) -> list:
+        """Return per-image text input for the HuggingFace zero-shot processor."""
+        prompt = self.text_labels or self.text_prompt
+        if not prompt:
+            raise ValueError("'text_labels' or 'text_prompt' is required for zero-shot HuggingFace detection models.")
+        return [prompt] * num_images
 
     def _get_zero_shot_category_id(self, category_name: str) -> int:
-        """Return a stable category id for a zero-shot label."""
+        """Return a stable category id for a zero-shot label, assigning a new one for unseen phrases."""
         if category_name not in self._category_name_to_id:
-            category_id = max(self.category_mapping.keys(), default=-1) + 1 if self.category_mapping else 0
-            self._category_name_to_id[category_name] = category_id
-            self.category_mapping[category_id] = category_name
+            category_mapping = self.category_mapping or {}
+            new_id = len(category_mapping)
+            self._category_name_to_id[category_name] = new_id
+            category_mapping[new_id] = category_name
+            self.category_mapping = category_mapping
         return self._category_name_to_id[category_name]
 
     def get_valid_predictions(self, logits: Any, pred_boxes: Any) -> tuple:
@@ -379,27 +353,20 @@ class HuggingfaceDetectionModel(DetectionModel):
             image_height, image_width, _ = self.image_shapes[image_ind]
             shift_amount = [int(x) for x in shift_amount_list[image_ind]]
             full_shape = None if full_shape_list is None else [int(x) for x in full_shape_list[image_ind]]
-            if "text_labels" in image_predictions:
-                labels = image_predictions["text_labels"]
-            else:
-                labels = image_predictions.get("labels", [])
+            labels = image_predictions.get("text_labels") or image_predictions.get("labels", [])
 
             object_prediction_list = []
             for score, bbox, category_name in zip(image_predictions["scores"], image_predictions["boxes"], labels):
+                category_name = str(category_name)
+                # when fixed text_labels are given, drop combined phrases (e.g. "car truck")
                 if self.text_labels and category_name not in self.text_labels:
                     continue
-                bbox_list = bbox.tolist()
-                bbox_list[0] = max(0, bbox_list[0])
-                bbox_list[1] = max(0, bbox_list[1])
-                bbox_list[2] = min(bbox_list[2], image_width)
-                bbox_list[3] = min(bbox_list[3], image_height)
-                category_id = self._get_zero_shot_category_id(str(category_name))
-
+                x1, y1, x2, y2 = bbox.tolist()
                 object_prediction = ObjectPrediction(
-                    bbox=bbox_list,
+                    bbox=[max(0, x1), max(0, y1), min(x2, image_width), min(y2, image_height)],
                     segmentation=None,
-                    category_id=category_id,
-                    category_name=str(category_name),
+                    category_id=self._get_zero_shot_category_id(category_name),
+                    category_name=category_name,
                     shift_amount=shift_amount,
                     score=score.item() if hasattr(score, "item") else float(score),
                     full_shape=full_shape,
