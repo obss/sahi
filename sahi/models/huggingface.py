@@ -85,7 +85,7 @@ class HuggingfaceDetectionModel(DetectionModel):
     def num_categories(self) -> int:
         """Returns number of categories."""
         if self._is_zero_shot_model:
-            return len(self.category_mapping or {})
+            return len(self.category_mapping)
         return self.model.config.num_labels  # type: ignore[attr-defined]
 
     def load_model(self) -> None:
@@ -160,10 +160,8 @@ class HuggingfaceDetectionModel(DetectionModel):
             outputs = self.model(**inputs)
         self._original_input_ids = inputs.get("input_ids")
 
-        if isinstance(image, list):
-            self._original_shapes = [img.shape for img in image]
-        else:
-            self._original_shapes = [image.shape]
+        images = image if isinstance(image, list) else [image]
+        self._original_shapes = [img.shape for img in images]
         self._original_predictions = outputs
 
     def perform_batch_inference(self, images: list[np.ndarray]) -> None:
@@ -226,11 +224,9 @@ class HuggingfaceDetectionModel(DetectionModel):
     def _get_zero_shot_category_id(self, category_name: str) -> int:
         """Return a stable category id for a zero-shot label, assigning a new one for unseen phrases."""
         if category_name not in self._category_name_to_id:
-            category_mapping = self.category_mapping or {}
-            new_id = len(category_mapping)
+            new_id = len(self.category_mapping)
             self._category_name_to_id[category_name] = new_id
-            category_mapping[new_id] = category_name
-            self.category_mapping = category_mapping
+            self.category_mapping[new_id] = category_name
         return self._category_name_to_id[category_name]
 
     def get_valid_predictions(self, logits: Any, pred_boxes: Any) -> tuple:
@@ -299,6 +295,8 @@ class HuggingfaceDetectionModel(DetectionModel):
             )
             return
 
+        from sahi.utils.cv import yolo_bbox_to_voc_bbox
+
         n_image = original_predictions.logits.shape[0]
         object_prediction_list_per_image = []
         for image_ind in range(n_image):
@@ -316,14 +314,7 @@ class HuggingfaceDetectionModel(DetectionModel):
 
             for ind in range(len(boxes)):
                 category_id = cat_ids[ind].item()
-                from sahi.utils.cv import yolo_bbox_to_voc_bbox
-
-                yolo_bbox = boxes[ind].tolist()
-                bbox = yolo_bbox_to_voc_bbox(
-                    yolo_bbox,
-                    image_width=image_width,
-                    image_height=image_height,
-                )
+                bbox = yolo_bbox_to_voc_bbox(boxes[ind].tolist(), image_width=image_width, image_height=image_height)
                 bbox = self._clamp_bbox(bbox, image_width, image_height)
 
                 object_prediction = ObjectPrediction(
