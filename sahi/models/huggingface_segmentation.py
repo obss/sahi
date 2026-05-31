@@ -12,11 +12,10 @@ from typing import Any
 
 import numpy as np
 
-from sahi.models.base import DetectionModel
+from sahi.models.huggingface import HuggingfaceDetectionModel
 from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_coco_segmentation_from_bool_mask
-from sahi.utils.import_utils import ensure_package_minimum_version
 
 # {model_class_name: processor_class_name} — strings to avoid eager transformers import
 _SUPPORTED_MODELS: dict[str, str] = {
@@ -32,11 +31,13 @@ class SegmentationType(Enum):
     PANOPTIC_SEGMENTATION = "panoptic"
 
 
-class HuggingfaceSegmentationModel(DetectionModel):
+class HuggingfaceSegmentationModel(HuggingfaceDetectionModel):
     """HuggingFace segmentation model.
 
-    Supports MaskFormer, Mask2Former, and OneFormer architectures for
-    instance, semantic, and panoptic segmentation.
+    Subclasses :class:`HuggingfaceDetectionModel`, reusing its processor,
+    ``num_categories``, token handling, and dependency checks. Supports
+    MaskFormer, Mask2Former, and OneFormer for instance, semantic, and
+    panoptic segmentation.
 
     Args:
         overlap_mask_area_threshold: Overlap mask area threshold to merge or
@@ -50,54 +51,20 @@ class HuggingfaceSegmentationModel(DetectionModel):
 
     def __init__(
         self,
-        model_path: str | None = None,
-        model: Any | None = None,
-        processor: Any | None = None,
-        config_path: str | None = None,
-        device: str | None = None,
-        mask_threshold: float = 0.5,
-        confidence_threshold: float = 0.5,
-        category_mapping: dict | None = None,
-        category_remapping: dict | None = None,
-        load_at_init: bool = True,
-        image_size: int | None = None,
-        token: str | None = None,
+        *args: Any,
         overlap_mask_area_threshold: float = 0.8,
         label_ids_to_fuse: list[int] | None = None,
         min_segment_area: int = 100,
         segmentation_type: SegmentationType = SegmentationType.INSTANCE_SEGMENTATION,
+        **kwargs: Any,
     ) -> None:
-        self._processor = processor
-        self._token = token
         self.segmentation_type = segmentation_type
         self.overlap_mask_area_threshold = overlap_mask_area_threshold
         self.label_ids_to_fuse = label_ids_to_fuse
         self.min_segment_area = min_segment_area
-
-        existing = getattr(self, "required_packages", None) or []
-        self.required_packages = [*list(existing), "torch", "transformers", "opencv-python"]
-        ensure_package_minimum_version("transformers", "4.42.0")
-
-        super().__init__(
-            model_path,
-            model,
-            config_path,
-            device,
-            mask_threshold,
-            confidence_threshold,
-            category_mapping,
-            category_remapping,
-            load_at_init,
-            image_size,
-        )
-
-    @property
-    def processor(self) -> Any:
-        return self._processor
-
-    @property
-    def num_categories(self) -> int:
-        return self.model.config.num_labels
+        # Segmentation models default to a stricter threshold than detection (0.3).
+        kwargs.setdefault("confidence_threshold", 0.5)
+        super().__init__(*args, **kwargs)
 
     def load_model(self) -> None:
         """Load model and processor from HuggingFace."""
@@ -150,7 +117,7 @@ class HuggingfaceSegmentationModel(DetectionModel):
             outputs = self.model(**inputs)
 
         images = image if isinstance(image, list) else [image]
-        self._original_shapes = [(img.shape[0], img.shape[1]) for img in images]
+        self._original_shapes = [(int(img.shape[0]), int(img.shape[1])) for img in images]
         self._original_predictions = outputs
 
     def perform_batch_inference(self, images: list[np.ndarray]) -> None:
@@ -172,7 +139,7 @@ class HuggingfaceSegmentationModel(DetectionModel):
                 inputs[key] = inputs[key].to(self.device)
         return inputs
 
-    def _post_process(self, predictions: Any, target_sizes: list[tuple[int, int]]) -> list[dict]:
+    def _post_process(self, predictions: Any, target_sizes: list) -> list[dict]:
         processor = self.processor
         seg_type = self.segmentation_type
         common: dict[str, Any] = {
@@ -199,7 +166,7 @@ class HuggingfaceSegmentationModel(DetectionModel):
             return _convert_panoptic_to_binary_masks(outputs)
         return processor.post_process_instance_segmentation(predictions, return_binary_maps=True, **common)
 
-    def get_valid_predictions(self, post_processed_output: dict) -> tuple[list, list, list]:
+    def _extract_segments(self, post_processed_output: dict) -> tuple[list, list, list]:
         """Convert per-segment binary masks to (scores, category_ids, coco_segmentations).
 
         Each mask yields at most one COCO multi-polygon entry; masks smaller
@@ -240,9 +207,9 @@ class HuggingfaceSegmentationModel(DetectionModel):
 
         object_prediction_list_per_image: list[list[ObjectPrediction]] = []
         for image_ind, output in enumerate(post_processed_outputs):
-            scores, category_ids, segments = self.get_valid_predictions(output)
+            scores, category_ids, segments = self._extract_segments(output)
             shift_amount = shift_amount_list[image_ind]
-            full_shape = target_sizes[image_ind] if full_shape_list is None else full_shape_list[image_ind]
+            full_shape = list(target_sizes[image_ind]) if full_shape_list is None else full_shape_list[image_ind]
 
             object_prediction_list = [
                 ObjectPrediction(
