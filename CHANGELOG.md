@@ -111,8 +111,9 @@ documentation overhaul.
 
 ### 🙌 New Contributors
 
-- @ZephyrKeXiner, @yogendrasinghx, @siromermer, @ibuldakov, @volks73, and
-  @srikrishnavignesh made their first contributions in this release.
+- Haotian Gong (@ZephyrKeXiner), Yogendra Singh (@yogendrasinghx), @siromermer,
+  Ivan Buldakov (@ibuldakov), Christopher Field (@volks73), and Vignesh Suresh
+  (@srikrishnavignesh) made their first contributions in this release.
 
 **Full Changelog**:
 <https://github.com/obss/sahi/compare/0.11.36...0.12.0>
