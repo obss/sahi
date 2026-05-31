@@ -206,6 +206,23 @@ class HuggingfaceDetectionModel(DetectionModel):
             raise ValueError("'text_labels' or 'text_prompt' is required for zero-shot HuggingFace detection models.")
         return [prompt] * num_images
 
+    @staticmethod
+    def _clamp_bbox(bbox: list, image_width: int, image_height: int) -> list:
+        """Clamp a [x1, y1, x2, y2] box to image bounds."""
+        x1, y1, x2, y2 = bbox
+        return [max(0, x1), max(0, y1), min(x2, image_width), min(y2, image_height)]
+
+    @staticmethod
+    def _shift_and_full_shape(
+        shift_amount_list: list[list[int | float]],
+        full_shape_list: list[list[int | float]] | None,
+        image_ind: int,
+    ) -> tuple[list[int], list[int] | None]:
+        """Return the int-cast shift amount and full shape for a single image."""
+        shift_amount = [int(x) for x in shift_amount_list[image_ind]]
+        full_shape = None if full_shape_list is None else [int(x) for x in full_shape_list[image_ind]]
+        return shift_amount, full_shape
+
     def _get_zero_shot_category_id(self, category_name: str) -> int:
         """Return a stable category id for a zero-shot label, assigning a new one for unseen phrases."""
         if category_name not in self._category_name_to_id:
@@ -293,8 +310,9 @@ class HuggingfaceDetectionModel(DetectionModel):
             # create object_prediction_list
             object_prediction_list = []
 
-            shift_amount = [int(x) for x in shift_amount_list_typed[image_ind]]
-            full_shape = None if full_shape_list_typed is None else [int(x) for x in full_shape_list_typed[image_ind]]
+            shift_amount, full_shape = self._shift_and_full_shape(
+                shift_amount_list_typed, full_shape_list_typed, image_ind
+            )
 
             for ind in range(len(boxes)):
                 category_id = cat_ids[ind].item()
@@ -306,12 +324,7 @@ class HuggingfaceDetectionModel(DetectionModel):
                     image_width=image_width,
                     image_height=image_height,
                 )
-
-                # fix negative box coords
-                bbox[0] = max(0, bbox[0])
-                bbox[1] = max(0, bbox[1])
-                bbox[2] = min(bbox[2], image_width)
-                bbox[3] = min(bbox[3], image_height)
+                bbox = self._clamp_bbox(bbox, image_width, image_height)
 
                 object_prediction = ObjectPrediction(
                     bbox=bbox,
@@ -351,8 +364,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         object_prediction_list_per_image = []
         for image_ind, image_predictions in enumerate(results):
             image_height, image_width, _ = self.image_shapes[image_ind]
-            shift_amount = [int(x) for x in shift_amount_list[image_ind]]
-            full_shape = None if full_shape_list is None else [int(x) for x in full_shape_list[image_ind]]
+            shift_amount, full_shape = self._shift_and_full_shape(shift_amount_list, full_shape_list, image_ind)
             labels = image_predictions.get("text_labels") or image_predictions.get("labels", [])
 
             object_prediction_list = []
@@ -361,9 +373,8 @@ class HuggingfaceDetectionModel(DetectionModel):
                 # when fixed text_labels are given, drop combined phrases (e.g. "car truck")
                 if self.text_labels and category_name not in self.text_labels:
                     continue
-                x1, y1, x2, y2 = bbox.tolist()
                 object_prediction = ObjectPrediction(
-                    bbox=[max(0, x1), max(0, y1), min(x2, image_width), min(y2, image_height)],
+                    bbox=self._clamp_bbox(bbox.tolist(), image_width, image_height),
                     segmentation=None,
                     category_id=self._get_zero_shot_category_id(category_name),
                     category_name=category_name,
