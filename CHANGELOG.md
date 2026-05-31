@@ -1,5 +1,123 @@
 # 📝 CHANGELOG
 
+## 🚀 SAHI v0.12.0 Release Notes
+
+One of the largest SAHI releases to date — **89 commits** since `0.11.36` —
+featuring a re-architected postprocessing engine, true batch inference, a
+torch-free core, new open-vocabulary and segmentation models, and a full
+documentation overhaul.
+
+### 🚀 Key Updates
+
+#### ⚡ Batch inference, torch-free core & accelerated postprocessing backends
+
+- **Batch inference** — slices are processed in batches end-to-end for major
+  GPU throughput gains ([#1336](https://github.com/obss/sahi/pull/1336)).
+- **Torch-free core** — the core slicing/postprocessing path no longer
+  hard-depends on PyTorch; install only what your backend needs
+  ([#1336](https://github.com/obss/sahi/pull/1336)).
+- **Pluggable postprocessing backends** — NMS/NMM run on a selectable backend:
+  **NumPy** (zero heavy deps), **Numba** (JIT-accelerated CPU), or
+  **TorchVision** (GPU), auto-selected for your environment
+  ([#1336](https://github.com/obss/sahi/pull/1336)).
+
+#### 🧠 New model support
+
+- **GroundingDINO (HuggingFace)** — zero-shot, text-prompted open-vocabulary
+  detection through SAHI's sliced pipeline, with a dedicated demo notebook
+  ([#1361](https://github.com/obss/sahi/pull/1361)).
+- **Universal segmentation from HuggingFace**
+  ([#1360](https://github.com/obss/sahi/pull/1360)).
+- **RF-DETR-Seg** segmentation models
+  ([#1315](https://github.com/obss/sahi/pull/1315)).
+- **YOLOE** detection model ([#1268](https://github.com/obss/sahi/pull/1268)).
+- **YOLO-World** open-vocabulary detection
+  ([#1267](https://github.com/obss/sahi/pull/1267)).
+- **YOLO26** support across the Ultralytics backend, CLI, docs, and notebooks
+  ([#1321](https://github.com/obss/sahi/pull/1321),
+  [#1322](https://github.com/obss/sahi/pull/1322),
+  [#1356](https://github.com/obss/sahi/pull/1356)).
+
+#### 🎚️ Finer control over slicing & postprocessing
+
+- **`force_postprocess_type`** in `get_sliced_prediction`
+  ([#1346](https://github.com/obss/sahi/pull/1346)).
+- **Per-call `confidence_threshold` override** across prediction APIs
+  ([#1352](https://github.com/obss/sahi/pull/1352)).
+- **Progress bar + progress callback** for `get_sliced_prediction` in both the
+  Python API and CLI ([#1255](https://github.com/obss/sahi/pull/1255)).
+
+#### 📚 Documentation
+
+- Migrated docs to **Zensical** with full code typing & formatting cleanup
+  ([#1344](https://github.com/obss/sahi/pull/1344)).
+- **Chinese (zh) translation** added and kept in sync
+  ([#1253](https://github.com/obss/sahi/pull/1253),
+  [#1332](https://github.com/obss/sahi/pull/1332),
+  [#1347](https://github.com/obss/sahi/pull/1347)).
+- New API reference, postprocessing backends guide, security policy, and Code
+  of Conduct ([#1257](https://github.com/obss/sahi/pull/1257),
+  [#1272](https://github.com/obss/sahi/pull/1272),
+  [#1349](https://github.com/obss/sahi/pull/1349)).
+
+### ✨ Performance & Improvements
+
+- Faster `read_image_as_pil` for quicker slicing throughput
+  ([#1353](https://github.com/obss/sahi/pull/1353)).
+- Improved performance & resource management in prediction and slicing
+  ([#1263](https://github.com/obss/sahi/pull/1263)).
+- Better `nms` performance with correct empty-prediction handling
+  ([#1288](https://github.com/obss/sahi/pull/1288)).
+- Replaced `pybboxes` with a lightweight in-house `yolo_bbox_to_voc_bbox`
+  ([#1320](https://github.com/obss/sahi/pull/1320)) and removed the `pybboxes` /
+  pinned `opencv-python` constraints
+  ([#1325](https://github.com/obss/sahi/pull/1325)).
+
+### 🐞 Bug Fixes
+
+- Fixed invalid segmentation masks for Detectron2 models
+  ([#1262](https://github.com/obss/sahi/pull/1262)).
+- Corrected margin calculation in `BoundingBox`
+  ([#1286](https://github.com/obss/sahi/pull/1286)).
+- Fixed CHW-format image handling in `read_image_as_pil`
+  ([#1287](https://github.com/obss/sahi/pull/1287)).
+- Validate overlap ratios in `get_slice_bboxes` (must be `< 1.0`)
+  ([#1285](https://github.com/obss/sahi/pull/1285)).
+- Corrected error message for invalid model path in `RTDetrDetectionModel`
+  ([#1266](https://github.com/obss/sahi/pull/1266)).
+- Fixed incorrect type annotations in the postprocess module
+  ([#1327](https://github.com/obss/sahi/pull/1327)).
+- Ultralytics model supports additional formats with improved task handling
+  ([#1321](https://github.com/obss/sahi/pull/1321)).
+- Added `pywinpty` for Windows dev compatibility
+  ([#1319](https://github.com/obss/sahi/pull/1319)).
+
+### 🧹 Maintenance & CI
+
+- Pinned all GitHub Actions to commit SHAs for supply-chain security
+  ([#1351](https://github.com/obss/sahi/pull/1351)).
+- Multi-OS CI matrix and clearer workflow naming
+  ([#1334](https://github.com/obss/sahi/pull/1334)).
+- Bumped to Python 3.12/3.13 in CI and docs
+  ([#1259](https://github.com/obss/sahi/pull/1259),
+  [#1260](https://github.com/obss/sahi/pull/1260)).
+- Removed deprecated YOLOv5 helpers, legacy `requirements.txt`, MMDet workflow,
+  and unused Netlify config ([#1326](https://github.com/obss/sahi/pull/1326),
+  [#1342](https://github.com/obss/sahi/pull/1342),
+  [#1341](https://github.com/obss/sahi/pull/1341),
+  [#1335](https://github.com/obss/sahi/pull/1335)).
+- `numpy<3.0`, `torchvision 0.23.0`, and many Dependabot dependency bumps (now
+  also covering pip).
+
+### 🙌 New Contributors
+
+- Haotian Gong (@ZephyrKeXiner), Yogendra Singh (@yogendrasinghx), @siromermer,
+  Ivan Buldakov (@ibuldakov), Christopher Field (@volks73), and Vignesh Suresh
+  (@srikrishnavignesh) made their first contributions in this release.
+
+**Full Changelog**:
+<https://github.com/obss/sahi/compare/0.11.36...0.12.0>
+
 ## 🚀 SAHI v0.11.31 Release Notes
 
 We're excited to announce SAHI v0.11.31 with important bug fixes and
