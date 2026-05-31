@@ -16,9 +16,6 @@ from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.import_utils import ensure_package_minimum_version
 
-_TRANSFORMERS_MIN_VERSION = "4.42.0"
-_TRANSFORMERS_ZERO_SHOT_MIN_VERSION = "4.49.0"
-
 
 class HuggingfaceDetectionModel(DetectionModel):
     """HuggingFace Transformers object detection model.
@@ -56,7 +53,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         self._category_name_to_id: dict[str, int] = {}
         existing_packages = getattr(self, "required_packages", None) or []
         self.required_packages = [*list(existing_packages), "torch", "transformers"]
-        ensure_package_minimum_version("transformers", _TRANSFORMERS_MIN_VERSION)
+        ensure_package_minimum_version("transformers", "4.42.0")
         super().__init__(
             model_path,
             model,
@@ -96,7 +93,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         assert self.model_path is not None, "model_path must be provided for HuggingFace models"
         config = AutoConfig.from_pretrained(self.model_path, token=hf_token)
         if self._is_zero_shot(config):
-            ensure_package_minimum_version("transformers", _TRANSFORMERS_ZERO_SHOT_MIN_VERSION)
+            ensure_package_minimum_version("transformers", "4.49.0")
             from transformers import AutoModelForZeroShotObjectDetection
 
             model_class: Any = AutoModelForZeroShotObjectDetection
