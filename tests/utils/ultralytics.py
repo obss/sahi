@@ -32,7 +32,8 @@ def download_file(url: str, save_path: str, chunk_size: int = 8192) -> None:
         save_path: Path where the file will be saved
         chunk_size: Size of chunks for downloading
     """
-    response = requests.get(url, stream=True)
+    response = requests.get(url, stream=True, allow_redirects=True)
+    response.raise_for_status()
     total_size = int(response.headers.get("content-length", 0))
 
     # Ensure directory exists
