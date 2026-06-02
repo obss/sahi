@@ -11,6 +11,7 @@ tags:
 ---
 
 <div align="center">
+<img width="90" alt="SAHI logo" src="https://raw.githubusercontent.com/obss/sahi/main/docs/images/sahi-logo.svg">
 <h1>
   SAHI: Slicing Aided Hyper Inference
 </h1>

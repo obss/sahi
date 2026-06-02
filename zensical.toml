@@ -65,6 +65,8 @@ nav = [
 [project.theme]
 language = "en"
 variant = "material"
+logo = "images/sahi-logo.svg"
+favicon = "images/sahi-logo.svg"
 features = [
   "navigation.tracking",
   "content.code.copy",
