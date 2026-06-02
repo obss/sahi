@@ -6,6 +6,7 @@ repo_name = "obss/sahi"
 edit_uri = "https://github.com/obss/sahi/tree/main/docs"
 docs_dir = "docs"
 site_dir = "site"
+extra_css = ["stylesheets/extra.css"]
 
 nav = [
   {Home = "index.md"},
