@@ -149,8 +149,8 @@ result = get_sliced_prediction(
 
 ## HuggingFace Transformers
 
-Use any object detection model from the HuggingFace Hub (DETR, Deformable DETR,
-DETA, etc.).
+Use object detection and zero-shot object detection models from the HuggingFace
+Hub (DETR, Deformable DETR, DETA, GroundingDINO, etc.).
 
 ```bash
 pip install transformers timm
@@ -172,7 +172,96 @@ result = get_sliced_prediction(
 )
 ```
 
+GroundingDINO models require text-conditioned inference. Use `text_labels` when
+the target categories are known, so SAHI can assign stable category ids to those
+labels. Additional grounded phrases returned by the processor are appended as
+new categories.
+
+```python
+detection_model = AutoDetectionModel.from_pretrained(
+    model_type="huggingface",
+    model_path="IDEA-Research/grounding-dino-tiny",
+    confidence_threshold=0.25,
+    text_threshold=0.20,
+    text_labels=["car", "truck", "person"],
+    device="cuda:0",
+)
+```
+
+### Zero-shot parameters
+
+In addition to the [common parameters](#common-parameters), zero-shot
+(GroundingDINO) models accept:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `text_labels` | list[str] | Fixed categories to detect, e.g. `["car", "truck"]`. Each gets a stable category id; phrases outside this list are dropped |
+| `text_prompt` | str | Free-form prompt (e.g. `"a car. a truck."`) used when `text_labels` is not set; returned phrases become categories dynamically |
+| `text_threshold` | float | Minimum score for matching a box to a text token (default: 0.25) |
+
+HuggingFace object detection notebook:
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_huggingface.ipynb)
+
+GroundingDINO zero-shot detection notebook:
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_groundingdino.ipynb)
+
+---
+
+## HuggingFace Segmentation
+
+Run segmentation models from the HuggingFace Hub. SAHI returns each segment as
+an `ObjectPrediction` with a polygon mask, so sliced inference and
+postprocessing work the same as for detection.
+
+| Architecture | `instance` | `semantic` | `panoptic` |
+|--------------|:----------:|:----------:|:----------:|
+| MaskFormer   | ✅ | ✅ | ✅ |
+| Mask2Former  | ✅ | ✅ | ✅ |
+| OneFormer    | ✅ | ✅ | ✅ |
+
+The available heads depend on the checkpoint (e.g.
+`facebook/mask2former-swin-tiny-coco-instance` is instance-only). OneFormer
+selects the head at inference time, so a single checkpoint serves all three.
+
+```bash
+pip install transformers timm
+```
+
+```python
+from sahi.models.huggingface_segmentation import SegmentationType
+
+detection_model = AutoDetectionModel.from_pretrained(
+    model_type="huggingface_segmentation",
+    model_path="facebook/mask2former-swin-tiny-coco-instance",
+    confidence_threshold=0.5,
+    device="cuda:0",
+    segmentation_type=SegmentationType.INSTANCE_SEGMENTATION,
+)
+
+result = get_sliced_prediction(
+    "image.jpg",
+    detection_model,
+    slice_height=512,
+    slice_width=512,
+)
+```
+
+Switch `segmentation_type` to `SEMANTIC_SEGMENTATION` or
+`PANOPTIC_SEGMENTATION` to use the matching head. Note that semantic
+segmentation merges every instance of a class into a single mask, so one
+`ObjectPrediction` is returned per class rather than per instance.
+
+### Segmentation parameters
+
+In addition to the [common parameters](#common-parameters), this model accepts:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `segmentation_type` | `SegmentationType` | `INSTANCE_SEGMENTATION` (default), `SEMANTIC_SEGMENTATION`, or `PANOPTIC_SEGMENTATION` |
+| `min_segment_area` | int | Drop segments smaller than this many pixels (default: 100) |
+| `overlap_mask_area_threshold` | float | Merge/discard disconnected parts within a mask (default: 0.8) |
+| `label_ids_to_fuse` | list[int] | Panoptic only -- fuse all instances of these labels into one segment |
+| `token` | str | HuggingFace access token for gated/private models (falls back to `$HF_TOKEN`) |
 
 ---
 

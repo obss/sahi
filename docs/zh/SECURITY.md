@@ -15,19 +15,19 @@
 
 ### 报告方式
 
-**请勿通过公开的 GitHub Issues 报告安全漏洞。**
+## 请勿通过公开的 GitHub Issues 报告安全漏洞。
 
 请通过以下方式之一进行报告：
 
 1. **GitHub 安全公告**（推荐）
-   - 前往[安全公告](https://github.com/obss/sahi/security/advisories)页面
-   - 点击"Report a vulnerability"
-   - 填写漏洞详情
+    - 前往[安全公告](https://github.com/obss/sahi/security/advisories)页面
+    - 点击"Report a vulnerability"
+    - 填写漏洞详情
 
 2. **邮件**
-   - 通过 GitHub 向维护者发送邮件
-   - 在主题中包含"SECURITY"
-   - 提供漏洞的详细信息
+    - 通过 GitHub 向维护者发送邮件
+    - 在主题中包含"SECURITY"
+    - 提供漏洞的详细信息
 
 ### 报告中应包含的信息
 
