@@ -81,7 +81,7 @@
 
 - [GitHub 安全公告](https://github.com/obss/sahi/security/advisories)
 - [GitHub 发布](https://github.com/obss/sahi/releases)
-- [CHANGELOG.md](../../CHANGELOG.md)
+- [CHANGELOG.md](changelog.md)
 
 ### 其他资源
 

@@ -162,7 +162,7 @@ sahi predict-fiftyone --image_dir image/file/or/folder \
 
 ### 其他参数
 
-支持 [`sahi predict`](#predict-命令用法) 命令的所有参数。
+支持 [`sahi predict`](#predict) 命令的所有参数。
 
 ---
 
@@ -174,7 +174,7 @@ sahi predict-fiftyone --image_dir image/file/or/folder \
 
 你需要先将预测结果转换为
 [COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用
-[`sahi predict`](#predict-命令用法) 来生成该格式。
+[`sahi predict`](#predict) 来生成该格式。
 
 ```bash
 sahi coco fiftyone --image_dir dir/to/images \
@@ -255,7 +255,7 @@ sahi coco yolo --image_dir dir/to/images \
 
 你需要先将预测结果转换为
 [COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用
-[`sahi predict`](#predict-命令用法) 来生成该格式。
+[`sahi predict`](#predict) 来生成该格式。
 
 ```bash
 sahi coco evaluate --dataset_json_path dataset.json \
@@ -277,8 +277,8 @@ sahi coco evaluate --dataset_json_path dataset.json \
 
 ## 检测数量限制：
 
-- `--proposal_nums "[10 100 500]"` - 设置每张图像的最大检测数（默认：[100, 300,
-  1000]）
+- `--proposal_nums "[10 100 500]"` - 设置每张图像的最大检测数（默认：`[100, 300,
+  1000]`）
 
 ## IOU 阈值：
 
@@ -298,7 +298,7 @@ sahi coco evaluate --dataset_json_path dataset.json \
 
 你需要先将预测结果转换为
 [COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用
-[`sahi predict`](#predict-命令用法) 来生成该格式。
+[`sahi predict`](#predict) 来生成该格式。
 
 ```bash
 sahi coco analyse --dataset_json_path dataset.json \
@@ -378,5 +378,5 @@ python script_name.py
 
 - [预测工具](predict.md) -- 预测参数和可视化的 Python API
 - [COCO 工具](coco.md) -- COCO 数据集操作的 Python API
-- [模型集成](../guides/models.md) -- 各框架的模型集成指南
-- [交互式 Notebooks](../notebooks.md) -- 所有框架的动手实践示例
+- [模型集成](guides/models.md) -- 各框架的模型集成指南
+- [交互式 Notebooks](notebooks.md) -- 所有框架的动手实践示例
