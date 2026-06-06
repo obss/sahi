@@ -35,16 +35,14 @@ pip install ultralytics
 
 ??? note "其他安装方式"
 
-## Conda：
+    **Conda：**
 
-```text
-[![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
-[![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
-```
+    [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
+    [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
 
-```bash
-conda install -c conda-forge sahi
-```
+    ```bash
+    conda install -c conda-forge sahi
+    ```
 
     !!! note
         如果你在 CUDA 环境下安装，建议在同一条命令中安装 `ultralytics`、`pytorch` 和 `pytorch-cuda`：
