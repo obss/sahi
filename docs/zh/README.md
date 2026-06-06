@@ -1,4 +1,5 @@
 <div align="center">
+<img width="90" alt="SAHI logo" src="https://raw.githubusercontent.com/obss/sahi/main/docs/images/sahi-logo.svg">
 <h1>
   SAHI: 切片辅助高效推理
 </h1>

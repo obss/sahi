@@ -6,6 +6,7 @@ repo_name = "obss/sahi"
 edit_uri = "https://github.com/obss/sahi/tree/main/docs"
 docs_dir = "docs"
 site_dir = "site"
+extra_css = ["stylesheets/extra.css"]
 
 nav = [
   {Home = "index.md"},
@@ -65,6 +66,8 @@ nav = [
 [project.theme]
 language = "en"
 variant = "material"
+logo = "images/sahi-logo.svg"
+favicon = "images/sahi-logo.svg"
 features = [
   "navigation.tracking",
   "content.code.copy",
