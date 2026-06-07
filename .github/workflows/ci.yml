@@ -100,10 +100,8 @@ jobs:
         run: |
           # MMDet tests self-skip via pytest.importorskip when mmcv/mmdet are absent.
           # Retry transient network failures (e.g. HuggingFace Hub connection/timeout errors)
-          # instead of failing the whole run.
-          uv run pytest --capture=no -n auto \
-            --reruns 3 --reruns-delay 10 \
-            --only-rerun "(?i)(connect|connection|timed? *out|timeout|HTTPError|couldn't connect|We couldn't connect|max retries|temporarily unavailable|ConnectionError|ReadTimeout)"
+          # instead of failing the whole run. Single line so it works on both bash and Windows PowerShell.
+          uv run pytest --capture=no -n auto --reruns 3 --reruns-delay 10 --only-rerun "(?i)(connect|connection|timed? *out|timeout|HTTPError|couldn't connect|We couldn't connect|max retries|temporarily unavailable|ConnectionError|ReadTimeout)"
       - name: Test SAHI CLI (without MMDet)
         run: |
           uv run sahi predict --no_sliced_prediction --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
