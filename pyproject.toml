@@ -97,14 +97,6 @@ all = [
   "onnxruntime;python_version>='3.10'",
 ]
 
-mmdet = [
-  # MMDetection dependencies - only for Python 3.11 and not on macOS ARM64
-  "mmengine;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  "mmcv==2.2.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  "mmdet==3.3.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  # numpy 2 is not compatible with torch 2.1.2
-  "numpy<3.0;python_version=='3.11'",
-]
 ci = [
   # max supported pytorch version for python 3.8 is 2.4.1
   # CPU versions for Linux/Windows CI
@@ -133,10 +125,6 @@ ci = [
 ]
 
 [tool.uv]
-
-find-links = [
-  "http://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
-]
 
 override-dependencies = ["opencv-python>=4.12.0.88", "pillow>=8.2.0", "pywinpty!=2.0.14; os_name == 'nt'"]
 
