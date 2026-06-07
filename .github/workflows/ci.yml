@@ -36,6 +36,11 @@ jobs:
       github.event_name != 'schedule' && github.event_name !=
       'workflow_dispatch'
     runs-on: ${{ matrix.os }}
+    env:
+      # Cache HuggingFace downloads in the workspace so actions/cache can persist them
+      HF_HOME: ${{ github.workspace }}/.cache/huggingface
+      # Give flaky HF Hub downloads more headroom before timing out (default is 10s)
+      HF_HUB_DOWNLOAD_TIMEOUT: "60"
     strategy:
       fail-fast: false
       matrix:
@@ -47,7 +52,7 @@ jobs:
           - os: windows-latest
             python-version: "3.12"
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Setup uv python package manager
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
@@ -63,11 +68,20 @@ jobs:
         with:
           path: tests/data/models
           key:
-            ${{ runner.os }}-models-${{ hashFiles('sahi/utils/huggingface.py',
-            'sahi/utils/yolov5.py', 'sahi/utils/ultralytics.py',
-            'sahi/utils/rtdetr.py', 'sahi/utils/torchvision.py') }}
+            ${{ runner.os }}-models-${{ hashFiles('sahi/utils/yolov5.py',
+            'sahi/utils/ultralytics.py', 'sahi/utils/rtdetr.py',
+            'sahi/utils/torchvision.py') }}
           restore-keys: |
             ${{ runner.os }}-models-
+
+      - name: Cache HuggingFace Hub downloads
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ${{ github.workspace }}/.cache/huggingface
+          key:
+            ${{ runner.os }}-hf-${{ hashFiles('tests/utils/huggingface.py') }}
+          restore-keys: |
+            ${{ runner.os }}-hf-
 
       - name: Install dependencies
         run: uv sync --group dev --extra ci
@@ -84,8 +98,10 @@ jobs:
 
       - name: Test with python ${{ matrix.python-version }}
         run: |
-          # Exclude MMDet tests which run in a separate workflow
-          uv run pytest --capture=no -n auto -k "not (mmdet or test_get_prediction_mmdet or test_get_sliced_prediction_mmdet or test_mmdet_yolox_tiny_prediction)"
+          # MMDet tests self-skip via pytest.importorskip when mmcv/mmdet are absent.
+          # Retry transient network failures (e.g. HuggingFace Hub connection/timeout errors)
+          # instead of failing the whole run. Single line so it works on both bash and Windows PowerShell.
+          uv run pytest --capture=no -n auto --reruns 3 --reruns-delay 10 --only-rerun "(?i)(connect|connection|timed? *out|timeout|HTTPError|couldn't connect|We couldn't connect|max retries|temporarily unavailable|ConnectionError|ReadTimeout)"
       - name: Test SAHI CLI (without MMDet)
         run: |
           uv run sahi predict --no_sliced_prediction --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
