@@ -497,6 +497,26 @@ class TestNumbaBackend:
         preds = np.array(PREDS_NMM, dtype=np.float32)
         assert greedy_nmm_numpy(preds, "IOU", 0.1) == greedy_nmm_numba(preds, "IOU", 0.1)
 
+    def test_greedy_nmm_merge_order_parity(self) -> None:
+        """Test numba preserves numpy greedy NMM merge ordering."""
+        from sahi.postprocess._numba_backend import greedy_nmm_numba
+        from sahi.postprocess._numpy_backend import greedy_nmm_numpy
+
+        preds = np.array(
+            [
+                make_pred(0, 0, 10, 10, 0.7, 1),
+                make_pred(0, 0, 10, 10, 0.8, 1),
+                make_pred(0, 0, 10, 10, 0.9, 1),
+            ],
+            dtype=np.float32,
+        )
+
+        expected = {2: [1, 0]}
+        assert greedy_nmm_numpy(preds, "IOU", 0.5) == expected
+        assert greedy_nmm_numba(preds, "IOU", 0.5) == expected
+        assert greedy_nmm_numpy(preds, "IOS", 0.5) == expected
+        assert greedy_nmm_numba(preds, "IOS", 0.5) == expected
+
     def test_nmm_parity(self) -> None:
         """Test numba and numpy NMM parity."""
         from sahi.postprocess._numba_backend import nmm_numba
