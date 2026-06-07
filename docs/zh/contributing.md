@@ -89,22 +89,22 @@ uv run pytest --cov=sahi
 1. 查看 CI 输出，确认失败的 Python 版本
 2. 使用该版本创建环境：
 
-    ```bash
-    uv venv --python 3.X  # 将 X 替换为 CI 中的版本号
-    source .venv/bin/activate
-    ```
+   ```bash
+   uv venv --python 3.X  # 将 X 替换为 CI 中的版本号
+   source .venv/bin/activate
+   ```
 
 3. 安装开发依赖：
 
-    ```bash
-    uv sync --extra dev
-    ```
+   ```bash
+   uv sync --extra dev
+   ```
 
 4. 修复格式：
 
-    ```bash
-    python scripts/format_code.py fix
-    ```
+   ```bash
+   python scripts/format_code.py fix
+   ```
 
 5. 提交并推送更改
 

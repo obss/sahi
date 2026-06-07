@@ -78,7 +78,7 @@ sahi predict --slice_width 512 --slice_height 512 \
 
 - `--model_confidence_threshold 0.25` - 设置检测的最低置信度
 
-### 后处理选项
+#### 后处理选项
 
 **后处理类型：**
 
@@ -95,7 +95,7 @@ sahi predict --slice_width 512 --slice_height 512 \
 - `--postprocess_match_threshold 0.5` - 设置匹配阈值
 - `--postprocess_class_agnostic` - 后处理时忽略类别 ID
 
-### 导出选项
+#### 导出选项
 
 **可视化导出：**
 
@@ -107,7 +107,7 @@ sahi predict --slice_width 512 --slice_height 512 \
 - `--export_pickle` - 导出预测 pickle 文件
 - `--export_crop` - 导出裁剪后的检测结果
 
-### 推理模式
+#### 推理模式
 
 默认情况下，SAHI 执行多阶段推理（同时进行全图推理和切片推理）：
 
