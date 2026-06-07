@@ -143,10 +143,10 @@ def _greedy_nmm_numba_inner(
     areas: NDArray,
     match_threshold: float,
     use_iou: bool,
-) -> tuple[list[int], NDArray]:
+) -> tuple[list[int], NDArray, NDArray]:
     """Core greedy NMM loop — fully JIT-compiled.
 
-    Returns (keep_order, keeper_of) where keeper_of[i] = keeper index for box i, or -1 if keeper.
+    Returns (keep_order, keeper_of, sorted_idxs) where keeper_of[i] = keeper index for box i, or -1 if keeper.
     """
     n = len(scores)
     sorted_idxs = _argsort_descending(scores, x1, y1, x2, y2)
@@ -181,7 +181,7 @@ def _greedy_nmm_numba_inner(
                 suppressed[cand] = True
                 keeper_of[cand] = idx
 
-    return keep_order, keeper_of
+    return keep_order, keeper_of, sorted_idxs
 
 
 @numba.njit(cache=True)
@@ -242,7 +242,7 @@ def greedy_nmm_numba(
     scores = preds[:, 4]
     areas = (x2 - x1) * (y2 - y1)
 
-    keep_order, keeper_of = _greedy_nmm_numba_inner(
+    keep_order, keeper_of, sorted_idxs = _greedy_nmm_numba_inner(
         x1, y1, x2, y2, scores, areas, match_threshold, match_metric == "IOU"
     )
 
@@ -250,7 +250,7 @@ def greedy_nmm_numba(
     keep_to_merge: dict[int, list[int]] = {}
     for k in keep_order:
         keep_to_merge[int(k)] = []
-    for i in range(len(keeper_of)):
+    for i in sorted_idxs:
         if keeper_of[i] >= 0:
             keep_to_merge[int(keeper_of[i])].append(int(i))
 
