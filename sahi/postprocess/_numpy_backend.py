@@ -236,6 +236,90 @@ def greedy_nmm_from_mask(match_mask: np.ndarray, sorted_idxs: np.ndarray) -> dic
     return keep_to_merge_list
 
 
+def _word_bit_mask(dtype: np.dtype, bit: int) -> np.generic:
+    return dtype.type(1 << bit)
+
+
+def _clear_word_bit(words: np.ndarray, index: int, word_bits: int) -> None:
+    word_index = index // word_bits
+    bit = index % word_bits
+    words[word_index] &= ~_word_bit_mask(words.dtype, bit)
+
+
+def _word_bit_is_set(words: np.ndarray, index: int, word_bits: int) -> bool:
+    word_index = index // word_bits
+    bit = index % word_bits
+    return bool(words[word_index] & _word_bit_mask(words.dtype, bit))
+
+
+def _full_bitset(n: int, dtype: np.dtype, word_bits: int) -> np.ndarray:
+    num_words = (n + word_bits - 1) // word_bits
+    bitset = np.full(num_words, np.iinfo(dtype).max, dtype=dtype)
+    remainder = n % word_bits
+    if remainder:
+        bitset[-1] = dtype.type((1 << remainder) - 1)
+    return bitset
+
+
+def _packed_mask_to_indices(words: np.ndarray, n: int, word_bits: int) -> list[int]:
+    indices: list[int] = []
+    for word_index, word in enumerate(words):
+        value = int(word)
+        while value:
+            lowest_set_bit = value & -value
+            bit = lowest_set_bit.bit_length() - 1
+            index = word_index * word_bits + bit
+            if index < n:
+                indices.append(index)
+            value ^= lowest_set_bit
+    return indices
+
+
+def greedy_nmm_from_packed_mask(match_bitset: np.ndarray, sorted_idxs: np.ndarray) -> dict[int, list[int]]:
+    """Greedy NMM using a precomputed packed boolean match bitset.
+
+    Args:
+        match_bitset: (N, ceil(N / word_bits)) unsigned integer array where
+            each bit marks whether a candidate should merge into the row box.
+        sorted_idxs: Indices sorted by score descending.
+
+    Returns:
+        Dict mapping each kept index to a list of indices merged into it.
+    """
+    n = len(sorted_idxs)
+    if n == 0:
+        return {}
+
+    if match_bitset.dtype.kind != "u":
+        raise TypeError("match_bitset must use an unsigned integer dtype")
+
+    word_bits = np.iinfo(match_bitset.dtype).bits
+    suppressed = np.zeros(match_bitset.shape[1], dtype=match_bitset.dtype)
+    eligible = _full_bitset(n, match_bitset.dtype, word_bits)
+    rank = np.empty(n, dtype=np.intp)
+    rank[sorted_idxs] = np.arange(n, dtype=np.intp)
+
+    keep_to_merge_list: dict[int, list[int]] = {}
+    for raw_idx in sorted_idxs:
+        idx = int(raw_idx)
+        _clear_word_bit(eligible, idx, word_bits)
+        if _word_bit_is_set(suppressed, idx, word_bits):
+            continue
+
+        matched_words = match_bitset[idx].copy()
+        matched_words &= eligible
+        matched_words &= ~suppressed
+
+        merge_indices = _packed_mask_to_indices(matched_words, n, word_bits)
+        if merge_indices:
+            merge_indices.sort(key=lambda merge_idx: rank[merge_idx])
+            suppressed |= matched_words
+
+        keep_to_merge_list[idx] = merge_indices
+
+    return keep_to_merge_list
+
+
 def nmm_from_matrix(
     matrix: np.ndarray,
     sorted_idxs: np.ndarray,

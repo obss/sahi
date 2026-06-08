@@ -24,7 +24,7 @@ def set_postprocess_backend(name: str) -> None:
     **not** thread-safe.
 
     Args:
-        name: One of "auto", "numpy", "numba", "torchvision".
+        name: One of "auto", "numpy", "numba", "torchvision", "triton".
     """
     global _backend, _resolved_cache
     if name not in VALID_BACKENDS:
@@ -56,13 +56,12 @@ def resolve_backend() -> str:
        loops, faster than pure numpy for large prediction counts).
     3. **numpy** -- always available as the fallback (pure numpy,
        no extra dependencies).
-    4. **triton** -- for extreme speed.
 
     If the backend was explicitly set via ``set_postprocess_backend``, that
     value is returned directly without auto-detection.
 
     Returns:
-        One of "numpy", "numba", "torchvision" or "triton".
+        One of "numpy", "numba", or "torchvision".
     """
     global _resolved_cache
     if _resolved_cache is not None:
@@ -82,15 +81,6 @@ def resolve_backend() -> str:
                 return _resolved_cache
         except ImportError:
             pass
-    if is_available("triton"):
-        try:
-            import triton
-            
-            _resolved_cache = "triton"
-            return _resolved_cache
-        except ImportError:
-            pass
-
     if is_available("numba"):
         _resolved_cache = "numba"
         return _resolved_cache

@@ -9,6 +9,7 @@ It compares:
     numpy               Pure numpy GreedyNMM IOS baseline
     torchvision_matrix  Old torchvision path: GPU float matrix -> CPU greedy
     torch_mask          New path: GPU bool match mask -> CPU greedy
+    triton              Triton packed bitset -> CPU greedy
 
 The run is deterministic for a fixed seed and writes CSV, JSON, and Markdown
 reports under benchmarks/results by default.
@@ -39,7 +40,7 @@ import numpy as np
 from sahi.postprocess._numpy_backend import greedy_nmm_from_matrix, greedy_nmm_numpy
 
 DEFAULT_OUTPUT_DIR = Path("benchmarks/results")
-VARIANTS = ("numpy", "torchvision_matrix", "torch_mask")
+VARIANTS = ("numpy", "torchvision_matrix", "torch_mask", "triton")
 DATA_SEED_OFFSETS = {"clustered": 10_000_000, "random": 20_000_000}
 
 
@@ -96,7 +97,7 @@ def runtime_info() -> dict[str, Any]:
         "modules": {},
         "torch": {},
     }
-    for module_name in ("numpy", "torch", "torchvision"):
+    for module_name in ("numpy", "torch", "torchvision", "triton"):
         info["modules"][module_name] = {
             "installed": has_module(module_name),
             "version": package_version(module_name),
@@ -217,15 +218,27 @@ def run_torch_mask(predictions: np.ndarray, threshold: float) -> dict[int, list[
     return greedy_nmm_torchvision(predictions, "IOS", threshold)
 
 
+def run_triton(predictions: np.ndarray, threshold: float) -> dict[int, list[int]]:
+    from sahi.postprocess._triton_backend import greedy_nmm_triton
+
+    return greedy_nmm_triton(predictions, "IOS", threshold)
+
+
 def variant_available(variant: str) -> tuple[bool, str | None]:
     if variant == "numpy":
         return True, None
 
     try:
         import torch  # noqa: F401
-        import torchvision  # noqa: F401
+        if variant in ("torchvision_matrix", "torch_mask"):
+            import torchvision  # noqa: F401
+        if variant == "triton":
+            import triton  # noqa: F401
     except Exception as exc:
         return False, f"{type(exc).__name__}: {exc}"
+
+    if variant == "triton" and not torch.cuda.is_available():
+        return False, "CUDA is unavailable"
     return True, None
 
 
@@ -236,6 +249,8 @@ def get_runner(variant: str) -> Callable[[np.ndarray, float], dict[int, list[int
         return run_torchvision_matrix
     if variant == "torch_mask":
         return run_torch_mask
+    if variant == "triton":
+        return run_triton
     raise ValueError(f"Unknown variant: {variant}")
 
 
@@ -365,19 +380,41 @@ def speedup_table(rows: list[BenchRow]) -> str:
     for (data, boxes), by_variant in sorted(grouped.items()):
         baseline = by_variant.get("torchvision_matrix")
         mask = by_variant.get("torch_mask")
+        triton_row = by_variant.get("triton")
         numpy = by_variant.get("numpy")
         matrix_to_mask = baseline.median_ms / mask.median_ms if baseline and mask and mask.median_ms else None
-        numpy_to_mask = numpy.median_ms / mask.median_ms if numpy and mask and mask.median_ms else None
+        matrix_to_triton = (
+            baseline.median_ms / triton_row.median_ms if baseline and triton_row and triton_row.median_ms else None
+        )
+        mask_to_triton = mask.median_ms / triton_row.median_ms if mask and triton_row and triton_row.median_ms else None
+        numpy_to_triton = (
+            numpy.median_ms / triton_row.median_ms if numpy and triton_row and triton_row.median_ms else None
+        )
         table_rows.append(
             [
                 data,
                 str(boxes),
                 format_float(matrix_to_mask) if matrix_to_mask is not None else "-",
-                format_float(numpy_to_mask) if numpy_to_mask is not None else "-",
+                format_float(matrix_to_triton) if matrix_to_triton is not None else "-",
+                format_float(mask_to_triton) if mask_to_triton is not None else "-",
+                format_float(numpy_to_triton) if numpy_to_triton is not None else "-",
                 "yes" if mask and mask.parity else "no" if mask else "-",
+                "yes" if triton_row and triton_row.parity else "no" if triton_row else "-",
             ]
         )
-    return format_table(["data", "boxes", "speedup_vs_matrix", "speedup_vs_numpy", "mask_parity"], table_rows)
+    return format_table(
+        [
+            "data",
+            "boxes",
+            "mask_vs_matrix",
+            "triton_vs_matrix",
+            "triton_vs_mask",
+            "triton_vs_numpy",
+            "mask_parity",
+            "triton_parity",
+        ],
+        table_rows,
+    )
 
 
 def write_csv(path: Path, rows: list[BenchRow]) -> None:
