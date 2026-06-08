@@ -117,7 +117,7 @@ pip install transformers>=4.49.0 timm
 - Install your desired detection framework (yolov5):
 
 ```console
-pip install yolov5==7.0.14 sahi==0.11.21
+pip install yolov5==7.0.14 sahi==0.12.1
 ```
 
 - Install your desired detection framework (mmdet):
