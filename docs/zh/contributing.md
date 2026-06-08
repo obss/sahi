@@ -89,22 +89,22 @@ uv run pytest --cov=sahi
 1. 查看 CI 输出，确认失败的 Python 版本
 2. 使用该版本创建环境：
 
-    ```bash
-    uv venv --python 3.X  # 将 X 替换为 CI 中的版本号
-    source .venv/bin/activate
-    ```
+   ```bash
+   uv venv --python 3.X  # 将 X 替换为 CI 中的版本号
+   source .venv/bin/activate
+   ```
 
 3. 安装开发依赖：
 
-    ```bash
-    uv sync --extra dev
-    ```
+   ```bash
+   uv sync --extra dev
+   ```
 
 4. 修复格式：
 
-    ```bash
-    python scripts/format_code.py fix
-    ```
+   ```bash
+   python scripts/format_code.py fix
+   ```
 
 5. 提交并推送更改
 
@@ -117,7 +117,7 @@ uv run pytest --cov=sahi
 3. 在 `sahi/auto_model.py` 中将您的框架添加到 `MODEL_TYPE_TO_MODEL_CLASS_NAME`
 4. 在 `tests/test_yourframework.py` 下添加测试
 5. 在 `docs/notebooks/inference_for_your_framework.ipynb` 下添加示例 notebook
-6. 更新 [`README.md`](../../README.md) 和 `docs/` 下的相关文档以包含您的新模型
+6. 更新 [`README.md`](https://github.com/obss/sahi/blob/main/README.md) 和 `docs/` 下的相关文档以包含您的新模型
 
 请参考现有实现，如 `sahi/models/ultralytics.py`。
 

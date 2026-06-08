@@ -195,7 +195,7 @@ In addition to the [common parameters](#common-parameters), zero-shot
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `text_labels` | list[str] | Fixed categories to detect, e.g. `["car", "truck"]`. Each gets a stable category id; phrases outside this list are dropped |
+| `text_labels` | `list[str]` | Fixed categories to detect, e.g. `["car", "truck"]`. Each gets a stable category id; phrases outside this list are dropped |
 | `text_prompt` | str | Free-form prompt (e.g. `"a car. a truck."`) used when `text_labels` is not set; returned phrases become categories dynamically |
 | `text_threshold` | float | Minimum score for matching a box to a text token (default: 0.25) |
 
@@ -260,7 +260,7 @@ In addition to the [common parameters](#common-parameters), this model accepts:
 | `segmentation_type` | `SegmentationType` | `INSTANCE_SEGMENTATION` (default), `SEMANTIC_SEGMENTATION`, or `PANOPTIC_SEGMENTATION` |
 | `min_segment_area` | int | Drop segments smaller than this many pixels (default: 100) |
 | `overlap_mask_area_threshold` | float | Merge/discard disconnected parts within a mask (default: 0.8) |
-| `label_ids_to_fuse` | list[int] | Panoptic only -- fuse all instances of these labels into one segment |
+| `label_ids_to_fuse` | `list[int]` | Panoptic only -- fuse all instances of these labels into one segment |
 | `token` | str | HuggingFace access token for gated/private models (falls back to `$HF_TOKEN`) |
 
 ---

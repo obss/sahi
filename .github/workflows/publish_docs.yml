@@ -50,7 +50,14 @@ jobs:
 
       - name: 📚 Build Docs
         run: |
+          # English site -> site/
           uv run zensical build
+          # Keep the zh site's custom styling in sync with the English extra.css
+          mkdir -p docs/zh/stylesheets
+          cp docs/stylesheets/extra.css docs/zh/stylesheets/extra.css
+          # Rebuild /zh as a standalone localized site (own nav, links stay inside /zh/)
+          rm -rf site/zh
+          uv run zensical build -f zensical.zh.toml
 
       - name: 🚀 Deploy to GitHub Pages
         if:
