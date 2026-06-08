@@ -197,6 +197,45 @@ def greedy_nmm_from_matrix(matrix: np.ndarray, sorted_idxs: np.ndarray, match_th
     return keep_to_merge_list
 
 
+def greedy_nmm_from_mask(match_mask: np.ndarray, sorted_idxs: np.ndarray) -> dict[int, list[int]]:
+    """Greedy NMM using a precomputed boolean match mask.
+
+    Args:
+        match_mask: (N, N) boolean array where ``match_mask[i, j]`` means
+            prediction ``j`` should merge into prediction ``i`` if ``i`` is
+            selected as a keeper.
+        sorted_idxs: Indices sorted by score descending.
+
+    Returns:
+        Dict mapping each kept index to a list of indices merged into it.
+    """
+    keep_to_merge_list: dict[int, list[int]] = {}
+    suppressed = np.zeros(match_mask.shape[0], dtype=bool)
+
+    for i, idx in enumerate(sorted_idxs):
+        if suppressed[idx]:
+            continue
+
+        remaining = sorted_idxs[i + 1 :]
+        if len(remaining) == 0:
+            keep_to_merge_list[int(idx)] = []
+            continue
+
+        not_suppressed = ~suppressed[remaining]
+        candidates = remaining[not_suppressed]
+
+        if len(candidates) == 0:
+            keep_to_merge_list[int(idx)] = []
+            continue
+
+        merge_indices = candidates[match_mask[idx, candidates]]
+
+        suppressed[merge_indices] = True
+        keep_to_merge_list[int(idx)] = merge_indices.tolist()
+
+    return keep_to_merge_list
+
+
 def nmm_from_matrix(
     matrix: np.ndarray,
     sorted_idxs: np.ndarray,
