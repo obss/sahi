@@ -21,12 +21,13 @@ _BACKEND_MODULE_MAP = {
     "numpy": "sahi.postprocess._numpy_backend",
     "numba": "sahi.postprocess._numba_backend",
     "torchvision": "sahi.postprocess._torchvision_backend",
+    "triton": "sahi.postprocess._triton_backend",
 }
 
 _FUNC_NAME_MAP = {
-    "nms": {"numpy": "nms_numpy", "numba": "nms_numba", "torchvision": "nms_torchvision"},
-    "greedy_nmm": {"numpy": "greedy_nmm_numpy", "numba": "greedy_nmm_numba", "torchvision": "greedy_nmm_torchvision"},
-    "nmm": {"numpy": "nmm_numpy", "numba": "nmm_numba", "torchvision": "nmm_torchvision"},
+    "nms": {"numpy": "nms_numpy", "numba": "nms_numba", "torchvision": "nms_torchvision", "triton": "nms_triton"},
+    "greedy_nmm": {"numpy": "greedy_nmm_numpy", "numba": "greedy_nmm_numba", "torchvision": "greedy_nmm_torchvision", "triton": "greedy_nmm_triton"},
+    "nmm": {"numpy": "nmm_numpy", "numba": "nmm_numba", "torchvision": "nmm_torchvision", "triton": "nmm_triton"},
 }
 
 _dispatch_cache: dict[tuple[str, str], Callable[..., Any]] = {}

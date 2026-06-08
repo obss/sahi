@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from sahi.utils.import_utils import is_available
 
-VALID_BACKENDS = ("auto", "numpy", "numba", "torchvision")
+VALID_BACKENDS = ("auto", "numpy", "numba", "torchvision", "triton")
 
 _backend: str = "auto"
 _resolved_cache: str | None = None
@@ -56,12 +56,13 @@ def resolve_backend() -> str:
        loops, faster than pure numpy for large prediction counts).
     3. **numpy** -- always available as the fallback (pure numpy,
        no extra dependencies).
+    4. **triton** -- for extreme speed.
 
     If the backend was explicitly set via ``set_postprocess_backend``, that
     value is returned directly without auto-detection.
 
     Returns:
-        One of "numpy", "numba", or "torchvision".
+        One of "numpy", "numba", "torchvision" or "triton".
     """
     global _resolved_cache
     if _resolved_cache is not None:
@@ -79,6 +80,14 @@ def resolve_backend() -> str:
             if torch.cuda.is_available():
                 _resolved_cache = "torchvision"
                 return _resolved_cache
+        except ImportError:
+            pass
+    if is_available("triton"):
+        try:
+            import triton
+            
+            _resolved_cache = "triton"
+            return _resolved_cache
         except ImportError:
             pass
 
