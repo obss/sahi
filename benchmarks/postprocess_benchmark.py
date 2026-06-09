@@ -229,7 +229,8 @@ def variant_available(variant: str) -> tuple[bool, str | None]:
         return True, None
 
     try:
-        import torch  # noqa: F401
+        import torch
+
         if variant in ("torchvision_matrix", "torch_mask"):
             import torchvision  # noqa: F401
         if variant == "triton":
@@ -288,7 +289,9 @@ def benchmark_variant(
 
     last_result: dict[int, list[int]] | None = None
     for i in range(warmups):
-        progress(f"  warmup {i + 1}/{warmups}: variant={variant} data={data} boxes={len(predictions)}", enabled=show_progress)
+        progress(
+            f"  warmup {i + 1}/{warmups}: variant={variant} data={data} boxes={len(predictions)}", enabled=show_progress
+        )
         _, last_result = time_once(runner, predictions, threshold)
 
     gc.collect()
@@ -418,7 +421,9 @@ def speedup_table(rows: list[BenchRow]) -> str:
 
 
 def write_csv(path: Path, rows: list[BenchRow]) -> None:
-    fieldnames = list(asdict(rows[0]).keys()) if rows else [field.name for field in BenchRow.__dataclass_fields__.values()]
+    fieldnames = (
+        list(asdict(rows[0]).keys()) if rows else [field.name for field in BenchRow.__dataclass_fields__.values()]
+    )
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -452,7 +457,23 @@ def write_markdown(path: Path, rows: list[BenchRow], runtime: dict[str, Any]) ->
     for key, value in runtime.get("torch", {}).items():
         lines.append(f"- torch.{key}: {value}")
 
-    lines.extend(["", "## Speedups", "", "```text", speedup_table(rows), "```", "", "## Results", "", "```text", result_table(rows), "```", ""])
+    lines.extend(
+        [
+            "",
+            "## Speedups",
+            "",
+            "```text",
+            speedup_table(rows),
+            "```",
+            "",
+            "## Results",
+            "",
+            "```text",
+            result_table(rows),
+            "```",
+            "",
+        ]
+    )
     path.write_text("\n".join(lines), encoding="utf-8")
 
 

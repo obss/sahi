@@ -516,9 +516,7 @@ class TestNumpyBackend:
                 if match_mask[row, col]:
                     packed_mask[row, 0] |= np.uint32(1 << col)
 
-        assert greedy_nmm_from_packed_mask(packed_mask, sorted_idxs) == greedy_nmm_from_matrix(
-            matrix, sorted_idxs, 0.5
-        )
+        assert greedy_nmm_from_packed_mask(packed_mask, sorted_idxs) == greedy_nmm_from_matrix(matrix, sorted_idxs, 0.5)
 
     def test_greedy_nmm_from_packed_mask_word_boundary_parity(self) -> None:
         """Test packed match bitset across a 32-bit word boundary."""
@@ -538,9 +536,7 @@ class TestNumpyBackend:
             for col in range(len(preds)):
                 packed_mask[row, col // 32] |= np.uint32(1 << (col % 32))
 
-        assert greedy_nmm_from_packed_mask(packed_mask, sorted_idxs) == greedy_nmm_from_matrix(
-            matrix, sorted_idxs, 0.5
-        )
+        assert greedy_nmm_from_packed_mask(packed_mask, sorted_idxs) == greedy_nmm_from_matrix(matrix, sorted_idxs, 0.5)
 
 
 # ===========================================================================
@@ -745,8 +741,8 @@ class TestTritonBackend:
 
     def test_forced_triton_backend_dispatch(self) -> None:
         """Test dispatch with forced Triton backend."""
-        from sahi.postprocess.backends import set_postprocess_backend
         from sahi.postprocess._numpy_backend import greedy_nmm_numpy
+        from sahi.postprocess.backends import set_postprocess_backend
 
         original = get_postprocess_backend()
         try:

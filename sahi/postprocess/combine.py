@@ -26,7 +26,12 @@ _BACKEND_MODULE_MAP = {
 
 _FUNC_NAME_MAP = {
     "nms": {"numpy": "nms_numpy", "numba": "nms_numba", "torchvision": "nms_torchvision", "triton": "nms_triton"},
-    "greedy_nmm": {"numpy": "greedy_nmm_numpy", "numba": "greedy_nmm_numba", "torchvision": "greedy_nmm_torchvision", "triton": "greedy_nmm_triton"},
+    "greedy_nmm": {
+        "numpy": "greedy_nmm_numpy",
+        "numba": "greedy_nmm_numba",
+        "torchvision": "greedy_nmm_torchvision",
+        "triton": "greedy_nmm_triton",
+    },
     "nmm": {"numpy": "nmm_numpy", "numba": "nmm_numba", "torchvision": "nmm_torchvision", "triton": "nmm_triton"},
 }
 
