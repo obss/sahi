@@ -51,12 +51,12 @@ SAHI, büyük görüntülerdeki küçük nesneleri tespit etmek için **sliced i
 
 | Komut | Açıklama |
 | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage) | Herhangi bir [ultralytics](https://github.com/ultralytics/ultralytics) / [mmdet](https://github.com/open-mmlab/mmdetection) / [huggingface](https://huggingface.co/models?pipeline_tag=object-detection&sort=downloads) / [torchvision](https://pytorch.org/vision/stable/models.html#object-detection) modeliyle video veya görüntü üzerinde sliced/standart tahmin yapar — bkz. [CLI kılavuzu](docs/cli.md#predict-command-usage) |
-| [predict-fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-fiftyone-command-usage) | Desteklenen herhangi bir modelle sliced/standart tahmin yapar ve sonuçları [fiftyone app](https://github.com/voxel51/fiftyone) üzerinde görselleştirir — [daha fazla bilgi](docs/fiftyone.md) |
-| [coco slice](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-slice-command-usage) | COCO annotation ve görüntü dosyalarını otomatik olarak dilimlere ayırır — bkz. [slicing yardımcı araçları](docs/slicing.md) |
+| [predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage) | Herhangi bir [ultralytics](https://github.com/ultralytics/ultralytics) / [mmdet](https://github.com/open-mmlab/mmdetection) / [huggingface](https://huggingface.co/models?pipeline_tag=object-detection&sort=downloads) / [torchvision](https://pytorch.org/vision/stable/models.html#object-detection) modeliyle video veya görüntü üzerinde sliced/standart tahmin yapar — bkz. [CLI kılavuzu](cli.md#predict-command-usage) |
+| [predict-fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-fiftyone-command-usage) | Desteklenen herhangi bir modelle sliced/standart tahmin yapar ve sonuçları [fiftyone app](https://github.com/voxel51/fiftyone) üzerinde görselleştirir — [daha fazla bilgi](fiftyone.md) |
+| [coco slice](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-slice-command-usage) | COCO annotation ve görüntü dosyalarını otomatik olarak dilimlere ayırır — bkz. [slicing yardımcı araçları](slicing.md) |
 | [coco fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-fiftyone-command-usage) | COCO dataset'inizdeki birden fazla tahmin sonucunu [fiftyone ui](https://github.com/voxel51/fiftyone) üzerinde yanlış tespit sayısına göre sıralı biçimde inceler |
-| [coco evaluate](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-evaluate-command-usage) | Verilen tahminler ve ground truth için sınıf bazında COCO AP ve AR hesaplar — bkz. [COCO araçları](docs/coco.md) |
-| [coco analyse](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-analyse-command-usage) | Çok sayıda hata analizi grafiği hesaplar ve dışa aktarır — bkz. [tam kılavuz](docs/README.md) |
+| [coco evaluate](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-evaluate-command-usage) | Verilen tahminler ve ground truth için sınıf bazında COCO AP ve AR hesaplar — bkz. [COCO araçları](coco.md) |
+| [coco analyse](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-analyse-command-usage) | Çok sayıda hata analizi grafiği hesaplar ve dışa aktarır — bkz. [tam kılavuz](index.md) |
 | [coco yolo](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-yolo-command-usage) | Herhangi bir COCO dataset'ini otomatik olarak [ultralytics](https://github.com/ultralytics/ultralytics) formatına dönüştürür |
 
 ### Topluluk Onayı
@@ -147,8 +147,8 @@ pip install inference>=0.51.5 rfdetr>=1.6.2
 | [Hata Analizi Grafikleri ve Değerlendirme](https://github.com/obss/sahi/discussions/622) ⭐ | Tartışma |
 | [İnteraktif Sonuç Görselleştirme ve İnceleme](https://github.com/obss/sahi/discussions/624) ⭐ | Tartışma |
 | [Video Inference Desteği](https://github.com/obss/sahi/discussions/626) | Tartışma |
-| [Slicing İşlemi Notebook'u](demo/slicing.ipynb) | Notebook |
-| [Tam Dokümantasyon](docs/README.md) | Dokümantasyon |
+| [Slicing İşlemi Notebook'u](../../demo/slicing.ipynb) | Notebook |
+| [Tam Dokümantasyon](index.md) | Dokümantasyon |
 
 ### Notebook'lar ve Deneme Sürümleri
 
@@ -173,7 +173,7 @@ pip install inference>=0.51.5 rfdetr>=1.6.2
 
 <img width="700" alt="sahi-predict" src="https://user-images.githubusercontent.com/34196005/149310540-e32f504c-6c9e-4691-8afd-59f3a1a457f0.gif">
 
-`sahi predict` komutu hakkında ayrıntılı bilgi için [CLI dokümantasyonuna](docs/cli.md#predict-command-usage) bakın; gelişmiş kullanım için [prediction API](docs/predict.md) sayfasını inceleyin.
+`sahi predict` komutu hakkında ayrıntılı bilgi için [CLI dokümantasyonuna](cli.md#predict-command-usage) bakın; gelişmiş kullanım için [prediction API](predict.md) sayfasını inceleyin.
 
 Video inference hakkında ayrıntılı bilgi için [video inference eğitimine](https://github.com/obss/sahi/discussions/626) göz atın.
 
@@ -187,11 +187,11 @@ Ayrıntılı bilgi için [Hata Analizi Grafikleri ve Değerlendirme](https://git
 
 <img width="700" alt="sahi-fiftyone" src="https://user-images.githubusercontent.com/34196005/149321540-e6dd5f3-36dc-4267-8574-a985dd0c6578.gif">
 
-İnteraktif görselleştirme ve inceleme için [FiftyOne entegrasyonunu](docs/fiftyone.md) keşfedin.
+İnteraktif görselleştirme ve inceleme için [FiftyOne entegrasyonunu](fiftyone.md) keşfedin.
 
 ### Diğer Araçlar
 
-YOLO formatına dönüştürme, dataset dilimleme, alt örnekleme, filtreleme, birleştirme ve bölme işlemleri için [kapsamlı COCO araçları kılavuzuna](docs/coco.md) göz atın. Görüntü ve dataset dilimleme parametreleri üzerinde ayrıntılı kontrol için [slicing araçları dokümantasyonuna](docs/slicing.md) bakın.
+YOLO formatına dönüştürme, dataset dilimleme, alt örnekleme, filtreleme, birleştirme ve bölme işlemleri için [kapsamlı COCO araçları kılavuzuna](coco.md) göz atın. Görüntü ve dataset dilimleme parametreleri üzerinde ayrıntılı kontrol için [slicing araçları dokümantasyonuna](slicing.md) bakın.
 
 ## <div align="center">Atıf</div>
 
@@ -222,7 +222,7 @@ Bu paketi çalışmanızda kullanırsanız lütfen aşağıdaki şekilde atıf y
 
 ## <div align="center">Katkıda Bulunma</div>
 
-Katkılarınızı bekliyoruz! Başlamak için [Katkı Kılavuzunu](CONTRIBUTING.md) inceleyin. Tüm katkıda bulunanlara teşekkürler 🙏
+Katkılarınızı bekliyoruz! Başlamak için [Katkı Kılavuzunu](../../CONTRIBUTING.md) inceleyin. Tüm katkıda bulunanlara teşekkürler 🙏
 
 <p align="center">
     <a href="https://github.com/obss/sahi/graphs/contributors">
