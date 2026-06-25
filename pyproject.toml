@@ -100,7 +100,7 @@ all = [
 ci = [
   # max supported pytorch version for python 3.8 is 2.4.1
   # CPU versions for Linux/Windows CI
-  "torch==2.8.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
+  "torch==2.12.1;python_version>='3.9' and platform_system!='Darwin'",
   "torch==2.4.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
   "torchvision==0.23.0;python_version>='3.9' and platform_system!='Darwin'",
   "torchvision==0.19.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
