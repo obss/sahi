@@ -1,12 +1,3 @@
-"""Tests for sahi.utils.import_utils.
-
-These tests guard against a regression where ``check_requirements`` and
-``ensure_package_minimum_version`` were accidentally written as generator
-functions (a trailing ``yield``). Because the callers never iterate the
-returned object, the function bodies never executed and the intended
-``ImportError`` was silently never raised.
-"""
-
 from __future__ import annotations
 
 import inspect
