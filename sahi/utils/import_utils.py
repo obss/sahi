@@ -126,16 +126,7 @@ def ensure_package_minimum_version(package_name: str, minimum_version: str, verb
     Raises:
         ImportError: If the installed version is below minimum_version.
     """
-    from packaging import version
-
-    _is_available, _version = get_package_info(package_name, verbose=verbose)
-    if _is_available:
-        if _version == "unknown":
-            logger.warning(
-                f"Could not determine version of {package_name}. Assuming version {minimum_version} is compatible."
-            )
-        else:
-            if version.parse(_version) < version.parse(minimum_version):
-                raise ImportError(
-                    f"Please upgrade {package_name} to version {minimum_version} or higher to use this module."
-                )
+    if not check_package_minimum_version(package_name, minimum_version, verbose=verbose):
+        raise ImportError(
+            f"Please upgrade {package_name} to version {minimum_version} or higher to use this module."
+        )
