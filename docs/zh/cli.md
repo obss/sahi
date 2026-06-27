@@ -70,7 +70,7 @@ sahi predict --slice_width 512 --slice_height 512 \
 ## 检测框架：
 
 - `--model_type mmdet` - 用于 MMDetection 模型
-- `--model_type ultralytics` - 用于 Ultralytics/YOLOv5/YOLO11 模型
+- `--model_type ultralytics` - 用于 Ultralytics/YOLOv5/YOLO11/YOLO26 模型
 - `--model_type huggingface` - 用于 HuggingFace 模型
 - `--model_type torchvision` - 用于 Torchvision 模型
 
