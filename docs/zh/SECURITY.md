@@ -15,7 +15,7 @@
 
 ### 报告方式
 
-## 请勿通过公开的 GitHub Issues 报告安全漏洞。
+**请勿通过公开的 GitHub Issues 报告安全漏洞。**
 
 请通过以下方式之一进行报告：
 
@@ -81,7 +81,7 @@
 
 - [GitHub 安全公告](https://github.com/obss/sahi/security/advisories)
 - [GitHub 发布](https://github.com/obss/sahi/releases)
-- [CHANGELOG.md](../../CHANGELOG.md)
+- [CHANGELOG.md](changelog.md)
 
 ### 其他资源
 
