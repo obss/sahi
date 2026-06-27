@@ -127,6 +127,4 @@ def ensure_package_minimum_version(package_name: str, minimum_version: str, verb
         ImportError: If the installed version is below minimum_version.
     """
     if not check_package_minimum_version(package_name, minimum_version, verbose=verbose):
-        raise ImportError(
-            f"Please upgrade {package_name} to version {minimum_version} or higher to use this module."
-        )
+        raise ImportError(f"Please upgrade {package_name} to version {minimum_version} or higher to use this module.")

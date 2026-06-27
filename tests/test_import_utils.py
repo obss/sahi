@@ -7,7 +7,6 @@ import pytest
 
 from sahi.utils import import_utils
 from sahi.utils.import_utils import (
-    check_package_minimum_version,
     check_requirements,
     ensure_package_minimum_version,
     get_package_info,
@@ -15,6 +14,13 @@ from sahi.utils.import_utils import (
 )
 
 MISSING_PACKAGE = "this_package_definitely_does_not_exist_12345"
+
+VERSION_CASES = [
+    pytest.param(True, "2.0.0", "1.0.0", True, id="satisfied"),
+    pytest.param(True, "1.0.0", "2.0.0", False, id="too-low"),
+    pytest.param(False, "N/A", "2.0.0", True, id="absent"),
+    pytest.param(True, "unknown", "2.0.0", True, id="unknown"),
+]
 
 
 @pytest.fixture
@@ -61,27 +67,6 @@ class TestCheckRequirements:
         message = str(exc_info.value)
         assert MISSING_PACKAGE in message
         assert "numpy" not in message
-
-
-# (available, version, min_version, satisfied) — satisfied=False only when known and too low.
-VERSION_CASES = [
-    pytest.param(True, "2.0.0", "1.0.0", True, id="satisfied"),
-    pytest.param(True, "1.0.0", "2.0.0", False, id="too-low"),
-    pytest.param(False, "N/A", "2.0.0", True, id="absent"),
-    pytest.param(True, "unknown", "2.0.0", True, id="unknown"),
-]
-
-
-@pytest.mark.parametrize("available, version, min_version, satisfied", VERSION_CASES)
-def test_check_package_minimum_version(
-    fake_package: Callable[[bool, str], None],
-    available: bool,
-    version: str,
-    min_version: str,
-    satisfied: bool,
-) -> None:
-    fake_package(available, version)
-    assert check_package_minimum_version("somepkg", min_version) is satisfied
 
 
 @pytest.mark.parametrize("available, version, min_version, satisfied", VERSION_CASES)
