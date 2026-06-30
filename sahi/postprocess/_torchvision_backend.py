@@ -13,6 +13,7 @@ import torchvision
 
 from sahi.postprocess._numpy_backend import (
     _score_tiebreak_order,
+    greedy_nmm_from_mask,
     greedy_nmm_from_matrix,
     nmm_from_matrix,
     nms_from_matrix,
@@ -58,6 +59,46 @@ def _prepare_matrix_torch(predictions: np.ndarray, match_metric: str) -> tuple[n
     return matrix, sorted_idxs
 
 
+def _compute_match_mask_torch(predictions: np.ndarray, match_metric: str, match_threshold: float) -> np.ndarray:
+    """Compute pairwise threshold matches using torch on GPU, return a boolean numpy mask."""
+    device = _get_device()
+    boxes = torch.tensor(predictions[:, :4], dtype=torch.float32, device=device)
+
+    x1, y1, x2, y2 = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
+    areas = (x2 - x1) * (y2 - y1)
+
+    inter_x1 = torch.maximum(x1[:, None], x1[None, :])
+    inter_y1 = torch.maximum(y1[:, None], y1[None, :])
+    inter_x2 = torch.minimum(x2[:, None], x2[None, :])
+    inter_y2 = torch.minimum(y2[:, None], y2[None, :])
+    inter = torch.clamp(inter_x2 - inter_x1, min=0) * torch.clamp(inter_y2 - inter_y1, min=0)
+
+    if match_metric == "IOU":
+        denominator = areas[:, None] + areas[None, :] - inter
+    else:  # IOS
+        denominator = torch.minimum(areas[:, None], areas[None, :])
+
+    match_mask = torch.where(
+        denominator > 0,
+        inter / denominator >= match_threshold,
+        torch.zeros_like(inter, dtype=torch.bool),
+    )
+    return match_mask.cpu().numpy()
+
+
+def _prepare_match_mask_torch(
+    predictions: np.ndarray,
+    match_metric: str,
+    match_threshold: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Compute boolean match mask on GPU and sort indices on CPU."""
+    match_mask = _compute_match_mask_torch(predictions, match_metric, match_threshold)
+    boxes = predictions[:, :4]
+    scores = predictions[:, 4]
+    sorted_idxs = _score_tiebreak_order(boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3], scores)
+    return match_mask, sorted_idxs
+
+
 # ---------------------------------------------------------------------------
 # Public torchvision backend functions
 # ---------------------------------------------------------------------------
@@ -90,7 +131,14 @@ def greedy_nmm_torchvision(
     match_metric: str = "IOU",
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
-    """Greedy NMM: compute metric matrix on GPU, merge logic on CPU."""
+    """Greedy NMM: compute overlap matches on GPU, merge logic on CPU."""
+    if len(predictions) == 0:
+        return {}
+
+    if match_metric == "IOS":
+        match_mask, sorted_idxs = _prepare_match_mask_torch(predictions, match_metric, match_threshold)
+        return greedy_nmm_from_mask(match_mask, sorted_idxs)
+
     matrix, sorted_idxs = _prepare_matrix_torch(predictions, match_metric)
     return greedy_nmm_from_matrix(matrix, sorted_idxs, match_threshold)
 

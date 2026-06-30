@@ -16,6 +16,7 @@ dependencies = [
   "fire",
   "requests",
   "click",
+  "triton>=3.3.1",
 ]
 
 classifiers = [
