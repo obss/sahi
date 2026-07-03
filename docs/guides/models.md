@@ -19,8 +19,10 @@ function -- sliced prediction, batch inference, CLI, etc.
 
 ## Ultralytics (YOLO)
 
-Supports YOLOv8, YOLO11, YOLO26, and all Ultralytics model variants
-including segmentation and oriented bounding box models.
+Supports [Ultralytics YOLO26](https://docs.ultralytics.com/models/yolo26),
+[Ultralytics YOLO11](https://docs.ultralytics.com/models/yolo11),
+[Ultralytics YOLOv8](https://docs.ultralytics.com/models/yolov8), and all
+Ultralytics model variants including segmentation and oriented bounding box models.
 
 ```bash
 pip install ultralytics

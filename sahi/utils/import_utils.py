@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import importlib.util
 from collections.abc import Iterable
-from typing import Any, Generator
 
 from sahi.logger import logger
 
@@ -72,7 +71,7 @@ def is_available(module_name: str) -> bool:
     return importlib.util.find_spec(module_name) is not None
 
 
-def check_requirements(package_names: Iterable[str]) -> Generator[Any, Any, Any]:
+def check_requirements(package_names: Iterable[str]) -> None:
     """Verify that all required packages are importable.
 
     Args:
@@ -80,9 +79,6 @@ def check_requirements(package_names: Iterable[str]) -> Generator[Any, Any, Any]
 
     Raises:
         ImportError: If any of the listed packages cannot be found.
-
-    Yields:
-        Control back to the caller if all packages are available.
     """
     missing_packages = []
     for package_name in package_names:
@@ -90,7 +86,6 @@ def check_requirements(package_names: Iterable[str]) -> Generator[Any, Any, Any]
             missing_packages.append(package_name)
     if missing_packages:
         raise ImportError(f"The following packages are required to use this module: {missing_packages}")
-    yield
 
 
 def check_package_minimum_version(package_name: str, minimum_version: str, verbose: bool = False) -> bool:
@@ -120,9 +115,7 @@ def check_package_minimum_version(package_name: str, minimum_version: str, verbo
     return True
 
 
-def ensure_package_minimum_version(
-    package_name: str, minimum_version: str, verbose: bool = False
-) -> Generator[None, Any, None]:
+def ensure_package_minimum_version(package_name: str, minimum_version: str, verbose: bool = False) -> None:
     """Ensure a package meets a minimum version, raising on failure.
 
     Args:
@@ -132,21 +125,6 @@ def ensure_package_minimum_version(
 
     Raises:
         ImportError: If the installed version is below minimum_version.
-
-    Yields:
-        Control back to the caller if the version requirement is met.
     """
-    from packaging import version
-
-    _is_available, _version = get_package_info(package_name, verbose=verbose)
-    if _is_available:
-        if _version == "unknown":
-            logger.warning(
-                f"Could not determine version of {package_name}. Assuming version {minimum_version} is compatible."
-            )
-        else:
-            if version.parse(_version) < version.parse(minimum_version):
-                raise ImportError(
-                    f"Please upgrade {package_name} to version {minimum_version} or higher to use this module."
-                )
-    yield
+    if not check_package_minimum_version(package_name, minimum_version, verbose=verbose):
+        raise ImportError(f"Please upgrade {package_name} to version {minimum_version} or higher to use this module.")

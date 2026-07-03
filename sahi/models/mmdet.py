@@ -188,7 +188,17 @@ class MmdetDetectionModel(DetectionModel):
         Considers both single dataset and ConcatDataset scenarios.
         """
 
-        def check_pipeline_for_mask(pipeline: list) -> bool:
+        def check_dataset_for_mask(dataset_config: dict) -> bool:
+            if dataset_config["type"] == "RepeatDataset":
+                return check_dataset_for_mask(dataset_config["dataset"])
+            if dataset_config["type"] == "ConcatDataset":
+                # If using ConcatDataset, check each dataset individually
+                datasets = dataset_config["datasets"]
+                for dataset in datasets:
+                    if check_dataset_for_mask(dataset):
+                        return True
+            # Otherwise, assume a single dataset with its own pipeline
+            pipeline = dataset_config["pipeline"]
             return any(
                 isinstance(item, dict) and any("mask" in key and value is True for key, value in item.items())
                 for item in pipeline
@@ -196,19 +206,7 @@ class MmdetDetectionModel(DetectionModel):
 
         # Access the dataset from the configuration
         dataset_config = self.model.cfg["train_dataloader"]["dataset"]  # type: ignore[attr-defined]
-
-        if dataset_config["type"] == "ConcatDataset":
-            # If using ConcatDataset, check each dataset individually
-            datasets = dataset_config["datasets"]
-            for dataset in datasets:
-                if check_pipeline_for_mask(dataset["pipeline"]):
-                    return True
-        else:
-            # Otherwise, assume a single dataset with its own pipeline
-            if check_pipeline_for_mask(dataset_config["pipeline"]):
-                return True
-
-        return False
+        return check_dataset_for_mask(dataset_config)
 
     @property
     def category_names(self) -> tuple | list:
