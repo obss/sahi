@@ -198,11 +198,12 @@ class MmdetDetectionModel(DetectionModel):
                     if check_dataset_for_mask(dataset):
                         return True
             # Otherwise, assume a single dataset with its own pipeline
-            pipeline=dataset_config["pipeline"]
+            pipeline = dataset_config["pipeline"]
             return any(
                 isinstance(item, dict) and any("mask" in key and value is True for key, value in item.items())
                 for item in pipeline
             )
+
         # Access the dataset from the configuration
         dataset_config = self.model.cfg["train_dataloader"]["dataset"]  # type: ignore[attr-defined]
         return check_dataset_for_mask(dataset_config)
