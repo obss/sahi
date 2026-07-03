@@ -72,7 +72,7 @@ sahi predict --slice_width 512 --slice_height 512 \
 **Detection Framework:**
 
 - `--model_type mmdet` - For MMDetection models
-- `--model_type ultralytics` - For Ultralytics/YOLOv5/YOLO11 models
+- `--model_type ultralytics` - For Ultralytics/YOLOv5/YOLO11/YOLO26 models
 - `--model_type huggingface` - For HuggingFace models
 - `--model_type torchvision` - For Torchvision models
 
