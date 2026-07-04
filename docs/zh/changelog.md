@@ -185,10 +185,10 @@ tags:
 
 - **测试套件迁移至 pytest**
   ([#1187](https://github.com/obss/sahi/pull/1187))
-  - 通过更好的并行执行加速测试
-  - 扩展 Python 版本覆盖（3.8、3.9、3.10、3.11、3.12）
-  - 更新至更新的 PyTorch 版本以实现更好的兼容性测试
-  - 改进测试组织和可维护性
+    - 通过更好的并行执行加速测试
+    - 扩展 Python 版本覆盖（3.8、3.9、3.10、3.11、3.12）
+    - 更新至更新的 PyTorch 版本以实现更好的兼容性测试
+    - 改进测试组织和可维护性
 - **重构 MMDetection 测试**以提高可靠性
   ([#1185](https://github.com/obss/sahi/pull/1185))
 
@@ -196,10 +196,10 @@ tags:
 
 - **新增 Context7 MCP 集成**，用于 AI 辅助开发
   ([#1198](https://github.com/obss/sahi/pull/1198))
-  - SAHI 的文档现已在 [Context7 MCP](https://context7.com/obss/sahi) 中建立索引
-  - 为 AI 编码助手提供最新的、版本特定的代码示例
-  - 包含 [llms.txt](https://context7.com/obss/sahi/llms.txt) 文件，用于 AI 可读文档
-  - 查看 [Context7 MCP 安装指南](https://github.com/upstash/context7#%EF%B8%8F-installation) 将 SAHI 文档集成到您的 AI 工作流程中
+    - SAHI 的文档现已在 [Context7 MCP](https://context7.com/obss/sahi) 中建立索引
+    - 为 AI 编码助手提供最新的、版本特定的代码示例
+    - 包含 [llms.txt](https://context7.com/obss/sahi/llms.txt) 文件，用于 AI 可读文档
+    - 查看 [Context7 MCP 安装指南](https://github.com/upstash/context7#%EF%B8%8F-installation) 将 SAHI 文档集成到您的 AI 工作流程中
 
 ### 🛠️ 改进
 

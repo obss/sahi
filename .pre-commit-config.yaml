@@ -30,3 +30,9 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: [numpy,types-aiofiles]
+
+  - repo: https://github.com/rvben/rumdl-pre-commit
+    rev: v0.2.28
+    hooks:
+      - id: rumdl
+        files: ^docs/.*\.md$

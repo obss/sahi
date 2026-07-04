@@ -1,0 +1,18 @@
+# rumdl config for the SAHI Markdown docs
+# https://github.com/rvben/rumdl
+
+[global]
+# Parse MkDocs / zensical syntax (admonitions, tabs, snippets, attr_list, grids)
+flavor = "mkdocs"
+
+# Lint the docs tree only
+include = ["docs/**/*.md"]
+
+# Rules that clash with the docs style
+disable = [
+    "MD013", # line length: tables, badges and CJK text run long
+    "MD024", # duplicate headings: the changelog repeats section titles per release
+    "MD033", # inline HTML: badges and layout blocks are intentional
+    "MD036", # emphasis as heading: bold labels before lists are intentional
+    "MD041", # first-line heading: pages open with a centered hero block
+]
