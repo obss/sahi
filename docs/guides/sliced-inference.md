@@ -47,7 +47,7 @@ are fully visible in at least one patch.
 Key parameters:
 
 | Parameter | What it controls |
-|-----------|-----------------|
+| ----------- | ----------------- |
 | `slice_height` / `slice_width` | Size of each tile in pixels |
 | `overlap_height_ratio` / `overlap_width_ratio` | Fraction of overlap between adjacent tiles (0.0 -- 1.0) |
 | `auto_slice_resolution` | Let SAHI pick tile sizes based on image resolution |
