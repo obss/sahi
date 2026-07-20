@@ -16,6 +16,20 @@ from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_bbox_from_bool_mask, get_coco_segmentation_from_bool_mask
 
+RFDETR_MODEL_NAMES = (
+    "RFDETRBase",
+    "RFDETRNano",
+    "RFDETRSmall",
+    "RFDETRMedium",
+    "RFDETRLarge",
+    "RFDETRSegNano",
+    "RFDETRSegSmall",
+    "RFDETRSegMedium",
+    "RFDETRSegLarge",
+    "RFDETRSegXLarge",
+    "RFDETRSeg2XLarge",
+)
+
 
 class RoboflowDetectionModel(DetectionModel):
     """Roboflow object detection model.
@@ -62,7 +76,9 @@ class RoboflowDetectionModel(DetectionModel):
             image_size: int
                 Inference input size.
         """
-        self._use_universe = model and isinstance(model, str)
+        # A string is a Roboflow Universe model id, except when it exactly names an
+        # RF-DETR class, which selects a local model and never contacts the API.
+        self._use_universe = bool(model) and isinstance(model, str) and model not in RFDETR_MODEL_NAMES
         self._model = model
         self._device = device
         self._api_key = api_key
@@ -126,47 +142,16 @@ class RoboflowDetectionModel(DetectionModel):
             )
 
         else:
-            from rfdetr.detr import (
-                RFDETRBase,
-                RFDETRLarge,
-                RFDETRMedium,
-                RFDETRNano,
-                RFDETRSeg2XLarge,
-                RFDETRSegLarge,
-                RFDETRSegMedium,
-                RFDETRSegNano,
-                RFDETRSegSmall,
-                RFDETRSegXLarge,
-                RFDETRSmall,
-            )
+            import rfdetr.detr
 
             model, model_path = self._model, self.model_path
-            model_names = (
-                "RFDETRBase",
-                "RFDETRNano",
-                "RFDETRSmall",
-                "RFDETRMedium",
-                "RFDETRLarge",
-                "RFDETRSegNano",
-                "RFDETRSegSmall",
-                "RFDETRSegMedium",
-                "RFDETRSegLarge",
-                "RFDETRSegXLarge",
-                "RFDETRSeg2XLarge",
-            )
-            model_types = (
-                RFDETRBase,
-                RFDETRNano,
-                RFDETRSmall,
-                RFDETRMedium,
-                RFDETRLarge,
-                RFDETRSegNano,
-                RFDETRSegSmall,
-                RFDETRSegMedium,
-                RFDETRSegLarge,
-                RFDETRSegXLarge,
-                RFDETRSeg2XLarge,
-            )
+            model_names = RFDETR_MODEL_NAMES
+            model_types = tuple(getattr(rfdetr.detr, name) for name in RFDETR_MODEL_NAMES)
+
+            # Accept the class name as a string so local models work without importing rfdetr.
+            if isinstance(model, str) and model in model_names:
+                model = getattr(rfdetr.detr, model)
+
             if hasattr(model, "__name__") and model.__name__ in model_names:
                 model_params = dict(
                     device=self._device,
@@ -182,7 +167,10 @@ class RoboflowDetectionModel(DetectionModel):
                 model = model
             else:
                 raise ValueError(
-                    f"Model must be a Roboflow model string or one of {model_names} models, got {self.model}."
+                    f"Could not resolve a local RF-DETR model from {self._model!r}. Pass `model` as one of "
+                    f"{model_names} (the class, an instance, or its name as a string) together with "
+                    "`model_path` for local weights. Note that any other string is treated as a Roboflow "
+                    "Universe model id and requires an API key."
                 )
 
         self.set_model(model)

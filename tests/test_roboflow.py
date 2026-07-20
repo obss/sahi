@@ -162,3 +162,42 @@ def test_rfdetr_seg() -> None:
 
         sliced_predictions = sliced_results.object_prediction_list
         assert len(sliced_predictions) > len(predictions)
+
+
+def test_rfdetr_seg_by_class_name() -> None:
+    """An RF-DETR class name string selects a local model instead of Roboflow Universe."""
+    from rfdetr.assets.coco_classes import COCO_CLASSES
+
+    model = AutoDetectionModel.from_pretrained(
+        model_type="roboflow",
+        model="RFDETRSegMedium",
+        confidence_threshold=0.5,
+        category_mapping=COCO_CLASSES,
+        image_size=432,
+        device="cpu",
+    )
+
+    assert model.has_mask
+
+    result = get_prediction(read_image("tests/data/small-vehicles1.jpeg"), model)
+    assert len(result.object_prediction_list) > 0
+
+
+def test_rfdetr_class_name_does_not_use_universe() -> None:
+    """Class-name strings must not be routed to the API, plain strings must be."""
+    from sahi.models.roboflow import RoboflowDetectionModel
+
+    local = RoboflowDetectionModel(model="RFDETRSegMedium", load_at_init=False)
+    assert local._use_universe is False
+
+    universe = RoboflowDetectionModel(model="rfdetr-base", load_at_init=False)
+    assert universe._use_universe is True
+
+
+def test_rfdetr_unresolvable_model_raises() -> None:
+    """An unusable local model reports how to pass a local RF-DETR model."""
+    from sahi.models.roboflow import RoboflowDetectionModel
+
+    detection_model = RoboflowDetectionModel(model=None, load_at_init=False)
+    with pytest.raises(ValueError, match="Could not resolve a local RF-DETR model"):
+        detection_model.load_model()
