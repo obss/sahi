@@ -1,14 +1,24 @@
-"""Pure numpy postprocessing backend — no shapely dependency.
+"""Numpy postprocessing backend.
 
-Replaces shapely STRtree + intersection with vectorized numpy broadcasting
-for axis-aligned bounding box IoU/IoS computation.
+Uses vectorized numpy broadcasting over a dense NxN matrix for axis-aligned
+bounding box IoU/IoS computation. Large inputs are routed to
+``_sparse_backend`` instead, which avoids the quadratic matrix entirely.
 """
 
 from __future__ import annotations
 
 import numpy as np
 
-# Maximum N for full NxN matrix computation. Above this, compute row-batches.
+from sahi.postprocess._sparse_backend import (
+    build_sparse_matches,
+    greedy_nmm_sparse,
+    nmm_sparse,
+    nms_sparse,
+    should_use_sparse,
+)
+
+# Maximum N computed in one broadcast. Above this the rows are batched, which
+# bounds the temporaries but not the NxN result itself.
 _MAX_FULL_MATRIX = 8000
 
 
@@ -32,7 +42,7 @@ def compute_metric_matrix(boxes: np.ndarray, areas: np.ndarray, match_metric: st
     if n <= _MAX_FULL_MATRIX:
         return _compute_metric_matrix_full(boxes, areas, match_metric)
 
-    # Batched computation for large N to limit memory
+    # Row batches keep the intermediates small; the result is still NxN.
     matrix = np.zeros((n, n), dtype=np.float32)
     batch = _MAX_FULL_MATRIX
     for i in range(0, n, batch):
@@ -281,6 +291,18 @@ def nmm_from_matrix(
 # ---------------------------------------------------------------------------
 
 
+def _prepare_sparse(
+    predictions: np.ndarray, match_metric: str, match_threshold: float
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Build the CSR match adjacency and the score order, skipping the N x N matrix."""
+    boxes = predictions[:, :4]
+    scores = predictions[:, 4]
+    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    indptr, indices = build_sparse_matches(boxes, areas, match_metric, match_threshold)
+    sorted_idxs = _score_tiebreak_order(boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3], scores)
+    return indptr, indices, sorted_idxs
+
+
 def nms_numpy(
     predictions: np.ndarray,
     match_metric: str = "IOU",
@@ -289,6 +311,9 @@ def nms_numpy(
     """Non-maximum suppression using vectorized numpy metric matrix."""
     if len(predictions) == 0:
         return []
+    if should_use_sparse(len(predictions), match_threshold):
+        indptr, indices, sorted_idxs = _prepare_sparse(predictions, match_metric, match_threshold)
+        return nms_sparse(indptr, indices, sorted_idxs)
     matrix, sorted_idxs = _prepare_matrix(predictions, match_metric)
     return nms_from_matrix(matrix, sorted_idxs, match_threshold)
 
@@ -299,6 +324,9 @@ def greedy_nmm_numpy(
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
     """Greedy non-maximum merging using vectorized numpy metric matrix."""
+    if should_use_sparse(len(predictions), match_threshold):
+        indptr, indices, sorted_idxs = _prepare_sparse(predictions, match_metric, match_threshold)
+        return greedy_nmm_sparse(indptr, indices, sorted_idxs)
     matrix, sorted_idxs = _prepare_matrix(predictions, match_metric)
     return greedy_nmm_from_matrix(matrix, sorted_idxs, match_threshold)
 
@@ -309,5 +337,8 @@ def nmm_numpy(
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
     """Non-maximum merging using vectorized numpy metric matrix."""
+    if should_use_sparse(len(predictions), match_threshold):
+        indptr, indices, sorted_idxs = _prepare_sparse(predictions, match_metric, match_threshold)
+        return nmm_sparse(indptr, indices, sorted_idxs, predictions[:, 4], predictions[:, :4])
     matrix, sorted_idxs = _prepare_matrix(predictions, match_metric)
     return nmm_from_matrix(matrix, sorted_idxs, predictions[:, 4], predictions[:, :4], match_threshold)
