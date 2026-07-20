@@ -59,6 +59,61 @@ def print_environment_info() -> None:
     get_package_info("opencv-python")
 
 
+OPENCV_DISTRIBUTIONS = (
+    "opencv-python",
+    "opencv-python-headless",
+    "opencv-contrib-python",
+    "opencv-contrib-python-headless",
+)
+
+
+def get_opencv_distribution_versions() -> dict[str, str]:
+    """Collect the installed versions of every OpenCV distribution.
+
+    Returns:
+        Mapping of distribution name to version, for those that are installed.
+    """
+    import importlib.metadata as _importlib_metadata
+
+    versions = {}
+    for distribution in OPENCV_DISTRIBUTIONS:
+        try:
+            versions[distribution] = _importlib_metadata.version(distribution)
+        except _importlib_metadata.PackageNotFoundError:
+            continue
+    return versions
+
+
+def get_opencv_conflict_message() -> str | None:
+    """Describe an OpenCV installation that mixes distribution versions.
+
+    All OpenCV distributions install into the same ``cv2`` directory, so
+    installing more than one of them at different versions leaves a mixture of
+    Python and native files behind, and ``import cv2`` fails with a confusing
+    error such as ``partially initialized module 'cv2' has no attribute
+    'gapi_wip_gst_GStreamerPipeline'``.
+
+    Returns:
+        A message explaining how to fix the installation, or None when the
+            installed OpenCV distributions agree on a single version.
+    """
+    versions = get_opencv_distribution_versions()
+    if len(set(versions.values())) < 2:
+        return None
+
+    from packaging import version as version_parser
+
+    installed = ", ".join(f"{name}=={version}" for name, version in versions.items())
+    newest = max(versions.values(), key=version_parser.parse)
+    suggestion = " ".join(f"{name}=={newest}" for name in versions)
+    return (
+        f"Conflicting OpenCV installations detected: {installed}. They all install into the same 'cv2' "
+        "directory, so mixing versions leaves a broken 'cv2' package behind. Keep a single OpenCV "
+        f"distribution, or reinstall all of them at the same version, e.g. "
+        f"`pip install --force-reinstall {suggestion}`."
+    )
+
+
 def is_available(module_name: str) -> bool:
     """Check whether a Python module is importable.
 
