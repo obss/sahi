@@ -190,7 +190,7 @@ detection_model = AutoDetectionModel.from_pretrained(
 除[通用参数](#common-parameters)外，零样本模型（GroundingDINO）还接受以下参数：
 
 | 参数 | 类型 | 说明 |
-|------|------|------|
+| ------ | ------ | ------ |
 | `text_labels` | `list[str]` | 要检测的固定类别，例如 `["car", "truck"]`。每个类别都会获得稳定的类别 ID；列表外的短语会被过滤 |
 | `text_prompt` | str | 未设置 `text_labels` 时使用的自由文本提示词，例如 `"a car. a truck."`；返回的短语会动态成为类别 |
 | `text_threshold` | float | 文本 token 与边界框匹配时的最低分数，默认值为 0.25 |
@@ -208,11 +208,11 @@ GroundingDINO 零样本检测 notebook：
 使用 HuggingFace Hub 中的分割模型。SAHI 会将每个分割结果作为带有多边形掩码的
 `ObjectPrediction` 返回，因此切片推理和后处理方式与目标检测相同。
 
-| 架构 | `instance` | `semantic` | `panoptic` |
-|------|:----------:|:----------:|:----------:|
-| MaskFormer   | ✅ | ✅ | ✅ |
-| Mask2Former  | ✅ | ✅ | ✅ |
-| OneFormer    | ✅ | ✅ | ✅ |
+| 架构        | `instance` | `semantic` | `panoptic` |
+| ----------- | :--------: | :--------: | :--------: |
+| MaskFormer  |     ✅     |     ✅     |     ✅     |
+| Mask2Former |     ✅     |     ✅     |     ✅     |
+| OneFormer   |     ✅     |     ✅     |     ✅     |
 
 可用的任务头取决于 checkpoint。例如，
 `facebook/mask2former-swin-tiny-coco-instance` 仅支持实例分割。OneFormer
@@ -251,7 +251,7 @@ result = get_sliced_prediction(
 除[通用参数](#common-parameters)外，该模型还接受以下参数：
 
 | 参数 | 类型 | 说明 |
-|------|------|------|
+| ------ | ------ | ------ |
 | `segmentation_type` | `SegmentationType` | `INSTANCE_SEGMENTATION`（默认）、`SEMANTIC_SEGMENTATION` 或 `PANOPTIC_SEGMENTATION` |
 | `min_segment_area` | int | 丢弃像素数小于该值的分割结果，默认值为 100 |
 | `overlap_mask_area_threshold` | float | 合并或丢弃掩码中不连续区域的阈值，默认值为 0.8 |
@@ -408,7 +408,7 @@ result = get_sliced_prediction(
 所有模型都接受以下 `AutoDetectionModel.from_pretrained()` 参数：
 
 | 参数 | 类型 | 说明 |
-|------|------|------|
+| ------ | ------ | ------ |
 | `model_type` | str | 框架名称，请参见上文各节 |
 | `model_path` | str | 权重文件路径或模型名称 |
 | `config_path` | str | 配置文件路径，用于 MMDetection 和 Detectron2 |

@@ -45,7 +45,7 @@ SAHI 通过三个步骤解决这一问题：
 关键参数：
 
 | 参数 | 控制内容 |
-|------|----------|
+| ------ | ---------- |
 | `slice_height` / `slice_width` | 每个图块的像素尺寸 |
 | `overlap_height_ratio` / `overlap_width_ratio` | 相邻图块之间的重叠比例（0.0 -- 1.0） |
 | `auto_slice_resolution` | 由 SAHI 根据图像分辨率选择图块尺寸 |

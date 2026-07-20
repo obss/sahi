@@ -15,7 +15,7 @@ tags:
 ## 推理 Notebooks
 
 | Notebook | 框架 | 模型 | 链接 |
-|----------|------|------|------|
+| ---------- | ------ | ------ | ------ |
 | **Ultralytics** | ultralytics | YOLOv8、YOLO11、YOLO26 | [![在 Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_ultralytics.ipynb) [![GitHub](https://img.shields.io/badge/GitHub-source-black?logo=github)](https://github.com/obss/sahi/blob/main/demo/inference_for_ultralytics.ipynb) |
 | **YOLOE** | ultralytics | YOLOE 变体 | [![在 Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_ultralytics_yoloe.ipynb) [![GitHub](https://img.shields.io/badge/GitHub-source-black?logo=github)](https://github.com/obss/sahi/blob/main/demo/inference_for_ultralytics_yoloe.ipynb) |
 | **YOLOv5** | yolov5 | YOLOv5 变体 | [![在 Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov5.ipynb) [![GitHub](https://img.shields.io/badge/GitHub-source-black?logo=github)](https://github.com/obss/sahi/blob/main/demo/inference_for_yolov5.ipynb) |
@@ -30,7 +30,7 @@ tags:
 ## 工具 Notebooks
 
 | Notebook | 说明 | 链接 |
-|----------|------|------|
+| ---------- | ------ | ------ |
 | **切片** | 图像和 COCO 数据集切片操作 | [![在 Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/slicing.ipynb) [![GitHub](https://img.shields.io/badge/GitHub-source-black?logo=github)](https://github.com/obss/sahi/blob/main/demo/slicing.ipynb) |
 
 ## 在本地运行

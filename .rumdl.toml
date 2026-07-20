@@ -8,6 +8,9 @@ flavor = "mkdocs"
 # Lint the docs tree only
 include = ["docs/**/*.md"]
 
+# Keep table columns padded and aligned (off by default)
+enable = ["MD060"]
+
 # Rules that clash with the docs style
 disable = [
     "MD013", # line length: tables, badges and CJK text run long

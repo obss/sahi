@@ -117,7 +117,7 @@ sahi predict \
 切片后，SAHI 使用 NMS 或 NMM 合并重叠的预测结果。系统会自动选择最佳可用后端：
 
 | 后端 | 选择条件 | 安装方式 |
-|------|---------|---------|
+| ------ | --------- | --------- |
 | **torchvision** | CUDA GPU + torchvision 可用 | `pip install torch torchvision` |
 | **numba** | 已安装 numba，无 GPU | `pip install numba` |
 | **numpy** | 始终可用（兜底方案） | -- |
