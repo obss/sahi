@@ -196,8 +196,8 @@ In addition to the [common parameters](#common-parameters), zero-shot
 (GroundingDINO) models accept:
 
 | Parameter | Type | Description |
-|-----------|------|-------------|
-| `text_labels` | list[str] | Fixed categories to detect, e.g. `["car", "truck"]`. Each gets a stable category id; phrases outside this list are dropped |
+| ----------- | ------ | ------------- |
+| `text_labels` | `list[str]` | Fixed categories to detect, e.g. `["car", "truck"]`. Each gets a stable category id; phrases outside this list are dropped |
 | `text_prompt` | str | Free-form prompt (e.g. `"a car. a truck."`) used when `text_labels` is not set; returned phrases become categories dynamically |
 | `text_threshold` | float | Minimum score for matching a box to a text token (default: 0.25) |
 
@@ -216,10 +216,10 @@ an `ObjectPrediction` with a polygon mask, so sliced inference and
 postprocessing work the same as for detection.
 
 | Architecture | `instance` | `semantic` | `panoptic` |
-|--------------|:----------:|:----------:|:----------:|
-| MaskFormer   | ✅ | ✅ | ✅ |
-| Mask2Former  | ✅ | ✅ | ✅ |
-| OneFormer    | ✅ | ✅ | ✅ |
+| ------------ | :--------: | :--------: | :--------: |
+| MaskFormer   |     ✅     |     ✅     |     ✅     |
+| Mask2Former  |     ✅     |     ✅     |     ✅     |
+| OneFormer    |     ✅     |     ✅     |     ✅     |
 
 The available heads depend on the checkpoint (e.g.
 `facebook/mask2former-swin-tiny-coco-instance` is instance-only). OneFormer
@@ -258,11 +258,11 @@ segmentation merges every instance of a class into a single mask, so one
 In addition to the [common parameters](#common-parameters), this model accepts:
 
 | Parameter | Type | Description |
-|-----------|------|-------------|
+| ----------- | ------ | ------------- |
 | `segmentation_type` | `SegmentationType` | `INSTANCE_SEGMENTATION` (default), `SEMANTIC_SEGMENTATION`, or `PANOPTIC_SEGMENTATION` |
 | `min_segment_area` | int | Drop segments smaller than this many pixels (default: 100) |
 | `overlap_mask_area_threshold` | float | Merge/discard disconnected parts within a mask (default: 0.8) |
-| `label_ids_to_fuse` | list[int] | Panoptic only -- fuse all instances of these labels into one segment |
+| `label_ids_to_fuse` | `list[int]` | Panoptic only -- fuse all instances of these labels into one segment |
 | `token` | str | HuggingFace access token for gated/private models (falls back to `$HF_TOKEN`) |
 
 ---
@@ -415,7 +415,7 @@ result = get_sliced_prediction(
 All models accept these parameters in `AutoDetectionModel.from_pretrained()`:
 
 | Parameter | Type | Description |
-|-----------|------|-------------|
+| ----------- | ------ | ------------- |
 | `model_type` | str | Framework name (see sections above) |
 | `model_path` | str | Path to weights file or model name |
 | `config_path` | str | Config file path (MMDetection, Detectron2) |
