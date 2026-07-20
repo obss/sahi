@@ -150,34 +150,38 @@ def greedy_nmm_sparse(
     return keep_to_merge_list
 
 
-def _dominates(current: int, neighbours: np.ndarray, scores: np.ndarray, boxes: np.ndarray) -> np.ndarray:
-    """Return which neighbours ``current`` may claim as merge candidates.
+def _dominates_all(indptr: np.ndarray, indices: np.ndarray, scores: np.ndarray, boxes: np.ndarray) -> np.ndarray:
+    """Return, for every CSR entry, whether its row may claim its column.
 
     A box claims another when the other scores lower, or scores equal and does
     not sort before it lexicographically by coordinates. Same rule as the dense
-    ``dominates`` matrix, evaluated only for the given neighbours.
+    ``dominates`` matrix, evaluated for all stored pairs at once so the merge
+    loop below does no per-row numpy work.
 
     Args:
-        current: Index of the claiming box.
-        neighbours: Indices of the candidate boxes.
+        indptr: CSR row pointers of length N + 1.
+        indices: CSR column indices.
         scores: Prediction scores of shape (N,).
         boxes: Array of shape (N, 4) with columns [x1, y1, x2, y2].
 
     Returns:
-        Boolean array aligned with ``neighbours``, True where it may be claimed.
+        Boolean array aligned with ``indices``, True where the row may claim it.
     """
-    lower_score = scores[current] > scores[neighbours]
-    score_equal = scores[current] == scores[neighbours]
+    n = len(indptr) - 1
+    rows = np.repeat(np.arange(n, dtype=np.intp), np.diff(indptr))
 
-    current_lt = np.zeros(len(neighbours), dtype=bool)
-    still_equal = np.ones(len(neighbours), dtype=bool)
+    lower_score = scores[rows] > scores[indices]
+    score_equal = scores[rows] == scores[indices]
+
+    row_lt = np.zeros(len(indices), dtype=bool)
+    still_equal = np.ones(len(indices), dtype=bool)
     for col in range(4):
-        col_lt = boxes[current, col] < boxes[neighbours, col]
-        col_eq = boxes[current, col] == boxes[neighbours, col]
-        current_lt |= still_equal & col_lt
+        col_lt = boxes[rows, col] < boxes[indices, col]
+        col_eq = boxes[rows, col] == boxes[indices, col]
+        row_lt |= still_equal & col_lt
         still_equal &= col_eq
 
-    return lower_score | (score_equal & ~current_lt)
+    return lower_score | (score_equal & ~row_lt)
 
 
 def nmm_sparse(
@@ -205,13 +209,15 @@ def nmm_sparse(
     if n == 0:
         return {}
 
+    dominates = _dominates_all(indptr, indices, scores, boxes)
+
     keep_to_merge_list: dict[int, list[int]] = {}
     merge_to_keep = np.full(n, -1, dtype=np.intp)
 
     for idx_pos in range(n):
         current_idx = int(sorted_idxs[idx_pos])
-        neighbours = indices[indptr[current_idx] : indptr[current_idx + 1]]
-        matched = neighbours[_dominates(current_idx, neighbours, scores, boxes)]
+        start, end = indptr[current_idx], indptr[current_idx + 1]
+        matched = indices[start:end][dominates[start:end]]
 
         if merge_to_keep[current_idx] < 0:
             keep_to_merge_list[current_idx] = []
