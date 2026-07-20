@@ -9,12 +9,22 @@ import time
 from collections.abc import Generator
 from io import BytesIO
 
-import cv2
 import numpy as np
 from PIL import Image, ImageOps
 
 from sahi.logger import logger
 from sahi.utils.file import Path
+from sahi.utils.import_utils import get_opencv_conflict_message
+
+try:
+    import cv2
+except Exception:
+    # A 'cv2' directory left broken by mixed OpenCV installations fails in
+    # confusing ways, so explain the cause before the original error surfaces.
+    conflict_message = get_opencv_conflict_message()
+    if conflict_message is not None:
+        logger.error(conflict_message)
+    raise
 
 IMAGE_EXTENSIONS_LOSSY = [".jpg", ".jpeg"]
 IMAGE_EXTENSIONS_LOSSLESS = [".png", ".tif", ".tiff", ".bmp"]
