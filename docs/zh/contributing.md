@@ -117,7 +117,7 @@ uv run pytest --cov=sahi
 3. 在 `sahi/auto_model.py` 中将您的框架添加到 `MODEL_TYPE_TO_MODEL_CLASS_NAME`
 4. 在 `tests/test_yourframework.py` 下添加测试
 5. 在 `docs/notebooks/inference_for_your_framework.ipynb` 下添加示例 notebook
-6. 更新 [`README.md`](../../README.md) 和 `docs/` 下的相关文档以包含您的新模型
+6. 更新 [`README.md`](https://github.com/obss/sahi/blob/main/README.md) 和 `docs/` 下的相关文档以包含您的新模型
 
 请参考现有实现，如 `sahi/models/ultralytics.py`。
 
