@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from sahi.utils.import_utils import is_available
 
-VALID_BACKENDS = ("auto", "numpy", "numba", "torchvision")
+VALID_BACKENDS = ("auto", "numpy", "numba", "torchvision", "triton")
 
 _backend: str = "auto"
 _resolved_cache: str | None = None
@@ -24,7 +24,7 @@ def set_postprocess_backend(name: str) -> None:
     **not** thread-safe.
 
     Args:
-        name: One of "auto", "numpy", "numba", "torchvision".
+        name: One of "auto", "numpy", "numba", "torchvision", "triton".
     """
     global _backend, _resolved_cache
     if name not in VALID_BACKENDS:
@@ -81,7 +81,6 @@ def resolve_backend() -> str:
                 return _resolved_cache
         except ImportError:
             pass
-
     if is_available("numba"):
         _resolved_cache = "numba"
         return _resolved_cache

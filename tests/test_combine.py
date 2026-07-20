@@ -349,7 +349,7 @@ class TestBackendRegistry:
 
         original = get_postprocess_backend()
         try:
-            for name in ("numpy", "numba", "torchvision", "auto"):
+            for name in ("numpy", "numba", "torchvision", "triton", "auto"):
                 set_postprocess_backend(name)
                 assert get_postprocess_backend() == name
         finally:
@@ -466,6 +466,77 @@ class TestNumpyBackend:
         areas = np.array([100, 100], dtype=np.float32)
         matrix = compute_metric_matrix(boxes, areas, "IOU")
         assert matrix[0, 1] == pytest.approx(0.0, abs=1e-5)
+
+    def test_greedy_nmm_from_mask_parity(self) -> None:
+        """Test boolean match mask greedy NMM matches matrix greedy NMM."""
+        from sahi.postprocess._numpy_backend import (
+            _prepare_matrix,
+            greedy_nmm_from_mask,
+            greedy_nmm_from_matrix,
+        )
+
+        preds = np.array(
+            [
+                make_pred(0, 0, 100, 100, 0.9, 1),
+                make_pred(10, 10, 20, 20, 0.8, 1),
+                make_pred(200, 200, 220, 220, 0.7, 1),
+                make_pred(12, 12, 18, 18, 0.6, 1),
+            ],
+            dtype=np.float32,
+        )
+
+        matrix, sorted_idxs = _prepare_matrix(preds, "IOS")
+        match_mask = matrix >= 0.5
+
+        assert greedy_nmm_from_mask(match_mask, sorted_idxs) == greedy_nmm_from_matrix(matrix, sorted_idxs, 0.5)
+
+    def test_greedy_nmm_from_packed_mask_parity(self) -> None:
+        """Test packed match bitset greedy NMM matches matrix greedy NMM."""
+        from sahi.postprocess._numpy_backend import (
+            _prepare_matrix,
+            greedy_nmm_from_matrix,
+            greedy_nmm_from_packed_mask,
+        )
+
+        preds = np.array(
+            [
+                make_pred(0, 0, 100, 100, 0.9, 1),
+                make_pred(10, 10, 20, 20, 0.8, 1),
+                make_pred(200, 200, 220, 220, 0.7, 1),
+                make_pred(12, 12, 18, 18, 0.6, 1),
+            ],
+            dtype=np.float32,
+        )
+
+        matrix, sorted_idxs = _prepare_matrix(preds, "IOS")
+        match_mask = matrix >= 0.5
+        packed_mask = np.zeros((len(preds), 1), dtype=np.uint32)
+        for row in range(len(preds)):
+            for col in range(len(preds)):
+                if match_mask[row, col]:
+                    packed_mask[row, 0] |= np.uint32(1 << col)
+
+        assert greedy_nmm_from_packed_mask(packed_mask, sorted_idxs) == greedy_nmm_from_matrix(matrix, sorted_idxs, 0.5)
+
+    def test_greedy_nmm_from_packed_mask_word_boundary_parity(self) -> None:
+        """Test packed match bitset across a 32-bit word boundary."""
+        from sahi.postprocess._numpy_backend import (
+            _prepare_matrix,
+            greedy_nmm_from_matrix,
+            greedy_nmm_from_packed_mask,
+        )
+
+        preds = np.array(
+            [make_pred(0, 0, 10, 10, score / 100, 1) for score in range(40, 0, -1)],
+            dtype=np.float32,
+        )
+        matrix, sorted_idxs = _prepare_matrix(preds, "IOS")
+        packed_mask = np.full((len(preds), 2), np.uint32(0), dtype=np.uint32)
+        for row in range(len(preds)):
+            for col in range(len(preds)):
+                packed_mask[row, col // 32] |= np.uint32(1 << (col % 32))
+
+        assert greedy_nmm_from_packed_mask(packed_mask, sorted_idxs) == greedy_nmm_from_matrix(matrix, sorted_idxs, 0.5)
 
 
 # ===========================================================================
@@ -605,3 +676,84 @@ class TestTorchParity:
             np_result = func(np.array(preds_data, dtype=np.float32), **kwargs)
             torch_result = func(self._to_tensor(preds_data).numpy(), **kwargs)
             assert np_result == torch_result, f"{func.__name__}: mismatch"
+
+
+class TestTorchvisionMaskBackend:
+    """Test torchvision boolean mask greedy NMM path."""
+
+    @pytest.fixture(autouse=True)
+    def _skip_no_torchvision(self) -> None:
+        """Skip tests if torch or torchvision is not importable."""
+        try:
+            import torch  # noqa: F401
+            import torchvision  # noqa: F401
+        except Exception as exc:
+            pytest.skip(f"torchvision backend unavailable: {type(exc).__name__}: {exc}")
+
+    def test_greedy_nmm_ios_mask_parity(self) -> None:
+        """Test torchvision IOS mask path matches numpy greedy NMM."""
+        from sahi.postprocess._numpy_backend import greedy_nmm_numpy
+        from sahi.postprocess._torchvision_backend import greedy_nmm_torchvision
+
+        preds = np.array(
+            [
+                make_pred(0, 0, 100, 100, 0.9, 1),
+                make_pred(10, 10, 20, 20, 0.8, 1),
+                make_pred(200, 200, 220, 220, 0.7, 1),
+                make_pred(12, 12, 18, 18, 0.6, 1),
+            ],
+            dtype=np.float32,
+        )
+
+        assert greedy_nmm_torchvision(preds, "IOS", 0.5) == greedy_nmm_numpy(preds, "IOS", 0.5)
+
+
+class TestTritonBackend:
+    """Test Triton packed bitset GreedyNMM path."""
+
+    @pytest.fixture(autouse=True)
+    def _skip_no_triton_cuda(self) -> None:
+        """Skip tests if torch, triton, or CUDA is unavailable."""
+        try:
+            import torch
+            import triton  # noqa: F401
+        except Exception as exc:
+            pytest.skip(f"triton backend unavailable: {type(exc).__name__}: {exc}")
+        if not torch.cuda.is_available():
+            pytest.skip("triton backend requires CUDA")
+
+    def test_greedy_nmm_ios_parity(self) -> None:
+        """Test Triton IOS packed bitset path matches numpy greedy NMM."""
+        from sahi.postprocess._numpy_backend import greedy_nmm_numpy
+        from sahi.postprocess._triton_backend import greedy_nmm_triton
+
+        preds = np.array(
+            [
+                make_pred(0, 0, 100, 100, 0.9, 1),
+                make_pred(10, 10, 20, 20, 0.8, 1),
+                make_pred(200, 200, 220, 220, 0.7, 1),
+                make_pred(12, 12, 18, 18, 0.6, 1),
+            ],
+            dtype=np.float32,
+        )
+
+        assert greedy_nmm_triton(preds, "IOS", 0.5) == greedy_nmm_numpy(preds, "IOS", 0.5)
+
+    def test_forced_triton_backend_dispatch(self) -> None:
+        """Test dispatch with forced Triton backend."""
+        from sahi.postprocess._numpy_backend import greedy_nmm_numpy
+        from sahi.postprocess.backends import set_postprocess_backend
+
+        original = get_postprocess_backend()
+        try:
+            set_postprocess_backend("triton")
+            preds = np.array(
+                [
+                    make_pred(0, 0, 100, 100, 0.9, 1),
+                    make_pred(10, 10, 20, 20, 0.8, 1),
+                ],
+                dtype=np.float32,
+            )
+            assert greedy_nmm(preds, "IOS", 0.5) == greedy_nmm_numpy(preds, "IOS", 0.5)
+        finally:
+            set_postprocess_backend(original)
