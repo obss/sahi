@@ -156,6 +156,15 @@ def _dominates(current: int, neighbours: np.ndarray, scores: np.ndarray, boxes: 
     A box claims another when the other scores lower, or scores equal and does
     not sort before it lexicographically by coordinates. Same rule as the dense
     ``dominates`` matrix, evaluated only for the given neighbours.
+
+    Args:
+        current: Index of the claiming box.
+        neighbours: Indices of the candidate boxes.
+        scores: Prediction scores of shape (N,).
+        boxes: Array of shape (N, 4) with columns [x1, y1, x2, y2].
+
+    Returns:
+        Boolean array aligned with ``neighbours``, True where it may be claimed.
     """
     lower_score = scores[current] > scores[neighbours]
     score_equal = scores[current] == scores[neighbours]

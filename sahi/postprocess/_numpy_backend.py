@@ -17,7 +17,8 @@ from sahi.postprocess._sparse_backend import (
     should_use_sparse,
 )
 
-# Maximum N for full NxN matrix computation. Above this, compute row-batches.
+# Maximum N computed in one broadcast. Above this the rows are batched, which
+# bounds the temporaries but not the NxN result itself.
 _MAX_FULL_MATRIX = 8000
 
 
@@ -41,7 +42,7 @@ def compute_metric_matrix(boxes: np.ndarray, areas: np.ndarray, match_metric: st
     if n <= _MAX_FULL_MATRIX:
         return _compute_metric_matrix_full(boxes, areas, match_metric)
 
-    # Batched computation for large N to limit memory
+    # Row batches keep the intermediates small; the result is still NxN.
     matrix = np.zeros((n, n), dtype=np.float32)
     batch = _MAX_FULL_MATRIX
     for i in range(0, n, batch):
