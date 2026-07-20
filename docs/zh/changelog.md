@@ -8,6 +8,132 @@ tags:
 
 # 📝 更新日志
 
+## 🚀 SAHI v0.12.0 发布说明
+
+这是 SAHI 迄今为止规模最大的版本之一。自 `0.11.34` 以来共包含 **95 个提交**
+（同时纳入了 `0.11.35`/`0.11.36` 热修复版本），带来了重新设计的后处理引擎、
+真正的批量推理、无 PyTorch 核心、新增的开放词汇和分割模型，以及全面重构的文档。
+
+### 🚀 关键更新
+
+#### ⚡ 批量推理、无 PyTorch 核心与加速后处理后端
+
+- **批量推理** -- 端到端批量处理切片，大幅提升 GPU 吞吐量
+  ([#1336](https://github.com/obss/sahi/pull/1336))。
+- **无 PyTorch 核心** -- 核心切片和后处理流程不再硬依赖 PyTorch；只需安装所用后端需要的依赖
+  ([#1336](https://github.com/obss/sahi/pull/1336))。
+- **可插拔后处理后端** -- NMS/NMM 可以在以下后端运行：
+  **NumPy**（无重型依赖）、**Numba**（JIT 加速 CPU）或
+  **TorchVision**（GPU）；系统会根据当前环境自动选择
+  ([#1336](https://github.com/obss/sahi/pull/1336))。
+
+#### 🧠 新增模型支持
+
+- **GroundingDINO (HuggingFace)** -- 通过 SAHI 的切片流程进行零样本、文本提示驱动的开放词汇检测，
+  并提供专用的演示 notebook
+  ([#1361](https://github.com/obss/sahi/pull/1361))。
+- **HuggingFace 通用分割**
+  ([#1360](https://github.com/obss/sahi/pull/1360))。
+- **RF-DETR-Seg** 分割模型
+  ([#1315](https://github.com/obss/sahi/pull/1315))。
+- **YOLOE** 检测模型 ([#1268](https://github.com/obss/sahi/pull/1268))。
+- **YOLO-World** 开放词汇检测
+  ([#1267](https://github.com/obss/sahi/pull/1267))。
+- 在 Ultralytics 后端、CLI、文档和 notebooks 中支持 **YOLO26**
+  ([#1321](https://github.com/obss/sahi/pull/1321),
+  [#1322](https://github.com/obss/sahi/pull/1322),
+  [#1356](https://github.com/obss/sahi/pull/1356))。
+
+#### 🎚️ 更精细的切片与后处理控制
+
+- 在 `get_sliced_prediction` 中新增 **`force_postprocess_type`**
+  ([#1346](https://github.com/obss/sahi/pull/1346))。
+- 所有预测 API 均支持在每次调用时覆盖 **`confidence_threshold`**
+  ([#1352](https://github.com/obss/sahi/pull/1352))。
+- Python API 和 CLI 中的 `get_sliced_prediction` 均支持**进度条和进度回调**
+  ([#1255](https://github.com/obss/sahi/pull/1255))。
+
+#### 📚 文档
+
+- 文档迁移至 **Zensical**，并全面清理代码类型标注和格式
+  ([#1344](https://github.com/obss/sahi/pull/1344))。
+- 新增**中文 (zh) 翻译**并保持同步
+  ([#1253](https://github.com/obss/sahi/pull/1253),
+  [#1332](https://github.com/obss/sahi/pull/1332),
+  [#1347](https://github.com/obss/sahi/pull/1347))。
+- 新增 API 参考、后处理后端指南、安全政策和行为准则
+  ([#1257](https://github.com/obss/sahi/pull/1257),
+  [#1272](https://github.com/obss/sahi/pull/1272),
+  [#1349](https://github.com/obss/sahi/pull/1349))。
+
+### ✨ 性能与改进
+
+- **显著加速后处理** -- NMS、NMM 和 GREEDYNMM 现使用 shapely `STRtree` 空间索引，
+  大幅加速包含大量切片或检测结果的图像合并
+  ([#1248](https://github.com/obss/sahi/pull/1248))。
+- 加速 `read_image_as_pil`，提高切片吞吐量
+  ([#1353](https://github.com/obss/sahi/pull/1353))。
+- 改进预测和切片过程中的性能与资源管理
+  ([#1263](https://github.com/obss/sahi/pull/1263))。
+- 提升 `nms` 性能，并正确处理空预测结果
+  ([#1288](https://github.com/obss/sahi/pull/1288))。
+- 使用轻量级内置函数 `yolo_bbox_to_voc_bbox` 替代 `pybboxes`
+  ([#1320](https://github.com/obss/sahi/pull/1320))，并移除 `pybboxes` 和
+  固定版本的 `opencv-python` 约束
+  ([#1325](https://github.com/obss/sahi/pull/1325))。
+
+### 🐞 Bug 修复
+
+- 修复空 `shapely_annotation.multipolygon` 导致边界框为空的问题
+  ([#1140](https://github.com/obss/sahi/pull/1140))。
+- 修复 Detectron2 模型的无效分割掩码
+  ([#1262](https://github.com/obss/sahi/pull/1262))。
+- 修正 `BoundingBox` 中的边距计算
+  ([#1286](https://github.com/obss/sahi/pull/1286))。
+- 修复 `read_image_as_pil` 对 CHW 格式图像的处理
+  ([#1287](https://github.com/obss/sahi/pull/1287))。
+- 校验 `get_slice_bboxes` 中的重叠率（必须小于 `1.0`）
+  ([#1285](https://github.com/obss/sahi/pull/1285))。
+- 修正 `RTDetrDetectionModel` 中模型路径无效时的错误消息
+  ([#1266](https://github.com/obss/sahi/pull/1266))。
+- 修复后处理模块中不正确的类型标注
+  ([#1327](https://github.com/obss/sahi/pull/1327))。
+- Ultralytics 模型支持更多格式，并改进任务处理
+  ([#1321](https://github.com/obss/sahi/pull/1321))。
+- 新增 `pywinpty`，提升 Windows 开发兼容性
+  ([#1319](https://github.com/obss/sahi/pull/1319))。
+
+### 🧹 维护与 CI
+
+- 将所有 GitHub Actions 固定到提交 SHA，提升供应链安全性
+  ([#1351](https://github.com/obss/sahi/pull/1351))。
+- 新增多操作系统 CI 矩阵，并使用更清晰的工作流名称
+  ([#1334](https://github.com/obss/sahi/pull/1334))。
+- CI 和文档升级至 Python 3.12/3.13
+  ([#1259](https://github.com/obss/sahi/pull/1259),
+  [#1260](https://github.com/obss/sahi/pull/1260))。
+- 移除已弃用的 YOLOv5 辅助函数、旧版 `requirements.txt`、MMDet 工作流和未使用的 Netlify 配置
+  ([#1326](https://github.com/obss/sahi/pull/1326),
+  [#1342](https://github.com/obss/sahi/pull/1342),
+  [#1341](https://github.com/obss/sahi/pull/1341),
+  [#1335](https://github.com/obss/sahi/pull/1335))。
+- 将依赖更新至 `numpy<3.0`、`torchvision 0.23.0`，并纳入大量 Dependabot 依赖更新
+  （现在也覆盖 pip）。
+
+### 🙌 新贡献者
+
+- @vinnik-dmitry07 在 [#1140](https://github.com/obss/sahi/pull/1140) 中首次贡献
+- @nikvo1 在 [#1248](https://github.com/obss/sahi/pull/1248) 中首次贡献
+- Christopher Field (@volks73) 在 [#1262](https://github.com/obss/sahi/pull/1262) 中首次贡献
+- Haotian Gong (@ZephyrKeXiner) 在 [#1253](https://github.com/obss/sahi/pull/1253) 中首次贡献
+- Yogendra Singh (@yogendrasinghx) 在 [#1326](https://github.com/obss/sahi/pull/1326) 中首次贡献
+- Ivan Buldakov (@ibuldakov) 在 [#1315](https://github.com/obss/sahi/pull/1315) 中首次贡献
+- Vignesh Suresh (@srikrishnavignesh) 在 [#1360](https://github.com/obss/sahi/pull/1360) 中首次贡献
+- Ömer Günaydın (@siromermer) 在 [#1361](https://github.com/obss/sahi/pull/1361) 中首次贡献
+
+**完整更新日志**：
+<https://github.com/obss/sahi/compare/0.11.34...0.12.0>
+
 ## 🚀 SAHI v0.11.31 发布说明
 
 我们很高兴地宣布 SAHI v0.11.31 版本，包含重要的 Bug 修复和改进！
@@ -59,10 +185,10 @@ tags:
 
 - **测试套件迁移至 pytest**
   ([#1187](https://github.com/obss/sahi/pull/1187))
-  - 通过更好的并行执行加速测试
-  - 扩展 Python 版本覆盖（3.8、3.9、3.10、3.11、3.12）
-  - 更新至更新的 PyTorch 版本以实现更好的兼容性测试
-  - 改进测试组织和可维护性
+    - 通过更好的并行执行加速测试
+    - 扩展 Python 版本覆盖（3.8、3.9、3.10、3.11、3.12）
+    - 更新至更新的 PyTorch 版本以实现更好的兼容性测试
+    - 改进测试组织和可维护性
 - **重构 MMDetection 测试**以提高可靠性
   ([#1185](https://github.com/obss/sahi/pull/1185))
 
@@ -70,10 +196,10 @@ tags:
 
 - **新增 Context7 MCP 集成**，用于 AI 辅助开发
   ([#1198](https://github.com/obss/sahi/pull/1198))
-  - SAHI 的文档现已在 [Context7 MCP](https://context7.com/obss/sahi) 中建立索引
-  - 为 AI 编码助手提供最新的、版本特定的代码示例
-  - 包含 [llms.txt](https://context7.com/obss/sahi/llms.txt) 文件，用于 AI 可读文档
-  - 查看 [Context7 MCP 安装指南](https://github.com/upstash/context7#%EF%B8%8F-installation) 将 SAHI 文档集成到您的 AI 工作流程中
+    - SAHI 的文档现已在 [Context7 MCP](https://context7.com/obss/sahi) 中建立索引
+    - 为 AI 编码助手提供最新的、版本特定的代码示例
+    - 包含 [llms.txt](https://context7.com/obss/sahi/llms.txt) 文件，用于 AI 可读文档
+    - 查看 [Context7 MCP 安装指南](https://github.com/upstash/context7#%EF%B8%8F-installation) 将 SAHI 文档集成到您的 AI 工作流程中
 
 ### 🛠️ 改进
 
@@ -233,7 +359,7 @@ tags:
 - 修复拼写错误和脚本 URL - @gboeer 在
   <https://github.com/obss/sahi/pull/1155>
 - 修复 CI 工作流 bug - @Dronakurl 在 <https://github.com/obss/sahi/pull/1156>
-- [文档] 修复拼写错误 - @gboeer 在 <https://github.com/obss/sahi/pull/1157>
+- `[文档]` 修复拼写错误 - @gboeer 在 <https://github.com/obss/sahi/pull/1157>
 - 移除 deepsparse 集成 - @fcakyon 在
   <https://github.com/obss/sahi/pull/1164>
 - 修复：使 PyTorch 不再是硬依赖 - @ducviet00 在
@@ -348,13 +474,16 @@ tags:
 所有文档文件都配有 [demo 目录](../../demo/) 中的交互式 Jupyter notebook：
 
 - `slicing.ipynb` - 切片操作演示
-- `inference_for_ultralytics.ipynb` - YOLOv8/YOLO11/YOLO12 集成
+- `inference_for_ultralytics.ipynb` - YOLOv8/YOLO11/YOLO26 集成
+- `inference_for_ultralytics_yoloe.ipynb` - YOLOE 集成
 - `inference_for_yolov5.ipynb` - YOLOv5 集成
 - `inference_for_mmdetection.ipynb` - MMDetection 集成
+- `inference_for_detectron2.ipynb` - Detectron2 集成
 - `inference_for_huggingface.ipynb` - HuggingFace 模型集成
+- `inference_for_groundingdino.ipynb` - GroundingDINO 零样本检测
 - `inference_for_torchvision.ipynb` - TorchVision 模型集成
 - `inference_for_rtdetr.ipynb` - RT-DETR 集成
-- `inference_for_sparse_yolov5.ipynb` - DeepSparse 优化推理
+- `inference_for_roboflow.ipynb` - Roboflow RF-DETR 集成
 
 ### 🚦 快速上手
 

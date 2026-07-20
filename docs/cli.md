@@ -287,7 +287,7 @@ Calculates COCO evaluation metrics and exports results to the output folder.
 **Detection Limits:**
 
 - `--proposal_nums "[10 100 500]"` - Set max detections per image (default:
-  [100, 300, 1000])
+  `[100, 300, 1000]`)
 
 **IOU Thresholds:**
 

@@ -12,7 +12,7 @@ tags:
 
 SAHI 提供了一套全面的命令行工具用于目标检测任务。本指南涵盖所有可用命令，附有详细的示例和选项说明。
 
-## `predict` 命令用法
+## `predict` 命令用法 { #predict-command-usage }
 
 对图像或视频执行切片推理，以更好地检测小目标。
 
@@ -41,7 +41,7 @@ sahi predict --model_path yolo26s.pt --model_type ultralytics --source video.mp4
 sahi predict --model_path yolo26s.pt --model_type ultralytics --source video.mp4 --view_video
 ```
 
-## 键盘控制：
+**键盘控制：**
 
 - **`D`** - 前进 100 帧
 - **`A`** - 后退 100 帧
@@ -67,47 +67,47 @@ sahi predict --slice_width 512 --slice_height 512 \
 
 #### 模型配置
 
-## 检测框架：
+**检测框架：**
 
 - `--model_type mmdet` - 用于 MMDetection 模型
 - `--model_type ultralytics` - 用于 Ultralytics/YOLOv5/YOLO11/YOLO26 模型
 - `--model_type huggingface` - 用于 HuggingFace 模型
 - `--model_type torchvision` - 用于 Torchvision 模型
 
-## 置信度阈值：
+**置信度阈值：**
 
 - `--model_confidence_threshold 0.25` - 设置检测的最低置信度
 
-### 后处理选项
+#### 后处理选项
 
-## 后处理类型：
+**后处理类型：**
 
 - `--postprocess_type GREEDYNMM` - 贪心非最大合并（默认）
 - `--postprocess_type NMS` - 标准非最大抑制
 
-## 匹配指标：
+**匹配指标：**
 
 - `--postprocess_match_metric IOS` - 交集与较小面积之比
 - `--postprocess_match_metric IOU` - 交并比（默认）
 
-## 其他选项：
+**其他选项：**
 
 - `--postprocess_match_threshold 0.5` - 设置匹配阈值
 - `--postprocess_class_agnostic` - 后处理时忽略类别 ID
 
-### 导出选项
+#### 导出选项
 
-## 可视化导出：
+**可视化导出：**
 
 - `--novisual` - 禁用预测可视化导出
 - `--visual_export_format JPG` - 设置导出格式（JPG、PNG 等）
 
-## 数据导出：
+**数据导出：**
 
 - `--export_pickle` - 导出预测 pickle 文件
 - `--export_crop` - 导出裁剪后的检测结果
 
-### 推理模式
+#### 推理模式
 
 默认情况下，SAHI 执行多阶段推理（同时进行全图推理和切片推理）：
 
@@ -162,7 +162,7 @@ sahi predict-fiftyone --image_dir image/file/or/folder \
 
 ### 其他参数
 
-支持 [`sahi predict`](#predict-命令用法) 命令的所有参数。
+支持 [`sahi predict`](#predict) 命令的所有参数。
 
 ---
 
@@ -174,7 +174,7 @@ sahi predict-fiftyone --image_dir image/file/or/folder \
 
 你需要先将预测结果转换为
 [COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用
-[`sahi predict`](#predict-命令用法) 来生成该格式。
+[`sahi predict`](#predict) 来生成该格式。
 
 ```bash
 sahi coco fiftyone --image_dir dir/to/images \
@@ -205,19 +205,19 @@ sahi coco slice --image_dir dir/to/images \
 
 ### 参数
 
-## 切片尺寸：
+**切片尺寸：**
 
 - `--slice_size 512` - 设置切片的高度和宽度（默认：512）
 
-## 重叠率：
+**重叠率：**
 
 - `--overlap_ratio 0.2` - 设置高度/宽度的重叠比例（默认：0.2）
 
-## 过滤：
+**过滤：**
 
 - `--ignore_negative_samples` - 排除没有标注的图像
 
-## 输出：
+**输出：**
 
 - `--out_dir output/folder` - 指定输出目录
 
@@ -255,7 +255,7 @@ sahi coco yolo --image_dir dir/to/images \
 
 你需要先将预测结果转换为
 [COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用
-[`sahi predict`](#predict-命令用法) 来生成该格式。
+[`sahi predict`](#predict) 来生成该格式。
 
 ```bash
 sahi coco evaluate --dataset_json_path dataset.json \
@@ -266,25 +266,25 @@ sahi coco evaluate --dataset_json_path dataset.json \
 
 ### 参数
 
-## 指标类型：
+**指标类型：**
 
 - `--type bbox` - 评估边界框检测（默认）
 - `--type mask` - 评估实例分割掩码
 
-## 评分选项：
+**评分选项：**
 
 - `--classwise` - 除整体指标外，额外计算每个类别的分数
 
-## 检测数量限制：
+**检测数量限制：**
 
-- `--proposal_nums "[10 100 500]"` - 设置每张图像的最大检测数（默认：[100, 300,
-  1000]）
+- `--proposal_nums "[10 100 500]"` - 设置每张图像的最大检测数（默认：`[100, 300,
+  1000]`）
 
-## IOU 阈值：
+**IOU 阈值：**
 
 - `--iou_thrs 0.5` - 指定 IOU 阈值（默认：0.50:0.95 和 0.5）
 
-## 输出：
+**输出：**
 
 - `--out_dir output/folder` - 指定输出目录
 
@@ -298,7 +298,7 @@ sahi coco evaluate --dataset_json_path dataset.json \
 
 你需要先将预测结果转换为
 [COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用
-[`sahi predict`](#predict-命令用法) 来生成该格式。
+[`sahi predict`](#predict) 来生成该格式。
 
 ```bash
 sahi coco analyse --dataset_json_path dataset.json \
@@ -310,16 +310,16 @@ sahi coco analyse --dataset_json_path dataset.json \
 
 ### 参数
 
-## 分析类型：
+**分析类型：**
 
 - `--type bbox` - 分析边界框检测（默认）
 - `--type segm` - 分析实例分割掩码
 
-## 附加图表：
+**附加图表：**
 
 - `--extraplots` - 生成额外的 mAP 柱状图和标注面积统计
 
-## 面积区间：
+**面积区间：**
 
 - `--areas "[1024 9216 10000000000]"` - 定义分析的面积区间（默认：COCO 的小/中/大面积）
 
@@ -378,5 +378,5 @@ python script_name.py
 
 - [预测工具](predict.md) -- 预测参数和可视化的 Python API
 - [COCO 工具](coco.md) -- COCO 数据集操作的 Python API
-- [模型集成](../guides/models.md) -- 各框架的模型集成指南
-- [交互式 Notebooks](../notebooks.md) -- 所有框架的动手实践示例
+- [模型集成](guides/models.md) -- 各框架的模型集成指南
+- [交互式 Notebooks](notebooks.md) -- 所有框架的动手实践示例
