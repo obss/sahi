@@ -9,6 +9,7 @@ from sahi.utils import import_utils
 from sahi.utils.import_utils import (
     check_requirements,
     ensure_package_minimum_version,
+    get_opencv_conflict_message,
     get_package_info,
     is_available,
 )
@@ -83,3 +84,31 @@ def test_ensure_package_minimum_version(
     else:
         with pytest.raises(ImportError, match="somepkg"):
             ensure_package_minimum_version("somepkg", min_version)
+
+
+class TestOpenCVConflictMessage:
+    @staticmethod
+    def _fake_versions(monkeypatch: pytest.MonkeyPatch, versions: dict[str, str]) -> None:
+        monkeypatch.setattr(import_utils, "get_opencv_distribution_versions", lambda: versions)
+
+    def test_no_message_for_single_distribution(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._fake_versions(monkeypatch, {"opencv-python": "5.0.0.93"})
+        assert get_opencv_conflict_message() is None
+
+    def test_no_message_when_versions_agree(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._fake_versions(monkeypatch, {"opencv-python": "5.0.0.93", "opencv-python-headless": "5.0.0.93"})
+        assert get_opencv_conflict_message() is None
+
+    def test_message_suggests_the_newest_version(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._fake_versions(monkeypatch, {"opencv-python": "5.0.0.93", "opencv-python-headless": "4.10.0.84"})
+        message = get_opencv_conflict_message()
+        assert message is not None
+        assert "opencv-python==5.0.0.93" in message
+        assert "opencv-python-headless==5.0.0.93" in message
+
+    def test_newest_version_is_compared_numerically(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """4.9 must not win over 4.10 through string comparison."""
+        self._fake_versions(monkeypatch, {"opencv-python": "4.9.0.80", "opencv-python-headless": "4.10.0.84"})
+        message = get_opencv_conflict_message()
+        assert message is not None
+        assert "opencv-python==4.10.0.84" in message
