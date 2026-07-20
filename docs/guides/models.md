@@ -390,14 +390,36 @@ Use Roboflow's RF-DETR models for detection and segmentation.
 pip install rfdetr
 ```
 
-```python
-detection_model = AutoDetectionModel.from_pretrained(
-    model_type="roboflow",
-    model_path="rfdetr-base",
-    confidence_threshold=0.3,
-    device="cuda:0",
-)
+Pass the model with the `model` argument. A plain string is treated as a Roboflow Universe
+model id and requires an API key; an RF-DETR class name selects a local model instead.
 
+=== "Roboflow Universe (API key)"
+
+    ```python
+    detection_model = AutoDetectionModel.from_pretrained(
+        model_type="roboflow",
+        model="rfdetr-base",  # Universe model id
+        api_key="YOUR_API_KEY",  # or set ROBOFLOW_API_KEY
+        confidence_threshold=0.3,
+        device="cuda:0",
+    )
+    ```
+
+=== "Local weights (no API key)"
+
+    ```python
+    detection_model = AutoDetectionModel.from_pretrained(
+        model_type="roboflow",
+        model="RFDETRSegMedium",  # RF-DETR class name, or the class/instance itself
+        model_path="checkpoint.pth",  # your locally trained weights
+        category_mapping={"0": "cat", "1": "dog"},  # required for custom classes
+        image_size=640,  # must match the training resolution
+        confidence_threshold=0.3,
+        device="cuda:0",
+    )
+    ```
+
+```python
 result = get_sliced_prediction(
     "image.jpg",
     detection_model,
@@ -405,6 +427,12 @@ result = get_sliced_prediction(
     slice_width=512,
 )
 ```
+
+Available RF-DETR models: `RFDETRBase`, `RFDETRNano`, `RFDETRSmall`, `RFDETRMedium`, `RFDETRLarge`,
+`RFDETRSegNano`, `RFDETRSegSmall`, `RFDETRSegMedium`, `RFDETRSegLarge`, `RFDETRSegXLarge`, `RFDETRSeg2XLarge`.
+
+`category_mapping` determines `num_classes`, so a custom model needs it or the head will not match
+the checkpoint. `image_size` is only applied when `model_path` is set.
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_roboflow.ipynb)
 
