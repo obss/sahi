@@ -18,13 +18,13 @@ from sahi.utils.import_utils import get_opencv_conflict_message
 
 try:
     import cv2
-except (ImportError, AttributeError) as error:
-    # A broken 'cv2' package raises AttributeError during its own import, so
-    # point at the likely cause instead of letting it surface unexplained.
+except Exception:
+    # A 'cv2' directory left broken by mixed OpenCV installations fails in
+    # confusing ways, so explain the cause before the original error surfaces.
     conflict_message = get_opencv_conflict_message()
-    if conflict_message is None:
-        raise
-    raise ImportError(conflict_message) from error
+    if conflict_message is not None:
+        logger.error(conflict_message)
+    raise
 
 IMAGE_EXTENSIONS_LOSSY = [".jpg", ".jpeg"]
 IMAGE_EXTENSIONS_LOSSLESS = [".png", ".tif", ".tiff", ".bmp"]
