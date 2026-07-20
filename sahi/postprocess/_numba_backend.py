@@ -18,7 +18,9 @@ from numpy.typing import NDArray
 from sahi.postprocess._numpy_backend import (
     _score_tiebreak_order,
     nmm_from_matrix,
+    nmm_numpy,
 )
+from sahi.postprocess._sparse_backend import should_use_sparse
 
 
 @numba.njit(cache=True)
@@ -263,6 +265,9 @@ def nmm_numba(
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
     """NMM using numba-computed metric matrix + shared Python merge logic."""
+    if should_use_sparse(len(predictions), match_threshold):
+        return nmm_numpy(predictions, match_metric, match_threshold)
+
     preds = predictions.astype(np.float64)
     boxes = preds[:, :4]
     scores = preds[:, 4]
