@@ -35,16 +35,14 @@ pip install ultralytics
 
 ??? note "其他安装方式"
 
-## Conda：
+    **Conda：**
 
-```text
-[![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
-[![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
-```
+    [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
+    [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
 
-```bash
-conda install -c conda-forge sahi
-```
+    ```bash
+    conda install -c conda-forge sahi
+    ```
 
     !!! note
         如果你在 CUDA 环境下安装，建议在同一条命令中安装 `ultralytics`、`pytorch` 和 `pytorch-cuda`：
@@ -119,7 +117,7 @@ sahi predict \
 切片后，SAHI 使用 NMS 或 NMM 合并重叠的预测结果。系统会自动选择最佳可用后端：
 
 | 后端 | 选择条件 | 安装方式 |
-|------|---------|---------|
+| ------ | --------- | --------- |
 | **torchvision** | CUDA GPU + torchvision 可用 | `pip install torch torchvision` |
 | **numba** | 已安装 numba，无 GPU | `pip install numba` |
 | **numpy** | 始终可用（兜底方案） | -- |
@@ -135,11 +133,13 @@ set_postprocess_backend("torchvision") # GPU 加速
 set_postprocess_backend("auto")        # 恢复自动检测
 ```
 
+完整说明请参见[后处理后端指南](postprocess/backends.md)。
+
 ## 下一步
 
-- [切片推理工作原理](../guides/sliced-inference.md) -- 了解算法、调优技巧和使用场景
-- [模型集成](../guides/models.md) -- 将 SAHI 与 Ultralytics、HuggingFace、MMDetection、TorchVision、Detectron2 等配合使用
+- [切片推理工作原理](guides/sliced-inference.md) -- 了解算法、调优技巧和使用场景
+- [模型集成](guides/models.md) -- 将 SAHI 与 Ultralytics、HuggingFace、MMDetection、TorchVision、Detectron2 等配合使用
 - [预测工具](predict.md) -- 批量推理、进度跟踪、可视化选项
 - [COCO 工具](coco.md) -- 创建、切片、合并和转换 COCO 数据集
 - [CLI 命令](cli.md) -- 完整 CLI 参考
-- [交互式 Notebooks](../notebooks.md) -- 每个框架的动手实践 Colab notebooks
+- [交互式 Notebooks](notebooks.md) -- 每个框架的动手实践 Colab notebooks

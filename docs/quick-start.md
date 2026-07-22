@@ -123,7 +123,7 @@ After slicing, SAHI merges overlapping predictions with NMS or NMM. The best
 available backend is selected automatically:
 
 | Backend | When selected | Install |
-|---------|--------------|---------|
+| --------- | -------------- | --------- |
 | **torchvision** | CUDA GPU + torchvision available | `pip install torch torchvision` |
 | **numba** | numba installed, no GPU | `pip install numba` |
 | **numpy** | Always available (fallback) | -- |

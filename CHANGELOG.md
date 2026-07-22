@@ -1,5 +1,76 @@
 # 📝 CHANGELOG
 
+## 🚀 SAHI v0.12.2 Release Notes
+
+A patch release fixing out-of-memory failures and severe slowdowns when
+postprocessing large prediction sets, plus model, packaging and documentation
+fixes gathered since `0.12.1`.
+
+### 🐛 Fixes
+
+- **Postprocessing no longer allocates an `N x N` matrix for large inputs**
+  ([#1395](https://github.com/obss/sahi/pull/1395)). v0.11 used a shapely
+  STRtree and only compared nearby boxes; v0.12 replaced it with a dense
+  matrix that is `O(N^2)` in time and memory regardless of layout. The
+  TorchVision backend had no size guard and built seven `N x N` tensors on the
+  GPU, so it ran out of memory first. The greedy loops only ever use
+  `matrix >= match_threshold`, never the metric values, so the thresholded
+  adjacency is now built directly from the pairs an STRtree reports as
+  intersecting and stored as CSR. Fixes
+  [#1374](https://github.com/obss/sahi/issues/1374).
+- **RF-DETR** local models can be loaded by class name, with corrected Roboflow
+  docs ([#1394](https://github.com/obss/sahi/pull/1394)).
+- **MMDetection** `has_mask` now handles `RepeatDataset`
+  ([#1387](https://github.com/obss/sahi/pull/1387)).
+- **Dependency and minimum-version checks** are enforced in `import_utils`
+  ([#1377](https://github.com/obss/sahi/pull/1377)).
+- All **OpenCV distributions** are kept on one version, avoiding conflicting
+  installs ([#1393](https://github.com/obss/sahi/pull/1393)).
+
+### 📚 Documentation
+
+- Chinese translations updated and completed
+  ([#1371](https://github.com/obss/sahi/pull/1371)).
+- Docs default to **YOLO26** and link the Ultralytics YOLO26 page
+  ([#1386](https://github.com/obss/sahi/pull/1386)), and YOLO26 is listed among
+  the CLI models ([#1378](https://github.com/obss/sahi/pull/1378)).
+
+### 🧹 Maintenance & CI
+
+- Bumped `astral-sh/setup-uv` 8.2.0 → 8.3.2
+  ([#1389](https://github.com/obss/sahi/pull/1389)) and updated
+  `actions/checkout` / `actions/cache`
+  ([#1385](https://github.com/obss/sahi/pull/1385)).
+- Relaxed the `build` requirement to `>=0.10,<1.6`
+  ([#1382](https://github.com/obss/sahi/pull/1382)).
+
+### ⚡ Performance
+
+33337 boxes, `IOS` metric, threshold `0.3`. Same outputs before and after
+(6571 predictions for `greedy_nmm`, 4639 for `nmm`).
+
+CPU (Intel Core i7-13850HX):
+
+| backend | greedy_nmm before | after | nmm before | after |
+| ------- | ----------------- | ----- | ---------- | ----- |
+| numpy | 15.88s | 0.18s | 27.06s | 0.21s |
+| torchvision | 6.22s | 0.18s | 17.34s | 0.21s |
+| numba | 1.53s | 1.55s | 18.56s | 0.22s |
+
+CUDA (RTX 4000 Ada Laptop, 12 GB):
+
+| backend | greedy_nmm before | after | nmm before | after |
+| ------- | ----------------- | ----- | ---------- | ----- |
+| numpy | 15.93s | 0.26s | 27.00s | 0.21s |
+| torchvision | OOM, 4.14 GiB | 0.17s | OOM, 4.14 GiB | 0.23s |
+| numba | 1.09s | 1.09s | 18.82s | 0.22s |
+
+Inputs below 2000 boxes, and any non-positive threshold, stay on the dense
+path where it is faster.
+
+**Full Changelog**:
+<https://github.com/obss/sahi/compare/0.12.1...0.12.2>
+
 ## 🚀 SAHI v0.12.0 Release Notes
 
 One of the largest SAHI releases to date — **95 commits** since `0.11.34`

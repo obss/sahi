@@ -1,6 +1,6 @@
 [project]
 name = "sahi"
-version = "0.12.1"
+version = "0.12.2"
 readme = "README.md"
 description = "A vision library for performing sliced inference on large images/small objects"
 requires-python = ">=3.8"
@@ -126,7 +126,17 @@ ci = [
 
 [tool.uv]
 
-override-dependencies = ["opencv-python>=4.12.0.88", "pillow>=8.2.0", "pywinpty!=2.0.14; os_name == 'nt'"]
+# Keep every OpenCV distribution on the same version: they all install into the
+# same `cv2/` directory, so mixing majors (e.g. opencv-python 5.x with a
+# transitively pinned opencv-python-headless 4.x) breaks `import cv2`.
+override-dependencies = [
+  "opencv-python>=4.12.0.88",
+  "opencv-python-headless>=4.12.0.88",
+  "opencv-contrib-python>=4.12.0.88",
+  "opencv-contrib-python-headless>=4.12.0.88",
+  "pillow>=8.2.0",
+  "pywinpty!=2.0.14; os_name == 'nt'",
+]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
