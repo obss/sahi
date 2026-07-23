@@ -14,9 +14,13 @@ import torchvision
 from sahi.postprocess._numpy_backend import (
     _score_tiebreak_order,
     greedy_nmm_from_matrix,
+    greedy_nmm_numpy,
     nmm_from_matrix,
+    nmm_numpy,
     nms_from_matrix,
+    nms_numpy,
 )
+from sahi.postprocess._sparse_backend import should_use_sparse
 from sahi.utils.torch_utils import select_device
 
 
@@ -81,6 +85,8 @@ def nms_torchvision(
         return keep.cpu().tolist()
 
     # IOS: compute matrix on GPU, greedy loop on CPU
+    if should_use_sparse(len(predictions), match_threshold):
+        return nms_numpy(predictions, match_metric, match_threshold)
     matrix, sorted_idxs = _prepare_matrix_torch(predictions, match_metric)
     return nms_from_matrix(matrix, sorted_idxs, match_threshold)
 
@@ -91,6 +97,8 @@ def greedy_nmm_torchvision(
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
     """Greedy NMM: compute metric matrix on GPU, merge logic on CPU."""
+    if should_use_sparse(len(predictions), match_threshold):
+        return greedy_nmm_numpy(predictions, match_metric, match_threshold)
     matrix, sorted_idxs = _prepare_matrix_torch(predictions, match_metric)
     return greedy_nmm_from_matrix(matrix, sorted_idxs, match_threshold)
 
@@ -101,5 +109,7 @@ def nmm_torchvision(
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
     """NMM: compute metric matrix on GPU, transitive merge logic on CPU."""
+    if should_use_sparse(len(predictions), match_threshold):
+        return nmm_numpy(predictions, match_metric, match_threshold)
     matrix, sorted_idxs = _prepare_matrix_torch(predictions, match_metric)
     return nmm_from_matrix(matrix, sorted_idxs, predictions[:, 4], predictions[:, :4], match_threshold)

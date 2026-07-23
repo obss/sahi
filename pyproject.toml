@@ -1,6 +1,6 @@
 [project]
 name = "sahi"
-version = "0.12.0"
+version = "0.12.2"
 readme = "README.md"
 description = "A vision library for performing sliced inference on large images/small objects"
 requires-python = ">=3.8"
@@ -69,7 +69,7 @@ docs = [
 build = [
   "twine>=5.1.1,<7.0.0",
   "wheel>=0.40,<0.48",
-  "build>=0.10,<1.5",
+  "build>=0.10,<1.6",
   "hatch>=1.14.1",
 ]
 
@@ -97,14 +97,6 @@ all = [
   "onnxruntime;python_version>='3.10'",
 ]
 
-mmdet = [
-  # MMDetection dependencies - only for Python 3.11 and not on macOS ARM64
-  "mmengine;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  "mmcv==2.2.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  "mmdet==3.3.0;python_version=='3.11' and (platform_system!='Darwin' or platform_machine!='arm64')",
-  # numpy 2 is not compatible with torch 2.1.2
-  "numpy<3.0;python_version=='3.11'",
-]
 ci = [
   # max supported pytorch version for python 3.8 is 2.4.1
   # CPU versions for Linux/Windows CI
@@ -134,11 +126,17 @@ ci = [
 
 [tool.uv]
 
-find-links = [
-  "http://download.openmmlab.com/mmcv/dist/cpu/torch2.1.0/index.html",
+# Keep every OpenCV distribution on the same version: they all install into the
+# same `cv2/` directory, so mixing majors (e.g. opencv-python 5.x with a
+# transitively pinned opencv-python-headless 4.x) breaks `import cv2`.
+override-dependencies = [
+  "opencv-python>=4.12.0.88",
+  "opencv-python-headless>=4.12.0.88",
+  "opencv-contrib-python>=4.12.0.88",
+  "opencv-contrib-python-headless>=4.12.0.88",
+  "pillow>=8.2.0",
+  "pywinpty!=2.0.14; os_name == 'nt'",
 ]
-
-override-dependencies = ["opencv-python>=4.12.0.88", "pillow>=8.2.0", "pywinpty!=2.0.14; os_name == 'nt'"]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import importlib.util
 from collections.abc import Iterable
-from typing import Any, Generator
 
 from sahi.logger import logger
 
@@ -60,6 +59,61 @@ def print_environment_info() -> None:
     get_package_info("opencv-python")
 
 
+OPENCV_DISTRIBUTIONS = (
+    "opencv-python",
+    "opencv-python-headless",
+    "opencv-contrib-python",
+    "opencv-contrib-python-headless",
+)
+
+
+def get_opencv_distribution_versions() -> dict[str, str]:
+    """Collect the installed versions of every OpenCV distribution.
+
+    Returns:
+        Mapping of distribution name to version, for those that are installed.
+    """
+    import importlib.metadata as _importlib_metadata
+
+    versions = {}
+    for distribution in OPENCV_DISTRIBUTIONS:
+        try:
+            versions[distribution] = _importlib_metadata.version(distribution)
+        except _importlib_metadata.PackageNotFoundError:
+            continue
+    return versions
+
+
+def get_opencv_conflict_message() -> str | None:
+    """Describe an OpenCV installation that mixes distribution versions.
+
+    All OpenCV distributions install into the same ``cv2`` directory, so
+    installing more than one of them at different versions leaves a mixture of
+    Python and native files behind, and ``import cv2`` fails with a confusing
+    error such as ``partially initialized module 'cv2' has no attribute
+    'gapi_wip_gst_GStreamerPipeline'``.
+
+    Returns:
+        A message explaining how to fix the installation, or None when the
+            installed OpenCV distributions agree on a single version.
+    """
+    versions = get_opencv_distribution_versions()
+    if len(set(versions.values())) < 2:
+        return None
+
+    from packaging import version as version_parser
+
+    installed = ", ".join(f"{name}=={version}" for name, version in versions.items())
+    newest = max(versions.values(), key=version_parser.parse)
+    suggestion = " ".join(f"{name}=={newest}" for name in versions)
+    return (
+        f"Conflicting OpenCV installations detected: {installed}. They all install into the same 'cv2' "
+        "directory, so mixing versions leaves a broken 'cv2' package behind. Keep a single OpenCV "
+        f"distribution, or reinstall all of them at the same version, e.g. "
+        f"`pip install --force-reinstall {suggestion}`."
+    )
+
+
 def is_available(module_name: str) -> bool:
     """Check whether a Python module is importable.
 
@@ -72,7 +126,7 @@ def is_available(module_name: str) -> bool:
     return importlib.util.find_spec(module_name) is not None
 
 
-def check_requirements(package_names: Iterable[str]) -> Generator[Any, Any, Any]:
+def check_requirements(package_names: Iterable[str]) -> None:
     """Verify that all required packages are importable.
 
     Args:
@@ -80,9 +134,6 @@ def check_requirements(package_names: Iterable[str]) -> Generator[Any, Any, Any]
 
     Raises:
         ImportError: If any of the listed packages cannot be found.
-
-    Yields:
-        Control back to the caller if all packages are available.
     """
     missing_packages = []
     for package_name in package_names:
@@ -90,7 +141,6 @@ def check_requirements(package_names: Iterable[str]) -> Generator[Any, Any, Any]
             missing_packages.append(package_name)
     if missing_packages:
         raise ImportError(f"The following packages are required to use this module: {missing_packages}")
-    yield
 
 
 def check_package_minimum_version(package_name: str, minimum_version: str, verbose: bool = False) -> bool:
@@ -120,9 +170,7 @@ def check_package_minimum_version(package_name: str, minimum_version: str, verbo
     return True
 
 
-def ensure_package_minimum_version(
-    package_name: str, minimum_version: str, verbose: bool = False
-) -> Generator[None, Any, None]:
+def ensure_package_minimum_version(package_name: str, minimum_version: str, verbose: bool = False) -> None:
     """Ensure a package meets a minimum version, raising on failure.
 
     Args:
@@ -132,21 +180,6 @@ def ensure_package_minimum_version(
 
     Raises:
         ImportError: If the installed version is below minimum_version.
-
-    Yields:
-        Control back to the caller if the version requirement is met.
     """
-    from packaging import version
-
-    _is_available, _version = get_package_info(package_name, verbose=verbose)
-    if _is_available:
-        if _version == "unknown":
-            logger.warning(
-                f"Could not determine version of {package_name}. Assuming version {minimum_version} is compatible."
-            )
-        else:
-            if version.parse(_version) < version.parse(minimum_version):
-                raise ImportError(
-                    f"Please upgrade {package_name} to version {minimum_version} or higher to use this module."
-                )
-    yield
+    if not check_package_minimum_version(package_name, minimum_version, verbose=verbose):
+        raise ImportError(f"Please upgrade {package_name} to version {minimum_version} or higher to use this module.")

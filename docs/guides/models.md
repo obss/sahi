@@ -19,8 +19,10 @@ function -- sliced prediction, batch inference, CLI, etc.
 
 ## Ultralytics (YOLO)
 
-Supports YOLOv8, YOLO11, YOLO26, and all Ultralytics model variants
-including segmentation and oriented bounding box models.
+Supports [Ultralytics YOLO26](https://docs.ultralytics.com/models/yolo26),
+[Ultralytics YOLO11](https://docs.ultralytics.com/models/yolo11),
+[Ultralytics YOLOv8](https://docs.ultralytics.com/models/yolov8), and all
+Ultralytics model variants including segmentation and oriented bounding box models.
 
 ```bash
 pip install ultralytics
@@ -194,8 +196,8 @@ In addition to the [common parameters](#common-parameters), zero-shot
 (GroundingDINO) models accept:
 
 | Parameter | Type | Description |
-|-----------|------|-------------|
-| `text_labels` | list[str] | Fixed categories to detect, e.g. `["car", "truck"]`. Each gets a stable category id; phrases outside this list are dropped |
+| ----------- | ------ | ------------- |
+| `text_labels` | `list[str]` | Fixed categories to detect, e.g. `["car", "truck"]`. Each gets a stable category id; phrases outside this list are dropped |
 | `text_prompt` | str | Free-form prompt (e.g. `"a car. a truck."`) used when `text_labels` is not set; returned phrases become categories dynamically |
 | `text_threshold` | float | Minimum score for matching a box to a text token (default: 0.25) |
 
@@ -214,10 +216,10 @@ an `ObjectPrediction` with a polygon mask, so sliced inference and
 postprocessing work the same as for detection.
 
 | Architecture | `instance` | `semantic` | `panoptic` |
-|--------------|:----------:|:----------:|:----------:|
-| MaskFormer   | ✅ | ✅ | ✅ |
-| Mask2Former  | ✅ | ✅ | ✅ |
-| OneFormer    | ✅ | ✅ | ✅ |
+| ------------ | :--------: | :--------: | :--------: |
+| MaskFormer   |     ✅     |     ✅     |     ✅     |
+| Mask2Former  |     ✅     |     ✅     |     ✅     |
+| OneFormer    |     ✅     |     ✅     |     ✅     |
 
 The available heads depend on the checkpoint (e.g.
 `facebook/mask2former-swin-tiny-coco-instance` is instance-only). OneFormer
@@ -256,11 +258,11 @@ segmentation merges every instance of a class into a single mask, so one
 In addition to the [common parameters](#common-parameters), this model accepts:
 
 | Parameter | Type | Description |
-|-----------|------|-------------|
+| ----------- | ------ | ------------- |
 | `segmentation_type` | `SegmentationType` | `INSTANCE_SEGMENTATION` (default), `SEMANTIC_SEGMENTATION`, or `PANOPTIC_SEGMENTATION` |
 | `min_segment_area` | int | Drop segments smaller than this many pixels (default: 100) |
 | `overlap_mask_area_threshold` | float | Merge/discard disconnected parts within a mask (default: 0.8) |
-| `label_ids_to_fuse` | list[int] | Panoptic only -- fuse all instances of these labels into one segment |
+| `label_ids_to_fuse` | `list[int]` | Panoptic only -- fuse all instances of these labels into one segment |
 | `token` | str | HuggingFace access token for gated/private models (falls back to `$HF_TOKEN`) |
 
 ---
@@ -388,14 +390,36 @@ Use Roboflow's RF-DETR models for detection and segmentation.
 pip install rfdetr
 ```
 
-```python
-detection_model = AutoDetectionModel.from_pretrained(
-    model_type="roboflow",
-    model_path="rfdetr-base",
-    confidence_threshold=0.3,
-    device="cuda:0",
-)
+Pass the model with the `model` argument. A plain string is treated as a Roboflow Universe
+model id and requires an API key; an RF-DETR class name selects a local model instead.
 
+=== "Roboflow Universe (API key)"
+
+    ```python
+    detection_model = AutoDetectionModel.from_pretrained(
+        model_type="roboflow",
+        model="rfdetr-base",  # Universe model id
+        api_key="YOUR_API_KEY",  # or set ROBOFLOW_API_KEY
+        confidence_threshold=0.3,
+        device="cuda:0",
+    )
+    ```
+
+=== "Local weights (no API key)"
+
+    ```python
+    detection_model = AutoDetectionModel.from_pretrained(
+        model_type="roboflow",
+        model="RFDETRSegMedium",  # RF-DETR class name, or the class/instance itself
+        model_path="checkpoint.pth",  # your locally trained weights
+        category_mapping={"0": "cat", "1": "dog"},  # required for custom classes
+        image_size=640,  # must match the training resolution
+        confidence_threshold=0.3,
+        device="cuda:0",
+    )
+    ```
+
+```python
 result = get_sliced_prediction(
     "image.jpg",
     detection_model,
@@ -403,6 +427,12 @@ result = get_sliced_prediction(
     slice_width=512,
 )
 ```
+
+Available RF-DETR models: `RFDETRBase`, `RFDETRNano`, `RFDETRSmall`, `RFDETRMedium`, `RFDETRLarge`,
+`RFDETRSegNano`, `RFDETRSegSmall`, `RFDETRSegMedium`, `RFDETRSegLarge`, `RFDETRSegXLarge`, `RFDETRSeg2XLarge`.
+
+`category_mapping` determines `num_classes`, so a custom model needs it or the head will not match
+the checkpoint. `image_size` is only applied when `model_path` is set.
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_roboflow.ipynb)
 
@@ -413,7 +443,7 @@ result = get_sliced_prediction(
 All models accept these parameters in `AutoDetectionModel.from_pretrained()`:
 
 | Parameter | Type | Description |
-|-----------|------|-------------|
+| ----------- | ------ | ------------- |
 | `model_type` | str | Framework name (see sections above) |
 | `model_path` | str | Path to weights file or model name |
 | `config_path` | str | Config file path (MMDetection, Detectron2) |

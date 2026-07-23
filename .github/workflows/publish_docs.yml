@@ -29,12 +29,12 @@ jobs:
         python-version: ["3.12"]
     steps:
       - name: 📥 Checkout the repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       - name: 🐍 Install uv and set Python ${{ matrix.python-version }}
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: true
@@ -50,7 +50,14 @@ jobs:
 
       - name: 📚 Build Docs
         run: |
+          # English site -> site/
           uv run zensical build
+          # Keep the zh site's custom styling in sync with the English extra.css
+          mkdir -p docs/zh/stylesheets
+          cp docs/stylesheets/extra.css docs/zh/stylesheets/extra.css
+          # Rebuild /zh as a standalone localized site (own nav, links stay inside /zh/)
+          rm -rf site/zh
+          uv run zensical build -f zensical.zh.toml
 
       - name: 🚀 Deploy to GitHub Pages
         if:

@@ -70,7 +70,7 @@ set_postprocess_backend("torchvision")
 
 detection_model = AutoDetectionModel.from_pretrained(
     model_type="ultralytics",
-    model_path="yolo11n.pt",
+    model_path="yolo26n.pt",
     confidence_threshold=0.25,
     device="cuda:0",
 )
