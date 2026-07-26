@@ -1,38 +1,39 @@
 [project]
-site_name = "SAHI Documentation"
-site_url = "https://sahi.readthedocs.io/"
+site_name = "SAHI Dokümantasyonu"
+site_url = "https://sahi.readthedocs.io/tr/"
 repo_url = "https://github.com/obss/sahi"
 repo_name = "obss/sahi"
-edit_uri = "https://github.com/obss/sahi/tree/main/docs"
-docs_dir = "docs"
-site_dir = "site"
+edit_uri = "https://github.com/obss/sahi/tree/main/docs/tr"
+docs_dir = "docs/tr"
+site_dir = "site/tr"
 extra_css = ["stylesheets/extra.css"]
 
+# zensical.toml ile birebir aynı nav yapısı, yalnızca başlıklar Türkçe
 nav = [
-  {Home = "index.md"},
-  {"Quick Start" = "quick-start.md"},
-  {Guides = [
-    {"How Sliced Inference Works" = "guides/sliced-inference.md"},
-    {"Model Integrations" = "guides/models.md"},
-    {"Prediction Utilities" = "predict.md"},
-    {"COCO Dataset Operations" = "coco.md"},
-    {"Slicing Utilities" = "slicing.md"},
-    {"Postprocessing Backends" = "postprocess/backends.md"},
-    {"FiftyOne Visualization" = "fiftyone.md"},
-    {"CLI Commands" = "cli.md"},
+  {"Ana Sayfa" = "index.md"},
+  {"Hızlı Başlangıç" = "quick-start.md"},
+  {"Kullanım Kılavuzları" = [
+    {"Sliced Inference Nasıl Çalışır" = "guides/sliced-inference.md"},
+    {"Model Entegrasyonları" = "guides/models.md"},
+    {"Prediction Araçları" = "predict.md"},
+    {"COCO Veri Kümesi Operasyonları" = "coco.md"},
+    {"Dilimleme Araçları" = "slicing.md"},
+    {"Postprocessing Backend'leri" = "postprocess/backends.md"},
+    {"FiftyOne Görselleştirmesi" = "fiftyone.md"},
+    {"CLI Komutları" = "cli.md"},
   ]},
-  {Notebooks = "notebooks.md"},
-  {"Code Reference" = [
-    {"High-level API" = [
+  {"Notebook'lar" = "notebooks.md"},
+  {"Kod Referansı" = [
+    {"Yüksek Seviyeli API" = [
       "predict.md",
       "slicing.md",
     ]},
-    {Core = [
+    {"Çekirdek" = [
       "annotation.md",
       "prediction.md",
       "auto_model.md",
     ]},
-    {Models = [
+    {"Modeller" = [
       "models/base.md",
       "models/ultralytics.md",
       "models/yolov5.md",
@@ -46,25 +47,25 @@ nav = [
       "models/rtdetr.md",
       "models/roboflow.md",
     ]},
-    {"Post-processing" = [
+    {"Postprocessing" = [
       "postprocess/backends.md",
       "postprocess/combine.md",
       "postprocess/utils.md",
     ]},
-    {Utils = [
-      {"COCO Utils" = "utils/coco.md"},
-      {"Computer Vision Utils" = "utils/cv.md"},
-      {"File Utils" = "utils/file.md"},
+    {"Araçlar" = [
+      {"COCO Araçları" = "utils/coco.md"},
+      {"Bilgisayarlı Görü Araçları" = "utils/cv.md"},
+      {"Dosya Araçları" = "utils/file.md"},
     ]},
   ]},
-  {"API Reference Index" = "api.md"},
-  {Contributing = "contributing.md"},
-  {License = "license.md"},
-  {Changelog = "changelog.md"},
+  {"API Referans İndeksi" = "api.md"},
+  {"Katkıda Bulunma" = "contributing.md"},
+  {"Lisans" = "license.md"},
+  {"Güncelleme Günlüğü" = "changelog.md"},
 ]
 
 [project.theme]
-language = "en"
+language = "tr"
 variant = "material"
 logo = "images/sahi-logo.svg"
 favicon = "images/sahi-logo.svg"
@@ -87,13 +88,13 @@ icon.edit = "material/pencil"
 scheme = "default"
 primary = "custom"
 toggle.icon = "material/brightness-7"
-toggle.name = "Switch to dark mode"
+toggle.name = "Koyu moda geç"
 
 [[project.theme.palette]]
 scheme = "slate"
 primary = "custom"
 toggle.icon = "material/brightness-4"
-toggle.name = "Switch to light mode"
+toggle.name = "Açık moda geç"
 
 # --- Alternate languages ---
 
@@ -129,7 +130,6 @@ link = "https://pypi.org/project/sahi"
 [project.plugins.mkdocstrings]
 default_handler = "python"
 
-
 [project.plugins.mkdocstrings.handlers.python.options]
 parameter_headings = true
 allow_inspection = true
@@ -140,7 +140,6 @@ show_symbol_type_heading = true
 show_root_heading = true
 show_symbol_type_toc = true
 show_category_heading = true
-
 
 # --- Python Markdown extensions ---
 

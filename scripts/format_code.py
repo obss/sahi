@@ -1,8 +1,16 @@
 """Code formatting and linting utilities."""
 
 import os
+import shutil
 import subprocess
 import sys
+
+
+def get_ruff_cmd() -> str:
+    """Get the appropriate ruff command invocation."""
+    if shutil.which("ruff"):
+        return "ruff"
+    return "uv run ruff"
 
 
 def run_command(cmd: str) -> int:
@@ -15,13 +23,14 @@ def run_command(cmd: str) -> int:
 def check_formatting() -> int:
     """Check code formatting without making changes."""
     print("Checking code formatting...")
+    ruff = get_ruff_cmd()
 
     # Check linting (match pre-commit args)
-    lint_status = run_command("ruff check . --exit-non-zero-on-fix")
+    lint_status = run_command(f"{ruff} check . --exit-non-zero-on-fix")
     print(lint_status)
 
     # Check formatting (match pre-commit args)
-    format_status = run_command("ruff format --check .")
+    format_status = run_command(f"{ruff} format --check .")
     print(format_status)
 
     if lint_status == 0 and format_status == 0:
@@ -35,14 +44,15 @@ def check_formatting() -> int:
 def fix_formatting() -> int:
     """Fix code formatting issues."""
     print("Fixing code formatting...")
+    ruff = get_ruff_cmd()
 
     # Fix linting issues (match pre-commit args)
     print("\nFixing linting issues...")
-    run_command("ruff check --fix . --unsafe-fixes --exit-non-zero-on-fix")
+    run_command(f"{ruff} check --fix . --unsafe-fixes --exit-non-zero-on-fix")
 
     # Format code (match pre-commit ruff-format)
     print("\nFormatting code...")
-    run_command("ruff format .")
+    run_command(f"{ruff} format .")
 
     print("\n✅ Formatting complete!")
     return 0

@@ -97,10 +97,8 @@ import pytest
 import sys
 
 # Skip if Python version is too old
-pytestmark = pytest.mark.skipif(
-    sys.version_info[:2] < (3, 9),
-    reason="Feature requires Python 3.9+"
-)
+pytestmark = pytest.mark.skipif(sys.version_info[:2] < (3, 9), reason="Feature requires Python 3.9+")
+
 
 def test_my_feature():
     # Skip if optional dependency is missing

@@ -1,0 +1,69 @@
+/* Light theme: deep blue header — logo (#2B57E0) reads as a brighter highlight */
+[data-md-color-primary=custom] {
+  --md-primary-fg-color: #162d8a;
+  --md-primary-fg-color--light: #1e3fa8;
+  --md-primary-fg-color--dark: #0f2070;
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: rgba(255, 255, 255, 0.6);
+}
+
+.md-header {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+}
+
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.md-tabs {
+  background-color: #0f2070;
+}
+
+.md-tabs__link {
+  color: rgba(255, 255, 255, 0.75) !important;
+  opacity: 1 !important;
+}
+
+.md-tabs__link--active,
+.md-tabs__link:hover {
+  color: #FFC93C !important;
+}
+
+/* Dark theme: near-black navy header */
+[data-md-color-scheme=slate] [data-md-color-primary=custom] {
+  --md-primary-fg-color: #0a0d14;
+  --md-primary-fg-color--light: #0f1320;
+  --md-primary-fg-color--dark: #06080f;
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: rgba(255, 255, 255, 0.54);
+}
+
+[data-md-color-scheme=slate] .md-header {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+[data-md-color-scheme=slate] .md-tabs {
+  background-color: #060810;
+}
+
+[data-md-color-scheme=slate] .md-tabs__link {
+  color: rgba(255, 255, 255, 0.65) !important;
+  opacity: 1 !important;
+}
+
+[data-md-color-scheme=slate] .md-tabs__link--active,
+[data-md-color-scheme=slate] .md-tabs__link:hover {
+  color: #FFC93C !important;
+}
+
+/* Dark mode: lighten sidebar links so they're readable on dark background */
+[data-md-color-scheme=slate] {
+  --md-typeset-a-color: #7b9fff;
+}
+
+[data-md-color-scheme=slate] .md-nav__link--active,
+[data-md-color-scheme=slate] .md-nav__link:hover {
+  color: #7b9fff !important;
+}

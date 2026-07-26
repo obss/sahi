@@ -45,7 +45,7 @@ SAHI 通过启用**切片推理**来检测大图像中的小物体，从而帮�
 
 <div align="center">
 
-🌐 [English](../../README.md) | 🇨🇳 [简体中文](README.md)
+🌐 [English](../../README.md) | 🇨🇳 [简体中文](README.md) | 🇹🇷 [Türkçe](../tr/README.md)
 
 </div>
 
