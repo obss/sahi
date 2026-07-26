@@ -22,7 +22,7 @@ Daha iyi küçük nesne tespiti (small object detection) amacıyla Sliced Infere
 sahi predict --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
 ```
 
-Bu işlem varsayılan parametrelerle Sliced Inference gerçekleştirir ve tahmin görsellerini `runs/predict/exp` klasörüne aktarır.
+Bu işlem varsayılan parametrelerle Sliced Inference gerçekleştirir ve prediction görsellerini `runs/predict/exp` klasörüne aktarır.
 
 ### Video Girdisi Desteği
 
@@ -48,7 +48,7 @@ sahi predict --model_path yolo26s.pt --model_type ultralytics --source video.mp4
 - **`F`** - 20 kare geri
 - **`Esc`** - İzleyiciden çıkış
 
-> **İpucu:** `--view_video` yavaşsa, 20 kadelik aralıkları atlamak için `--frame_skip_interval=20` ekleyin.
+> **İpucu:** `--view_video` yavaşsa, 20 karelik aralıkları atlamak için `--frame_skip_interval=20` ekleyin.
 
 ### Gelişmiş Dilimleme Parametreleri
 
@@ -97,12 +97,12 @@ sahi predict --slice_width 512 --slice_height 512 \
 
 **Görsel Dışa Aktarımlar:**
 
-- `--novisual` - Tahmin görselleştirme dışa aktarımlarını devre dışı bırakır
+- `--novisual` - Prediction görselleştirme dışa aktarımlarını devre dışı bırakır
 - `--visual_export_format JPG` - Dışa aktarma formatını belirler (JPG, PNG vb.)
 
 **Veri Dışa Aktarımları:**
 
-- `--export_pickle` - Tahmin pickle dosyalarını dışa aktarır
+- `--export_pickle` - Prediction pickle dosyalarını dışa aktarır
 - `--export_crop` - Kırpılmış tespitleri dışa aktarır
 
 #### Inference Modları
