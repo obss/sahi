@@ -113,7 +113,7 @@ Sonuçlar varsayılan olarak `runs/predict/exp` dizinine kaydedilir.
 
 ## Postprocessing Backend Seçimi
 
-Dilimleme sonrasında SAHI, örtüşen tahminleri NMS veya NMM ile birleştirir. Mevcut en iyi backend otomatik olarak seçilir:
+Dilimleme sonrasında SAHI, örtüşen prediction'ları NMS veya NMM ile birleştirir. Mevcut en iyi backend otomatik olarak seçilir:
 
 | Backend | Ne zaman seçilir | Kurulum |
 | --------- | -------------- | --------- |
