@@ -91,7 +91,7 @@ result = predict(
 
 ### Düşük seviyeli batch inference API'si
 
-`perform_batch_inference`, tek bir çağrıda bir modeli birden fazla görsel üzerinde çalıştırmanıza ve görsel başına tahmin listelerini almanıza olanak tanır. Ultralytics YOLO modelleri yerel GPU batching kullanır; diğer tüm modeller aynı API ile sıralı tekil görsel inference işlemine düşer.
+`perform_batch_inference`, tek bir çağrıda bir modeli birden fazla görsel üzerinde çalıştırmanıza ve görsel başına prediction listelerini almanıza olanak tanır. Ultralytics YOLO modelleri yerel GPU batching kullanır; diğer tüm modeller aynı API ile sıralı tekil görsel inference işlemini yürütür.
 
 ```python
 import cv2
