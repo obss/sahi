@@ -20,11 +20,11 @@ Standart object detector'lar, inference yapmadan önce girdi görsellerini sabit
 
 SAHI bu sorunu üç adımda çözer:
 
-### 1. Görseli örtüşen dilimlere (tiles) ayırma
+### 1. Görseli örtüşen (overlapping) dilimlere (slice/tile) ayırma
 
 Girdi görseli daha küçük parçalardan (patch) oluşan bir ızgaraya (grid) bölünür. Her parçanın boyutu dedektörün beklediği boyuta göre ayarlanır (örn. 512x512); böylece her parça içindeki nesneler güvenilir tespit için yeterli piksel detayını korur.
 
-Dilimler arasındaki örtüşen bölgeler (overlap), dilim sınırında kalan nesnelerin en az bir parçada tamamen görünür olmasını sağlar.
+Dilimler arasındaki örtüşen (overlap) bölgeler, dilim sınırında kalan nesnelerin en az bir parçada tamamen görünür olmasını sağlar.
 
 ```text
 +--------+--------+--------+
@@ -52,11 +52,11 @@ Her dilim bağımsız olarak object detection modeline iletilir. Dilimler küç�
 
 İsteğe bağlı olarak SAHI, dedektörü orijinal çözünürlükte **tam görsel** üzerinde de çalıştırır (`perform_standard_pred=True`, varsayılan). Bu işlem, birden fazla dilime bölünebilecek büyük nesneleri yakalar.
 
-### 3. Tahminleri tam görsele geri birleştirme
+### 3. Prediction'ları tam görsele geri birleştirme
 
-Dilim seviyesindeki tahminler tam görsel koordinatlarına geri haritalanır. Dilimler örtüştüğü için aynı nesne genellikle birden fazla dilimde tespit edilir. SAHI, bu mükerrer tespitleri birleştirmek veya bastırmak için bir postprocessing adımı uygular:
+Dilim (slice) seviyesindeki prediction'lar tam görsel koordinatlarına geri haritalanır. Dilimler birbiriyle örtüştüğü (overlap ettiği) için aynı nesne genellikle birden fazla dilimde tespit edilir. SAHI, bu tekrarlanan (duplicate) tespitleri birleştirmek veya bastırmak için bir postprocessing adımı uygular:
 
-- **GreedyNMM** (varsayılan) -- Örtüşen kutuları koordinatlarını ve skorlarını ortalayarak hırslı (greedy) bir şekilde birleştirir. Çoğu kullanım senaryosu için en iyisidir.
+- **GreedyNMM** (varsayılan) -- Örtüşen (overlapping) kutuları (bounding box) koordinatlarını ve skorlarını ortalayarak greedy bir şekilde birleştirir. Çoğu kullanım senaryosu için en iyisidir.
 - **NMM** -- Non-Maximum Merging. GreedyNMM'e benzer ancak tüm örtüşmeleri eşzamanlı olarak işler.
 - **NMS** -- Non-Maximum Suppression. En yüksek skorlu kutuyu tutar ve örtüşen diğer kutuları eler. Kesin, birleştirilmemiş tespitler istediğinizde kullanın.
 - **LSNMS** -- Location-Sensitive NMS. Konumsal konumu faktör olarak ekleyen bir varyant.
@@ -86,9 +86,9 @@ Sliced Inference en çok şu durumlarda fayda sağlar:
 
 **Örtüşme oranı (Overlap ratio)**: 0.2 (%20) ile başlayın. Dilim sınırlarında kaçırılan tespitler fark ederseniz 0.3--0.4 seviyesine çıkarın. Daha yüksek örtüşme, daha fazla dilim ve daha yavaş inference demektir.
 
-**Standart tahmin**: İlgilendiğiniz tüm nesnelerin küçük olduğundan emin değilseniz `perform_standard_pred=True` olarak tutun. Tam görsel geçişi, dilimler arasında kalacak büyük nesneleri yakalar.
+**Standart prediction**: İlgilendiğiniz tüm nesnelerin küçük olduğundan emin değilseniz `perform_standard_pred=True` olarak tutun. Tam görsel geçişi, dilimler arasında kalacak büyük nesneleri yakalar.
 
-**Postprocessing eşiği**: `postprocess_match_threshold` mükerrer tespitlerin ne kadar agresif birleştirileceğini kontrol eder. Düşük değerler daha fazla birleştirir; yüksek değerler ayrı kutuları korur. Varsayılan 0.5 değeri çoğu durum için uygundur.
+**Postprocessing eşiği**: `postprocess_match_threshold` tekrarlanan (duplicate) tespitlerin ne kadar agresif birleştirileceğini kontrol eder. Düşük değerler daha fazla birleştirir; yüksek değerler ayrı kutuları korur. Varsayılan 0.5 değeri çoğu durum için uygundur.
 
 ## Sonraki Adımlar
 

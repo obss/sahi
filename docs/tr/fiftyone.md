@@ -8,7 +8,7 @@ tags:
 
 # FiftyOne Görselleştirmesi
 
-[FiftyOne](https://github.com/voxel51/fiftyone), tespit sonuçlarını incelemek, tahminleri karşılaştırmak ve model performansını hata ayıklamak (debug) için etkileşimli bir kullanıcı arayüzü sunar.
+[FiftyOne](https://github.com/voxel51/fiftyone), tespit sonuçlarını incelemek, tahminleri karşılaştırmak ve model performansında hata ayıklamak (debug) için etkileşimli bir kullanıcı arayüzü sunar.
 
 Desteklenen sürüm: `pip install fiftyone>=0.14.2,<0.15.0`
 
@@ -24,7 +24,7 @@ session = launch_fiftyone_app(coco_image_dir, coco_json_path)
 session.close()
 ```
 
-## SAHI Tahminlerini Görselleştirme
+## SAHI Prediction'larını Görselleştirme
 
 Sliced Inference çalıştırın ve sonuçları FiftyOne formatına dönüştürün:
 
@@ -53,7 +53,7 @@ fiftyone_detections = result.to_fiftyone_detections()
 
 ## Birden Fazla Tespit Sonucunu Karşılaştırma
 
-Bir veri kümesini yanlış tespitlere göre sıralanmış birden fazla tahmin sonucuyla birlikte görselleştirmek için CLI'yi kullanın:
+Bir veri kümesini yanlış tespitlere göre sıralanmış birden fazla prediction sonucuyla birlikte görselleştirmek için CLI'yi kullanın:
 
 ```bash
 sahi coco fiftyone \

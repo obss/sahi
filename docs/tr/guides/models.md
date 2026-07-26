@@ -13,7 +13,7 @@ tags:
 
 # Model Entegrasyonları
 
-SAHI, tekilleştirilmiş bir API üzerinden tüm object detection kütüphaneleriyle çalışır. Modelinizi `AutoDetectionModel.from_pretrained()` ile bir kez yükleyin, ardından istediğiniz tüm SAHI fonksiyonlarıyla (Sliced Prediction, batch inference, CLI vb.) kullanın.
+SAHI, birleştirilmiş (tekil) bir API üzerinden tüm object detection kütüphaneleriyle çalışır. Modelinizi `AutoDetectionModel.from_pretrained()` ile bir kez yükleyin, ardından istediğiniz tüm SAHI fonksiyonlarıyla (Sliced Prediction, batch inference, CLI vb.) kullanın.
 
 ## Ultralytics (YOLO)
 

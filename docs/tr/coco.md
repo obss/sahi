@@ -288,7 +288,7 @@ print(coco.stats)
 
 ## Geçersiz Sonuçları Temizleme
 
-Bir COCO sonuçları JSON dosyasındaki geçersiz tahminleri kaldırın:
+Bir COCO sonuçları JSON dosyasındaki geçersiz prediction'ları kaldırın:
 
 ```python
 from sahi.utils.coco import remove_invalid_coco_results
