@@ -47,7 +47,7 @@ supports various popular detection models and provides easy-to-use APIs.
 
 <div align="center">
 
-🌐 [English](README.md) | 🇨🇳 [简体中文](docs/zh/README.md)
+🌐 [English](README.md) | 🇨🇳 [简体中文](docs/zh/README.md) | 🇹🇷 [Türkçe](docs/tr/README.md)
 
 </div>
 
