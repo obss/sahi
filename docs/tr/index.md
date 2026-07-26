@@ -77,7 +77,7 @@ SAHI, ekstra bir fine-tuning gerektirmeden herhangi bir object detector ile kull
 
     ---
 
-    SAHI ile yeni görseller, videolar ve akışlar (streams) üzerinde tahmin yürütün.
+    SAHI ile yeni görseller, videolar ve stream'ler üzerinde prediction yürütün.
 
     [:octicons-arrow-right-24: Daha Fazla Bilgi](predict.md)
 
@@ -85,7 +85,7 @@ SAHI, ekstra bir fine-tuning gerektirmeden herhangi bir object detector ile kull
 
     ---
 
-    Inference için büyük görselleri ve veri kümelerini nasıl dilimleyeceğinizi öğrenin.
+    Inference için büyük görselleri ve veri kümelerini nasıl dilimleyeceğinizi (slice) öğrenin.
 
     [:octicons-arrow-right-24: Daha Fazla Bilgi](slicing.md)
 
