@@ -58,6 +58,12 @@ jobs:
           # Rebuild /zh as a standalone localized site (own nav, links stay inside /zh/)
           rm -rf site/zh
           uv run zensical build -f zensical.zh.toml
+          # Keep the tr site's custom styling in sync with the English extra.css
+          mkdir -p docs/tr/stylesheets
+          cp docs/stylesheets/extra.css docs/tr/stylesheets/extra.css
+          # Rebuild /tr as a standalone localized site (own nav, links stay inside /tr/)
+          rm -rf site/tr
+          uv run zensical build -f zensical.tr.toml
 
       - name: 🚀 Deploy to GitHub Pages
         if:
