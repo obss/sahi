@@ -13,11 +13,11 @@ SAHI'nin postprocessing (NMS, NMM) işlemleri üç değiştirilebilir backend ü
 
 ## Backend genel bakış
 
-| Backend         | En iyi kullanım alanı                                                    | Ek bağımlılık                          |
-| --------------- | ------------------------------------------------------------------------ | -------------------------------------- |
-| **numpy**       | Yalnızca CPU ortamları, küçük/orta tahmin sayıları                       | Yok (her zaman mevcut)                 |
-| **numba**       | Yüksek tahmin sayılı CPU; ilk çağrıda ~1 sn JIT ısınması, ardından hızlı | `pip install numba`                    |
-| **torchvision** | CUDA GPU mevcut olduğunda; büyük batch'ler için en hızlısı               | `pip install torch torchvision` + CUDA |
+| Backend         | En iyi kullanım alanı                                                        | Ek bağımlılık                          |
+| --------------- | ---------------------------------------------------------------------------- | -------------------------------------- |
+| **numpy**       | Yalnızca CPU ortamları, küçük/orta prediction sayıları                       | Yok (her zaman mevcut)                 |
+| **numba**       | Yüksek prediction sayılı CPU; ilk çağrıda ~1 sn JIT ısınması, ardından hızlı | `pip install numba`                    |
+| **torchvision** | CUDA GPU mevcut olduğunda; büyük batch'ler için en hızlısı                   | `pip install torch torchvision` + CUDA |
 
 ## Otomatik Algılama (varsayılan)
 
