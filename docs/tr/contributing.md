@@ -121,6 +121,6 @@ Yeni bir tespit kütüphanesi desteği eklemek için:
 
 Lütfen `sahi/models/ultralytics.py` gibi mevcut uygulamaları referans alın.
 
-## Sorunuz mu Var?
+## Sorunuz Var mı?
 
 Herhangi bir sorunuz varsa, [bir tartışma (discussion) başlatabilirsiniz](https://github.com/obss/sahi/discussions)!
