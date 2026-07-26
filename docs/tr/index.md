@@ -17,7 +17,7 @@ tags:
 </h1>
 
 <h4>
-  Geniş ölçekli object detection ve instance segmentation için hafif siklet bir bilgisayarlı görü kütüphanesi
+  Geniş ölçekli object detection ve instance segmentation için hafif bir bilgisayarlı görü kütüphanesi
 </h4>
 
 <h4>
