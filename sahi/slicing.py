@@ -775,3 +775,212 @@ def shift_masks(masks: np.ndarray, offset: Sequence[int], full_shape: Sequence[i
         shifted_masks.append(mask.bool_mask)
 
     return np.stack(shifted_masks, axis=0)
+
+
+def _normalize_labelme_points(shape: dict) -> list[list[float]]:
+    """Extract and normalize Labelme points to ``[[x, y], ...]``."""
+    points = shape.get("points")
+    if not isinstance(points, list) or not points:
+        raise ValueError("Each Labelme shape must have a non-empty 'points' list.")
+
+    normalized_points: list[list[float]] = []
+    for point in points:
+        if not isinstance(point, list) or len(point) < 2:
+            raise ValueError("Each point in Labelme shape must be a list with at least 2 values.")
+        normalized_points.append([float(point[0]), float(point[1])])
+    return normalized_points
+
+
+def _labelme_shape_to_coco_annotation(shape: dict, category_id: int) -> CocoAnnotation:
+    """Convert one Labelme shape to a CocoAnnotation."""
+    if "label" not in shape:
+        raise ValueError("Each Labelme shape must include a 'label' field.")
+
+    category_name = str(shape["label"])
+    shape_type = shape.get("shape_type", "polygon")
+    points = _normalize_labelme_points(shape)
+
+    if shape_type == "polygon":
+        if len(points) < 3:
+            raise ValueError("Labelme polygon shape must include at least 3 points.")
+        segmentation = [[coord for point in points for coord in point]]
+        return CocoAnnotation.from_coco_segmentation(
+            segmentation=segmentation,
+            category_id=category_id,
+            category_name=category_name,
+        )
+
+    if shape_type == "rectangle":
+        xs = [point[0] for point in points]
+        ys = [point[1] for point in points]
+        x_min, x_max = min(xs), max(xs)
+        y_min, y_max = min(ys), max(ys)
+        return CocoAnnotation.from_coco_bbox(
+            bbox=[x_min, y_min, x_max - x_min, y_max - y_min],
+            category_id=category_id,
+            category_name=category_name,
+        )
+
+    # Fallback for unsupported shape types: approximate with tight bbox.
+    logger.warning(
+        "Unsupported Labelme shape_type '%s' detected; converting to bbox before slicing.",
+        shape_type,
+    )
+    xs = [point[0] for point in points]
+    ys = [point[1] for point in points]
+    x_min, x_max = min(xs), max(xs)
+    y_min, y_max = min(ys), max(ys)
+    return CocoAnnotation.from_coco_bbox(
+        bbox=[x_min, y_min, x_max - x_min, y_max - y_min],
+        category_id=category_id,
+        category_name=category_name,
+    )
+
+
+def _coco_segmentation_to_labelme_points(segmentation: list[float] | list[int]) -> list[list[float]]:
+    """Convert one COCO polygon list to Labelme points."""
+    if len(segmentation) % 2 != 0:
+        raise ValueError("COCO polygon segmentation must contain an even number of coordinates.")
+
+    points = [[float(segmentation[i]), float(segmentation[i + 1])] for i in range(0, len(segmentation), 2)]
+    if len(points) > 1 and points[0] == points[-1]:
+        points = points[:-1]
+    return points
+
+
+def _coco_annotation_to_labelme_shapes(coco_annotation: CocoAnnotation, shape_template: dict) -> list[dict]:
+    """Convert a sliced CocoAnnotation to one or more Labelme shapes."""
+    output_shapes: list[dict] = []
+    segmentation = coco_annotation.segmentation
+
+    if segmentation:
+        for polygon in segmentation:
+            polygon_points = _coco_segmentation_to_labelme_points(polygon)
+            if len(polygon_points) < 3:
+                continue
+            output_shapes.append(
+                {
+                    "label": shape_template["label"],
+                    "points": polygon_points,
+                    "group_id": shape_template["group_id"],
+                    "description": shape_template["description"],
+                    "shape_type": "polygon",
+                    "flags": shape_template["flags"],
+                }
+            )
+        return output_shapes
+
+    x_min, y_min, width, height = coco_annotation.bbox
+    output_shapes.append(
+        {
+            "label": shape_template["label"],
+            "points": [[x_min, y_min], [x_min + width, y_min + height]],
+            "group_id": shape_template["group_id"],
+            "description": shape_template["description"],
+            "shape_type": "rectangle",
+            "flags": shape_template["flags"],
+        }
+    )
+    return output_shapes
+
+
+def slice_labelme_json(
+    image: str | Image.Image | np.ndarray,
+    input_json_path: str,
+    output_dir: str | None = None,
+    output_file_name: str | None = None,
+    slice_height: int | None = None,
+    slice_width: int | None = None,
+    overlap_height_ratio: float | None = 0.2,
+    overlap_width_ratio: float | None = 0.2,
+    auto_slice_resolution: bool | None = True,
+    min_area_ratio: float | None = 0.1,
+    min_width_height: float | None = None,
+    out_ext: str | None = None,
+    verbose: bool | None = False,
+    exif_fix: bool = True,
+) -> tuple[SliceImageResult, list[dict], list[str]]:
+    """Slice one image and its Labelme JSON annotation into sliding-window patches."""
+    labelme_dict: dict = load_json(input_json_path)  # type: ignore[assignment]
+    labelme_shapes = labelme_dict.get("shapes")
+    if not isinstance(labelme_shapes, list):
+        raise ValueError("Labelme JSON must include a 'shapes' list.")
+
+    coco_annotation_list: list[CocoAnnotation] = []
+    shape_id_to_template: dict[int, dict] = {}
+    for shape_index, shape in enumerate(labelme_shapes, start=1):
+        if not isinstance(shape, dict):
+            raise ValueError("Each entry in Labelme 'shapes' must be a dictionary.")
+        coco_annotation = _labelme_shape_to_coco_annotation(shape, category_id=shape_index)
+        coco_annotation_list.append(coco_annotation)
+        shape_id_to_template[shape_index] = {
+            "label": shape["label"],
+            "group_id": shape.get("group_id"),
+            "description": shape.get("description", ""),
+            "flags": shape.get("flags", {}),
+        }
+
+    resolved_output_file_name = output_file_name
+    if resolved_output_file_name is None:
+        if isinstance(image, str):
+            resolved_output_file_name = Path(image).stem
+        else:
+            resolved_output_file_name = Path(input_json_path).stem
+
+    slice_image_result = slice_image(
+        image=image,
+        coco_annotation_list=coco_annotation_list,
+        output_file_name=resolved_output_file_name,
+        output_dir=output_dir,
+        slice_height=slice_height,
+        slice_width=slice_width,
+        overlap_height_ratio=overlap_height_ratio,
+        overlap_width_ratio=overlap_width_ratio,
+        auto_slice_resolution=auto_slice_resolution,
+        min_area_ratio=min_area_ratio,
+        min_width_height=min_width_height,
+        out_ext=out_ext,
+        verbose=verbose,
+        exif_fix=exif_fix,
+    )
+
+    base_labelme_dict = {
+        key: value
+        for key, value in labelme_dict.items()
+        if key not in {"shapes", "imagePath", "imageData", "imageHeight", "imageWidth"}
+    }
+    if "version" not in base_labelme_dict:
+        base_labelme_dict["version"] = "5.0.0"
+    if "flags" not in base_labelme_dict:
+        base_labelme_dict["flags"] = {}
+
+    sliced_labelme_dict_list: list[dict] = []
+    saved_json_paths: list[str] = []
+    for sliced_coco_image in slice_image_result.coco_images:
+        sliced_shapes: list[dict] = []
+        for sliced_annotation in sliced_coco_image.annotations:
+            shape_template = shape_id_to_template.get(sliced_annotation.category_id)
+            if shape_template is None:
+                raise ValueError(
+                    f"Unable to map sliced annotation category_id={sliced_annotation.category_id} to Labelme shape."
+                )
+            sliced_shapes.extend(_coco_annotation_to_labelme_shapes(sliced_annotation, shape_template))
+
+        sliced_labelme_dict = dict(base_labelme_dict)
+        sliced_labelme_dict.update(
+            {
+                "shapes": sliced_shapes,
+                "imagePath": sliced_coco_image.file_name,
+                "imageData": None,
+                "imageHeight": sliced_coco_image.height,
+                "imageWidth": sliced_coco_image.width,
+            }
+        )
+        sliced_labelme_dict_list.append(sliced_labelme_dict)
+
+        if output_dir:
+            output_json_path = str(Path(output_dir) / f"{Path(sliced_coco_image.file_name).stem}.json")
+            save_json(sliced_labelme_dict, output_json_path)
+            saved_json_paths.append(output_json_path)
+
+    return slice_image_result, sliced_labelme_dict_list, saved_json_paths
