@@ -314,6 +314,7 @@ def slice_image(
     overlap_width_ratio: float | None = 0.2,
     auto_slice_resolution: bool | None = True,
     min_area_ratio: float | None = 0.1,
+    min_width_height: float | None = None,
     out_ext: str | None = None,
     verbose: bool | None = False,
     exif_fix: bool = True,
@@ -338,6 +339,9 @@ def slice_image(
             it enables automatically calculate these params from image resolution and orientation.
         min_area_ratio (float, optional): If the cropped annotation area to original annotation
             ratio is smaller than this value, the annotation is filtered out. Default 0.1.
+        min_width_height (float | None, optional): If provided, annotations are filtered
+            only when BOTH sliced width and height are smaller than this threshold and
+            cropped/original area ratio is smaller than ``min_area_ratio``.
         out_ext (str, optional): Extension of saved images. Default is the
             original suffix for lossless image formats and png for lossy formats ('.jpg','.jpeg').
         verbose (bool, optional): Switch to print relevant values to screen.
@@ -426,7 +430,10 @@ def slice_image(
         if coco_annotation_list is not None:
             min_area_ratio_val: float = min_area_ratio if min_area_ratio is not None else 0.1
             for sliced_coco_annotation in process_coco_annotations(
-                coco_annotation_list, slice_bbox, min_area_ratio_val
+                coco_annotation_list,
+                slice_bbox,
+                min_area_ratio_val,
+                min_width_height=min_width_height,
             ):
                 coco_image.add_annotation(sliced_coco_annotation)
 
@@ -471,6 +478,7 @@ def slice_coco(
     overlap_height_ratio: float | None = 0.2,
     overlap_width_ratio: float | None = 0.2,
     min_area_ratio: float | None = 0.1,
+    min_width_height: float | None = None,
     out_ext: str | None = None,
     verbose: bool | None = False,
     exif_fix: bool = True,
@@ -497,6 +505,9 @@ def slice_coco(
             overlap of 20 pixels). Default 0.2.
         min_area_ratio (float): If the cropped annotation area to original annotation
             ratio is smaller than this value, the annotation is filtered out. Default 0.1.
+        min_width_height (float | None, optional): If provided, annotations are filtered
+            only when BOTH sliced width and height are smaller than this threshold and
+            cropped/original area ratio is smaller than ``min_area_ratio``.
         out_ext (str, optional): Extension of saved images. Default is the
             original suffix.
         verbose (bool, optional): Switch to print relevant values to screen.
@@ -532,6 +543,7 @@ def slice_coco(
                 overlap_height_ratio=overlap_height_ratio,
                 overlap_width_ratio=overlap_width_ratio,
                 min_area_ratio=min_area_ratio,
+                min_width_height=min_width_height,
                 out_ext=out_ext,
                 verbose=verbose,
                 exif_fix=exif_fix,
