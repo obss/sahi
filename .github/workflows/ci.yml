@@ -115,6 +115,66 @@ jobs:
           # coco analyse
           uv run sahi coco analyse --dataset_json_path tests/data/coco_evaluate/dataset.json --result_json_path tests/data/coco_evaluate/result.json --out_dir tests/data/coco_evaluate/
 
+  streaming:
+    name: "Streaming slice reads (${{ matrix.libvips }} libvips, OS: ${{ matrix.os }})"
+    if:
+      github.event_name != 'schedule' && github.event_name !=
+      'workflow_dispatch'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # System libvips with a pyvips<3.0 pin is what `sahi[ci]`/`inference` users end
+          # up with. See docs/predict.md for why the two cannot be combined.
+          - os: ubuntu-latest
+            libvips: system
+            pyvips: "pyvips<3.0"
+          # The string users are told to type. The leg above hand-installs pyvips, so it
+          # would not notice `[bigimage]` resolving to a pyvips with no libvips behind it,
+          # which falls back to a whole-image decode silently rather than failing.
+          - os: ubuntu-latest
+            libvips: extra
+            pyvips: ""
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup uv python package manager
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          activate-environment: true
+          cache-dependency-glob: |
+            **/pyproject.toml
+
+      # -dev rather than libvips42, whose name moved to libvips42t64 in Ubuntu 24.04
+      - name: Install system libvips
+        if: matrix.libvips == 'system'
+        run: sudo apt-get update && sudo apt-get install -y libvips-dev
+
+      # Separate from the `ci` job, whose `inference` dependency caps pyvips<3.0.
+      # Installed without the `binary` extra so streaming is really exercised.
+      - name: Install sahi with libvips
+        if: matrix.libvips != 'extra'
+        run: uv pip install -e . pytest "${{ matrix.pyvips }}"
+      - name: Install sahi with the bigimage extra
+        if: matrix.libvips == 'extra'
+        run: uv pip install -e ".[bigimage]" pytest
+      # The extra must deliver a vendored libvips as well as the pyvips bindings. Without
+      # one, `import pyvips` raises OSError and slicing quietly decodes whole images.
+      # pyvips-binary ships the library as a top-level `_libvips` extension module, not
+      # as a `pyvips_binary` package, so that is what proves the wheel supplied it rather
+      # than a system libvips this leg deliberately does not install.
+      - name: Verify the extra vendored libvips
+        if: matrix.libvips == 'extra'
+        run: python -c "import _libvips; print('vendored libvips at', _libvips.__file__)"
+      - name: Verify libvips is really loadable
+        run: python -c "import pyvips; print('libvips', pyvips.version(0), pyvips.version(1), pyvips.version(2))"
+      # `not slow` drops the peak-RSS measurement: it is a real check but not a dependable
+      # one on a shared runner. See TestPeakMemory and scripts/benchmark_streaming_slices.py.
+      - name: Test streaming slice reads
+        run: pytest tests/test_slice_stream.py tests/test_predict_stream.py -q -m "not slow"
+
   schedule-test:
     name:
       "Schedule/PyPI check (OS: ${{ matrix.os }}, Python: ${{

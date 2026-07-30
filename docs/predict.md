@@ -39,6 +39,128 @@ result = get_sliced_prediction(
 
 ```
 
+### Predicting on very large images
+
+When you call `get_sliced_prediction` with a file path, slices are read from disk one
+row-band at a time instead of decoding the whole image up front, so peak memory stays a
+small fraction of the scan rather than tracking its full decoded size. Two things unlock
+the full saving:
+
+- Install the optional streaming backend: `pip install sahi[bigimage]` (bundles
+  libvips). Without it the image is decoded whole, matching the old behaviour.
+- Pass `perform_standard_pred=False`. The default also runs inference on the full
+  image, which decodes it in one piece and cancels out the saving. sahi logs a warning
+  when you leave it on while slices are being streamed.
+
+A Pillow image, a numpy array or a URL is already decoded (or has to be fetched whole),
+so those inputs keep the old behaviour. The same goes for the `sahi predict` CLI, which
+decodes the image up front for the visualisations it exports: use the Python API to
+stream.
+
+Images whose EXIF orientation tag rotates or mirrors them cannot be streamed and fall
+back to a whole-image decode (a warning says so). `SliceImageStream.is_streaming` reports
+whether a given input will actually be streamed.
+
+#### Measured effect
+
+A 39266x29140 (1144 MP) JPEG scan, sliced 640x640 at 0.2 overlap into 4389 slices,
+peak RSS of the whole process:
+
+| path | peak RSS | wall time |
+| --- | --- | --- |
+| streaming, libvips present | 671 MB | 10.9 s |
+| whole-image decode alone (no slicing) | 6613 MB | 9.0 s |
+| `slice_image`, all slices materialised | 3.2 GB image + 5.0 GB slices, does not complete in 6 GB | - |
+
+Slicing on its own, with nothing consuming the batches, streaming is about 10-15% slower
+than the eager path, plus a flat ~0.1 s for the one-time `import pyvips`:
+
+| image | eager | streaming |
+| --- | --- | --- |
+| 1 MP | 0.27 s / 156 MB | 0.44 s / 156 MB |
+| 16 MP | 0.62 s / 163 MB | 0.91 s / 189 MB |
+| 64 MP | 1.83 s / 438 MB | 2.07 s / 327 MB |
+| 144 MP | 3.71 s / 896 MB | 4.13 s / 508 MB |
+| 256 MP | 6.56 s / 1537 MB | 6.69 s / 733 MB |
+
+Below ~64 MP streaming costs memory rather than saving it, since the fixed overhead
+outweighs the band saving.
+
+That is the pessimistic case, though: it measures slicing with no inference. In a real
+`get_sliced_prediction` the model runs on each batch, and the next band is decoded on a
+worker thread while it does (libvips releases the GIL). At 30 ms of work per batch,
+roughly what a small detector costs on 8 slices:
+
+| image | eager | streaming, no prefetch | streaming + prefetch |
+| --- | --- | --- | --- |
+| 64 MP | 5.77 s / 438 MB | 5.83 s / 327 MB | **4.34 s / 321 MB** |
+| 256 MP | 20.73 s / 1537 MB | 19.45 s / 733 MB | **16.62 s / 722 MB** |
+
+So with anything real consuming the slices, streaming ends up both faster than the eager
+path and half its peak memory. Prefetch is on by default and can be turned off with
+`SliceImageStream.iter_batches(batch_size, prefetch=False)`.
+
+Reproduce any of this with:
+
+```console
+python scripts/benchmark_streaming_slices.py                  # slicing alone
+python scripts/benchmark_streaming_slices.py --consume-ms 30  # with simulated inference
+```
+
+Peak memory grows with image height, at roughly a tenth the rate of a whole-image
+decode. libvips retains about 0.45 bytes for every pixel it decodes — some 360 MB across
+the 1144 MP scan. This is the loader's own bookkeeping: the same climb reproduces with a
+bare `pyvips.Region` fetch loop and no sahi in the process. Much of the rest of the
+resident set is memory glibc has freed but not returned to the OS, which `malloc_trim(0)`
+reclaims. Budget for that slope on scans far taller than the ones measured here.
+
+#### Caveat: import order
+
+`sahi.utils.cv` raises `OPENCV_IO_MAX_IMAGE_PIXELS` at import time, because OpenCV reads
+that variable once when *it* is imported and refuses to decode anything above 2^30
+pixels otherwise. If something imports `cv2` before any `sahi` module, the limit stays
+at its default and images above 1073 MP quietly fall back to the slower, more allocating
+PIL path instead of failing. Import `sahi` first, or set the variable in the environment,
+if you work at that size.
+
+#### Installing libvips
+
+`pip install sahi[bigimage]` pulls `pyvips[binary]`, which ships libvips itself and
+needs nothing from the system.
+
+That extra only exists from pyvips 3.0 on, so it is unavailable when something else in
+the environment caps pyvips below 3.0. Roboflow's `inference` is the common case, since
+it requires `pyvips<3.0` transitively; `pip` then warns `does not have an extra named
+binary` and installs the bindings with no libvips behind them, and slicing falls back to
+decoding whole images — correct results, but not the low memory.
+
+Install libvips through the system instead and streaming works on any pyvips, 2.x
+included:
+
+| OS | command |
+| --- | --- |
+| Debian/Ubuntu | `apt install libvips42t64` (Ubuntu 24.04+; `libvips42` before that, `libvips` on older releases) |
+| Fedora/RHEL | `dnf install vips` |
+| macOS | `brew install vips` |
+| Windows | download the libvips zip and add its `bin` to `PATH`, or use `conda install -c conda-forge libvips` |
+
+then `pip install pyvips`. Verify with:
+
+```console
+python -c "import pyvips; print(pyvips.version(0), pyvips.version(1), pyvips.version(2))"
+```
+
+An importable pyvips with no libvips behind it raises `OSError` rather than
+`ImportError`. sahi treats that as a failed backend and decodes the image whole. This
+is logged at **debug** level, not as a warning — most installs have no libvips and its
+absence is not an error — so enable debug logging to see it:
+
+```python
+import logging
+
+logging.getLogger("sahi").setLevel(logging.DEBUG)
+```
+
 ## Standard inference
 
 ```python

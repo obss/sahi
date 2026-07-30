@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
+import pytest
 from PIL import Image
 
-from sahi.slicing import shift_bboxes, shift_masks, slice_coco, slice_image
+from sahi.slicing import _slice_file_suffix, shift_bboxes, shift_masks, slice_coco, slice_image
 from sahi.utils.coco import Coco
 from sahi.utils.cv import read_image
 
@@ -188,3 +191,36 @@ class TestSlicing:
         shifted_masks = shift_masks(masks=masks, offset=[shift_x, shift_y], full_shape=full_shape)
         assert shifted_masks.shape == (3, 720, 1280)
         assert isinstance(shifted_masks, np.ndarray)
+
+
+class TestSliceFileSuffix:
+    """Test the extension exported slices are written with."""
+
+    @pytest.mark.parametrize(
+        ("image", "expected"),
+        [
+            ("scan.tif", ".tif"),
+            ("scan.png", ".png"),
+            ("scan.jpg", ".png"),  # lossy sources are re-encoded losslessly
+            ("https://example.com/scan.jpg", ".png"),
+            ("https://example.com/scan", ".png"),  # nothing to inherit
+        ],
+    )
+    def test_path_keeps_its_extension_unless_lossy(self, image: str, expected: str) -> None:
+        """Test a path input exports slices under its own extension."""
+        assert _slice_file_suffix(image) == expected
+
+    def test_pil_image_uses_the_file_it_was_opened_from(self, tmp_path: Path) -> None:
+        """Test a PIL image carries the extension of the file behind it."""
+        path = tmp_path / "scan.tif"
+        Image.fromarray(np.zeros((4, 4, 3), np.uint8)).save(path)
+        with Image.open(path) as image_pil:
+            assert _slice_file_suffix(image_pil) == ".tif"
+
+    def test_in_memory_image_falls_back_to_png(self) -> None:
+        """Test an array has no source extension to inherit."""
+        assert _slice_file_suffix(np.zeros((4, 4, 3), np.uint8)) == ".png"
+
+    def test_out_ext_wins(self) -> None:
+        """Test an explicit out_ext overrides the source extension."""
+        assert _slice_file_suffix("scan.tif", out_ext=".jpg") == ".jpg"

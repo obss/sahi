@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import time
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Iterator
 from functools import cmp_to_key
 from typing import Any
 
@@ -24,7 +25,7 @@ from sahi.postprocess.combine import (
     PostprocessPredictions,
 )
 from sahi.prediction import ObjectPrediction, PredictionResult
-from sahi.slicing import slice_image
+from sahi.slicing import SliceExporter, SliceImageStream
 from sahi.utils.coco import Coco, CocoImage
 from sahi.utils.cv import (
     IMAGE_EXTENSIONS,
@@ -219,6 +220,9 @@ def get_sliced_prediction(
         perform_standard_pred: bool
             Perform a standard prediction on top of sliced predictions to increase large object
             detection accuracy. Default: True.
+            This also runs inference on the full image, which decodes it in one piece. The
+            low peak memory quoted for gigapixel inputs requires ``perform_standard_pred=False``;
+            leaving it on while slices are being streamed logs a warning.
         postprocess_type: str
             Type of the postprocess to be used after sliced inference while merging/eliminating predictions.
             Options are 'NMM', 'GREEDYNMM' or 'NMS'. Default is 'GREEDYNMM'.
@@ -301,12 +305,10 @@ def get_sliced_prediction(
     try:
         durations_in_seconds = dict()
 
-        # create slices from full image
+        # plan slices from the image header; pixels are read a row-band at a time below
         time_start = time.perf_counter()
-        slice_image_result = slice_image(
+        slice_stream = SliceImageStream(
             image=image,
-            output_file_name=slice_export_prefix,
-            output_dir=slice_dir,
             slice_height=slice_height,
             slice_width=slice_width,
             overlap_height_ratio=overlap_height_ratio,
@@ -315,8 +317,16 @@ def get_sliced_prediction(
         )
         from sahi.models.ultralytics import UltralyticsDetectionModel
 
-        num_slices = len(slice_image_result)
-        durations_in_seconds["slice"] = time.perf_counter() - time_start
+        num_slices = len(slice_stream)
+        # geometry only; the pixel reads are timed as they happen in the loop below
+        planning_seconds = time.perf_counter() - time_start
+
+        if num_slices > 1 and perform_standard_pred and slice_stream.is_streaming:
+            logger.warning(
+                "perform_standard_pred=True also runs inference on the full image, which decodes it in "
+                "one piece and undoes the memory saving of reading slices a band at a time. "
+                "Pass perform_standard_pred=False to keep peak memory bounded."
+            )
 
         # auto postprocess type switch for low confidence thresholds
         if (
@@ -349,51 +359,74 @@ def get_sliced_prediction(
 
         postprocess_time = 0.0
         time_start = time.perf_counter()
-        num_batches = (num_slices + batch_size - 1) // batch_size
         if verbose == 1 or verbose == 2:
             tqdm.write(f"Performing prediction on {num_slices} slices.")
 
-        if progress_bar:
-            slice_iterator = tqdm(range(num_batches), desc="Processing slices", total=num_batches)
-        else:
-            slice_iterator = range(num_batches)
-
         full_shape: list[int | float] = [
-            slice_image_result.original_image_height,
-            slice_image_result.original_image_width,
+            slice_stream.original_image_height,
+            slice_stream.original_image_width,
         ]
         object_prediction_list = []
         slices_processed = 0
-        for batch_ind in slice_iterator:
-            batch_start = batch_ind * batch_size
-            batch_end = min(batch_start + batch_size, num_slices)
-            batch_images = [slice_image_result.images[i] for i in range(batch_start, batch_end)]
-            batch_shifts: list[list[int | float]] = [
-                list(slice_image_result.starting_pixels[i]) for i in range(batch_start, batch_end)
-            ]
-            current_batch_size = len(batch_images)
+        read_seconds = [0.0]
 
-            detection_model.perform_batch_inference([np.ascontiguousarray(img) for img in batch_images])
-            detection_model.convert_original_predictions(
-                shift_amount=batch_shifts,
-                full_shape=[full_shape] * current_batch_size,
-            )
+        def timed(batches: Iterator[Any]) -> Generator[Any, None, None]:
+            """Yield from `batches`, accumulating the wall time spent waiting for pixels.
 
-            for image_preds in detection_model.object_prediction_list_per_image:
-                filtered_preds = filter_predictions(image_preds, exclude_classes_by_name, exclude_classes_by_id)
-                for object_prediction in filtered_preds:
-                    if object_prediction:
-                        object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+            Measured around `next` rather than inside the stream: with prefetching most of
+            the band decode overlaps inference, and only the part the caller actually
+            waited on belongs in the slice duration.
+            """
+            while True:
+                started = time.perf_counter()
+                try:
+                    batch = next(batches)
+                except StopIteration:
+                    return
+                finally:
+                    read_seconds[0] += time.perf_counter() - started
+                yield batch
 
-            slices_processed += current_batch_size
+        with contextlib.ExitStack() as stack:
+            progress = stack.enter_context(tqdm(desc="Processing slices", total=num_slices)) if progress_bar else None
+            # export per batch, so slices are not held until the end
+            exporter = None
+            if slice_dir and slice_export_prefix:
+                exporter = stack.enter_context(
+                    SliceExporter(slice_dir, slice_export_prefix, image, max_workers=batch_size)
+                )
 
-            if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
-                postprocess_time_start = time.time()
-                object_prediction_list = postprocess(object_prediction_list)
-                postprocess_time += time.time() - postprocess_time_start
+            for batch_images, batch_starts in timed(slice_stream.iter_batches(batch_size)):
+                current_batch_size = len(batch_images)
+                batch_shifts: list[list[int | float]] = [list(start) for start in batch_starts]
 
-            if progress_callback is not None:
-                progress_callback(slices_processed, num_slices)
+                if exporter is not None:
+                    exporter.export(batch_images, batch_starts)
+
+                # slices arrive as fresh C-contiguous copies, so no repacking is needed
+                detection_model.perform_batch_inference(batch_images)
+                detection_model.convert_original_predictions(
+                    shift_amount=batch_shifts,
+                    full_shape=[full_shape] * current_batch_size,
+                )
+
+                for image_preds in detection_model.object_prediction_list_per_image:
+                    filtered_preds = filter_predictions(image_preds, exclude_classes_by_name, exclude_classes_by_id)
+                    for object_prediction in filtered_preds:
+                        if object_prediction:
+                            object_prediction_list.append(object_prediction.get_shifted_object_prediction())
+
+                slices_processed += current_batch_size
+
+                if merge_buffer_length is not None and len(object_prediction_list) > merge_buffer_length:
+                    postprocess_time_start = time.time()
+                    object_prediction_list = postprocess(object_prediction_list)
+                    postprocess_time += time.time() - postprocess_time_start
+
+                if progress is not None:
+                    progress.update(current_batch_size)
+                if progress_callback is not None:
+                    progress_callback(slices_processed, num_slices)
 
         if num_slices > 1 and perform_standard_pred:
             prediction_result = get_prediction(
@@ -401,8 +434,8 @@ def get_sliced_prediction(
                 detection_model=detection_model,
                 shift_amount=[0, 0],
                 full_shape=[
-                    slice_image_result.original_image_height,
-                    slice_image_result.original_image_width,
+                    slice_stream.original_image_height,
+                    slice_stream.original_image_width,
                 ],
                 postprocess=None,
                 exclude_classes_by_name=exclude_classes_by_name,
@@ -416,7 +449,8 @@ def get_sliced_prediction(
             postprocess_time += time.time() - postprocess_time_start
 
         time_end = time.perf_counter() - time_start
-        durations_in_seconds["prediction"] = time_end - postprocess_time
+        durations_in_seconds["slice"] = planning_seconds + read_seconds[0]
+        durations_in_seconds["prediction"] = time_end - postprocess_time - read_seconds[0]
         durations_in_seconds["postprocess"] = postprocess_time
 
         if verbose == 2:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from functools import cached_property
 from typing import Any
 
 import numpy as np
@@ -10,7 +11,7 @@ from PIL import Image
 
 from sahi.annotation import ObjectAnnotation
 from sahi.utils.coco import CocoPrediction
-from sahi.utils.cv import read_image_as_pil, visualize_object_predictions
+from sahi.utils.cv import read_image_as_pil, read_image_size, visualize_object_predictions
 from sahi.utils.file import Path
 
 
@@ -202,10 +203,27 @@ class PredictionResult:
             durations_in_seconds: dict[str, Any]
                 Elapsed times for profiling (e.g. inference, postprocess).
         """
-        self.image: Image.Image = read_image_as_pil(image)
-        self.image_width, self.image_height = self.image.size
+        self._image_source = image
+        if isinstance(image, str) and image.startswith("http"):
+            # sizing a remote image costs a full download, so keep what it fetched
+            fetched: Image.Image = read_image_as_pil(image)  # type: ignore[assignment]
+            self.__dict__["image"] = fetched
+            self.image_width, self.image_height = fetched.size
+        else:
+            # header read only: decoding a gigapixel scan to learn its size would undo
+            # the point of slicing it a band at a time
+            self.image_width, self.image_height = read_image_size(image)
         self.object_prediction_list: list[ObjectPrediction] = object_prediction_list
         self.durations_in_seconds = durations_in_seconds
+
+    @cached_property
+    def image(self) -> Image.Image:
+        """The source image, decoded on first access and cached thereafter.
+
+        Assignable: writing to it shadows the cache, as it did when this was a plain
+        attribute.
+        """
+        return read_image_as_pil(self._image_source)  # type: ignore[return-value]
 
     def export_visuals(
         self,

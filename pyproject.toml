@@ -83,6 +83,9 @@ roboflow = [
   "rfdetr>=1.6.2;python_version>='3.12'",
 ]
 onnx = ["onnx;python_version>='3.10'", "onnxruntime;python_version>='3.10'"]
+# streams slices of huge images from disk band-by-band instead of decoding them whole.
+# Left unpinned so it stays resolvable alongside `inference`; see docs/predict.md.
+bigimage = ["pyvips[binary]"]
 numba = ["numba>=0.59.0;python_version>='3.10'"]
 torchvision = ["torch>=2.4.1", "torchvision>=0.19.0"]
 all = [
@@ -122,6 +125,9 @@ ci = [
   "ultralytics>=8.3.161",
   "scikit-image",
   "fiftyone",
+  # pyvips is deliberately absent: `inference` caps pyvips<3.0, so listing the extra
+  # here would install pyvips with no libvips behind it. The `streaming` job in ci.yml
+  # covers that path instead.
 ]
 
 [tool.uv]
@@ -360,6 +366,9 @@ line-ending = "auto"
 minversion = "6.0"
 addopts = ["--import-mode=importlib", "--no-header"]
 pythonpath = ["."]
+markers = [
+    "slow: measurements too heavy or too runner-dependent for CI; run with `pytest -m slow`",
+]
 
 [tool.typos.default]
 extend-ignore-identifiers-re = ["fo"]

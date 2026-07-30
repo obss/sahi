@@ -39,6 +39,26 @@ result = get_sliced_prediction(
 
 ```
 
+### 超大图像推理
+
+当你向 `get_sliced_prediction` 传入文件路径时，切片会按行带（row-band）逐段从磁盘读取，
+而不是一次性解码整幅图像，因此峰值内存只占整幅扫描图的一小部分，而不再随其解码后的完整
+体积增长。要获得完整的内存收益，需要两件事：
+
+- 安装可选的流式后端：`pip install sahi[bigimage]`（内置 libvips）。没有它时图像会被整幅
+  解码，行为与以前一致。
+- 传入 `perform_standard_pred=False`。默认值还会在整幅图像上再跑一次推理，这会把图像整幅
+  解码，从而抵消上述收益。在流式读取切片时若保留该默认值，sahi 会记录一条警告。
+
+Pillow 图像、numpy 数组和 URL 本身就已经解码完毕（或必须整个下载），因此这些输入保持原有
+行为。`sahi predict` 命令行同样如此——它需要为导出的可视化结果预先解码图像，若要使用流式
+读取请改用 Python API。
+
+带有 EXIF 方向标签（旋转或镜像）的图像无法流式读取，会回退为整幅解码（并给出警告）。
+`SliceImageStream.is_streaming` 可以查询某个输入实际是否会被流式读取。
+
+具体的内存与耗时实测数据见[英文文档](../predict.md#predicting-on-very-large-images)。
+
 ## 全图推理
 
 ```python

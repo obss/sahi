@@ -133,6 +133,16 @@ mim install mmdet==3.3.0
 pip install inference>=0.51.5 rfdetr>=1.6.2
 ```
 
+- Install the streaming backend for gigapixel images (optional, see
+  [slicing docs](docs/slicing.md)):
+
+```console
+pip install sahi[bigimage]
+```
+
+Installing it alongside `inference` needs libvips from your system package manager
+instead — see [installing libvips](docs/predict.md#installing-libvips).
+
 </details>
 
 ## <div align="center">Quick Start</div>

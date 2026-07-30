@@ -31,6 +31,24 @@ slice_image_result = slice_image(
 )
 ```
 
+- Stream slices of a huge image without decoding it whole (used internally by
+  `get_sliced_prediction`; install `sahi[bigimage]` for the libvips-backed band
+  reader, otherwise it falls back to a whole-image decode):
+
+```python
+from sahi.slicing import SliceImageStream
+
+stream = SliceImageStream(
+    image=image_path,
+    slice_height=256,
+    slice_width=256,
+    overlap_height_ratio=0.2,
+    overlap_width_ratio=0.2,
+)
+for batch_images, batch_starts in stream.iter_batches(batch_size=8):
+    ...  # at most one row-band of the image is resident at a time
+```
+
 - Slice a COCO formatted dataset:
 
 ```python

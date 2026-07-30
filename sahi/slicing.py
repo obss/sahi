@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import concurrent.futures
+import contextlib
 import os
-from collections.abc import Sequence
+import queue
+import threading
+from collections.abc import Callable, Iterator, Sequence
 from pathlib import Path
 from typing import Any, Literal
 
@@ -16,11 +19,16 @@ from tqdm import tqdm
 from sahi.annotation import BoundingBox, Mask
 from sahi.logger import logger
 from sahi.utils.coco import Coco, CocoAnnotation, CocoImage, create_coco_dict
-from sahi.utils.cv import IMAGE_EXTENSIONS_LOSSLESS, IMAGE_EXTENSIONS_LOSSY, read_image_as_pil
+from sahi.utils.cv import IMAGE_EXTENSIONS_LOSSY, _to_hwc, read_image_as_pil, read_image_size
 from sahi.utils.file import load_json, save_json
 
 _CPU_COUNT = os.cpu_count() or 4
 MAX_WORKERS = max(1, min(32, _CPU_COUNT * 2))
+
+# Rows per forward read, trading calls into the decoder against the size of the buffer
+# the reader holds. Reads go through a single libvips region, so the decoder stays in
+# step regardless of where a chunk lands.
+_CHUNK_ROWS = 128
 
 
 def get_slice_bboxes(
@@ -65,10 +73,12 @@ def get_slice_bboxes(
     y_max = y_min = 0
 
     if slice_height and slice_width:
-        if overlap_height_ratio is not None and overlap_height_ratio >= 1.0:
-            raise ValueError("Overlap ratio must be less than 1.0")
-        if overlap_width_ratio is not None and overlap_width_ratio >= 1.0:
-            raise ValueError("Overlap ratio must be less than 1.0")
+        # a negative ratio spaces slices apart instead of overlapping them, which leaves
+        # rows no band covers and so cannot be streamed
+        if overlap_height_ratio is not None and not 0.0 <= overlap_height_ratio < 1.0:
+            raise ValueError("Overlap ratio must be in [0.0, 1.0)")
+        if overlap_width_ratio is not None and not 0.0 <= overlap_width_ratio < 1.0:
+            raise ValueError("Overlap ratio must be in [0.0, 1.0)")
         y_overlap = int((overlap_height_ratio if overlap_height_ratio is not None else 0.2) * slice_height)
         x_overlap = int((overlap_width_ratio if overlap_width_ratio is not None else 0.2) * slice_width)
     elif auto_slice_resolution:
@@ -275,6 +285,561 @@ class SliceImageResult:
         return len(self._sliced_image_list)
 
 
+def _slice_file_suffix(image: str | Image.Image | np.ndarray, out_ext: str | None = None) -> str:
+    """Resolve the file extension exported slices are written with.
+
+    Taken from the source path when there is one: a path handed in directly, or the
+    `filename` a PIL image opened from disk carries. Lossy sources are re-encoded as png
+    so repeated slicing does not compound the compression. Arrays, URLs and in-memory
+    images have no extension to inherit and also get png.
+    """
+    if out_ext:
+        return out_ext
+    if isinstance(image, str) and not image.startswith("http"):
+        source_name = image
+    elif isinstance(image, Image.Image):
+        source_name = str(getattr(image, "filename", ""))
+    else:
+        return ".png"
+    source_suffix = Path(source_name).suffix
+    if not source_suffix or source_suffix in IMAGE_EXTENSIONS_LOSSY:
+        return ".png"
+    return source_suffix
+
+
+def _export_slice(
+    image: np.ndarray,
+    starting_pixel: Sequence[int],
+    output_dir: str,
+    prefix: str,
+    suffix: str,
+) -> None:
+    """Write one slice to `output_dir` under the name pattern `slice_image` uses.
+
+    The slice bbox is recovered from the starting pixel plus the array shape, since
+    `get_slice_bboxes` clamps the far edge to the image bounds.
+    """
+    x_min, y_min = starting_pixel
+    height, width = image.shape[:2]
+    file_name = f"{prefix}_{x_min}_{y_min}_{x_min + width}_{y_min + height}{suffix}"
+    Image.fromarray(image).save(str(Path(output_dir) / file_name))
+
+
+class SliceExporter:
+    """Write slices to disk in the background, under the names `slice_image` uses.
+
+    A context manager so the writer threads are shut down with the caller's loop. Exists
+    so a streaming caller can flush each batch as it goes rather than holding every slice
+    until the end, which is the memory `SliceImageStream` exists to bound.
+    """
+
+    def __init__(
+        self,
+        output_dir: str,
+        prefix: str,
+        image: str | os.PathLike | Image.Image | np.ndarray,
+        out_ext: str | None = None,
+        max_workers: int | None = None,
+    ) -> None:
+        """Prepare `output_dir` and resolve the extension slices are written with.
+
+        Args:
+            output_dir: Directory to write slices into. Created if missing.
+            prefix: File name prefix, as `slice_image`'s `output_file_name`.
+            image: The image being sliced; its extension is inherited where it has one.
+            out_ext: Extension to force instead of inheriting one.
+            max_workers: Cap on writer threads. Defaults to `MAX_WORKERS`.
+        """
+        self._output_dir = output_dir
+        self._prefix = prefix
+        self._suffix = _slice_file_suffix(image, out_ext)
+        self._max_workers = min(MAX_WORKERS, max_workers) if max_workers else MAX_WORKERS
+        self._executor: concurrent.futures.ThreadPoolExecutor | None = None
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+    def __enter__(self) -> SliceExporter:
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=self._max_workers)
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        if self._executor is not None:
+            self._executor.shutdown()
+            self._executor = None
+
+    def export(self, images: Sequence[np.ndarray], starting_pixels: Sequence[Sequence[int]]) -> None:
+        """Write one batch of slices, returning once they are all on disk.
+
+        Draining before returning is deliberate: queueing the writes would keep the batch
+        alive alongside the next one, doubling the peak this class is used to avoid.
+        """
+        if self._executor is None:
+            raise RuntimeError("SliceExporter must be used as a context manager")
+        list(
+            self._executor.map(
+                _export_slice,
+                images,
+                starting_pixels,
+                [self._output_dir] * len(images),
+                [self._prefix] * len(images),
+                [self._suffix] * len(images),
+            )
+        )
+
+
+class SliceImageStream:
+    """Compute slice geometry from the image header, reading pixels a band at a time.
+
+    `slice_image` holds the whole decoded image while every slice is materialised. This
+    exposes the geometry up front, which callers need for progress reporting and
+    coordinate shifts, but defers the pixel reads so the full image is never resident.
+    """
+
+    def __init__(
+        self,
+        image: str | os.PathLike | Image.Image | np.ndarray,
+        slice_height: int | None = None,
+        slice_width: int | None = None,
+        overlap_height_ratio: float | None = 0.2,
+        overlap_width_ratio: float | None = 0.2,
+        auto_slice_resolution: bool | None = True,
+        exif_fix: bool = True,
+    ) -> None:
+        """Initialize the stream and compute slice geometry.
+
+        Args:
+            image: File path of image, Pillow Image, or numpy array to be sliced.
+            slice_height: Height of each slice. Default None.
+            slice_width: Width of each slice. Default None.
+            overlap_height_ratio: Fractional overlap in height of each slice. Default 0.2.
+            overlap_width_ratio: Fractional overlap in width of each slice. Default 0.2.
+            auto_slice_resolution: Calculate slice params from resolution when not given.
+            exif_fix: Whether to apply an EXIF fix to the image.
+        """
+        if isinstance(image, os.PathLike):
+            # normalise early: every path check below (and _open_band_source's) tests for
+            # str, so a Path would silently skip streaming and decode whole instead.
+            image = os.fspath(image)
+        if isinstance(image, str) and image.startswith("http"):
+            # A remote image has no header to peek at, so read_image_size has to fetch the
+            # whole thing anyway. Keep the pixels: re-fetching them in iter_batches would
+            # double the transfer, and nothing is deferred by dropping them.
+            image = read_image_as_pil(image, exif_fix=exif_fix, return_arr=True)  # type: ignore[assignment]
+        self._image = image
+        self._exif_fix = exif_fix
+        width, height = read_image_size(image, exif_fix=exif_fix)
+        if height <= 0 or width <= 0:
+            # matches slice_image: an empty image yields no slices, and silently returning
+            # zero predictions reads as "nothing detected" rather than "nothing was read".
+            raise RuntimeError(f"invalid image size: {(width, height)}")
+        self.original_image_height, self.original_image_width = height, width
+        self.slice_bboxes = get_slice_bboxes(
+            image_height=self.original_image_height,
+            image_width=self.original_image_width,
+            slice_height=slice_height,
+            slice_width=slice_width,
+            auto_slice_resolution=auto_slice_resolution,
+            overlap_height_ratio=overlap_height_ratio,
+            overlap_width_ratio=overlap_width_ratio,
+        )
+
+    def __len__(self) -> int:
+        return len(self.slice_bboxes)
+
+    @property
+    def is_streaming(self) -> bool:
+        """Whether pixels will be read a band at a time rather than decoded in one piece.
+
+        False when the input is not a local path or the optional libvips extra is
+        unusable, in which case the whole image is decoded and peak memory is unchanged.
+        """
+        return _can_stream(self._image)
+
+    def iter_batches(
+        self, batch_size: int = 1, prefetch: bool = True
+    ) -> Iterator[tuple[list[np.ndarray], list[list[int]]]]:
+        """Yield batches of slices together with their starting pixels.
+
+        Slices are produced one row-band at a time, so at most one band is resident.
+        Batches are allowed to span bands: slices are handed out as copies, so carrying
+        the tail of one band into the next batch pins only those slices, and stopping at
+        each band would give short batches on images a few slices wide.
+
+        Args:
+            batch_size: Maximum number of slices per yielded batch.
+            prefetch: Decode the next band on a worker thread while the caller works on
+                the current batch. Only applies to the libvips source; see `_prefetch`.
+
+        Yields:
+            Tuples of (slice images, starting pixels as [x_min, y_min]).
+        """
+        if batch_size < 1:
+            raise ValueError(f"batch_size must be >= 1, got {batch_size}")
+
+        bands = _group_bboxes_into_bands(self.slice_bboxes)
+        band_height = max((y_max - y_min for (y_min, y_max), _ in bands), default=0)
+
+        def produce() -> Iterator[tuple[list[np.ndarray], list[list[int]]]]:
+            # Opened in here, not in iter_batches, so that when this runs on a prefetch
+            # worker the libvips region is created and used on the same thread. A
+            # VipsRegion is thread-affine: fetching from a region built on another
+            # thread aborts the process inside libvips.
+            source = _open_band_source(
+                self._image,
+                band_height=band_height,
+                exif_fix=self._exif_fix,
+                expected_shape=(self.original_image_height, self.original_image_width),
+            )
+            yield from self._batches_from(source, bands, batch_size)
+
+        batches = produce()
+        # Only libvips releases the GIL, so only it can overlap with the caller. An
+        # in-memory source is already decoded, and threading it would add handoffs to
+        # hide work that no longer exists.
+        if prefetch and self.is_streaming:
+            batches = _prefetch(batches)
+        # returned rather than delegated to, so this function is not itself a generator
+        # and the batch_size check above raises on the call instead of the first `next`
+        return batches
+
+    def _batches_from(
+        self,
+        source: _InMemoryBandSource | _VipsBandSource,
+        bands: list[tuple[tuple[int, int], list[list[int]]]],
+        batch_size: int,
+    ) -> Iterator[tuple[list[np.ndarray], list[list[int]]]]:
+        """Cut `bands` out of `source`, batched. See `iter_batches` for the contract."""
+        images: list[np.ndarray] = []
+        shifts: list[list[int]] = []
+        for (y_min, y_max), bboxes in bands:
+            try:
+                band = source.read_band(y_min, y_max)
+            except Exception as error:
+                if isinstance(source, _InMemoryBandSource):
+                    raise
+                # A streaming decoder can fail part way in, well after the open that
+                # _open_band_source guards: libvips only rejects a read it dislikes once
+                # it reaches it. Re-decode eagerly rather than failing the caller.
+                logger.warning(f"streaming read failed ({error}), decoding the whole image instead")
+                source = _decode_band_source(
+                    self._image,
+                    exif_fix=self._exif_fix,
+                    expected_shape=(self.original_image_height, self.original_image_width),
+                )
+                band = source.read_band(y_min, y_max)
+            for x_min, _, x_max, _ in bboxes:
+                # copy: a streaming source reuses its band buffer, so a view would be
+                # rewritten under the caller. np.ascontiguousarray is not enough here, as
+                # it returns the input untouched when the slice spans the full width.
+                images.append(band[:, x_min:x_max].copy())
+                shifts.append([x_min, y_min])
+                if len(images) == batch_size:
+                    yield images, shifts
+                    images, shifts = [], []
+        if images:
+            yield images, shifts
+
+
+def _can_stream(image: str | Image.Image | np.ndarray) -> bool:
+    """Whether `_open_band_source` will attempt libvips for this input.
+
+    Answers without opening anything, so `iter_batches` can decide about prefetching
+    before the source exists. A false positive (libvips is importable but rejects the
+    file) only costs a worker thread that overlaps nothing.
+    """
+    if not isinstance(image, str) or image.startswith("http"):
+        return False
+    try:
+        import pyvips  # noqa: F401
+    except Exception:
+        return False
+    return True
+
+
+def _prefetch(
+    batches: Iterator[tuple[list[np.ndarray], list[list[int]]]], depth: int = 1
+) -> Iterator[tuple[list[np.ndarray], list[list[int]]]]:
+    """Run `batches` on a worker thread, keeping up to `depth` results ready.
+
+    libvips releases the GIL while it decodes, so the next band can be read while the
+    caller is busy with the current batch. Measured on a 256 MP JPEG: 1.5 s of
+    GIL-holding work in the consumer cost 0.2 s of wall time instead of 1.5 s.
+
+    `depth` is 1 because each queued item pins a whole batch of slices, which is the
+    memory this class exists to bound. Exceptions are re-raised in the caller's thread.
+    """
+    slots: queue.Queue = queue.Queue(maxsize=depth)
+    finished = object()
+    stop = threading.Event()
+
+    def pump() -> None:
+        try:
+            # closed here, on the thread that owns it: `batches` holds a thread-affine
+            # VipsRegion, and closing it from the consumer would raise
+            # "generator already executing" whenever the producer is mid-read.
+            with contextlib.closing(batches):  # type: ignore[type-var]
+                for batch in batches:
+                    slots.put(batch)
+                    if stop.is_set():
+                        return
+        except BaseException as error:
+            # broad on purpose: anything the producer raises is re-raised in the
+            # consumer's thread, where the caller can actually see it
+            slots.put(error)
+        else:
+            slots.put(finished)
+
+    worker = threading.Thread(target=pump, name="sahi-slice-prefetch", daemon=True)
+    worker.start()
+    try:
+        while True:
+            item = slots.get()
+            if item is finished:
+                return
+            if isinstance(item, BaseException):
+                raise item
+            yield item
+    finally:
+        # The caller may abandon us mid-iteration (`break`, or an error downstream).
+        # Draining lets the worker finish its blocked `put`, see the stop flag and exit
+        # instead of sitting on a full queue for the life of the process.
+        stop.set()
+        while worker.is_alive():
+            with contextlib.suppress(queue.Empty):
+                slots.get(timeout=0.1)
+        worker.join()
+
+
+def _group_bboxes_into_bands(
+    slice_bboxes: list[list[int]],
+) -> list[tuple[tuple[int, int], list[list[int]]]]:
+    """Group slice bboxes by their shared vertical extent, preserving order.
+
+    `get_slice_bboxes` emits slices in row-major order, so every slice sharing a
+    (y_min, y_max) pair can be cut from a single horizontal band of the image.
+    """
+    bands: dict[tuple[int, int], list[list[int]]] = {}
+    for bbox in slice_bboxes:
+        bands.setdefault((bbox[1], bbox[3]), []).append(bbox)
+    return list(bands.items())
+
+
+class _ChunkedBandReader:
+    """Assemble overlapping bands from a source that can only be read forwards.
+
+    Consecutive bands overlap, but a sequential decoder cannot rewind to serve the
+    overlap a second time. Rows therefore arrive in fixed forward-only chunks, and the
+    overlap is carried forward inside a preallocated buffer.
+    """
+
+    def __init__(
+        self,
+        read_chunk: Callable[[int, int], np.ndarray],
+        image_height: int,
+        band_height: int,
+    ) -> None:
+        """Initialize the reader.
+
+        Args:
+            read_chunk: Callable taking (first row, number of rows) and returning them.
+                It is only ever called with monotonically advancing rows.
+            image_height: Total height of the source image.
+            band_height: Tallest band that will be requested.
+        """
+        self._read_chunk = read_chunk
+        self._image_height = image_height
+        self._capacity = band_height + _CHUNK_ROWS
+        self._buffer: np.ndarray | None = None
+        self._buffer_start = 0  # image row held at buffer[0]
+        self._valid = 0  # rows currently held in the buffer
+        self._read_pos = 0  # rows already consumed from the source
+
+    def read_band(self, y_min: int, y_max: int) -> np.ndarray:
+        """Return rows [y_min, y_max) of the image.
+
+        Bands must be requested with non-decreasing `y_min`. The returned array is a
+        view into a reused buffer and is only valid until the next call; copy anything
+        that must outlive it.
+        """
+        self._discard_rows_before(y_min)
+        while self._buffer_start + self._valid < y_max:
+            self._pull_chunk()
+        start = y_min - self._buffer_start
+        return self._buffer[start : start + (y_max - y_min)]  # type: ignore[index]
+
+    def _discard_rows_before(self, y_min: int) -> None:
+        """Drop rows that no later band can need, compacting in place."""
+        drop = y_min - self._buffer_start
+        if drop <= 0:
+            return
+        if drop > self._valid:
+            # A gap means rows were never read, which would leave _read_pos behind
+            # _buffer_start and make every later band return the wrong rows.
+            raise ValueError(f"band starts at row {y_min}, past buffered row {self._buffer_start + self._valid}")
+        keep = self._valid - drop
+        if keep and self._buffer is not None:
+            self._buffer[:keep] = self._buffer[drop : drop + keep]
+        self._valid = keep
+        self._buffer_start = y_min
+
+    def _pull_chunk(self) -> None:
+        """Read the next chunk of rows from the source."""
+        rows = min(_CHUNK_ROWS, self._image_height - self._read_pos, self._capacity - self._valid)
+        if rows <= 0:
+            # read_band loops until the buffer reaches y_max, so a zero-row read would hang
+            # instead of failing. Unreachable as constructed: the only source cross-checks
+            # its dimensions at open.
+            raise ValueError(f"no rows left to read at row {self._read_pos} of {self._image_height}")
+        chunk = self._read_chunk(self._read_pos, rows)
+        if self._buffer is None:
+            self._buffer = np.empty((self._capacity, *chunk.shape[1:]), dtype=chunk.dtype)
+        self._buffer[self._valid : self._valid + rows] = chunk
+        self._valid += rows
+        self._read_pos += rows
+
+
+class _InMemoryBandSource:
+    """Band source for images already decoded in memory; bands are views into the array."""
+
+    def __init__(self, array: np.ndarray, expected_shape: tuple[int, int] | None = None) -> None:
+        """Serve bands from `array`, refusing it if it is not the size slices were planned for.
+
+        numpy clamps an out-of-range slice instead of raising, so a geometry/pixels
+        disagreement would hand back short bands and mis-sized slices rather than an
+        error. `_VipsBandSource` cross-checks its dimensions at open; this is that check
+        here, and on both axes: the `band[:, x_min:x_max]` cut in `_batches_from` has the
+        same hazard on x, where no quarter turn is needed to reach it.
+        """
+        actual = array.shape[:2]
+        if expected_shape is not None and actual != expected_shape:
+            raise ValueError(f"decoded image is {actual} where the header read saw {expected_shape}")
+        self._array = array
+
+    def read_band(self, y_min: int, y_max: int) -> np.ndarray:
+        """Return rows [y_min, y_max) of the image."""
+        return self._array[y_min:y_max]
+
+
+class _VipsBandSource:
+    """Stream bands from a file with libvips, decoding only as far as the current band.
+
+    Requires the optional `pyvips` extra. This is the only source that does not hold the
+    whole decoded image at once.
+
+    Memory is not constant in image height: libvips itself retains roughly 0.45 bytes per
+    pixel decoded. See docs/predict.md for the measurements.
+    """
+
+    def __init__(
+        self,
+        path: str,
+        band_height: int,
+        expected_shape: tuple[int, int] | None = None,
+    ) -> None:
+        """Open `path` for sequential access and prepare the band reader.
+
+        Args:
+            path: Local file to stream.
+            band_height: Tallest band that will be requested.
+            expected_shape: (height, width) the caller computed for the image; a
+                mismatch means this source would mis-slice, so it refuses to open.
+        """
+        import pyvips
+
+        image = pyvips.Image.new_from_file(path, access="sequential")
+        # libvips omits the field entirely when the file carries no orientation tag
+        orientation = image.get("orientation") if image.get_typeof("orientation") else 1
+        if orientation != 1:
+            # read_image_as_pil applies every EXIF transform (mirrors and 180s, not only
+            # quarter turns) while sequential decoding applies none, so a streamed slice
+            # would carry the right geometry and the wrong pixels.
+            #
+            # This refuses on the tag alone, ignoring exif_fix. Pillow's TIFF plugin
+            # applies orientations 2-4 in load() whatever the caller asked for, so
+            # honouring the flag here made a mirrored TIFF differ on every slice.
+            raise ValueError(f"EXIF orientation {orientation} transforms the image")
+        if expected_shape is not None and (image.height, image.width) != expected_shape:
+            raise ValueError(f"libvips sees {(image.height, image.width)} where the header read saw {expected_shape}")
+        if image.interpretation not in ("srgb", "b-w"):
+            # libvips converts CMYK to sRGB without the Adobe inversion PIL and OpenCV
+            # apply, which is up to 127 levels of error per channel. An allowlist, since
+            # anything unlisted is safer decoded eagerly than converted differently.
+            raise ValueError(f"{image.interpretation} converts differently in libvips than in PIL")
+        if image.format != "uchar":
+            # colourspace() rescales deep samples onto 0-255 where PIL's I;16 -> RGB
+            # clips, so the two paths disagree by up to a full level.
+            # _read_local_image_as_arr bails to PIL for the same reason.
+            raise ValueError(f"{image.format} samples convert differently in libvips than in PIL")
+        # Match read_image_as_pil's .convert("RGB"): promote grayscale/CMYK to 3-channel
+        # sRGB and drop any alpha, so slices carry the same channels either way.
+        image = image.colourspace("srgb")
+        if image.bands > 3:
+            image = image[0:3]
+        self._image = image
+        # One region for the whole read. crop(...).numpy() evaluates the pipeline afresh
+        # per chunk, which desynchronises the sequential loader's line counter: the TIFF
+        # loader rejects that outright ("out of order read"), while the JPEG and PNG
+        # loaders happen to hold enough line cache to absorb it.
+        self._region = pyvips.Region.new(image)
+        self._reader = _ChunkedBandReader(
+            self._read_chunk,
+            image_height=self._image.height,
+            band_height=band_height,
+        )
+
+    def _read_chunk(self, y_min: int, rows: int) -> np.ndarray:
+        # colourspace("srgb") always yields an 8-bit image, so the buffer is plain uint8
+        buffer = self._region.fetch(0, y_min, self._image.width, rows)
+        return np.frombuffer(buffer, dtype=np.uint8).reshape(rows, self._image.width, self._image.bands)
+
+    def read_band(self, y_min: int, y_max: int) -> np.ndarray:
+        """Return rows [y_min, y_max) of the image."""
+        return self._reader.read_band(y_min, y_max)
+
+
+def _open_band_source(
+    image: str | Image.Image | np.ndarray,
+    band_height: int,
+    exif_fix: bool = True,
+    expected_shape: tuple[int, int] | None = None,
+) -> _InMemoryBandSource | _VipsBandSource:
+    """Select the cheapest band source available for this input.
+
+    Falls back to decoding the whole image when nothing cheaper applies, so behaviour
+    never regresses relative to `slice_image`.
+    """
+    # libvips reads files, so URLs skip it: handing it one costs an exception and a
+    # warning blaming libvips for a file it was never given.
+    if isinstance(image, str) and not image.startswith("http"):
+        try:
+            import pyvips  # noqa: F401
+        except Exception as error:
+            # pyvips binds libvips through cffi at import and raises OSError, not
+            # ImportError, when the shared library is absent. Both mean the optional extra
+            # is unusable here, which is the documented default.
+            logger.debug(f"pyvips is unusable ({error}), decoding the whole image instead")
+        else:
+            try:
+                return _VipsBandSource(image, band_height=band_height, expected_shape=expected_shape)
+            except Exception as error:
+                # warn: the caller may be relying on streaming to fit in RAM
+                logger.warning(f"libvips cannot stream {image} ({error}), decoding the whole image instead")
+    return _decode_band_source(image, exif_fix=exif_fix, expected_shape=expected_shape)
+
+
+def _decode_band_source(
+    image: str | Image.Image | np.ndarray,
+    exif_fix: bool = True,
+    expected_shape: tuple[int, int] | None = None,
+) -> _InMemoryBandSource:
+    """Decode the whole image up front and serve bands from memory."""
+    if isinstance(image, np.ndarray):
+        # match read_image_as_pil, which transposes CHW arrays; the transpose is a view
+        return _InMemoryBandSource(_to_hwc(image), expected_shape=expected_shape)
+    # a Pillow image is already decoded, so there is nothing left to defer
+    image_arr: np.ndarray = read_image_as_pil(image, exif_fix=exif_fix, return_arr=True)  # type: ignore[assignment]
+    return _InMemoryBandSource(image_arr, expected_shape=expected_shape)
+
+
 def slice_image(
     image: str | Image.Image | np.ndarray,
     coco_annotation_list: list[CocoAnnotation] | None = None,
@@ -327,25 +892,17 @@ def slice_image(
     # define verboseprint
     verboselog = logger.info if verbose else lambda *a, **k: None
 
-    def _export_single_slice(image: np.ndarray, output_dir: str, slice_file_name: str) -> None:
-        image_pil = read_image_as_pil(image, exif_fix=exif_fix)
-        slice_file_path = str(Path(output_dir) / slice_file_name)
-        # export sliced image
-        image_pil.save(slice_file_path)
-        image_pil.close()  # to fix https://github.com/obss/sahi/issues/565
-        verboselog("sliced image path: " + slice_file_path)
-
     # create outdir if not present
     if output_dir is not None:
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    # read image
-    image_pil = read_image_as_pil(image, exif_fix=exif_fix)
-    verboselog("image.shape: " + str(image_pil.size))
+    # read image directly as an array, so no full-size PIL copy is held alongside it
+    image_arr: np.ndarray = read_image_as_pil(image, exif_fix=exif_fix, return_arr=True)  # type: ignore[assignment]
+    image_height, image_width = image_arr.shape[:2]
+    verboselog("image.shape: " + str((image_width, image_height)))
 
-    image_width, image_height = image_pil.size
     if not (image_width != 0 and image_height != 0):
-        raise RuntimeError(f"invalid image size: {image_pil.size} for 'slice_image'.")
+        raise RuntimeError(f"invalid image size: {(image_width, image_height)} for 'slice_image'.")
     slice_bboxes = get_slice_bboxes(
         image_height=image_height,
         image_width=image_width,
@@ -361,7 +918,8 @@ def slice_image(
     # init images and annotations lists
     sliced_image_result = SliceImageResult(original_image_size=[image_height, image_width], image_dir=output_dir)
 
-    image_pil_arr = np.asarray(image_pil)
+    suffix = _slice_file_suffix(image, out_ext)
+
     # iterate over slices
     for slice_bbox in slice_bboxes:
         n_ims += 1
@@ -371,22 +929,10 @@ def slice_image(
         tly = slice_bbox[1]
         brx = slice_bbox[2]
         bry = slice_bbox[3]
-        image_pil_slice = image_pil_arr[tly:bry, tlx:brx]
-
-        # set image file suffixes
-        slice_suffixes = "_".join(map(str, slice_bbox))
-        if out_ext:
-            suffix = out_ext
-        elif hasattr(image_pil, "filename"):
-            suffix = Path(getattr(image_pil, "filename")).suffix
-            if suffix in IMAGE_EXTENSIONS_LOSSY:
-                suffix = ".png"
-            elif suffix in IMAGE_EXTENSIONS_LOSSLESS:
-                suffix = Path(image_pil.filename).suffix
-        else:
-            suffix = ".png"
+        image_pil_slice = image_arr[tly:bry, tlx:brx]
 
         # set image file name and path
+        slice_suffixes = "_".join(map(str, slice_bbox))
         slice_file_name = f"{output_file_name}_{slice_suffixes}{suffix}"
 
         # create coco image
@@ -416,12 +962,15 @@ def slice_image(
         max_workers = max(1, max_workers)
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             # map will schedule tasks and wait for completion when the context exits
+            num = len(sliced_image_result)
             list(
                 executor.map(
-                    _export_single_slice,
+                    _export_slice,
                     sliced_image_result.images,
-                    [output_dir] * len(sliced_image_result),
-                    sliced_image_result.filenames,
+                    sliced_image_result.starting_pixels,
+                    [output_dir] * num,
+                    [output_file_name] * num,
+                    [suffix] * num,
                 )
             )
 
