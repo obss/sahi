@@ -123,7 +123,10 @@ def annotation_inside_slice(annotation: dict, slice_bbox: list[int]) -> bool:
 
 
 def process_coco_annotations(
-    coco_annotation_list: list[CocoAnnotation], slice_bbox: list[int], min_area_ratio: float
+    coco_annotation_list: list[CocoAnnotation],
+    slice_bbox: list[int],
+    min_area_ratio: float,
+    min_width_height: float | None = None,
 ) -> list[CocoAnnotation]:
     """Slices and filters given list of CocoAnnotation objects with given 'slice_bbox' and 'min_area_ratio'.
 
@@ -135,6 +138,9 @@ def process_coco_annotations(
         min_area_ratio (float): If the cropped annotation area to original
             annotation ratio is smaller than this value, the annotation is
             filtered out. Default 0.1.
+        min_width_height (float | None): If provided, an annotation is filtered
+            out only when BOTH sliced width and height are smaller than this
+            threshold and its area ratio is smaller than ``min_area_ratio``.
 
     Returns:
         (List[CocoAnnotation]): Sliced annotations.
@@ -143,8 +149,30 @@ def process_coco_annotations(
     for coco_annotation in coco_annotation_list:
         if annotation_inside_slice(coco_annotation.json, slice_bbox):
             sliced_coco_annotation = coco_annotation.get_sliced_coco_annotation(slice_bbox)
-            if sliced_coco_annotation.area / coco_annotation.area >= min_area_ratio:
-                sliced_coco_annotation_list.append(sliced_coco_annotation)
+            original_area = coco_annotation.area
+            if original_area <= 0:
+                continue
+            area_ratio = sliced_coco_annotation.area / original_area
+            if min_width_height is None:
+                if area_ratio >= min_area_ratio:
+                    sliced_coco_annotation_list.append(sliced_coco_annotation)
+            else:
+                sliced_bbox = sliced_coco_annotation.bbox
+                if len(sliced_bbox) >= 4:
+                    sliced_width = sliced_bbox[2]
+                    sliced_height = sliced_bbox[3]
+                else:
+                    # Degenerate intersections can produce non-area geometries
+                    # without a valid xywh bbox; treat their size as zero.
+                    sliced_width = 0.0
+                    sliced_height = 0.0
+                should_filter = (
+                    area_ratio < min_area_ratio
+                    and sliced_width < min_width_height
+                    and sliced_height < min_width_height
+                )
+                if not should_filter:
+                    sliced_coco_annotation_list.append(sliced_coco_annotation)
     return sliced_coco_annotation_list
 
 
