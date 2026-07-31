@@ -119,7 +119,7 @@ def select_device(device: str | None = None) -> str | torch.device:
 
     if not cpu and not mps and torch.cuda.is_available() and valid_cuda_id:  # prefer GPU if available
         arg = f"cuda:{device}" if device else "cuda:0"
-    elif mps and torch.backends.mps.is_available():  # prefer MPS if available
+    elif mps and getattr(torch, "has_mps", False) and torch.backends.mps.is_available():  # prefer MPS if available
         arg = "mps"
     else:  # revert to CPU
         arg = "cpu"
