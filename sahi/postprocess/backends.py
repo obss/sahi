@@ -76,7 +76,7 @@ def resolve_backend() -> str:
         try:
             import torch
 
-            if torch.cuda.is_available():
+            if torch.cuda.is_available() or torch.mps.is_available():
                 _resolved_cache = "torchvision"
                 return _resolved_cache
         except ImportError:
