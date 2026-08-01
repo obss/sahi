@@ -377,6 +377,33 @@ class TestBackendRegistry:
         finally:
             set_postprocess_backend(original)
 
+    @pytest.mark.parametrize(
+        ("cuda", "mps", "expected"),
+        [(True, False, "torchvision"), (False, True, "torchvision"), (False, False, None)],
+    )
+    def test_auto_resolves_gpu_to_torchvision(
+        self, monkeypatch: pytest.MonkeyPatch, cuda: bool, mps: bool, expected: str | None
+    ) -> None:
+        """Auto-detection picks torchvision on CUDA and on Apple MPS, but not on CPU."""
+        import torch
+
+        from sahi.postprocess.backends import resolve_backend, set_postprocess_backend
+
+        pytest.importorskip("torchvision")
+        monkeypatch.setattr(torch.cuda, "is_available", lambda: cuda)
+        monkeypatch.setattr(torch.backends.mps, "is_available", lambda: mps)
+
+        original = get_postprocess_backend()
+        try:
+            set_postprocess_backend("auto")
+            resolved = resolve_backend()
+            if expected is None:
+                assert resolved != "torchvision"
+            else:
+                assert resolved == expected
+        finally:
+            set_postprocess_backend(original)
+
     def test_forced_numpy_backend_dispatch(self) -> None:
         """Test NMS dispatch with forced numpy backend."""
         from sahi.postprocess.backends import set_postprocess_backend
