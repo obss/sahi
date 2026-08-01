@@ -50,8 +50,8 @@ def resolve_backend() -> str:
 
     When the backend is set to "auto", detection follows this priority:
 
-    1. **torchvision** -- selected if both torchvision and a CUDA GPU are
-       available (GPU-accelerated NMS).
+    1. **torchvision** -- selected if torchvision is installed and a GPU is
+       available, either CUDA or Apple MPS (GPU-accelerated NMS).
     2. **numba** -- selected if the numba package is installed (JIT-compiled
        loops, faster than pure numpy for large prediction counts).
     3. **numpy** -- always available as the fallback (pure numpy,
@@ -71,12 +71,14 @@ def resolve_backend() -> str:
         _resolved_cache = _backend
         return _backend
 
-    # Auto-detect: prefer torchvision on GPU, then numba, then numpy
+    # Auto-detect: prefer torchvision on CUDA/MPS, then numba, then numpy
     if is_available("torchvision"):
         try:
             import torch
 
-            if torch.cuda.is_available():
+            # torch.mps.is_available() only exists from torch 2.5; torch.backends.mps
+            # has been the stable entry point since 1.12 and is False on non-Apple builds.
+            if torch.cuda.is_available() or torch.backends.mps.is_available():
                 _resolved_cache = "torchvision"
                 return _resolved_cache
         except ImportError:

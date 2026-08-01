@@ -96,8 +96,16 @@ def select_device(device: str | None = None) -> str | torch.device:
 
     import torch
 
-    if device == "cuda" or device is None:
+    if device == "cuda":
         device = "cuda:0"
+    elif device is None:
+        if torch.cuda.is_available():
+            device = "cuda:0"
+        elif torch.backends.mps.is_available():
+            device = "mps"
+        else:
+            device = "cpu"
+
     device = str(device).strip().lower().replace("cuda:", "").replace("none", "")  # to string, 'cuda:0' to '0'
     cpu = device == "cpu"
     mps = device == "mps"  # Apple Metal Performance Shaders (MPS)
@@ -111,7 +119,7 @@ def select_device(device: str | None = None) -> str | torch.device:
 
     if not cpu and not mps and torch.cuda.is_available() and valid_cuda_id:  # prefer GPU if available
         arg = f"cuda:{device}" if device else "cuda:0"
-    elif mps and getattr(torch, "has_mps", False) and torch.backends.mps.is_available():  # prefer MPS if available
+    elif mps and torch.backends.mps.is_available():  # prefer MPS if available
         arg = "mps"
     else:  # revert to CPU
         arg = "cpu"
