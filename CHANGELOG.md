@@ -19,6 +19,7 @@ A patch release that puts Apple Silicon GPUs to work, adds a Turkish translation
 
 - Device selection and postprocessing backend resolution are covered by tests ([#1409](https://github.com/obss/sahi/pull/1409)).
 - Bumped `astral-sh/setup-uv` 8.3.2 → 9.0.0 ([#1399](https://github.com/obss/sahi/pull/1399)), `actions/setup-python` 6.3.0 → 7.0.0 ([#1400](https://github.com/obss/sahi/pull/1400)) and `actions/checkout` 7.0.0 → 7.0.1 ([#1398](https://github.com/obss/sahi/pull/1398)).
+- Relaxed the `twine` requirement to `>=5.1.1,<8.0.0` ([#1406](https://github.com/obss/sahi/pull/1406)).
 
 ### ⚡ Performance
 
