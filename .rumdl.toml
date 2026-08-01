@@ -5,8 +5,8 @@
 # Parse MkDocs / zensical syntax (admonitions, tabs, snippets, attr_list, grids)
 flavor = "mkdocs"
 
-# Lint the docs tree only
-include = ["docs/**/*.md"]
+# Lint the docs tree and the changelog
+include = ["docs/**/*.md", "CHANGELOG.md"]
 
 # Keep table columns padded and aligned (off by default)
 enable = ["MD060"]
