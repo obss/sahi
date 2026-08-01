@@ -124,7 +124,7 @@ available backend is selected automatically:
 
 | Backend | When selected | Install |
 | --------- | -------------- | --------- |
-| **torchvision** | CUDA GPU + torchvision available | `pip install torch torchvision` |
+| **torchvision** | CUDA or Apple MPS GPU + torchvision available | `pip install torch torchvision` |
 | **numba** | numba installed, no GPU | `pip install numba` |
 | **numpy** | Always available (fallback) | -- |
 

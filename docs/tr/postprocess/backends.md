@@ -13,17 +13,18 @@ SAHI'nin postprocessing (NMS, NMM) işlemleri üç değiştirilebilir backend ü
 
 ## Backend genel bakış
 
-| Backend         | En iyi kullanım alanı                                                        | Ek bağımlılık                          |
-| --------------- | ---------------------------------------------------------------------------- | -------------------------------------- |
-| **numpy**       | Yalnızca CPU ortamları, küçük/orta prediction sayıları                       | Yok (her zaman mevcut)                 |
-| **numba**       | Yüksek prediction sayılı CPU; ilk çağrıda ~1 sn JIT ısınması, ardından hızlı | `pip install numba`                    |
-| **torchvision** | CUDA GPU mevcut olduğunda; büyük batch'ler için en hızlısı                   | `pip install torch torchvision` + CUDA |
+| Backend         | En iyi kullanım alanı                                                        | Ek bağımlılık                   |
+| --------------- | ---------------------------------------------------------------------------- | ------------------------------- |
+| **numpy**       | Yalnızca CPU ortamları, küçük/orta prediction sayıları                       | Yok (her zaman mevcut)          |
+| **numba**       | Yüksek prediction sayılı CPU; ilk çağrıda ~1 sn JIT ısınması, ardından hızlı | `pip install numba`             |
+| **torchvision** | CUDA veya Apple MPS GPU mevcut olduğunda; büyük batch'ler için en hızlısı    | `pip install torch torchvision` |
 
 ## Otomatik Algılama (varsayılan)
 
 SAHI varsayılan olarak çalışma anında (runtime) mevcut en iyi backend'i otomatik olarak seçer:
 
-1. **torchvision** — `torchvision` yüklüyse _ve_ bir CUDA GPU mevcutsa.
+1. **torchvision** — `torchvision` yüklüyse _ve_ bir GPU mevcutsa
+   (CUDA veya Apple Silicon üzerinde Apple MPS).
 2. **numba** — `numba` paketi yüklüyse.
 3. **numpy** — son çare (fallback) olarak her zaman mevcuttur.
 
@@ -63,7 +64,7 @@ from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
 from sahi.postprocess.backends import set_postprocess_backend
 
-# Use GPU-accelerated postprocessing when running on a CUDA machine
+# CUDA veya Apple Silicon makinelerde GPU hızlandırmalı son işlemeyi kullan
 set_postprocess_backend("torchvision")
 
 detection_model = AutoDetectionModel.from_pretrained(

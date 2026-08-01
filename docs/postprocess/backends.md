@@ -14,17 +14,18 @@ right backend depends on your hardware and installed packages.
 
 ## Backend overview
 
-| Backend         | Best for                                                                   | Extra dependency                       |
-| --------------- | -------------------------------------------------------------------------- | -------------------------------------- |
-| **numpy**       | CPU-only environments, small/medium prediction counts                      | None (always available)                |
-| **numba**       | CPU with large prediction counts; ~1 s JIT warmup on first call, then fast | `pip install numba`                    |
-| **torchvision** | CUDA GPU available; fastest for large batches                              | `pip install torch torchvision` + CUDA |
+| Backend         | Best for                                                                   | Extra dependency                |
+| --------------- | -------------------------------------------------------------------------- | ------------------------------- |
+| **numpy**       | CPU-only environments, small/medium prediction counts                      | None (always available)         |
+| **numba**       | CPU with large prediction counts; ~1 s JIT warmup on first call, then fast | `pip install numba`             |
+| **torchvision** | CUDA or Apple MPS GPU available; fastest for large batches                 | `pip install torch torchvision` |
 
 ## Auto-detection (default)
 
 By default SAHI automatically picks the best available backend at runtime:
 
-1. **torchvision** — if `torchvision` is installed _and_ a CUDA GPU is present.
+1. **torchvision** — if `torchvision` is installed _and_ a GPU is present
+   (CUDA, or Apple MPS on Apple Silicon).
 2. **numba** — if the `numba` package is installed.
 3. **numpy** — always available as the final fallback.
 
@@ -65,7 +66,7 @@ from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
 from sahi.postprocess.backends import set_postprocess_backend
 
-# Use GPU-accelerated postprocessing when running on a CUDA machine
+# Use GPU-accelerated postprocessing when running on a CUDA or Apple Silicon machine
 set_postprocess_backend("torchvision")
 
 detection_model = AutoDetectionModel.from_pretrained(

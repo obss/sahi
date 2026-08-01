@@ -14,17 +14,17 @@ SAHI 的后处理操作（NMS、NMM）可以在三种可互换的后端上运行
 
 ## 后端概览
 
-| 后端            | 适用场景                                                                | 额外依赖                               |
-| --------------- | ----------------------------------------------------------------------- | -------------------------------------- |
-| **numpy**       | 仅使用 CPU 的环境，预测结果数量较少或中等                               | 无（始终可用）                         |
-| **numba**       | 使用 CPU 且预测结果数量较多；首次调用需要约 1 秒进行 JIT 预热，之后较快 | `pip install numba`                    |
-| **torchvision** | CUDA GPU 可用；处理大型批次时速度最快                                   | `pip install torch torchvision` + CUDA |
+| 后端            | 适用场景                                                                | 额外依赖                        |
+| --------------- | ----------------------------------------------------------------------- | ------------------------------- |
+| **numpy**       | 仅使用 CPU 的环境，预测结果数量较少或中等                               | 无（始终可用）                  |
+| **numba**       | 使用 CPU 且预测结果数量较多；首次调用需要约 1 秒进行 JIT 预热，之后较快 | `pip install numba`             |
+| **torchvision** | CUDA 或 Apple MPS GPU 可用；处理大型批次时速度最快                      | `pip install torch torchvision` |
 
 ## 自动检测（默认）
 
 默认情况下，SAHI 会在运行时自动选择最佳可用后端：
 
-1. **torchvision** -- 已安装 `torchvision` 且存在 CUDA GPU 时使用。
+1. **torchvision** -- 已安装 `torchvision` 且存在 GPU（CUDA，或 Apple Silicon 上的 Apple MPS）时使用。
 2. **numba** -- 已安装 `numba` 软件包时使用。
 3. **numpy** -- 始终可用，作为最终兜底方案。
 
@@ -65,7 +65,7 @@ from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
 from sahi.postprocess.backends import set_postprocess_backend
 
-# 在 CUDA 环境中使用 GPU 加速后处理
+# 在 CUDA 或 Apple Silicon 环境中使用 GPU 加速后处理
 set_postprocess_backend("torchvision")
 
 detection_model = AutoDetectionModel.from_pretrained(
