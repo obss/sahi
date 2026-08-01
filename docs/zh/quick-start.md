@@ -118,7 +118,7 @@ sahi predict \
 
 | 后端 | 选择条件 | 安装方式 |
 | ------ | --------- | --------- |
-| **torchvision** | CUDA GPU + torchvision 可用 | `pip install torch torchvision` |
+| **torchvision** | CUDA 或 Apple MPS GPU + torchvision 可用 | `pip install torch torchvision` |
 | **numba** | 已安装 numba，无 GPU | `pip install numba` |
 | **numpy** | 始终可用（兜底方案） | -- |
 

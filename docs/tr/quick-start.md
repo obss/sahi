@@ -117,7 +117,7 @@ Dilimleme sonrasında SAHI, örtüşen prediction'ları NMS veya NMM ile birleş
 
 | Backend | Ne zaman seçilir | Kurulum |
 | --------- | -------------- | --------- |
-| **torchvision** | CUDA GPU + torchvision mevcut olduğunda | `pip install torch torchvision` |
+| **torchvision** | CUDA veya Apple MPS GPU + torchvision mevcut olduğunda | `pip install torch torchvision` |
 | **numba** | numba yüklü, GPU yok | `pip install numba` |
 | **numpy** | Her zaman mevcut (fallback) | -- |
 
