@@ -2,44 +2,23 @@
 
 ## 🚀 SAHI v0.12.3 Release Notes
 
-A patch release that puts Apple Silicon GPUs to work, adds a Turkish
-translation of the documentation, and clears CI maintenance gathered since
-`0.12.2`.
+A patch release that puts Apple Silicon GPUs to work, adds a Turkish translation of the documentation, and clears CI maintenance gathered since `0.12.2`.
 
 ### 🐛 Fixes
 
-- **Apple MPS is now detected for device selection and postprocessing**
-  ([#1408](https://github.com/obss/sahi/pull/1408)). `select_device()` only
-  looked for CUDA, so macOS users fell back to CPU even with a working Metal
-  backend. Automatic selection is now CUDA → MPS → CPU, and the `torchvision`
-  postprocessing backend is picked when either GPU is present. Detection goes
-  through `torch.backends.mps.is_available()`, which exists on every supported
-  torch version and reports `False` on non-Apple builds.
-- **`threading.currentThread()` replaced with `current_thread()`**
-  ([#1392](https://github.com/obss/sahi/pull/1392)), removing a
-  `DeprecationWarning` on newer Python versions.
+- **Apple MPS is now detected for device selection and postprocessing** ([#1408](https://github.com/obss/sahi/pull/1408)). `select_device()` only looked for CUDA, so macOS users fell back to CPU even with a working Metal backend. Automatic selection is now CUDA → MPS → CPU, and the `torchvision` postprocessing backend is picked when either GPU is present. Detection goes through `torch.backends.mps.is_available()`, which exists on every supported torch version and reports `False` on non-Apple builds.
+- **`threading.currentThread()` replaced with `current_thread()`** ([#1392](https://github.com/obss/sahi/pull/1392)), removing a `DeprecationWarning` on newer Python versions.
 
 ### 📚 Documentation
 
-- **Turkish translation** of the documentation, with a build step and
-  `zensical` configuration to match
-  ([#1401](https://github.com/obss/sahi/pull/1401),
-  [#1402](https://github.com/obss/sahi/pull/1402),
-  [#1404](https://github.com/obss/sahi/pull/1404)).
-- Multilingual subpath links now resolve correctly
-  ([#1403](https://github.com/obss/sahi/pull/1403)).
-- Backend documentation lists MPS alongside CUDA
-  ([#1410](https://github.com/obss/sahi/pull/1410)).
+- **Turkish translation** of the documentation, with a build step and `zensical` configuration to match ([#1401](https://github.com/obss/sahi/pull/1401), [#1402](https://github.com/obss/sahi/pull/1402), [#1404](https://github.com/obss/sahi/pull/1404)).
+- Multilingual subpath links now resolve correctly ([#1403](https://github.com/obss/sahi/pull/1403)).
+- Backend documentation lists MPS alongside CUDA ([#1410](https://github.com/obss/sahi/pull/1410)).
 
 ### 🧹 Maintenance & CI
 
-- Device selection and postprocessing backend resolution are covered by tests
-  ([#1409](https://github.com/obss/sahi/pull/1409)).
-- Bumped `astral-sh/setup-uv` 8.3.2 → 9.0.0
-  ([#1399](https://github.com/obss/sahi/pull/1399)),
-  `actions/setup-python` 6.3.0 → 7.0.0
-  ([#1400](https://github.com/obss/sahi/pull/1400)) and `actions/checkout`
-  7.0.0 → 7.0.1 ([#1398](https://github.com/obss/sahi/pull/1398)).
+- Device selection and postprocessing backend resolution are covered by tests ([#1409](https://github.com/obss/sahi/pull/1409)).
+- Bumped `astral-sh/setup-uv` 8.3.2 → 9.0.0 ([#1399](https://github.com/obss/sahi/pull/1399)), `actions/setup-python` 6.3.0 → 7.0.0 ([#1400](https://github.com/obss/sahi/pull/1400)) and `actions/checkout` 7.0.0 → 7.0.1 ([#1398](https://github.com/obss/sahi/pull/1398)).
 
 ### ⚡ Performance
 
@@ -53,8 +32,7 @@ NMS with the `IOU` metric, best of 5 runs, on an Apple M2 Pro:
 | 5000 | 81.37 ms | 34.16 ms | 4.05 ms |
 | 20000 | 1237.70 ms | 462.56 ms | 11.75 ms |
 
-Below roughly 500 boxes `numba` stays ahead, but the difference there is about
-a millisecond.
+Below roughly 500 boxes `numba` stays ahead, but the difference there is about a millisecond.
 
 **Full Changelog**:
 <https://github.com/obss/sahi/compare/0.12.2...0.12.3>
