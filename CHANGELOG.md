@@ -1,5 +1,13 @@
 # 📝 CHANGELOG
 
+## 🚀 SAHI v0.12.4 Release Notes
+
+A patch release that fixes the `sahi` command line interface, which was broken on any installation that did not already have `matplotlib` present.
+
+### 🐛 Fixes
+
+- **`matplotlib` is now a declared dependency** ([#1414](https://github.com/obss/sahi/pull/1414)). `sahi.cli` imports `sahi.scripts.coco_error_analysis`, which imports `matplotlib` at module level, but `matplotlib` was never listed in `[project].dependencies` or in any extra. Because the import is eager, every `sahi` command failed on a clean install, including ones unrelated to plotting such as `sahi version`. The issue went unnoticed because `matplotlib` is usually already installed alongside other packages in a typical environment.
+
 ## 🚀 SAHI v0.12.3 Release Notes
 
 A patch release that puts Apple Silicon GPUs to work, adds a Turkish translation of the documentation, and clears CI maintenance gathered since `0.12.2`.
