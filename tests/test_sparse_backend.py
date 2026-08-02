@@ -99,3 +99,59 @@ def test_large_input_takes_sparse_path_and_matches_dense() -> None:
     assert nms_numpy(predictions, "IOS", 0.3) == nms_from_matrix(matrix, sorted_idxs, 0.3)
     assert greedy_nmm_numpy(predictions, "IOS", 0.3) == greedy_nmm_from_matrix(matrix, sorted_idxs, 0.3)
     assert nmm_numpy(predictions, "IOS", 0.3) == nmm_from_matrix(matrix, sorted_idxs, scores, boxes, 0.3)
+
+
+@pytest.mark.parametrize("match_threshold", [0.1, 0.3, 0.5, 0.7])
+@pytest.mark.parametrize("match_metric", ["IOU", "IOS"])
+def test_nmm_never_merges_a_keeper_into_itself(match_metric: str, match_threshold: float) -> None:
+    """Tied scores on duplicate boxes used to let a later box claim an earlier keeper.
+
+    A keeper is never merged into anything, no index lands in two merge lists,
+    and every index is either a keeper or merged exactly once.
+    """
+    rng = np.random.default_rng(11)
+    n = 80
+    x1 = np.round(rng.uniform(0, 200, n) / 25) * 25
+    y1 = np.round(rng.uniform(0, 200, n) / 25) * 25
+    w = np.round(rng.uniform(1, 40, n) / 25) * 25
+    h = np.round(rng.uniform(1, 40, n) / 25) * 25
+    scores = np.round(rng.uniform(0, 1, n), 1)
+    predictions = np.stack([x1, y1, x1 + w, y1 + h, scores, rng.integers(0, 3, n)], axis=1)
+
+    boxes = predictions[:, :4]
+    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    matrix, sorted_idxs = _prepare_matrix(predictions, match_metric)
+    indptr, indices = build_sparse_matches(boxes, areas, match_metric, match_threshold)
+
+    dense = nmm_from_matrix(matrix, sorted_idxs, predictions[:, 4], boxes, match_threshold)
+    csr = nmm_sparse(indptr, indices, sorted_idxs, predictions[:, 4], boxes)
+    assert dense == csr
+
+    for name, result in (("dense", dense), ("csr", csr)):
+        merged_by: dict[int, int] = {}
+        for keeper, merged in result.items():
+            assert keeper not in merged, f"{name}: keeper {keeper} merged into itself"
+            for m in merged:
+                assert m not in merged_by, f"{name}: {m} merged into {merged_by[m]} and {keeper}"
+                merged_by[m] = keeper
+        assert not set(result) & set(merged_by), f"{name}: an index is both keeper and merged"
+        assert set(result) | set(merged_by) == set(range(n)), f"{name}: some index is in no group"
+
+
+def test_metric_does_not_warn_on_zero_area_boxes() -> None:
+    """Degenerate boxes make the denominator zero; that must not divide by zero."""
+    import warnings
+
+    from sahi.postprocess._numpy_backend import compute_metric_matrix
+
+    predictions = _make_predictions(300, spread=200.0, seed=12)
+    predictions[::7, 2] = predictions[::7, 0]  # zero width
+    predictions[::11, 3] = predictions[::11, 1]  # zero height
+    boxes = predictions[:, :4]
+    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        for metric in ("IOU", "IOS"):
+            compute_metric_matrix(boxes, areas, metric)
+            build_sparse_matches(boxes, areas, metric, 0.3)
