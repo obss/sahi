@@ -16,7 +16,7 @@ from tqdm import tqdm
 from sahi.annotation import BoundingBox, Mask
 from sahi.logger import logger
 from sahi.utils.coco import Coco, CocoAnnotation, CocoImage, create_coco_dict
-from sahi.utils.cv import IMAGE_EXTENSIONS_LOSSLESS, IMAGE_EXTENSIONS_LOSSY, read_image_as_pil
+from sahi.utils.cv import IMAGE_EXTENSIONS_LOSSY, read_image_as_pil
 from sahi.utils.file import load_json, save_json
 
 _CPU_COUNT = os.cpu_count() or 4
@@ -275,6 +275,23 @@ class SliceImageResult:
         return len(self._sliced_image_list)
 
 
+def _slice_file_suffix(image: str | Image.Image | np.ndarray, out_ext: str | None = None) -> str:
+    """Resolve the file extension exported slices are written with.
+
+    Takes over from the `image_pil.filename` lookup that slicing an array in place made
+    impossible, and keeps its outcome exactly. Only an already-open PIL image carries a
+    filename: `read_image_as_pil` returns a converted copy, so a path loses it and exports
+    as png. Lossy sources become png too, so repeated slicing does not compound the
+    compression.
+    """
+    if out_ext:
+        return out_ext
+    source_suffix = Path(str(getattr(image, "filename", ""))).suffix
+    if not source_suffix or source_suffix in IMAGE_EXTENSIONS_LOSSY:
+        return ".png"
+    return source_suffix
+
+
 def slice_image(
     image: str | Image.Image | np.ndarray,
     coco_annotation_list: list[CocoAnnotation] | None = None,
@@ -339,13 +356,13 @@ def slice_image(
     if output_dir is not None:
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    # read image
-    image_pil = read_image_as_pil(image, exif_fix=exif_fix)
-    verboselog("image.shape: " + str(image_pil.size))
+    # read as an array, so no full-size PIL copy is held alongside it
+    image_arr: np.ndarray = read_image_as_pil(image, exif_fix=exif_fix, return_arr=True)  # type: ignore[assignment]
+    image_height, image_width = image_arr.shape[:2]
+    verboselog("image.shape: " + str((image_width, image_height)))
 
-    image_width, image_height = image_pil.size
     if not (image_width != 0 and image_height != 0):
-        raise RuntimeError(f"invalid image size: {image_pil.size} for 'slice_image'.")
+        raise RuntimeError(f"invalid image size: {(image_width, image_height)} for 'slice_image'.")
     slice_bboxes = get_slice_bboxes(
         image_height=image_height,
         image_width=image_width,
@@ -361,7 +378,8 @@ def slice_image(
     # init images and annotations lists
     sliced_image_result = SliceImageResult(original_image_size=[image_height, image_width], image_dir=output_dir)
 
-    image_pil_arr = np.asarray(image_pil)
+    suffix = _slice_file_suffix(image, out_ext)
+
     # iterate over slices
     for slice_bbox in slice_bboxes:
         n_ims += 1
@@ -371,22 +389,10 @@ def slice_image(
         tly = slice_bbox[1]
         brx = slice_bbox[2]
         bry = slice_bbox[3]
-        image_pil_slice = image_pil_arr[tly:bry, tlx:brx]
-
-        # set image file suffixes
-        slice_suffixes = "_".join(map(str, slice_bbox))
-        if out_ext:
-            suffix = out_ext
-        elif hasattr(image_pil, "filename"):
-            suffix = Path(getattr(image_pil, "filename")).suffix
-            if suffix in IMAGE_EXTENSIONS_LOSSY:
-                suffix = ".png"
-            elif suffix in IMAGE_EXTENSIONS_LOSSLESS:
-                suffix = Path(image_pil.filename).suffix
-        else:
-            suffix = ".png"
+        image_pil_slice = image_arr[tly:bry, tlx:brx]
 
         # set image file name and path
+        slice_suffixes = "_".join(map(str, slice_bbox))
         slice_file_name = f"{output_file_name}_{slice_suffixes}{suffix}"
 
         # create coco image
