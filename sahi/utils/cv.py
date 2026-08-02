@@ -16,6 +16,9 @@ from sahi.logger import logger
 from sahi.utils.file import Path
 from sahi.utils.import_utils import get_opencv_conflict_message
 
+# OpenCV caps decodes at 2**30 px and reads the limit once, at import, so this must come first
+os.environ.setdefault("OPENCV_IO_MAX_IMAGE_PIXELS", str(2**40))
+
 try:
     import cv2
 except Exception:
@@ -200,20 +203,107 @@ def _to_hwc(arr: np.ndarray) -> np.ndarray:
     return a
 
 
+def _read_local_image_as_arr(path: str, exif_fix: bool = True) -> np.ndarray | None:
+    """Decode a local image file straight to an HWC RGB ndarray, skipping the PIL intermediate.
+
+    `np.asarray(PIL.Image)` goes through `Image.tobytes()`, which costs two full-size
+    buffers. OpenCV plus an in-place channel swap costs one.
+
+    Args:
+        path (str): Local filesystem path of the image.
+        exif_fix (bool): Whether to honor the EXIF orientation tag. Defaults to True.
+
+    Returns:
+        np.ndarray | None: HWC RGB uint8 array, or None when OpenCV cannot be trusted with
+            the file, so the caller can fall back to the PIL/skimage path.
+
+    Note:
+        On a None return OpenCV may first print its own C++ error to stderr. It is not
+        raised and cannot be caught; the PIL fallback still gives the right answer.
+    """
+    # ANYDEPTH keeps 16-bit samples 16-bit so they can be detected below
+    flags = cv2.IMREAD_COLOR | cv2.IMREAD_ANYDEPTH
+    if not exif_fix:
+        flags |= cv2.IMREAD_IGNORE_ORIENTATION
+    try:
+        bgr = cv2.imread(path, flags)
+    except cv2.error:
+        # over the pixel cap OpenCV raises rather than returning None; PIL reads these
+        return None
+    if bgr is None:
+        return None
+    if bgr.dtype != np.uint8:
+        # deep images take the PIL path so both entry points convert identically
+        return None
+    # in-place, so no second full-size buffer
+    return cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB, dst=bgr)
+
+
+# EXIF orientation tag; values 5-8 rotate by a quarter turn and so swap width and height.
+_EXIF_ORIENTATION_TAG = 0x0112
+_EXIF_QUARTER_TURNS = frozenset({5, 6, 7, 8})
+
+
+def read_image_size(image: Image.Image | str | os.PathLike | np.ndarray, exif_fix: bool = True) -> tuple[int, int]:
+    """Return the (width, height) `read_image_as_pil` would produce, without decoding it.
+
+    For a local path only the header is read. Decoding a gigapixel scan just to ask for
+    its dimensions costs gigabytes.
+
+    Args:
+        image: The image to size. An image path or URL (str), a numpy image (np.ndarray), or a PIL.Image object.
+        exif_fix: Whether the caller will apply the EXIF orientation, as `read_image_as_pil`
+            does by default. Ignored for TIFF, which Pillow's plugin rotates either way.
+
+    Returns:
+        The image size as (width, height).
+    """
+    if isinstance(image, np.ndarray):
+        # read_image_as_pil transposes CHW input, so the reported size must match that
+        hwc = _to_hwc(image)
+        return hwc.shape[1], hwc.shape[0]
+    if isinstance(image, Image.Image):
+        return image.size
+    if str(image).startswith("http"):
+        # remote images have no local header to peek at, so there is nothing to save
+        return read_image_as_pil(image, exif_fix=exif_fix).size  # type: ignore[union-attr]
+
+    # https://stackoverflow.com/questions/56174099/how-to-load-images-larger-than-max-image-pixels-with-pil
+    Image.MAX_IMAGE_PIXELS = None
+    try:
+        with Image.open(image) as image_pil:
+            width, height = image_pil.size
+            if image_pil.getexif().get(_EXIF_ORIENTATION_TAG) in _EXIF_QUARTER_TURNS:
+                stored = (image_pil.tag_v2.get(256), image_pil.tag_v2.get(257))
+                if image_pil.format == "TIFF" and None not in stored:
+                    # a TIFF turns inside the plugin whatever exif_fix says, and tags 256/257 keep the stored size
+                    swap = stored == (width, height)
+                else:
+                    swap = exif_fix
+                if swap:
+                    return height, width
+    except FileNotFoundError:
+        raise
+    except Exception as error:
+        # read_image_as_pil falls back to skimage, so sizing must not be stricter than decoding
+        logger.debug(f"header read of {image} failed ({error}), sizing from a full decode instead")
+        return read_image_as_pil(image, exif_fix=exif_fix).size  # type: ignore[union-attr]
+    return width, height
+
+
 def read_image_as_pil(
-    image: Image.Image | str | np.ndarray,
+    image: Image.Image | str | os.PathLike | np.ndarray,
     exif_fix: bool = True,
     return_arr: bool = False,
 ) -> Image.Image | np.ndarray:
     """Loads an image as PIL.Image.Image (or np.ndarray when return_arr=True).
 
     Args:
-        image (Union[Image.Image, str, np.ndarray]): The image to be loaded. It can be an image path or URL (str),
-            a numpy image (np.ndarray), or a PIL.Image object.
+        image (Union[Image.Image, str, os.PathLike, np.ndarray]): The image to be loaded. It can be an image path
+            (str or path-like) or URL (str), a numpy image (np.ndarray), or a PIL.Image object.
         exif_fix (bool): Whether to apply an EXIF fix to the image. Defaults to False.
-        return_arr (bool): When True and the input is already a numpy array, skip the
-            costly PIL conversion and return an HWC RGB ndarray directly. For PIL/str inputs the
-            PIL image is converted to ndarray before returning. Defaults to False.
+        return_arr (bool): When True, return an HWC RGB ndarray. Local paths decode straight
+            to one; other inputs convert from PIL before returning. Defaults to False.
 
     Returns:
         PIL.Image.Image | np.ndarray: The loaded image.
@@ -221,11 +311,20 @@ def read_image_as_pil(
     # https://stackoverflow.com/questions/56174099/how-to-load-images-larger-than-max-image-pixels-with-pil
     Image.MAX_IMAGE_PIXELS = None
 
+    if isinstance(image, os.PathLike):
+        # read_image_size takes a Path, so rejecting one here meant a path could size but not decode
+        image = os.fspath(image)
+
     if isinstance(image, Image.Image):
         if return_arr:
             return np.asarray(image)
         return image
     elif isinstance(image, str):
+        # local files decode straight to an array; URLs still need the download path below
+        if return_arr and not str(image).startswith("http"):
+            image_arr = _read_local_image_as_arr(image, exif_fix=exif_fix)
+            if image_arr is not None:
+                return image_arr
         # read image if str image path is provided
         try:
             import requests
