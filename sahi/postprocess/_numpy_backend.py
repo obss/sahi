@@ -10,6 +10,7 @@ from __future__ import annotations
 import numpy as np
 
 from sahi.postprocess._sparse_backend import (
+    _safe_ratio,
     build_sparse_matches,
     greedy_nmm_sparse,
     nmm_sparse,
@@ -55,10 +56,10 @@ def compute_metric_matrix(boxes: np.ndarray, areas: np.ndarray, match_metric: st
 
         if match_metric == "IOU":
             union = areas[i:ie, None] + areas[None, :] - inter
-            matrix[i:ie] = np.where(union > 0, inter / union, 0)
+            matrix[i:ie] = _safe_ratio(inter, union)
         else:  # IOS
             smaller = np.minimum(areas[i:ie, None], areas[None, :])
-            matrix[i:ie] = np.where(smaller > 0, inter / smaller, 0)
+            matrix[i:ie] = _safe_ratio(inter, smaller)
     return matrix
 
 
@@ -82,10 +83,10 @@ def _compute_metric_matrix_full(boxes: np.ndarray, areas: np.ndarray, match_metr
 
     if match_metric == "IOU":
         union = areas[:, None] + areas[None, :] - inter
-        return np.where(union > 0, inter / union, 0).astype(np.float32)
+        return _safe_ratio(inter, union).astype(np.float32)
     else:  # IOS
         smaller = np.minimum(areas[:, None], areas[None, :])
-        return np.where(smaller > 0, inter / smaller, 0).astype(np.float32)
+        return _safe_ratio(inter, smaller).astype(np.float32)
 
 
 def _score_tiebreak_order(
@@ -264,7 +265,9 @@ def nmm_from_matrix(
         matched = np.where(candidates_of[current_idx])[0]
 
         if merge_to_keep[current_idx] < 0:
-            # current_idx is a keeper
+            # current_idx is a keeper. Point it at itself so that a later box
+            # cannot claim it: keepers are never merged into anything.
+            merge_to_keep[current_idx] = current_idx
             keep_to_merge_list[current_idx] = []
             for m in matched:
                 m_int = int(m)
