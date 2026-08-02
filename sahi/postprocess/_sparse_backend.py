@@ -35,6 +35,21 @@ def should_use_sparse(n: int, match_threshold: float) -> bool:
     return n >= SPARSE_MIN_BOXES and match_threshold > 0
 
 
+def _safe_ratio(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
+    """Divide where the denominator is positive, yielding zero elsewhere.
+
+    Degenerate boxes have zero area, so the denominator can be zero. Masking the
+    division rather than the result keeps numpy from evaluating ``0 / 0`` and
+    warning about it.
+    """
+    return np.divide(
+        numerator,
+        denominator,
+        out=np.zeros(np.broadcast(numerator, denominator).shape, dtype=np.result_type(numerator, denominator)),
+        where=denominator > 0,
+    )
+
+
 def build_sparse_matches(
     boxes: np.ndarray,
     areas: np.ndarray,
@@ -76,7 +91,7 @@ def build_sparse_matches(
         denom = areas[rows] + areas[cols] - inter
     else:  # IOS
         denom = np.minimum(areas[rows], areas[cols])
-    metric = np.where(denom > 0, inter / denom, 0)
+    metric = _safe_ratio(inter, denom)
 
     matched = metric >= match_threshold
     rows, cols = rows[matched], cols[matched]
@@ -220,6 +235,9 @@ def nmm_sparse(
         matched = indices[start:end][dominates[start:end]]
 
         if merge_to_keep[current_idx] < 0:
+            # current_idx is a keeper. Point it at itself so that a later box
+            # cannot claim it: keepers are never merged into anything.
+            merge_to_keep[current_idx] = current_idx
             keep_to_merge_list[current_idx] = []
             for m in matched:
                 m_int = int(m)
