@@ -1,5 +1,37 @@
 # 📝 CHANGELOG
 
+## 🚀 SAHI v0.12.5 Release Notes
+
+A patch release that finishes the postprocessing memory work started in `0.12.2`, which turned out to help only when boxes were spread out, and fixes two correctness problems found while testing it.
+
+### 🐛 Fixes
+
+- **Postprocessing memory no longer depends on how crowded the boxes are** ([#1417](https://github.com/obss/sahi/pull/1417)). Avoiding the `N x N` overlap matrix by storing one entry per intersecting pair is only a saving while boxes are spread out. Boxes piled on top of each other intersect nearly everything, so the pair count approaches `N^2` and the stored list costs about as much as the matrix it replaced, which is exactly the layout that sliced inference produces on crowd scenes and small-object imagery. The merge loops read one row of matches at a time, and NMS and greedy NMM only ever read rows of boxes that survived, so rows are now answered from the STRtree on demand and peak memory is bounded by `O(N + max_degree)` whatever the layout. NMM reads a row per box rather than per survivor, so it keeps the stored pair list until that list is projected to be large.
+- **A non-positive `match_threshold` no longer builds a metric matrix** ([#1417](https://github.com/obss/sahi/pull/1417)). Both metrics are non-negative, so `metric >= 0` holds for every pair and the adjacency is the complete graph. The dense path was still computing every overlap to discover this, which made the one configuration that needs no overlap computation the most expensive one and reproduced the out-of-memory failure from [#1374](https://github.com/obss/sahi/issues/1374) at 25000 boxes. The result now follows from the score order alone.
+- **NMM no longer merges a keeper into itself** ([#1416](https://github.com/obss/sahi/pull/1416)). A keeper was marked by leaving its `merge_to_keep` entry at `-1`, the same value that marks a box as unclaimed, so a box processed later could claim a keeper and append it to a merge list. With tied scores on duplicate boxes this produced a keeper listed inside its own merge list, and an index reachable as both a keeper and a merged box. Keepers now point at themselves, which makes them unclaimable without changing any other outcome.
+- **Zero-area boxes no longer trigger a divide-by-zero warning** ([#1416](https://github.com/obss/sahi/pull/1416)). The metric computed `inter / denom` for every pair and discarded the invalid entries afterwards, so a degenerate box emitted a `RuntimeWarning`. The division is now masked instead of the result.
+
+### ⚡ Performance
+
+Postprocessing on crowded and scattered layouts, `IOS / 0.3`:
+
+| layout | boxes | NMS before | NMS after | peak memory before | peak memory after |
+| ------ | ----: | ---------: | --------: | -----------------: | ----------------: |
+| crowded | 33337 | 47180 ms | 135 ms | 3416 MB | 4 MB |
+| crowded | 20000 | 15931 ms | 57 ms | 1232 MB | 2 MB |
+| crowded | 10000 | 2717 ms | 25 ms | 311 MB | 1 MB |
+| scattered | 33336 | 539 ms | 188 ms | 65 MB | 4 MB |
+
+- **The numba backend picks its path by box density** ([#1418](https://github.com/obss/sahi/pull/1418)). Its NMS and greedy NMM loops ran an exhaustive pairwise scan whatever the input. Routing them by prediction count alone would regress crowded scenes, because the JIT loop skips suppressed candidates and stays competitive long after the numpy one stops being viable, so the neighbour count decides instead and is estimated from a sample of the boxes. The score sort was also an insertion sort, quadratic in its own right, and now uses the same `lexsort` the other backends share, which produces an identical order including ties.
+
+| average neighbours per box, 20000 boxes | NMS before | NMS after | greedy NMM before | greedy NMM after |
+| --------------------------------------: | ---------: | --------: | ----------------: | ---------------: |
+| 0.0 | 909 ms | 43 ms | 842 ms | 89 ms |
+| 0.8 | 781 ms | 52 ms | 757 ms | 84 ms |
+| 5.1 | 495 ms | 118 ms | 479 ms | 151 ms |
+| 20.1 | 241 ms | 146 ms | 236 ms | 148 ms |
+| 78.9 | 141 ms | 73 ms | 143 ms | 71 ms |
+
 ## 🚀 SAHI v0.12.4 Release Notes
 
 A patch release that fixes the `sahi` command line interface, which was broken on any installation that did not already have `matplotlib` present.
