@@ -18,13 +18,34 @@ from numpy.typing import NDArray
 from sahi.postprocess._numpy_backend import (
     _score_tiebreak_order,
     greedy_nmm_match_all,
+    greedy_nmm_numpy,
     matches_all_pairs,
     nmm_from_matrix,
     nmm_match_all,
     nmm_numpy,
     nms_match_all,
+    nms_numpy,
 )
-from sahi.postprocess._sparse_backend import should_use_sparse
+from sahi.postprocess._sparse_backend import estimate_mean_degree, should_use_sparse
+
+# The JIT loops skip suppressed candidates, so they stay competitive far longer
+# than the numpy ones. Sparse only pays off while boxes have few neighbours;
+# past this many the STRtree query costs more than the loop it replaces.
+NUMBA_SPARSE_MAX_DEGREE = 12.0
+
+
+def _should_use_numba_sparse(predictions: np.ndarray, match_metric: str, match_threshold: float) -> bool:
+    """Whether NMS/greedy NMM should take the sparse path on this input.
+
+    Unlike the numpy backend, size alone is not enough: the JIT loops beat the
+    sparse path on densely overlapping inputs whatever N is. Estimate the mean
+    neighbour count from a sample of the boxes first, which costs a small
+    fraction of the full query.
+    """
+    if not should_use_sparse(len(predictions), match_threshold):
+        return False
+    boxes = predictions[:, :4]
+    return estimate_mean_degree(boxes) <= NUMBA_SPARSE_MAX_DEGREE
 
 
 @numba.njit(cache=True)
@@ -73,27 +94,6 @@ def _compute_metric(
 
 
 @numba.njit(cache=True)
-def _argsort_descending(scores: NDArray, x1: NDArray, y1: NDArray, x2: NDArray, y2: NDArray) -> NDArray:
-    """Sort indices by score descending with deterministic coordinate tie-breaking."""
-    n = len(scores)
-    indices = np.arange(n)
-    for i in range(1, n):
-        key = indices[i]
-        j = i - 1
-        while j >= 0:
-            jj = indices[j]
-            if scores[jj] > scores[key]:
-                break
-            if scores[jj] == scores[key]:
-                if (x1[jj], y1[jj], x2[jj], y2[jj]) <= (x1[key], y1[key], x2[key], y2[key]):
-                    break
-            indices[j + 1] = indices[j]
-            j -= 1
-        indices[j + 1] = key
-    return indices
-
-
-@numba.njit(cache=True)
 def _nms_numba_inner(
     x1: NDArray,
     y1: NDArray,
@@ -101,12 +101,12 @@ def _nms_numba_inner(
     y2: NDArray,
     scores: NDArray,
     areas: NDArray,
+    sorted_idxs: NDArray,
     match_threshold: float,
     use_iou: bool,
 ) -> list[int]:
     """Core NMS loop — fully JIT-compiled."""
     n = len(scores)
-    sorted_idxs = _argsort_descending(scores, x1, y1, x2, y2)
     suppressed = np.zeros(n, dtype=numba.boolean)
     keep = []
 
@@ -147,6 +147,7 @@ def _greedy_nmm_numba_inner(
     y2: NDArray,
     scores: NDArray,
     areas: NDArray,
+    sorted_idxs: NDArray,
     match_threshold: float,
     use_iou: bool,
 ) -> tuple[list[int], NDArray, NDArray]:
@@ -155,7 +156,6 @@ def _greedy_nmm_numba_inner(
     Returns (keep_order, keeper_of, sorted_idxs) where keeper_of[i] = keeper index for box i, or -1 if keeper.
     """
     n = len(scores)
-    sorted_idxs = _argsort_descending(scores, x1, y1, x2, y2)
     suppressed = np.zeros(n, dtype=numba.boolean)
     keeper_of = np.full(n, -1, dtype=numba.int64)
     keep_order = []
@@ -232,12 +232,16 @@ def nms_numba(
     if matches_all_pairs(match_threshold):
         return nms_match_all(predictions)
 
+    if _should_use_numba_sparse(predictions, match_metric, match_threshold):
+        return nms_numpy(predictions, match_metric, match_threshold)
+
     preds = predictions.astype(np.float64)
     x1, y1, x2, y2 = preds[:, 0], preds[:, 1], preds[:, 2], preds[:, 3]
     scores = preds[:, 4]
     areas = (x2 - x1) * (y2 - y1)
+    sorted_idxs = _score_tiebreak_order(x1, y1, x2, y2, scores)
 
-    return _nms_numba_inner(x1, y1, x2, y2, scores, areas, match_threshold, match_metric == "IOU")
+    return _nms_numba_inner(x1, y1, x2, y2, scores, areas, sorted_idxs, match_threshold, match_metric == "IOU")
 
 
 def greedy_nmm_numba(
@@ -248,14 +252,17 @@ def greedy_nmm_numba(
     """Greedy non-maximum merging using numba JIT compilation."""
     if matches_all_pairs(match_threshold):
         return greedy_nmm_match_all(predictions)
+    if _should_use_numba_sparse(predictions, match_metric, match_threshold):
+        return greedy_nmm_numpy(predictions, match_metric, match_threshold)
 
     preds = predictions.astype(np.float64)
     x1, y1, x2, y2 = preds[:, 0], preds[:, 1], preds[:, 2], preds[:, 3]
     scores = preds[:, 4]
     areas = (x2 - x1) * (y2 - y1)
+    sorted_idxs = _score_tiebreak_order(x1, y1, x2, y2, scores)
 
     keep_order, keeper_of, sorted_idxs = _greedy_nmm_numba_inner(
-        x1, y1, x2, y2, scores, areas, match_threshold, match_metric == "IOU"
+        x1, y1, x2, y2, scores, areas, sorted_idxs, match_threshold, match_metric == "IOU"
     )
 
     # Convert parallel arrays to dict
