@@ -17,8 +17,12 @@ from numpy.typing import NDArray
 
 from sahi.postprocess._numpy_backend import (
     _score_tiebreak_order,
+    greedy_nmm_match_all,
+    matches_all_pairs,
     nmm_from_matrix,
+    nmm_match_all,
     nmm_numpy,
+    nms_match_all,
 )
 from sahi.postprocess._sparse_backend import should_use_sparse
 
@@ -225,6 +229,9 @@ def nms_numba(
     if len(predictions) == 0:
         return []
 
+    if matches_all_pairs(match_threshold):
+        return nms_match_all(predictions)
+
     preds = predictions.astype(np.float64)
     x1, y1, x2, y2 = preds[:, 0], preds[:, 1], preds[:, 2], preds[:, 3]
     scores = preds[:, 4]
@@ -239,6 +246,9 @@ def greedy_nmm_numba(
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
     """Greedy non-maximum merging using numba JIT compilation."""
+    if matches_all_pairs(match_threshold):
+        return greedy_nmm_match_all(predictions)
+
     preds = predictions.astype(np.float64)
     x1, y1, x2, y2 = preds[:, 0], preds[:, 1], preds[:, 2], preds[:, 3]
     scores = preds[:, 4]
@@ -265,6 +275,8 @@ def nmm_numba(
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
     """NMM using numba-computed metric matrix + shared Python merge logic."""
+    if matches_all_pairs(match_threshold):
+        return nmm_match_all(predictions)
     if should_use_sparse(len(predictions), match_threshold):
         return nmm_numpy(predictions, match_metric, match_threshold)
 

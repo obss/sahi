@@ -9,14 +9,20 @@ from sahi.postprocess._numpy_backend import (
     _prepare_matrix,
     greedy_nmm_from_matrix,
     nmm_from_matrix,
+    nmm_numpy,
     nms_from_matrix,
 )
 from sahi.postprocess._sparse_backend import (
     SPARSE_MIN_BOXES,
+    MatchQuery,
     build_sparse_matches,
     greedy_nmm_sparse,
+    greedy_nmm_streaming,
     nmm_sparse,
+    nmm_streaming,
     nms_sparse,
+    nms_streaming,
+    should_stream_nmm,
     should_use_sparse,
 )
 
@@ -85,6 +91,87 @@ def test_sparse_algorithms_match_dense(match_metric: str, match_threshold: float
     )
 
 
+@pytest.mark.parametrize("match_metric", ["IOU", "IOS"])
+@pytest.mark.parametrize("match_threshold", [0.1, 0.5, 0.9])
+@pytest.mark.parametrize("spread", [200.0, 20000.0])
+def test_match_query_row_equals_csr_row(match_metric: str, match_threshold: float, spread: float) -> None:
+    """A row read on demand is the row the CSR builder would have stored."""
+    predictions = _make_predictions(300, spread, seed=4)
+    boxes = predictions[:, :4]
+    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+
+    indptr, indices = build_sparse_matches(boxes, areas, match_metric, match_threshold)
+    query = MatchQuery(boxes, areas, match_metric, match_threshold)
+
+    for i in range(len(boxes)):
+        assert query.row(i).tolist() == indices[indptr[i] : indptr[i + 1]].tolist()
+
+
+@pytest.mark.parametrize("match_metric", ["IOU", "IOS"])
+@pytest.mark.parametrize("match_threshold", [0.1, 0.5, 0.9])
+@pytest.mark.parametrize("spread", [200.0, 20000.0])
+def test_streaming_matches_pair_list(match_metric: str, match_threshold: float, spread: float) -> None:
+    """Streaming NMS and greedy NMM agree with the stored-pair versions."""
+    predictions = _make_predictions(400, spread, seed=5)
+    boxes = predictions[:, :4]
+    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+
+    _, sorted_idxs = _prepare_matrix(predictions, match_metric)
+    indptr, indices = build_sparse_matches(boxes, areas, match_metric, match_threshold)
+
+    assert nms_streaming(boxes, areas, match_metric, match_threshold, sorted_idxs) == nms_sparse(
+        indptr, indices, sorted_idxs
+    )
+    assert greedy_nmm_streaming(boxes, areas, match_metric, match_threshold, sorted_idxs) == greedy_nmm_sparse(
+        indptr, indices, sorted_idxs
+    )
+    assert nmm_streaming(boxes, areas, match_metric, match_threshold, sorted_idxs, predictions[:, 4]) == nmm_sparse(
+        indptr, indices, sorted_idxs, predictions[:, 4], boxes
+    )
+
+
+def test_nmm_streams_only_when_pair_list_would_be_large() -> None:
+    """Scattered boxes keep the stored-pair path; crowded ones switch to streaming."""
+    scattered = _make_predictions(4000, spread=30000.0, seed=7)
+    crowded = _make_predictions(4000, spread=80.0, seed=7)
+
+    assert should_stream_nmm(scattered[:, :4]) is False
+    assert should_stream_nmm(crowded[:, :4]) is True
+
+    # both routes must still agree with the stored-pair result
+    for predictions in (scattered, crowded):
+        boxes = predictions[:, :4]
+        areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+        _, sorted_idxs = _prepare_matrix(predictions, "IOS")
+        indptr, indices = build_sparse_matches(boxes, areas, "IOS", 0.3)
+        assert nmm_numpy(predictions, "IOS", 0.3) == nmm_sparse(indptr, indices, sorted_idxs, predictions[:, 4], boxes)
+
+
+def test_crowded_input_stays_within_memory() -> None:
+    """Regression guard for #1374 on layouts where storing every pair is not sparse.
+
+    These boxes all sit on top of each other, so the pair count is close to
+    N squared and the stored-pair path needs hundreds of MB for it.
+    """
+    import tracemalloc
+
+    from sahi.postprocess._numpy_backend import greedy_nmm_numpy, nms_numpy
+
+    predictions = _make_predictions(8000, spread=80.0, seed=6)
+    boxes = predictions[:, :4]
+    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    indptr, _ = build_sparse_matches(boxes, areas, "IOS", 0.3)
+    assert indptr[-1] > 5_000_000, "fixture must be crowded enough to matter"
+
+    tracemalloc.start()
+    nms_numpy(predictions, "IOS", 0.3)
+    greedy_nmm_numpy(predictions, "IOS", 0.3)
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+
+    assert peak < 32 * 2**20, f"peak {peak / 2**20:.0f} MB suggests the pair list was materialized"
+
+
 def test_large_input_takes_sparse_path_and_matches_dense() -> None:
     """Above the cutoff the public numpy functions still agree with the dense path."""
     from sahi.postprocess._numpy_backend import greedy_nmm_numpy, nmm_numpy, nms_numpy
@@ -123,12 +210,15 @@ def test_nmm_never_merges_a_keeper_into_itself(match_metric: str, match_threshol
     matrix, sorted_idxs = _prepare_matrix(predictions, match_metric)
     indptr, indices = build_sparse_matches(boxes, areas, match_metric, match_threshold)
 
-    dense = nmm_from_matrix(matrix, sorted_idxs, predictions[:, 4], boxes, match_threshold)
-    csr = nmm_sparse(indptr, indices, sorted_idxs, predictions[:, 4], boxes)
-    assert dense == csr
+    results = {
+        "dense": nmm_from_matrix(matrix, sorted_idxs, predictions[:, 4], boxes, match_threshold),
+        "csr": nmm_sparse(indptr, indices, sorted_idxs, predictions[:, 4], boxes),
+        "streaming": nmm_streaming(boxes, areas, match_metric, match_threshold, sorted_idxs, predictions[:, 4]),
+    }
+    assert results["dense"] == results["csr"] == results["streaming"]
 
-    for name, result in (("dense", dense), ("csr", csr)):
-        merged_by: dict[int, int] = {}
+    for name, result in results.items():
+        merged_by = {}
         for keeper, merged in result.items():
             assert keeper not in merged, f"{name}: keeper {keeper} merged into itself"
             for m in merged:
@@ -155,3 +245,4 @@ def test_metric_does_not_warn_on_zero_area_boxes() -> None:
         for metric in ("IOU", "IOS"):
             compute_metric_matrix(boxes, areas, metric)
             build_sparse_matches(boxes, areas, metric, 0.3)
+            MatchQuery(boxes, areas, metric, 0.3).row(0)

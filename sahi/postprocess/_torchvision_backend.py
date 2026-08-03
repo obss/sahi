@@ -14,10 +14,14 @@ import torchvision
 from sahi.postprocess._numpy_backend import (
     _score_tiebreak_order,
     greedy_nmm_from_matrix,
+    greedy_nmm_match_all,
     greedy_nmm_numpy,
+    matches_all_pairs,
     nmm_from_matrix,
+    nmm_match_all,
     nmm_numpy,
     nms_from_matrix,
+    nms_match_all,
     nms_numpy,
 )
 from sahi.postprocess._sparse_backend import should_use_sparse
@@ -76,6 +80,9 @@ def nms_torchvision(
     if len(predictions) == 0:
         return []
 
+    if matches_all_pairs(match_threshold):
+        return nms_match_all(predictions)
+
     if match_metric == "IOU":
         # Use torchvision's native CUDA NMS kernel
         device = _get_device()
@@ -97,6 +104,8 @@ def greedy_nmm_torchvision(
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
     """Greedy NMM: compute metric matrix on GPU, merge logic on CPU."""
+    if matches_all_pairs(match_threshold):
+        return greedy_nmm_match_all(predictions)
     if should_use_sparse(len(predictions), match_threshold):
         return greedy_nmm_numpy(predictions, match_metric, match_threshold)
     matrix, sorted_idxs = _prepare_matrix_torch(predictions, match_metric)
@@ -109,6 +118,8 @@ def nmm_torchvision(
     match_threshold: float = 0.5,
 ) -> dict[int, list[int]]:
     """NMM: compute metric matrix on GPU, transitive merge logic on CPU."""
+    if matches_all_pairs(match_threshold):
+        return nmm_match_all(predictions)
     if should_use_sparse(len(predictions), match_threshold):
         return nmm_numpy(predictions, match_metric, match_threshold)
     matrix, sorted_idxs = _prepare_matrix_torch(predictions, match_metric)
