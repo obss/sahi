@@ -422,7 +422,7 @@ def nmm_sparse(
                 keep_to_merge_list[keep_idx] = merge_list
             for m in matched:
                 m_int = int(m)
-                if merge_to_keep[m_int] < 0 and m_int not in merge_list:
+                if merge_to_keep[m_int] < 0:
                     merge_list.append(m_int)
                     merge_to_keep[m_int] = keep_idx
 
@@ -481,7 +481,7 @@ def nmm_streaming(
                 keep_to_merge_list[keep_idx] = merge_list
             for m in matched:
                 m_int = int(m)
-                if merge_to_keep[m_int] < 0 and m_int not in merge_list:
+                if merge_to_keep[m_int] < 0:
                     merge_list.append(m_int)
                     merge_to_keep[m_int] = keep_idx
 
