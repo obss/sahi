@@ -162,7 +162,7 @@ sahi predict-fiftyone --image_dir image/file/or/folder \
 
 ### 其他参数
 
-支持 [`sahi predict`](#predict) 命令的所有参数。
+支持 [`sahi predict`](#predict-command-usage) 命令的所有参数。
 
 ---
 
@@ -174,7 +174,7 @@ sahi predict-fiftyone --image_dir image/file/or/folder \
 
 你需要先将预测结果转换为
 [COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用
-[`sahi predict`](#predict) 来生成该格式。
+[`sahi predict`](#predict-command-usage) 来生成该格式。
 
 ```bash
 sahi coco fiftyone --image_dir dir/to/images \
@@ -255,7 +255,7 @@ sahi coco yolo --image_dir dir/to/images \
 
 你需要先将预测结果转换为
 [COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用
-[`sahi predict`](#predict) 来生成该格式。
+[`sahi predict`](#predict-command-usage) 来生成该格式。
 
 ```bash
 sahi coco evaluate --dataset_json_path dataset.json \
@@ -298,7 +298,7 @@ sahi coco evaluate --dataset_json_path dataset.json \
 
 你需要先将预测结果转换为
 [COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用
-[`sahi predict`](#predict) 来生成该格式。
+[`sahi predict`](#predict-command-usage) 来生成该格式。
 
 ```bash
 sahi coco analyse --dataset_json_path dataset.json \

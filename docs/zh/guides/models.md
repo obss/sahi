@@ -383,14 +383,36 @@ result = get_sliced_prediction(
 pip install rfdetr
 ```
 
-```python
-detection_model = AutoDetectionModel.from_pretrained(
-    model_type="roboflow",
-    model_path="rfdetr-base",
-    confidence_threshold=0.3,
-    device="cuda:0",
-)
+通过 `model` 参数传入模型。普通字符串会被视为 Roboflow Universe 模型 ID，
+并且需要 API 密钥；RF-DETR 类名则会选择本地模型。
 
+=== "Roboflow Universe（需要 API 密钥）"
+
+    ```python
+    detection_model = AutoDetectionModel.from_pretrained(
+        model_type="roboflow",
+        model="rfdetr-base",  # Universe 模型 ID
+        api_key="YOUR_API_KEY",  # 也可以设置 ROBOFLOW_API_KEY
+        confidence_threshold=0.3,
+        device="cuda:0",
+    )
+    ```
+
+=== "本地权重（无需 API 密钥）"
+
+    ```python
+    detection_model = AutoDetectionModel.from_pretrained(
+        model_type="roboflow",
+        model="RFDETRSegMedium",  # RF-DETR 类名，也可以传入类或实例本身
+        model_path="checkpoint.pth",  # 本地训练得到的权重
+        category_mapping={"0": "cat", "1": "dog"},  # 自定义类别时必填
+        image_size=640,  # 必须与训练分辨率一致
+        confidence_threshold=0.3,
+        device="cuda:0",
+    )
+    ```
+
+```python
 result = get_sliced_prediction(
     "image.jpg",
     detection_model,
@@ -398,6 +420,12 @@ result = get_sliced_prediction(
     slice_width=512,
 )
 ```
+
+可用的 RF-DETR 模型包括：`RFDETRBase`、`RFDETRNano`、`RFDETRSmall`、`RFDETRMedium`、`RFDETRLarge`、
+`RFDETRSegNano`、`RFDETRSegSmall`、`RFDETRSegMedium`、`RFDETRSegLarge`、`RFDETRSegXLarge`、`RFDETRSeg2XLarge`。
+
+`category_mapping` 决定 `num_classes`，因此自定义模型必须提供该参数，否则模型头将无法与检查点匹配。
+只有设置了 `model_path` 时，`image_size` 才会生效。
 
 [![在 Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_roboflow.ipynb)
 

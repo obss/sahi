@@ -8,6 +8,192 @@ tags:
 
 # 📝 更新日志
 
+## 🚀 SAHI v0.12.5 发布说明
+
+此补丁版本完成了从 `0.12.2` 开始的后处理内存优化工作。此前的优化后来被发现只在边界框
+较为分散时有效；本版本还修复了测试过程中发现的两个正确性问题。
+
+### 🐛 修复
+
+- **后处理内存占用不再受边界框密集程度影响**
+  ([#1417](https://github.com/obss/sahi/pull/1417))。通过为每对相交的边界框存储一条记录来避免
+  `N x N` 重叠矩阵，只能在边界框较为分散时节省内存。当边界框大量重叠时，几乎每个边界框都与
+  其他边界框相交，相交对数量会接近 `N^2`，所存列表的开销也会接近它所取代的矩阵；而这恰好是
+  切片推理在拥挤场景和小目标图像中产生的布局。合并循环每次只读取一行匹配项，NMS 和 greedy NMM
+  也只会读取保留下来的边界框所对应的行，因此现在会按需从 STRtree 查询这些行。无论边界框如何布局，
+  峰值内存都限制在 `O(N + max_degree)`。NMM 会为每个边界框而不只是保留框读取一行，因此在预计
+  相交对列表不会过大时仍会保留该列表。
+- **非正数 `match_threshold` 不再构建度量矩阵**
+  ([#1417](https://github.com/obss/sahi/pull/1417))。两种度量值都非负，因此每一对边界框都满足
+  `metric >= 0`，邻接关系就是完全图。稠密路径此前仍会计算所有重叠度来得出这一结果，导致这个本来
+  不需要任何重叠计算的配置反而开销最大，并在 25000 个边界框时重现了
+  [#1374](https://github.com/obss/sahi/issues/1374) 中的内存不足问题。现在仅根据分数顺序即可得出结果。
+- **NMM 不再将保留框合并到自身** ([#1416](https://github.com/obss/sahi/pull/1416))。
+  此前通过让保留框的 `merge_to_keep` 条目保持为 `-1` 来标记它，但 `-1` 同时也用于标记尚未被认领的
+  边界框，因此稍后处理的边界框可能会认领一个保留框，并将其加入合并列表。当重复框的分数相同时，
+  这会使保留框出现在自身的合并列表中，同一个索引既能作为保留框访问，又能作为被合并框访问。
+  现在保留框会指向自身，使其无法再被认领，同时不改变其他结果。
+- **零面积边界框不再触发除零警告** ([#1416](https://github.com/obss/sahi/pull/1416))。
+  此前度量计算会对每一对边界框执行 `inter / denom`，之后才丢弃无效条目，因此退化边界框会产生
+  `RuntimeWarning`。现在会屏蔽除法运算，而不是事后屏蔽结果。
+
+### ⚡ 性能
+
+在密集和分散布局上使用 `IOS / 0.3` 进行后处理：
+
+| 布局 | 边界框数量 | NMS 优化前 | NMS 优化后 | 优化前峰值内存 | 优化后峰值内存 |
+| ---- | ---------: | ---------: | ---------: | -------------: | -------------: |
+| 密集 | 33337 | 47180 ms | 135 ms | 3416 MB | 4 MB |
+| 密集 | 20000 | 15931 ms | 57 ms | 1232 MB | 2 MB |
+| 密集 | 10000 | 2717 ms | 25 ms | 311 MB | 1 MB |
+| 分散 | 33336 | 539 ms | 188 ms | 65 MB | 4 MB |
+
+- **numba 后端根据边界框密度选择执行路径**
+  ([#1418](https://github.com/obss/sahi/pull/1418))。其 NMS 和 greedy NMM 循环此前无论输入如何，
+  都会执行穷举式成对扫描。如果只按预测结果数量选择路径，会使拥挤场景的性能倒退，因为 JIT 循环会
+  跳过已抑制的候选框，即使输入规模很大也仍有竞争力。因此现在根据邻居数量进行选择，并通过对边界框
+  采样来估算该数量。此外，分数排序此前使用本身具有二次复杂度的插入排序，现在改为与其他后端相同的
+  `lexsort`，包括分数相同时也能生成完全一致的顺序。
+
+| 每个边界框的平均邻居数（20000 个边界框） | NMS 优化前 | NMS 优化后 | greedy NMM 优化前 | greedy NMM 优化后 |
+| ---------------------------------------: | ---------: | ---------: | ----------------: | ----------------: |
+| 0.0 | 909 ms | 43 ms | 842 ms | 89 ms |
+| 0.8 | 781 ms | 52 ms | 757 ms | 84 ms |
+| 5.1 | 495 ms | 118 ms | 479 ms | 151 ms |
+| 20.1 | 241 ms | 146 ms | 236 ms | 148 ms |
+| 78.9 | 141 ms | 73 ms | 143 ms | 71 ms |
+
+## 🚀 SAHI v0.12.4 发布说明
+
+此补丁版本修复了 `sahi` 命令行界面的问题：在没有预先安装 `matplotlib` 的环境中，该界面此前
+无法使用。
+
+### 🐛 修复
+
+- **`matplotlib` 现已声明为依赖项** ([#1414](https://github.com/obss/sahi/pull/1414))。
+  `sahi.cli` 会导入 `sahi.scripts.coco_error_analysis`，后者又会在模块级导入 `matplotlib`，
+  但 `[project].dependencies` 和所有可选依赖中此前都没有列出 `matplotlib`。由于采用立即导入，
+  在全新环境中所有 `sahi` 命令都会失败，包括 `sahi version` 等与绘图无关的命令。这个问题一直
+  没有被发现，是因为典型环境通常会随其他软件包一同安装 `matplotlib`。
+
+## 🚀 SAHI v0.12.3 发布说明
+
+此补丁版本启用了 Apple Silicon GPU、增加了土耳其语文档，并清理了自 `0.12.2` 以来积累的
+CI 维护事项。
+
+### 🐛 修复
+
+- **设备选择和后处理现在可以检测 Apple MPS**
+  ([#1408](https://github.com/obss/sahi/pull/1408))。`select_device()` 此前只检测 CUDA，
+  因此即使 Metal 后端可用，macOS 用户也会回退到 CPU。自动选择顺序现在为 CUDA → MPS → CPU；
+  当任一 GPU 可用时，都会选择 `torchvision` 后处理后端。检测通过
+  `torch.backends.mps.is_available()` 完成；所有受支持的 torch 版本都提供该方法，并且在非
+  Apple 构建上会返回 `False`。
+- **将 `threading.currentThread()` 替换为 `current_thread()`**
+  ([#1392](https://github.com/obss/sahi/pull/1392))，消除了较新 Python 版本中的
+  `DeprecationWarning`。
+
+### 📚 文档
+
+- 新增文档的**土耳其语翻译**，并提供与其匹配的构建步骤和 `zensical` 配置
+  ([#1401](https://github.com/obss/sahi/pull/1401)、
+  [#1402](https://github.com/obss/sahi/pull/1402)、
+  [#1404](https://github.com/obss/sahi/pull/1404))。
+- 修正多语言子路径链接 ([#1403](https://github.com/obss/sahi/pull/1403))。
+- 后端文档现在同时列出 MPS 和 CUDA ([#1410](https://github.com/obss/sahi/pull/1410))。
+
+### 🧹 维护与 CI
+
+- 新增设备选择和后处理后端解析测试 ([#1409](https://github.com/obss/sahi/pull/1409))。
+- 将 `astral-sh/setup-uv` 从 8.3.2 升级到 9.0.0
+  ([#1399](https://github.com/obss/sahi/pull/1399))，将 `actions/setup-python` 从 6.3.0
+  升级到 7.0.0 ([#1400](https://github.com/obss/sahi/pull/1400))，并将
+  `actions/checkout` 从 7.0.0 升级到 7.0.1
+  ([#1398](https://github.com/obss/sahi/pull/1398))。
+- 将 `twine` 的版本要求放宽到 `>=5.1.1,<8.0.0`
+  ([#1406](https://github.com/obss/sahi/pull/1406))。
+
+### ⚡ 性能
+
+在 Apple M2 Pro 上使用 `IOU` 度量进行 NMS，取 5 次运行中的最佳成绩：
+
+| 边界框数量 | numpy | numba | torchvision (MPS) |
+| ---------: | ----: | ----: | ----------------: |
+| 100 | 0.14 ms | 0.02 ms | 1.44 ms |
+| 500 | 1.53 ms | 0.36 ms | 1.42 ms |
+| 1000 | 5.46 ms | 1.40 ms | 1.45 ms |
+| 5000 | 81.37 ms | 34.16 ms | 4.05 ms |
+| 20000 | 1237.70 ms | 462.56 ms | 11.75 ms |
+
+当边界框数量少于约 500 个时，`numba` 仍然更快，但此时差异仅约为一毫秒。
+
+**完整更新日志**：
+<https://github.com/obss/sahi/compare/0.12.2...0.12.3>
+
+## 🚀 SAHI v0.12.2 发布说明
+
+此补丁版本修复了对大量预测结果进行后处理时的内存不足和严重性能下降问题，同时包含自 `0.12.1`
+以来积累的模型、打包和文档修复。
+
+### 🐛 修复
+
+- **后处理不再为大型输入分配 `N x N` 矩阵**
+  ([#1395](https://github.com/obss/sahi/pull/1395))。v0.11 使用 shapely `STRtree`，只比较
+  相邻的边界框；v0.12 将其替换为稠密矩阵，无论边界框如何布局，时间和空间复杂度都是 `O(N^2)`。
+  TorchVision 后端没有输入规模保护，会在 GPU 上构建七个 `N x N` 张量，因此最先耗尽内存。
+  greedy 循环只会使用 `matrix >= match_threshold` 的结果，而不会使用度量值本身，因此现在会根据
+  STRtree 报告的相交对直接构建经过阈值过滤的邻接关系，并以 CSR 格式存储。修复
+  [#1374](https://github.com/obss/sahi/issues/1374)。
+- 支持按类名加载本地 **RF-DETR** 模型，并修正 Roboflow 文档
+  ([#1394](https://github.com/obss/sahi/pull/1394))。
+- MMDetection 的 `has_mask` 现在可以处理 `RepeatDataset`
+  ([#1387](https://github.com/obss/sahi/pull/1387))。
+- 在 `import_utils` 中强制执行**依赖项和最低版本检查**
+  ([#1377](https://github.com/obss/sahi/pull/1377))。
+- 所有 **OpenCV 发行包**保持相同版本，避免安装相互冲突的软件包
+  ([#1393](https://github.com/obss/sahi/pull/1393))。
+
+### 📚 文档
+
+- 更新并补全中文翻译 ([#1371](https://github.com/obss/sahi/pull/1371))。
+- 文档默认使用 **YOLO26**，并链接至 Ultralytics YOLO26 页面
+  ([#1386](https://github.com/obss/sahi/pull/1386))；CLI 模型列表中也加入了 YOLO26
+  ([#1378](https://github.com/obss/sahi/pull/1378))。
+
+### 🧹 维护与 CI
+
+- 将 `astral-sh/setup-uv` 从 8.2.0 升级到 8.3.2
+  ([#1389](https://github.com/obss/sahi/pull/1389))，并更新 `actions/checkout` / `actions/cache`
+  ([#1385](https://github.com/obss/sahi/pull/1385))。
+- 将 `build` 的版本要求放宽到 `>=0.10,<1.6`
+  ([#1382](https://github.com/obss/sahi/pull/1382))。
+
+### ⚡ 性能
+
+33337 个边界框，使用 `IOS` 度量，阈值为 `0.3`。优化前后的输出相同
+（`greedy_nmm` 生成 6571 个预测结果，`nmm` 生成 4639 个预测结果）。
+
+CPU（Intel Core i7-13850HX）：
+
+| 后端 | greedy_nmm 优化前 | 优化后 | nmm 优化前 | 优化后 |
+| ---- | -----------------: | -----: | ---------: | -----: |
+| numpy | 15.88s | 0.18s | 27.06s | 0.21s |
+| torchvision | 6.22s | 0.18s | 17.34s | 0.21s |
+| numba | 1.53s | 1.55s | 18.56s | 0.22s |
+
+CUDA（RTX 4000 Ada Laptop，12 GB）：
+
+| 后端 | greedy_nmm 优化前 | 优化后 | nmm 优化前 | 优化后 |
+| ---- | -----------------: | -----: | ---------: | -----: |
+| numpy | 15.93s | 0.26s | 27.00s | 0.21s |
+| torchvision | OOM，4.14 GiB | 0.17s | OOM，4.14 GiB | 0.23s |
+| numba | 1.09s | 1.09s | 18.82s | 0.22s |
+
+少于 2000 个边界框的输入以及任何非正数阈值仍使用速度更快的稠密路径。
+
+**完整更新日志**：
+<https://github.com/obss/sahi/compare/0.12.1...0.12.2>
+
 ## 🚀 SAHI v0.12.0 发布说明
 
 这是 SAHI 迄今为止规模最大的版本之一。自 `0.11.34` 以来共包含 **95 个提交**
