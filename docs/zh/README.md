@@ -231,7 +231,7 @@ pip install inference>=0.51.5 rfdetr>=1.6.2
 
 ## <div align="center">贡献者</div>
 
-欢迎贡献！请参阅我们的 [贡献指南](../../CONTRIBUTING.md)
+欢迎贡献！请参阅我们的 [贡献指南](contributing.md)
 来开始使用。感谢所有贡献者！
 
 <p align="center">
