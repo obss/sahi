@@ -2,17 +2,30 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+import pytest
+from PIL import Image
 
 from sahi.utils.cv import (
+    IMAGE_EXTENSIONS_LOSSY,
     Colors,
     apply_color_mask,
     get_bbox_from_bool_mask,
     get_coco_segmentation_from_bool_mask,
     read_image,
+    read_image_as_pil,
+    read_image_size,
 )
+
+LOCAL_IMAGES = [
+    "tests/data/coco_utils/terrain1.jpg",
+    "tests/data/coco_utils/terrain2.png",
+    "tests/data/coco_utils/terrain2_gray.png",
+    "tests/data/small-vehicles1.jpeg",
+]
 
 
 class TestCvUtils:
@@ -82,3 +95,34 @@ class TestCvUtils:
         expected_result = [1, 1, 2, 2]
         result = get_bbox_from_bool_mask(mask)
         assert result == expected_result
+
+    @pytest.mark.parametrize("image_path", LOCAL_IMAGES)
+    def test_read_image_size_matches_full_decode(self, image_path: str) -> None:
+        """Reading the size from the header agrees with decoding the whole image."""
+        assert read_image_size(image_path) == read_image_as_pil(image_path).size
+
+    @pytest.mark.parametrize("image_format, suffix", [("JPEG", ".jpg"), ("TIFF", ".tif")])
+    @pytest.mark.parametrize("exif_fix", [True, False])
+    def test_read_image_size_honors_exif_orientation(
+        self, tmp_path: Path, image_format: str, suffix: str, exif_fix: bool
+    ) -> None:
+        """An orientation tag that turns the image must swap the reported width and height."""
+        image_path = tmp_path / f"rotated{suffix}"
+        image = Image.fromarray(np.zeros((20, 40, 3), dtype=np.uint8))  # 40 wide, 20 tall
+        exif = image.getexif()
+        exif[0x0112] = 6  # rotate a quarter turn
+        image.save(image_path, format=image_format, exif=exif)
+
+        assert read_image_size(image_path, exif_fix=exif_fix) == read_image_as_pil(image_path, exif_fix=exif_fix).size
+
+    @pytest.mark.parametrize("image_path", LOCAL_IMAGES)
+    def test_read_image_as_pil_return_arr_matches_pil_decode(self, image_path: str) -> None:
+        """Decoding straight to an array gives the same pixels as converting from PIL."""
+        from_pil = np.asarray(read_image_as_pil(image_path))
+        as_arr = read_image_as_pil(image_path, return_arr=True)
+
+        assert as_arr.dtype == np.uint8
+        assert as_arr.shape == from_pil.shape
+        # decoders may round a lossy sample differently; a channel swap would be off by far more
+        tolerance = 1 if Path(image_path).suffix in IMAGE_EXTENSIONS_LOSSY else 0
+        assert np.abs(as_arr.astype(int) - from_pil.astype(int)).max() <= tolerance

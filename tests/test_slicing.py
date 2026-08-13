@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
+import pytest
 from PIL import Image
 
-from sahi.slicing import shift_bboxes, shift_masks, slice_coco, slice_image
+from sahi.slicing import _slice_file_suffix, shift_bboxes, shift_masks, slice_coco, slice_image
 from sahi.utils.coco import Coco
 from sahi.utils.cv import read_image
 
@@ -178,6 +181,44 @@ class TestSlicing:
         shifted_torch_bboxes = shift_bboxes(bboxes=torch_bboxes, offset=[shift_x, shift_y])
         assert shifted_torch_bboxes.tolist() == [[11, 22, 13, 24]]
         assert isinstance(shifted_torch_bboxes, torch.Tensor)
+
+    @pytest.mark.parametrize(
+        "image, out_ext, expected",
+        [
+            # a path is not a PIL image, so it carries no filename to inherit and exports png
+            ("source.jpg", None, ".png"),
+            ("source.bmp", None, ".png"),
+            (np.zeros((4, 4, 3), dtype=np.uint8), None, ".png"),
+            ("source.bmp", ".tif", ".tif"),
+        ],
+    )
+    def test_slice_file_suffix(self, image: str | np.ndarray, out_ext: str | None, expected: str) -> None:
+        """Exported slices keep the extension chosen before slicing switched to an array."""
+        assert _slice_file_suffix(image, out_ext) == expected
+
+    def test_slice_file_suffix_inherits_a_lossless_source_extension(self, tmp_path: Path) -> None:
+        """An open PIL image is the only input carrying a filename, and a lossless one is kept."""
+        bmp_path = tmp_path / "source.bmp"
+        Image.fromarray(np.zeros((4, 4, 3), dtype=np.uint8)).save(bmp_path)
+
+        with Image.open(bmp_path) as image:
+            assert _slice_file_suffix(image) == ".bmp"
+
+    def test_slice_image_from_path_matches_array_input(self) -> None:
+        """Slicing a path gives the same slices, and the same png export suffix, as slicing its array."""
+        image_path = "tests/data/coco_utils/terrain1.jpg"
+        kwargs = dict(
+            slice_height=512, slice_width=512, overlap_height_ratio=0.2, overlap_width_ratio=0.2, verbose=False
+        )
+
+        from_path = slice_image(image=image_path, **kwargs)  # type: ignore[arg-type]
+        from_array = slice_image(image=read_image(image_path), **kwargs)  # type: ignore[arg-type]
+
+        assert len(from_path) == len(from_array)
+        for path_slice, array_slice in zip(from_path.images, from_array.images):
+            np.testing.assert_array_equal(path_slice, array_slice)
+        # a lossy source exports as png, so repeated slicing does not compound the compression
+        assert all(name.endswith(".png") for name in from_path.filenames)
 
     def test_shift_masks(self) -> None:
         """Test shifting mask arrays."""
