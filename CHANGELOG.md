@@ -1,5 +1,29 @@
 # 📝 CHANGELOG
 
+## 🚀 SAHI v0.12.6 Release Notes
+
+A patch release with one performance fix. NMM postprocessing no longer slows down as its merge groups grow, which is the shape crowded scenes produce.
+
+### ⚡ Performance
+
+- **NMM stops rescanning merge lists it has already filled** ([#1422](https://github.com/obss/sahi/pull/1422)). Every candidate box was first searched for in the Python list of boxes already merged into the current keeper, and only then checked against the `merge_to_keep` array. That search costs one step per box already in the group, so a crowded scene, which ends up with a few very large groups, paid it on almost every candidate. A box is appended to a merge list and recorded in `merge_to_keep` in the same step, so the array lookup on its own already answers the question and the list search only repeated it. Removing it leaves every group exactly as it was and turns the merge bookkeeping from quadratic in the size of a group into linear. The dense, stored-pair and streaming paths share this bookkeeping, so all three improve, and the numba backend inherits the change through the dense one.
+
+![NMM merge time before and after, on crowded scenes](https://raw.githubusercontent.com/obss/sahi/main/resources/nmm-crowded-speedup.png)
+
+NMM on a crowded layout, `IOS / 0.3`:
+
+| boxes | before | after | speedup |
+| ----: | -----: | ----: | ------: |
+| 2000 | 324 ms | 199 ms | 1.6x |
+| 5000 | 2132 ms | 896 ms | 2.4x |
+| 10000 | 13303 ms | 3531 ms | 3.8x |
+| 20000 | 80153 ms | 14625 ms | 5.5x |
+| 33337 | 297170 ms | 48926 ms | 6.1x |
+
+### 📚 Documentation
+
+- **The Chinese documentation now covers `0.12.5`** ([#1423](https://github.com/obss/sahi/pull/1423)).
+
 ## 🚀 SAHI v0.12.5 Release Notes
 
 A patch release that finishes the postprocessing memory work started in `0.12.2`, which turned out to help only when boxes were spread out, and fixes two correctness problems found while testing it.
