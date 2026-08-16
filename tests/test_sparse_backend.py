@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from typing import NamedTuple
+
 import numpy as np
 import pytest
 
 from sahi.postprocess._numpy_backend import (
     _prepare_matrix,
+    _score_tiebreak_order,
     greedy_nmm_from_matrix,
     nmm_from_matrix,
     nmm_numpy,
@@ -26,6 +29,12 @@ from sahi.postprocess._sparse_backend import (
     should_use_sparse,
 )
 
+# Every parity test runs the same metric x threshold x spread grid.
+PARITY_GRID = pytest.mark.parametrize(
+    ("match_metric", "match_threshold", "spread"),
+    [(m, t, s) for m in ("IOU", "IOS") for t in (0.1, 0.5, 0.9) for s in (200.0, 20000.0)],
+)
+
 
 def _make_predictions(n: int, spread: float, seed: int) -> np.ndarray:
     """Build (N, 6) predictions; larger spread means fewer overlapping boxes."""
@@ -40,6 +49,39 @@ def _make_predictions(n: int, spread: float, seed: int) -> np.ndarray:
     return np.stack([x1, y1, x1 + w, y1 + h, scores, categories], axis=1)
 
 
+class _Case(NamedTuple):
+    """Both representations of one fixture: dense matrix and CSR adjacency."""
+
+    boxes: np.ndarray
+    areas: np.ndarray
+    scores: np.ndarray
+    matrix: np.ndarray
+    sorted_idxs: np.ndarray
+    indptr: np.ndarray
+    indices: np.ndarray
+
+
+def _case(predictions: np.ndarray, match_metric: str, match_threshold: float) -> _Case:
+    """Set up what the parity tests compare. Builds the NxN matrix, so keep N small."""
+    boxes, scores = predictions[:, :4], predictions[:, 4]
+    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    matrix, sorted_idxs = _prepare_matrix(predictions, match_metric)
+    indptr, indices = build_sparse_matches(boxes, areas, match_metric, match_threshold)
+    return _Case(boxes, areas, scores, matrix, sorted_idxs, indptr, indices)
+
+
+def _assert_partition(result: dict[int, list[int]], n: int, label: str) -> None:
+    """Every index is either a keeper or merged into exactly one keeper, never both."""
+    merged_by: dict[int, int] = {}
+    for keeper, merged in result.items():
+        assert keeper not in merged, f"{label}: keeper {keeper} merged into itself"
+        for m in merged:
+            assert m not in merged_by, f"{label}: {m} merged into {merged_by[m]} and {keeper}"
+            merged_by[m] = keeper
+    assert not set(result) & set(merged_by), f"{label}: an index is both keeper and merged"
+    assert set(result) | set(merged_by) == set(range(n)), f"{label}: some index is in no group"
+
+
 def test_should_use_sparse_thresholds() -> None:
     """Small inputs and non-positive thresholds stay on the dense path."""
     assert should_use_sparse(SPARSE_MIN_BOXES, 0.5) is True
@@ -48,86 +90,49 @@ def test_should_use_sparse_thresholds() -> None:
     assert should_use_sparse(SPARSE_MIN_BOXES, 0.0) is False
 
 
-@pytest.mark.parametrize("match_metric", ["IOU", "IOS"])
-@pytest.mark.parametrize("match_threshold", [0.1, 0.5, 0.9])
-@pytest.mark.parametrize("spread", [200.0, 20000.0])
+@PARITY_GRID
 def test_sparse_adjacency_matches_dense(match_metric: str, match_threshold: float, spread: float) -> None:
     """The CSR adjacency equals the thresholded dense matrix, minus the diagonal."""
-    predictions = _make_predictions(400, spread, seed=1)
-    boxes = predictions[:, :4]
-    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    case = _case(_make_predictions(400, spread, seed=1), match_metric, match_threshold)
 
-    matrix, _ = _prepare_matrix(predictions, match_metric)
-    indptr, indices = build_sparse_matches(boxes, areas, match_metric, match_threshold)
-
-    expected = matrix >= match_threshold
+    expected = case.matrix >= match_threshold
     np.fill_diagonal(expected, False)
 
-    for i in range(len(boxes)):
-        got = indices[indptr[i] : indptr[i + 1]]
+    for i in range(len(case.boxes)):
+        got = case.indices[case.indptr[i] : case.indptr[i + 1]]
         assert sorted(got.tolist()) == got.tolist(), "CSR columns must be ascending"
         assert set(got.tolist()) == set(np.where(expected[i])[0].tolist())
 
 
-@pytest.mark.parametrize("match_metric", ["IOU", "IOS"])
-@pytest.mark.parametrize("match_threshold", [0.1, 0.5, 0.9])
-@pytest.mark.parametrize("spread", [200.0, 20000.0])
-def test_sparse_algorithms_match_dense(match_metric: str, match_threshold: float, spread: float) -> None:
-    """NMS, greedy NMM and NMM return identical results on both paths."""
+@PARITY_GRID
+def test_dense_csr_and_streaming_agree(match_metric: str, match_threshold: float, spread: float) -> None:
+    """NMS, greedy NMM and NMM return identical results on all three paths."""
     predictions = _make_predictions(400, spread, seed=2)
-    boxes = predictions[:, :4]
-    scores = predictions[:, 4]
-    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    case = _case(predictions, match_metric, match_threshold)
+    streaming_args = (case.boxes, case.areas, match_metric, match_threshold, case.sorted_idxs)
 
-    matrix, sorted_idxs = _prepare_matrix(predictions, match_metric)
-    indptr, indices = build_sparse_matches(boxes, areas, match_metric, match_threshold)
+    dense_nms = nms_from_matrix(case.matrix, case.sorted_idxs, match_threshold)
+    assert nms_sparse(case.indptr, case.indices, case.sorted_idxs) == dense_nms
+    assert nms_streaming(*streaming_args) == dense_nms
 
-    assert nms_sparse(indptr, indices, sorted_idxs) == nms_from_matrix(matrix, sorted_idxs, match_threshold)
-    assert greedy_nmm_sparse(indptr, indices, sorted_idxs) == greedy_nmm_from_matrix(
-        matrix, sorted_idxs, match_threshold
-    )
-    assert nmm_sparse(indptr, indices, sorted_idxs, scores, boxes) == nmm_from_matrix(
-        matrix, sorted_idxs, scores, boxes, match_threshold
-    )
+    dense_greedy = greedy_nmm_from_matrix(case.matrix, case.sorted_idxs, match_threshold)
+    assert greedy_nmm_sparse(case.indptr, case.indices, case.sorted_idxs) == dense_greedy
+    assert greedy_nmm_streaming(*streaming_args) == dense_greedy
+
+    dense_nmm = nmm_from_matrix(case.matrix, case.sorted_idxs, case.scores, case.boxes, match_threshold)
+    assert nmm_sparse(case.indptr, case.indices, case.sorted_idxs, case.scores, case.boxes) == dense_nmm
+    assert nmm_streaming(*streaming_args, case.scores) == dense_nmm
+    _assert_partition(dense_nmm, len(predictions), "nmm")
 
 
-@pytest.mark.parametrize("match_metric", ["IOU", "IOS"])
-@pytest.mark.parametrize("match_threshold", [0.1, 0.5, 0.9])
-@pytest.mark.parametrize("spread", [200.0, 20000.0])
+@PARITY_GRID
 def test_match_query_row_equals_csr_row(match_metric: str, match_threshold: float, spread: float) -> None:
     """A row read on demand is the row the CSR builder would have stored."""
-    predictions = _make_predictions(300, spread, seed=4)
-    boxes = predictions[:, :4]
-    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    case = _case(_make_predictions(300, spread, seed=4), match_metric, match_threshold)
+    query = MatchQuery(case.boxes, case.areas, match_metric, match_threshold)
 
-    indptr, indices = build_sparse_matches(boxes, areas, match_metric, match_threshold)
-    query = MatchQuery(boxes, areas, match_metric, match_threshold)
-
-    for i in range(len(boxes)):
-        assert query.row(i).tolist() == indices[indptr[i] : indptr[i + 1]].tolist()
-
-
-@pytest.mark.parametrize("match_metric", ["IOU", "IOS"])
-@pytest.mark.parametrize("match_threshold", [0.1, 0.5, 0.9])
-@pytest.mark.parametrize("spread", [200.0, 20000.0])
-def test_streaming_matches_pair_list(match_metric: str, match_threshold: float, spread: float) -> None:
-    """Streaming NMS and greedy NMM agree with the stored-pair versions."""
-    predictions = _make_predictions(400, spread, seed=5)
-    boxes = predictions[:, :4]
-    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
-
-    _, sorted_idxs = _prepare_matrix(predictions, match_metric)
-    indptr, indices = build_sparse_matches(boxes, areas, match_metric, match_threshold)
-
-    assert nms_streaming(boxes, areas, match_metric, match_threshold, sorted_idxs) == nms_sparse(
-        indptr, indices, sorted_idxs
-    )
-    assert greedy_nmm_streaming(boxes, areas, match_metric, match_threshold, sorted_idxs) == greedy_nmm_sparse(
-        indptr, indices, sorted_idxs
-    )
-    assert nmm_streaming(boxes, areas, match_metric, match_threshold, sorted_idxs, predictions[:, 4]) == nmm_sparse(
-        indptr, indices, sorted_idxs, predictions[:, 4], boxes
-    )
+    for i in range(len(case.boxes)):
+        assert query.row(i).tolist() == case.indices[case.indptr[i] : case.indptr[i + 1]].tolist()
 
 
 def test_nmm_streams_only_when_pair_list_would_be_large() -> None:
@@ -138,13 +143,17 @@ def test_nmm_streams_only_when_pair_list_would_be_large() -> None:
     assert should_stream_nmm(scattered[:, :4]) is False
     assert should_stream_nmm(crowded[:, :4]) is True
 
-    # both routes must still agree with the stored-pair result
-    for predictions in (scattered, crowded):
-        boxes = predictions[:, :4]
+    # Both routes must agree with the stored-pair result and still group every box.
+    for name, predictions in (("scattered", scattered), ("crowded", crowded)):
+        boxes, scores = predictions[:, :4], predictions[:, 4]
         areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
-        _, sorted_idxs = _prepare_matrix(predictions, "IOS")
+        # The NxN matrix is skipped here; only the score order it returns is needed.
+        sorted_idxs = _score_tiebreak_order(boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3], scores)
         indptr, indices = build_sparse_matches(boxes, areas, "IOS", 0.3)
-        assert nmm_numpy(predictions, "IOS", 0.3) == nmm_sparse(indptr, indices, sorted_idxs, predictions[:, 4], boxes)
+
+        result = nmm_numpy(predictions, "IOS", 0.3)
+        assert result == nmm_sparse(indptr, indices, sorted_idxs, scores, boxes)
+        _assert_partition(result, len(predictions), name)
 
 
 def test_crowded_input_stays_within_memory() -> None:
@@ -174,18 +183,18 @@ def test_crowded_input_stays_within_memory() -> None:
 
 def test_large_input_takes_sparse_path_and_matches_dense() -> None:
     """Above the cutoff the public numpy functions still agree with the dense path."""
-    from sahi.postprocess._numpy_backend import greedy_nmm_numpy, nmm_numpy, nms_numpy
+    from sahi.postprocess._numpy_backend import greedy_nmm_numpy, nms_numpy
 
     n = SPARSE_MIN_BOXES + 500
     predictions = _make_predictions(n, spread=30000.0, seed=3)
     assert should_use_sparse(n, 0.3) is True
+    case = _case(predictions, "IOS", 0.3)
 
-    matrix, sorted_idxs = _prepare_matrix(predictions, "IOS")
-    boxes, scores = predictions[:, :4], predictions[:, 4]
-
-    assert nms_numpy(predictions, "IOS", 0.3) == nms_from_matrix(matrix, sorted_idxs, 0.3)
-    assert greedy_nmm_numpy(predictions, "IOS", 0.3) == greedy_nmm_from_matrix(matrix, sorted_idxs, 0.3)
-    assert nmm_numpy(predictions, "IOS", 0.3) == nmm_from_matrix(matrix, sorted_idxs, scores, boxes, 0.3)
+    assert nms_numpy(predictions, "IOS", 0.3) == nms_from_matrix(case.matrix, case.sorted_idxs, 0.3)
+    assert greedy_nmm_numpy(predictions, "IOS", 0.3) == greedy_nmm_from_matrix(case.matrix, case.sorted_idxs, 0.3)
+    assert nmm_numpy(predictions, "IOS", 0.3) == nmm_from_matrix(
+        case.matrix, case.sorted_idxs, case.scores, case.boxes, 0.3
+    )
 
 
 @pytest.mark.parametrize("match_threshold", [0.1, 0.3, 0.5, 0.7])
@@ -204,28 +213,19 @@ def test_nmm_never_merges_a_keeper_into_itself(match_metric: str, match_threshol
     h = np.round(rng.uniform(1, 40, n) / 25) * 25
     scores = np.round(rng.uniform(0, 1, n), 1)
     predictions = np.stack([x1, y1, x1 + w, y1 + h, scores, rng.integers(0, 3, n)], axis=1)
-
-    boxes = predictions[:, :4]
-    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
-    matrix, sorted_idxs = _prepare_matrix(predictions, match_metric)
-    indptr, indices = build_sparse_matches(boxes, areas, match_metric, match_threshold)
+    case = _case(predictions, match_metric, match_threshold)
 
     results = {
-        "dense": nmm_from_matrix(matrix, sorted_idxs, predictions[:, 4], boxes, match_threshold),
-        "csr": nmm_sparse(indptr, indices, sorted_idxs, predictions[:, 4], boxes),
-        "streaming": nmm_streaming(boxes, areas, match_metric, match_threshold, sorted_idxs, predictions[:, 4]),
+        "dense": nmm_from_matrix(case.matrix, case.sorted_idxs, case.scores, case.boxes, match_threshold),
+        "csr": nmm_sparse(case.indptr, case.indices, case.sorted_idxs, case.scores, case.boxes),
+        "streaming": nmm_streaming(
+            case.boxes, case.areas, match_metric, match_threshold, case.sorted_idxs, case.scores
+        ),
     }
     assert results["dense"] == results["csr"] == results["streaming"]
 
     for name, result in results.items():
-        merged_by = {}
-        for keeper, merged in result.items():
-            assert keeper not in merged, f"{name}: keeper {keeper} merged into itself"
-            for m in merged:
-                assert m not in merged_by, f"{name}: {m} merged into {merged_by[m]} and {keeper}"
-                merged_by[m] = keeper
-        assert not set(result) & set(merged_by), f"{name}: an index is both keeper and merged"
-        assert set(result) | set(merged_by) == set(range(n)), f"{name}: some index is in no group"
+        _assert_partition(result, n, name)
 
 
 def test_metric_does_not_warn_on_zero_area_boxes() -> None:
