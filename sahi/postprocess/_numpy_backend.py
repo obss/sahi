@@ -345,23 +345,21 @@ def nmm_from_matrix(
             # current_idx is a keeper. Point it at itself so that a later box
             # cannot claim it: keepers are never merged into anything.
             merge_to_keep[current_idx] = current_idx
-            keep_to_merge_list[current_idx] = []
-            for m in matched:
-                m_int = int(m)
-                if merge_to_keep[m_int] < 0:
-                    keep_to_merge_list[current_idx].append(m_int)
-                    merge_to_keep[m_int] = current_idx
+            keep_idx = current_idx
+            merge_list: list[int] = []
+            keep_to_merge_list[keep_idx] = merge_list
         else:
             # current_idx was already merged into a keeper
             keep_idx = int(merge_to_keep[current_idx])
-            merge_list = keep_to_merge_list.get(keep_idx, [])
-            if keep_idx not in keep_to_merge_list:
-                keep_to_merge_list[keep_idx] = merge_list
-            for m in matched:
-                m_int = int(m)
-                if m_int not in merge_list and merge_to_keep[m_int] < 0:
-                    merge_list.append(m_int)
-                    merge_to_keep[m_int] = keep_idx
+            merge_list = keep_to_merge_list[keep_idx]
+
+        # A claimed box always has a non-negative merge_to_keep entry, so that
+        # test alone decides membership; scanning merge_list would repeat it.
+        for m in matched:
+            m_int = int(m)
+            if merge_to_keep[m_int] < 0:
+                merge_list.append(m_int)
+                merge_to_keep[m_int] = keep_idx
 
     return keep_to_merge_list
 
