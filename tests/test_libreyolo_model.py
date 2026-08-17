@@ -2,9 +2,17 @@
 
 from __future__ import annotations
 
+import importlib
+
+import pytest
+
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.libreyolo import LibreYoloTestConstants, download_libreyolo9t_model
+
+pytestmark = pytest.mark.skipif(
+    importlib.util.find_spec("libreyolo") is None, reason="libreyolo is not installed"
+)
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.3

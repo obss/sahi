@@ -64,10 +64,7 @@ class LibreYoloDetectionModel(UltralyticsDetectionModel):
                     device = getattr(self.model, "device", "cpu")
                     result.masks = Masks(torch.tensor([], device=device), result.boxes.orig_shape)
 
-            return [
-                (result.boxes.data, result.masks.data)
-                for result in prediction_result
-            ]
+            return [(result.boxes.data, result.masks.data) for result in prediction_result]
         elif self.is_obb:
             device = getattr(self.model, "device", "cpu")
             return [

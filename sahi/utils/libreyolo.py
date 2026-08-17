@@ -10,9 +10,7 @@ from pathlib import Path
 class LibreYoloTestConstants:
     """LibreYOLO test model configurations."""
 
-    LIBREYOLO9T_MODEL_URL = (
-        "https://huggingface.co/LibreYOLO/LibreYOLO9t/resolve/main/LibreYOLO9t.pt"
-    )
+    LIBREYOLO9T_MODEL_URL = "https://huggingface.co/LibreYOLO/LibreYOLO9t/resolve/main/LibreYOLO9t.pt"
     LIBREYOLO9T_MODEL_PATH = "tests/data/models/libreyolo/LibreYOLO9t.pt"
 
 
