@@ -25,10 +25,12 @@ from shapely import box as shapely_box
 # the N x N matrix it saves.
 SPARSE_MIN_BOXES = 2000
 
-# NMM reads a row for every box, not just for the survivors, so it keeps the
-# stored pair list until that list would get large, measured at about 110 bytes
-# per pair once the intermediates are counted.
-NMM_MAX_PAIRS = 2_000_000
+# NMM reads a row for every box, not just for the survivors, so answering its
+# rows from a stored pair list is worth the memory while boxes have few
+# neighbours. Past this many the list costs more to build than the queries it
+# saves, and keeps growing with the square of the crowding. The measured
+# crossover barely moves with N, so it is a degree and not a pair budget.
+NMM_MAX_DEGREE = 40.0
 
 # Probing the tree in one call would return sample x degree pairs at once, which
 # on crowded boxes dwarfs everything the path being chosen goes on to allocate.
@@ -58,9 +60,10 @@ def should_stream_nmm(boxes: np.ndarray) -> bool:
         boxes: Array of shape (N, 4) with columns [x1, y1, x2, y2].
 
     Returns:
-        True when the pair list is projected to exceed ``NMM_MAX_PAIRS``.
+        True when the boxes intersect each other often enough that reading rows
+        from the tree beats storing them.
     """
-    return estimate_mean_degree(boxes) * len(boxes) > NMM_MAX_PAIRS
+    return estimate_mean_degree(boxes) > NMM_MAX_DEGREE
 
 
 def should_use_sparse(n: int, match_threshold: float) -> bool:

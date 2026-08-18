@@ -174,7 +174,7 @@ def test_settled_boxes_leave_later_rows() -> None:
     assert query.row(0).tolist() == []
 
 
-def test_nmm_streams_only_when_pair_list_would_be_large() -> None:
+def test_nmm_streams_only_when_boxes_are_crowded() -> None:
     """Scattered boxes keep the stored-pair path; crowded ones switch to streaming."""
     scattered = _make_predictions(4000, spread=30000.0, seed=7)
     crowded = _make_predictions(4000, spread=80.0, seed=7)
