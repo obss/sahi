@@ -66,6 +66,8 @@ jobs:
           # Rebuild /tr as a standalone localized site (own nav, links stay inside /tr/)
           rm -rf site/tr
           uv run zensical build -f zensical.tr.toml
+          # Publish each page's markdown source beside its HTML, plus llms.txt
+          uv run python scripts/docs/export_markdown_sources.py
 
       - name: 🚀 Deploy to GitHub Pages
         if:
