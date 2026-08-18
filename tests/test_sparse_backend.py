@@ -135,6 +135,45 @@ def test_match_query_row_equals_csr_row(match_metric: str, match_threshold: floa
         assert query.row(i).tolist() == case.indices[case.indptr[i] : case.indptr[i + 1]].tolist()
 
 
+@pytest.mark.parametrize("match_metric", ["IOU", "IOS"])
+def test_streaming_agrees_with_dense_once_the_tree_is_rebuilt(match_metric: str) -> None:
+    """Crowded boxes settle early, so every loop rebuilds its query and exits before the end."""
+    predictions = _make_predictions(1200, spread=80.0, seed=8)
+    case = _case(predictions, match_metric, 0.3)
+    streaming_args = (case.boxes, case.areas, match_metric, 0.3, case.sorted_idxs)
+
+    assert nms_streaming(*streaming_args) == nms_from_matrix(case.matrix, case.sorted_idxs, 0.3)
+    assert greedy_nmm_streaming(*streaming_args) == greedy_nmm_from_matrix(case.matrix, case.sorted_idxs, 0.3)
+
+    result = nmm_streaming(*streaming_args, case.scores)
+    assert result == nmm_from_matrix(case.matrix, case.sorted_idxs, case.scores, case.boxes, 0.3)
+    _assert_partition(result, len(predictions), "rebuilt")
+
+
+def test_settled_boxes_leave_later_rows() -> None:
+    """Deactivating a box drops it from every later row, but it stays queryable itself."""
+    case = _case(_make_predictions(300, spread=200.0, seed=9), "IOU", 0.1)
+    n = len(case.boxes)
+    query = MatchQuery(case.boxes, case.areas, "IOU", 0.1)
+    full_rows = [query.row(i).tolist() for i in range(n)]
+    assert any(full_rows), "fixture must produce some matches"
+
+    # Settling every second box halves the population, which rebuilds the tree.
+    query.deactivate_row(np.arange(0, n, 2))
+    assert query.active_count == n // 2
+    for i in range(n):
+        assert query.row(i).tolist() == [m for m in full_rows[i] if m % 2]
+
+    query.deactivate(1)
+    assert query.active_count == n // 2 - 1
+    query.deactivate(1)  # settling twice must not double count
+    assert query.active_count == n // 2 - 1
+
+    query.deactivate_row(np.arange(3, n, 2))
+    assert query.active_count == 0
+    assert query.row(0).tolist() == []
+
+
 def test_nmm_streams_only_when_pair_list_would_be_large() -> None:
     """Scattered boxes keep the stored-pair path; crowded ones switch to streaming."""
     scattered = _make_predictions(4000, spread=30000.0, seed=7)
@@ -175,6 +214,7 @@ def test_crowded_input_stays_within_memory() -> None:
     tracemalloc.start()
     nms_numpy(predictions, "IOS", 0.3)
     greedy_nmm_numpy(predictions, "IOS", 0.3)
+    nmm_numpy(predictions, "IOS", 0.3)
     _, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
 

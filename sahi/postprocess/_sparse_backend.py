@@ -9,9 +9,10 @@ intersecting. The adjacency is CSR: row ``i`` is
 Storing every pair is only a saving while boxes are spread out. Boxes piled on
 top of each other intersect nearly everything, so the pair count approaches
 ``N ^ 2`` and the CSR gets as expensive as the matrix it replaced. The loops
-read one row at a time and NMS and greedy NMM only ever read rows of boxes that
-survived, so ``MatchQuery`` answers rows from the tree on demand instead, which
-holds peak memory at ``O(N + max_degree)`` whatever the layout.
+read one row at a time, so ``MatchQuery`` answers rows from the tree on demand
+instead, which holds peak memory at ``O(N + max_degree)`` whatever the layout.
+Each loop also hands boxes back to the query as it finishes with them, so a
+crowded input shrinks the tree it is querying as it goes.
 """
 
 from __future__ import annotations
@@ -24,10 +25,15 @@ from shapely import box as shapely_box
 # the N x N matrix it saves.
 SPARSE_MIN_BOXES = 2000
 
-# NMM can read many more rows than NMS and greedy NMM, so it keeps the stored
-# pair list until that list would get large, measured at about 110 bytes per
-# pair once the intermediates are counted.
+# NMM reads a row for every box, not just for the survivors, so it keeps the
+# stored pair list until that list would get large, measured at about 110 bytes
+# per pair once the intermediates are counted.
 NMM_MAX_PAIRS = 2_000_000
+
+# Probing the tree in one call would return sample x degree pairs at once, which
+# on crowded boxes dwarfs everything the path being chosen goes on to allocate.
+# Only the count is wanted, so the probe is spent a chunk at a time.
+DEGREE_PROBE_CHUNK = 32
 
 
 def _safe_ratio(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
@@ -77,6 +83,13 @@ def should_use_sparse(n: int, match_threshold: float) -> bool:
 class MatchQuery:
     """Answers 'which boxes match box i' from an STRtree, without storing pairs.
 
+    Every loop below settles each box exactly once, as a keeper or into a group,
+    and never revisits that decision, so a settled box is dropped from later
+    rows. It stays available as a query geometry for when its own turn arrives;
+    it just cannot be returned as a candidate again. STRtree is immutable, so
+    settled boxes are masked out and the tree is rebuilt once the live
+    population has halved, which is O(N log N) of rebuilding over a whole run.
+
     Args:
         boxes: Array of shape (N, 4) with columns [x1, y1, x2, y2].
         areas: Precomputed areas of shape (N,).
@@ -91,11 +104,30 @@ class MatchQuery:
         self.match_threshold = match_threshold
         self.geoms = shapely_box(boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3])
         self.tree = STRtree(self.geoms)
+        self.active = np.ones(len(boxes), dtype=bool)
+        self.active_count = len(boxes)
+        self.tree_indices = np.arange(len(boxes), dtype=np.intp)
+        # Until the first rebuild the tree holds every box, so its own indices
+        # are the box indices and the remap in ``_candidate_indices`` is a no-op.
+        self.tree_is_whole = True
+
+    def deactivate(self, index: int) -> None:
+        """Drop one settled box from every later row."""
+        if self.active[index]:
+            self.active[index] = False
+            self.active_count -= 1
+
+    def deactivate_row(self, indices: np.ndarray) -> None:
+        """Drop a whole settled row. Its entries are active by construction."""
+        if len(indices):
+            self.active[indices] = False
+            self.active_count -= len(indices)
 
     def row(self, i: int) -> np.ndarray:
-        """Return the matches of box ``i``, ascending, excluding ``i`` itself.
+        """Return the unsettled matches of box ``i``, ascending, excluding ``i``.
 
-        Equivalent to one row of the CSR ``build_sparse_matches`` would build.
+        With nothing deactivated yet this is one row of the CSR
+        ``build_sparse_matches`` would build.
         """
         candidates = self._candidate_indices(i)
         candidates = candidates[candidates != i]
@@ -118,46 +150,22 @@ class MatchQuery:
         return np.sort(candidates[metric >= self.match_threshold]).astype(np.intp)
 
     def _candidate_indices(self, i: int) -> np.ndarray:
-        """Return box indices whose envelopes intersect box ``i``."""
-        # STRtree's envelope query is already an exact intersection prefilter
-        # for axis-aligned rectangles.  The metric calculation in ``row``
-        # remains the source of truth, so asking GEOS to run ``intersects`` as
-        # well only repeats work for every candidate pair.
-        return self.tree.query(self.geoms[i])
-
-
-class ActiveMatchQuery(MatchQuery):
-    """Match query that periodically drops boxes NMM has already claimed.
-
-    STRtree is immutable, so claimed boxes are filtered by a boolean mask until
-    only half of the indexed boxes remain.  The tree is then rebuilt over the
-    survivors.  A claimed box may still be used as the query geometry when its
-    turn arrives; it just cannot be returned as a candidate and claimed again.
-    """
-
-    def __init__(self, boxes: np.ndarray, areas: np.ndarray, match_metric: str, match_threshold: float) -> None:
-        super().__init__(boxes, areas, match_metric, match_threshold)
-        self.active = np.ones(len(boxes), dtype=bool)
-        self.active_count = len(boxes)
-        self.tree_indices = np.arange(len(boxes), dtype=np.intp)
-
-    def deactivate(self, indices: int | np.ndarray) -> None:
-        """Remove newly claimed indices from future candidate rows."""
-        indices_array = np.atleast_1d(indices).astype(np.intp, copy=False)
-        newly_inactive = indices_array[self.active[indices_array]]
-        self.active[newly_inactive] = False
-        self.active_count -= len(newly_inactive)
-
-    def _candidate_indices(self, i: int) -> np.ndarray:
+        """Return the active box indices whose envelopes intersect box ``i``."""
         if self.active_count == 0:
             return np.empty(0, dtype=np.intp)
 
         if self.active_count * 2 <= len(self.tree_indices):
             self.tree_indices = np.flatnonzero(self.active)
             self.tree = STRtree(self.geoms[self.tree_indices])
+            self.tree_is_whole = False
 
-        local_indices = self.tree.query(self.geoms[i])
-        candidates = self.tree_indices[local_indices]
+        # Every indexed geometry is an axis-aligned rectangle, so it is its own
+        # envelope and the tree's envelope query is already exact. Asking GEOS
+        # for "intersects" as well would repeat that test for every pair, and
+        # the metric above is the real filter regardless.
+        candidates = self.tree.query(self.geoms[i])
+        if not self.tree_is_whole:
+            candidates = self.tree_indices[candidates]
         return candidates[self.active[candidates]]
 
 
@@ -170,9 +178,9 @@ def nms_streaming(
 ) -> list[int]:
     """NMS reading match rows on demand. Same result as ``nms_sparse``.
 
-    Only boxes that survive are ever queried, so on crowded inputs, where almost
-    everything is suppressed, this touches a small fraction of the pairs the CSR
-    would have stored.
+    Only boxes that survive are ever queried, and suppressed boxes leave the
+    query, so on crowded inputs this touches a small fraction of the pairs the
+    CSR would have stored.
 
     Args:
         boxes: Array of shape (N, 4) with columns [x1, y1, x2, y2].
@@ -185,14 +193,21 @@ def nms_streaming(
         List of kept indices sorted by score descending.
     """
     matches = MatchQuery(boxes, areas, match_metric, match_threshold)
-    suppressed = np.zeros(len(boxes), dtype=bool)
     keep: list[int] = []
 
     for idx in sorted_idxs:
-        if suppressed[idx]:
+        if matches.active_count == 0:
+            break
+
+        current_idx = int(idx)
+        if not matches.active[current_idx]:
             continue
-        keep.append(int(idx))
-        suppressed[matches.row(int(idx))] = True
+        keep.append(current_idx)
+
+        # A survivor can never be suppressed afterwards. The metrics are
+        # symmetric, so any box able to suppress it was suppressed by it first.
+        matches.deactivate(current_idx)
+        matches.deactivate_row(matches.row(current_idx))
 
     return keep
 
@@ -218,24 +233,28 @@ def greedy_nmm_streaming(
     """
     n = len(boxes)
     matches = MatchQuery(boxes, areas, match_metric, match_threshold)
-    suppressed = np.zeros(n, dtype=bool)
 
     # The dense loop only considers candidates that come later in score order,
-    # and emits them in that order.
+    # and emits them in that order. A row cannot return an earlier one, since
+    # every box before this position has been settled and left the query, so
+    # only that order is left to reproduce.
     rank = np.empty(n, dtype=np.intp)
     rank[sorted_idxs] = np.arange(n)
 
     keep_to_merge_list: dict[int, list[int]] = {}
-    for position, idx in enumerate(sorted_idxs):
-        if suppressed[idx]:
+    for idx in sorted_idxs:
+        if matches.active_count == 0:
+            break
+
+        current_idx = int(idx)
+        if not matches.active[current_idx]:
             continue
 
-        neighbours = matches.row(int(idx))
-        merge_indices = neighbours[(rank[neighbours] > position) & ~suppressed[neighbours]]
+        matches.deactivate(current_idx)
+        merge_indices = matches.row(current_idx)
         merge_indices = merge_indices[np.argsort(rank[merge_indices])]
-
-        suppressed[merge_indices] = True
-        keep_to_merge_list[int(idx)] = merge_indices.tolist()
+        matches.deactivate_row(merge_indices)
+        keep_to_merge_list[current_idx] = merge_indices.tolist()
 
     return keep_to_merge_list
 
@@ -260,10 +279,12 @@ def estimate_mean_degree(boxes: np.ndarray, sample: int = 512) -> float:
     k = min(n, sample)
     probe = geoms[np.linspace(0, n - 1, k).astype(np.intp)]
     # The indexed geometries are axis-aligned rectangles, so their envelopes
-    # intersect exactly when the rectangles do.  Avoid a duplicate GEOS
-    # predicate evaluation for every candidate pair.
-    rows, _ = tree.query(probe)
-    return max(0.0, len(rows) / k - 1.0)
+    # intersect exactly when the rectangles do. Avoid a duplicate GEOS predicate
+    # evaluation for every candidate pair.
+    matches = sum(
+        len(tree.query(probe[start : start + DEGREE_PROBE_CHUNK])[0]) for start in range(0, k, DEGREE_PROBE_CHUNK)
+    )
+    return max(0.0, matches / k - 1.0)
 
 
 def build_sparse_matches(
@@ -482,11 +503,10 @@ def nmm_streaming(
 ) -> dict[int, list[int]]:
     """NMM reading match rows on demand. Same result as ``nmm_sparse``.
 
-    NMM propagates group labels through claimed boxes, but only unclaimed boxes
-    can change groups. The candidate tree is therefore rebuilt over unclaimed
-    boxes whenever its live population halves. This keeps memory bounded while
-    avoiding queries and metric calculations for edges whose destination has
-    already been assigned.
+    Unlike NMS and greedy NMM this reads a row for every box, not just for the
+    survivors, since a claimed box still propagates its keeper's label. Only
+    unclaimed boxes can change groups, so claimed ones leave the query and the
+    run stops early once every box has been assigned.
 
     Args:
         boxes: Array of shape (N, 4) with columns [x1, y1, x2, y2].
@@ -500,7 +520,7 @@ def nmm_streaming(
         Dict mapping each kept index to a list of indices merged into it.
     """
     n = len(boxes)
-    matches = ActiveMatchQuery(boxes, areas, match_metric, match_threshold)
+    matches = MatchQuery(boxes, areas, match_metric, match_threshold)
 
     keep_to_merge_list: dict[int, list[int]] = {}
     merge_to_keep = np.full(n, -1, dtype=np.intp)
@@ -522,14 +542,14 @@ def nmm_streaming(
             keep_idx = int(merge_to_keep[current_idx])
             merge_list = keep_to_merge_list[keep_idx]
 
-        # The current box and every returned candidate are now assigned.  They
-        # remain valid query geometries when their turns arrive, but cannot be
-        # claimed by a second group, so remove them from future candidate rows.
+        # The current box and every returned candidate are now assigned. They
+        # stay valid query geometries for when their turns arrive, but cannot be
+        # claimed by a second group, so they leave the candidate rows.
         matches.deactivate(current_idx)
         matched = _dominated_row(matches.row(current_idx), current_idx, scores, boxes)
         merge_list.extend(matched.tolist())
         merge_to_keep[matched] = keep_idx
-        matches.deactivate(matched)
+        matches.deactivate_row(matched)
 
     return keep_to_merge_list
 
