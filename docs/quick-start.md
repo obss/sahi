@@ -1,4 +1,6 @@
 ---
+hide:
+  - navigation
 tags:
   - getting-started
   - installation
