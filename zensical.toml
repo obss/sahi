@@ -15,18 +15,14 @@ nav = [
     {"How Sliced Inference Works" = "guides/sliced-inference.md"},
     {"Model Integrations" = "guides/models.md"},
     {"Prediction Utilities" = "predict.md"},
-    {"COCO Dataset Operations" = "coco.md"},
     {"Slicing Utilities" = "slicing.md"},
     {"Postprocessing Backends" = "postprocess/backends.md"},
-    {"FiftyOne Visualization" = "fiftyone.md"},
     {"CLI Commands" = "cli.md"},
+    {"COCO Dataset Operations" = "coco.md"},
+    {"FiftyOne Visualization" = "fiftyone.md"},
   ]},
   {Notebooks = "notebooks.md"},
   {"Code Reference" = [
-    {"High-level API" = [
-      "predict.md",
-      "slicing.md",
-    ]},
     {Core = [
       "annotation.md",
       "prediction.md",
@@ -47,7 +43,6 @@ nav = [
       "models/roboflow.md",
     ]},
     {"Post-processing" = [
-      "postprocess/backends.md",
       "postprocess/combine.md",
       "postprocess/utils.md",
     ]},
