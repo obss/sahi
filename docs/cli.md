@@ -89,8 +89,8 @@ sahi predict --slice_width 512 --slice_height 512 \
 
 **Match Metrics:**
 
-- `--postprocess_match_metric IOS` - Intersection over smaller area
-- `--postprocess_match_metric IOU` - Intersection over union (default)
+- `--postprocess_match_metric IOS` - Intersection over smaller area (default)
+- `--postprocess_match_metric IOU` - Intersection over union
 
 **Additional Options:**
 
@@ -127,8 +127,7 @@ sahi predict --dataset_json_path dataset.json \
   --model_path path/to/model
 ```
 
-Predictions will be exported as a COCO JSON file to
-`runs/predict/exp/results.json`. You can then use:
+Adding `--dataset_json_path` also exports predictions as a COCO JSON file to `runs/predict/exp/result.json`. You can then use:
 
 - `sahi coco evaluate` - Calculate COCO evaluation metrics
 - `sahi coco analyse` - Generate detailed error analysis plots
@@ -367,7 +366,6 @@ Display your currently installed SAHI version.
 
 ```bash
 sahi version
-0.11.22
 ```
 
 ---
