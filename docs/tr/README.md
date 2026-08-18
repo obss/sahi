@@ -147,7 +147,7 @@ pip install inference>=0.51.5 rfdetr>=1.6.2
 | [Hata Analizi Grafikleri & Değerlendirme](https://github.com/obss/sahi/discussions/622) ⭐                                                   | Tartışma    |
 | [Etkileşimli Sonuç Görselleştirme ve İnceleme](https://github.com/obss/sahi/discussions/624) ⭐                                              | Tartışma    |
 | [Video Inference Desteği](https://github.com/obss/sahi/discussions/626)                                                                      | Tartışma    |
-| [Dilimleme Operasyonları Notebook'u](demo/slicing.ipynb)                                                                                     | Notebook    |
+| [Dilimleme Operasyonları Notebook'u](https://github.com/obss/sahi/blob/main/demo/slicing.ipynb)                                              | Notebook    |
 | [Tam Dokümantasyon](index.md)                                                                                                                | Doküman     |
 
 ### Notebook'lar & Demolar

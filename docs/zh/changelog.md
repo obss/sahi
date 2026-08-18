@@ -681,7 +681,7 @@ CUDA（RTX 4000 Ada Laptop，12 GB）：
 
 #### 📓 交互式示例
 
-所有文档文件都配有 [demo 目录](../../demo/) 中的交互式 Jupyter notebook：
+所有文档文件都配有 [demo 目录](https://github.com/obss/sahi/tree/main/demo) 中的交互式 Jupyter notebook：
 
 - `slicing.ipynb` - 切片操作演示
 - `inference_for_ultralytics.ipynb` - YOLOv8/YOLO11/YOLO26 集成
@@ -703,7 +703,7 @@ CUDA（RTX 4000 Ada Laptop，12 GB）：
 2. 探索[切片工具](slicing.md)，学习处理大图像
 3. 查看 [CLI 命令](cli.md)，了解命令行用法
 4. 深入 [COCO 工具](coco.md)，学习数据集操作
-5. 尝试 [demo 目录](../../demo/) 中的交互式 notebook，获取实践经验
+5. 尝试 [demo 目录](https://github.com/obss/sahi/tree/main/demo) 中的交互式 notebook，获取实践经验
 
 ## 🚀 SAHI v0.11.21 发布说明
 

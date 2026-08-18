@@ -151,7 +151,7 @@ pip install inference>=0.51.5 rfdetr>=1.6.2
 | [误差分析绘图 & 评估](https://github.com/obss/sahi/discussions/622) ⭐                                                                   | 讨论     |
 | [交互式结果可视化与检查](https://github.com/obss/sahi/discussions/624) ⭐                                                                | 讨论     |
 | [视频推理支持](https://github.com/obss/sahi/discussions/626)                                                                             | 讨论     |
-| [切片操作 Notebook](../../demo/slicing.ipynb)                                                                                            | Notebook |
+| [切片操作 Notebook](https://github.com/obss/sahi/blob/main/demo/slicing.ipynb)                                                           | Notebook |
 | [完整文档](index.md)                                                                                                                     | 文档     |
 
 ### Notebooks & 示例
