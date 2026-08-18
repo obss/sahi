@@ -224,6 +224,9 @@ def _read_local_image_as_arr(path: str, exif_fix: bool = True) -> np.ndarray | N
         np.ndarray | None: HWC RGB uint8 array, or None when OpenCV cannot be trusted with
             the file, so the caller can fall back to the PIL/skimage path.
     """
+    # The header read has to survive the same images the decode does, and Pillow
+    # refuses anything over its bomb threshold until this is cleared.
+    Image.MAX_IMAGE_PIXELS = None
     try:
         with Image.open(path) as header:
             if header.mode not in _ARRAY_DECODE_MODES:
