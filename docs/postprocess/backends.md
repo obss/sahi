@@ -24,10 +24,10 @@ right backend depends on your hardware and installed packages.
 
 By default SAHI automatically picks the best available backend at runtime:
 
-1. **torchvision** — if `torchvision` is installed _and_ a GPU is present
+1. **torchvision**: if `torchvision` is installed _and_ a GPU is present
    (CUDA, or Apple MPS on Apple Silicon).
-2. **numba** — if the `numba` package is installed.
-3. **numpy** — always available as the final fallback.
+2. **numba**: if the `numba` package is installed.
+3. **numpy**: always available as the final fallback.
 
 ```python
 from sahi.postprocess.backends import get_postprocess_backend
@@ -103,11 +103,11 @@ predictions = np.array([
     [300, 300, 400, 400, 0.90, 1],
 ])
 
-# Global NMS — all categories compete together
+# Global NMS, all categories compete together
 keep = nms(predictions, match_metric="IOU", match_threshold=0.5)
 print(predictions[keep])
 
-# Per-category NMS — class 0 and class 1 are treated independently
+# Per-category NMS, class 0 and class 1 are treated independently
 keep = batched_nms(predictions, match_metric="IOU", match_threshold=0.5)
 print(predictions[keep])
 ```
@@ -147,7 +147,7 @@ by `get_sliced_prediction` via the `postprocess_type` argument:
 ```python
 from sahi.postprocess.combine import NMSPostprocess, NMMPostprocess, GreedyNMMPostprocess
 
-# NMS — keep the best box, discard the rest
+# NMS, keep the best box, discard the rest
 postprocessor = NMSPostprocess(
     match_threshold=0.5,
     match_metric="IOU",
@@ -155,11 +155,11 @@ postprocessor = NMSPostprocess(
 )
 filtered = postprocessor(object_prediction_list)
 
-# Greedy NMM — merge overlapping boxes (fast)
+# Greedy NMM, merge overlapping boxes (fast)
 postprocessor = GreedyNMMPostprocess(match_threshold=0.5)
 merged = postprocessor(object_prediction_list)
 
-# Full NMM — transitive merging
+# Full NMM, transitive merging
 postprocessor = NMMPostprocess(match_threshold=0.5)
 merged = postprocessor(object_prediction_list)
 ```
