@@ -18,7 +18,7 @@
   <a href="https://pepy.tech/project/sahi"><img src="https://pepy.tech/badge/sahi/month" alt="Aylık İndirme"></a>
   <a href="https://badge.fury.io/py/sahi"><img src="https://badge.fury.io/py/sahi.svg" alt="PyPI Sürümü"></a>
   <a href="https://anaconda.org/conda-forge/sahi"><img src="https://anaconda.org/conda-forge/sahi/badges/version.svg" alt="Conda Sürümü"></a>
-  <a href="https://github.com/obss/sahi/blob/main/LICENSE.md"><img src="https://img.shields.io/pypi/l/sahi" alt="Lisans"></a>
+  <a href="https://github.com/obss/sahi/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/sahi" alt="Lisans"></a>
 </div>
 
 <!-- CI & Quality -->

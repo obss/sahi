@@ -1,6 +1,6 @@
 [project]
 site_name = "SAHI Documentation"
-site_url = "https://sahi.readthedocs.io/"
+site_url = "https://obss.github.io/sahi/"
 repo_url = "https://github.com/obss/sahi"
 repo_name = "obss/sahi"
 edit_uri = "https://github.com/obss/sahi/tree/main/docs"
@@ -149,6 +149,8 @@ permalink = true
 # --- PyMdown extensions ---
 
 [project.markdown_extensions.pymdownx.details]
+[project.markdown_extensions.abbr]
+
 [project.markdown_extensions.pymdownx.superfences]
 
 [project.markdown_extensions.pymdownx.tabbed]

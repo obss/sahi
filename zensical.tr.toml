@@ -1,6 +1,6 @@
 [project]
 site_name = "SAHI Dokümantasyonu"
-site_url = "https://sahi.readthedocs.io/tr/"
+site_url = "https://obss.github.io/sahi/tr/"
 repo_url = "https://github.com/obss/sahi"
 repo_name = "obss/sahi"
 edit_uri = "https://github.com/obss/sahi/tree/main/docs/tr"
