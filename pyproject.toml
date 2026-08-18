@@ -31,6 +31,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
@@ -83,10 +84,15 @@ yolov5 = ["yolov5>=6.0.0,<8.0.0"]
 ultralytics = ["ultralytics>=8.0.0"]
 transformers = ["transformers>=4.49.0;python_version>='3.9'"]
 roboflow = [
-  "inference>=0.51.5;python_version>='3.12'",
-  "rfdetr>=1.6.2;python_version>='3.12'",
+  # inference pins onnxruntime<1.22, which has no cp314 wheel
+  "inference>=0.51.5;python_version>='3.12' and python_version<'3.14'",
+  "rfdetr>=1.6.2;python_version>='3.12' and python_version<'3.14'",
 ]
-onnx = ["onnx;python_version>='3.10'", "onnxruntime;python_version>='3.10'"]
+onnx = [
+  "onnx;python_version>='3.10'",
+  "onnxruntime;python_version>='3.10' and python_version<'3.14'",
+  "onnxruntime>=1.23.2;python_version>='3.14'",
+]
 numba = ["numba>=0.59.0;python_version>='3.10'"]
 torchvision = ["torch>=2.4.1", "torchvision>=0.19.0"]
 all = [
@@ -95,32 +101,39 @@ all = [
   "torch>=2.4.1",
   "torchvision",
   "transformers>=4.49.0;python_version>='3.9'",
-  "inference>=0.51.5;python_version>='3.12'",
-  "rfdetr>=1.6.2;python_version>='3.12'",
+  # inference pins onnxruntime<1.22, which has no cp314 wheel
+  "inference>=0.51.5;python_version>='3.12' and python_version<'3.14'",
+  "rfdetr>=1.6.2;python_version>='3.12' and python_version<'3.14'",
   "onnx;python_version>='3.10'",
-  "onnxruntime;python_version>='3.10'",
+  "onnxruntime;python_version>='3.10' and python_version<'3.14'",
+  "onnxruntime>=1.23.2;python_version>='3.14'",
 ]
 
 ci = [
-  # max supported pytorch version for python 3.8 is 2.4.1
+  # max supported pytorch version for python 3.8 is 2.4.1, and 2.8.0 ships no cp314 wheel
   # CPU versions for Linux/Windows CI
-  "torch==2.8.0+cpu;python_version>='3.9' and platform_system!='Darwin'",
+  "torch==2.9.0+cpu;python_version>='3.14' and platform_system!='Darwin'",
+  "torch==2.8.0+cpu;python_version>='3.9' and python_version<'3.14' and platform_system!='Darwin'",
   "torch==2.4.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
-  "torchvision==0.23.0;python_version>='3.9' and platform_system!='Darwin'",
+  "torchvision==0.24.0+cpu;python_version>='3.14' and platform_system!='Darwin'",
+  "torchvision==0.23.0;python_version>='3.9' and python_version<'3.14' and platform_system!='Darwin'",
   "torchvision==0.19.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
   # Regular versions for macOS
-  "torch==2.8.0;python_version>='3.9' and platform_system=='Darwin'",
+  "torch==2.9.0;python_version>='3.14' and platform_system=='Darwin'",
+  "torch==2.8.0;python_version>='3.9' and python_version<'3.14' and platform_system=='Darwin'",
   "torch==2.4.1;python_version=='3.8' and platform_system=='Darwin'",
-  "torchvision==0.23.0;python_version>='3.9' and platform_system=='Darwin'",
+  "torchvision==0.24.0;python_version>='3.14' and platform_system=='Darwin'",
+  "torchvision==0.23.0;python_version>='3.9' and python_version<'3.14' and platform_system=='Darwin'",
   "torchvision==0.19.1;python_version=='3.8' and platform_system=='Darwin'",
   # transformers is supported for python>=3.9
   "transformers>=4.49.0;python_version>='3.9'",
-  # test roboflow only for python>=3.12
-  "inference>=0.51.5;python_version>='3.12'",
-  "rfdetr>=1.6.2;python_version>='3.12'",
+  # test roboflow only for python>=3.12; inference pins onnxruntime<1.22, which has no cp314 wheel
+  "inference>=0.51.5;python_version>='3.12' and python_version<'3.14'",
+  "rfdetr>=1.6.2;python_version>='3.12' and python_version<'3.14'",
   # ultralytics onnx is supported for python>=3.10
   "onnx;python_version>='3.10'",
-  "onnxruntime;python_version>='3.10'",
+  "onnxruntime;python_version>='3.10' and python_version<'3.14'",
+  "onnxruntime>=1.23.2;python_version>='3.14'",
   # These are available for all python versions
   "pycocotools>=2.0.7",
   "ultralytics>=8.3.161",
