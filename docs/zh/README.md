@@ -18,7 +18,7 @@
   <a href="https://pepy.tech/project/sahi"><img src="https://pepy.tech/badge/sahi/month" alt="月下载量"></a>
   <a href="https://badge.fury.io/py/sahi"><img src="https://badge.fury.io/py/sahi.svg" alt="PyPI 版本"></a>
   <a href="https://anaconda.org/conda-forge/sahi"><img src="https://anaconda.org/conda-forge/sahi/badges/version.svg" alt="Conda 版本"></a>
-  <a href="https://github.com/obss/sahi/blob/main/LICENSE.md"><img src="https://img.shields.io/pypi/l/sahi" alt="许可证"></a>
+  <a href="https://github.com/obss/sahi/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/sahi" alt="许可证"></a>
 </div>
 
 <!-- CI & 质量 -->
