@@ -26,7 +26,7 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 ```bash
 # Install core + dev dependencies
-uv sync --extra dev
+uv sync --group dev
 
 # For testing specific models, install their dependencies.
 ```
@@ -92,7 +92,7 @@ If the CI build fails due to formatting:
 3. Install dev dependencies:
 
    ```bash
-   uv sync --extra dev
+   uv sync --group dev
    ```
 
 4. Fix formatting:
