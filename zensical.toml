@@ -69,10 +69,16 @@ features = [
   "content.action.edit",
   "content.tooltips",
   "content.code.annotate",
+  "content.tabs.link",
   "navigation.tabs",
   "navigation.tabs.sticky",
   "navigation.top",
   "navigation.indexes",
+  "navigation.footer",
+  "toc.follow",
+  "search.suggest",
+  "search.highlight",
+  "search.share",
 ]
 font.text = "Inter"
 font.code = "IBM Plex Mono"
@@ -126,6 +132,13 @@ default_handler = "python"
 
 
 [project.plugins.mkdocstrings.handlers.python.options]
+separate_signature = true
+show_signature_annotations = true
+signature_crossrefs = true
+merge_init_into_class = true
+members_order = "source"
+docstring_section_style = "table"
+filters = ["!^_"]
 parameter_headings = true
 allow_inspection = true
 show_bases = true
