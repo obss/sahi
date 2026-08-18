@@ -267,6 +267,11 @@ def read_image_size(image: Image.Image | str | os.PathLike | np.ndarray, exif_fi
 
     Returns:
         The image size as (width, height).
+
+    Example:
+        >>> from sahi.utils.cv import read_image_size
+        >>> read_image_size("tests/data/small-vehicles1.jpeg")
+        (1068, 580)
     """
     if isinstance(image, np.ndarray):
         # read_image_as_pil transposes CHW input, so the reported size must match that
@@ -311,7 +316,7 @@ def read_image_as_pil(
     Args:
         image (Union[Image.Image, str, os.PathLike, np.ndarray]): The image to be loaded. It can be an image path
             (str or path-like) or URL (str), a numpy image (np.ndarray), or a PIL.Image object.
-        exif_fix (bool): Whether to apply an EXIF fix to the image. Defaults to False.
+        exif_fix (bool): Whether to apply the EXIF orientation to the image. Defaults to True.
         return_arr (bool): When True, return an HWC RGB ndarray. Local paths decode straight
             to one; other inputs convert from PIL before returning. Defaults to False.
 
