@@ -16,9 +16,6 @@ from sahi.logger import logger
 from sahi.utils.file import Path
 from sahi.utils.import_utils import get_opencv_conflict_message
 
-# OpenCV caps decodes at 2**30 px and reads the limit once, at import, so this must come first
-os.environ.setdefault("OPENCV_IO_MAX_IMAGE_PIXELS", str(2**40))
-
 try:
     import cv2
 except Exception:
@@ -203,11 +200,21 @@ def _to_hwc(arr: np.ndarray) -> np.ndarray:
     return a
 
 
+# EXIF orientation tag; values 5-8 rotate by a quarter turn and so swap width and height.
+_EXIF_ORIENTATION_TAG = 0x0112
+_EXIF_QUARTER_TURNS = frozenset({5, 6, 7, 8})
+
+# Modes Pillow converts to RGB the way OpenCV does. Deeper samples do not, and the
+# dtype only says so once the whole file has been decoded, which is the cost being cut.
+_ARRAY_DECODE_MODES = frozenset({"1", "CMYK", "L", "LA", "P", "PA", "RGB", "RGBA"})
+
+
 def _read_local_image_as_arr(path: str, exif_fix: bool = True) -> np.ndarray | None:
     """Decode a local image file straight to an HWC RGB ndarray, skipping the PIL intermediate.
 
     `np.asarray(PIL.Image)` goes through `Image.tobytes()`, which costs two full-size
-    buffers. OpenCV plus an in-place channel swap costs one.
+    buffers. OpenCV plus an in-place channel swap costs one. The header decides whether
+    OpenCV is asked at all, so a file it cannot match is never decoded twice.
 
     Args:
         path (str): Local filesystem path of the image.
@@ -216,32 +223,32 @@ def _read_local_image_as_arr(path: str, exif_fix: bool = True) -> np.ndarray | N
     Returns:
         np.ndarray | None: HWC RGB uint8 array, or None when OpenCV cannot be trusted with
             the file, so the caller can fall back to the PIL/skimage path.
-
-    Note:
-        On a None return OpenCV may first print its own C++ error to stderr. It is not
-        raised and cannot be caught; the PIL fallback still gives the right answer.
     """
-    # ANYDEPTH keeps 16-bit samples 16-bit so they can be detected below
-    flags = cv2.IMREAD_COLOR | cv2.IMREAD_ANYDEPTH
+    try:
+        with Image.open(path) as header:
+            if header.mode not in _ARRAY_DECODE_MODES:
+                return None
+            if header.format == "TIFF" and header.getexif().get(_EXIF_ORIENTATION_TAG) in _EXIF_QUARTER_TURNS:
+                # Pillow's TIFF plugin turns a quarter-turned image whatever exif_fix
+                # says, so OpenCV is not guaranteed to land on the same pixels.
+                return None
+    except Exception:
+        # Whatever the PIL path would have to handle itself, including what only
+        # skimage reads, is not this function's to decode.
+        return None
+
+    flags = cv2.IMREAD_COLOR
     if not exif_fix:
         flags |= cv2.IMREAD_IGNORE_ORIENTATION
     try:
         bgr = cv2.imread(path, flags)
     except cv2.error:
-        # over the pixel cap OpenCV raises rather than returning None; PIL reads these
+        # over its pixel cap OpenCV raises rather than returning None; PIL reads these
         return None
     if bgr is None:
         return None
-    if bgr.dtype != np.uint8:
-        # deep images take the PIL path so both entry points convert identically
-        return None
     # in-place, so no second full-size buffer
     return cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB, dst=bgr)
-
-
-# EXIF orientation tag; values 5-8 rotate by a quarter turn and so swap width and height.
-_EXIF_ORIENTATION_TAG = 0x0112
-_EXIF_QUARTER_TURNS = frozenset({5, 6, 7, 8})
 
 
 def read_image_size(image: Image.Image | str | os.PathLike | np.ndarray, exif_fix: bool = True) -> tuple[int, int]:
