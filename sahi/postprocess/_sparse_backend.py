@@ -210,7 +210,7 @@ def nms_streaming(
     match_threshold: float,
     sorted_idxs: np.ndarray,
 ) -> list[int]:
-    """NMS reading match rows on demand. Same result as ``nms_sparse``.
+    """NMS reading match rows on demand. Same result as ``nms_from_matrix``.
 
     Only boxes that survive are ever queried, and suppressed boxes leave the
     query, so on crowded inputs this touches a small fraction of the pairs the
@@ -253,7 +253,7 @@ def greedy_nmm_streaming(
     match_threshold: float,
     sorted_idxs: np.ndarray,
 ) -> dict[int, list[int]]:
-    """Greedy NMM reading match rows on demand. Same result as ``greedy_nmm_sparse``.
+    """Greedy NMM reading match rows on demand. Same result as ``greedy_nmm_from_matrix``.
 
     Args:
         boxes: Array of shape (N, 4) with columns [x1, y1, x2, y2].
@@ -361,67 +361,6 @@ def build_sparse_matches(
     indptr = np.zeros(n + 1, dtype=np.intp)
     np.cumsum(np.bincount(rows, minlength=n), out=indptr[1:])
     return indptr, cols.astype(np.intp)
-
-
-def nms_sparse(indptr: np.ndarray, indices: np.ndarray, sorted_idxs: np.ndarray) -> list[int]:
-    """NMS over a CSR match adjacency. Mirrors ``nms_from_matrix``.
-
-    Args:
-        indptr: CSR row pointers of length N + 1.
-        indices: CSR column indices.
-        sorted_idxs: Indices sorted by score descending.
-
-    Returns:
-        List of kept indices sorted by score descending.
-    """
-    keep: list[int] = []
-    suppressed = np.zeros(len(indptr) - 1, dtype=bool)
-
-    for idx in sorted_idxs:
-        if suppressed[idx]:
-            continue
-        keep.append(int(idx))
-        suppressed[indices[indptr[idx] : indptr[idx + 1]]] = True
-
-    return keep
-
-
-def greedy_nmm_sparse(
-    indptr: np.ndarray,
-    indices: np.ndarray,
-    sorted_idxs: np.ndarray,
-) -> dict[int, list[int]]:
-    """Greedy NMM over a CSR match adjacency. Mirrors ``greedy_nmm_from_matrix``.
-
-    Args:
-        indptr: CSR row pointers of length N + 1.
-        indices: CSR column indices.
-        sorted_idxs: Indices sorted by score descending.
-
-    Returns:
-        Dict mapping each kept index to a list of indices merged into it.
-    """
-    n = len(indptr) - 1
-    suppressed = np.zeros(n, dtype=bool)
-
-    # The dense loop only considers candidates that come later in score order,
-    # and emits them in that order.
-    rank = np.empty(n, dtype=np.intp)
-    rank[sorted_idxs] = np.arange(n)
-
-    keep_to_merge_list: dict[int, list[int]] = {}
-    for position, idx in enumerate(sorted_idxs):
-        if suppressed[idx]:
-            continue
-
-        neighbours = indices[indptr[idx] : indptr[idx + 1]]
-        merge_indices = neighbours[(rank[neighbours] > position) & ~suppressed[neighbours]]
-        merge_indices = merge_indices[np.argsort(rank[merge_indices])]
-
-        suppressed[merge_indices] = True
-        keep_to_merge_list[int(idx)] = merge_indices.tolist()
-
-    return keep_to_merge_list
 
 
 def _dominates_all(indptr: np.ndarray, indices: np.ndarray, scores: np.ndarray, boxes: np.ndarray) -> np.ndarray:

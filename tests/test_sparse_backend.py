@@ -19,11 +19,9 @@ from sahi.postprocess._sparse_backend import (
     SPARSE_MIN_BOXES,
     MatchQuery,
     build_sparse_matches,
-    greedy_nmm_sparse,
     greedy_nmm_streaming,
     nmm_sparse,
     nmm_streaming,
-    nms_sparse,
     nms_streaming,
     should_stream_nmm,
     should_use_sparse,
@@ -106,18 +104,15 @@ def test_sparse_adjacency_matches_dense(match_metric: str, match_threshold: floa
 
 @PARITY_GRID
 def test_dense_csr_and_streaming_agree(match_metric: str, match_threshold: float, spread: float) -> None:
-    """NMS, greedy NMM and NMM return identical results on all three paths."""
+    """NMS, greedy NMM and NMM return identical results on every path that exists for them."""
     predictions = _make_predictions(400, spread, seed=2)
     case = _case(predictions, match_metric, match_threshold)
     streaming_args = (case.boxes, case.areas, match_metric, match_threshold, case.sorted_idxs)
 
-    dense_nms = nms_from_matrix(case.matrix, case.sorted_idxs, match_threshold)
-    assert nms_sparse(case.indptr, case.indices, case.sorted_idxs) == dense_nms
-    assert nms_streaming(*streaming_args) == dense_nms
-
-    dense_greedy = greedy_nmm_from_matrix(case.matrix, case.sorted_idxs, match_threshold)
-    assert greedy_nmm_sparse(case.indptr, case.indices, case.sorted_idxs) == dense_greedy
-    assert greedy_nmm_streaming(*streaming_args) == dense_greedy
+    assert nms_streaming(*streaming_args) == nms_from_matrix(case.matrix, case.sorted_idxs, match_threshold)
+    assert greedy_nmm_streaming(*streaming_args) == greedy_nmm_from_matrix(
+        case.matrix, case.sorted_idxs, match_threshold
+    )
 
     dense_nmm = nmm_from_matrix(case.matrix, case.sorted_idxs, case.scores, case.boxes, match_threshold)
     assert nmm_sparse(case.indptr, case.indices, case.sorted_idxs, case.scores, case.boxes) == dense_nmm
