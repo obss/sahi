@@ -2,17 +2,63 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+import pytest
+from PIL import Image
 
 from sahi.utils.cv import (
+    IMAGE_EXTENSIONS_LOSSY,
     Colors,
     apply_color_mask,
     get_bbox_from_bool_mask,
     get_coco_segmentation_from_bool_mask,
     read_image,
+    read_image_as_pil,
+    read_image_size,
 )
+
+LOCAL_IMAGES = [
+    "tests/data/coco_utils/terrain1.jpg",
+    "tests/data/coco_utils/terrain2.png",
+    "tests/data/coco_utils/terrain2_gray.png",
+    "tests/data/small-vehicles1.jpeg",
+]
+
+_PIXELS = np.random.default_rng(3).integers(0, 256, (37, 53, 3), dtype=np.uint8)
+
+# One entry per mode and container the array decode has to agree with PIL on. The
+# deep ones are the reason the header is read first: their dtype only shows up
+# after a full decode, which is the cost this is all trying to avoid.
+DECODER_FIXTURES = {
+    "rgb.jpg": lambda: Image.fromarray(_PIXELS),
+    "gray.jpg": lambda: Image.fromarray(_PIXELS[..., 0]),
+    "cmyk.jpg": lambda: Image.fromarray(_PIXELS).convert("CMYK"),
+    "rgb.png": lambda: Image.fromarray(_PIXELS),
+    "rgba.png": lambda: Image.fromarray(np.dstack([_PIXELS, _PIXELS[..., :1]])),
+    "palette.png": lambda: Image.fromarray(_PIXELS).convert("P", palette=Image.Palette.ADAPTIVE),
+    "luma_alpha.png": lambda: Image.fromarray(_PIXELS[..., 0]).convert("LA"),
+    "bilevel.png": lambda: Image.fromarray(_PIXELS[..., 0] > 127),
+    "deep.png": lambda: Image.fromarray(_PIXELS[..., 0].astype(np.uint16) * 257),
+    "rgb.bmp": lambda: Image.fromarray(_PIXELS),
+    "rgb.webp": lambda: Image.fromarray(_PIXELS),
+    "rgb.tif": lambda: Image.fromarray(_PIXELS),
+    "deep.tif": lambda: Image.fromarray(_PIXELS[..., 0].astype(np.uint16) * 257),
+}
+
+
+def assert_decode_parity(image_path: str | Path, exif_fix: bool = True) -> None:
+    """The array decode must give the pixels the PIL decode would have given."""
+    from_pil = np.asarray(read_image_as_pil(str(image_path), exif_fix=exif_fix))
+    as_arr = read_image_as_pil(str(image_path), exif_fix=exif_fix, return_arr=True)
+
+    assert as_arr.dtype == from_pil.dtype
+    assert as_arr.shape == from_pil.shape
+    # decoders may round a lossy sample differently; a channel swap would be off by far more
+    tolerance = 1 if Path(str(image_path)).suffix in IMAGE_EXTENSIONS_LOSSY else 0
+    assert np.abs(as_arr.astype(int) - from_pil.astype(int)).max() <= tolerance
 
 
 class TestCvUtils:
@@ -82,3 +128,50 @@ class TestCvUtils:
         expected_result = [1, 1, 2, 2]
         result = get_bbox_from_bool_mask(mask)
         assert result == expected_result
+
+    @pytest.mark.parametrize("image_path", LOCAL_IMAGES)
+    def test_read_image_size_matches_full_decode(self, image_path: str) -> None:
+        """Reading the size from the header agrees with decoding the whole image."""
+        assert read_image_size(image_path) == read_image_as_pil(image_path).size
+
+    @pytest.mark.parametrize("image_format, suffix", [("JPEG", ".jpg"), ("TIFF", ".tif")])
+    @pytest.mark.parametrize("exif_fix", [True, False])
+    def test_read_image_size_honors_exif_orientation(
+        self, tmp_path: Path, image_format: str, suffix: str, exif_fix: bool
+    ) -> None:
+        """An orientation tag that turns the image must swap the reported width and height."""
+        image_path = tmp_path / f"rotated{suffix}"
+        image = Image.fromarray(np.zeros((20, 40, 3), dtype=np.uint8))  # 40 wide, 20 tall
+        exif = image.getexif()
+        exif[0x0112] = 6  # rotate a quarter turn
+        image.save(image_path, format=image_format, exif=exif)
+
+        assert read_image_size(image_path, exif_fix=exif_fix) == read_image_as_pil(image_path, exif_fix=exif_fix).size
+
+    @pytest.mark.parametrize("image_path", LOCAL_IMAGES)
+    def test_read_image_as_pil_return_arr_matches_pil_decode(self, image_path: str) -> None:
+        """Decoding straight to an array gives the same pixels as converting from PIL."""
+        assert_decode_parity(image_path)
+
+    @pytest.mark.parametrize("name", list(DECODER_FIXTURES))
+    @pytest.mark.parametrize("exif_fix", [True, False])
+    def test_array_decode_matches_pil_decode_per_mode(self, tmp_path: Path, name: str, exif_fix: bool) -> None:
+        """Every mode and container either decodes identically or falls back to PIL."""
+        image_path = tmp_path / name
+        DECODER_FIXTURES[name]().save(image_path)
+        assert_decode_parity(image_path, exif_fix=exif_fix)
+
+    @pytest.mark.parametrize("suffix", [".jpg", ".tif"])
+    @pytest.mark.parametrize("orientation", range(1, 9))
+    @pytest.mark.parametrize("exif_fix", [True, False])
+    def test_array_decode_matches_pil_decode_per_orientation(
+        self, tmp_path: Path, suffix: str, orientation: int, exif_fix: bool
+    ) -> None:
+        """Both decoders must land on the same pixels for every EXIF orientation."""
+        image_path = tmp_path / f"rotated{suffix}"
+        image = Image.fromarray(_PIXELS)
+        exif = image.getexif()
+        exif[0x0112] = orientation
+        image.save(image_path, exif=exif)
+
+        assert_decode_parity(image_path, exif_fix=exif_fix)
