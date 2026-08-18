@@ -53,6 +53,49 @@ def _safe_ratio(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
     )
 
 
+def _overlap_metric(
+    boxes: np.ndarray, areas: np.ndarray, left: int | np.ndarray, right: np.ndarray, match_metric: str
+) -> np.ndarray:
+    """Overlap of each ``left`` box against the ``right`` box paired with it.
+
+    ``left`` may be a single index, which broadcasts against ``right``. Holding the
+    IOU and IOS rule in one place keeps a row read on demand and a stored pair from
+    drifting apart.
+    """
+    inter_x1 = np.maximum(boxes[left, 0], boxes[right, 0])
+    inter_y1 = np.maximum(boxes[left, 1], boxes[right, 1])
+    inter_x2 = np.minimum(boxes[left, 2], boxes[right, 2])
+    inter_y2 = np.minimum(boxes[left, 3], boxes[right, 3])
+    inter = np.maximum(0, inter_x2 - inter_x1) * np.maximum(0, inter_y2 - inter_y1)
+
+    if match_metric == "IOU":
+        denom = areas[left] + areas[right] - inter
+    else:  # IOS
+        denom = np.minimum(areas[left], areas[right])
+    return _safe_ratio(inter, denom)
+
+
+def _dominates(left: int | np.ndarray, right: np.ndarray, scores: np.ndarray, boxes: np.ndarray) -> np.ndarray:
+    """Whether each ``left`` box may claim the ``right`` box paired with it.
+
+    A box claims another when the other scores lower, or scores equal and does not
+    sort before it lexicographically by coordinates. ``left`` may be a single index,
+    which broadcasts against ``right``. Same rule as the dense ``dominates`` matrix.
+    """
+    lower_score = scores[left] > scores[right]
+    score_equal = scores[left] == scores[right]
+
+    left_lt = np.zeros(len(right), dtype=bool)
+    still_equal = np.ones(len(right), dtype=bool)
+    for col in range(4):
+        col_lt = boxes[left, col] < boxes[right, col]
+        col_eq = boxes[left, col] == boxes[right, col]
+        left_lt |= still_equal & col_lt
+        still_equal &= col_eq
+
+    return lower_score | (score_equal & ~left_lt)
+
+
 def should_stream_nmm(boxes: np.ndarray) -> bool:
     """Return whether NMM should answer rows from the tree instead of storing pairs.
 
@@ -137,19 +180,7 @@ class MatchQuery:
         if len(candidates) == 0:
             return candidates.astype(np.intp)
 
-        boxes, areas = self.boxes, self.areas
-        inter_x1 = np.maximum(boxes[i, 0], boxes[candidates, 0])
-        inter_y1 = np.maximum(boxes[i, 1], boxes[candidates, 1])
-        inter_x2 = np.minimum(boxes[i, 2], boxes[candidates, 2])
-        inter_y2 = np.minimum(boxes[i, 3], boxes[candidates, 3])
-        inter = np.maximum(0, inter_x2 - inter_x1) * np.maximum(0, inter_y2 - inter_y1)
-
-        if self.match_metric == "IOU":
-            denom = areas[i] + areas[candidates] - inter
-        else:  # IOS
-            denom = np.minimum(areas[i], areas[candidates])
-        metric = _safe_ratio(inter, denom)
-
+        metric = _overlap_metric(self.boxes, self.areas, i, candidates, self.match_metric)
         return np.sort(candidates[metric >= self.match_threshold]).astype(np.intp)
 
     def _candidate_indices(self, i: int) -> np.ndarray:
@@ -321,19 +352,7 @@ def build_sparse_matches(
     if self_pair.any():
         rows, cols = rows[~self_pair], cols[~self_pair]
 
-    inter_x1 = np.maximum(boxes[rows, 0], boxes[cols, 0])
-    inter_y1 = np.maximum(boxes[rows, 1], boxes[cols, 1])
-    inter_x2 = np.minimum(boxes[rows, 2], boxes[cols, 2])
-    inter_y2 = np.minimum(boxes[rows, 3], boxes[cols, 3])
-    inter = np.maximum(0, inter_x2 - inter_x1) * np.maximum(0, inter_y2 - inter_y1)
-
-    if match_metric == "IOU":
-        denom = areas[rows] + areas[cols] - inter
-    else:  # IOS
-        denom = np.minimum(areas[rows], areas[cols])
-    metric = _safe_ratio(inter, denom)
-
-    matched = metric >= match_threshold
+    matched = _overlap_metric(boxes, areas, rows, cols, match_metric) >= match_threshold
     rows, cols = rows[matched], cols[matched]
 
     order = np.lexsort((cols, rows))
@@ -408,10 +427,8 @@ def greedy_nmm_sparse(
 def _dominates_all(indptr: np.ndarray, indices: np.ndarray, scores: np.ndarray, boxes: np.ndarray) -> np.ndarray:
     """Return, for every CSR entry, whether its row may claim its column.
 
-    A box claims another when the other scores lower, or scores equal and does
-    not sort before it lexicographically by coordinates. Same rule as the dense
-    ``dominates`` matrix, evaluated for all stored pairs at once so the merge
-    loop below does no per-row numpy work.
+    Evaluated for all stored pairs at once so the merge loop does no per-row
+    numpy work.
 
     Args:
         indptr: CSR row pointers of length N + 1.
@@ -424,19 +441,7 @@ def _dominates_all(indptr: np.ndarray, indices: np.ndarray, scores: np.ndarray, 
     """
     n = len(indptr) - 1
     rows = np.repeat(np.arange(n, dtype=np.intp), np.diff(indptr))
-
-    lower_score = scores[rows] > scores[indices]
-    score_equal = scores[rows] == scores[indices]
-
-    row_lt = np.zeros(len(indices), dtype=bool)
-    still_equal = np.ones(len(indices), dtype=bool)
-    for col in range(4):
-        col_lt = boxes[rows, col] < boxes[indices, col]
-        col_eq = boxes[rows, col] == boxes[indices, col]
-        row_lt |= still_equal & col_lt
-        still_equal &= col_eq
-
-    return lower_score | (score_equal & ~row_lt)
+    return _dominates(rows, indices, scores, boxes)
 
 
 def nmm_sparse(
@@ -564,16 +569,4 @@ def _dominated_row(candidates: np.ndarray, i: int, scores: np.ndarray, boxes: np
     """
     if len(candidates) == 0:
         return candidates
-
-    lower_score = scores[i] > scores[candidates]
-    score_equal = scores[i] == scores[candidates]
-
-    row_lt = np.zeros(len(candidates), dtype=bool)
-    still_equal = np.ones(len(candidates), dtype=bool)
-    for col in range(4):
-        col_lt = boxes[i, col] < boxes[candidates, col]
-        col_eq = boxes[i, col] == boxes[candidates, col]
-        row_lt |= still_equal & col_lt
-        still_equal &= col_eq
-
-    return candidates[lower_score | (score_equal & ~row_lt)]
+    return candidates[_dominates(i, candidates, scores, boxes)]
