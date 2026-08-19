@@ -447,9 +447,9 @@ All models accept these parameters in `AutoDetectionModel.from_pretrained()`:
 | `model_type` | str | Framework name (see sections above) |
 | `model_path` | str | Path to weights file or model name |
 | `config_path` | str | Config file path (MMDetection, Detectron2) |
-| `confidence_threshold` | float | Minimum score to keep a detection (default: 0.25) |
+| `confidence_threshold` | float | Minimum score to keep a detection (default: 0.3) |
 | `device` | str | `"cpu"`, `"cuda:0"`, `"mps"`, etc. |
-| `category_mapping` | dict | Map category IDs to names: `{0: "car", 1: "person"}` |
+| `category_mapping` | dict | Map category IDs to names, keys are strings: `{"0": "car", "1": "person"}` |
 | `category_remapping` | dict | Remap category names after inference |
 | `image_size` | int | Override model input resolution |
 | `load_at_init` | bool | Load weights immediately (default: True) |

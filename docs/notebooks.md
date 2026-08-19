@@ -1,4 +1,6 @@
 ---
+hide:
+  - navigation
 tags:
   - notebooks
   - demos
@@ -40,6 +42,6 @@ Clone the repository and run notebooks with Jupyter:
 ```bash
 git clone https://github.com/obss/sahi.git
 cd sahi
-pip install -e ".[dev]"
+uv sync --group dev
 jupyter notebook demo/
 ```

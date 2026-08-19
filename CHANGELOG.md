@@ -672,7 +672,7 @@ and @fcakyon!
 #### 📓 Interactive Examples
 
 All documentation files are complemented by interactive Jupyter notebooks in the
-[demo directory](../demo/):
+[demo directory](https://github.com/obss/sahi/tree/main/demo):
 
 - `slicing.ipynb` - Slicing operations demonstration
 - `inference_for_ultralytics.ipynb` - YOLOv8/YOLO11/YOLO12 integration
@@ -693,7 +693,7 @@ If you're new to SAHI:
    images
 3. Check out the [CLI commands](cli.md) for command-line usage
 4. Dive into [COCO utilities](coco.md) for dataset operations
-5. Try the interactive notebooks in the [demo directory](../demo/) for hands-on
+5. Try the interactive notebooks in the [demo directory](https://github.com/obss/sahi/tree/main/demo) for hands-on
    experience
 
 ## 🚀 SAHI v0.11.21 Release Notes

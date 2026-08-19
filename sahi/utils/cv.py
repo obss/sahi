@@ -200,20 +200,125 @@ def _to_hwc(arr: np.ndarray) -> np.ndarray:
     return a
 
 
+# EXIF orientation tag; values 5-8 rotate by a quarter turn and so swap width and height.
+_EXIF_ORIENTATION_TAG = 0x0112
+_EXIF_QUARTER_TURNS = frozenset({5, 6, 7, 8})
+
+# Modes Pillow converts to RGB the way OpenCV does. Deeper samples do not, and the
+# dtype only says so once the whole file has been decoded, which is the cost being cut.
+_ARRAY_DECODE_MODES = frozenset({"1", "CMYK", "L", "LA", "P", "PA", "RGB", "RGBA"})
+
+
+def _read_local_image_as_arr(path: str, exif_fix: bool = True) -> np.ndarray | None:
+    """Decode a local image file straight to an HWC RGB ndarray, skipping the PIL intermediate.
+
+    `np.asarray(PIL.Image)` goes through `Image.tobytes()`, which costs two full-size
+    buffers. OpenCV plus an in-place channel swap costs one. The header decides whether
+    OpenCV is asked at all, so a file it cannot match is never decoded twice.
+
+    Args:
+        path (str): Local filesystem path of the image.
+        exif_fix (bool): Whether to honor the EXIF orientation tag. Defaults to True.
+
+    Returns:
+        np.ndarray | None: HWC RGB uint8 array, or None when OpenCV cannot be trusted with
+            the file, so the caller can fall back to the PIL/skimage path.
+    """
+    # The header read has to survive the same images the decode does, and Pillow
+    # refuses anything over its bomb threshold until this is cleared.
+    Image.MAX_IMAGE_PIXELS = None
+    try:
+        with Image.open(path) as header:
+            if header.mode not in _ARRAY_DECODE_MODES:
+                return None
+            if header.format == "TIFF" and header.getexif().get(_EXIF_ORIENTATION_TAG) in _EXIF_QUARTER_TURNS:
+                # Pillow's TIFF plugin turns a quarter-turned image whatever exif_fix
+                # says, so OpenCV is not guaranteed to land on the same pixels.
+                return None
+    except Exception:
+        # Whatever the PIL path would have to handle itself, including what only
+        # skimage reads, is not this function's to decode.
+        return None
+
+    flags = cv2.IMREAD_COLOR
+    if not exif_fix:
+        flags |= cv2.IMREAD_IGNORE_ORIENTATION
+    try:
+        bgr = cv2.imread(path, flags)
+    except cv2.error:
+        # over its pixel cap OpenCV raises rather than returning None; PIL reads these
+        return None
+    if bgr is None:
+        return None
+    # in-place, so no second full-size buffer
+    return cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB, dst=bgr)
+
+
+def read_image_size(image: Image.Image | str | os.PathLike | np.ndarray, exif_fix: bool = True) -> tuple[int, int]:
+    """Return the (width, height) `read_image_as_pil` would produce, without decoding it.
+
+    For a local path only the header is read. Decoding a gigapixel scan just to ask for
+    its dimensions costs gigabytes.
+
+    Args:
+        image: The image to size. An image path or URL (str), a numpy image (np.ndarray), or a PIL.Image object.
+        exif_fix: Whether the caller will apply the EXIF orientation, as `read_image_as_pil`
+            does by default. Ignored for TIFF, which Pillow's plugin rotates either way.
+
+    Returns:
+        The image size as (width, height).
+
+    Example:
+        >>> from sahi.utils.cv import read_image_size
+        >>> read_image_size("tests/data/small-vehicles1.jpeg")
+        (1068, 580)
+    """
+    if isinstance(image, np.ndarray):
+        # read_image_as_pil transposes CHW input, so the reported size must match that
+        hwc = _to_hwc(image)
+        return hwc.shape[1], hwc.shape[0]
+    if isinstance(image, Image.Image):
+        return image.size
+    if str(image).startswith("http"):
+        # remote images have no local header to peek at, so there is nothing to save
+        return read_image_as_pil(image, exif_fix=exif_fix).size  # type: ignore[union-attr]
+
+    # https://stackoverflow.com/questions/56174099/how-to-load-images-larger-than-max-image-pixels-with-pil
+    Image.MAX_IMAGE_PIXELS = None
+    try:
+        with Image.open(image) as image_pil:
+            width, height = image_pil.size
+            if image_pil.getexif().get(_EXIF_ORIENTATION_TAG) in _EXIF_QUARTER_TURNS:
+                stored = (image_pil.tag_v2.get(256), image_pil.tag_v2.get(257))
+                if image_pil.format == "TIFF" and None not in stored:
+                    # a TIFF turns inside the plugin whatever exif_fix says, and tags 256/257 keep the stored size
+                    swap = stored == (width, height)
+                else:
+                    swap = exif_fix
+                if swap:
+                    return height, width
+    except FileNotFoundError:
+        raise
+    except Exception as error:
+        # read_image_as_pil falls back to skimage, so sizing must not be stricter than decoding
+        logger.debug(f"header read of {image} failed ({error}), sizing from a full decode instead")
+        return read_image_as_pil(image, exif_fix=exif_fix).size  # type: ignore[union-attr]
+    return width, height
+
+
 def read_image_as_pil(
-    image: Image.Image | str | np.ndarray,
+    image: Image.Image | str | os.PathLike | np.ndarray,
     exif_fix: bool = True,
     return_arr: bool = False,
 ) -> Image.Image | np.ndarray:
     """Loads an image as PIL.Image.Image (or np.ndarray when return_arr=True).
 
     Args:
-        image (Union[Image.Image, str, np.ndarray]): The image to be loaded. It can be an image path or URL (str),
-            a numpy image (np.ndarray), or a PIL.Image object.
-        exif_fix (bool): Whether to apply an EXIF fix to the image. Defaults to False.
-        return_arr (bool): When True and the input is already a numpy array, skip the
-            costly PIL conversion and return an HWC RGB ndarray directly. For PIL/str inputs the
-            PIL image is converted to ndarray before returning. Defaults to False.
+        image (Union[Image.Image, str, os.PathLike, np.ndarray]): The image to be loaded. It can be an image path
+            (str or path-like) or URL (str), a numpy image (np.ndarray), or a PIL.Image object.
+        exif_fix (bool): Whether to apply the EXIF orientation to the image. Defaults to True.
+        return_arr (bool): When True, return an HWC RGB ndarray. Local paths decode straight
+            to one; other inputs convert from PIL before returning. Defaults to False.
 
     Returns:
         PIL.Image.Image | np.ndarray: The loaded image.
@@ -221,11 +326,20 @@ def read_image_as_pil(
     # https://stackoverflow.com/questions/56174099/how-to-load-images-larger-than-max-image-pixels-with-pil
     Image.MAX_IMAGE_PIXELS = None
 
+    if isinstance(image, os.PathLike):
+        # read_image_size takes a Path, so rejecting one here meant a path could size but not decode
+        image = os.fspath(image)
+
     if isinstance(image, Image.Image):
         if return_arr:
             return np.asarray(image)
         return image
     elif isinstance(image, str):
+        # local files decode straight to an array; URLs still need the download path below
+        if return_arr and not str(image).startswith("http"):
+            image_arr = _read_local_image_as_arr(image, exif_fix=exif_fix)
+            if image_arr is not None:
+                return image_arr
         # read image if str image path is provided
         try:
             import requests
