@@ -69,7 +69,7 @@ dev = [
 docs = [
     "zensical",
     "mkdocstrings[python]",
-    "pymdown-extensions",
+    "pymdown-extensions>=11.0.1; python_version >= '3.10'",
 ]
 build = [
   "twine>=5.1.1,<8.0.0",
