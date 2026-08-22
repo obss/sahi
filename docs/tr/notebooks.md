@@ -32,6 +32,7 @@ SAHI'yi farklı tespit framework'leri ile gösteren uygulamalı Jupyter notebook
 | Notebook | Açıklama | Bağlantılar |
 | ---------- | ------------- | ------- |
 | **Slicing** | Görsel ve COCO veri kümesi dilimleme operasyonları | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/slicing.ipynb) [![GitHub](https://img.shields.io/badge/GitHub-source-black?logo=github)](https://github.com/obss/sahi/blob/main/demo/slicing.ipynb) |
+| **Toplu (Batch) Dilimlenmiş Inference** | Dilimlenmiş inference için batch boyutu, hız ve TensorRT | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_with_batch_slicing.ipynb) [![GitHub](https://img.shields.io/badge/GitHub-source-black?logo=github)](https://github.com/obss/sahi/blob/main/demo/inference_with_batch_slicing.ipynb) |
 
 ## Yerel Olarak Çalıştırma
 

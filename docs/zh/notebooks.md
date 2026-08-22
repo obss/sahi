@@ -34,6 +34,7 @@ tags:
 | Notebook | 说明 | 链接 |
 | ---------- | ------ | ------ |
 | **切片** | 图像和 COCO 数据集切片操作 | [![在 Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/slicing.ipynb) [![GitHub](https://img.shields.io/badge/GitHub-source-black?logo=github)](https://github.com/obss/sahi/blob/main/demo/slicing.ipynb) |
+| **批量切片推理** | 切片推理的批大小、速度与 TensorRT | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_with_batch_slicing.ipynb) [![GitHub](https://img.shields.io/badge/GitHub-source-black?logo=github)](https://github.com/obss/sahi/blob/main/demo/inference_with_batch_slicing.ipynb) |
 
 ## 在本地运行
 
