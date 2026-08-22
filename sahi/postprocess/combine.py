@@ -62,7 +62,7 @@ def _dispatch(func_type: str) -> Callable[..., Any]:
 
 
 # ---------------------------------------------------------------------------
-# Batched (per-category) wrapper — shared logic for all batched_* functions
+# Batched (per-category) wrapper -- shared logic for all batched_* functions
 # ---------------------------------------------------------------------------
 
 
@@ -126,7 +126,7 @@ def _batched_apply(
 
 
 # ---------------------------------------------------------------------------
-# Public API — unchanged signatures
+# Public API -- unchanged signatures
 # ---------------------------------------------------------------------------
 
 

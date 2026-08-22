@@ -26,7 +26,7 @@ _MAX_FULL_MATRIX = 8000
 
 
 # ---------------------------------------------------------------------------
-# Shared utilities — used by all backends via precomputed metric matrix
+# Shared utilities -- used by all backends via precomputed metric matrix
 # ---------------------------------------------------------------------------
 
 
@@ -217,7 +217,7 @@ def _prepare_matrix(predictions: np.ndarray, match_metric: str) -> tuple[np.ndar
 
 
 # ---------------------------------------------------------------------------
-# Shared greedy loop functions — operate on precomputed matrix
+# Shared greedy loop functions -- operate on precomputed matrix
 # ---------------------------------------------------------------------------
 
 
