@@ -32,6 +32,12 @@ SPARSE_MIN_BOXES = 2000
 # crossover barely moves with N, so it is a degree and not a pair budget.
 NMM_MAX_DEGREE = 40.0
 
+# NMS only ever reads rows of boxes that survived, so it settles far fewer rows
+# than NMM and the stored list keeps paying off much longer. Measured crossover
+# is around degree 175; staying under it keeps the pair list bounded on the
+# crowded inputs streaming exists to protect.
+NMS_MAX_DEGREE = 150.0
+
 # Probing the tree in one call would return sample x degree pairs at once, which
 # on crowded boxes dwarfs everything the path being chosen goes on to allocate.
 # Only the count is wanted, so the probe is spent a chunk at a time.
@@ -96,17 +102,28 @@ def _dominates(left: int | np.ndarray, right: np.ndarray, scores: np.ndarray, bo
     return lower_score | (score_equal & ~left_lt)
 
 
-def should_stream_nmm(boxes: np.ndarray) -> bool:
-    """Return whether NMM should answer rows from the tree instead of storing pairs.
+def should_stream(boxes: np.ndarray, max_degree: float) -> bool:
+    """Return whether to answer rows from the tree instead of storing pairs.
 
     Args:
         boxes: Array of shape (N, 4) with columns [x1, y1, x2, y2].
+        max_degree: Mean degree above which streaming wins, per caller.
 
     Returns:
         True when the boxes intersect each other often enough that reading rows
         from the tree beats storing them.
     """
-    return estimate_mean_degree(boxes) > NMM_MAX_DEGREE
+    return estimate_mean_degree(boxes) > max_degree
+
+
+def should_stream_nmm(boxes: np.ndarray) -> bool:
+    """Return whether NMM should answer rows from the tree instead of storing pairs."""
+    return should_stream(boxes, NMM_MAX_DEGREE)
+
+
+def should_stream_nms(boxes: np.ndarray) -> bool:
+    """Return whether NMS should answer rows from the tree instead of storing pairs."""
+    return should_stream(boxes, NMS_MAX_DEGREE)
 
 
 def should_use_sparse(n: int, match_threshold: float) -> bool:
@@ -381,6 +398,32 @@ def _dominates_all(indptr: np.ndarray, indices: np.ndarray, scores: np.ndarray, 
     n = len(indptr) - 1
     rows = np.repeat(np.arange(n, dtype=np.intp), np.diff(indptr))
     return _dominates(rows, indices, scores, boxes)
+
+
+def nms_sparse(indptr: np.ndarray, indices: np.ndarray, sorted_idxs: np.ndarray) -> list[int]:
+    """NMS over a CSR match adjacency. Mirrors ``nms_from_matrix``.
+
+    Suppressing a whole row is one vectorized store, so while the pair list
+    stays bounded this beats querying the tree per survivor.
+
+    Args:
+        indptr: CSR row pointers of length N + 1.
+        indices: CSR column indices.
+        sorted_idxs: Indices sorted by score descending.
+
+    Returns:
+        List of kept indices sorted by score descending.
+    """
+    keep: list[int] = []
+    suppressed = np.zeros(len(indptr) - 1, dtype=bool)
+
+    for idx in sorted_idxs:
+        if suppressed[idx]:
+            continue
+        keep.append(int(idx))
+        suppressed[indices[indptr[idx] : indptr[idx + 1]]] = True
+
+    return keep
 
 
 def nmm_sparse(
