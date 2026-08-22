@@ -1,4 +1,4 @@
-/* Light theme: deep blue header — logo (#2B57E0) reads as a brighter highlight */
+/* Light theme: deep blue header -- logo (#2B57E0) reads as a brighter highlight */
 [data-md-color-primary=custom] {
   --md-primary-fg-color: #162d8a;
   --md-primary-fg-color--light: #1e3fa8;

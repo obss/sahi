@@ -105,7 +105,7 @@ def _nms_numba_inner(
     match_threshold: float,
     use_iou: bool,
 ) -> list[int]:
-    """Core NMS loop — fully JIT-compiled."""
+    """Core NMS loop -- fully JIT-compiled."""
     n = len(scores)
     suppressed = np.zeros(n, dtype=numba.boolean)
     keep = []
@@ -151,7 +151,7 @@ def _greedy_nmm_numba_inner(
     match_threshold: float,
     use_iou: bool,
 ) -> tuple[list[int], NDArray, NDArray]:
-    """Core greedy NMM loop — fully JIT-compiled.
+    """Core greedy NMM loop -- fully JIT-compiled.
 
     Returns (keep_order, keeper_of, sorted_idxs) where keeper_of[i] = keeper index for box i, or -1 if keeper.
     """
@@ -192,7 +192,7 @@ def _greedy_nmm_numba_inner(
 
 @numba.njit(cache=True)
 def _compute_metric_matrix_numba(boxes: NDArray, areas: NDArray, use_iou: bool) -> NDArray:
-    """Compute full metric matrix with numba — symmetric, only compute upper triangle."""
+    """Compute full metric matrix with numba -- symmetric, only compute upper triangle."""
     n = len(boxes)
     matrix = np.zeros((n, n), dtype=np.float64)
     for i in range(n):
