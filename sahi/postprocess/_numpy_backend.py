@@ -12,11 +12,14 @@ import numpy as np
 from sahi.postprocess._sparse_backend import (
     _safe_ratio,
     build_sparse_matches,
+    greedy_nmm_sparse,
     greedy_nmm_streaming,
     nmm_sparse,
     nmm_streaming,
+    nms_sparse,
     nms_streaming,
     should_stream_nmm,
+    should_stream_survivor,
     should_use_sparse,
 )
 
@@ -400,8 +403,11 @@ def nms_numpy(
     if matches_all_pairs(match_threshold):
         return nms_match_all(predictions)
     if should_use_sparse(len(predictions), match_threshold):
-        boxes, areas, sorted_idxs = _prepare_streaming(predictions)
-        return nms_streaming(boxes, areas, match_metric, match_threshold, sorted_idxs)
+        if should_stream_survivor(predictions[:, :4]):
+            boxes, areas, sorted_idxs = _prepare_streaming(predictions)
+            return nms_streaming(boxes, areas, match_metric, match_threshold, sorted_idxs)
+        indptr, indices, sorted_idxs = _prepare_sparse(predictions, match_metric, match_threshold)
+        return nms_sparse(indptr, indices, sorted_idxs)
     matrix, sorted_idxs = _prepare_matrix(predictions, match_metric)
     return nms_from_matrix(matrix, sorted_idxs, match_threshold)
 
@@ -415,8 +421,11 @@ def greedy_nmm_numpy(
     if matches_all_pairs(match_threshold):
         return greedy_nmm_match_all(predictions)
     if should_use_sparse(len(predictions), match_threshold):
-        boxes, areas, sorted_idxs = _prepare_streaming(predictions)
-        return greedy_nmm_streaming(boxes, areas, match_metric, match_threshold, sorted_idxs)
+        if should_stream_survivor(predictions[:, :4]):
+            boxes, areas, sorted_idxs = _prepare_streaming(predictions)
+            return greedy_nmm_streaming(boxes, areas, match_metric, match_threshold, sorted_idxs)
+        indptr, indices, sorted_idxs = _prepare_sparse(predictions, match_metric, match_threshold)
+        return greedy_nmm_sparse(indptr, indices, sorted_idxs)
     matrix, sorted_idxs = _prepare_matrix(predictions, match_metric)
     return greedy_nmm_from_matrix(matrix, sorted_idxs, match_threshold)
 
