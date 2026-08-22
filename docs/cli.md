@@ -386,8 +386,8 @@ python script_name.py
 
 ## Additional Resources
 
-- [Prediction Utilities](predict.md) -- Python API for prediction parameters and
+- [Prediction Utilities](predict.md): Python API for prediction parameters and
   visualization
-- [COCO Utilities](coco.md) -- Python API for COCO dataset operations
-- [Model Integrations](guides/models.md) -- Framework-specific setup guides
-- [Interactive Notebooks](notebooks.md) -- Hands-on examples for all frameworks
+- [COCO Utilities](coco.md): Python API for COCO dataset operations
+- [Model Integrations](guides/models.md): Framework-specific setup guides
+- [Interactive Notebooks](notebooks.md): Hands-on examples for all frameworks
