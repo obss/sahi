@@ -1,0 +1,1701 @@
+---
+hide:
+  - navigation
+tags:
+  - changelog
+  - release-notes
+---
+
+# 📝 CHANGELOG
+
+
+
+## 🚀 SAHI v0.12.6 Release Notes
+
+
+
+A patch release with one performance fix. NMM postprocessing no longer slows down as its merge groups grow, which is the shape crowded scenes produce.
+
+
+
+### ⚡ Performance
+
+
+
+- **NMM stops rescanning merge lists it has already filled** ([#1422](https://github.com/obss/sahi/pull/1422)). Every candidate box was first searched for in the Python list of boxes already merged into the current keeper, and only then checked against the `merge_to_keep` array. That search costs one step per box already in the group, so a crowded scene, which ends up with a few very large groups, paid it on almost every candidate. A box is appended to a merge list and recorded in `merge_to_keep` in the same step, so the array lookup on its own already answers the question and the list search only repeated it. Removing it leaves every group exactly as it was and turns the merge bookkeeping from quadratic in the size of a group into linear. The dense, stored-pair and streaming paths share this bookkeeping, so all three improve, and the numba backend inherits the change through the dense one.
+
+
+
+![NMM merge time before and after, on crowded scenes](https://raw.githubusercontent.com/obss/sahi/main/resources/nmm-crowded-speedup.png)
+
+
+
+NMM on a crowded layout, `IOS / 0.3`:
+
+
+
+| boxes | before | after | speedup |
+
+| ----: | -----: | ----: | ------: |
+
+| 2000 | 324 ms | 199 ms | 1.6x |
+
+| 5000 | 2132 ms | 896 ms | 2.4x |
+
+| 10000 | 13303 ms | 3531 ms | 3.8x |
+
+| 20000 | 80153 ms | 14625 ms | 5.5x |
+
+| 33337 | 297170 ms | 48926 ms | 6.1x |
+
+
+
+### 📚 Documentation
+
+
+
+- **The Chinese documentation now covers `0.12.5`** ([#1423](https://github.com/obss/sahi/pull/1423)).
+
+
+
+## 🚀 SAHI v0.12.5 Release Notes
+
+
+
+A patch release that finishes the postprocessing memory work started in `0.12.2`, which turned out to help only when boxes were spread out, and fixes two correctness problems found while testing it.
+
+
+
+### 🐛 Fixes
+
+
+
+- **Postprocessing memory no longer depends on how crowded the boxes are** ([#1417](https://github.com/obss/sahi/pull/1417)). Avoiding the `N x N` overlap matrix by storing one entry per intersecting pair is only a saving while boxes are spread out. Boxes piled on top of each other intersect nearly everything, so the pair count approaches `N^2` and the stored list costs about as much as the matrix it replaced, which is exactly the layout that sliced inference produces on crowd scenes and small-object imagery. The merge loops read one row of matches at a time, and NMS and greedy NMM only ever read rows of boxes that survived, so rows are now answered from the STRtree on demand and peak memory is bounded by `O(N + max_degree)` whatever the layout. NMM reads a row per box rather than per survivor, so it keeps the stored pair list until that list is projected to be large.
+
+- **A non-positive `match_threshold` no longer builds a metric matrix** ([#1417](https://github.com/obss/sahi/pull/1417)). Both metrics are non-negative, so `metric >= 0` holds for every pair and the adjacency is the complete graph. The dense path was still computing every overlap to discover this, which made the one configuration that needs no overlap computation the most expensive one and reproduced the out-of-memory failure from [#1374](https://github.com/obss/sahi/issues/1374) at 25000 boxes. The result now follows from the score order alone.
+
+- **NMM no longer merges a keeper into itself** ([#1416](https://github.com/obss/sahi/pull/1416)). A keeper was marked by leaving its `merge_to_keep` entry at `-1`, the same value that marks a box as unclaimed, so a box processed later could claim a keeper and append it to a merge list. With tied scores on duplicate boxes this produced a keeper listed inside its own merge list, and an index reachable as both a keeper and a merged box. Keepers now point at themselves, which makes them unclaimable without changing any other outcome.
+
+- **Zero-area boxes no longer trigger a divide-by-zero warning** ([#1416](https://github.com/obss/sahi/pull/1416)). The metric computed `inter / denom` for every pair and discarded the invalid entries afterwards, so a degenerate box emitted a `RuntimeWarning`. The division is now masked instead of the result.
+
+
+
+### ⚡ Performance
+
+
+
+Postprocessing on crowded and scattered layouts, `IOS / 0.3`:
+
+
+
+| layout | boxes | NMS before | NMS after | peak memory before | peak memory after |
+
+| ------ | ----: | ---------: | --------: | -----------------: | ----------------: |
+
+| crowded | 33337 | 47180 ms | 135 ms | 3416 MB | 4 MB |
+
+| crowded | 20000 | 15931 ms | 57 ms | 1232 MB | 2 MB |
+
+| crowded | 10000 | 2717 ms | 25 ms | 311 MB | 1 MB |
+
+| scattered | 33336 | 539 ms | 188 ms | 65 MB | 4 MB |
+
+
+
+- **The numba backend picks its path by box density** ([#1418](https://github.com/obss/sahi/pull/1418)). Its NMS and greedy NMM loops ran an exhaustive pairwise scan whatever the input. Routing them by prediction count alone would regress crowded scenes, because the JIT loop skips suppressed candidates and stays competitive long after the numpy one stops being viable, so the neighbour count decides instead and is estimated from a sample of the boxes. The score sort was also an insertion sort, quadratic in its own right, and now uses the same `lexsort` the other backends share, which produces an identical order including ties.
+
+
+
+| average neighbours per box, 20000 boxes | NMS before | NMS after | greedy NMM before | greedy NMM after |
+
+| --------------------------------------: | ---------: | --------: | ----------------: | ---------------: |
+
+| 0.0 | 909 ms | 43 ms | 842 ms | 89 ms |
+
+| 0.8 | 781 ms | 52 ms | 757 ms | 84 ms |
+
+| 5.1 | 495 ms | 118 ms | 479 ms | 151 ms |
+
+| 20.1 | 241 ms | 146 ms | 236 ms | 148 ms |
+
+| 78.9 | 141 ms | 73 ms | 143 ms | 71 ms |
+
+
+
+## 🚀 SAHI v0.12.4 Release Notes
+
+
+
+A patch release that fixes the `sahi` command line interface, which was broken on any installation that did not already have `matplotlib` present.
+
+
+
+### 🐛 Fixes
+
+
+
+- **`matplotlib` is now a declared dependency** ([#1414](https://github.com/obss/sahi/pull/1414)). `sahi.cli` imports `sahi.scripts.coco_error_analysis`, which imports `matplotlib` at module level, but `matplotlib` was never listed in `[project].dependencies` or in any extra. Because the import is eager, every `sahi` command failed on a clean install, including ones unrelated to plotting such as `sahi version`. The issue went unnoticed because `matplotlib` is usually already installed alongside other packages in a typical environment.
+
+
+
+## 🚀 SAHI v0.12.3 Release Notes
+
+
+
+A patch release that puts Apple Silicon GPUs to work, adds a Turkish translation of the documentation, and clears CI maintenance gathered since `0.12.2`.
+
+
+
+### 🐛 Fixes
+
+
+
+- **Apple MPS is now detected for device selection and postprocessing** ([#1408](https://github.com/obss/sahi/pull/1408)). `select_device()` only looked for CUDA, so macOS users fell back to CPU even with a working Metal backend. Automatic selection is now CUDA → MPS → CPU, and the `torchvision` postprocessing backend is picked when either GPU is present. Detection goes through `torch.backends.mps.is_available()`, which exists on every supported torch version and reports `False` on non-Apple builds.
+
+- **`threading.currentThread()` replaced with `current_thread()`** ([#1392](https://github.com/obss/sahi/pull/1392)), removing a `DeprecationWarning` on newer Python versions.
+
+
+
+### 📚 Documentation
+
+
+
+- **Turkish translation** of the documentation, with a build step and `zensical` configuration to match ([#1401](https://github.com/obss/sahi/pull/1401), [#1402](https://github.com/obss/sahi/pull/1402), [#1404](https://github.com/obss/sahi/pull/1404)).
+
+- Multilingual subpath links now resolve correctly ([#1403](https://github.com/obss/sahi/pull/1403)).
+
+- Backend documentation lists MPS alongside CUDA ([#1410](https://github.com/obss/sahi/pull/1410)).
+
+
+
+### 🧹 Maintenance & CI
+
+
+
+- Device selection and postprocessing backend resolution are covered by tests ([#1409](https://github.com/obss/sahi/pull/1409)).
+
+- Bumped `astral-sh/setup-uv` 8.3.2 → 9.0.0 ([#1399](https://github.com/obss/sahi/pull/1399)), `actions/setup-python` 6.3.0 → 7.0.0 ([#1400](https://github.com/obss/sahi/pull/1400)) and `actions/checkout` 7.0.0 → 7.0.1 ([#1398](https://github.com/obss/sahi/pull/1398)).
+
+- Relaxed the `twine` requirement to `>=5.1.1,<8.0.0` ([#1406](https://github.com/obss/sahi/pull/1406)).
+
+
+
+### ⚡ Performance
+
+
+
+NMS with the `IOU` metric, best of 5 runs, on an Apple M2 Pro:
+
+
+
+| boxes | numpy | numba | torchvision (MPS) |
+
+| ----: | ----: | ----: | ----------------: |
+
+| 100 | 0.14 ms | 0.02 ms | 1.44 ms |
+
+| 500 | 1.53 ms | 0.36 ms | 1.42 ms |
+
+| 1000 | 5.46 ms | 1.40 ms | 1.45 ms |
+
+| 5000 | 81.37 ms | 34.16 ms | 4.05 ms |
+
+| 20000 | 1237.70 ms | 462.56 ms | 11.75 ms |
+
+
+
+Below roughly 500 boxes `numba` stays ahead, but the difference there is about a millisecond.
+
+
+
+**Full Changelog**:
+
+<https://github.com/obss/sahi/compare/0.12.2...0.12.3>
+
+
+
+## 🚀 SAHI v0.12.2 Release Notes
+
+
+
+A patch release fixing out-of-memory failures and severe slowdowns when
+
+postprocessing large prediction sets, plus model, packaging and documentation
+
+fixes gathered since `0.12.1`.
+
+
+
+### 🐛 Fixes
+
+
+
+- **Postprocessing no longer allocates an `N x N` matrix for large inputs**
+
+  ([#1395](https://github.com/obss/sahi/pull/1395)). v0.11 used a shapely
+
+  STRtree and only compared nearby boxes; v0.12 replaced it with a dense
+
+  matrix that is `O(N^2)` in time and memory regardless of layout. The
+
+  TorchVision backend had no size guard and built seven `N x N` tensors on the
+
+  GPU, so it ran out of memory first. The greedy loops only ever use
+
+  `matrix >= match_threshold`, never the metric values, so the thresholded
+
+  adjacency is now built directly from the pairs an STRtree reports as
+
+  intersecting and stored as CSR. Fixes
+
+  [#1374](https://github.com/obss/sahi/issues/1374).
+
+- **RF-DETR** local models can be loaded by class name, with corrected Roboflow
+
+  docs ([#1394](https://github.com/obss/sahi/pull/1394)).
+
+- **MMDetection** `has_mask` now handles `RepeatDataset`
+
+  ([#1387](https://github.com/obss/sahi/pull/1387)).
+
+- **Dependency and minimum-version checks** are enforced in `import_utils`
+
+  ([#1377](https://github.com/obss/sahi/pull/1377)).
+
+- All **OpenCV distributions** are kept on one version, avoiding conflicting
+
+  installs ([#1393](https://github.com/obss/sahi/pull/1393)).
+
+
+
+### 📚 Documentation
+
+
+
+- Chinese translations updated and completed
+
+  ([#1371](https://github.com/obss/sahi/pull/1371)).
+
+- Docs default to **YOLO26** and link the Ultralytics YOLO26 page
+
+  ([#1386](https://github.com/obss/sahi/pull/1386)), and YOLO26 is listed among
+
+  the CLI models ([#1378](https://github.com/obss/sahi/pull/1378)).
+
+
+
+### 🧹 Maintenance & CI
+
+
+
+- Bumped `astral-sh/setup-uv` 8.2.0 → 8.3.2
+
+  ([#1389](https://github.com/obss/sahi/pull/1389)) and updated
+
+  `actions/checkout` / `actions/cache`
+
+  ([#1385](https://github.com/obss/sahi/pull/1385)).
+
+- Relaxed the `build` requirement to `>=0.10,<1.6`
+
+  ([#1382](https://github.com/obss/sahi/pull/1382)).
+
+
+
+### ⚡ Performance
+
+
+
+33337 boxes, `IOS` metric, threshold `0.3`. Same outputs before and after
+
+(6571 predictions for `greedy_nmm`, 4639 for `nmm`).
+
+
+
+CPU (Intel Core i7-13850HX):
+
+
+
+| backend | greedy_nmm before | after | nmm before | after |
+
+| ------- | ----------------- | ----- | ---------- | ----- |
+
+| numpy | 15.88s | 0.18s | 27.06s | 0.21s |
+
+| torchvision | 6.22s | 0.18s | 17.34s | 0.21s |
+
+| numba | 1.53s | 1.55s | 18.56s | 0.22s |
+
+
+
+CUDA (RTX 4000 Ada Laptop, 12 GB):
+
+
+
+| backend | greedy_nmm before | after | nmm before | after |
+
+| ------- | ----------------- | ----- | ---------- | ----- |
+
+| numpy | 15.93s | 0.26s | 27.00s | 0.21s |
+
+| torchvision | OOM, 4.14 GiB | 0.17s | OOM, 4.14 GiB | 0.23s |
+
+| numba | 1.09s | 1.09s | 18.82s | 0.22s |
+
+
+
+Inputs below 2000 boxes, and any non-positive threshold, stay on the dense
+
+path where it is faster.
+
+
+
+**Full Changelog**:
+
+<https://github.com/obss/sahi/compare/0.12.1...0.12.2>
+
+
+
+## 🚀 SAHI v0.12.0 Release Notes
+
+
+
+One of the largest SAHI releases to date, with **95 commits** since `0.11.34`
+
+(rolling in the `0.11.35`/`0.11.36` hotfixes), featuring a re-architected
+
+postprocessing engine, true batch inference, a torch-free core, new
+
+open-vocabulary and segmentation models, and a full documentation overhaul.
+
+
+
+### 🚀 Key Updates
+
+
+
+#### ⚡ Batch inference, torch-free core & accelerated postprocessing backends
+
+
+
+- **Batch inference**: slices are processed in batches end-to-end for major
+
+  GPU throughput gains ([#1336](https://github.com/obss/sahi/pull/1336)).
+
+- **Torch-free core**: the core slicing/postprocessing path no longer
+
+  hard-depends on PyTorch; install only what your backend needs
+
+  ([#1336](https://github.com/obss/sahi/pull/1336)).
+
+- **Pluggable postprocessing backends**: NMS/NMM run on a selectable backend:
+
+  **NumPy** (zero heavy deps), **Numba** (JIT-accelerated CPU), or
+
+  **TorchVision** (GPU), auto-selected for your environment
+
+  ([#1336](https://github.com/obss/sahi/pull/1336)).
+
+
+
+#### 🧠 New model support
+
+
+
+- **GroundingDINO (HuggingFace)**: zero-shot, text-prompted open-vocabulary
+
+  detection through SAHI's sliced pipeline, with a dedicated demo notebook
+
+  ([#1361](https://github.com/obss/sahi/pull/1361)).
+
+- **Universal segmentation from HuggingFace**
+
+  ([#1360](https://github.com/obss/sahi/pull/1360)).
+
+- **RF-DETR-Seg** segmentation models
+
+  ([#1315](https://github.com/obss/sahi/pull/1315)).
+
+- **YOLOE** detection model ([#1268](https://github.com/obss/sahi/pull/1268)).
+
+- **YOLO-World** open-vocabulary detection
+
+  ([#1267](https://github.com/obss/sahi/pull/1267)).
+
+- **YOLO26** support across the Ultralytics backend, CLI, docs, and notebooks
+
+  ([#1321](https://github.com/obss/sahi/pull/1321),
+
+  [#1322](https://github.com/obss/sahi/pull/1322),
+
+  [#1356](https://github.com/obss/sahi/pull/1356)).
+
+
+
+#### 🎚️ Finer control over slicing & postprocessing
+
+
+
+- **`force_postprocess_type`** in `get_sliced_prediction`
+
+  ([#1346](https://github.com/obss/sahi/pull/1346)).
+
+- **Per-call `confidence_threshold` override** across prediction APIs
+
+  ([#1352](https://github.com/obss/sahi/pull/1352)).
+
+- **Progress bar + progress callback** for `get_sliced_prediction` in both the
+
+  Python API and CLI ([#1255](https://github.com/obss/sahi/pull/1255)).
+
+
+
+#### 📚 Documentation
+
+
+
+- Migrated docs to **Zensical** with full code typing & formatting cleanup
+
+  ([#1344](https://github.com/obss/sahi/pull/1344)).
+
+- **Chinese (zh) translation** added and kept in sync
+
+  ([#1253](https://github.com/obss/sahi/pull/1253),
+
+  [#1332](https://github.com/obss/sahi/pull/1332),
+
+  [#1347](https://github.com/obss/sahi/pull/1347)).
+
+- New API reference, postprocessing backends guide, security policy, and Code
+
+  of Conduct ([#1257](https://github.com/obss/sahi/pull/1257),
+
+  [#1272](https://github.com/obss/sahi/pull/1272),
+
+  [#1349](https://github.com/obss/sahi/pull/1349)).
+
+
+
+### ✨ Performance & Improvements
+
+
+
+- **Significantly faster post-processing**: NMS, NMM, and GREEDYNMM now use a
+
+  shapely `STRtree` spatial index, dramatically speeding up merging on images
+
+  with many slices/detections ([#1248](https://github.com/obss/sahi/pull/1248)).
+
+- Faster `read_image_as_pil` for quicker slicing throughput
+
+  ([#1353](https://github.com/obss/sahi/pull/1353)).
+
+- Improved performance & resource management in prediction and slicing
+
+  ([#1263](https://github.com/obss/sahi/pull/1263)).
+
+- Better `nms` performance with correct empty-prediction handling
+
+  ([#1288](https://github.com/obss/sahi/pull/1288)).
+
+- Replaced `pybboxes` with a lightweight in-house `yolo_bbox_to_voc_bbox`
+
+  ([#1320](https://github.com/obss/sahi/pull/1320)) and removed the `pybboxes` /
+
+  pinned `opencv-python` constraints
+
+  ([#1325](https://github.com/obss/sahi/pull/1325)).
+
+
+
+### 🐞 Bug Fixes
+
+
+
+- Fixed empty bounding boxes caused by an empty
+
+  `shapely_annotation.multipolygon`
+
+  ([#1140](https://github.com/obss/sahi/pull/1140)).
+
+- Fixed invalid segmentation masks for Detectron2 models
+
+  ([#1262](https://github.com/obss/sahi/pull/1262)).
+
+- Corrected margin calculation in `BoundingBox`
+
+  ([#1286](https://github.com/obss/sahi/pull/1286)).
+
+- Fixed CHW-format image handling in `read_image_as_pil`
+
+  ([#1287](https://github.com/obss/sahi/pull/1287)).
+
+- Validate overlap ratios in `get_slice_bboxes` (must be `< 1.0`)
+
+  ([#1285](https://github.com/obss/sahi/pull/1285)).
+
+- Corrected error message for invalid model path in `RTDetrDetectionModel`
+
+  ([#1266](https://github.com/obss/sahi/pull/1266)).
+
+- Fixed incorrect type annotations in the postprocess module
+
+  ([#1327](https://github.com/obss/sahi/pull/1327)).
+
+- Ultralytics model supports additional formats with improved task handling
+
+  ([#1321](https://github.com/obss/sahi/pull/1321)).
+
+- Added `pywinpty` for Windows dev compatibility
+
+  ([#1319](https://github.com/obss/sahi/pull/1319)).
+
+
+
+### 🧹 Maintenance & CI
+
+
+
+- Pinned all GitHub Actions to commit SHAs for supply-chain security
+
+  ([#1351](https://github.com/obss/sahi/pull/1351)).
+
+- Multi-OS CI matrix and clearer workflow naming
+
+  ([#1334](https://github.com/obss/sahi/pull/1334)).
+
+- Bumped to Python 3.12/3.13 in CI and docs
+
+  ([#1259](https://github.com/obss/sahi/pull/1259),
+
+  [#1260](https://github.com/obss/sahi/pull/1260)).
+
+- Removed deprecated YOLOv5 helpers, legacy `requirements.txt`, MMDet workflow,
+
+  and unused Netlify config ([#1326](https://github.com/obss/sahi/pull/1326),
+
+  [#1342](https://github.com/obss/sahi/pull/1342),
+
+  [#1341](https://github.com/obss/sahi/pull/1341),
+
+  [#1335](https://github.com/obss/sahi/pull/1335)).
+
+- `numpy<3.0`, `torchvision 0.23.0`, and many Dependabot dependency bumps (now
+
+  also covering pip).
+
+
+
+### 🙌 New Contributors
+
+
+
+- @vinnik-dmitry07 made their first contribution in
+
+  [#1140](https://github.com/obss/sahi/pull/1140)
+
+- @nikvo1 made their first contribution in
+
+  [#1248](https://github.com/obss/sahi/pull/1248)
+
+- Christopher Field (@volks73) made their first contribution in
+
+  [#1262](https://github.com/obss/sahi/pull/1262)
+
+- Haotian Gong (@ZephyrKeXiner) made their first contribution in
+
+  [#1253](https://github.com/obss/sahi/pull/1253)
+
+- Yogendra Singh (@yogendrasinghx) made their first contribution in
+
+  [#1326](https://github.com/obss/sahi/pull/1326)
+
+- Ivan Buldakov (@ibuldakov) made their first contribution in
+
+  [#1315](https://github.com/obss/sahi/pull/1315)
+
+- Vignesh Suresh (@srikrishnavignesh) made their first contribution in
+
+  [#1360](https://github.com/obss/sahi/pull/1360)
+
+- Ömer Günaydın (@siromermer) made their first contribution in
+
+  [#1361](https://github.com/obss/sahi/pull/1361)
+
+
+
+**Full Changelog**:
+
+<https://github.com/obss/sahi/compare/0.11.34...0.12.0>
+
+
+
+## 🚀 SAHI v0.11.31 Release Notes
+
+
+
+We're excited to announce SAHI v0.11.31 with important bug fixes and
+
+improvements!
+
+
+
+## 🆕 What's Changed
+
+
+
+- Make Category immutable and add tests by @gboeer in
+
+  <https://github.com/obss/sahi/pull/1206>
+
+- Update docstring for greedy_nmm by @kikefdezl in
+
+  <https://github.com/obss/sahi/pull/1205>
+
+- update version by @fcakyon in <https://github.com/obss/sahi/pull/1208>
+
+
+
+## 🙌 New Contributors
+
+
+
+- @kikefdezl made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1205>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.30...0.11.31>
+
+
+
+## 🚀 SAHI v0.11.30 Release Notes
+
+
+
+We're excited to announce SAHI v0.11.30 with improved performance tracking,
+
+enhanced testing infrastructure, and better developer experience!
+
+
+
+### 📈 Milestones
+
+
+
+- **Academic papers citing SAHI reached 400!**
+
+  ([#1168](https://github.com/obss/sahi/pull/1168))
+
+
+
+### 🚀 Key Updates
+
+
+
+#### ⚡️ Performance & Monitoring
+
+
+
+- **Fixed postprocess duration tracking** in `get_sliced_prediction` - now
+
+  properly separates slice, prediction, and postprocess timings for accurate
+
+  performance monitoring ([#1201](https://github.com/obss/sahi/pull/1201)) -
+
+  Thanks @Toprak2!
+
+
+
+#### 🧩 Framework Updates
+
+
+
+- **Refactored Ultralytics support** with ONNX model support and better
+
+  compatibility ([#1184](https://github.com/obss/sahi/pull/1184))
+
+- **Updated TorchVision support** to latest API
+
+  ([#1182](https://github.com/obss/sahi/pull/1182))
+
+- **Improved Detectron2 support** with better config handling to prevent
+
+  KeyError issues ([#1116](https://github.com/obss/sahi/pull/1116)) - Thanks
+
+  @Arnesh1411!
+
+- **Added Roboflow framework support** for RF-DETR models from the Roboflow
+
+  Universe ([#1161](https://github.com/obss/sahi/pull/1161)) - Thanks @nok!
+
+- **Removed deepsparse integration** as the framework is no longer maintained
+
+  ([#1164](https://github.com/obss/sahi/pull/1164))
+
+
+
+#### 🧪 Testing Infrastructure
+
+
+
+- **Migrated test suite to pytest**
+
+  ([#1187](https://github.com/obss/sahi/pull/1187))
+
+  - Tests now run faster with better parallel execution
+
+  - Extended Python version coverage (3.8, 3.9, 3.10, 3.11, 3.12)
+
+  - Updated to more recent PyTorch versions for better compatibility testing
+
+  - Improved test organization and maintainability
+
+- **Refactored MMDetection tests** for better reliability
+
+  ([#1185](https://github.com/obss/sahi/pull/1185))
+
+
+
+#### 💻 Developer Experience
+
+
+
+- **Added Context7 MCP integration** for AI-assisted development
+
+  ([#1198](https://github.com/obss/sahi/pull/1198))
+
+  - SAHI's documentation is now
+
+    [indexed in Context7 MCP](https://context7.com/obss/sahi)
+
+  - Provides AI coding assistants with up-to-date, version-specific code
+
+    examples
+
+  - Includes [llms.txt](https://context7.com/obss/sahi/llms.txt) file for
+
+    AI-readable documentation
+
+  - Check out the
+
+    [Context7 MCP installation guide](https://github.com/upstash/context7#%EF%B8%8F-installation)
+
+    to integrate SAHI docs with your AI workflow
+
+
+
+### 🛠️ Improvements
+
+
+
+#### 🧹 Code Quality & Safety
+
+
+
+- **Immutable bounding boxes** for thread-safe operations
+
+  ([#1194](https://github.com/obss/sahi/pull/1194),
+
+  [#1191](https://github.com/obss/sahi/pull/1191)) - Thanks @gboeer!
+
+- **Enhanced type hints and docstrings** throughout the codebase
+
+  ([#1195](https://github.com/obss/sahi/pull/1195)) - Thanks @gboeer!
+
+- **Overloaded operators for prediction scores** enabling intuitive score
+
+  comparisons ([#1190](https://github.com/obss/sahi/pull/1190)) - Thanks
+
+  @gboeer!
+
+- **PyTorch is now a soft dependency** improving flexibility
+
+  ([#1162](https://github.com/obss/sahi/pull/1162)) - Thanks @ducviet00!
+
+
+
+### 🏗️ Infrastructure & Stability
+
+
+
+- **Improved dependency management** and documentation
+
+  ([#1183](https://github.com/obss/sahi/pull/1183))
+
+- **Enhanced pyproject.toml configuration** for better package management
+
+  ([#1181](https://github.com/obss/sahi/pull/1181))
+
+- **Optimized CI/CD workflows** for MMDetection tests
+
+  ([#1186](https://github.com/obss/sahi/pull/1186))
+
+
+
+### 🐛 Bug Fixes
+
+
+
+- Fixed CUDA device selection to support devices other than cuda:0
+
+  ([#1158](https://github.com/obss/sahi/pull/1158)) - Thanks @0xf21!
+
+- Corrected parameter naming from 'confidence' to 'threshold' for consistency
+
+  ([#1180](https://github.com/obss/sahi/pull/1180)) - Thanks @nok!
+
+- Fixed regex string formatting in device selection function
+
+  ([#1165](https://github.com/obss/sahi/pull/1165))
+
+- Resolved torch import errors when PyTorch is not installed
+
+  ([#1172](https://github.com/obss/sahi/pull/1172)) - Thanks @ducviet00!
+
+- Fixed model instantiation issues with `AutoDetectionModel.from_pretrained`
+
+  ([#1158](https://github.com/obss/sahi/pull/1158))
+
+
+
+### 📦 Dependencies
+
+
+
+- Updated OpenCV packages from 4.10.0.84 to 4.11.0.86
+
+  ([#1171](https://github.com/obss/sahi/pull/1171)) - Thanks @ducviet00-h2!
+
+- Removed unmaintained matplotlib-stubs dependency
+
+  ([#1169](https://github.com/obss/sahi/pull/1169))
+
+- Cleaned up unused configuration files
+
+  ([#1199](https://github.com/obss/sahi/pull/1199))
+
+
+
+### 📚 Documentation
+
+
+
+- Added context7.json for better AI tool integration
+
+  ([#1200](https://github.com/obss/sahi/pull/1200))
+
+- Updated README with new contributors
+
+  ([#1175](https://github.com/obss/sahi/pull/1175),
+
+  [#1179](https://github.com/obss/sahi/pull/1179))
+
+- Added Roboflow+SAHI Colab tutorial link
+
+  ([#1177](https://github.com/obss/sahi/pull/1177))
+
+
+
+### 🙏 Acknowledgments
+
+
+
+Special thanks to all contributors who made this release possible: @nok,
+
+@gboeer, @Toprak2, @Arnesh1411, @0xf21, @ducviet00, @ducviet00-h2, @p-constant,
+
+and @fcakyon!
+
+
+
+---
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.24...0.11.30>
+
+
+
+## 🚀 SAHI v0.11.29 Release Notes
+
+
+
+### 🆕 What's Changed
+
+
+
+- Make bounding box immutable by @gboeer in
+
+  <https://github.com/obss/sahi/pull/1194>
+
+- Improve type hints and docstrings by @gboeer in
+
+  <https://github.com/obss/sahi/pull/1195>
+
+- update version by @fcakyon in <https://github.com/obss/sahi/pull/1196>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.28...0.11.29>
+
+
+
+## 🚀 SAHI v0.11.28 Release Notes
+
+
+
+### 🆕 What's Changed
+
+
+
+- Add overloaded operators for prediction score by @gboeer in
+
+  <https://github.com/obss/sahi/pull/1190>
+
+- Improve detectron2 support by @Arnesh1411 in
+
+  <https://github.com/obss/sahi/pull/1116>
+
+- Use immutable arguments for bounding boxes by @gboeer in
+
+  <https://github.com/obss/sahi/pull/1191>
+
+- update version by @fcakyon in <https://github.com/obss/sahi/pull/1192>
+
+
+
+### 🙌 New Contributors
+
+
+
+- @Arnesh1411 made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1116>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.27...0.11.28>
+
+
+
+## 🚀 SAHI v0.11.27 Release Notes
+
+
+
+## 🆕 What's Changed
+
+
+
+- fix: Update inference method to use 'threshold' instead of 'confidence' by
+
+  @nok in <https://github.com/obss/sahi/pull/1180>
+
+- Update README.md by @nok in <https://github.com/obss/sahi/pull/1179>
+
+- improve pyproject.toml by @fcakyon in <https://github.com/obss/sahi/pull/1181>
+
+- Refactor dependency management and some docs by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1183>
+
+- update: refactor ultralytics support by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1184>
+
+- Refactor mmdet tests by @fcakyon in <https://github.com/obss/sahi/pull/1185>
+
+- update torchvision support to latest api by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1182>
+
+- optimize mmdet workflow trigger condition by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1186>
+
+- Migrate tests to pytest by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1187>
+
+- update version by @fcakyon in <https://github.com/obss/sahi/pull/1188>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.26...0.11.27>
+
+
+
+## 🚀 SAHI v0.11.26 Release Notes
+
+
+
+### 🆕 What's Changed
+
+
+
+- Bump opencv packages from `4.10.0.84` to `4.11.0.86` by @ducviet00-h2 in
+
+  <https://github.com/obss/sahi/pull/1171>
+
+- Add new framework Roboflow (RFDETR models) by @nok in
+
+  <https://github.com/obss/sahi/pull/1161>
+
+- add new contributors to readme by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1175>
+
+- add roboflow+sahi colab url to readme by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1177>
+
+- update version by @fcakyon in <https://github.com/obss/sahi/pull/1176>
+
+
+
+### 🙌 New Contributors
+
+
+
+- @ducviet00-h2 made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1171>
+
+- @nok made their first contribution in <https://github.com/obss/sahi/pull/1161>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.25...0.11.26>
+
+
+
+## 🚀 SAHI v0.11.25 Release Notes
+
+
+
+### 🆕 What's Changed
+
+
+
+- update sahi citation in readme by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1168>
+
+- remove matplotlib-stubs as its not maintained by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1169>
+
+- Fix torch import errors by @ducviet00 in
+
+  <https://github.com/obss/sahi/pull/1172>
+
+- update version by @fcakyon in <https://github.com/obss/sahi/pull/1173>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.24...0.11.25>
+
+
+
+## 🚀 SAHI v0.11.24 Release Notes
+
+
+
+### 🆕 What's Changed
+
+
+
+- Fix typo and scripts URL by @gboeer in
+
+  <https://github.com/obss/sahi/pull/1155>
+
+- fix ci workflow bug by @Dronakurl in <https://github.com/obss/sahi/pull/1156>
+
+- [DOC] Fix typos by @gboeer in <https://github.com/obss/sahi/pull/1157>
+
+- Remove deepsparse integration by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1164>
+
+- Fix: Make pytorch is not a hard dependency by @ducviet00 in
+
+  <https://github.com/obss/sahi/pull/1162>
+
+- fix: specify a device other than cuda:0 by @0xf21 in
+
+  <https://github.com/obss/sahi/pull/1158>
+
+- fix: correct regex string formatting in select_device function by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1165>
+
+- add TensorrtExecutionProvider to yolov8onnx by @p-constant in
+
+  <https://github.com/obss/sahi/pull/1091>
+
+- update version by @fcakyon in <https://github.com/obss/sahi/pull/1166>
+
+
+
+### 🙌 New Contributors
+
+
+
+- @gboeer made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1155>
+
+- @ducviet00 made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1162>
+
+- @0xf21 made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1158>
+
+- @p-constant made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1091>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.23...0.11.24>
+
+
+
+## 🚀 SAHI v0.11.23 Release Notes
+
+
+
+### 🆕 What's Changed
+
+
+
+- fix(CI): numpy dependency fixes #1119 by @Dronakurl in
+
+  <https://github.com/obss/sahi/pull/1144>
+
+- Fix: Predict cannot find TIF files in source directory by @dibunker in
+
+  <https://github.com/obss/sahi/pull/1142>
+
+- Fixed typos in demo Notebooks by @picjul in
+
+  <https://github.com/obss/sahi/pull/1150>
+
+- fix: Fix Polygon Repair and Empty Polygon Issues, see #1118 by @mario-dg in
+
+  <https://github.com/obss/sahi/pull/1138>
+
+- improve package ci logging by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1151>
+
+
+
+### 🙌 New Contributors
+
+
+
+- @dibunker made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1142>
+
+- @picjul made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1150>
+
+- @mario-dg made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1138>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.22...0.11.23>
+
+
+
+## 🚀 SAHI v0.11.22 Release Notes
+
+
+
+### 🆕 What's Changed
+
+
+
+- Improve support for latest mmdet (v3.3.0) by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1129>
+
+- Improve support for latest yolov5-pip and ultralytics versions by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1130>
+
+- support latest huggingface/transformers models by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1131>
+
+- refctor coco to yolo conversion, update docs by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1132>
+
+- bump version by @fcakyon in <https://github.com/obss/sahi/pull/1134>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.21...0.11.22>
+
+
+
+### 📚 Core Documentation Files
+
+
+
+#### 📦 [Prediction Utilities](predict.md)
+
+
+
+- Detailed guide for performing object detection inference
+
+- Standard and sliced inference examples
+
+- Batch prediction usage
+
+- Class exclusion during inference
+
+- Visualization parameters and export formats
+
+- Interactive examples with various model integrations (YOLOv8, MMDetection,
+
+  etc.)
+
+
+
+#### ✂️ [Slicing Utilities](slicing.md)
+
+
+
+- Guide for slicing large images and datasets
+
+- Image slicing examples
+
+- COCO dataset slicing examples
+
+- Interactive demo notebook reference
+
+
+
+#### 🐒 [COCO Utilities](coco.md)
+
+
+
+- Comprehensive guide for working with COCO format datasets
+
+- Dataset creation and manipulation
+
+- Slicing COCO datasets
+
+- Dataset splitting (train/val)
+
+- Category filtering and updates
+
+- Area-based filtering
+
+- Dataset merging
+
+- Format conversion (COCO ↔ YOLO)
+
+- Dataset sampling utilities
+
+- Statistics calculation
+
+- Result validation
+
+
+
+#### 💻 [CLI Commands](cli.md)
+
+
+
+- Complete reference for SAHI command-line interface
+
+- Prediction commands
+
+- FiftyOne integration
+
+- COCO dataset operations
+
+- Environment information
+
+- Version checking
+
+- Custom script usage
+
+
+
+#### 👁️ [FiftyOne Integration](fiftyone.md)
+
+
+
+- Guide for visualizing and analyzing predictions with FiftyOne
+
+- Dataset visualization
+
+- Result exploration
+
+- Interactive analysis
+
+
+
+#### 📓 Interactive Examples
+
+
+
+All documentation files are complemented by interactive Jupyter notebooks in the
+
+[demo directory](https://github.com/obss/sahi/tree/main/demo):
+
+
+
+- `slicing.ipynb` - Slicing operations demonstration
+
+- `inference_for_ultralytics.ipynb` - YOLOv8/YOLO11/YOLO12 integration
+
+- `inference_for_yolov5.ipynb` - YOLOv5 integration
+
+- `inference_for_mmdetection.ipynb` - MMDetection integration
+
+- `inference_for_huggingface.ipynb` - HuggingFace models integration
+
+- `inference_for_torchvision.ipynb` - TorchVision models integration
+
+- `inference_for_rtdetr.ipynb` - RT-DETR integration
+
+- `inference_for_sparse_yolov5.ipynb` - DeepSparse optimized inference
+
+
+
+### 🚦 Getting Started
+
+
+
+If you're new to SAHI:
+
+
+
+1. Start with the [prediction utilities](predict.md) to understand basic
+
+   inference
+
+2. Explore the [slicing utilities](slicing.md) to learn about processing large
+
+   images
+
+3. Check out the [CLI commands](cli.md) for command-line usage
+
+4. Dive into [COCO utilities](coco.md) for dataset operations
+
+5. Try the interactive notebooks in the [demo directory](https://github.com/obss/sahi/tree/main/demo) for hands-on
+
+   experience
+
+
+
+## 🚀 SAHI v0.11.21 Release Notes
+
+
+
+### 🆕 What's Changed
+
+
+
+- Exclude classes from inference using pretrained or custom models by @gguzzy in
+
+  <https://github.com/obss/sahi/pull/1104>
+
+- pyproject.toml, pre-commit, ruff, uv and typing issues, fixes #1119 by
+
+  @Dronakurl in <https://github.com/obss/sahi/pull/1120>
+
+- add class exclusion example into predict docs by @gguzzy in
+
+  <https://github.com/obss/sahi/pull/1125>
+
+- Add OBB demo by @fcakyon in <https://github.com/obss/sahi/pull/1126>
+
+- fix a type hint typo in predict func by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1111>
+
+- Remove numpy<2 upper pin by @weiji14 in
+
+  <https://github.com/obss/sahi/pull/1112>
+
+- fix ci badge on readme by @fcakyon in <https://github.com/obss/sahi/pull/1124>
+
+- fix version in pyproject.toml by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1127>
+
+
+
+### 🙌 New Contributors
+
+
+
+- @Dronakurl made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1120>
+
+- @gguzzy made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1104>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.20...0.11.21>
+
+
+
+## 🚀 SAHI v0.11.20 Release Notes
+
+
+
+### 🆕 What's Changed
+
+
+
+- add yolo11 and ultralytics obb task support by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1109>
+
+- support latest opencv version by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1106>
+
+- simplify yolo detection model code by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1107>
+
+- Pin shapely>2.0.0 by @weiji14 in <https://github.com/obss/sahi/pull/1101>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.19...0.11.20>
+
+
+
+## 🚀 SAHI v0.11.19 Release Notes
+
+
+
+### 🆕 What's Changed
+
+
+
+- fix ci actions by @fcakyon in <https://github.com/obss/sahi/pull/1073>
+
+- Update has_mask method for mmdet models (handle an edge case) by @ccomkhj in
+
+  <https://github.com/obss/sahi/pull/1066>
+
+- Another self-intersection corner case handling by @sergiev in
+
+  <https://github.com/obss/sahi/pull/982>
+
+- Update README.md by @fcakyon in <https://github.com/obss/sahi/pull/1077>
+
+- drop non-working yolonas support by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1097>
+
+- drop yolonas support part2 by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1098>
+
+- Update has_mask method for mmdet models (handle ConcatDataset) by @ccomkhj in
+
+  <https://github.com/obss/sahi/pull/1092>
+
+
+
+### 🙌 New Contributors
+
+
+
+- @ccomkhj made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1066>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.18...0.11.19>
+
+
+
+## 🚀 SAHI v0.11.18 Release Notes
+
+
+
+### 🆕 What's Changed
+
+
+
+- add yolov8 mask support, improve mask processing speed by 4-5x by @mayrajeo in
+
+  <https://github.com/obss/sahi/pull/1039>
+
+- fix has_mask method for mmdet models by @Alias-z in
+
+  <https://github.com/obss/sahi/pull/1054>
+
+- Fix `TypeError: 'GeometryCollection' object is not subscriptable` when slicing
+
+  COCO by @Alias-z in <https://github.com/obss/sahi/pull/1047>
+
+- support opencv-python version 4.9 by @iokarkan in
+
+  <https://github.com/obss/sahi/pull/1041>
+
+- add upperlimit to numpy dep by @fcakyon in
+
+  <https://github.com/obss/sahi/pull/1057>
+
+- add more unit tests by @MMerling in <https://github.com/obss/sahi/pull/1048>
+
+- upgrade ci actions by @fcakyon in <https://github.com/obss/sahi/pull/1049>
+
+
+
+### 🙌 New Contributors
+
+
+
+- @iokarkan made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1041>
+
+- @MMerling made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1048>
+
+- @Alias-z made their first contribution in
+
+  <https://github.com/obss/sahi/pull/1047>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.16...0.11.18>
+
+
+
+## 🚀 SAHI v0.11.16 Release Notes
+
+
+
+## 🚀 SAHI v0.11.15 Release Notes
+
+
+
+## 🚀 SAHI v0.11.14 Release Notes
+
+
+
+### 🆕 What's Changed
+
+
+
+- support Deci-AI YOLO-NAS models by @ssahinnkadir in
+
+  <https://github.com/obss/sahi/pull/874>
+
+- Significant speed improvement for Detectron2 models by @MyosQ in
+
+  <https://github.com/obss/sahi/pull/865>
+
+- support ultralytics>=8.0.99 by @eVen-gits in
+
+  <https://github.com/obss/sahi/pull/873>
+
+- Documentation typo, and missing value by @Hamzalopode in
+
+  <https://github.com/obss/sahi/pull/859>
+
+- update version by @fcakyon in <https://github.com/obss/sahi/pull/876>
+
+- update black version by @fcakyon in <https://github.com/obss/sahi/pull/877>
+
+
+
+### 🙌 New Contributors
+
+
+
+- @Hamzalopode made their first contribution in
+
+  <https://github.com/obss/sahi/pull/859>
+
+- @eVen-gits made their first contribution in
+
+  <https://github.com/obss/sahi/pull/873>
+
+- @MyosQ made their first contribution in
+
+  <https://github.com/obss/sahi/pull/865>
+
+
+
+**Full Changelog**: <https://github.com/obss/sahi/compare/0.11.13...0.11.14>
+
+
+
+## 🚀 SAHI v0.11.13 Release Notes
+
+
+
+## 🚀 SAHI v0.11.12 Release Notes
+
+
+
+## 🚀 SAHI v0.11.11 Release Notes
+
+
+
+## 🚀 SAHI v0.11.10 Release Notes
+
+
+
+## 🚀 SAHI v0.11.9 Release Notes
+
+
+
+## 🚀 SAHI v0.11.8 Release Notes
+
+
+
+## 🚀 SAHI v0.11.7 Release Notes
+
+
+
+## 🚀 SAHI v0.11.6 Release Notes
+
+
+
+## 🚀 SAHI v0.11.5 Release Notes
+
+
+
+## 🚀 SAHI v0.11.4 Release Notes
+
+
+
+## 🚀 SAHI v0.11.3 Release Notes
+
+
+
+## 🚀 SAHI v0.11.2 Release Notes
+
+
+
+## 🚀 SAHI v0.11.1 Release Notes
