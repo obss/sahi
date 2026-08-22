@@ -105,8 +105,8 @@ all = ["sahi[yolov5,ultralytics,torchvision,transformers,roboflow,onnx]"]
 
 ci = [
   "sahi[transformers,roboflow,onnx]",
-  # pin the floors the torch extra declares; a bare version also matches the
-  # +cpu local build that the pytorch-cpu index serves Linux and Windows
+  # pin the floors the torch extra declares. A bare version also matches the
+  # local build tag, so these hold whichever backend uv resolves.
   "torch==2.13.0;python_version>='3.10'",
   "torch==2.8.0;python_version=='3.9'",
   "torch==2.4.1;python_version=='3.8'",
@@ -121,6 +121,13 @@ ci = [
 
 [tool.uv]
 
+# A torch wheel bundles its own CUDA runtime, so the wheel has to match the
+# machine rather than the requirement. "auto" reads the installed driver and
+# picks the matching build, falling back to the CPU wheels where there is no
+# GPU. CI pins it to cpu through UV_TORCH_BACKEND so the runners never pull a
+# CUDA wheel they cannot use.
+torch-backend = "auto"
+
 # Keep every OpenCV distribution on the same version: they all install into the
 # same `cv2/` directory, so mixing majors (e.g. opencv-python 5.x with a
 # transitively pinned opencv-python-headless 4.x) breaks `import cv2`.
@@ -133,14 +140,6 @@ override-dependencies = [
   "pywinpty!=2.0.14; os_name == 'nt'",
 ]
 
-[[tool.uv.index]]
-name = "pytorch-cpu"
-url = "https://download.pytorch.org/whl/cpu"
-explicit = true
-
-[tool.uv.sources]
-torch = [{ index = "pytorch-cpu" }]
-torchvision = [{ index = "pytorch-cpu" }]
 
 [tool.ruff]
 target-version = "py38"
