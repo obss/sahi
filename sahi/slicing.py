@@ -170,7 +170,12 @@ class SlicedImage:
 class SliceImageResult:
     """Container for sliced image results."""
 
-    def __init__(self, original_image_size: list[int], image_dir: str | None = None) -> None:
+    def __init__(
+        self,
+        original_image_size: list[int],
+        image_dir: str | None = None,
+        original_image: np.ndarray | None = None,
+    ) -> None:
         """Initialize SliceImageResult.
 
         Args:
@@ -178,10 +183,15 @@ class SliceImageResult:
                 Directory of the sliced image exports.
             original_image_size: list of int
                 Size of the unsliced original image in [height, width].
+            original_image: np.ndarray, optional
+                The decoded source image. Every slice is a view into it, so it is
+                alive for as long as this result is; holding it lets callers reuse
+                the decode instead of reading the file again.
         """
         self.original_image_height = original_image_size[0]
         self.original_image_width = original_image_size[1]
         self.image_dir = image_dir
+        self.original_image = original_image
 
         self._sliced_image_list: list[SlicedImage] = []
 
@@ -376,7 +386,9 @@ def slice_image(
     n_ims = 0
 
     # init images and annotations lists
-    sliced_image_result = SliceImageResult(original_image_size=[image_height, image_width], image_dir=output_dir)
+    sliced_image_result = SliceImageResult(
+        original_image_size=[image_height, image_width], image_dir=output_dir, original_image=image_arr
+    )
 
     suffix = _slice_file_suffix(image, out_ext)
 
