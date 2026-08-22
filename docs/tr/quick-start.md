@@ -119,7 +119,7 @@ Dilimleme sonrasında SAHI, örtüşen prediction'ları NMS veya NMM ile birleş
 | --------- | -------------- | --------- |
 | **torchvision** | CUDA veya Apple MPS GPU + torchvision mevcut olduğunda | `pip install torch torchvision` |
 | **numba** | numba yüklü, GPU yok | `pip install numba` |
-| **numpy** | Her zaman mevcut (fallback) | -- |
+| **numpy** | Her zaman mevcut (fallback) | Gerekmez |
 
 Seçimi manuel olarak geçersiz kılma:
 
@@ -134,9 +134,9 @@ set_postprocess_backend("auto")        # restore auto-detection
 
 ## Sonraki Adımlar
 
-- [Sliced Inference Nasıl Çalışır](guides/sliced-inference.md) -- Algoritmayı, parametre ipuçlarını ve ne zaman kullanılacağını anlayın
-- [Model Entegrasyonları](guides/models.md) -- SAHI'yi Ultralytics, HuggingFace, MMDetection, TorchVision, Detectron2 ve daha fazlası ile kullanın
-- [Prediction Araçları](predict.md) -- Toplu (batch) inference, ilerleme takibi, görselleştirme seçenekleri
-- [COCO Araçları](coco.md) -- COCO veri kümelerini oluşturun, dilimleyin, birleştirin ve dönüştürün
-- [CLI Komutları](cli.md) -- Tam CLI referansı
-- [Etkileşimli Notebook'lar](notebooks.md) -- Tüm framework'ler için uygulamalı Colab notebook'ları
+- [Sliced Inference Nasıl Çalışır](guides/sliced-inference.md): Algoritmayı, parametre ipuçlarını ve ne zaman kullanılacağını anlayın
+- [Model Entegrasyonları](guides/models.md): SAHI'yi Ultralytics, HuggingFace, MMDetection, TorchVision, Detectron2 ve daha fazlası ile kullanın
+- [Prediction Araçları](predict.md): Toplu (batch) inference, ilerleme takibi, görselleştirme seçenekleri
+- [COCO Araçları](coco.md): COCO veri kümelerini oluşturun, dilimleyin, birleştirin ve dönüştürün
+- [CLI Komutları](cli.md): Tam CLI referansı
+- [Etkileşimli Notebook'lar](notebooks.md): Tüm framework'ler için uygulamalı Colab notebook'ları
