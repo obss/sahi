@@ -9,8 +9,9 @@ on:
       - "docs/**"
       - "demo/**"
       - "context7.json"
-      - "mkdocs.yml"
       - "zensical.toml"
+      - "zensical.tr.toml"
+      - "zensical.zh.toml"
 
   pull_request:
     branches: [main]
@@ -21,8 +22,9 @@ on:
       - "docs/**"
       - "demo/**"
       - "context7.json"
-      - "mkdocs.yml"
       - "zensical.toml"
+      - "zensical.tr.toml"
+      - "zensical.zh.toml"
 
   schedule:
     - cron: "0 0 * * *" # Runs at 00:00 UTC every day
