@@ -89,7 +89,7 @@ class CocoAnnotation:
 
         Args:
             segmentation: List[List]
-                [[1, 1, 325, 125, 250, 200, 5, 200]]
+                `[[1, 1, 325, 125, 250, 200, 5, 200]]`
             category_id: int
                 Category id of the annotation
             category_name: str
@@ -206,7 +206,7 @@ class CocoAnnotation:
 
         Args:
             segmentation: List[List]
-                [[1, 1, 325, 125, 250, 200, 5, 200]]
+                `[[1, 1, 325, 125, 250, 200, 5, 200]]`
             bbox: List
                 [xmin, ymin, width, height]
             category_id: int
@@ -265,7 +265,7 @@ class CocoAnnotation:
 
     @property
     def segmentation(self) -> list[list[int]]:
-        """Returns coco formatted segmentation of the annotation as [[1, 1, 325, 125, 250, 200, 5, 200]]."""
+        """Returns coco formatted segmentation of the annotation as `[[1, 1, 325, 125, 250, 200, 5, 200]]`."""
         if self._segmentation:
             return self._shapely_annotation.to_coco_segmentation()
         else:
@@ -350,7 +350,7 @@ class CocoPrediction(CocoAnnotation):
 
         Args:
             segmentation: List[List]
-                [[1, 1, 325, 125, 250, 200, 5, 200]]
+                `[[1, 1, 325, 125, 250, 200, 5, 200]]`
             category_id: int
                 Category id of the annotation
             category_name: str
@@ -456,7 +456,7 @@ class CocoPrediction(CocoAnnotation):
 
         Args:
             segmentation: List[List]
-                [[1, 1, 325, 125, 250, 200, 5, 200]]
+                `[[1, 1, 325, 125, 250, 200, 5, 200]]`
             bbox: List
                 [xmin, ymin, width, height]
             category_id: int
