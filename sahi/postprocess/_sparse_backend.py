@@ -32,11 +32,11 @@ SPARSE_MIN_BOXES = 2000
 # crossover barely moves with N, so it is a degree and not a pair budget.
 NMM_MAX_DEGREE = 40.0
 
-# NMS only ever reads rows of boxes that survived, so it settles far fewer rows
-# than NMM and the stored list keeps paying off much longer. Measured crossover
-# is around degree 175; staying under it keeps the pair list bounded on the
-# crowded inputs streaming exists to protect.
-NMS_MAX_DEGREE = 150.0
+# NMS and greedy NMM only ever read rows of boxes that survived, so they settle
+# far fewer rows than NMM and the stored list keeps paying off much longer. Both
+# measure the same crossover, around degree 175; staying under it keeps the pair
+# list bounded on the crowded inputs streaming exists to protect.
+SURVIVOR_MAX_DEGREE = 150.0
 
 # Probing the tree in one call would return sample x degree pairs at once, which
 # on crowded boxes dwarfs everything the path being chosen goes on to allocate.
@@ -121,9 +121,12 @@ def should_stream_nmm(boxes: np.ndarray) -> bool:
     return should_stream(boxes, NMM_MAX_DEGREE)
 
 
-def should_stream_nms(boxes: np.ndarray) -> bool:
-    """Return whether NMS should answer rows from the tree instead of storing pairs."""
-    return should_stream(boxes, NMS_MAX_DEGREE)
+def should_stream_survivor(boxes: np.ndarray) -> bool:
+    """Return whether NMS and greedy NMM should read rows from the tree.
+
+    Both settle a row only for a box that survived, so they share a crossover.
+    """
+    return should_stream(boxes, SURVIVOR_MAX_DEGREE)
 
 
 def should_use_sparse(n: int, match_threshold: float) -> bool:
@@ -424,6 +427,44 @@ def nms_sparse(indptr: np.ndarray, indices: np.ndarray, sorted_idxs: np.ndarray)
         suppressed[indices[indptr[idx] : indptr[idx + 1]]] = True
 
     return keep
+
+
+def greedy_nmm_sparse(
+    indptr: np.ndarray,
+    indices: np.ndarray,
+    sorted_idxs: np.ndarray,
+) -> dict[int, list[int]]:
+    """Greedy NMM over a CSR match adjacency. Mirrors ``greedy_nmm_from_matrix``.
+
+    Args:
+        indptr: CSR row pointers of length N + 1.
+        indices: CSR column indices.
+        sorted_idxs: Indices sorted by score descending.
+
+    Returns:
+        Dict mapping each kept index to a list of indices merged into it.
+    """
+    n = len(indptr) - 1
+    suppressed = np.zeros(n, dtype=bool)
+
+    # The dense loop only considers candidates that come later in score order,
+    # and emits them in that order.
+    rank = np.empty(n, dtype=np.intp)
+    rank[sorted_idxs] = np.arange(n)
+
+    keep_to_merge_list: dict[int, list[int]] = {}
+    for position, idx in enumerate(sorted_idxs):
+        if suppressed[idx]:
+            continue
+
+        neighbours = indices[indptr[idx] : indptr[idx + 1]]
+        merge_indices = neighbours[(rank[neighbours] > position) & ~suppressed[neighbours]]
+        merge_indices = merge_indices[np.argsort(rank[merge_indices])]
+
+        suppressed[merge_indices] = True
+        keep_to_merge_list[int(idx)] = merge_indices.tolist()
+
+    return keep_to_merge_list
 
 
 def nmm_sparse(

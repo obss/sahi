@@ -19,13 +19,14 @@ from sahi.postprocess._sparse_backend import (
     SPARSE_MIN_BOXES,
     MatchQuery,
     build_sparse_matches,
+    greedy_nmm_sparse,
     greedy_nmm_streaming,
     nmm_sparse,
     nmm_streaming,
     nms_sparse,
     nms_streaming,
     should_stream_nmm,
-    should_stream_nms,
+    should_stream_survivor,
     should_use_sparse,
 )
 
@@ -114,9 +115,9 @@ def test_dense_csr_and_streaming_agree(match_metric: str, match_threshold: float
     dense_nms = nms_from_matrix(case.matrix, case.sorted_idxs, match_threshold)
     assert nms_streaming(*streaming_args) == dense_nms
     assert nms_sparse(case.indptr, case.indices, case.sorted_idxs) == dense_nms
-    assert greedy_nmm_streaming(*streaming_args) == greedy_nmm_from_matrix(
-        case.matrix, case.sorted_idxs, match_threshold
-    )
+    dense_greedy = greedy_nmm_from_matrix(case.matrix, case.sorted_idxs, match_threshold)
+    assert greedy_nmm_streaming(*streaming_args) == dense_greedy
+    assert greedy_nmm_sparse(case.indptr, case.indices, case.sorted_idxs) == dense_greedy
 
     dense_nmm = nmm_from_matrix(case.matrix, case.sorted_idxs, case.scores, case.boxes, match_threshold)
     assert nmm_sparse(case.indptr, case.indices, case.sorted_idxs, case.scores, case.boxes) == dense_nmm
@@ -146,6 +147,9 @@ def test_streaming_agrees_with_dense_once_the_tree_is_rebuilt(match_metric: str)
         case.matrix, case.sorted_idxs, 0.3
     )
     assert greedy_nmm_streaming(*streaming_args) == greedy_nmm_from_matrix(case.matrix, case.sorted_idxs, 0.3)
+    assert greedy_nmm_sparse(case.indptr, case.indices, case.sorted_idxs) == greedy_nmm_from_matrix(
+        case.matrix, case.sorted_idxs, 0.3
+    )
 
     result = nmm_streaming(*streaming_args, case.scores)
     assert result == nmm_from_matrix(case.matrix, case.sorted_idxs, case.scores, case.boxes, 0.3)
@@ -184,10 +188,10 @@ def test_nmm_streams_only_when_boxes_are_crowded() -> None:
     assert should_stream_nmm(scattered[:, :4]) is False
     assert should_stream_nmm(crowded[:, :4]) is True
 
-    # NMS settles fewer rows than NMM, so it keeps the stored pairs for longer,
-    # but the same crowding must still push it onto the streaming path.
-    assert should_stream_nms(scattered[:, :4]) is False
-    assert should_stream_nms(crowded[:, :4]) is True
+    # NMS and greedy NMM settle fewer rows than NMM, so they keep the stored
+    # pairs for longer, but the same crowding must still push them to streaming.
+    assert should_stream_survivor(scattered[:, :4]) is False
+    assert should_stream_survivor(crowded[:, :4]) is True
 
     # Both routes must agree with the stored-pair result and still group every box.
     for name, predictions in (("scattered", scattered), ("crowded", crowded)):
