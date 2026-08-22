@@ -688,3 +688,39 @@ def test_video_prediction() -> None:
         name="exp",
         verbose=1,
     )
+
+
+def test_source_image_is_decoded_once_per_sliced_prediction(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A sliced run decodes the source file once, not once per result it builds.
+
+    Slicing already holds the decoded array and every slice is a view into it,
+    so the standard pass and both PredictionResults reuse it. Decoding a
+    gigapixel source four times is the cost this guards against.
+    """
+    import sahi.predict
+    import sahi.prediction
+    import sahi.slicing
+    from sahi.utils.cv import read_image_as_pil
+
+    decodes = []
+
+    def counting_read(image: Any, *args: Any, **kwargs: Any) -> Any:
+        # only a path or URL costs a decode; an array or PIL image is already open
+        if isinstance(image, str):
+            decodes.append(image)
+        return read_image_as_pil(image, *args, **kwargs)
+
+    for module in (sahi.slicing, sahi.predict, sahi.prediction):
+        monkeypatch.setattr(module, "read_image_as_pil", counting_read, raising=False)
+
+    model = UltralyticsDetectionModel(
+        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=MODEL_DEVICE,
+        image_size=IMAGE_SIZE,
+    )
+    result = get_sliced_prediction("tests/data/small-vehicles1.jpeg", model, slice_height=256, slice_width=256)
+
+    assert len(decodes) == 1, f"expected a single decode, got {len(decodes)}: {decodes}"
+    # the size still comes back, and the pixels are still reachable on demand
+    assert (result.image_width, result.image_height) == result.image.size
