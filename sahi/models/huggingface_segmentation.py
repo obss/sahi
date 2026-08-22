@@ -17,7 +17,7 @@ from sahi.prediction import ObjectPrediction
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 from sahi.utils.cv import get_coco_segmentation_from_bool_mask
 
-# {model_class_name: processor_class_name} — strings to avoid eager transformers import
+# {model_class_name: processor_class_name} -- strings to avoid eager transformers import
 _SUPPORTED_MODELS: dict[str, str] = {
     "Mask2FormerForUniversalSegmentation": "Mask2FormerImageProcessor",
     "MaskFormerForInstanceSegmentation": "MaskFormerImageProcessor",

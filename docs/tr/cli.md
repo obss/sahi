@@ -362,7 +362,7 @@ python script_name.py
 
 ## Ek Kaynaklar
 
-- [Prediction Araçları](predict.md) -- Prediction parametreleri ve görselleştirme için Python API'si
-- [COCO Araçları](coco.md) -- COCO veri kümesi operasyonları için Python API'si
-- [Model Entegrasyonları](guides/models.md) -- Kütüphaneye özel kurulum kılavuzları
-- [Etkileşimli Notebook'lar](notebooks.md) -- Tüm kütüphaneler için uygulamalı örnekler
+- [Prediction Araçları](predict.md): Prediction parametreleri ve görselleştirme için Python API'si
+- [COCO Araçları](coco.md): COCO veri kümesi operasyonları için Python API'si
+- [Model Entegrasyonları](guides/models.md): Kütüphaneye özel kurulum kılavuzları
+- [Etkileşimli Notebook'lar](notebooks.md): Tüm kütüphaneler için uygulamalı örnekler

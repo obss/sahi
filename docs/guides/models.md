@@ -15,7 +15,7 @@ tags:
 
 SAHI works with any object detection framework through a unified API. Load your
 model once with `AutoDetectionModel.from_pretrained()`, then use it with any SAHI
-function -- sliced prediction, batch inference, CLI, etc.
+function: sliced prediction, batch inference, CLI, etc.
 
 ## Ultralytics (YOLO)
 
@@ -96,7 +96,7 @@ result = get_sliced_prediction(
 
 ## YOLO-World (Zero-Shot)
 
-Open-vocabulary detection -- detect objects by text description without
+Open-vocabulary detection: detect objects by text description without
 retraining.
 
 ```bash
@@ -262,7 +262,7 @@ In addition to the [common parameters](#common-parameters), this model accepts:
 | `segmentation_type` | `SegmentationType` | `INSTANCE_SEGMENTATION` (default), `SEMANTIC_SEGMENTATION`, or `PANOPTIC_SEGMENTATION` |
 | `min_segment_area` | int | Drop segments smaller than this many pixels (default: 100) |
 | `overlap_mask_area_threshold` | float | Merge/discard disconnected parts within a mask (default: 0.8) |
-| `label_ids_to_fuse` | `list[int]` | Panoptic only -- fuse all instances of these labels into one segment |
+| `label_ids_to_fuse` | `list[int]` | Panoptic only, fuses all instances of these labels into one segment |
 | `token` | str | HuggingFace access token for gated/private models (falls back to `$HF_TOKEN`) |
 
 ---
@@ -474,6 +474,6 @@ detection_model = AutoDetectionModel.from_pretrained(
 
 ## Next Steps
 
-- [How Sliced Inference Works](sliced-inference.md) -- Understand the algorithm
-- [Prediction Utilities](../predict.md) -- Advanced prediction options
-- [Interactive Notebooks](../notebooks.md) -- Hands-on examples for each framework
+- [How Sliced Inference Works](sliced-inference.md): Understand the algorithm
+- [Prediction Utilities](../predict.md): Advanced prediction options
+- [Interactive Notebooks](../notebooks.md): Hands-on examples for each framework

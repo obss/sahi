@@ -153,7 +153,7 @@ class UltralyticsDetectionModel(DetectionModel):
         if self.image_size is not None:
             kwargs = {"imgsz": self.image_size, **kwargs}
 
-        # YOLO expects BGR — convert each image and pass the list for native batch inference
+        # YOLO expects BGR -- convert each image and pass the list for native batch inference
         images_bgr = [img[:, :, ::-1] for img in images]
         prediction_result = self.model(images_bgr, **kwargs)
 

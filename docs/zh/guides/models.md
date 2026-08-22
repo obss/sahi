@@ -467,6 +467,6 @@ detection_model = AutoDetectionModel.from_pretrained(
 
 ## 下一步
 
-- [切片推理工作原理](sliced-inference.md) -- 了解算法
-- [预测工具](../predict.md) -- 高级预测选项
-- [交互式 Notebooks](../notebooks.md) -- 每个框架的动手实践示例
+- [切片推理工作原理](sliced-inference.md)：了解算法
+- [预测工具](../predict.md)：高级预测选项
+- [交互式 Notebooks](../notebooks.md)：每个框架的动手实践示例

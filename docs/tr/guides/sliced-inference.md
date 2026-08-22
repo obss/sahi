@@ -10,7 +10,7 @@ tags:
 
 ## Problem: Büyük Görsellerde Küçük Nesneler
 
-Standart object detector'lar, inference yapmadan önce girdi görsellerini sabit bir çözünürlüğe (örn. 640x640) göre yeniden boyutlandırır (resize). Kaynak görseliniz çok daha büyük olduğunda -- örneğin bir 4K drone fotoğrafı veya uydu görseli -- küçük nesneler sadece birkaç piksellik boyuta düşer ve geleneksel dedektörler tarafından tespit edilemez hale gelir.
+Standart object detector'lar, inference yapmadan önce girdi görsellerini sabit bir çözünürlüğe (örn. 640x640) göre yeniden boyutlandırır (resize). Kaynak görseliniz çok daha büyük olduğunda, örneğin bir 4K drone fotoğrafı veya uydu görseli, küçük nesneler sadece birkaç piksellik boyuta düşer ve geleneksel dedektörler tarafından tespit edilemez hale gelir.
 
 <div align="center">
   <img width="700" alt="sliced inference" src="https://raw.githubusercontent.com/obss/sahi/main/resources/sliced_inference.gif">
@@ -43,7 +43,7 @@ Dilimler arasındaki örtüşen (overlap) bölgeler, dilim sınırında kalan ne
 | Parametre | Ne kontrol eder |
 | ----------- | ----------------- |
 | `slice_height` / `slice_width` | Piksel cinsinden her bir dilimin boyutu |
-| `overlap_height_ratio` / `overlap_width_ratio` | Bitişik dilimler arasındaki örtüşme oranı (0.0 -- 1.0) |
+| `overlap_height_ratio` / `overlap_width_ratio` | Bitişik dilimler arasındaki örtüşme oranı (0.0 ile 1.0 arasında) |
 | `auto_slice_resolution` | SAHI'nin dilim boyutlarını görsel çözünürlüğüne göre otomatik seçmesini sağlar |
 
 ### 2. Dedektörü her dilimde çalıştırma
@@ -56,15 +56,15 @@ Her dilim bağımsız olarak object detection modeline iletilir. Dilimler küç�
 
 Dilim (slice) seviyesindeki prediction'lar tam görsel koordinatlarına geri haritalanır. Dilimler birbiriyle örtüştüğü (overlap ettiği) için aynı nesne genellikle birden fazla dilimde tespit edilir. SAHI, bu tekrarlanan (duplicate) tespitleri birleştirmek veya bastırmak için bir postprocessing adımı uygular:
 
-- **GreedyNMM** (varsayılan) -- Örtüşen (overlapping) kutuları (bounding box) koordinatlarını ve skorlarını ortalayarak greedy bir şekilde birleştirir. Çoğu kullanım senaryosu için en iyisidir.
-- **NMM** -- Non-Maximum Merging. GreedyNMM'e benzer ancak tüm örtüşmeleri eşzamanlı olarak işler.
-- **NMS** -- Non-Maximum Suppression. En yüksek skorlu kutuyu tutar ve örtüşen diğer kutuları eler. Kesin, birleştirilmemiş tespitler istediğinizde kullanın.
-- **LSNMS** -- Location-Sensitive NMS. Konumsal konumu faktör olarak ekleyen bir varyant.
+- **GreedyNMM** (varsayılan): Örtüşen (overlapping) kutuları (bounding box) koordinatlarını ve skorlarını ortalayarak greedy bir şekilde birleştirir. Çoğu kullanım senaryosu için en iyisidir.
+- **NMM**: Non-Maximum Merging. GreedyNMM'e benzer ancak tüm örtüşmeleri eşzamanlı olarak işler.
+- **NMS**: Non-Maximum Suppression. En yüksek skorlu kutuyu tutar ve örtüşen diğer kutuları eler. Kesin, birleştirilmemiş tespitler istediğinizde kullanın.
+- **LSNMS**: Location-Sensitive NMS. Konumsal konumu faktör olarak ekleyen bir varyant.
 
 Birleştirme adımı farklı örtüşme metrikleri kullanabilir:
 
-- **IOS** (Intersection over Smaller) -- Daha agresif birleştirme; nesne boyutları geniş bir aralıkta değiştiğinde iyidir.
-- **IOU** (Intersection over Union) -- Standart metrik; daha muhafazakardır.
+- **IOS** (Intersection over Smaller): Daha agresif birleştirme; nesne boyutları geniş bir aralıkta değiştiğinde iyidir.
+- **IOU** (Intersection over Union): Standart metrik; daha muhafazakardır.
 
 ## Sliced Inference Ne Zaman Kullanılmalı?
 
@@ -92,6 +92,6 @@ Sliced Inference en çok şu durumlarda fayda sağlar:
 
 ## Sonraki Adımlar
 
-- [Hızlı Başlangıç](../quick-start.md) -- SAHI'yi kullanmaya başlayın
-- [Model Entegrasyonları](models.md) -- SAHI'yi kendi tespit kütüphanenizle kullanın
-- [Postprocessing Backend'leri](../postprocess/backends.md) -- Hız için NMS/NMM backend'ini yapılandırın
+- [Hızlı Başlangıç](../quick-start.md): SAHI'yi kullanmaya başlayın
+- [Model Entegrasyonları](models.md): SAHI'yi kendi tespit kütüphanenizle kullanın
+- [Postprocessing Backend'leri](../postprocess/backends.md): Hız için NMS/NMM backend'ini yapılandırın

@@ -175,8 +175,8 @@ path where it is faster.
 
 ## 🚀 SAHI v0.12.0 Release Notes
 
-One of the largest SAHI releases to date — **95 commits** since `0.11.34`
-(rolling in the `0.11.35`/`0.11.36` hotfixes) — featuring a re-architected
+One of the largest SAHI releases to date, with **95 commits** since `0.11.34`
+(rolling in the `0.11.35`/`0.11.36` hotfixes), featuring a re-architected
 postprocessing engine, true batch inference, a torch-free core, new
 open-vocabulary and segmentation models, and a full documentation overhaul.
 
@@ -184,19 +184,19 @@ open-vocabulary and segmentation models, and a full documentation overhaul.
 
 #### ⚡ Batch inference, torch-free core & accelerated postprocessing backends
 
-- **Batch inference** — slices are processed in batches end-to-end for major
+- **Batch inference**: slices are processed in batches end-to-end for major
   GPU throughput gains ([#1336](https://github.com/obss/sahi/pull/1336)).
-- **Torch-free core** — the core slicing/postprocessing path no longer
+- **Torch-free core**: the core slicing/postprocessing path no longer
   hard-depends on PyTorch; install only what your backend needs
   ([#1336](https://github.com/obss/sahi/pull/1336)).
-- **Pluggable postprocessing backends** — NMS/NMM run on a selectable backend:
+- **Pluggable postprocessing backends**: NMS/NMM run on a selectable backend:
   **NumPy** (zero heavy deps), **Numba** (JIT-accelerated CPU), or
   **TorchVision** (GPU), auto-selected for your environment
   ([#1336](https://github.com/obss/sahi/pull/1336)).
 
 #### 🧠 New model support
 
-- **GroundingDINO (HuggingFace)** — zero-shot, text-prompted open-vocabulary
+- **GroundingDINO (HuggingFace)**: zero-shot, text-prompted open-vocabulary
   detection through SAHI's sliced pipeline, with a dedicated demo notebook
   ([#1361](https://github.com/obss/sahi/pull/1361)).
 - **Universal segmentation from HuggingFace**
@@ -235,7 +235,7 @@ open-vocabulary and segmentation models, and a full documentation overhaul.
 
 ### ✨ Performance & Improvements
 
-- **Significantly faster post-processing** — NMS, NMM, and GREEDYNMM now use a
+- **Significantly faster post-processing**: NMS, NMM, and GREEDYNMM now use a
   shapely `STRtree` spatial index, dramatically speeding up merging on images
   with many slices/detections ([#1248](https://github.com/obss/sahi/pull/1248)).
 - Faster `read_image_as_pil` for quicker slicing throughput

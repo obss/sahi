@@ -69,7 +69,7 @@ dev = [
 docs = [
     "zensical",
     "mkdocstrings[python]",
-    "pymdown-extensions",
+    "pymdown-extensions>=11.0.1;python_version>='3.10'",
 ]
 build = [
   "twine>=5.1.1,<8.0.0",
@@ -79,7 +79,13 @@ build = [
 ]
 
 [project.optional-dependencies]
-torch = ["torch>=2.4.1"]
+# torch shipped its last cp38 wheel in 2.4.1 and its last cp39 wheel in 2.8.0,
+# so each interpreter floors at the newest release it still has wheels for
+torch = [
+  "torch>=2.13.0;python_version>='3.10'",
+  "torch>=2.8.0;python_version=='3.9'",
+  "torch>=2.4.1;python_version<'3.9'",
+]
 yolov5 = ["yolov5>=6.0.0,<8.0.0"]
 ultralytics = ["ultralytics>=8.0.0"]
 transformers = ["transformers>=4.49.0;python_version>='3.9'"]
@@ -94,47 +100,19 @@ onnx = [
   "onnxruntime>=1.23.2;python_version>='3.14'",
 ]
 numba = ["numba>=0.59.0;python_version>='3.10'"]
-torchvision = ["torch>=2.4.1", "torchvision>=0.19.0"]
-all = [
-  "yolov5>=6.0.0,<8.0.0",
-  "ultralytics>=8.0.0",
-  "torch>=2.4.1",
-  "torchvision",
-  "transformers>=4.49.0;python_version>='3.9'",
-  # inference pins onnxruntime<1.22, which has no cp314 wheel
-  "inference>=0.51.5;python_version>='3.12' and python_version<'3.14'",
-  "rfdetr>=1.6.2;python_version>='3.12' and python_version<'3.14'",
-  "onnx;python_version>='3.10'",
-  "onnxruntime;python_version>='3.10' and python_version<'3.14'",
-  "onnxruntime>=1.23.2;python_version>='3.14'",
-]
+torchvision = ["sahi[torch]", "torchvision>=0.19.0"]
+all = ["sahi[yolov5,ultralytics,torchvision,transformers,roboflow,onnx]"]
 
 ci = [
-  # max supported pytorch version for python 3.8 is 2.4.1, and 2.8.0 ships no cp314 wheel
-  # CPU versions for Linux/Windows CI
-  "torch==2.9.0+cpu;python_version>='3.14' and platform_system!='Darwin'",
-  "torch==2.8.0+cpu;python_version>='3.9' and python_version<'3.14' and platform_system!='Darwin'",
-  "torch==2.4.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
-  "torchvision==0.24.0+cpu;python_version>='3.14' and platform_system!='Darwin'",
-  "torchvision==0.23.0;python_version>='3.9' and python_version<'3.14' and platform_system!='Darwin'",
-  "torchvision==0.19.1+cpu;python_version=='3.8' and platform_system!='Darwin'",
-  # Regular versions for macOS
-  "torch==2.9.0;python_version>='3.14' and platform_system=='Darwin'",
-  "torch==2.8.0;python_version>='3.9' and python_version<'3.14' and platform_system=='Darwin'",
-  "torch==2.4.1;python_version=='3.8' and platform_system=='Darwin'",
-  "torchvision==0.24.0;python_version>='3.14' and platform_system=='Darwin'",
-  "torchvision==0.23.0;python_version>='3.9' and python_version<'3.14' and platform_system=='Darwin'",
-  "torchvision==0.19.1;python_version=='3.8' and platform_system=='Darwin'",
-  # transformers is supported for python>=3.9
-  "transformers>=4.49.0;python_version>='3.9'",
-  # test roboflow only for python>=3.12; inference pins onnxruntime<1.22, which has no cp314 wheel
-  "inference>=0.51.5;python_version>='3.12' and python_version<'3.14'",
-  "rfdetr>=1.6.2;python_version>='3.12' and python_version<'3.14'",
-  # ultralytics onnx is supported for python>=3.10
-  "onnx;python_version>='3.10'",
-  "onnxruntime;python_version>='3.10' and python_version<'3.14'",
-  "onnxruntime>=1.23.2;python_version>='3.14'",
-  # These are available for all python versions
+  "sahi[transformers,roboflow,onnx]",
+  # pin the floors the torch extra declares. A bare version also matches the
+  # local build tag, so these hold whichever backend uv resolves.
+  "torch==2.13.0;python_version>='3.10'",
+  "torch==2.8.0;python_version=='3.9'",
+  "torch==2.4.1;python_version=='3.8'",
+  "torchvision==0.28.0;python_version>='3.10'",
+  "torchvision==0.23.0;python_version=='3.9'",
+  "torchvision==0.19.1;python_version=='3.8'",
   "pycocotools>=2.0.7",
   "ultralytics>=8.3.161",
   "scikit-image",
@@ -142,6 +120,13 @@ ci = [
 ]
 
 [tool.uv]
+
+# A torch wheel bundles its own CUDA runtime, so the wheel has to match the
+# machine rather than the requirement. "auto" reads the installed driver and
+# picks the matching build, falling back to the CPU wheels where there is no
+# GPU. CI pins it to cpu through UV_TORCH_BACKEND so the runners never pull a
+# CUDA wheel they cannot use.
+torch-backend = "auto"
 
 # Keep every OpenCV distribution on the same version: they all install into the
 # same `cv2/` directory, so mixing majors (e.g. opencv-python 5.x with a
@@ -155,14 +140,6 @@ override-dependencies = [
   "pywinpty!=2.0.14; os_name == 'nt'",
 ]
 
-[[tool.uv.index]]
-name = "pytorch-cpu"
-url = "https://download.pytorch.org/whl/cpu"
-explicit = true
-
-[tool.uv.sources]
-torch = [{ index = "pytorch-cpu" }]
-torchvision = [{ index = "pytorch-cpu" }]
 
 [tool.ruff]
 target-version = "py38"

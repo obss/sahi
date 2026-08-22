@@ -9,8 +9,9 @@ on:
       - "docs/**"
       - "demo/**"
       - "context7.json"
-      - "mkdocs.yml"
       - "zensical.toml"
+      - "zensical.tr.toml"
+      - "zensical.zh.toml"
 
   pull_request:
     branches: [main]
@@ -21,8 +22,9 @@ on:
       - "docs/**"
       - "demo/**"
       - "context7.json"
-      - "mkdocs.yml"
       - "zensical.toml"
+      - "zensical.tr.toml"
+      - "zensical.zh.toml"
 
   schedule:
     - cron: "0 0 * * *" # Runs at 00:00 UTC every day
@@ -41,6 +43,8 @@ jobs:
       HF_HOME: ${{ github.workspace }}/.cache/huggingface
       # Give flaky HF Hub downloads more headroom before timing out (default is 10s)
       HF_HUB_DOWNLOAD_TIMEOUT: "60"
+      # The runners have no GPU, so take the CPU wheels rather than detecting
+      UV_TORCH_BACKEND: cpu
     strategy:
       fail-fast: false
       matrix:

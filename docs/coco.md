@@ -306,6 +306,6 @@ coco_results = remove_invalid_coco_results("coco_result.json", "coco_dataset.jso
 
 ## Additional Resources
 
-- [Interactive notebooks](notebooks.md) -- Hands-on examples including COCO
+- [Interactive notebooks](notebooks.md): Hands-on examples including COCO
   dataset slicing
-- [CLI documentation](cli.md) -- Command-line operations for COCO datasets
+- [CLI documentation](cli.md): Command-line operations for COCO datasets

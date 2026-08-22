@@ -109,7 +109,7 @@ class TestEdgeCases:
             dtype=np.float32,
         )
         keep = nms(preds, match_threshold=0.5)
-        assert len(keep) == 3  # all kept — no overlap
+        assert len(keep) == 3  # all kept -- no overlap
 
     def test_nms_equal_scores_deterministic(self) -> None:
         """Test NMS determinism with equal scores."""

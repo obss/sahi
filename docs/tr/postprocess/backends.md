@@ -23,10 +23,10 @@ SAHI'nin postprocessing (NMS, NMM) işlemleri üç değiştirilebilir backend ü
 
 SAHI varsayılan olarak çalışma anında (runtime) mevcut en iyi backend'i otomatik olarak seçer:
 
-1. **torchvision** — `torchvision` yüklüyse _ve_ bir GPU mevcutsa
+1. **torchvision**: `torchvision` yüklüyse _ve_ bir GPU mevcutsa
    (CUDA veya Apple Silicon üzerinde Apple MPS).
-2. **numba** — `numba` paketi yüklüyse.
-3. **numpy** — son çare (fallback) olarak her zaman mevcuttur.
+2. **numba**: `numba` paketi yüklüyse.
+3. **numpy**: son çare (fallback) olarak her zaman mevcuttur.
 
 ```python
 from sahi.postprocess.backends import get_postprocess_backend
@@ -100,11 +100,11 @@ predictions = np.array([
     [300, 300, 400, 400, 0.90, 1],
 ])
 
-# Global NMS — all categories compete together
+# Global NMS, tüm kategoriler birlikte yarışır
 keep = nms(predictions, match_metric="IOU", match_threshold=0.5)
 print(predictions[keep])
 
-# Per-category NMS — class 0 and class 1 are treated independently
+# Kategori bazında NMS, sınıf 0 ve sınıf 1 bağımsız değerlendirilir
 keep = batched_nms(predictions, match_metric="IOU", match_threshold=0.5)
 print(predictions[keep])
 ```
@@ -142,19 +142,19 @@ Yüksek seviyeli sınıflar, SAHI'nin `ObjectPrediction` listeleriyle entegre ol
 ```python
 from sahi.postprocess.combine import NMSPostprocess, NMMPostprocess, GreedyNMMPostprocess
 
-# NMS — keep the best box, discard the rest
+# NMS, en iyi kutuyu tutar, geri kalanını atar
 postprocessor = NMSPostprocess(
     match_threshold=0.5,
     match_metric="IOU",
-    class_agnostic=True,   # False → per-category
+    class_agnostic=True,   # False → kategori bazında
 )
 filtered = postprocessor(object_prediction_list)
 
-# Greedy NMM — merge overlapping boxes (fast)
+# Greedy NMM, örtüşen kutuları birleştirir (hızlı)
 postprocessor = GreedyNMMPostprocess(match_threshold=0.5)
 merged = postprocessor(object_prediction_list)
 
-# Full NMM — transitive merging
+# Full NMM, geçişli birleştirme
 postprocessor = NMMPostprocess(match_threshold=0.5)
 merged = postprocessor(object_prediction_list)
 ```
