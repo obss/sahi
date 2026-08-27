@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import sys
 
 import pytest
@@ -14,6 +15,10 @@ pytestmark = [
     pytest.mark.skipif(
         sys.version_info[:2] < (3, 12) or sys.platform in ("darwin", "win32"),
         reason="Requires Python 3.12 or higher, skipped on macOS and Windows",
+    ),
+    pytest.mark.skipif(
+        importlib.util.find_spec("rfdetr") is None,
+        reason="roboflow inference pins onnxruntime below the first version with cp314 wheels",
     ),
     pytest.mark.flaky(reruns=3, reruns_delay=2),
 ]

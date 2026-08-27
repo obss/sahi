@@ -1,4 +1,4 @@
-"""Batch inference detection script — multiple HuggingFace architectures.
+"""Batch inference detection script -- multiple HuggingFace architectures.
 
 Tests sigmoid (RT-DETRv2, Conditional DETR) and softmax+background (DETR, YOLOS)
 classification heads. Runs single-image and batch inference, saves annotated
@@ -93,7 +93,7 @@ def run(cfg: dict, img1: np.ndarray, img2: np.ndarray) -> bool:
             device="cpu",
         )
     except Exception as e:
-        print(f"  SKIP — {e}")
+        print(f"  SKIP -- {e}")
         return True
 
     detected = "sigmoid" if model._uses_sigmoid_cls else "softmax"

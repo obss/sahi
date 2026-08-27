@@ -1,4 +1,6 @@
 ---
+hide:
+  - navigation
 tags:
   - api-reference
 ---

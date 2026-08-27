@@ -1,6 +1,6 @@
 [project]
 site_name = "SAHI Documentation"
-site_url = "https://sahi.readthedocs.io/"
+site_url = "https://obss.github.io/sahi/"
 repo_url = "https://github.com/obss/sahi"
 repo_name = "obss/sahi"
 edit_uri = "https://github.com/obss/sahi/tree/main/docs"
@@ -15,18 +15,14 @@ nav = [
     {"How Sliced Inference Works" = "guides/sliced-inference.md"},
     {"Model Integrations" = "guides/models.md"},
     {"Prediction Utilities" = "predict.md"},
-    {"COCO Dataset Operations" = "coco.md"},
     {"Slicing Utilities" = "slicing.md"},
     {"Postprocessing Backends" = "postprocess/backends.md"},
-    {"FiftyOne Visualization" = "fiftyone.md"},
     {"CLI Commands" = "cli.md"},
+    {"COCO Dataset Operations" = "coco.md"},
+    {"FiftyOne Visualization" = "fiftyone.md"},
   ]},
   {Notebooks = "notebooks.md"},
   {"Code Reference" = [
-    {"High-level API" = [
-      "predict.md",
-      "slicing.md",
-    ]},
     {Core = [
       "annotation.md",
       "prediction.md",
@@ -47,7 +43,6 @@ nav = [
       "models/roboflow.md",
     ]},
     {"Post-processing" = [
-      "postprocess/backends.md",
       "postprocess/combine.md",
       "postprocess/utils.md",
     ]},
@@ -74,10 +69,16 @@ features = [
   "content.action.edit",
   "content.tooltips",
   "content.code.annotate",
+  "content.tabs.link",
   "navigation.tabs",
   "navigation.tabs.sticky",
   "navigation.top",
   "navigation.indexes",
+  "navigation.footer",
+  "toc.follow",
+  "search.suggest",
+  "search.highlight",
+  "search.share",
 ]
 font.text = "Inter"
 font.code = "IBM Plex Mono"
@@ -131,6 +132,13 @@ default_handler = "python"
 
 
 [project.plugins.mkdocstrings.handlers.python.options]
+separate_signature = true
+show_signature_annotations = true
+signature_crossrefs = true
+merge_init_into_class = true
+members_order = "source"
+docstring_section_style = "table"
+filters = ["!^_"]
 parameter_headings = true
 allow_inspection = true
 show_bases = true
@@ -154,6 +162,8 @@ permalink = true
 # --- PyMdown extensions ---
 
 [project.markdown_extensions.pymdownx.details]
+[project.markdown_extensions.abbr]
+
 [project.markdown_extensions.pymdownx.superfences]
 
 [project.markdown_extensions.pymdownx.tabbed]

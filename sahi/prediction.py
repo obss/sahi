@@ -10,7 +10,7 @@ from PIL import Image
 
 from sahi.annotation import ObjectAnnotation
 from sahi.utils.coco import CocoPrediction
-from sahi.utils.cv import read_image_as_pil, visualize_object_predictions
+from sahi.utils.cv import read_image_as_pil, read_image_size, visualize_object_predictions
 from sahi.utils.file import Path
 
 
@@ -202,10 +202,21 @@ class PredictionResult:
             durations_in_seconds: dict[str, Any]
                 Elapsed times for profiling (e.g. inference, postprocess).
         """
-        self.image: Image.Image = read_image_as_pil(image)
-        self.image_width, self.image_height = self.image.size
+        # Only the size is needed to build a result, and a path can give that from
+        # its header. Decoding is deferred to the callers that want the pixels,
+        # which for a sliced run over a large image is usually none of them.
+        self._image_source = image
+        self._image: Image.Image | None = None
+        self.image_width, self.image_height = read_image_size(image)
         self.object_prediction_list: list[ObjectPrediction] = object_prediction_list
         self.durations_in_seconds = durations_in_seconds
+
+    @property
+    def image(self) -> Image.Image:
+        """The source image, decoded on first access and kept thereafter."""
+        if self._image is None:
+            self._image = read_image_as_pil(self._image_source)
+        return self._image
 
     def export_visuals(
         self,

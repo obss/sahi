@@ -397,7 +397,9 @@ def get_sliced_prediction(
 
         if num_slices > 1 and perform_standard_pred:
             prediction_result = get_prediction(
-                image=image,
+                # the slicing pass already decoded this, and every slice is a view
+                # into it, so reusing it costs nothing and saves a second decode
+                image=slice_image_result.original_image if slice_image_result.original_image is not None else image,
                 detection_model=detection_model,
                 shift_amount=[0, 0],
                 full_shape=[

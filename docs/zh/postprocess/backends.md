@@ -24,9 +24,9 @@ SAHI 的后处理操作（NMS、NMM）可以在三种可互换的后端上运行
 
 默认情况下，SAHI 会在运行时自动选择最佳可用后端：
 
-1. **torchvision** -- 已安装 `torchvision` 且存在 GPU（CUDA，或 Apple Silicon 上的 Apple MPS）时使用。
-2. **numba** -- 已安装 `numba` 软件包时使用。
-3. **numpy** -- 始终可用，作为最终兜底方案。
+1. **torchvision**：已安装 `torchvision` 且存在 GPU（CUDA，或 Apple Silicon 上的 Apple MPS）时使用。
+2. **numba**：已安装 `numba` 软件包时使用。
+3. **numpy**：始终可用，作为最终兜底方案。
 
 ```python
 from sahi.postprocess.backends import get_postprocess_backend

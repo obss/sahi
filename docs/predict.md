@@ -131,11 +131,9 @@ for i, preds in enumerate(detection_model.object_prediction_list_per_image):
         print(pred.category.name, pred.score.value, pred.bbox.to_xyxy())
 ```
 
-!!! note "Single-image compatibility" The existing `object_prediction_list`
+!!! note "Single-image compatibility"
 
-property is unchanged and returns predictions for the first image, so code that
-uses `perform_inference` + `convert_original_predictions` +
-`object_prediction_list` continues to work without modification.
+    The existing `object_prediction_list` property is unchanged and returns predictions for the first image, so code that uses `perform_inference` + `convert_original_predictions` + `object_prediction_list` continues to work without modification.
 
 ## Progress-Bar
 
@@ -175,11 +173,11 @@ result = get_sliced_prediction(
 )
 ```
 
-!!! tip "Notes" - `progress_bar` and `progress_callback` can be used together.
+!!! tip "Notes"
 
-When both are provided, the tqdm bar will display and the callback will be
-called after each slice group is processed. - The `progress_callback` is called
-with 1-based indices (i.e. first call will be `(1, total)`).
+    `progress_bar` and `progress_callback` can be used together. When both are provided, the tqdm bar will display and the callback will be called after each slice group is processed.
+
+    The `progress_callback` is called with 1-based indices, so the first call will be `(1, total)`.
 
 ## Exclude custom classes on inference
 
@@ -230,12 +228,9 @@ result.export_visuals(
     export_dir="outputs/",
     text_size=1.0,  # Size of the class label text
     rect_th=2,      # Thickness of bounding box lines
-    text_th=2,      # Thickness of the text
     hide_labels=False,  # Set True to hide class labels
     hide_conf=False,    # Set True to hide confidence scores
-    color=(255, 0, 0),  # Custom color in RGB format (red in this example)
     file_name="custom_visualization",
-    export_format="jpg"  # Supports 'jpg' and 'png'
 )
 
 # Export as COCO format annotations

@@ -241,7 +241,7 @@ class HuggingfaceDetectionModel(DetectionModel):
         import torch
 
         if self._uses_sigmoid_cls:
-            # RT-DETR family: per-class sigmoid, logits shape (Q, num_classes) — no background class
+            # RT-DETR family: per-class sigmoid, logits shape (Q, num_classes) -- no background class
             probs = logits.sigmoid()
             scores, cat_ids = probs.max(-1)
             valid_mask = scores >= self.confidence_threshold

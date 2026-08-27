@@ -228,18 +228,18 @@ CUDA（RTX 4000 Ada Laptop，12 GB）：
 
 #### ⚡ 批量推理、无 PyTorch 核心与加速后处理后端
 
-- **批量推理** -- 端到端批量处理切片，大幅提升 GPU 吞吐量
+- **批量推理**：端到端批量处理切片，大幅提升 GPU 吞吐量
   ([#1336](https://github.com/obss/sahi/pull/1336))。
-- **无 PyTorch 核心** -- 核心切片和后处理流程不再硬依赖 PyTorch；只需安装所用后端需要的依赖
+- **无 PyTorch 核心**：核心切片和后处理流程不再硬依赖 PyTorch；只需安装所用后端需要的依赖
   ([#1336](https://github.com/obss/sahi/pull/1336))。
-- **可插拔后处理后端** -- NMS/NMM 可以在以下后端运行：
+- **可插拔后处理后端**：NMS/NMM 可以在以下后端运行：
   **NumPy**（无重型依赖）、**Numba**（JIT 加速 CPU）或
   **TorchVision**（GPU）；系统会根据当前环境自动选择
   ([#1336](https://github.com/obss/sahi/pull/1336))。
 
 #### 🧠 新增模型支持
 
-- **GroundingDINO (HuggingFace)** -- 通过 SAHI 的切片流程进行零样本、文本提示驱动的开放词汇检测，
+- **GroundingDINO (HuggingFace)**：通过 SAHI 的切片流程进行零样本、文本提示驱动的开放词汇检测，
   并提供专用的演示 notebook
   ([#1361](https://github.com/obss/sahi/pull/1361))。
 - **HuggingFace 通用分割**
@@ -278,7 +278,7 @@ CUDA（RTX 4000 Ada Laptop，12 GB）：
 
 ### ✨ 性能与改进
 
-- **显著加速后处理** -- NMS、NMM 和 GREEDYNMM 现使用 shapely `STRtree` 空间索引，
+- **显著加速后处理**：NMS、NMM 和 GREEDYNMM 现使用 shapely `STRtree` 空间索引，
   大幅加速包含大量切片或检测结果的图像合并
   ([#1248](https://github.com/obss/sahi/pull/1248))。
 - 加速 `read_image_as_pil`，提高切片吞吐量
@@ -375,7 +375,7 @@ CUDA（RTX 4000 Ada Laptop，12 GB）：
 
 #### ⚡️ 性能与监控
 
-- **修复了 `get_sliced_prediction` 中的后处理耗时追踪** -- 现在可以正确分离切片、预测和后处理的耗时，实现准确的性能监控
+- **修复了 `get_sliced_prediction` 中的后处理耗时追踪**：现在可以正确分离切片、预测和后处理的耗时，实现准确的性能监控
   ([#1201](https://github.com/obss/sahi/pull/1201)) - 感谢 @Toprak2！
 
 #### 🧩 框架更新
@@ -681,7 +681,7 @@ CUDA（RTX 4000 Ada Laptop，12 GB）：
 
 #### 📓 交互式示例
 
-所有文档文件都配有 [demo 目录](../../demo/) 中的交互式 Jupyter notebook：
+所有文档文件都配有 [demo 目录](https://github.com/obss/sahi/tree/main/demo) 中的交互式 Jupyter notebook：
 
 - `slicing.ipynb` - 切片操作演示
 - `inference_for_ultralytics.ipynb` - YOLOv8/YOLO11/YOLO26 集成
@@ -703,7 +703,7 @@ CUDA（RTX 4000 Ada Laptop，12 GB）：
 2. 探索[切片工具](slicing.md)，学习处理大图像
 3. 查看 [CLI 命令](cli.md)，了解命令行用法
 4. 深入 [COCO 工具](coco.md)，学习数据集操作
-5. 尝试 [demo 目录](../../demo/) 中的交互式 notebook，获取实践经验
+5. 尝试 [demo 目录](https://github.com/obss/sahi/tree/main/demo) 中的交互式 notebook，获取实践经验
 
 ## 🚀 SAHI v0.11.21 发布说明
 

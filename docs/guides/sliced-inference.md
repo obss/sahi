@@ -11,8 +11,8 @@ tags:
 ## The Problem: Small Objects in Large Images
 
 Standard object detectors resize input images to a fixed resolution (e.g.
-640x640) before running inference. When your source image is much larger -- say a
-4K drone photo or a satellite tile -- small objects get downscaled to just a few
+640x640) before running inference. When your source image is much larger, say a
+4K drone photo or a satellite tile, small objects get downscaled to just a few
 pixels and become undetectable.
 
 <div align="center">
@@ -49,7 +49,7 @@ Key parameters:
 | Parameter | What it controls |
 | ----------- | ----------------- |
 | `slice_height` / `slice_width` | Size of each tile in pixels |
-| `overlap_height_ratio` / `overlap_width_ratio` | Fraction of overlap between adjacent tiles (0.0 -- 1.0) |
+| `overlap_height_ratio` / `overlap_width_ratio` | Fraction of overlap between adjacent tiles (0.0 to 1.0) |
 | `auto_slice_resolution` | Let SAHI pick tile sizes based on image resolution |
 
 ### 2. Run the detector on every tile
@@ -68,19 +68,19 @@ Tile-level predictions are mapped back to full-image coordinates. Because tiles
 overlap, the same object will often be detected in multiple tiles. SAHI applies a
 postprocessing step to merge or suppress these duplicates:
 
-- **GreedyNMM** (default) -- Greedily merges overlapping boxes by averaging their
+- **GreedyNMM** (default): Greedily merges overlapping boxes by averaging their
   coordinates and scores. Best for most use cases.
-- **NMM** -- Non-Maximum Merging. Similar to GreedyNMM but processes all overlaps
+- **NMM**: Non-Maximum Merging. Similar to GreedyNMM but processes all overlaps
   simultaneously.
-- **NMS** -- Non-Maximum Suppression. Keeps the highest-scoring box and discards
+- **NMS**: Non-Maximum Suppression. Keeps the highest-scoring box and discards
   overlapping ones. Use when you want strict, non-merged detections.
-- **LSNMS** -- Location-Sensitive NMS. A variant that factors in spatial location.
+- **LSNMS**: Location-Sensitive NMS. A variant that factors in spatial location.
 
 The merge step can use different overlap metrics:
 
-- **IOS** (Intersection over Smaller) -- More aggressive merging; good when object
+- **IOS** (Intersection over Smaller): More aggressive merging; good when object
   sizes vary widely.
-- **IOU** (Intersection over Union) -- Standard metric; more conservative.
+- **IOU** (Intersection over Union): Standard metric; more conservative.
 
 ## When to Use Sliced Inference
 
@@ -116,7 +116,7 @@ more separate boxes. Default of 0.5 works for most cases.
 
 ## Next Steps
 
-- [Quick Start](../quick-start.md) -- Get up and running with SAHI
-- [Model Integrations](models.md) -- Use SAHI with your detection framework
-- [Postprocessing Backends](../postprocess/backends.md) -- Configure NMS/NMM
+- [Quick Start](../quick-start.md): Get up and running with SAHI
+- [Model Integrations](models.md): Use SAHI with your detection framework
+- [Postprocessing Backends](../postprocess/backends.md): Configure NMS/NMM
   backend for speed

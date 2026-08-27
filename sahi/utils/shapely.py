@@ -90,7 +90,7 @@ class ShapelyAnnotation:
 
         Args:
             segmentation: COCO segmentation format,
-                e.g. [[1, 1, 325, 125, 250, 200, 5, 200]].
+                e.g. `[[1, 1, 325, 125, 250, 200, 5, 200]]`.
             slice_bbox: Bounding box as [xmin, ymin, width, height].
                 Should have the same format as the output of the get_bbox_from_shapely function.
                 Is used to calculate sliced coco coordinates.

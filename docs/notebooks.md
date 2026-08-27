@@ -1,4 +1,6 @@
 ---
+hide:
+  - navigation
 tags:
   - notebooks
   - demos
@@ -32,6 +34,7 @@ frameworks. Each notebook can be run directly in Google Colab or cloned from the
 | Notebook | Description | Links |
 | ---------- | ------------- | ------- |
 | **Slicing** | Image and COCO dataset slicing operations | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/slicing.ipynb) [![GitHub](https://img.shields.io/badge/GitHub-source-black?logo=github)](https://github.com/obss/sahi/blob/main/demo/slicing.ipynb) |
+| **Batched Sliced Inference** | Batch size, speed, and TensorRT for sliced inference | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_with_batch_slicing.ipynb) [![GitHub](https://img.shields.io/badge/GitHub-source-black?logo=github)](https://github.com/obss/sahi/blob/main/demo/inference_with_batch_slicing.ipynb) |
 
 ## Running Locally
 
@@ -40,6 +43,6 @@ Clone the repository and run notebooks with Jupyter:
 ```bash
 git clone https://github.com/obss/sahi.git
 cd sahi
-pip install -e ".[dev]"
+uv sync --group dev
 jupyter notebook demo/
 ```

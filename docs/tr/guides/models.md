@@ -90,7 +90,7 @@ result = get_sliced_prediction(
 
 ## YOLO-World (Zero-Shot)
 
-Open-vocabulary tespit -- yeniden eğitim gerektirmeden metin açıklamasıyla (text description) nesneleri tespit edin.
+Open-vocabulary tespit: yeniden eğitim gerektirmeden metin açıklamasıyla (text description) nesneleri tespit edin.
 
 ```bash
 pip install ultralytics
@@ -243,7 +243,7 @@ Uygun başlığı kullanmak için `segmentation_type` seçeneğini `SEMANTIC_SEG
 | `segmentation_type` | `SegmentationType` | `INSTANCE_SEGMENTATION` (varsayılan), `SEMANTIC_SEGMENTATION` veya `PANOPTIC_SEGMENTATION` |
 | `min_segment_area` | int | Bu piksel sayısından küçük segmentleri ele (varsayılan: 100) |
 | `overlap_mask_area_threshold` | float | Bir maske içindeki bağlantısız parçaları birleştir/at (varsayılan: 0.8) |
-| `label_ids_to_fuse` | `list[int]` | Yalnızca panoptic -- bu etiketlerin tüm örneklerini tek bir segmentte birleştir |
+| `label_ids_to_fuse` | `list[int]` | Yalnızca panoptic, bu etiketlerin tüm örneklerini tek bir segmentte birleştirir |
 | `token` | str | Korumalı/özel (gated/private) modeller için HuggingFace erişim token'ı (`$HF_TOKEN` değerine düşer) |
 
 ---
@@ -451,6 +451,6 @@ detection_model = AutoDetectionModel.from_pretrained(
 
 ## Sonraki Adımlar
 
-- [Sliced Inference Nasıl Çalışır](sliced-inference.md) -- Algoritmayı anlayın
-- [Prediction Araçları](../predict.md) -- Gelişmiş prediction seçenekleri
-- [Etkileşimli Notebook'lar](../notebooks.md) -- Her framework için uygulamalı örnekler
+- [Sliced Inference Nasıl Çalışır](sliced-inference.md): Algoritmayı anlayın
+- [Prediction Araçları](../predict.md): Gelişmiş prediction seçenekleri
+- [Etkileşimli Notebook'lar](../notebooks.md): Her framework için uygulamalı örnekler

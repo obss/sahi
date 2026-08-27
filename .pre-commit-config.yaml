@@ -5,7 +5,6 @@ repos:
       - id: trailing-whitespace
         exclude: test/.*\.py
       - id: check-yaml
-        exclude: mkdocs.yml
       - id: check-executables-have-shebangs
       - id: check-toml
       - id: check-case-conflict
@@ -30,6 +29,11 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: [numpy,types-aiofiles]
+
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1
+    hooks:
+      - id: nbstripout
 
   - repo: https://github.com/rvben/rumdl-pre-commit
     rev: v0.2.28

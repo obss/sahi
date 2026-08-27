@@ -305,5 +305,5 @@ coco_results = remove_invalid_coco_results("coco_result.json", "coco_dataset.jso
 
 ## Ek Kaynaklar
 
-- [Etkileşimli Notebook'lar](notebooks.md) -- COCO veri kümesi dilimleme dahil uygulamalı örnekler
-- [CLI dokümantasyonu](cli.md) -- COCO veri kümeleri için komut satırı operasyonları
+- [Etkileşimli Notebook'lar](notebooks.md): COCO veri kümesi dilimleme dahil uygulamalı örnekler
+- [CLI dokümantasyonu](cli.md): COCO veri kümeleri için komut satırı operasyonları
