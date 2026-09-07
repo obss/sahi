@@ -181,7 +181,8 @@ class TestCvUtils:
 
 def write_test_video(path: Path, num_frames: int, fps: float, size: tuple[int, int] = (64, 64)) -> None:
     """Write a solid-colour mp4 with an exactly known frame count and fps."""
-    writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, size)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore[attr-defined]  # pyright: ignore[reportAttributeAccessIssue]
+    writer = cv2.VideoWriter(str(path), fourcc, fps, size)
     for frame_ind in range(num_frames):
         writer.write(np.full((size[1], size[0], 3), frame_ind % 256, dtype=np.uint8))
     writer.release()
