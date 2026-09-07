@@ -443,9 +443,10 @@ def get_video_reader(
     # get video from video path
     video_capture = cv2.VideoCapture(source)
 
-    num_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-    if view_visual:
-        num_frames = int(num_frames / (frame_skip_interval + 1))
+    # Both branches of read_video_frame seek ahead by frame_skip_interval and then read
+    # one more, so a frame reaches the caller every frame_skip_interval + 1 of the source
+    # whether or not the visual is being rendered.
+    num_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT) / (frame_skip_interval + 1))
 
     def read_video_frame(video_capture: cv2.VideoCapture, frame_skip_interval: int) -> Generator[Image.Image]:  # type: ignore[type-arg]
         if view_visual:
@@ -495,14 +496,9 @@ def get_video_reader(
 
     if export_visual:
         # get video properties and create VideoWriter object
-        if frame_skip_interval != 0:
-            fps = video_capture.get(cv2.CAP_PROP_FPS)  # original fps of video
-            # The fps of export video is increasing during view_image because frame is skipped
-            fps = (
-                fps / frame_skip_interval
-            )  # How many time_interval equals to original fps. One time_interval skip x frames.
-        else:
-            fps = video_capture.get(cv2.CAP_PROP_FPS)
+        # Skipping keeps every frame_skip_interval + 1 frames, so the export needs the
+        # same fraction of the source fps to play back over the source's own duration.
+        fps = video_capture.get(cv2.CAP_PROP_FPS) / (frame_skip_interval + 1)
 
         w = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))

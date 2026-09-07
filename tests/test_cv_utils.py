@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import cv2
 import numpy as np
 import pytest
 from PIL import Image
@@ -15,6 +16,7 @@ from sahi.utils.cv import (
     apply_color_mask,
     get_bbox_from_bool_mask,
     get_coco_segmentation_from_bool_mask,
+    get_video_reader,
     read_image,
     read_image_as_pil,
     read_image_size,
@@ -175,3 +177,70 @@ class TestCvUtils:
         image.save(image_path, exif=exif)
 
         assert_decode_parity(image_path, exif_fix=exif_fix)
+
+
+def write_test_video(path: Path, num_frames: int, fps: float, size: tuple[int, int] = (64, 64)) -> None:
+    """Write a solid-colour mp4 with an exactly known frame count and fps."""
+    writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, size)
+    for frame_ind in range(num_frames):
+        writer.write(np.full((size[1], size[0], 3), frame_ind % 256, dtype=np.uint8))
+    writer.release()
+
+
+class TestGetVideoReader:
+    """`get_video_reader` has to account for the frames `frame_skip_interval` drops."""
+
+    SOURCE_FPS = 30.0
+
+    @pytest.mark.parametrize("frame_skip_interval", [0, 1, 3])
+    @pytest.mark.parametrize("source_frames", [60, 61])
+    def test_reported_frame_count_matches_frames_yielded(
+        self, tmp_path: Path, source_frames: int, frame_skip_interval: int
+    ) -> None:
+        """The count handed to tqdm must be what the generator goes on to yield.
+
+        Each iteration seeks ahead by frame_skip_interval and then reads one more, so
+        the caller sees one frame per frame_skip_interval + 1 of the source. The count
+        used to be corrected only while a visual was being rendered, which left the
+        progress bar short by that factor on every headless run.
+        """
+        source = tmp_path / "source.mp4"
+        write_test_video(source, source_frames, self.SOURCE_FPS)
+        save_dir = tmp_path / "export"
+        save_dir.mkdir()
+
+        frames, _, _, num_frames = get_video_reader(
+            str(source), str(save_dir), frame_skip_interval, export_visual=False, view_visual=False
+        )
+
+        assert num_frames == source_frames // (frame_skip_interval + 1)
+        assert sum(1 for _ in frames) == num_frames
+
+    @pytest.mark.parametrize("frame_skip_interval", [0, 1, 3])
+    def test_exported_video_keeps_the_source_duration(self, tmp_path: Path, frame_skip_interval: int) -> None:
+        """Dropping frames has to lower the export fps by the same factor.
+
+        Otherwise the kept frames play back over a shorter span than they were
+        captured in, and the export runs fast by frame_skip_interval + 1.
+        """
+        source_frames = 60
+        source = tmp_path / "source.mp4"
+        write_test_video(source, source_frames, self.SOURCE_FPS)
+        save_dir = tmp_path / "export"
+        save_dir.mkdir()
+
+        frames, video_writer, _, _ = get_video_reader(
+            str(source), str(save_dir), frame_skip_interval, export_visual=True, view_visual=False
+        )
+        assert video_writer is not None
+        for frame in frames:
+            video_writer.write(cv2.cvtColor(np.asarray(frame), cv2.COLOR_RGB2BGR))
+        video_writer.release()
+
+        exported = cv2.VideoCapture(str(save_dir / "source.mp4"))
+        exported_fps = exported.get(cv2.CAP_PROP_FPS)
+        exported_frames = int(exported.get(cv2.CAP_PROP_FRAME_COUNT))
+        exported.release()
+
+        assert exported_fps == pytest.approx(self.SOURCE_FPS / (frame_skip_interval + 1))
+        assert exported_frames / exported_fps == pytest.approx(source_frames / self.SOURCE_FPS, rel=0.05)
