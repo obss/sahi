@@ -82,7 +82,7 @@ build = [
 # torch shipped its last cp38 wheel in 2.4.1 and its last cp39 wheel in 2.8.0,
 # so each interpreter floors at the newest release it still has wheels for
 torch = [
-  "torch>=2.13.0;python_version>='3.10'",
+  "torch>=2.8.0;python_version>='3.10'",
   "torch>=2.8.0;python_version=='3.9'",
   "torch>=2.4.1;python_version<'3.9'",
 ]
@@ -107,7 +107,7 @@ ci = [
   "sahi[transformers,roboflow,onnx]",
   # pin the floors the torch extra declares. A bare version also matches the
   # local build tag, so these hold whichever backend uv resolves.
-  "torch==2.13.0;python_version>='3.10'",
+  "torch==2.14.0;python_version>='3.10'",
   "torch==2.8.0;python_version=='3.9'",
   "torch==2.4.1;python_version=='3.8'",
   "torchvision==0.28.0;python_version>='3.10'",
