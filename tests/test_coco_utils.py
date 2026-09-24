@@ -746,3 +746,16 @@ class TestCocoUtils:
         assert coco_with_clipped_bboxes.images[0].annotations[5].bbox == [0, 0, 100, 100]
         assert coco_with_clipped_bboxes.images[1] is not None
         assert len(coco_with_clipped_bboxes.images[1].annotations) == 0
+
+    def test_remove_invalid_coco_results_short_bbox(self) -> None:
+        """Short COCO bboxes must be skipped, not raise IndexError."""
+        from sahi.utils.coco import remove_invalid_coco_results
+
+        valid = {"image_id": 1, "category_id": 1, "bbox": [1.0, 2.0, 3.0, 4.0], "score": 0.9}
+        short = {"image_id": 1, "category_id": 1, "bbox": [1.0, 2.0], "score": 0.5}
+        three = {"image_id": 1, "category_id": 1, "bbox": [1.0, 2.0, 3.0], "score": 0.4}
+        empty = {"image_id": 1, "category_id": 1, "bbox": [], "score": 0.3}
+        negative = {"image_id": 1, "category_id": 1, "bbox": [-1.0, 0.0, 3.0, 4.0], "score": 0.2}
+
+        kept = remove_invalid_coco_results([valid, short, three, empty, negative])
+        assert kept == [valid]

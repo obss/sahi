@@ -2327,6 +2327,11 @@ def remove_invalid_coco_results(
         if not bbox:
             print("ignoring invalid prediction with empty bbox")
             continue
+        # COCO bbox is [x, y, width, height]; short or overlong entries used to
+        # IndexError here instead of being skipped like other invalid shapes.
+        if len(bbox) != 4:
+            print(f"ignoring invalid prediction with bbox: {bbox}")
+            continue
         if bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
             print(f"ignoring invalid prediction with bbox: {bbox}")
             continue
