@@ -887,7 +887,11 @@ def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> list[list[f
             [[x1, y1, x2, y2, x3, y3, x4, y4], [...], ...]
     """
     # Convert from (4,2) to [x1,y1,x2,y2,x3,y3,x4,y4] format
-    points = obb_points.reshape(-1).tolist()
+    points = np.asarray(obb_points).reshape(-1).tolist()
+    # Empty or incomplete point lists used to IndexError on points[0]/points[1]
+    # when closing the polygon; there is nothing to convert.
+    if len(points) < 2:
+        return []
 
     # Create polygon from points and close it by repeating first point
     polygons = []

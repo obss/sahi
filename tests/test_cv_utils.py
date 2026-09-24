@@ -15,6 +15,7 @@ from sahi.utils.cv import (
     apply_color_mask,
     get_bbox_from_bool_mask,
     get_coco_segmentation_from_bool_mask,
+    get_coco_segmentation_from_obb_points,
     read_image,
     read_image_as_pil,
     read_image_size,
@@ -175,3 +176,16 @@ class TestCvUtils:
         image.save(image_path, exif=exif)
 
         assert_decode_parity(image_path, exif_fix=exif_fix)
+
+    def test_get_coco_segmentation_from_obb_points_empty(self) -> None:
+        """Empty OBB points must return [], not IndexError on close."""
+        assert get_coco_segmentation_from_obb_points(np.zeros((0, 2))) == []
+        assert get_coco_segmentation_from_obb_points(np.array([])) == []
+        assert get_coco_segmentation_from_obb_points(np.zeros((0, 4, 2))) == []
+
+    def test_get_coco_segmentation_from_obb_points_ok(self) -> None:
+        """A full (4, 2) OBB still closes the polygon with the first point."""
+        points = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
+        assert get_coco_segmentation_from_obb_points(points) == [
+            [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0]
+        ]
