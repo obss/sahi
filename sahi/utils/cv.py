@@ -443,10 +443,8 @@ def get_video_reader(
     # get video from video path
     video_capture = cv2.VideoCapture(source)
 
-    # Both branches of read_video_frame seek ahead by frame_skip_interval and then read
-    # one more, so a frame reaches the caller every frame_skip_interval + 1 of the source
-    # whether or not the visual is being rendered.
-    num_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT) / (frame_skip_interval + 1))
+    # one frame is yielded per frame_skip_interval + 1 source frames
+    num_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT)) // (frame_skip_interval + 1)
 
     def read_video_frame(video_capture: cv2.VideoCapture, frame_skip_interval: int) -> Generator[Image.Image]:  # type: ignore[type-arg]
         if view_visual:
@@ -495,9 +493,7 @@ def get_video_reader(
                 yield Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
     if export_visual:
-        # get video properties and create VideoWriter object
-        # Skipping keeps every frame_skip_interval + 1 frames, so the export needs the
-        # same fraction of the source fps to play back over the source's own duration.
+        # get video properties and create VideoWriter object, keeping the source duration
         fps = video_capture.get(cv2.CAP_PROP_FPS) / (frame_skip_interval + 1)
 
         w = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
