@@ -59,7 +59,7 @@ Dilim (slice) seviyesindeki prediction'lar tam görsel koordinatlarına geri har
 - **GreedyNMM** (varsayılan): Örtüşen (overlapping) kutuları (bounding box) koordinatlarını ve skorlarını ortalayarak greedy bir şekilde birleştirir. Çoğu kullanım senaryosu için en iyisidir.
 - **NMM**: Non-Maximum Merging. GreedyNMM'e benzer ancak tüm örtüşmeleri eşzamanlı olarak işler.
 - **NMS**: Non-Maximum Suppression. En yüksek skorlu kutuyu tutar ve örtüşen diğer kutuları eler. Kesin, birleştirilmemiş tespitler istediğinizde kullanın.
-- **LSNMS**: Location-Sensitive NMS. Konumsal konumu faktör olarak ekleyen bir varyant.
+- **LSNMS**: Location-Sensitive NMS. Uzamsal konumu da hesaba katan bir varyant.
 
 Birleştirme adımı farklı örtüşme metrikleri kullanabilir:
 

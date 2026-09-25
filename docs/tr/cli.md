@@ -12,7 +12,7 @@ tags:
 
 SAHI, object detection görevleri için kapsamlı bir komut satırı arayüzü (CLI) sunar. Bu kılavuz, tüm kullanılabilir komutları ayrıntılı örnekler ve seçeneklerle kapsar.
 
-## `predict` command usage
+## `predict` komutunun kullanımı { #predict-command-usage }
 
 Daha iyi küçük nesne tespiti (small object detection) amacıyla Sliced Inference kullanarak görseller veya videolar üzerinde object detection inference gerçekleştirin.
 
@@ -85,8 +85,8 @@ sahi predict --slice_width 512 --slice_height 512 \
 
 **Eşleşme Metrikleri:**
 
-- `--postprocess_match_metric IOS` - Intersection over smaller area
-- `--postprocess_match_metric IOU` - Intersection over union (varsayılan)
+- `--postprocess_match_metric IOS` - Intersection over smaller area (varsayılan)
+- `--postprocess_match_metric IOU` - Intersection over union
 
 **Ek Seçenekler:**
 
@@ -122,7 +122,7 @@ sahi predict --dataset_json_path dataset.json \
   --model_path path/to/model
 ```
 
-Tahminler bir COCO JSON dosyası olarak `runs/predict/exp/results.json` yoluna aktarılacaktır. Ardından şunları kullanabilirsiniz:
+`--dataset_json_path` eklendiğinde tahminler ayrıca bir COCO JSON dosyası olarak `runs/predict/exp/result.json` yoluna aktarılır. Ardından şunları kullanabilirsiniz:
 
 - `sahi coco evaluate` - COCO değerlendirme metriklerini hesaplar
 - `sahi coco analyse` - Detaylı hata analizi grafiklerini oluşturur
@@ -140,7 +140,7 @@ sahi predict --model_path path/to/model --source images/ \
 
 ---
 
-## `predict-fiftyone` command usage
+## `predict-fiftyone` komutunun kullanımı { #predict-fiftyone-command-usage }
 
 Sliced Inference gerçekleştirin ve sonuçları FiftyOne uygulaması kullanarak etkileşimli olarak görselleştirin.
 
@@ -161,7 +161,7 @@ Bu işlem varsayılan parametrelerle Sliced Inference gerçekleştirir ve etkile
 
 ---
 
-## `coco fiftyone` command usage
+## `coco fiftyone` komutunun kullanımı { #coco-fiftyone-command-usage }
 
 FiftyOne kullanıcı arayüzünü kullanarak COCO veri kümenizdeki birden fazla tespit sonucunu görselleştirin ve karşılaştırın.
 
@@ -183,7 +183,7 @@ Bu komut, veri kümesini görselleştiren ve yanlış tespitlere göre sıralanm
 
 ---
 
-## `coco slice` command usage
+## `coco slice` komutunun kullanımı { #coco-slice-command-usage }
 
 Büyük görselleri ve COCO formatındaki annotation'larını daha küçük dilimlere (tiles) dilimleyin.
 
@@ -208,7 +208,7 @@ Görselleri ve COCO annotation'larını dilimler, çıktı klasörüne dışa ak
 
 **Filtreleme:**
 
-- `--ignore_negative_samples` - Annotation içermeyen görselleri harici tutar
+- `--ignore_negative_samples` - Annotation içermeyen görselleri hariç tutar
 
 **Çıktı:**
 
@@ -216,7 +216,7 @@ Görselleri ve COCO annotation'larını dilimler, çıktı klasörüne dışa ak
 
 ---
 
-## `coco yolo` command usage
+## `coco yolo` komutunun kullanımı { #coco-yolo-command-usage }
 
 COCO formatındaki veri kümelerini Ultralytics ile eğitim için YOLO formatına dönüştürün.
 
@@ -239,7 +239,7 @@ COCO veri kümesini YOLO formatına dönüştürür ve `runs/coco2yolo/exp` klas
 
 ---
 
-## `coco evaluate` command usage
+## `coco evaluate` komutunun kullanımı { #coco-evaluate-command-usage }
 
 Tahminleriniz için COCO değerlendirme metriklerini (mAP, mAR) hesaplayın.
 
@@ -283,7 +283,7 @@ COCO değerlendirme metriklerini hesaplar ve sonuçları çıktı klasörüne ak
 
 ---
 
-## `coco analyse` command usage
+## `coco analyse` komutunun kullanımı { #coco-analyse-command-usage }
 
 COCO tahminleri için ayrıntılı hata analizi grafikleri oluşturun.
 
@@ -316,7 +316,7 @@ Kapsamlı hata analizi grafikleri oluşturur ve bunları belirtilen klasöre akt
 
 ---
 
-## `env` command usage
+## `env` komutunun kullanımı { #env-command-usage }
 
 SAHI ile ilgili yüklü paket sürümlerini görüntüleyin.
 
@@ -339,7 +339,7 @@ sahi env
 
 ---
 
-## `version` command usage
+## `version` komutunun kullanımı { #version-command-usage }
 
 Mevcut yüklü SAHI sürümünüzü görüntüleyin.
 
@@ -347,7 +347,6 @@ Mevcut yüklü SAHI sürümünüzü görüntüleyin.
 
 ```bash
 sahi version
-0.11.22
 ```
 
 ---

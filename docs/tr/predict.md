@@ -128,6 +128,7 @@ for i, preds in enumerate(detection_model.object_prediction_list_per_image):
 ```
 
 !!! note "Tekil görsel uyumluluğu"
+
     Mevcut `object_prediction_list` özelliği değişmemiştir ve ilk görsel için tahminleri döndürür; böylece `perform_inference` + `convert_original_predictions` + `object_prediction_list` kullanan kodlar herhangi bir değişiklik gerektirmeden çalışmaya devam eder.
 
 ## İlerleme Çubuğu (Progress-Bar)
@@ -162,8 +163,10 @@ result = get_sliced_prediction(
 ```
 
 !!! tip "Notlar"
-    - `progress_bar` ve `progress_callback` birlikte kullanılabilir. İkisi de sağlandığında, tqdm çubuğu görüntülenir ve her dilim grubu işlendikten sonra callback çağrılır.
-    - `progress_callback` 1 tabanlı indekslerle çağrılır (yani ilk çağrı `(1, total)` olacaktır).
+
+    `progress_bar` ve `progress_callback` birlikte kullanılabilir. İkisi de sağlandığında, tqdm çubuğu görüntülenir ve her dilim grubu işlendikten sonra callback çağrılır.
+
+    `progress_callback` 1 tabanlı indekslerle çağrılır, yani ilk çağrı `(1, total)` olacaktır.
 
 ## Inference Sırasında Özel Sınıfları Hariç Tutma
 
@@ -214,12 +217,9 @@ result.export_visuals(
     export_dir="outputs/",
     text_size=1.0,  # Size of the class label text
     rect_th=2,      # Thickness of bounding box lines
-    text_th=2,      # Thickness of the text
     hide_labels=False,  # Set True to hide class labels
     hide_conf=False,    # Set True to hide confidence scores
-    color=(255, 0, 0),  # Custom color in RGB format (red in this example)
     file_name="custom_visualization",
-    export_format="jpg"  # Supports 'jpg' and 'png'
 )
 
 # Export as COCO format annotations

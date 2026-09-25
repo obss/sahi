@@ -48,7 +48,34 @@ save_json(coco.json, "coco_dataset.json")
 save_json(coco.prediction_array, "coco_predictions.json")
 ```
 
-### pycocotools ile Değerlendirme (Evaluation)
+### SAHI ile Değerlendirme (Evaluation)
+
+SAHI'nin değerlendirme komutu varsayılan olarak pycocotools kullanır. İsteğe bağlı [ultrafast-pycocotools](https://github.com/developer0hye/ultrafast-pycocotools) backend'ini (0.1.11 veya daha yeni sürüm) kullanmak için:
+
+```bash
+pip install "sahi[ultrafast]"
+sahi coco evaluate --dataset_json_path coco_dataset.json \
+  --result_json_path coco_predictions.json --backend ultrafast
+```
+
+Segmentation için `--type segm` ekleyin. Backend, Python API üzerinden de çalışır:
+
+```python
+from sahi.scripts.coco_evaluation import evaluate
+
+result = evaluate(
+    "coco_dataset.json",
+    "coco_predictions.json",
+    backend="ultrafast",
+    max_detections=500,
+    classwise=True,
+    return_dict=True,
+)
+```
+
+İki backend de SAHI'nin mevcut özel alan aralıklarını, IoU eşiklerini, sınıf bazında metrikleri ve `eval.json` çıktısını kullanır. Backend seçimi yalnızca bu değerlendirme çağrısı için geçerlidir ve süreç genelindeki import'ların yerini almaz. Ultrafast değerlendirme yolu pycocotools gerektirmez; diğer komutların kendi bağımlılıkları olabilir.
+
+### Doğrudan pycocotools ile Değerlendirme
 
 ```python
 from pycocotools.cocoeval import COCOeval

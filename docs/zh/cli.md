@@ -22,8 +22,7 @@ SAHI 提供了一套全面的命令行工具用于目标检测任务。本指南
 sahi predict --source image/file/or/folder --model_path path/to/model --model_config_path path/to/config
 ```
 
-该命令会使用默认参数进行切片推理，并将预测可视化结果导出到 `runs/predict/exp`
-文件夹。
+该命令会使用默认参数进行切片推理，并将预测可视化结果导出到 `runs/predict/exp` 文件夹。
 
 ### 视频输入支持
 
@@ -49,8 +48,7 @@ sahi predict --model_path yolo26s.pt --model_type ultralytics --source video.mp4
 - **`F`** - 后退 20 帧
 - **`Esc`** - 退出查看器
 
-> **提示：** 如果 `--view_video` 运行较慢，可以添加 `--frame_skip_interval=20`
-> 来跳过 20 帧的间隔。
+> **提示：** 如果 `--view_video` 运行较慢，可以添加 `--frame_skip_interval=20` 来跳过 20 帧的间隔。
 
 ### 高级切片参数
 
@@ -87,8 +85,8 @@ sahi predict --slice_width 512 --slice_height 512 \
 
 **匹配指标：**
 
-- `--postprocess_match_metric IOS` - 交集与较小面积之比
-- `--postprocess_match_metric IOU` - 交并比（默认）
+- `--postprocess_match_metric IOS` - 交集与较小面积之比（默认）
+- `--postprocess_match_metric IOU` - 交并比
 
 **其他选项：**
 
@@ -124,8 +122,7 @@ sahi predict --dataset_json_path dataset.json \
   --model_path path/to/model
 ```
 
-预测结果会以 COCO JSON 格式导出到
-`runs/predict/exp/results.json`。之后你可以使用：
+添加 `--dataset_json_path` 还会将预测结果以 COCO JSON 文件格式导出到 `runs/predict/exp/result.json`。之后你可以使用：
 
 - `sahi coco evaluate` - 计算 COCO 评估指标
 - `sahi coco analyse` - 生成详细的误差分析图
@@ -139,9 +136,7 @@ sahi predict --model_path path/to/model --source images/ \
   --slice_width 512 --slice_height 512 --progress_bar
 ```
 
-> **注意：** `--progress_bar`
-> 参数控制 CLI 的可视化进度（tqdm）。`progress_callback` 参数仅在 Python
-> API 中可用，不作为 CLI 选项暴露。
+> **注意：** `--progress_bar` 参数控制 CLI 的可视化进度（tqdm）。`progress_callback` 参数仅在 Python API 中可用，不作为 CLI 选项暴露。
 
 ---
 
@@ -172,9 +167,7 @@ sahi predict-fiftyone --image_dir image/file/or/folder \
 
 ### 基本用法
 
-你需要先将预测结果转换为
-[COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用
-[`sahi predict`](#predict-command-usage) 来生成该格式。
+你需要先将预测结果转换为 [COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用 [`sahi predict`](#predict-command-usage) 来生成该格式。
 
 ```bash
 sahi coco fiftyone --image_dir dir/to/images \
@@ -227,8 +220,7 @@ sahi coco slice --image_dir dir/to/images \
 
 将 COCO 格式数据集转换为 YOLO 格式，用于 Ultralytics 训练。
 
-> **Windows 用户：** 请以**管理员身份**打开 Anaconda prompt 或 Windows
-> CMD，以正确创建符号链接。
+> **Windows 用户：** 请以**管理员身份**打开 Anaconda prompt 或 Windows CMD，以正确创建符号链接。
 
 ### 基本用法
 
@@ -253,9 +245,7 @@ sahi coco yolo --image_dir dir/to/images \
 
 ### 基本用法
 
-你需要先将预测结果转换为
-[COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用
-[`sahi predict`](#predict-command-usage) 来生成该格式。
+你需要先将预测结果转换为 [COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用 [`sahi predict`](#predict-command-usage) 来生成该格式。
 
 ```bash
 sahi coco evaluate --dataset_json_path dataset.json \
@@ -299,9 +289,7 @@ sahi coco evaluate --dataset_json_path dataset.json \
 
 ### 基本用法
 
-你需要先将预测结果转换为
-[COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用
-[`sahi predict`](#predict-command-usage) 来生成该格式。
+你需要先将预测结果转换为 [COCO result JSON 格式](https://cocodataset.org/#format-results)。可以使用 [`sahi predict`](#predict-command-usage) 来生成该格式。
 
 ```bash
 sahi coco analyse --dataset_json_path dataset.json \
@@ -359,15 +347,13 @@ sahi env
 
 ```bash
 sahi version
-0.11.22
 ```
 
 ---
 
 ## 自定义脚本
 
-所有脚本都可以从 [scripts 目录](https://github.com/obss/sahi/tree/main/scripts)
-下载，并根据你的需求进行修改。
+所有脚本都可以从 [scripts 目录](https://github.com/obss/sahi/tree/main/scripts) 下载，并根据你的需求进行修改。
 
 通过 pip 安装 SAHI 后，所有脚本都可以从任意目录调用：
 

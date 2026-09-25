@@ -127,16 +127,15 @@ for i, preds in enumerate(detection_model.object_prediction_list_per_image):
 ```
 
 !!! note "单图像兼容性"
+
     现有的 `object_prediction_list` 属性保持不变，返回第一张图像的预测结果，因此使用 `perform_inference` + `convert_original_predictions` + `object_prediction_list` 的代码无需修改即可继续工作。
 
 ## 进度条
 
 提供了两个选项来控制和接收切片推理过程中的进度更新：
 
-- `progress_bar`
-  (bool)：设为 True 时，在切片处理过程中显示 tqdm 进度条。适用于终端和 notebook 中的可视化反馈。默认为 False。
-- `progress_callback`
-  (callable)：一个回调函数，在每个切片（或切片组）处理完成后被调用。该回调接收两个整数参数：`(current_slice_index, total_slices)`。可用于集成自定义进度报告（例如，更新 GUI 元素或将进度记录到文件）。
+- `progress_bar` (bool)：设为 True 时，在切片处理过程中显示 tqdm 进度条。适用于终端和 notebook 中的可视化反馈。默认为 False。
+- `progress_callback` (callable)：一个回调函数，在每个切片（或切片组）处理完成后被调用。该回调接收两个整数参数：`(current_slice_index, total_slices)`。可用于集成自定义进度报告（例如，更新 GUI 元素或将进度记录到文件）。
 
 使用回调的示例：
 
@@ -162,9 +161,11 @@ result = get_sliced_prediction(
 )
 ```
 
-!!! tip "提示"
-    - `progress_bar` 和 `progress_callback` 可以同时使用。当两者都提供时，tqdm 进度条会显示，同时回调函数也会在每个切片组处理后被调用。
-    - `progress_callback` 使用从 1 开始的索引（即第一次调用为 `(1, total)`）。
+!!! tip "注意"
+
+    `progress_bar` 和 `progress_callback` 可以同时使用。当两者都提供时，tqdm 进度条会显示，同时回调函数也会在每个切片组处理后被调用。
+
+    `progress_callback` 使用从 1 开始的索引，因此第一次调用为 `(1, total)`。
 
 ## 在推理时排除自定义类别
 
@@ -215,12 +216,9 @@ result.export_visuals(
     export_dir="outputs/",
     text_size=1.0,  # 类别标签文字大小
     rect_th=2,      # 边界框线条粗细
-    text_th=2,      # 文字粗细
     hide_labels=False,  # 设为 True 隐藏类别标签
     hide_conf=False,    # 设为 True 隐藏置信度分数
-    color=(255, 0, 0),  # 自定义 RGB 颜色（此例为红色）
     file_name="custom_visualization",
-    export_format="jpg"  # 支持 'jpg' 和 'png'
 )
 
 # 导出为 COCO 格式标注

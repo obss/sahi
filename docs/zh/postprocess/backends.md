@@ -9,8 +9,7 @@ tags:
 
 # 后处理后端
 
-SAHI 的后处理操作（NMS、NMM）可以在三种可互换的后端上运行。合适的后端取决于
-您的硬件和已安装的软件包。
+SAHI 的后处理操作（NMS、NMM）可以在三种可互换的后端上运行。合适的后端取决于您的硬件和已安装的软件包。
 
 ## 后端概览
 
@@ -55,8 +54,7 @@ set_postprocess_backend("torchvision")
 set_postprocess_backend("auto")
 ```
 
-该调用会影响当前进程中后续的所有 NMS/NMM 操作，包括
-`get_sliced_prediction` 内部触发的操作。
+该调用会影响当前进程中后续的所有 NMS/NMM 操作，包括 `get_sliced_prediction` 内部触发的操作。
 
 ### 示例：为完整推理流程固定后端
 
@@ -70,7 +68,7 @@ set_postprocess_backend("torchvision")
 
 detection_model = AutoDetectionModel.from_pretrained(
     model_type="ultralytics",
-    model_path="yolo11n.pt",
+    model_path="yolo26n.pt",
     confidence_threshold=0.25,
     device="cuda:0",
 )
@@ -87,8 +85,7 @@ result = get_sliced_prediction(
 
 ## 直接使用后处理函数
 
-三个后端遵循相同的数组约定：使用形状为 `(N, 6)` 的 numpy 数组，列顺序为
-`[x1, y1, x2, y2, score, category_id]`。
+三个后端遵循相同的数组约定：使用形状为 `(N, 6)` 的 numpy 数组，列顺序为 `[x1, y1, x2, y2, score, category_id]`。
 
 ### NMS（抑制）
 
@@ -131,8 +128,7 @@ keep_to_merge = batched_greedy_nmm(predictions, match_threshold=0.5)
 
 ### IoS 指标
 
-NMS 和 NMM 都支持 `match_metric="IOS"`（Intersection over Smaller area，
-交集与较小面积之比）。当一个边界框远小于另一个边界框时，该指标非常实用：
+NMS 和 NMM 都支持 `match_metric="IOS"`（Intersection over Smaller area，交集与较小面积之比）。当一个边界框远小于另一个边界框时，该指标非常实用：
 
 ```python
 keep = nms(predictions, match_metric="IOS", match_threshold=0.5)
@@ -140,8 +136,7 @@ keep = nms(predictions, match_metric="IOS", match_threshold=0.5)
 
 ## 后处理类
 
-高级类可以与 SAHI 的 `ObjectPrediction` 列表集成，并由
-`get_sliced_prediction` 通过 `postprocess_type` 参数使用：
+高级类可以与 SAHI 的 `ObjectPrediction` 列表集成，并由 `get_sliced_prediction` 通过 `postprocess_type` 参数使用：
 
 ```python
 from sahi.postprocess.combine import NMSPostprocess, NMMPostprocess, GreedyNMMPostprocess
@@ -163,8 +158,7 @@ postprocessor = NMMPostprocess(match_threshold=0.5)
 merged = postprocessor(object_prediction_list)
 ```
 
-传入 `class_agnostic=False` 后，每个后处理器都会按类别独立运行，因此 `"car"`
-预测结果不会抑制 `"person"` 预测结果。
+传入 `class_agnostic=False` 后，每个后处理器都会按类别独立运行，因此 `"car"` 预测结果不会抑制 `"person"` 预测结果。
 
 ## API 参考
 

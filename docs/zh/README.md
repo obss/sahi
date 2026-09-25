@@ -24,7 +24,7 @@
 <!-- CI & 质量 -->
 <div>
   <a href="https://github.com/obss/sahi/actions/workflows/ci.yml"><img src="https://github.com/obss/sahi/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://snyk.io/test/github/obss/sahi"><img src="https://snyk.io/test/github/obss/sahi/badge.svg" alt="已知漏洞"></a>
+  <a href="https://security.snyk.io/package/pip/sahi"><img src="https://img.shields.io/badge/Snyk_security-monitored-8A2BE2" alt="已知漏洞"></a>
   <a href="https://www.codefactor.io/repository/github/onuralpszr/sahi"><img src="https://www.codefactor.io/repository/github/onuralpszr/sahi/badge" alt="CodeFactor"></a>
   <a href="https://ieeexplore.ieee.org/document/9897990"><img src="https://img.shields.io/badge/DOI-10.1109%2FICIP46576.2022.9897990-orange.svg" alt="DOI"></a>
 </div>
@@ -49,15 +49,15 @@ SAHI 通过启用**切片推理**来检测大图像中的小物体，从而帮�
 
 </div>
 
-| 命令                                                                                                  | 描述                                                                                                                                                                                                                                                                                                                                                                                 |
-| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 命令                                                                                                  | 描述                                                                                                                                                                                                                                                                                                                                                                               |
+| ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [predict](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-command-usage)                   | 使用任意 [ultralytics](https://github.com/ultralytics/ultralytics) / [mmdet](https://github.com/open-mmlab/mmdetection) / [huggingface](https://huggingface.co/models?pipeline_tag=object-detection&sort=downloads) / [torchvision](https://pytorch.org/vision/stable/models.html#object-detection) 模型进行切片或标准视频/图像预测，参见 [CLI 指南](cli.md#predict-command-usage) |
 | [predict-fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#predict-fiftyone-command-usage) | 使用任意支持的模型进行切片或标准预测，并在 [fiftyone 应用](https://github.com/voxel51/fiftyone) 中探索结果，[了解更多](fiftyone.md)                                                                                                                                                                                                                                                |
 | [coco slice](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-slice-command-usage)             | 自动切片 COCO 标注和图像文件，参见 [切片工具](slicing.md)                                                                                                                                                                                                                                                                                                                          |
-| [coco fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-fiftyone-command-usage)       | 在 [fiftyone ui](https://github.com/voxel51/fiftyone) 中探索 COCO 数据集的多个预测结果，按错误检测数量排序                                                                                                                                                                                                                                                                           |
+| [coco fiftyone](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-fiftyone-command-usage)       | 在 [fiftyone ui](https://github.com/voxel51/fiftyone) 中探索 COCO 数据集的多个预测结果，按错误检测数量排序                                                                                                                                                                                                                                                                         |
 | [coco evaluate](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-evaluate-command-usage)       | 针对给定的预测和真实数据评估 COCO 的类级别 AP 和 AR，查看 [COCO 工具](coco.md)                                                                                                                                                                                                                                                                                                     |
 | [coco analyse](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-analyse-command-usage)         | 计算并导出多种错误分析图表，参见 [完整指南](index.md)                                                                                                                                                                                                                                                                                                                              |
-| [coco yolo](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-yolo-command-usage)               | 将任意 COCO 数据集自动转换为 [ultralytics](https://github.com/ultralytics/ultralytics) 格式                                                                                                                                                                                                                                                                                          |
+| [coco yolo](https://github.com/obss/sahi/blob/main/docs/cli.md#coco-yolo-command-usage)               | 将任意 COCO 数据集自动转换为 [ultralytics](https://github.com/ultralytics/ultralytics) 格式                                                                                                                                                                                                                                                                                        |
 
 ### 社区认可
 
@@ -67,11 +67,7 @@ SAHI 通过启用**切片推理**来检测大图像中的小物体，从而帮�
 
 ### AI 工具认可
 
-SAHI 的文档已在 [Context7 MCP](https://context7.com/obss/sahi)
-中建立索引，为 AI 编码助手提供最新的，版本特定的代码示例和 API 参考。我们还提供了一个遵循 AI 可读文档新兴标准的
-[llms.txt](https://context7.com/obss/sahi/llms.txt)
-文件。要将 SAHI 文档集成到您的 AI 开发工作流程中，请查看
-[Context7 MCP 安装指南](https://github.com/upstash/context7#%EF%B8%8F-installation).
+SAHI 的文档已在 [Context7 MCP](https://context7.com/obss/sahi) 中建立索引，为 AI 编码助手提供最新的、特定版本的代码示例和 API 参考。我们还提供了一个遵循 AI 可读文档新兴标准的 [llms.txt](https://context7.com/obss/sahi/llms.txt) 文件。要将 SAHI 文档集成到您的 AI 开发工作流程中，请查看 [Context7 MCP 安装指南](https://github.com/upstash/context7#%EF%B8%8F-installation)。
 
 ## <div align="center">安装</div>
 
@@ -113,7 +109,7 @@ pip install transformers>=4.49.0 timm
 - 安装您所需的检测框架 (yolov5):
 
 ```console
-pip install yolov5==7.0.14 sahi==0.11.21
+pip install yolov5==7.0.14 sahi==0.12.1
 ```
 
 - 安装您所需的检测框架 (mmdet):
@@ -156,20 +152,22 @@ pip install inference>=0.51.5 rfdetr>=1.6.2
 
 ### Notebooks & 示例
 
-| 框架               | Notebook                                                                                                                                                                        | 示例                                                                                                                                                      |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| YOLO26             | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_ultralytics.ipynb) | -                                                                                                                                                         |
-| YOLO12             | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_ultralytics.ipynb) | -                                                                                                                                                         |
-| YOLO11             | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_ultralytics.ipynb) | -                                                                                                                                                         |
-| YOLO11-OBB         | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_ultralytics.ipynb) | -                                                                                                                                                         |
-| Roboflow / RF-DETR | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_roboflow.ipynb)    | -                                                                                                                                                         |
-| RT-DETR v2         | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_huggingface.ipynb) | -                                                                                                                                                         |
-| RT-DETR            | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_rtdetr.ipynb)      | -                                                                                                                                                         |
-| HuggingFace        | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_huggingface.ipynb) | -                                                                                                                                                         |
-| YOLOv5             | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov5.ipynb)      | -                                                                                                                                                         |
-| MMDetection        | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_mmdetection.ipynb) | -                                                                                                                                                         |
-| TorchVision        | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_torchvision.ipynb) | -                                                                                                                                                         |
-| YOLOX              | -                                                                                                                                                                               | [![HuggingFace Spaces](https://raw.githubusercontent.com/obss/sahi/main/resources/hf_spaces_badge.svg)](https://huggingface.co/spaces/fcakyon/sahi-yolox) |
+| 框架               | Notebook                                                                                                                                                                              | 示例                                                                                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| YOLO26             | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_ultralytics.ipynb)       | -                                                                                                                                                         |
+| YOLO11             | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_ultralytics.ipynb)       | -                                                                                                                                                         |
+| YOLO11-OBB         | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_ultralytics.ipynb)       | -                                                                                                                                                         |
+| YOLOE              | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_ultralytics_yoloe.ipynb) | -                                                                                                                                                         |
+| Roboflow / RF-DETR | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_roboflow.ipynb)          | -                                                                                                                                                         |
+| RT-DETR v2         | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_huggingface.ipynb)       | -                                                                                                                                                         |
+| RT-DETR            | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_rtdetr.ipynb)            | -                                                                                                                                                         |
+| HuggingFace        | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_huggingface.ipynb)       | -                                                                                                                                                         |
+| GroundingDINO      | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_groundingdino.ipynb)     | -                                                                                                                                                         |
+| YOLOv5             | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_yolov5.ipynb)            | -                                                                                                                                                         |
+| MMDetection        | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_mmdetection.ipynb)       | -                                                                                                                                                         |
+| Detectron2         | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_detectron2.ipynb)        | -                                                                                                                                                         |
+| TorchVision        | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_torchvision.ipynb)       | -                                                                                                                                                         |
+| YOLOX              | -                                                                                                                                                                                     | [![HuggingFace Spaces](https://raw.githubusercontent.com/obss/sahi/main/resources/hf_spaces_badge.svg)](https://huggingface.co/spaces/fcakyon/sahi-yolox) |
 
 <a href="https://huggingface.co/spaces/fcakyon/sahi-yolox"><img width="600" src="https://user-images.githubusercontent.com/34196005/144092739-c1d9bade-a128-4346-947f-424ce00e5c4f.gif" alt="sahi-yolox"></a>
 
@@ -177,18 +175,15 @@ pip install inference>=0.51.5 rfdetr>=1.6.2
 
 <img width="700" alt="sahi-predict" src="https://user-images.githubusercontent.com/34196005/149310540-e32f504c-6c9e-4691-8afd-59f3a1a457f0.gif">
 
-请在 [CLI 文档](cli.md#predict-command-usage) 中查找关于使用 `sahi predict`
-命令的详细信息，并查阅 [预测 API](predict.md) 以了解高级用法。
+请在 [CLI 文档](cli.md#predict-command-usage) 中查找关于使用 `sahi predict` 命令的详细信息，并查阅 [预测 API](predict.md) 以了解高级用法。
 
-请在 [视频推理教程](https://github.com/obss/sahi/discussions/626)
-中查找关于视频推理的详细信息。
+请在 [视频推理教程](https://github.com/obss/sahi/discussions/626) 中查找关于视频推理的详细信息。
 
 ### 误差分析绘图 & 评估
 
 <img width="700" alt="sahi-analyse" src="https://user-images.githubusercontent.com/34196005/149537858-22b2e274-04e8-4e10-8139-6bdcea32feab.gif">
 
-请在 [误差分析绘图 & 评估](https://github.com/obss/sahi/discussions/622)
-中查找相关的详细信息。
+请在 [误差分析绘图 & 评估](https://github.com/obss/sahi/discussions/622) 中查找相关的详细信息。
 
 ### 交互式结果可视化与检查
 
@@ -198,9 +193,7 @@ pip install inference>=0.51.5 rfdetr>=1.6.2
 
 ### 其他实用工具
 
-请查阅 [完整的 COCO 工具指南](coco.md)
-了解 YOLO 格式转换、数据集切片、子采样、筛选、合并与分割等操作。了解更多关于
-[切片工具](slicing.md) ，以实现对图像和数据集切片参数的精细控制。
+请查阅 [完整的 COCO 工具指南](coco.md) 了解 YOLO 格式转换、数据集切片、子采样、筛选、合并与拆分等操作。了解更多关于 [切片工具](slicing.md) 的信息，以实现对图像和数据集切片参数的精细控制。
 
 ## <div align="center">引用</div>
 
@@ -231,8 +224,7 @@ pip install inference>=0.51.5 rfdetr>=1.6.2
 
 ## <div align="center">贡献者</div>
 
-欢迎贡献！请参阅我们的 [贡献指南](contributing.md)
-来开始使用。感谢所有贡献者！
+欢迎贡献！请参阅我们的 [贡献指南](contributing.md) 来开始使用。感谢 🙏 所有贡献者！
 
 <p align="center">
     <a href="https://github.com/obss/sahi/graphs/contributors">

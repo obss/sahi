@@ -6,137 +6,82 @@ tags:
   - installation
   - inference
   - slicing
-  - postprocessing
 ---
 
 # Hızlı Başlangıç
 
-SAHI (Slicing Aided Hyper Inference), büyük görselleri örtüşen dilimlere (tiles) ayırarak, her dilimde dedektörünüzü çalıştırıp sonuçları birleştirerek büyük görsellerdeki küçük nesneleri tespit eder. Yeniden eğitim (retraining) gerektirmeden tüm tespit modelleriyle çalışır.
+SAHI büyük bir görseli örtüşen dilimlere ayırır, dedektörünüzü her dilimde çalıştırır ve tespitleri tam görsel üzerinde yeniden birleştirir. Küçük nesneler tespit edilebilecek kadar büyük kalır ve yeniden eğitim gerekmez.
 
-<div align="center">
-  <img width="700" alt="sliced inference" src="https://raw.githubusercontent.com/obss/sahi/main/resources/sliced_inference.gif">
-</div>
-
-## Kurulum
-
-[![PyPI - Version](https://img.shields.io/pypi/v/sahi?logo=pypi&logoColor=white)](https://pypi.org/project/sahi/)
-[![Conda Version](https://img.shields.io/conda/vn/conda-forge/sahi?logo=condaforge)](https://anaconda.org/conda-forge/sahi)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/sahi?logo=python&logoColor=gold)](https://pypi.org/project/sahi/)
+## 1. Kurulum
 
 ```bash
-pip install sahi
+pip install "sahi[ultralytics]"
 ```
 
-Object detection için ayrıca bir framework'e ihtiyacınız olacaktır. En yaygın tercih Ultralytics'tir:
+`sahi` tek başına bir dedektörle gelmez, bu yüzden istediğiniz framework için ilgili ekstrayı seçin: `ultralytics`, `transformers`, `yolov5`, `roboflow`, `torchvision`, `torch`, `onnx`, `numba` veya `all`. Conda kullanıcıları `conda install -c conda-forge sahi` çalıştırıp framework'ü ayrıca kurabilir.
 
-```bash
-pip install ultralytics
-```
+## 2. Prediction alın
 
-??? note "Diğer kurulum yöntemleri"
-
-    **Conda:**
-
-    [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
-    [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/sahi.svg)](https://anaconda.org/conda-forge/sahi)
-
-    ```bash
-    conda install -c conda-forge sahi
-    ```
-
-    !!! note
-        CUDA ortamında kurulum yapıyorsanız, `ultralytics`, `pytorch` ve `pytorch-cuda` paketlerini aynı komutta yüklemeniz tavsiye edilir:
-        ```bash
-        conda install -c pytorch -c nvidia -c conda-forge pytorch torchvision pytorch-cuda=11.8 ultralytics
-        ```
-
-    **Kaynak koddan:**
-    ```bash
-    pip install git+https://github.com/obss/sahi.git@main
-    ```
-
-    **Geliştirme (düzenlenebilir):**
-    ```bash
-    git clone https://github.com/obss/sahi
-    cd sahi
-    pip install -e .
-    ```
-
-Bağımlılıkların tam listesi için [pyproject.toml](https://github.com/obss/sahi/blob/main/pyproject.toml) dosyasına bakabilirsiniz.
-
-## Python ile Sliced Prediction
+Bu örnek CPU üzerinde baştan sona çalışır. Örnek bir görsel indirir ve Ultralytics ilk kullanımda `yolo26n.pt` dosyasını indirir.
 
 ```python
 from sahi import AutoDetectionModel
 from sahi.predict import get_sliced_prediction
+from sahi.utils.file import download_from_url
 
-# Load a model (works with any supported framework)
+download_from_url(
+    "https://raw.githubusercontent.com/obss/sahi/main/demo/demo_data/small-vehicles1.jpeg",
+    "demo_data/small-vehicles1.jpeg",
+)
+
 detection_model = AutoDetectionModel.from_pretrained(
     model_type="ultralytics",
     model_path="yolo26n.pt",
     confidence_threshold=0.25,
-    device="cuda:0",  # or "cpu"
+    device="cpu",  # or "cuda:0"
 )
 
-# Run sliced prediction
 result = get_sliced_prediction(
-    "path/to/your/image.jpg",
+    "demo_data/small-vehicles1.jpeg",
     detection_model,
     slice_height=512,
     slice_width=512,
     overlap_height_ratio=0.2,
     overlap_width_ratio=0.2,
 )
-
-# Export visualizations
-result.export_visuals(export_dir="demo_data/")
-
-# Access individual predictions
-for pred in result.object_prediction_list:
-    print(pred.category.name, pred.score.value, pred.bbox.to_xyxy())
 ```
 
-## CLI ile Prediction
+Başka bir framework için `model_type` ve `model_path` değerlerini değiştirin. Tam liste için [Model Entegrasyonları](guides/models.md) sayfasına bakın.
 
-Python kodu yazmadan Sliced Inference çalıştırın:
+## 3. Sonucu okuyun
 
-```bash
-sahi predict \
-  --model_path yolo26n.pt \
-  --model_type ultralytics \
-  --source /path/to/images/ \
-  --slice_height 512 \
-  --slice_width 512
-```
-
-Sonuçlar varsayılan olarak `runs/predict/exp` dizinine kaydedilir.
-
-## Postprocessing Backend Seçimi
-
-Dilimleme sonrasında SAHI, örtüşen prediction'ları NMS veya NMM ile birleştirir. Mevcut en iyi backend otomatik olarak seçilir:
-
-| Backend | Ne zaman seçilir | Kurulum |
-| --------- | -------------- | --------- |
-| **torchvision** | CUDA veya Apple MPS GPU + torchvision mevcut olduğunda | `pip install torch torchvision` |
-| **numba** | numba yüklü, GPU yok | `pip install numba` |
-| **numpy** | Her zaman mevcut (fallback) | Gerekmez |
-
-Seçimi manuel olarak geçersiz kılma:
+`result` bir `PredictionResult` nesnesidir. Her tespit `result.object_prediction_list` içinde bulunur.
 
 ```python
-from sahi.postprocess.backends import set_postprocess_backend
+for pred in result.object_prediction_list:
+    print(pred.category.name, pred.score.value, pred.bbox.to_xyxy())
 
-set_postprocess_backend("numpy")       # always available
-set_postprocess_backend("numba")       # JIT-compiled
-set_postprocess_backend("torchvision") # GPU-accelerated
-set_postprocess_backend("auto")        # restore auto-detection
+# Writes demo_data/prediction_visual.png
+result.export_visuals(export_dir="demo_data/")
+
+# COCO-format dicts, ready to dump as JSON
+coco_predictions = result.to_coco_predictions(image_id=1)
 ```
+
+Görseliniz zaten model girdi boyutuna yakınsa, bunun yerine `get_prediction` kullanın ve dilimlemeyi tamamen atlayın.
+
+## 4. Aynı işlem CLI ile
+
+```bash
+sahi predict --model_type ultralytics --model_path yolo26n.pt --source demo_data/ --slice_height 512 --slice_width 512
+```
+
+Görseller `runs/predict/exp` dizinine yazılır. Değerlendirme için ayrıca bir COCO `result.json` dosyası dışa aktarmak isterseniz `--dataset_json_path dataset.json` ekleyin.
 
 ## Sonraki Adımlar
 
-- [Sliced Inference Nasıl Çalışır](guides/sliced-inference.md): Algoritmayı, parametre ipuçlarını ve ne zaman kullanılacağını anlayın
-- [Model Entegrasyonları](guides/models.md): SAHI'yi Ultralytics, HuggingFace, MMDetection, TorchVision, Detectron2 ve daha fazlası ile kullanın
-- [Prediction Araçları](predict.md): Toplu (batch) inference, ilerleme takibi, görselleştirme seçenekleri
-- [COCO Araçları](coco.md): COCO veri kümelerini oluşturun, dilimleyin, birleştirin ve dönüştürün
-- [CLI Komutları](cli.md): Tam CLI referansı
-- [Etkileşimli Notebook'lar](notebooks.md): Tüm framework'ler için uygulamalı Colab notebook'ları
+- [Sliced Inference Nasıl Çalışır](guides/sliced-inference.md): dilim boyutu, örtüşme ve birleştirme stratejisini seçmek için.
+- [Model Entegrasyonları](guides/models.md): HuggingFace, MMDetection, Detectron2, TorchVision, RT-DETR, RF-DETR ve diğerleri için.
+- [Prediction Araçları](predict.md): toplu (batch) inference, ilerleme çubukları ve dışa aktarma seçenekleri için.
+- [CLI Komutları](cli.md): tüm komutlar ve parametreler için.
+- [Etkileşimli Notebook'lar](notebooks.md): çalıştırılabilir Colab örnekleri için.
