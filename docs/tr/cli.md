@@ -259,7 +259,7 @@ COCO değerlendirme metriklerini hesaplar ve sonuçları çıktı klasörüne ak
 **Metrik Tipi:**
 
 - `--type bbox` - Bounding box tespitlerini değerlendirir (varsayılan)
-- `--type mask` - Instance segmentation maskelerini değerlendirir
+- `--type segm` - Instance segmentation maskelerini değerlendirir
 
 **Skorlama Seçenekleri:**
 
@@ -267,7 +267,7 @@ COCO değerlendirme metriklerini hesaplar ve sonuçları çıktı klasörüne ak
 
 **Tespit Limitleri:**
 
-- `--proposal_nums "[10 100 500]"` - Görsel başına maksimum tespiti belirler (varsayılan: `[100, 300, 1000]`)
+- `--max_detections 100` - Görsel başına maksimum tespiti belirler (varsayılan: `500`)
 
 **IOU Eşikleri:**
 
@@ -276,6 +276,10 @@ COCO değerlendirme metriklerini hesaplar ve sonuçları çıktı klasörüne ak
 **Çıktı:**
 
 - `--out_dir output/folder` - Çıktı dizinini belirtir
+
+**Backend:**
+
+- `--backend ultrafast` - pycocotools yerine [ultrafast-pycocotools](https://github.com/developer0hye/ultrafast-pycocotools) kullanır (kurulum: `pip install "sahi[ultrafast]"`)
 
 ---
 
