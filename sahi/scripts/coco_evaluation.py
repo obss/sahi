@@ -12,7 +12,6 @@ from typing import Literal
 import fire
 import numpy as np
 
-from sahi.utils.import_utils import check_requirements
 from sahi.utils.table import create_ascii_table
 
 
@@ -382,21 +381,26 @@ def evaluate(
         iou_thrs: IoU threshold(s) used for evaluating recalls and mAPs.
         areas: Area regions for COCO evaluation calculations.
         return_dict: If True, returns a dict with 'eval_results' and 'export_path' fields.
-        backend: 'pycocotools' or 'ultrafast' (install with pip install "sahi[ultrafast]").
+        backend: COCO evaluator to use. Defaults to 'pycocotools'. Install 'sahi[ultrafast]'
+            to select 'ultrafast' (ultrafast-pycocotools>=0.1.11).
 
     Returns:
         Dict containing evaluation results and export path if return_dict is True,
         otherwise None.
     """
-    if backend == "ultrafast":
-        check_requirements(["ultrafast_pycocotools"])
-        from ultrafast_pycocotools import COCO, COCOeval
-    elif backend == "pycocotools":
-        check_requirements(["pycocotools"])
-        from pycocotools.coco import COCO
-        from pycocotools.cocoeval import COCOeval
-    else:
+    if backend not in ("pycocotools", "ultrafast"):
         raise ValueError(f"unknown backend {backend!r}, use 'pycocotools' or 'ultrafast'")
+    try:
+        if backend == "ultrafast":
+            from ultrafast_pycocotools import COCO, COCOeval
+        else:
+            from pycocotools.coco import COCO
+            from pycocotools.cocoeval import COCOeval
+    except ModuleNotFoundError:
+        install, package = (
+            ("sahi[ultrafast]", "ultrafast-pycocotools") if backend == "ultrafast" else ("-U pycocotools", backend)
+        )
+        raise ModuleNotFoundError(f'Please run "pip install {install}" to install {package} first for coco evaluation.')
 
     # perform coco eval
     result = evaluate_core(
