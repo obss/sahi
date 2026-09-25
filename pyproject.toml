@@ -230,6 +230,7 @@ module = [
     "fiftyone.*",
     "pycocotools",
     "pycocotools.*",
+    "ultrafast_pycocotools",
     "imantics",
     "imantics.*",
     "fire",

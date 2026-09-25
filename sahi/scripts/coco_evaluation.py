@@ -12,30 +12,8 @@ from typing import Literal
 import fire
 import numpy as np
 
+from sahi.utils.import_utils import check_requirements
 from sahi.utils.table import create_ascii_table
-
-
-def _load_coco_backend(backend: str) -> tuple[type, type]:
-    """Load only the requested evaluation backend without modifying global imports."""
-    if backend == "ultrafast":
-        try:
-            from ultrafast_pycocotools import COCO, COCOeval
-        except ModuleNotFoundError as exc:
-            raise ModuleNotFoundError(
-                'Install the ultrafast evaluation backend with pip install "sahi[ultrafast]" '
-                "(ultrafast-pycocotools>=0.1.11)."
-            ) from exc
-    elif backend == "pycocotools":
-        try:
-            from pycocotools.coco import COCO
-            from pycocotools.cocoeval import COCOeval
-        except ModuleNotFoundError as exc:
-            raise ModuleNotFoundError(
-                'Please run "pip install -U pycocotools" to install pycocotools first for coco evaluation.'
-            ) from exc
-    else:
-        raise ValueError(f"Unknown COCO backend {backend!r}; choose 'pycocotools' or 'ultrafast'.")
-    return COCO, COCOeval
 
 
 def _cocoeval_summarize(
@@ -178,11 +156,7 @@ def evaluate_core(
             if not results:
                 print("The testing results of the whole dataset is empty.")
                 break
-            try:
-                cocoDt = cocoGt.loadRes(results)
-            except IndexError:
-                print("The testing results of the whole dataset is empty.")
-                break
+            cocoDt = cocoGt.loadRes(results)
 
             cocoEval = COCOeval(cocoGt, cocoDt, iou_type)
             if areas is not None:
@@ -194,8 +168,7 @@ def evaluate_core(
                 ]
             cocoEval.params.catIds = cat_ids
             cocoEval.params.maxDets = [max_detections]
-            # Summaries use elementwise threshold comparisons for scalar and list inputs too.
-            cocoEval.params.iouThrs = np.atleast_1d(np.asarray(iou_thrs, dtype=float))
+            cocoEval.params.iouThrs = np.array(iou_thrs, dtype=float, ndmin=1)
             # mapping of cocoEval.stats
             coco_metric_names = {
                 "mAP": 0,
@@ -409,14 +382,21 @@ def evaluate(
         iou_thrs: IoU threshold(s) used for evaluating recalls and mAPs.
         areas: Area regions for COCO evaluation calculations.
         return_dict: If True, returns a dict with 'eval_results' and 'export_path' fields.
-        backend: COCO evaluator to use. Defaults to 'pycocotools'. Install 'sahi[ultrafast]'
-            to select 'ultrafast' (ultrafast-pycocotools>=0.1.11).
+        backend: 'pycocotools' or 'ultrafast' (install with pip install "sahi[ultrafast]").
 
     Returns:
         Dict containing evaluation results and export path if return_dict is True,
         otherwise None.
     """
-    COCO, COCOeval = _load_coco_backend(backend)
+    if backend == "ultrafast":
+        check_requirements(["ultrafast_pycocotools"])
+        from ultrafast_pycocotools import COCO, COCOeval
+    elif backend == "pycocotools":
+        check_requirements(["pycocotools"])
+        from pycocotools.coco import COCO
+        from pycocotools.cocoeval import COCOeval
+    else:
+        raise ValueError(f"unknown backend {backend!r}, use 'pycocotools' or 'ultrafast'")
 
     # perform coco eval
     result = evaluate_core(
