@@ -1,0 +1,256 @@
+---
+tags:
+  - inference
+  - slicing
+  - batch-inference
+  - visualization
+  - object-detection
+  - small-object-detection
+---
+
+# Prediction Utilities
+
+## Sliced inference
+
+```python
+from sahi.predict import get_sliced_prediction
+from sahi import AutoDetectionModel
+
+# init any model
+detection_model = AutoDetectionModel.from_pretrained(model_type='mmdet',...) # for MMDetection models
+detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',...) # for YOLOv8/YOLO11/YOLO26 models
+detection_model = AutoDetectionModel.from_pretrained(model_type='huggingface',...) # for HuggingFace detection models
+detection_model = AutoDetectionModel.from_pretrained(model_type='torchvision',...) # for Torchvision detection models
+detection_model = AutoDetectionModel.from_pretrained(model_type='rtdetr',...) # for RT-DETR models
+detection_model = AutoDetectionModel.from_pretrained(model_type='yoloe',...) # for YOLOE models
+detection_model = AutoDetectionModel.from_pretrained(model_type='yolov5',...) # for YOLOv5 models
+detection_model = AutoDetectionModel.from_pretrained(model_type='yolo-world',...) # for YOLOWorld models
+detection_model = AutoDetectionModel.from_pretrained(model_type='roboflow',...) # for Roboflow RFDETR detection/segmentation models
+
+# get sliced prediction result
+result = get_sliced_prediction(
+    image,
+    detection_model,
+    slice_height = 256,
+    slice_width = 256,
+    overlap_height_ratio = 0.2,
+    overlap_width_ratio = 0.2
+)
+
+```
+
+## Standard inference
+
+```python
+from sahi.predict import get_prediction
+from sahi import AutoDetectionModel
+
+# init a model
+detection_model = AutoDetectionModel.from_pretrained(...)
+
+# get standard prediction result
+result = get_prediction(
+    image,
+    detection_model,
+)
+
+```
+
+## Batch inference
+
+### Batch prediction over a folder or file list
+
+Use the high-level `predict` function to run sliced inference over many images
+at once and export results automatically:
+
+```python
+from sahi.predict import predict
+from sahi import AutoDetectionModel
+
+# init a model
+detection_model = AutoDetectionModel.from_pretrained(...)
+
+# get batch predict result
+result = predict(
+    model_type=..., # one of 'ultralytics', 'mmdet', 'huggingface'
+    model_path=..., # path to model weight file
+    model_config_path=..., # for mmdet models
+    model_confidence_threshold=0.5,
+    model_device='cpu', # or 'cuda:0'
+    source=..., # image or folder path
+    no_standard_prediction=True,
+    no_sliced_prediction=False,
+    slice_height=512,
+    slice_width=512,
+    overlap_height_ratio=0.2,
+    overlap_width_ratio=0.2,
+    export_pickle=False,
+    export_crop=False,
+    progress_bar=False,
+)
+```
+
+### Low-level batch inference API
+
+`perform_batch_inference` lets you run a model over multiple images in a single
+call and retrieve per-image prediction lists. Ultralytics YOLO models use native
+GPU batching; all other models fall back to sequential single-image inference
+with the same API.
+
+```python
+import cv2
+from sahi import AutoDetectionModel
+
+detection_model = AutoDetectionModel.from_pretrained(
+    model_type="ultralytics",
+    model_path="yolo26n.pt",
+    confidence_threshold=0.25,
+    device="cuda:0",
+)
+
+# Load a batch of images as numpy arrays (H, W, C) in RGB
+images = [cv2.cvtColor(cv2.imread(p), cv2.COLOR_BGR2RGB) for p in image_paths]
+
+# Run batch inference (native GPU batching for Ultralytics)
+detection_model.perform_batch_inference(images)
+
+# Provide per-image shift amounts and full image sizes (use [[0, 0]] defaults
+# when images are not slices)
+shift_amount_list = [[0, 0]] * len(images)
+full_shape_list   = [[img.shape[0], img.shape[1]] for img in images]
+
+detection_model.convert_original_predictions(
+    shift_amount=shift_amount_list,
+    full_shape=full_shape_list,
+)
+
+# Access predictions per image
+for i, preds in enumerate(detection_model.object_prediction_list_per_image):
+    print(f"Image {i}: {len(preds)} detections")
+    for pred in preds:
+        print(pred.category.name, pred.score.value, pred.bbox.to_xyxy())
+```
+
+!!! note "Single-image compatibility"
+
+    The existing `object_prediction_list` property is unchanged and returns predictions for the first image, so code that uses `perform_inference` + `convert_original_predictions` + `object_prediction_list` continues to work without modification.
+
+## Progress-Bar
+
+Two options were added to control and receive progress updates when running
+sliced inference over many slices:
+
+- `progress_bar` (bool): When True, shows a tqdm progress bar during slice
+  processing. Useful for visual feedback in terminals and notebooks. Default is
+  False.
+- `progress_callback` (callable): A callback function that will be called after
+  each slice (or slice group) is processed. The callback receives two integer
+  arguments: `(current_slice_index, total_slices)`. Use this to integrate custom
+  progress reporting (for example, update a GUI element or log progress to a
+  file).
+
+Example using the callback:
+
+```python
+from sahi.predict import get_sliced_prediction
+from sahi import AutoDetectionModel
+
+# init model
+detection_model = AutoDetectionModel.from_pretrained(...)
+
+def my_progress_callback(current, total):
+    print(f"Processed {current}/{total} slices")
+
+result = get_sliced_prediction(
+    image,
+    detection_model,
+    slice_height=512,
+    slice_width=512,
+    overlap_height_ratio=0.2,
+    overlap_width_ratio=0.2,
+    progress_bar=False,           # disable tqdm bar
+    progress_callback=my_progress_callback,  # use callback to receive updates
+)
+```
+
+!!! tip "Notes"
+
+    `progress_bar` and `progress_callback` can be used together. When both are provided, the tqdm bar will display and the callback will be called after each slice group is processed.
+
+    The `progress_callback` is called with 1-based indices, so the first call will be `(1, total)`.
+
+## Exclude custom classes on inference
+
+```python
+from sahi.predict import get_sliced_prediction
+from sahi import AutoDetectionModel
+
+# init a model
+detection_model = AutoDetectionModel.from_pretrained(...)
+
+# define the class names to exclude from custom model inference
+exclude_classes_by_name = ["car"]
+
+# or exclude classes by its custom id
+exclude_classes_by_id = [0]
+
+result = get_sliced_prediction(
+    image,
+    detection_model,
+    slice_height = 256,
+    slice_width = 256,
+    overlap_height_ratio = 0.2,
+    overlap_width_ratio = 0.2,
+    exclude_classes_by_name = exclude_classes_by_name
+    # exclude_classes_by_id = exclude_classes_by_id
+)
+
+```
+
+## Visualization parameters and export formats
+
+```python
+from sahi.predict import get_prediction
+from sahi import AutoDetectionModel
+from PIL import Image
+
+# init a model
+detection_model = AutoDetectionModel.from_pretrained(...)
+
+# get prediction result
+result = get_prediction(
+    image,
+    detection_model,
+)
+
+# Export with custom visualization parameters
+result.export_visuals(
+    export_dir="outputs/",
+    text_size=1.0,  # Size of the class label text
+    rect_th=2,      # Thickness of bounding box lines
+    hide_labels=False,  # Set True to hide class labels
+    hide_conf=False,    # Set True to hide confidence scores
+    file_name="custom_visualization",
+)
+
+# Export as COCO format annotations
+coco_annotations = result.to_coco_annotations()
+# Example output: [{'image_id': None, 'bbox': [x, y, width, height], 'category_id': 0, 'area': width*height, ...}]
+
+# Export as COCO predictions (includes confidence scores)
+coco_predictions = result.to_coco_predictions(image_id=1)
+# Example output: [{'image_id': 1, 'bbox': [x, y, width, height], 'score': 0.98, 'category_id': 0, ...}]
+
+# Export as imantics format
+imantics_annotations = result.to_imantics_annotations()
+# For use with imantics library: https://github.com/jsbroks/imantics
+
+# Export for FiftyOne visualization
+fiftyone_detections = result.to_fiftyone_detections()
+# For use with FiftyOne: https://github.com/voxel51/fiftyone
+```
+
+!!! tip "Interactive Demos"
+    Want to see these prediction utilities in action? Check out our
+    [interactive notebooks](notebooks.md) with hands-on examples for every
+    supported framework.

@@ -1,0 +1,43 @@
+# SAHI
+
+> A vision library for performing sliced inference on large images and small objects.
+
+Every page below is the markdown source of the corresponding documentation page.
+
+## Documentation
+
+- [Annotation](https://obss.github.io/sahi/annotation.md)
+- [API Reference Index](https://obss.github.io/sahi/api.md)
+- [AutoModel](https://obss.github.io/sahi/auto_model.md)
+- [📝 CHANGELOG](https://obss.github.io/sahi/changelog.md)
+- [CLI Commands](https://obss.github.io/sahi/cli.md)
+- [COCO Utilities](https://obss.github.io/sahi/coco.md)
+- [Contributing to SAHI](https://obss.github.io/sahi/contributing.md)
+- [FiftyOne Visualization](https://obss.github.io/sahi/fiftyone.md)
+- [Model Integrations](https://obss.github.io/sahi/guides/models.md)
+- [How Sliced Inference Works](https://obss.github.io/sahi/guides/sliced-inference.md)
+- [Home](https://obss.github.io/sahi/index.md)
+- [License](https://obss.github.io/sahi/license.md)
+- [Base Model](https://obss.github.io/sahi/models/base.md)
+- [Detectron2 Model](https://obss.github.io/sahi/models/detectron2.md)
+- [Huggingface Model](https://obss.github.io/sahi/models/huggingface.md)
+- [Huggingface Segmentation Model](https://obss.github.io/sahi/models/huggingface_segmentation.md)
+- [Mmdet Model](https://obss.github.io/sahi/models/mmdet.md)
+- [Roboflow Model](https://obss.github.io/sahi/models/roboflow.md)
+- [RTDETR Model](https://obss.github.io/sahi/models/rtdetr.md)
+- [Torchvision Model](https://obss.github.io/sahi/models/torchvision.md)
+- [Ultralytics Models](https://obss.github.io/sahi/models/ultralytics.md)
+- [YoloWorld Model](https://obss.github.io/sahi/models/yolo-world.md)
+- [YOLOE Model](https://obss.github.io/sahi/models/yoloe.md)
+- [YOLOv5 Model](https://obss.github.io/sahi/models/yolov5.md)
+- [Interactive Notebooks](https://obss.github.io/sahi/notebooks.md)
+- [Postprocessing Backends](https://obss.github.io/sahi/postprocess/backends.md)
+- [Combine](https://obss.github.io/sahi/postprocess/combine.md)
+- [Utils](https://obss.github.io/sahi/postprocess/utils.md)
+- [Prediction Utilities](https://obss.github.io/sahi/predict.md)
+- [Prediction](https://obss.github.io/sahi/prediction.md)
+- [Quick Start](https://obss.github.io/sahi/quick-start.md)
+- [Slicing](https://obss.github.io/sahi/slicing.md)
+- [Coco](https://obss.github.io/sahi/utils/coco.md)
+- [CV](https://obss.github.io/sahi/utils/cv.md)
+- [File Utilities](https://obss.github.io/sahi/utils/file.md)
