@@ -746,3 +746,12 @@ class TestCocoUtils:
         assert coco_with_clipped_bboxes.images[0].annotations[5].bbox == [0, 0, 100, 100]
         assert coco_with_clipped_bboxes.images[1] is not None
         assert len(coco_with_clipped_bboxes.images[1].annotations) == 0
+
+    def test_remove_invalid_coco_results_short_bbox(self) -> None:
+        from sahi.utils.coco import remove_invalid_coco_results
+
+        results = [
+            {"image_id": 1, "category_id": 1, "score": 0.9, "bbox": bbox}
+            for bbox in ([1, 2, 3, 4], [1, 2], [1, 2, 3], [], None, [-1, 0, 3, 4])
+        ]
+        assert remove_invalid_coco_results(results) == results[:1]
