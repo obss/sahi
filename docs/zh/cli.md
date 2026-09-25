@@ -221,10 +221,6 @@ sahi coco slice --image_dir dir/to/images \
 
 - `--out_dir output/folder` - 指定输出目录
 
-**后端：**
-
-- `--backend ultrafast` - 使用 [ultrafast-pycocotools](https://github.com/developer0hye/ultrafast-pycocotools) 代替 pycocotools（安装：`pip install "sahi[ultrafast]"`）
-
 ---
 
 ## `coco yolo` 命令用法
