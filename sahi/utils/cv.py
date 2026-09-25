@@ -878,16 +878,9 @@ def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> list[list[f
         List[List[float]]: Polygon points in COCO format
             [[x1, y1, x2, y2, x3, y3, x4, y4], [...], ...]
     """
-    # Convert from (4,2) to [x1,y1,x2,y2,x3,y3,x4,y4] format
+    # Flatten (4, 2) to [x1, y1, ..., x4, y4] and close it by repeating the first point
     points = obb_points.reshape(-1).tolist()
-
-    # Create polygon from points and close it by repeating first point
-    polygons = []
-    # Add first point to end to close polygon
-    closed_polygon = [*points, points[0], points[1]]
-    polygons.append(closed_polygon)
-
-    return polygons
+    return [[*points, *points[:2]]] if points else []
 
 
 def normalize_numpy_image(image: np.ndarray) -> np.ndarray:

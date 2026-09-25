@@ -16,6 +16,7 @@ from sahi.utils.cv import (
     apply_color_mask,
     get_bbox_from_bool_mask,
     get_coco_segmentation_from_bool_mask,
+    get_coco_segmentation_from_obb_points,
     get_video_reader,
     read_image,
     read_image_as_pil,
@@ -116,6 +117,11 @@ class TestCvUtils:
         mask[5:8, 5:8] = True
         result = get_coco_segmentation_from_bool_mask(mask)
         assert len(result) == 2
+
+    def test_get_coco_segmentation_from_obb_points(self) -> None:
+        points = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
+        assert get_coco_segmentation_from_obb_points(points) == [[0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0]]
+        assert get_coco_segmentation_from_obb_points(np.zeros((0, 4, 2))) == []
 
     def test_get_bbox_from_bool_mask(self) -> None:
         """Test bounding box extraction from boolean mask."""
