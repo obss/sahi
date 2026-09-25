@@ -228,10 +228,6 @@ Slices images and COCO annotations, exporting them to the output folder.
 
 - `--out_dir output/folder` - Specify output directory
 
-**Backend:**
-
-- `--backend ultrafast` - Use [ultrafast-pycocotools](https://github.com/developer0hye/ultrafast-pycocotools) instead of pycocotools (install with `pip install "sahi[ultrafast]"`)
-
 ---
 
 ## `coco yolo` command usage
