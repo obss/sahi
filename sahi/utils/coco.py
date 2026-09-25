@@ -2324,15 +2324,7 @@ def remove_invalid_coco_results(
     for coco_result in result_list:
         bbox = coco_result["bbox"]
         # ignore invalid predictions
-        if not bbox:
-            print("ignoring invalid prediction with empty bbox")
-            continue
-        # COCO bbox is [x, y, width, height]; short or overlong entries used to
-        # IndexError here instead of being skipped like other invalid shapes.
-        if len(bbox) != 4:
-            print(f"ignoring invalid prediction with bbox: {bbox}")
-            continue
-        if bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 0 or bbox[3] < 0:
+        if not bbox or len(bbox) != 4 or min(bbox) < 0:
             print(f"ignoring invalid prediction with bbox: {bbox}")
             continue
         if dataset_dict_or_path is not None:
