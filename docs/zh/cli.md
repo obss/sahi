@@ -221,6 +221,10 @@ sahi coco slice --image_dir dir/to/images \
 
 - `--out_dir output/folder` - 指定输出目录
 
+**后端：**
+
+- `--backend ultrafast` - 使用 [ultrafast-pycocotools](https://github.com/developer0hye/ultrafast-pycocotools) 代替 pycocotools（安装：`pip install "sahi[ultrafast]"`）
+
 ---
 
 ## `coco yolo` 命令用法
@@ -269,7 +273,7 @@ sahi coco evaluate --dataset_json_path dataset.json \
 **指标类型：**
 
 - `--type bbox` - 评估边界框检测（默认）
-- `--type mask` - 评估实例分割掩码
+- `--type segm` - 评估实例分割掩码
 
 **评分选项：**
 
@@ -277,8 +281,7 @@ sahi coco evaluate --dataset_json_path dataset.json \
 
 **检测数量限制：**
 
-- `--proposal_nums "[10 100 500]"` - 设置每张图像的最大检测数（默认：`[100, 300,
-  1000]`）
+- `--max_detections 100` - 设置每张图像的最大检测数（默认：`500`）
 
 **IOU 阈值：**
 
@@ -287,6 +290,10 @@ sahi coco evaluate --dataset_json_path dataset.json \
 **输出：**
 
 - `--out_dir output/folder` - 指定输出目录
+
+**后端：**
+
+- `--backend ultrafast` - 使用 [ultrafast-pycocotools](https://github.com/developer0hye/ultrafast-pycocotools) 代替 pycocotools（安装：`pip install "sahi[ultrafast]"`）
 
 ---
 

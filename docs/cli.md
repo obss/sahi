@@ -228,6 +228,10 @@ Slices images and COCO annotations, exporting them to the output folder.
 
 - `--out_dir output/folder` - Specify output directory
 
+**Backend:**
+
+- `--backend ultrafast` - Use [ultrafast-pycocotools](https://github.com/developer0hye/ultrafast-pycocotools) instead of pycocotools (install with `pip install "sahi[ultrafast]"`)
+
 ---
 
 ## `coco yolo` command usage
@@ -277,7 +281,7 @@ Calculates COCO evaluation metrics and exports results to the output folder.
 **Metric Type:**
 
 - `--type bbox` - Evaluate bounding box detections (default)
-- `--type mask` - Evaluate instance segmentation masks
+- `--type segm` - Evaluate instance segmentation masks
 
 **Scoring Options:**
 
@@ -285,8 +289,7 @@ Calculates COCO evaluation metrics and exports results to the output folder.
 
 **Detection Limits:**
 
-- `--proposal_nums "[10 100 500]"` - Set max detections per image (default:
-  `[100, 300, 1000]`)
+- `--max_detections 100` - Set max detections per image (default: `500`)
 
 **IOU Thresholds:**
 
@@ -295,6 +298,10 @@ Calculates COCO evaluation metrics and exports results to the output folder.
 **Output:**
 
 - `--out_dir output/folder` - Specify output directory
+
+**Backend:**
+
+- `--backend ultrafast` - Use [ultrafast-pycocotools](https://github.com/developer0hye/ultrafast-pycocotools) instead of pycocotools (install with `pip install "sahi[ultrafast]"`)
 
 ---
 
