@@ -116,6 +116,11 @@ class TestCvUtils:
         result = get_coco_segmentation_from_bool_mask(mask)
         assert len(result) == 2
 
+    def test_get_coco_segmentation_from_obb_points(self) -> None:
+        points = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
+        assert get_coco_segmentation_from_obb_points(points) == [[0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0]]
+        assert get_coco_segmentation_from_obb_points(np.zeros((0, 4, 2))) == []
+
     def test_get_bbox_from_bool_mask(self) -> None:
         """Test bounding box extraction from boolean mask."""
         mask = np.array(
@@ -176,8 +181,3 @@ class TestCvUtils:
         image.save(image_path, exif=exif)
 
         assert_decode_parity(image_path, exif_fix=exif_fix)
-
-    def test_get_coco_segmentation_from_obb_points(self) -> None:
-        points = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
-        assert get_coco_segmentation_from_obb_points(points) == [[0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0]]
-        assert get_coco_segmentation_from_obb_points(np.zeros((0, 4, 2))) == []
