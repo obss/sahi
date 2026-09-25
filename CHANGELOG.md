@@ -1,5 +1,42 @@
 # 📝 CHANGELOG
 
+## 🚀 SAHI v0.12.7 Release Notes
+
+A patch release that adds an optional ultrafast-pycocotools backend to COCO evaluation, fixes four crashes and miscounts in COCO and video utilities, speeds up postprocessing and sliced prediction, and raises the torch floor to 2.13.0 on Python 3.10 and newer.
+
+### ✨ Features
+
+- **`sahi coco evaluate` can run on ultrafast-pycocotools** ([#1452](https://github.com/obss/sahi/pull/1452)). Install it with `pip install "sahi[ultrafast]"` and pass `--backend ultrafast` on the CLI or `backend="ultrafast"` to `sahi.scripts.coco_evaluation.evaluate`. pycocotools stays the default, and the tests check that both backends return the same bbox and segm results ([#1457](https://github.com/obss/sahi/pull/1457)).
+
+### 🐛 Fixes
+
+- **COCO evaluation accepts a list of IoU thresholds** ([#1452](https://github.com/obss/sahi/pull/1452)). Passing `iou_thrs` as a list stopped in the summary step with a NumPy "nonzero on 0d arrays" error. Thresholds are now always stored as an array.
+- **Video prediction counts skipped frames correctly** ([#1449](https://github.com/obss/sahi/pull/1449)). The progress bar total only accounted for `frame_skip_interval` while a visual was shown, and the exported video used `fps / frame_skip_interval` instead of `fps / (frame_skip_interval + 1)`, so it played back faster than the source.
+- **`remove_invalid_coco_results` skips bboxes that do not have four values** ([#1455](https://github.com/obss/sahi/pull/1455)) instead of raising `IndexError`.
+- **`get_coco_segmentation_from_obb_points` returns an empty list for empty input** ([#1456](https://github.com/obss/sahi/pull/1456)) instead of raising `IndexError`.
+
+### ⚡ Performance
+
+- **NMS and greedy NMM choose the stored-pair path again when boxes are spread out** ([#1443](https://github.com/obss/sahi/pull/1443)). Since `0.12.5` they always read rows from the STRtree on demand, which is slower than a stored pair list when boxes are spread out. They now pick the path by crowding the same way NMM does, and the output is unchanged.
+- **Streaming postprocessing drops boxes it has finished with** ([#1426](https://github.com/obss/sahi/pull/1426)). Settled boxes are removed from later STRtree queries, so crowded inputs query a tree that shrinks as the loop runs.
+- **Sliced prediction decodes the source image once** ([#1445](https://github.com/obss/sahi/pull/1445)). `get_sliced_prediction` used to decode the file four times. It now reuses the decode that slicing already holds.
+- **`slice_image` uses less peak memory** ([#1421](https://github.com/obss/sahi/pull/1421)). Local files decode straight to a NumPy array with OpenCV instead of going through Pillow, and `read_image_size` reads the size from the file header without decoding the image. 16-bit files and anything else OpenCV declines use the Pillow path as before.
+
+### 📦 Build
+
+- **The torch floor is 2.13.0 on Python 3.10 and newer** ([#1440](https://github.com/obss/sahi/pull/1440)), 2.8.0 on Python 3.9 and 2.4.1 on Python 3.8, the newest release each of them still has wheels for.
+- **Development installs pick the torch build that matches the machine** ([#1446](https://github.com/obss/sahi/pull/1446)), CUDA or CPU, instead of always CPU.
+- **CI tests Python 3.13 and 3.14** ([#1433](https://github.com/obss/sahi/pull/1433)).
+
+### 📚 Documentation
+
+- **Documented commands, defaults and examples match the code** ([#1427](https://github.com/obss/sahi/pull/1427), [#1452](https://github.com/obss/sahi/pull/1452)). This includes the `coco evaluate` options, which now list `--type segm`, `--max_detections` and `--backend`.
+- **The quick start ends in a prediction, pages link to the next page, and API parameters are shown as tables** ([#1428](https://github.com/obss/sahi/pull/1428), [#1429](https://github.com/obss/sahi/pull/1429)).
+- **The docs point at the site they are published on and serve their markdown** ([#1431](https://github.com/obss/sahi/pull/1431)), and demo links resolve outside GitHub ([#1435](https://github.com/obss/sahi/pull/1435)).
+- **A new notebook measures batched sliced inference speed** ([#1447](https://github.com/obss/sahi/pull/1447)) on the machine it runs on and checks that batching does not change the detections.
+- **The README install example uses torch 2.13.0 on CUDA 13.0.**
+- **General cleanups** ([#1430](https://github.com/obss/sahi/pull/1430), [#1436](https://github.com/obss/sahi/pull/1436), [#1441](https://github.com/obss/sahi/pull/1441), [#1442](https://github.com/obss/sahi/pull/1442), [#1444](https://github.com/obss/sahi/pull/1444)): notebook outputs are stripped, autoref warnings and dead links are fixed, and punctuation is consistent.
+
 ## 🚀 SAHI v0.12.6 Release Notes
 
 A patch release with one performance fix. NMM postprocessing no longer slows down as its merge groups grow, which is the shape crowded scenes produce.

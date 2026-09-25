@@ -85,7 +85,7 @@ pip install sahi
 - İstediğiniz pytorch ve torchvision sürümünü yükleyin:
 
 ```console
-pip install torch==2.7.0 torchvision==0.22.0 --index-url https://download.pytorch.org/whl/cu126
+pip install torch==2.13.0 torchvision==0.28.0 --index-url https://download.pytorch.org/whl/cu130
 ```
 
 (mmdet desteği için torch 2.1.2 gereklidir):

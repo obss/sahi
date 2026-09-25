@@ -8,6 +8,43 @@ tags:
 
 # 📝 更新日志
 
+## 🚀 SAHI v0.12.7 发布说明
+
+此补丁版本为 COCO 评估新增了可选的 ultrafast-pycocotools 后端，修复了 COCO 和视频工具中的四处崩溃与计数错误，提升了后处理和切片预测的速度，并将 Python 3.10 及以上版本的 torch 最低版本提高到 2.13.0。
+
+### ✨ 新功能
+
+- **`sahi coco evaluate` 可以使用 ultrafast-pycocotools 运行** ([#1452](https://github.com/obss/sahi/pull/1452))。使用 `pip install "sahi[ultrafast]"` 安装后，在命令行中传入 `--backend ultrafast`，或在 `sahi.scripts.coco_evaluation.evaluate` 中传入 `backend="ultrafast"`。默认后端仍为 pycocotools，测试会检查两个后端在 bbox 和 segm 上返回相同的结果 ([#1457](https://github.com/obss/sahi/pull/1457))。
+
+### 🐛 修复
+
+- **COCO 评估支持以列表形式传入 IoU 阈值** ([#1452](https://github.com/obss/sahi/pull/1452))。此前以列表形式传入 `iou_thrs` 时，汇总步骤会因 NumPy 的 "nonzero on 0d arrays" 错误而中断。现在阈值始终以数组形式保存。
+- **视频预测正确计算跳过的帧** ([#1449](https://github.com/obss/sahi/pull/1449))。此前进度条总数只在显示可视化时才考虑 `frame_skip_interval`，导出视频使用的是 `fps / frame_skip_interval` 而不是 `fps / (frame_skip_interval + 1)`，因此播放速度比源视频快。
+- **`remove_invalid_coco_results` 会跳过不是四个值的 bbox** ([#1455](https://github.com/obss/sahi/pull/1455))，不再抛出 `IndexError`。
+- **`get_coco_segmentation_from_obb_points` 对空输入返回空列表** ([#1456](https://github.com/obss/sahi/pull/1456))，不再抛出 `IndexError`。
+
+### ⚡ 性能
+
+- **边界框分散时，NMS 和贪婪 NMM 重新使用存储对路径** ([#1443](https://github.com/obss/sahi/pull/1443))。自 `0.12.5` 起，它们总是按需从 STRtree 读取行，而在边界框分散时这比存储对列表更慢。现在它们会像 NMM 一样根据拥挤程度选择路径，输出不变。
+- **流式后处理会移除已处理完的边界框** ([#1426](https://github.com/obss/sahi/pull/1426))。已确定的边界框会从后续的 STRtree 查询中移除，因此拥挤输入所查询的树会随着循环运行不断缩小。
+- **切片预测只解码一次源图像** ([#1445](https://github.com/obss/sahi/pull/1445))。`get_sliced_prediction` 此前会解码文件四次，现在复用切片时已有的解码结果。
+- **`slice_image` 的峰值内存更低** ([#1421](https://github.com/obss/sahi/pull/1421))。本地文件直接通过 OpenCV 解码为 NumPy 数组，不再经过 Pillow；`read_image_size` 从文件头读取尺寸，无需解码图像。16 位文件以及其他 OpenCV 无法处理的文件仍像以前一样走 Pillow 路径。
+
+### 📦 构建
+
+- **Python 3.10 及以上版本的 torch 最低版本为 2.13.0** ([#1440](https://github.com/obss/sahi/pull/1440))，Python 3.9 为 2.8.0，Python 3.8 为 2.4.1，均为各版本仍提供 wheel 的最新 torch。
+- **开发环境安装会选择与机器匹配的 torch 构建** ([#1446](https://github.com/obss/sahi/pull/1446))，CUDA 或 CPU，而不再总是 CPU。
+- **CI 测试 Python 3.13 和 3.14** ([#1433](https://github.com/obss/sahi/pull/1433))。
+
+### 📚 文档
+
+- **文档中的命令、默认值和示例与代码一致** ([#1427](https://github.com/obss/sahi/pull/1427), [#1452](https://github.com/obss/sahi/pull/1452))。其中包括 `coco evaluate` 的选项，现在列出的是 `--type segm`、`--max_detections` 和 `--backend`。
+- **快速入门以一次预测结束，页面带有下一页链接，API 参数以表格展示** ([#1428](https://github.com/obss/sahi/pull/1428), [#1429](https://github.com/obss/sahi/pull/1429))。
+- **文档指向实际发布的网站并提供 markdown** ([#1431](https://github.com/obss/sahi/pull/1431))，演示链接在 GitHub 之外也能打开 ([#1435](https://github.com/obss/sahi/pull/1435))。
+- **新增一个测量批量切片推理速度的 notebook** ([#1447](https://github.com/obss/sahi/pull/1447))，在运行它的机器上测量，并检查批处理不会改变检测结果。
+- **README 安装示例使用 CUDA 13.0 上的 torch 2.13.0。**
+- **常规清理** ([#1430](https://github.com/obss/sahi/pull/1430), [#1436](https://github.com/obss/sahi/pull/1436), [#1441](https://github.com/obss/sahi/pull/1441), [#1442](https://github.com/obss/sahi/pull/1442), [#1444](https://github.com/obss/sahi/pull/1444))：清除 notebook 输出，修复 autoref 警告和失效链接，统一标点。
+
 ## 🚀 SAHI v0.12.6 发布说明
 
 此补丁版本包含一项性能修复。NMM 后处理不再随着合并组变大而变慢，而拥挤场景正好会产生这种形状的合并组。
