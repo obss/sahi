@@ -152,11 +152,10 @@ def evaluate_core(
             iou_type = metric
             with open(result_path) as json_file:
                 results = json.load(json_file)
-            try:
-                cocoDt = cocoGt.loadRes(results)
-            except IndexError:
+            if not results:
                 print("The testing results of the whole dataset is empty.")
                 break
+            cocoDt = cocoGt.loadRes(results)
 
             cocoEval = COCOeval(cocoGt, cocoDt, iou_type)
             if areas is not None:
@@ -168,9 +167,7 @@ def evaluate_core(
                 ]
             cocoEval.params.catIds = cat_ids
             cocoEval.params.maxDets = [max_detections]
-            cocoEval.params.iouThrs = (
-                [iou_thrs] if not isinstance(iou_thrs, list) and not isinstance(iou_thrs, np.ndarray) else iou_thrs
-            )
+            cocoEval.params.iouThrs = np.array(iou_thrs, dtype=float, ndmin=1)
             # mapping of cocoEval.stats
             coco_metric_names = {
                 "mAP": 0,
@@ -369,6 +366,7 @@ def evaluate(
     iou_thrs: list[float] | float | None = None,
     areas: list[int] = [1024, 9216, 10000000000],
     return_dict: bool = False,
+    backend: Literal["pycocotools", "ultrafast"] = "pycocotools",
 ) -> dict:
     """Evaluate COCO object detection results and compute metrics.
 
@@ -383,18 +381,26 @@ def evaluate(
         iou_thrs: IoU threshold(s) used for evaluating recalls and mAPs.
         areas: Area regions for COCO evaluation calculations.
         return_dict: If True, returns a dict with 'eval_results' and 'export_path' fields.
+        backend: COCO evaluator to use. Defaults to 'pycocotools'. Install 'sahi[ultrafast]'
+            to select 'ultrafast' (ultrafast-pycocotools>=0.1.11).
 
     Returns:
         Dict containing evaluation results and export path if return_dict is True,
         otherwise None.
     """
+    if backend not in ("pycocotools", "ultrafast"):
+        raise ValueError(f"unknown backend {backend!r}, use 'pycocotools' or 'ultrafast'")
     try:
-        from pycocotools.coco import COCO
-        from pycocotools.cocoeval import COCOeval
+        if backend == "ultrafast":
+            from ultrafast_pycocotools import COCO, COCOeval
+        else:
+            from pycocotools.coco import COCO
+            from pycocotools.cocoeval import COCOeval
     except ModuleNotFoundError:
-        raise ModuleNotFoundError(
-            'Please run "pip install -U pycocotools" to install pycocotools first for coco evaluation.'
+        install, package = (
+            ("sahi[ultrafast]", "ultrafast-pycocotools") if backend == "ultrafast" else ("-U pycocotools", backend)
         )
+        raise ModuleNotFoundError(f'Please run "pip install {install}" to install {package} first for coco evaluation.')
 
     # perform coco eval
     result = evaluate_core(

@@ -1,6 +1,6 @@
 [project]
 name = "sahi"
-version = "0.12.6"
+version = "0.12.7"
 readme = "README.md"
 description = "A vision library for performing sliced inference on large images/small objects"
 requires-python = ">=3.8"
@@ -79,6 +79,7 @@ build = [
 ]
 
 [project.optional-dependencies]
+ultrafast = ["ultrafast-pycocotools>=0.1.11,<0.2"]
 # torch shipped its last cp38 wheel in 2.4.1 and its last cp39 wheel in 2.8.0,
 # so each interpreter floors at the newest release it still has wheels for
 torch = [
@@ -114,6 +115,7 @@ ci = [
   "torchvision==0.23.0;python_version=='3.9'",
   "torchvision==0.19.1;python_version=='3.8'",
   "pycocotools>=2.0.7",
+  "sahi[ultrafast]",
   "ultralytics>=8.3.161",
   "scikit-image",
   "fiftyone",
@@ -228,6 +230,7 @@ module = [
     "fiftyone.*",
     "pycocotools",
     "pycocotools.*",
+    "ultrafast_pycocotools",
     "imantics",
     "imantics.*",
     "fire",

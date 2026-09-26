@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import cv2
 import numpy as np
 import pytest
 from PIL import Image
@@ -15,6 +16,8 @@ from sahi.utils.cv import (
     apply_color_mask,
     get_bbox_from_bool_mask,
     get_coco_segmentation_from_bool_mask,
+    get_coco_segmentation_from_obb_points,
+    get_video_reader,
     read_image,
     read_image_as_pil,
     read_image_size,
@@ -115,6 +118,11 @@ class TestCvUtils:
         result = get_coco_segmentation_from_bool_mask(mask)
         assert len(result) == 2
 
+    def test_get_coco_segmentation_from_obb_points(self) -> None:
+        points = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
+        assert get_coco_segmentation_from_obb_points(points) == [[0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0]]
+        assert get_coco_segmentation_from_obb_points(np.zeros((0, 4, 2))) == []
+
     def test_get_bbox_from_bool_mask(self) -> None:
         """Test bounding box extraction from boolean mask."""
         mask = np.array(
@@ -175,3 +183,26 @@ class TestCvUtils:
         image.save(image_path, exif=exif)
 
         assert_decode_parity(image_path, exif_fix=exif_fix)
+
+
+@pytest.mark.parametrize("frame_skip_interval", [0, 1, 3])
+def test_get_video_reader_frame_skip(tmp_path: Path, frame_skip_interval: int) -> None:
+    source, fps, source_frames = tmp_path / "source.mp4", 30.0, 61
+    writer = cv2.VideoWriter(str(source), cv2.VideoWriter_fourcc(*"mp4v"), fps, (64, 64))  # type: ignore[attr-defined]  # pyright: ignore[reportAttributeAccessIssue]
+    for i in range(source_frames):
+        writer.write(np.full((64, 64, 3), i, dtype=np.uint8))
+    writer.release()
+    save_dir = tmp_path / "export"
+    save_dir.mkdir()
+
+    frames, video_writer, _, num_frames = get_video_reader(str(source), str(save_dir), frame_skip_interval, True)
+    assert video_writer is not None
+    for frame in frames:
+        video_writer.write(np.asarray(frame))
+        num_frames -= 1
+    video_writer.release()
+    assert num_frames == 0
+
+    exported = cv2.VideoCapture(str(save_dir / "source.mp4"))
+    assert exported.get(cv2.CAP_PROP_FPS) == pytest.approx(fps / (frame_skip_interval + 1))
+    exported.release()

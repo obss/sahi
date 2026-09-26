@@ -49,7 +49,34 @@ save_json(coco.json, "coco_dataset.json")
 save_json(coco.prediction_array, "coco_predictions.json")
 ```
 
-### Evaluating with pycocotools
+### Evaluating with SAHI
+
+SAHI's evaluation command uses pycocotools by default. To use the optional [ultrafast-pycocotools](https://github.com/developer0hye/ultrafast-pycocotools) backend (version 0.1.11 or newer):
+
+```bash
+pip install "sahi[ultrafast]"
+sahi coco evaluate --dataset_json_path coco_dataset.json \
+  --result_json_path coco_predictions.json --backend ultrafast
+```
+
+For segmentation, add `--type segm`. The backend also works through the Python API:
+
+```python
+from sahi.scripts.coco_evaluation import evaluate
+
+result = evaluate(
+    "coco_dataset.json",
+    "coco_predictions.json",
+    backend="ultrafast",
+    max_detections=500,
+    classwise=True,
+    return_dict=True,
+)
+```
+
+Both backends use SAHI's existing custom area ranges, IoU thresholds, per-class metrics and `eval.json` output. Backend selection applies to this evaluation call and does not replace process-wide imports. The ultrafast evaluation path does not require pycocotools; other commands may have their own dependencies.
+
+### Evaluating with pycocotools directly
 
 ```python
 from pycocotools.cocoeval import COCOeval

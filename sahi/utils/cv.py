@@ -443,9 +443,8 @@ def get_video_reader(
     # get video from video path
     video_capture = cv2.VideoCapture(source)
 
-    num_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-    if view_visual:
-        num_frames = int(num_frames / (frame_skip_interval + 1))
+    # one frame is yielded per frame_skip_interval + 1 source frames
+    num_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT)) // (frame_skip_interval + 1)
 
     def read_video_frame(video_capture: cv2.VideoCapture, frame_skip_interval: int) -> Generator[Image.Image]:  # type: ignore[type-arg]
         if view_visual:
@@ -494,15 +493,8 @@ def get_video_reader(
                 yield Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
     if export_visual:
-        # get video properties and create VideoWriter object
-        if frame_skip_interval != 0:
-            fps = video_capture.get(cv2.CAP_PROP_FPS)  # original fps of video
-            # The fps of export video is increasing during view_image because frame is skipped
-            fps = (
-                fps / frame_skip_interval
-            )  # How many time_interval equals to original fps. One time_interval skip x frames.
-        else:
-            fps = video_capture.get(cv2.CAP_PROP_FPS)
+        # get video properties and create VideoWriter object, keeping the source duration
+        fps = video_capture.get(cv2.CAP_PROP_FPS) / (frame_skip_interval + 1)
 
         w = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -886,16 +878,9 @@ def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> list[list[f
         List[List[float]]: Polygon points in COCO format
             [[x1, y1, x2, y2, x3, y3, x4, y4], [...], ...]
     """
-    # Convert from (4,2) to [x1,y1,x2,y2,x3,y3,x4,y4] format
+    # Flatten (4, 2) to [x1, y1, ..., x4, y4] and close it by repeating the first point
     points = obb_points.reshape(-1).tolist()
-
-    # Create polygon from points and close it by repeating first point
-    polygons = []
-    # Add first point to end to close polygon
-    closed_polygon = [*points, points[0], points[1]]
-    polygons.append(closed_polygon)
-
-    return polygons
+    return [[*points, *points[:2]]] if points else []
 
 
 def normalize_numpy_image(image: np.ndarray) -> np.ndarray:
