@@ -323,6 +323,15 @@ class ShapelyAnnotation:
             intersection_multipolygon = MultiPolygon([intersection])
         elif intersection.geom_type == "MultiPolygon":
             intersection_multipolygon = intersection
+        elif intersection.geom_type == "GeometryCollection":
+            # edges or vertices touching the box border come back as lines/points, keep only the polygon parts
+            polygons = []
+            for geom in intersection.geoms:
+                if isinstance(geom, Polygon):
+                    polygons.append(geom)
+                elif isinstance(geom, MultiPolygon):
+                    polygons.extend(geom.geoms)
+            intersection_multipolygon = MultiPolygon(polygons)
         else:
             intersection_multipolygon = MultiPolygon([])
         # create shapely annotation from intersection multipolygon
