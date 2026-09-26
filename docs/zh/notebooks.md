@@ -10,9 +10,7 @@ tags:
 
 # 交互式 Notebooks
 
-这些 Jupyter notebooks 展示了如何将 SAHI 与不同的检测框架配合使用。每个 notebook
-都可以直接在 Google Colab 中运行，也可以从 GitHub 上的
-[demo 目录](https://github.com/obss/sahi/tree/main/demo)克隆到本地。
+这些 Jupyter notebooks 展示了如何将 SAHI 与不同的检测框架配合使用。每个 notebook 都可以直接在 Google Colab 中运行，也可以从 GitHub 上的 [demo 目录](https://github.com/obss/sahi/tree/main/demo)克隆到本地。
 
 ## 推理 Notebooks
 
@@ -34,7 +32,7 @@ tags:
 | Notebook | 说明 | 链接 |
 | ---------- | ------ | ------ |
 | **切片** | 图像和 COCO 数据集切片操作 | [![在 Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/slicing.ipynb) [![GitHub](https://img.shields.io/badge/GitHub-source-black?logo=github)](https://github.com/obss/sahi/blob/main/demo/slicing.ipynb) |
-| **批量切片推理** | 切片推理的批大小、速度与 TensorRT | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_with_batch_slicing.ipynb) [![GitHub](https://img.shields.io/badge/GitHub-source-black?logo=github)](https://github.com/obss/sahi/blob/main/demo/inference_with_batch_slicing.ipynb) |
+| **批量切片推理** | 切片推理的批大小、速度与 TensorRT | [![在 Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_with_batch_slicing.ipynb) [![GitHub](https://img.shields.io/badge/GitHub-source-black?logo=github)](https://github.com/obss/sahi/blob/main/demo/inference_with_batch_slicing.ipynb) |
 
 ## 在本地运行
 
@@ -43,6 +41,6 @@ tags:
 ```bash
 git clone https://github.com/obss/sahi.git
 cd sahi
-pip install -e ".[dev]"
+uv sync --group dev
 jupyter notebook demo/
 ```

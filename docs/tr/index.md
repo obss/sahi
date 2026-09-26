@@ -27,7 +27,7 @@ tags:
 <div>
     <a href="https://pepy.tech/project/sahi"><img src="https://pepy.tech/badge/sahi" alt="downloads"></a>
     <a href="https://pepy.tech/project/sahi"><img src="https://pepy.tech/badge/sahi/month" alt="downloads"></a>
-    <a href="https://github.com/obss/sahi/blob/main/LICENSE.md"><img src="https://img.shields.io/pypi/l/sahi" alt="License"></a>
+    <a href="https://github.com/obss/sahi/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/sahi" alt="License"></a>
     <a href="https://badge.fury.io/py/sahi"><img src="https://badge.fury.io/py/sahi.svg" alt="pypi version"></a>
     <a href="https://anaconda.org/conda-forge/sahi"><img src="https://anaconda.org/conda-forge/sahi/badges/version.svg" alt="conda version"></a>
     <a href="https://github.com/obss/sahi/actions/workflows/ci.yml"><img src="https://github.com/obss/sahi/actions/workflows/ci.yml/badge.svg" alt="Continuous Integration"></a>
@@ -109,7 +109,7 @@ SAHI, ekstra bir fine-tuning gerektirmeden herhangi bir object detector ile kull
 
     ---
 
-    Tepki ve tespit sonuçlarını etkileşimli olarak görselleştirin ve karşılaştırın.
+    Tespit sonuçlarını etkileşimli olarak inceleyin ve karşılaştırın.
 
     [:octicons-arrow-right-24: Daha Fazla Bilgi](fiftyone.md)
 

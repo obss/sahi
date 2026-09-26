@@ -3,6 +3,7 @@ tags:
   - api-reference
   - models
   - yoloe
+  - yolo
   - object-detection
 ---
 

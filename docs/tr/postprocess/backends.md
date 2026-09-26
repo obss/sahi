@@ -111,7 +111,7 @@ print(predictions[keep])
 
 ### NMM (birleştirme)
 
-NMM, örtüşen kutuları elenmek yerine birleştirir:
+NMM, örtüşen kutuları elemek yerine birleştirir:
 
 ```python
 from sahi.postprocess.combine import greedy_nmm, nmm, batched_greedy_nmm

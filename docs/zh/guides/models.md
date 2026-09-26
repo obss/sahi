@@ -13,14 +13,11 @@ tags:
 
 # 模型集成
 
-SAHI 通过统一的 API 支持任意目标检测框架。使用
-`AutoDetectionModel.from_pretrained()` 加载一次模型后，即可将其用于 SAHI
-的任意功能，包括切片预测、批量推理和 CLI 等。
+SAHI 通过统一的 API 支持任意目标检测框架。使用 `AutoDetectionModel.from_pretrained()` 加载一次模型后，即可将其用于 SAHI 的任意功能，包括切片预测、批量推理和 CLI 等。
 
 ## Ultralytics (YOLO)
 
-支持 YOLOv8、YOLO11、YOLO26 和所有 Ultralytics 模型变体，包括分割模型和
-旋转边界框模型。
+支持 [Ultralytics YOLO26](https://docs.ultralytics.com/models/yolo26)、[Ultralytics YOLO11](https://docs.ultralytics.com/models/yolo11)、[Ultralytics YOLOv8](https://docs.ultralytics.com/models/yolov8) 和所有 Ultralytics 模型变体，包括分割模型和旋转边界框模型。
 
 ```bash
 pip install ultralytics
@@ -147,8 +144,7 @@ result = get_sliced_prediction(
 
 ## HuggingFace Transformers
 
-使用 HuggingFace Hub 中的目标检测和零样本目标检测模型，包括 DETR、
-Deformable DETR、DETA 和 GroundingDINO 等。
+使用 HuggingFace Hub 中的目标检测和零样本目标检测模型，包括 DETR、Deformable DETR、DETA 和 GroundingDINO 等。
 
 ```bash
 pip install transformers timm
@@ -170,9 +166,7 @@ result = get_sliced_prediction(
 )
 ```
 
-GroundingDINO 模型需要以文本为条件进行推理。如果目标类别已知，请使用
-`text_labels`，这样 SAHI 可以为这些标签分配稳定的类别 ID。处理器返回的其他短语
-会被过滤。
+GroundingDINO 模型需要以文本为条件进行推理。如果目标类别已知，请使用 `text_labels`，这样 SAHI 可以为这些标签分配稳定的类别 ID。处理器返回的其他短语会作为新类别追加。
 
 ```python
 detection_model = AutoDetectionModel.from_pretrained(
@@ -205,8 +199,7 @@ GroundingDINO 零样本检测 notebook：
 
 ## HuggingFace 分割
 
-使用 HuggingFace Hub 中的分割模型。SAHI 会将每个分割结果作为带有多边形掩码的
-`ObjectPrediction` 返回，因此切片推理和后处理方式与目标检测相同。
+使用 HuggingFace Hub 中的分割模型。SAHI 会将每个分割结果作为带有多边形掩码的 `ObjectPrediction` 返回，因此切片推理和后处理方式与目标检测相同。
 
 | 架构        | `instance` | `semantic` | `panoptic` |
 | ----------- | :--------: | :--------: | :--------: |
@@ -214,9 +207,7 @@ GroundingDINO 零样本检测 notebook：
 | Mask2Former |     ✅     |     ✅     |     ✅     |
 | OneFormer   |     ✅     |     ✅     |     ✅     |
 
-可用的任务头取决于 checkpoint。例如，
-`facebook/mask2former-swin-tiny-coco-instance` 仅支持实例分割。OneFormer
-会在推理时选择任务头，因此同一个 checkpoint 可以支持全部三种任务。
+可用的任务头取决于 checkpoint。例如，`facebook/mask2former-swin-tiny-coco-instance` 仅支持实例分割。OneFormer 会在推理时选择任务头，因此同一个 checkpoint 可以支持全部三种任务。
 
 ```bash
 pip install transformers timm
@@ -241,10 +232,7 @@ result = get_sliced_prediction(
 )
 ```
 
-将 `segmentation_type` 切换为 `SEMANTIC_SEGMENTATION` 或
-`PANOPTIC_SEGMENTATION` 即可使用对应的任务头。请注意，语义分割会将同一类别的所有
-实例合并为一个掩码，因此每个类别只会返回一个 `ObjectPrediction`，而不是为每个
-实例分别返回。
+将 `segmentation_type` 切换为 `SEMANTIC_SEGMENTATION` 或 `PANOPTIC_SEGMENTATION` 即可使用对应的任务头。请注意，语义分割会将同一类别的所有实例合并为一个掩码，因此每个类别只会返回一个 `ObjectPrediction`，而不是为每个实例分别返回。
 
 ### 分割参数
 
@@ -290,8 +278,7 @@ result = get_sliced_prediction(
 
 ## TorchVision
 
-使用 TorchVision 内置的目标检测模型，包括 Faster R-CNN、RetinaNet、FCOS 和 SSD
-等。
+使用 TorchVision 内置的目标检测模型，包括 Faster R-CNN、RetinaNet、FCOS 和 SSD 等。
 
 ```bash
 pip install torch torchvision
@@ -383,8 +370,7 @@ result = get_sliced_prediction(
 pip install rfdetr
 ```
 
-通过 `model` 参数传入模型。普通字符串会被视为 Roboflow Universe 模型 ID，
-并且需要 API 密钥；RF-DETR 类名则会选择本地模型。
+通过 `model` 参数传入模型。普通字符串会被视为 Roboflow Universe 模型 ID，并且需要 API 密钥；RF-DETR 类名则会选择本地模型。
 
 === "Roboflow Universe（需要 API 密钥）"
 
@@ -421,11 +407,9 @@ result = get_sliced_prediction(
 )
 ```
 
-可用的 RF-DETR 模型包括：`RFDETRBase`、`RFDETRNano`、`RFDETRSmall`、`RFDETRMedium`、`RFDETRLarge`、
-`RFDETRSegNano`、`RFDETRSegSmall`、`RFDETRSegMedium`、`RFDETRSegLarge`、`RFDETRSegXLarge`、`RFDETRSeg2XLarge`。
+可用的 RF-DETR 模型包括：`RFDETRBase`、`RFDETRNano`、`RFDETRSmall`、`RFDETRMedium`、`RFDETRLarge`、`RFDETRSegNano`、`RFDETRSegSmall`、`RFDETRSegMedium`、`RFDETRSegLarge`、`RFDETRSegXLarge`、`RFDETRSeg2XLarge`。
 
-`category_mapping` 决定 `num_classes`，因此自定义模型必须提供该参数，否则模型头将无法与检查点匹配。
-只有设置了 `model_path` 时，`image_size` 才会生效。
+`category_mapping` 决定 `num_classes`，因此自定义模型必须提供该参数，否则模型头将无法与检查点匹配。只有设置了 `model_path` 时，`image_size` 才会生效。
 
 [![在 Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_roboflow.ipynb)
 
@@ -440,9 +424,9 @@ result = get_sliced_prediction(
 | `model_type` | str | 框架名称，请参见上文各节 |
 | `model_path` | str | 权重文件路径或模型名称 |
 | `config_path` | str | 配置文件路径，用于 MMDetection 和 Detectron2 |
-| `confidence_threshold` | float | 保留检测结果的最低分数，默认值为 0.25 |
+| `confidence_threshold` | float | 保留检测结果的最低分数，默认值为 0.3 |
 | `device` | str | `"cpu"`、`"cuda:0"` 或 `"mps"` 等 |
-| `category_mapping` | dict | 将类别 ID 映射到名称，例如 `{0: "car", 1: "person"}` |
+| `category_mapping` | dict | 将类别 ID 映射到名称，键为字符串：`{"0": "car", "1": "person"}` |
 | `category_remapping` | dict | 推理后重新映射类别名称 |
 | `image_size` | int | 覆盖模型输入分辨率 |
 | `load_at_init` | bool | 立即加载权重，默认值为 True |

@@ -4,7 +4,6 @@ tags:
   - models
   - mmdetection
   - object-detection
-  - instance-segmentation
 ---
 
 # MMDetection Model
