@@ -140,7 +140,7 @@ sahi predict --model_path path/to/model --source images/ \
 
 ---
 
-## `predict-fiftyone` 命令用法
+## `predict-fiftyone` 命令用法 { #predict-fiftyone-command-usage }
 
 执行切片推理并使用 FiftyOne App 交互式可视化结果。
 
@@ -161,7 +161,7 @@ sahi predict-fiftyone --image_dir image/file/or/folder \
 
 ---
 
-## `coco fiftyone` 命令用法
+## `coco fiftyone` 命令用法 { #coco-fiftyone-command-usage }
 
 使用 FiftyOne UI 在 COCO 数据集上可视化和比较多个检测结果。
 
@@ -183,7 +183,7 @@ sahi coco fiftyone --image_dir dir/to/images \
 
 ---
 
-## `coco slice` 命令用法
+## `coco slice` 命令用法 { #coco-slice-command-usage }
 
 将大图像及其 COCO 格式标注切片为更小的块。
 
@@ -216,7 +216,7 @@ sahi coco slice --image_dir dir/to/images \
 
 ---
 
-## `coco yolo` 命令用法
+## `coco yolo` 命令用法 { #coco-yolo-command-usage }
 
 将 COCO 格式数据集转换为 YOLO 格式，用于 Ultralytics 训练。
 
@@ -239,7 +239,7 @@ sahi coco yolo --image_dir dir/to/images \
 
 ---
 
-## `coco evaluate` 命令用法
+## `coco evaluate` 命令用法 { #coco-evaluate-command-usage }
 
 计算预测结果的 COCO 评估指标（mAP、mAR）。
 
@@ -283,7 +283,7 @@ sahi coco evaluate --dataset_json_path dataset.json \
 
 ---
 
-## `coco analyse` 命令用法
+## `coco analyse` 命令用法 { #coco-analyse-command-usage }
 
 生成 COCO 预测的详细误差分析图。
 
@@ -316,7 +316,7 @@ sahi coco analyse --dataset_json_path dataset.json \
 
 ---
 
-## `env` 命令用法
+## `env` 命令用法 { #env-command-usage }
 
 显示与 SAHI 相关的已安装包版本。
 
@@ -339,7 +339,7 @@ sahi env
 
 ---
 
-## `version` 命令用法
+## `version` 命令用法 { #version-command-usage }
 
 显示当前安装的 SAHI 版本。
 
