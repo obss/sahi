@@ -327,6 +327,24 @@ class TestPostprocessClasses:
         result = pp(obj_preds)
         assert len(result) >= 1
 
+    @pytest.mark.parametrize("postprocess_cls", [NMMPostprocess, GreedyNMMPostprocess])
+    @pytest.mark.parametrize(
+        ("match_metric", "second_box", "merged_box"),
+        [
+            ("IOS", [5, 0, 15, 10], [0, 0, 15, 10]),  # IoS = 50 / 100
+            ("IOU", [0, 0, 10, 20], [0, 0, 10, 20]),  # IoU = 100 / 200
+        ],
+    )
+    def test_merge_postprocess_at_exact_threshold(
+        self, postprocess_cls: type, match_metric: str, second_box: list, merged_box: list
+    ) -> None:
+        """A box whose overlap equals the threshold is merged, not dropped."""
+        obj_preds = _make_object_predictions([make_pred(0, 0, 10, 10, 0.9, 1), make_pred(*second_box, 0.8, 1)])
+        pp = postprocess_cls(match_threshold=0.5, match_metric=match_metric)
+        result = pp(obj_preds)
+        assert len(result) == 1
+        assert result[0].bbox.to_xyxy() == merged_box
+
     def test_nms_postprocess_single(self) -> None:
         """Test NMSPostprocess with single prediction."""
         obj_preds = _make_object_predictions([make_pred(0, 0, 10, 10, 0.9, 1)])

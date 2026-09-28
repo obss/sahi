@@ -336,7 +336,7 @@ def calculate_bbox_ios(pred1: ObjectPrediction, pred2: ObjectPrediction) -> floa
 def has_match(
     pred1: ObjectPrediction, pred2: ObjectPrediction, match_type: str = "IOU", match_threshold: float = 0.5
 ) -> bool:
-    """Check whether two predictions overlap above the given threshold.
+    """Check whether two predictions overlap at or above the given threshold.
 
     Args:
         pred1: First object prediction.
@@ -345,15 +345,15 @@ def has_match(
         match_threshold: Minimum overlap to count as a match.
 
     Returns:
-        True if the overlap exceeds match_threshold.
+        True if the overlap is at least match_threshold.
 
     Raises:
         ValueError: If match_type is not "IOU" or "IOS".
     """
     if match_type == "IOU":
-        threshold_condition = calculate_bbox_iou(pred1, pred2) > match_threshold
+        threshold_condition = calculate_bbox_iou(pred1, pred2) >= match_threshold
     elif match_type == "IOS":
-        threshold_condition = calculate_bbox_ios(pred1, pred2) > match_threshold
+        threshold_condition = calculate_bbox_ios(pred1, pred2) >= match_threshold
     else:
         raise ValueError()
     return threshold_condition
