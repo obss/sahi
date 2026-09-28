@@ -45,6 +45,7 @@ nav = [
       "models/huggingface_segmentation.md",
       "models/torchvision.md",
       "models/rtdetr.md",
+      "models/libreyolo.md",
       "models/roboflow.md",
     ]},
     {"后处理" = [

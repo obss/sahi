@@ -272,13 +272,13 @@ In addition to the [common parameters](#common-parameters), this model accepts:
 Real-Time Detection Transformer for high-accuracy real-time detection.
 
 ```bash
-pip install transformers timm
+pip install ultralytics
 ```
 
 ```python
 detection_model = AutoDetectionModel.from_pretrained(
     model_type="rtdetr",
-    model_path="PekingU/rtdetr_r50vd",
+    model_path="rtdetr-l.pt",
     confidence_threshold=0.3,
     device="cuda:0",
 )
@@ -292,6 +292,32 @@ result = get_sliced_prediction(
 ```
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_rtdetr.ipynb)
+
+---
+
+## LibreYOLO
+
+MIT-licensed YOLO models with an Ultralytics compatible API.
+
+```bash
+pip install libreyolo
+```
+
+```python
+detection_model = AutoDetectionModel.from_pretrained(
+    model_type="libreyolo",
+    model_path="LibreYOLO9t.pt",
+    confidence_threshold=0.3,
+    device="cuda:0",
+)
+
+result = get_sliced_prediction(
+    "image.jpg",
+    detection_model,
+    slice_height=512,
+    slice_width=512,
+)
+```
 
 ---
 
