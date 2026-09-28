@@ -141,6 +141,19 @@ class TestShapelyUtils:
 
         assert intersection_shapely_annotation.to_xywh() == []
 
+    def test_get_intersection_touching_box_border(self) -> None:
+        """Test that polygon parts are kept when the intersection also has a line on the box border."""
+        shapely_box = get_shapely_box(0, 0, 100, 100)
+
+        # the lower arm lies outside the box and only touches its right border along x=100
+        coco_segmentation = [[50, 10, 150, 10, 150, 90, 100, 90, 100, 60, 140, 60, 140, 40, 50, 40]]
+        shapely_annotation = ShapelyAnnotation.from_coco_segmentation(coco_segmentation)
+
+        intersection_shapely_annotation = shapely_annotation.get_intersection(shapely_box)
+
+        assert intersection_shapely_annotation.area == 1500
+        assert intersection_shapely_annotation.to_xywh() == [50, 10, 50, 30]
+
     def test_get_shapely_multipolygon_make_valid_returns_geometry_collection(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

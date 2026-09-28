@@ -24,34 +24,19 @@ def get_shapely_box(x: int | float, y: int | float, width: int | float, height: 
     return shapely_box
 
 
+def filter_polygons(geometry: GeometryCollection | Polygon | MultiPolygon) -> MultiPolygon:
+    """Return the Polygon parts of a geometry as a MultiPolygon, dropping lines and points."""
+    if isinstance(geometry, Polygon):
+        return MultiPolygon([geometry])
+    if isinstance(geometry, MultiPolygon):
+        return geometry
+    if isinstance(geometry, GeometryCollection):
+        return MultiPolygon([part for geom in geometry.geoms for part in filter_polygons(geom).geoms])
+    return MultiPolygon()
+
+
 def get_shapely_multipolygon(coco_segmentation: list[list]) -> MultiPolygon:
     """Accepts coco style polygon coords and converts it to valid shapely multipolygon object."""
-
-    def filter_polygons(geometry: GeometryCollection | Polygon | MultiPolygon) -> MultiPolygon:
-        """Filters out and returns only Polygon or MultiPolygon components of a geometry.
-
-        If geometry is a Polygon, it converts it into a MultiPolygon. If it's a GeometryCollection, it filters to create
-        a MultiPolygon from any Polygons in the collection. Returns an empty MultiPolygon if no Polygon or MultiPolygon
-        components are found.
-
-        Args:
-            geometry: A shapely geometry object (Polygon, MultiPolygon, GeometryCollection, etc.)
-
-        Returns: MultiPolygon
-        """
-        if isinstance(geometry, Polygon):
-            return MultiPolygon([geometry])
-        elif isinstance(geometry, MultiPolygon):
-            return geometry
-        elif isinstance(geometry, GeometryCollection):
-            polygons = [
-                geom.geoms if isinstance(geom, MultiPolygon) else geom
-                for geom in geometry.geoms
-                if isinstance(geom, (Polygon, MultiPolygon))
-            ]
-            return MultiPolygon(polygons) if polygons else MultiPolygon()
-        return MultiPolygon()
-
     polygon_list = []
     for coco_polygon in coco_segmentation:
         point_list = list(zip(coco_polygon[0::2], coco_polygon[1::2]))
@@ -319,12 +304,7 @@ class ShapelyAnnotation:
         else:
             slice_bbox = None
         # convert intersection to multipolygon
-        if intersection.geom_type == "Polygon":
-            intersection_multipolygon = MultiPolygon([intersection])
-        elif intersection.geom_type == "MultiPolygon":
-            intersection_multipolygon = intersection
-        else:
-            intersection_multipolygon = MultiPolygon([])
+        intersection_multipolygon = filter_polygons(intersection)
         # create shapely annotation from intersection multipolygon
         intersection_shapely_annotation = ShapelyAnnotation(intersection_multipolygon, slice_bbox)
 
