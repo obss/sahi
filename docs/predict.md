@@ -22,6 +22,7 @@ detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',..
 detection_model = AutoDetectionModel.from_pretrained(model_type='huggingface',...) # for HuggingFace detection models
 detection_model = AutoDetectionModel.from_pretrained(model_type='torchvision',...) # for Torchvision detection models
 detection_model = AutoDetectionModel.from_pretrained(model_type='rtdetr',...) # for RT-DETR models
+detection_model = AutoDetectionModel.from_pretrained(model_type='libreyolo',...) # for LibreYOLO models
 detection_model = AutoDetectionModel.from_pretrained(model_type='yoloe',...) # for YOLOE models
 detection_model = AutoDetectionModel.from_pretrained(model_type='yolov5',...) # for YOLOv5 models
 detection_model = AutoDetectionModel.from_pretrained(model_type='yolo-world',...) # for YOLOWorld models
