@@ -57,6 +57,28 @@ class TestCocoUtils:
         assert coco_category4.name == category_name
         assert coco_category4.supercategory == category_name
 
+    def test_coco_remapping_dict_with_chained_ids(self) -> None:
+        """Test that each category id is remapped once, even when a target id is also a source id."""
+        from sahi.utils.coco import Coco, CocoVid
+
+        coco_dict = {
+            "images": [{"id": 1, "file_name": "a.jpg", "height": 100, "width": 100}],
+            "categories": [{"id": 0, "name": "cat"}, {"id": 1, "name": "dog"}],
+            "annotations": [
+                {"id": 1, "image_id": 1, "category_id": 0, "bbox": [0, 0, 10, 10], "segmentation": [], "area": 100},
+                {"id": 2, "image_id": 1, "category_id": 1, "bbox": [20, 20, 10, 10], "segmentation": [], "area": 100},
+            ],
+        }
+        coco = Coco.from_coco_dict_or_path(coco_dict, remapping_dict={0: 1, 1: 2})
+
+        assert coco.category_mapping == {1: "cat", 2: "dog"}
+        annotations = coco.images[0].annotations
+        assert [(a.category_id, a.category_name) for a in annotations] == [(1, "cat"), (2, "dog")]
+
+        cocovid = CocoVid(remapping_dict={0: 1, 1: 2})
+        cocovid.add_categories_from_coco_category_list([{"id": 0, "name": "cat"}, {"id": 1, "name": "dog"}])
+        assert cocovid.category_mapping == {1: "cat", 2: "dog"}
+
     def test_coco_annotation(self) -> None:
         """Test CocoAnnotation creation from segmentation and bounding box."""
         from sahi.utils.coco import CocoAnnotation

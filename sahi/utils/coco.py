@@ -868,10 +868,7 @@ class Coco:
         """
         for coco_category in coco_category_list:
             if self.remapping_dict is not None:
-                for source_id in self.remapping_dict.keys():
-                    if coco_category["id"] == source_id:
-                        target_id = self.remapping_dict[source_id]
-                        coco_category["id"] = target_id
+                coco_category["id"] = self.remapping_dict.get(coco_category["id"], coco_category["id"])
 
             self.add_category(CocoCategory.from_coco_category(coco_category))
 
@@ -2197,10 +2194,7 @@ class CocoVid:
         """
         for coco_category in coco_category_list:
             if self.remapping_dict is not None:
-                for source_id in self.remapping_dict.keys():
-                    if coco_category["id"] == source_id:
-                        target_id = self.remapping_dict[source_id]
-                        coco_category["id"] = target_id
+                coco_category["id"] = self.remapping_dict.get(coco_category["id"], coco_category["id"])
 
             self.add_category(CocoCategory.from_coco_category(coco_category))
 
