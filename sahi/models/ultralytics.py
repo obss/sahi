@@ -103,18 +103,9 @@ class UltralyticsDetectionModel(DetectionModel):
         import torch
 
         if self.has_mask:
-            from ultralytics.engine.results import Masks
-
-            for result in prediction_result:
-                if not result.masks:
-                    device = getattr(self.model, "device", "cpu")
-                    result.masks = Masks(torch.tensor([], device=device), result.boxes.orig_shape)
-
+            device = getattr(self.model, "device", "cpu")
             return [
-                (
-                    result.boxes.data,
-                    result.masks.data,
-                )
+                (result.boxes.data, result.masks.data if result.masks else torch.empty(0, device=device))
                 for result in prediction_result
             ]
         elif self.is_obb:
@@ -148,7 +139,9 @@ class UltralyticsDetectionModel(DetectionModel):
         if self.model is None:
             raise ValueError("Model is not loaded, load it by calling .load_model()")
 
-        kwargs = {"cfg": self.config_path, "verbose": False, "conf": self.confidence_threshold, "device": self.device}
+        kwargs = {"verbose": False, "conf": self.confidence_threshold, "device": self.device}
+        if self.config_path is not None:
+            kwargs["cfg"] = self.config_path
 
         if self.image_size is not None:
             kwargs = {"imgsz": self.image_size, **kwargs}
