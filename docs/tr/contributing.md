@@ -33,7 +33,7 @@ source .venv/bin/activate  # Windows kullanıcıları: .venv\Scripts\activate
 
 ```bash
 # Çekirdek + geliştirme bağımlılıklarını yükleyin
-uv sync --extra dev
+uv sync --group dev
 
 # Belirli bir modeli test etmek isterseniz onun bağımlılıklarını da yükleyin.
 ```
@@ -99,7 +99,7 @@ CI derlemesi format sorunları nedeniyle başarısız olursa:
 3. Geliştirme bağımlılıklarını yükleyin:
 
     ```bash
-    uv sync --extra dev
+    uv sync --group dev
     ```
 
 4. Formatı düzeltin:
@@ -118,7 +118,7 @@ Yeni bir tespit kütüphanesi desteği eklemek için:
 2. `DetectionModel` sınıfından türeyen bir sınıf yazın
 3. `sahi/auto_model.py` içinde `MODEL_TYPE_TO_MODEL_CLASS_NAME` sözlüğüne kütüphanenizi ekleyin
 4. `tests/test_yourframework.py` altına test ekleyin
-5. `demo/inference_for_your_framework.ipynb` altına örnek bir notebook ekleyin
+5. `docs/notebooks/inference_for_your_framework.ipynb` altına örnek bir notebook ekleyin
 6. Yeni modelinizi içerecek şekilde [`README.md`](https://github.com/obss/sahi/blob/main/README.md) ve `docs/` altındaki ilgili dokümanları güncelleyin
 
 Lütfen `sahi/models/ultralytics.py` gibi mevcut uygulamaları referans alın.

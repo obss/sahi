@@ -794,12 +794,10 @@ def get_bool_mask_from_coco_segmentation(coco_segmentation: list[list[float]], w
     Returns:
         2D boolean mask of size (height, width).
     """
-    size = [height, width]
     points = [np.array(point).reshape(-1, 2).round().astype(int) for point in coco_segmentation]
-    bool_mask = np.zeros(size)
-    bool_mask = cv2.fillPoly(bool_mask, points, (1.0,))  # type: ignore[assignment]
-    bool_mask.astype(bool)
-    return bool_mask
+    mask = np.zeros((height, width), dtype=np.uint8)
+    cv2.fillPoly(mask, points, (1,))
+    return mask.astype(bool)
 
 
 def get_bbox_from_bool_mask(bool_mask: np.ndarray) -> list[int] | None:

@@ -41,6 +41,6 @@ Depoyu (repository) klonlayın ve notebook'ları Jupyter ile çalıştırın:
 ```bash
 git clone https://github.com/obss/sahi.git
 cd sahi
-pip install -e ".[dev]"
+uv sync --group dev
 jupyter notebook demo/
 ```

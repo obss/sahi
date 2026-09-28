@@ -33,7 +33,7 @@ source .venv/bin/activate  # Windows 用户: .venv\Scripts\activate
 
 ```bash
 # 安装核心 + 开发依赖
-uv sync --extra dev
+uv sync --group dev
 
 # 如需测试特定模型，请安装其对应的依赖。
 ```
@@ -99,7 +99,7 @@ uv run pytest --cov=sahi
 3. 安装开发依赖：
 
     ```bash
-    uv sync --extra dev
+    uv sync --group dev
     ```
 
 4. 修复格式：
