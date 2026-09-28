@@ -22,6 +22,7 @@ detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',..
 detection_model = AutoDetectionModel.from_pretrained(model_type='huggingface',...) # HuggingFace 检测模型
 detection_model = AutoDetectionModel.from_pretrained(model_type='torchvision',...) # Torchvision 检测模型
 detection_model = AutoDetectionModel.from_pretrained(model_type='rtdetr',...) # RT-DETR 模型
+detection_model = AutoDetectionModel.from_pretrained(model_type='libreyolo',...) # LibreYOLO 模型
 detection_model = AutoDetectionModel.from_pretrained(model_type='yoloe',...) # YOLOE 模型
 detection_model = AutoDetectionModel.from_pretrained(model_type='yolov5',...) # YOLOv5 模型
 detection_model = AutoDetectionModel.from_pretrained(model_type='yolo-world',...) # YOLOWorld 模型
@@ -147,7 +148,7 @@ from sahi import AutoDetectionModel
 detection_model = AutoDetectionModel.from_pretrained(...)
 
 def my_progress_callback(current, total):
-    print(f"已处理 {current}/{total} 个切片")
+    print(f"Processed {current}/{total} slices")
 
 result = get_sliced_prediction(
     image,

@@ -253,13 +253,13 @@ result = get_sliced_prediction(
 用于高精度实时检测的 Real-Time Detection Transformer。
 
 ```bash
-pip install transformers timm
+pip install ultralytics
 ```
 
 ```python
 detection_model = AutoDetectionModel.from_pretrained(
     model_type="rtdetr",
-    model_path="PekingU/rtdetr_r50vd",
+    model_path="rtdetr-l.pt",
     confidence_threshold=0.3,
     device="cuda:0",
 )
@@ -273,6 +273,32 @@ result = get_sliced_prediction(
 ```
 
 [![在 Colab 中打开](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/obss/sahi/blob/main/demo/inference_for_rtdetr.ipynb)
+
+---
+
+## LibreYOLO
+
+MIT 许可的 YOLO 模型，API 与 Ultralytics 兼容。
+
+```bash
+pip install libreyolo
+```
+
+```python
+detection_model = AutoDetectionModel.from_pretrained(
+    model_type="libreyolo",
+    model_path="LibreYOLO9t.pt",
+    confidence_threshold=0.3,
+    device="cuda:0",
+)
+
+result = get_sliced_prediction(
+    "image.jpg",
+    detection_model,
+    slice_height=512,
+    slice_width=512,
+)
+```
 
 ---
 

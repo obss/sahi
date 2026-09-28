@@ -83,6 +83,12 @@ Güvenlik güncellemeleri şu kanallardan duyurulacaktır:
 - [GitHub Releases](https://github.com/obss/sahi/releases)
 - [CHANGELOG.md](changelog.md)
 
+### Ek Kaynaklar
+
+- [GitHub Güvenlik En İyi Uygulamaları](https://docs.github.com/en/code-security)
+- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)
+- [Python Güvenlik En İyi Uygulamaları](https://python.readthedocs.io/en/stable/library/security_warnings.html)
+
 ## Bug Bounty Programı
 
 Şu anda bir bug bounty programımız bulunmamaktadır. Ancak, zafiyetleri bize sorumluluk bilinciyle bildiren güvenlik araştırmacılarına son derece müteşekkiriz.
