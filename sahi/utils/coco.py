@@ -1407,6 +1407,18 @@ class Coco:
         with open(yaml_path, "w") as outfile:
             yaml.dump(data, outfile, default_flow_style=None)
 
+    def _copy_without_images(self) -> Coco:
+        """Return a new Coco with the same settings and categories but no images."""
+        coco = Coco(
+            name=self.name,
+            image_dir=self.image_dir,
+            remapping_dict=self.remapping_dict,
+            ignore_negative_samples=self.ignore_negative_samples,
+        )
+        # categories are already remapped, copy them instead of remapping again
+        coco.categories = copy.deepcopy(self.categories)
+        return coco
+
     def get_subsampled_coco(self, subsample_ratio: int = 2, category_id: int | None = None) -> Coco:
         """Subsample images and return as Coco object.
 
@@ -1418,14 +1430,7 @@ class Coco:
         Returns:
             subsampled_coco: sahi.utils.coco.Coco
         """
-        subsampled_coco = Coco(
-            name=self.name,
-            image_dir=self.image_dir,
-            remapping_dict=self.remapping_dict,
-            ignore_negative_samples=self.ignore_negative_samples,
-        )
-        # self.categories are already remapped, copy them rather than remap again
-        subsampled_coco.categories = copy.deepcopy(self.categories)
+        subsampled_coco = self._copy_without_images()
 
         if category_id is not None:
             # get images that contain given category id
@@ -1486,14 +1491,7 @@ class Coco:
         Returns:
             upsampled_coco: sahi.utils.coco.Coco
         """
-        upsampled_coco = Coco(
-            name=self.name,
-            image_dir=self.image_dir,
-            remapping_dict=self.remapping_dict,
-            ignore_negative_samples=self.ignore_negative_samples,
-        )
-        # self.categories are already remapped, copy them rather than remap again
-        upsampled_coco.categories = copy.deepcopy(self.categories)
+        upsampled_coco = self._copy_without_images()
         for ind in range(upsample_ratio):
             for image_ind in range(len(self.images)):
                 # calculate add_this_image
@@ -1539,14 +1537,7 @@ class Coco:
         Returns:
             area_filtered_coco: sahi.utils.coco.Coco
         """
-        area_filtered_coco = Coco(
-            name=self.name,
-            image_dir=self.image_dir,
-            remapping_dict=self.remapping_dict,
-            ignore_negative_samples=self.ignore_negative_samples,
-        )
-        # self.categories are already remapped, copy them rather than remap again
-        area_filtered_coco.categories = copy.deepcopy(self.categories)
+        area_filtered_coco = self._copy_without_images()
         for image in self.images:
             is_valid_image = True
             for annotation in image.annotations:
@@ -1566,14 +1557,7 @@ class Coco:
         """Limits overflowing bounding boxes to image dimensions."""
         from sahi.slicing import annotation_inside_slice
 
-        coco = Coco(
-            name=self.name,
-            image_dir=self.image_dir,
-            remapping_dict=self.remapping_dict,
-            ignore_negative_samples=self.ignore_negative_samples,
-        )
-        # self.categories are already remapped, copy them rather than remap again
-        coco.categories = copy.deepcopy(self.categories)
+        coco = self._copy_without_images()
 
         for coco_img in self.images:
             img_dims = [0, 0, coco_img.width, coco_img.height]
