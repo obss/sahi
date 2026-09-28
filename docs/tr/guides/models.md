@@ -424,9 +424,9 @@ Tüm modeller `AutoDetectionModel.from_pretrained()` içinde şu parametreleri k
 | `model_type` | str | Framework adı (yukarıdaki bölümlere bakın) |
 | `model_path` | str | Ağırlık dosyasının yolu veya model adı |
 | `config_path` | str | Konfigürasyon dosyası yolu (MMDetection, Detectron2) |
-| `confidence_threshold` | float | Bir tespiti tutmak için minimum skor (varsayılan: 0.25) |
+| `confidence_threshold` | float | Bir tespiti tutmak için minimum skor (varsayılan: 0.3) |
 | `device` | str | `"cpu"`, `"cuda:0"`, `"mps"` vb. |
-| `category_mapping` | dict | Kategori ID'lerini isimlere haritalar: `{0: "car", 1: "person"}` |
+| `category_mapping` | dict | Kategori ID'lerini isimlere haritalar, anahtarlar string olmalıdır: `{"0": "car", "1": "person"}` |
 | `category_remapping` | dict | Inference sonrasında kategori isimlerini yeniden haritalar |
 | `image_size` | int | Model girdi çözünürlüğünü geçersiz kılar |
 | `load_at_init` | bool | Ağırlıkları hemen yükler (varsayılan: True) |
