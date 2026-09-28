@@ -15,6 +15,7 @@ from sahi.utils.cv import (
     Colors,
     apply_color_mask,
     get_bbox_from_bool_mask,
+    get_bool_mask_from_coco_segmentation,
     get_coco_segmentation_from_bool_mask,
     get_coco_segmentation_from_obb_points,
     get_video_reader,
@@ -117,6 +118,14 @@ class TestCvUtils:
         mask[5:8, 5:8] = True
         result = get_coco_segmentation_from_bool_mask(mask)
         assert len(result) == 2
+
+    def test_get_bool_mask_from_coco_segmentation(self) -> None:
+        """Test boolean mask from COCO segmentation."""
+        result = get_bool_mask_from_coco_segmentation([[1, 1, 3, 1, 3, 3, 1, 3]], width=5, height=4)
+        assert result.dtype == bool
+        assert result.shape == (4, 5)
+        assert result.sum() == 9
+        assert result[1:4, 1:4].all()
 
     def test_get_coco_segmentation_from_obb_points(self) -> None:
         points = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
