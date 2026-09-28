@@ -747,6 +747,34 @@ class TestCocoUtils:
         assert coco_with_clipped_bboxes.images[1] is not None
         assert len(coco_with_clipped_bboxes.images[1].annotations) == 0
 
+    def test_derived_coco_keeps_remapped_categories(self) -> None:
+        """Test that derived Coco objects do not apply remapping_dict to already remapped categories."""
+        from sahi.utils.coco import Coco
+
+        def get_coco_dict() -> dict:
+            return {
+                "images": [{"id": 1, "file_name": "a.jpg", "height": 100, "width": 100}],
+                "categories": [{"id": 1, "name": "cat"}, {"id": 2, "name": "dog"}],
+                "annotations": [
+                    {"id": 1, "image_id": 1, "category_id": 1, "bbox": [0, 0, 10, 10], "segmentation": []},
+                    {"id": 2, "image_id": 1, "category_id": 2, "bbox": [20, 20, 10, 10], "segmentation": []},
+                ],
+            }
+
+        remapping_dict = {1: 0, 2: 1}
+        expected_mapping = {0: "cat", 1: "dog"}
+        coco = Coco.from_coco_dict_or_path(get_coco_dict(), remapping_dict=remapping_dict)
+        assert coco.category_mapping == expected_mapping
+        assert coco.get_subsampled_coco(subsample_ratio=1).category_mapping == expected_mapping
+        assert coco.get_upsampled_coco(upsample_ratio=1).category_mapping == expected_mapping
+        assert coco.get_area_filtered_coco().category_mapping == expected_mapping
+        assert coco.get_coco_with_clipped_bboxes().category_mapping == expected_mapping
+
+        clipped_coco = Coco.from_coco_dict_or_path(
+            get_coco_dict(), remapping_dict=remapping_dict, clip_bboxes_to_img_dims=True
+        )
+        assert clipped_coco.json_categories == coco.json_categories
+
     def test_remove_invalid_coco_results_short_bbox(self) -> None:
         from sahi.utils.coco import remove_invalid_coco_results
 

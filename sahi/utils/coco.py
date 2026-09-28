@@ -1424,7 +1424,8 @@ class Coco:
             remapping_dict=self.remapping_dict,
             ignore_negative_samples=self.ignore_negative_samples,
         )
-        subsampled_coco.add_categories_from_coco_category_list(self.json_categories)
+        # self.categories are already remapped, copy them rather than remap again
+        subsampled_coco.categories = copy.deepcopy(self.categories)
 
         if category_id is not None:
             # get images that contain given category id
@@ -1491,7 +1492,8 @@ class Coco:
             remapping_dict=self.remapping_dict,
             ignore_negative_samples=self.ignore_negative_samples,
         )
-        upsampled_coco.add_categories_from_coco_category_list(self.json_categories)
+        # self.categories are already remapped, copy them rather than remap again
+        upsampled_coco.categories = copy.deepcopy(self.categories)
         for ind in range(upsample_ratio):
             for image_ind in range(len(self.images)):
                 # calculate add_this_image
@@ -1543,7 +1545,8 @@ class Coco:
             remapping_dict=self.remapping_dict,
             ignore_negative_samples=self.ignore_negative_samples,
         )
-        area_filtered_coco.add_categories_from_coco_category_list(self.json_categories)
+        # self.categories are already remapped, copy them rather than remap again
+        area_filtered_coco.categories = copy.deepcopy(self.categories)
         for image in self.images:
             is_valid_image = True
             for annotation in image.annotations:
@@ -1569,7 +1572,8 @@ class Coco:
             remapping_dict=self.remapping_dict,
             ignore_negative_samples=self.ignore_negative_samples,
         )
-        coco.add_categories_from_coco_category_list(self.json_categories)
+        # self.categories are already remapped, copy them rather than remap again
+        coco.categories = copy.deepcopy(self.categories)
 
         for coco_img in self.images:
             img_dims = [0, 0, coco_img.width, coco_img.height]
