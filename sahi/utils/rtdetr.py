@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import urllib.request
-from os import path
-from pathlib import Path
+from sahi.utils.file import download_from_url
 
 
 class RTDETRTestConstants:
@@ -19,27 +17,9 @@ class RTDETRTestConstants:
 
 def download_rtdetrl_model(destination_path: str | None = None) -> None:
     """Download the RT-DETR-L model for testing."""
-    if destination_path is None:
-        destination_path = RTDETRTestConstants.RTDETRL_MODEL_PATH
-
-    Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
-
-    if not path.exists(destination_path):
-        urllib.request.urlretrieve(
-            RTDETRTestConstants.RTDETRX_MODEL_URL,
-            destination_path,
-        )
+    download_from_url(RTDETRTestConstants.RTDETRL_MODEL_URL, destination_path or RTDETRTestConstants.RTDETRL_MODEL_PATH)
 
 
 def download_rtdetrx_model(destination_path: str | None = None) -> None:
     """Download the RT-DETR-X model for testing."""
-    if destination_path is None:
-        destination_path = RTDETRTestConstants.RTDETRX_MODEL_PATH
-
-    Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
-
-    if not path.exists(destination_path):
-        urllib.request.urlretrieve(
-            RTDETRTestConstants.RTDETRX_MODEL_URL,
-            destination_path,
-        )
+    download_from_url(RTDETRTestConstants.RTDETRX_MODEL_URL, destination_path or RTDETRTestConstants.RTDETRX_MODEL_PATH)

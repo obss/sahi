@@ -84,7 +84,7 @@ class TestRTDetrDetectionModel:
                     break
 
         # compare
-        desired_bbox = [321, 322, 384, 362]
+        desired_bbox = [321, 322, 383, 364]
         predicted_bbox = list(map(round, box[:4].tolist()))
         margin = 2
         for ind, point in enumerate(predicted_bbox):

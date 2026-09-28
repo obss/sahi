@@ -72,11 +72,11 @@ jobs:
         with:
           path: tests/data/models
           key:
-            ${{ runner.os }}-models-${{ hashFiles('sahi/utils/yolov5.py',
-            'sahi/utils/ultralytics.py', 'sahi/utils/rtdetr.py',
+            ${{ runner.os }}-models-v2-${{ hashFiles('sahi/utils/yolov5.py',
+            'tests/utils/ultralytics.py', 'sahi/utils/rtdetr.py',
             'sahi/utils/torchvision.py') }}
           restore-keys: |
-            ${{ runner.os }}-models-
+            ${{ runner.os }}-models-v2-
 
       - name: Cache HuggingFace Hub downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
