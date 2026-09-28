@@ -345,8 +345,7 @@ def has_match(
         match_threshold: Minimum overlap to count as a match.
 
     Returns:
-        True if the overlap is at least match_threshold, the same test the
-        NMS/NMM backends use to pick merge candidates.
+        True if the overlap is at least match_threshold.
 
     Raises:
         ValueError: If match_type is not "IOU" or "IOS".
