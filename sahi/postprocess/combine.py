@@ -210,6 +210,8 @@ def batched_greedy_nmm(
     Returns:
         Dict mapping each kept index to a list of indices merged into it.
     """
+    if len(predictions) == 0:
+        return {}
     return _batched_apply(predictions, greedy_nmm, match_metric, match_threshold)  # type: ignore[return-value]
 
 
@@ -252,6 +254,8 @@ def batched_nmm(
     Returns:
         Dict mapping each kept index to a list of indices merged into it.
     """
+    if len(predictions) == 0:
+        return {}
     return _batched_apply(predictions, nmm, match_metric, match_threshold)  # type: ignore[return-value]
 
 

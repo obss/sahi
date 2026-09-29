@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 import pytest
@@ -57,6 +57,22 @@ PREDS_BATCHED_NMM = [
 
 class TestEdgeCases:
     """Test edge cases for NMS/NMM functions."""
+
+    @pytest.mark.parametrize("postprocess", [batched_greedy_nmm, batched_nmm])
+    def test_batched_merging_empty(self, postprocess: Callable[..., dict[int, list[int]]]) -> None:
+        """Empty batched merging results retain the mapping interface."""
+        result = postprocess(np.empty((0, 6), dtype=np.float32))
+        assert result == {}
+        assert list(result.items()) == []
+
+    def test_batched_nms_empty(self) -> None:
+        """Empty batched suppression returns a list of kept indices."""
+        assert batched_nms(np.empty((0, 6), dtype=np.float32)) == []
+
+    @pytest.mark.parametrize("postprocess_class", [GreedyNMMPostprocess, NMMPostprocess])
+    def test_class_aware_merging_empty(self, postprocess_class: type[NMMPostprocess]) -> None:
+        """Class-aware postprocessors accept images without detections."""
+        assert postprocess_class(class_agnostic=False)([]) == []
 
     def test_nms_empty(self) -> None:
         """Test NMS with empty predictions."""
