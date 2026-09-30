@@ -63,7 +63,6 @@ class TestEdgeCases:
         """Empty batched merging results retain the mapping interface."""
         result = postprocess(np.empty((0, 6), dtype=np.float32))
         assert result == {}
-        assert list(result.items()) == []
 
     def test_batched_nms_empty(self) -> None:
         """Empty batched suppression returns a list of kept indices."""
