@@ -229,3 +229,17 @@ class TestSlicing:
         shifted_masks = shift_masks(masks=masks, offset=[shift_x, shift_y], full_shape=full_shape)
         assert shifted_masks.shape == (3, 720, 1280)
         assert isinstance(shifted_masks, np.ndarray)
+
+    def test_shift_masks_moves_the_mask_pixels(self) -> None:
+        """Each slice mask lands in the full image at its offset."""
+        masks = np.zeros((2, 30, 30), dtype=bool)
+        masks[0, 5:15, 5:15] = True
+        masks[1, 20:25, 3:9] = True
+        shift_x = 10
+        shift_y = 20
+        full_shape = [100, 100]
+        shifted_masks = shift_masks(masks=masks, offset=[shift_x, shift_y], full_shape=full_shape)
+
+        expected = np.zeros((2, 100, 100), dtype=bool)
+        expected[:, shift_y : shift_y + 30, shift_x : shift_x + 30] = masks
+        np.testing.assert_array_equal(shifted_masks, expected)
