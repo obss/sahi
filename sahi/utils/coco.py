@@ -159,12 +159,14 @@ class CocoAnnotation:
                 segmentation=annotation_dict["segmentation"],
                 category_id=annotation_dict["category_id"],
                 category_name=category_name,
+                iscrowd=annotation_dict.get("iscrowd", 0),
             )
         else:
             return cls(
                 bbox=annotation_dict["bbox"],
                 category_id=annotation_dict["category_id"],
                 category_name=category_name,
+                iscrowd=annotation_dict.get("iscrowd", 0),
             )
 
     @classmethod
@@ -1571,6 +1573,7 @@ class Coco:
                         category_id=coco_ann.category_id,
                         category_name=coco_ann.category_name,
                         image_id=coco_ann.image_id,
+                        iscrowd=coco_ann.iscrowd,
                     )
                     coco_image.add_annotation(coco_ann_from_shapely)
                 else:
@@ -1978,7 +1981,7 @@ def create_coco_dict(
             for coco_annotation in coco_annotations:
                 # create coco annotation object
                 out_annotation = {
-                    "iscrowd": 0,
+                    "iscrowd": coco_annotation.iscrowd,
                     "image_id": image_id,
                     "bbox": coco_annotation.bbox,
                     "segmentation": coco_annotation.segmentation,
