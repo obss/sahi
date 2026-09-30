@@ -1,5 +1,32 @@
 # 📝 CHANGELOG
 
+## 🚀 SAHI v0.12.8 Release Notes
+
+A patch release that adds LibreYOLO as a detection backend, fixes seven bugs in COCO category remapping, slicing, mask conversion and box merging, and builds boolean masks faster.
+
+### ✨ Features
+
+- **LibreYOLO detection backend** ([#1425](https://github.com/obss/sahi/pull/1425)). Install it with `pip install libreyolo` and load MIT-licensed LibreYOLO models with `model_type="libreyolo"`. It reuses the Ultralytics wrapper, and the models guide covers it in every language ([#1467](https://github.com/obss/sahi/pull/1467)).
+
+### 🐛 Fixes
+
+- **Sliced annotations that touch the slice border are kept** ([#1462](https://github.com/obss/sahi/pull/1462)). When a polygon edge lay exactly on a slice border, the intersection came back as a mix of polygons and lines and the annotation was dropped with area 0. The polygon parts are now kept.
+- **NMM merges boxes whose overlap equals the match threshold** ([#1464](https://github.com/obss/sahi/pull/1464)). These boxes were claimed by the keeper but never merged, so they disappeared from the output and the keeper box did not grow.
+- **`get_bool_mask_from_coco_segmentation` returns a boolean array** ([#1463](https://github.com/obss/sahi/pull/1463)). It returned the float64 canvas, so `Mask.bool_mask` could not be used to index an image.
+- **Category remapping maps each id once** ([#1465](https://github.com/obss/sahi/pull/1465)). With `remapping_dict={0: 1, 1: 2}` both categories ended up with id 2 and loading failed with `KeyError`.
+- **Subsampled, upsampled, area filtered and bbox clipped Coco objects keep their categories** ([#1466](https://github.com/obss/sahi/pull/1466)). They applied `remapping_dict` a second time to ids that were already remapped, which also affected `clip_bboxes_to_img_dims=True`.
+- **Class-aware NMM and greedy NMM accept an image with no detections** ([#1470](https://github.com/obss/sahi/pull/1470)) instead of raising `AttributeError`.
+- **`fix_shift_amount_list` and `fix_full_shape_list` accept empty lists** ([#1459](https://github.com/obss/sahi/pull/1459)) instead of raising `IndexError`.
+
+### ⚡ Performance
+
+- **Boolean masks from COCO polygons build about 8x faster** ([#1463](https://github.com/obss/sahi/pull/1463)). The mask is drawn on a uint8 canvas instead of float64, which takes a 1080p mask from 1.03 ms to 0.13 ms on an Intel Core i7-13850HX and uses 8x less memory.
+
+### 📚 Documentation
+
+- **The Chinese and Turkish docs match the English docs again** ([#1461](https://github.com/obss/sahi/pull/1461)).
+- **The RT-DETR guide uses the Ultralytics weights the backend loads** ([#1467](https://github.com/obss/sahi/pull/1467)), and the `coco slice` CLI docs no longer list a `--backend` option it does not have ([#1460](https://github.com/obss/sahi/pull/1460)).
+
 ## 🚀 SAHI v0.12.7 Release Notes
 
 A patch release that adds an optional ultrafast-pycocotools backend to COCO evaluation, fixes four crashes and miscounts in COCO and video utilities, speeds up postprocessing and sliced prediction, and raises the torch floor to 2.13.0 on Python 3.10 and newer.

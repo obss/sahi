@@ -8,6 +8,33 @@ tags:
 
 # 📝 更新日志
 
+## 🚀 SAHI v0.12.8 发布说明
+
+此补丁版本新增了 LibreYOLO 检测后端，修复了 COCO 类别重映射、切片、掩码转换和框合并中的七个问题，并加快了布尔掩码的生成速度。
+
+### ✨ 新功能
+
+- **LibreYOLO 检测后端** ([#1425](https://github.com/obss/sahi/pull/1425))。使用 `pip install libreyolo` 安装后，通过 `model_type="libreyolo"` 加载 MIT 许可的 LibreYOLO 模型。它复用 Ultralytics 封装，所有语言的模型指南都已包含它 ([#1467](https://github.com/obss/sahi/pull/1467))。
+
+### 🐛 修复
+
+- **与切片边界相接的切片标注会被保留** ([#1462](https://github.com/obss/sahi/pull/1462))。当多边形的边恰好落在切片边界上时，交集会同时包含多边形和线段，标注会因面积为 0 而被丢弃。现在会保留其中的多边形部分。
+- **NMM 会合并重叠度恰好等于匹配阈值的框** ([#1464](https://github.com/obss/sahi/pull/1464))。这些框此前会被保留框占用但不会被合并，因此会从输出中消失，保留框也不会扩大。
+- **`get_bool_mask_from_coco_segmentation` 返回布尔数组** ([#1463](https://github.com/obss/sahi/pull/1463))。此前返回的是 float64 画布，因此 `Mask.bool_mask` 无法用于图像索引。
+- **类别重映射对每个 id 只映射一次** ([#1465](https://github.com/obss/sahi/pull/1465))。使用 `remapping_dict={0: 1, 1: 2}` 时，两个类别都会变成 id 2，加载时会抛出 `KeyError`。
+- **子采样、上采样、按面积过滤和裁剪 bbox 后的 Coco 对象保留正确的类别** ([#1466](https://github.com/obss/sahi/pull/1466))。此前它们会对已经重映射的 id 再次应用 `remapping_dict`，`clip_bboxes_to_img_dims=True` 也会受到影响。
+- **类别感知的 NMM 和 greedy NMM 可以处理没有检测结果的图像** ([#1470](https://github.com/obss/sahi/pull/1470))，不再抛出 `AttributeError`。
+- **`fix_shift_amount_list` 和 `fix_full_shape_list` 接受空列表** ([#1459](https://github.com/obss/sahi/pull/1459))，不再抛出 `IndexError`。
+
+### ⚡ 性能
+
+- **从 COCO 多边形生成布尔掩码的速度提升约 8 倍** ([#1463](https://github.com/obss/sahi/pull/1463))。掩码现在绘制在 uint8 画布上而不是 float64 画布上，在 Intel Core i7-13850HX 上生成一张 1080p 掩码的时间从 1.03 ms 降至 0.13 ms，内存占用减少到八分之一。
+
+### 📚 文档
+
+- **中文和土耳其语文档再次与英文文档保持一致** ([#1461](https://github.com/obss/sahi/pull/1461))。
+- **RT-DETR 指南使用该后端实际加载的 Ultralytics 权重** ([#1467](https://github.com/obss/sahi/pull/1467))，`coco slice` 的 CLI 文档不再列出它并不支持的 `--backend` 选项 ([#1460](https://github.com/obss/sahi/pull/1460))。
+
 ## 🚀 SAHI v0.12.7 发布说明
 
 此补丁版本为 COCO 评估新增了可选的 ultrafast-pycocotools 后端，修复了 COCO 和视频工具中的四处崩溃与计数错误，提升了后处理和切片预测的速度，并将 Python 3.10 及以上版本的 torch 最低版本提高到 2.13.0。
