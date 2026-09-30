@@ -735,7 +735,7 @@ def shift_masks(masks: np.ndarray, offset: Sequence[int], full_shape: Sequence[i
     """Shift masks to the original image.
 
     Args:
-        masks (np.ndarray): masks that need to be shifted.
+        masks (np.ndarray): Boolean masks of shape (N, height, width) that need to be shifted.
         offset (Sequence[int]): The offset to translate with shape of (2, ).
         full_shape (Sequence[int]): A (height, width) tuple of the huge image's shape.
 
@@ -747,8 +747,8 @@ def shift_masks(masks: np.ndarray, offset: Sequence[int], full_shape: Sequence[i
         return masks
 
     shifted_masks = []
-    for mask_seg in masks:
-        mask = Mask(segmentation=mask_seg, shift_amount=list(offset[:2]), full_shape=list(full_shape[:2]))  # type: ignore[arg-type]
+    for bool_mask in masks:
+        mask = Mask.from_bool_mask(bool_mask, full_shape=list(full_shape[:2]), shift_amount=list(offset[:2]))
         mask = mask.get_shifted_mask()
         shifted_masks.append(mask.bool_mask)
 
