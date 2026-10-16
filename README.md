@@ -228,7 +228,7 @@ If you use this package in your work, please cite as:
 
 ```bibtex
 @software{obss2021sahi,
-  author       = {Akyon, Fatih Cagatay and Cengiz, Cemil and Altinuc, Sinan Onur and Cavusoglu, Devrim and Sahin, Kadir and Eryuksel, Ogulcan},
+  author       = {Akyon, Fatih Cagatay and Cengiz, Cemil and Altinuc, Sinan Onur and Cavusoglu, Devrim and Sahin, Kadir and Eryuksel, Ogulcan and Sezer, Onuralp},
   title        = {{SAHI: A lightweight vision library for performing large scale object detection and instance segmentation}},
   month        = nov,
   year         = 2021,
