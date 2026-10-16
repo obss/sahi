@@ -797,6 +797,34 @@ class TestCocoUtils:
         )
         assert clipped_coco.json_categories == coco.json_categories
 
+    def test_coco_keeps_iscrowd(self) -> None:
+        """Test that crowd annotations stay crowd annotations when loaded, clipped and exported."""
+        from sahi.utils.coco import Coco
+
+        def get_coco_dict() -> dict:
+            return {
+                "images": [{"id": 1, "file_name": "a.jpg", "height": 100, "width": 100}],
+                "categories": [{"id": 1, "name": "person"}],
+                "annotations": [
+                    {"id": 1, "image_id": 1, "category_id": 1, "bbox": [0, 0, 10, 10], "segmentation": []},
+                    {
+                        "id": 2,
+                        "image_id": 1,
+                        "category_id": 1,
+                        "bbox": [20, 20, 30, 30],
+                        "segmentation": [],
+                        "iscrowd": 1,
+                    },
+                ],
+            }
+
+        coco = Coco.from_coco_dict_or_path(get_coco_dict())
+        assert [annotation.iscrowd for annotation in coco.images[0].annotations] == [0, 1]
+        assert [annotation["iscrowd"] for annotation in coco.json["annotations"]] == [0, 1]
+
+        clipped_coco = Coco.from_coco_dict_or_path(get_coco_dict(), clip_bboxes_to_img_dims=True)
+        assert [annotation["iscrowd"] for annotation in clipped_coco.json["annotations"]] == [0, 1]
+
     def test_remove_invalid_coco_results_short_bbox(self) -> None:
         from sahi.utils.coco import remove_invalid_coco_results
 
