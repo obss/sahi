@@ -13,6 +13,8 @@ authors:
     given-names: "Kadir"
   - family-names: "Eryuksel"
     given-names: "Ogulcan"
+  - family-names: "Sezer"
+    given-names: "Onuralp"
 title:
   "SAHI: A lightweight vision library for performing large scale object
   detection and instance segmentation"
