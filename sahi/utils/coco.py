@@ -1465,7 +1465,7 @@ class Coco:
                 if add_this_image:
                     images_that_doesnt_contain_category.append(image)
 
-        if category_id:
+        if category_id is not None:
             selected_images = images_that_contain_category
             # add images that does not contain given category without subsampling
             for image_ind in range(len(images_that_doesnt_contain_category)):
