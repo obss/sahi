@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import os
 import shutil
+from pathlib import Path
 from typing import Any
+
+import pytest
 
 from sahi.logger import logger
 from sahi.utils.coco import merge, update_categories
@@ -384,6 +387,40 @@ class TestCocoUtils:
             shutil.rmtree(output_dir, ignore_errors=True)
         coco = Coco.from_coco_dict_or_path(coco_dict_path, image_dir=image_dir)
         coco.export_as_yolo(output_dir=output_dir, train_split_rate=0.5, numpy_seed=0)
+
+    @pytest.mark.parametrize("output_name", ["export", "export.jpg"])
+    @pytest.mark.parametrize(
+        ("file_name", "expected_labels"),
+        [
+            ("photo.jpg", ["photo.txt", "photo_2.txt"]),
+            ("photo.jpg.backup.jpg", ["photo.jpg.backup.txt", "photo.jpg.backup_2.txt"]),
+        ],
+    )
+    def test_yolo_labels_replace_only_the_image_suffix(
+        self, tmp_path: Path, output_name: str, file_name: str, expected_labels: list[str]
+    ) -> None:
+        """Keep directory and stem names intact, including after duplicate-image renaming."""
+        from PIL import Image
+
+        from sahi.utils.coco import CocoAnnotation, CocoImage, export_single_yolo_image_and_corresponding_txt
+
+        source = tmp_path / file_name
+        Image.new("RGB", (100, 100)).save(source)
+        output = tmp_path / output_name
+        output.mkdir()
+        image = CocoImage(file_name=str(source), height=100, width=100)
+        image.add_annotation(CocoAnnotation(bbox=[10, 20, 30, 40], category_id=0))
+
+        for _ in range(2):
+            export_single_yolo_image_and_corresponding_txt(image, str(tmp_path), str(output), disable_symlink=True)
+
+        expected_images = [Path(label).with_suffix(".jpg").name for label in expected_labels]
+        assert sorted(path.name for path in output.iterdir()) == sorted(expected_images + expected_labels)
+        for label, image_name in zip(expected_labels, expected_images):
+            values = (output / label).read_text().split()
+            assert values[0] == "0"
+            assert [float(value) for value in values[1:]] == pytest.approx([0.25, 0.4, 0.3, 0.4])
+            assert (output / image_name).read_bytes() == source.read_bytes()
 
     def test_update_categories(self) -> None:
         """Test updating categories in COCO dataset."""
