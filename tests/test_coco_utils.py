@@ -6,6 +6,8 @@ import os
 import shutil
 from typing import Any
 
+import pytest
+
 from sahi.logger import logger
 from sahi.utils.coco import merge, update_categories
 from sahi.utils.file import load_json
@@ -600,6 +602,40 @@ class TestCocoUtils:
             negative_subsampled_coco.stats["num_negative_images"]
             == int(coco.stats["num_negative_images"] / SUBSAMPLE_RATIO) + 1
         )
+
+    @pytest.mark.parametrize(
+        ("category_id", "expected_indices"),
+        [
+            (0, [0, 1, 3, 4, 5]),
+            (1, [0, 1, 2, 4, 5]),
+            (None, [0, 2, 4]),
+            (-1, [0, 1, 2, 3, 4]),
+            (2, [0, 1, 2, 3, 4, 5]),
+        ],
+    )
+    def test_get_subsampled_coco_preserves_other_categories(
+        self, category_id: int | None, expected_indices: list[int]
+    ) -> None:
+        """Subsample only the requested category, including category zero and negative samples."""
+        from sahi.utils.coco import Coco, CocoAnnotation, CocoCategory, CocoImage
+
+        coco = Coco()
+        for cid in (0, 1):
+            coco.add_category(CocoCategory(id=cid, name=f"class_{cid}"))
+        for index, image_category_id in enumerate((0, 1, 0, 1, None, None)):
+            image = CocoImage(file_name=f"{index}.jpg", height=100, width=100)
+            if image_category_id is not None:
+                image.add_annotation(
+                    CocoAnnotation(
+                        bbox=[10, 10, 20, 20], category_id=image_category_id, category_name=f"class_{image_category_id}"
+                    )
+                )
+            coco.add_image(image)
+
+        subsampled = coco.get_subsampled_coco(subsample_ratio=2, category_id=category_id)
+
+        assert sorted(image.file_name for image in subsampled.images) == [f"{index}.jpg" for index in expected_indices]
+        assert [image.file_name for image in coco.images] == [f"{index}.jpg" for index in range(6)]
 
     def test_get_upsampled_coco(self) -> None:
         """Test upsampling COCO dataset by ratio and category."""
