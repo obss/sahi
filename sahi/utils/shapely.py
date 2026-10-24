@@ -259,7 +259,7 @@ class ShapelyAnnotation:
 
     def get_simplified_shapely_annotation(self, tolerance: float = 1) -> ShapelyAnnotation:
         """Return simplified version of this annotation as a new ShapelyAnnotation."""
-        shapely_multipolygon = MultiPolygon([self.multipolygon.simplify(tolerance)])
+        shapely_multipolygon = filter_polygons(self.multipolygon.simplify(tolerance))
         shapely_annotation = ShapelyAnnotation(shapely_multipolygon)
         return shapely_annotation
 
@@ -286,7 +286,7 @@ class ShapelyAnnotation:
             mitre_limit=mitre_limit,
             single_sided=single_sided,
         )
-        shapely_annotation = ShapelyAnnotation(MultiPolygon([buffered_polygon]))
+        shapely_annotation = ShapelyAnnotation(filter_polygons(buffered_polygon))
         return shapely_annotation
 
     def get_intersection(self, polygon: Polygon) -> ShapelyAnnotation:
