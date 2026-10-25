@@ -19,6 +19,7 @@ from sahi.utils.cv import (
     get_coco_segmentation_from_bool_mask,
     get_coco_segmentation_from_obb_points,
     get_video_reader,
+    normalize_numpy_image,
     read_image,
     read_image_as_pil,
     read_image_size,
@@ -104,6 +105,14 @@ class TestCvUtils:
         result = apply_color_mask(image, color)
 
         np.testing.assert_array_equal(result, expected_output)
+
+    def test_normalize_black_image(self) -> None:
+        """Normalizing an all-black image should keep finite zeros."""
+        image = np.zeros((2, 2, 3), dtype=np.uint8)
+
+        result = normalize_numpy_image(image)
+
+        np.testing.assert_array_equal(result, np.zeros_like(image))
 
     def test_get_coco_segmentation_from_bool_mask_simple(self) -> None:
         """Test COCO segmentation from empty boolean mask."""

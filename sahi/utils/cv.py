@@ -883,7 +883,8 @@ def get_coco_segmentation_from_obb_points(obb_points: np.ndarray) -> list[list[f
 
 def normalize_numpy_image(image: np.ndarray) -> np.ndarray:
     """Normalizes numpy image."""
-    return image / np.max(image)
+    max_value = np.max(image)
+    return image / (max_value if max_value != 0 else 1)
 
 
 def ipython_display(image: np.ndarray) -> None:
