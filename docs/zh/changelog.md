@@ -8,6 +8,15 @@ tags:
 
 # 📝 更新日志
 
+## 🚀 SAHI v0.13.1 发布说明
+
+此补丁版本新增了对 Python 3.15 的支持。
+
+### 📦 构建
+
+- **支持 Python 3.15，并已加入 CI 测试** ([#1492](https://github.com/obss/sahi/pull/1492))。sahi 核心功能可以在 3.15 上安装和运行。torch 2.15.0 和 torchvision 0.29.2 是首批提供 Python 3.15 wheel 的版本，因此在 3.15 上安装 `torch` 或 `torchvision` 扩展时会选择这些版本或更新版本。
+- **在 Python 3.15 上，`onnx` 扩展暂不安装 onnxruntime** ([#1492](https://github.com/obss/sahi/pull/1492))，直到 onnxruntime 提供对应的 wheel。
+
 ## 🚀 SAHI v0.13.0 发布说明
 
 此次版本不再支持 Python 3.8 和 3.9，所有支持的 Python 版本的 torch 最低版本均提升至 2.13.0，并修复了切片、COCO 处理、shapely 标注和图像归一化中的七个问题。
