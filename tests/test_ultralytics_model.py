@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
@@ -40,6 +42,7 @@ def test_load_yolo11_model() -> None:
 
 def test_load_yolo11_onnx_model() -> None:
     """Test loading a YOLO11 ONNX model."""
+    pytest.importorskip("onnxruntime", reason="onnxruntime is not installed")
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
     download_yolo11n_onnx_model()
