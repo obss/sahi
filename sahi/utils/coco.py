@@ -1691,8 +1691,7 @@ def export_single_yolo_image_and_corresponding_txt(
     dw = 1.0 / (width)
     dh = 1.0 / (height)
     # set annotation filepath
-    image_file_suffix = Path(yolo_image_path).suffix
-    yolo_annotation_path = yolo_image_path.replace(image_file_suffix, ".txt")
+    yolo_annotation_path = Path(yolo_image_path).with_suffix(".txt")
     # create annotation file
     annotations = coco_image.annotations
     with open(yolo_annotation_path, "w") as outfile:
