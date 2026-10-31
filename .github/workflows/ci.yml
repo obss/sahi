@@ -111,10 +111,10 @@ jobs:
           uv run pytest --capture=no -n auto --reruns 3 --reruns-delay 10 --only-rerun "(?i)(connect|connection|timed? *out|timeout|HTTPError|couldn't connect|We couldn't connect|max retries|temporarily unavailable|ConnectionError|ReadTimeout)"
       - name: Test SAHI CLI (without MMDet)
         run: |
-          uv run sahi predict --no_sliced_prediction --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
-          uv run sahi predict --model_type ultralytics --source tests/data/ --novisual --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
-          uv run sahi predict --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
-          uv run sahi predict --model_type ultralytics --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/ultralytics/yolo11n.pt --image_size 320
+          uv run sahi predict --no_sliced_prediction --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --novisual --model_path tests/data/models/yolo26n.pt --image_size 320
+          uv run sahi predict --model_type ultralytics --source tests/data/ --novisual --model_path tests/data/models/yolo26n.pt --image_size 320
+          uv run sahi predict --model_type ultralytics --source tests/data/coco_utils/terrain1.jpg --export_pickle --export_crop --model_path tests/data/models/yolo26n.pt --image_size 320
+          uv run sahi predict --model_type ultralytics --source tests/data/coco_utils/ --novisual --dataset_json_path tests/data/coco_utils/combined_coco.json --model_path tests/data/models/yolo26n.pt --image_size 320
           # coco yolov5
           uv run sahi coco yolov5 --image_dir tests/data/coco_utils/ --dataset_json_path tests/data/coco_utils/combined_coco.json --train_split 0.9
           # coco evaluate

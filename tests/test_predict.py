@@ -16,7 +16,7 @@ from sahi.predict import get_prediction, get_sliced_prediction, predict
 from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
 
-from .utils.ultralytics import UltralyticsConstants, download_yolo11n_model, download_yolo26n_model
+from .utils.ultralytics import UltralyticsConstants, download_yolo26n_model
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5
@@ -92,24 +92,24 @@ def test_get_prediction_mmdet() -> None:
     assert num_car == 2
 
 
-def test_get_prediction_automodel_yolo11() -> None:
-    """Test full-image prediction with auto-loaded YOLO11 model."""
+def test_get_prediction_automodel_yolo26() -> None:
+    """Test full-image prediction with auto-loaded YOLO26 model."""
     from sahi.auto_model import AutoDetectionModel
     from sahi.predict import get_prediction
 
     # init model
-    download_yolo11n_model()
+    download_yolo26n_model()
 
-    yolo11_detection_model = AutoDetectionModel.from_pretrained(
+    yolo26_detection_model = AutoDetectionModel.from_pretrained(
         model_type="ultralytics",
-        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
         load_at_init=False,
         image_size=IMAGE_SIZE,
     )
-    yolo11_detection_model.load_model()
+    yolo26_detection_model.load_model()
 
     # prepare image
     image_path = "tests/data/small-vehicles1.jpeg"
@@ -117,7 +117,7 @@ def test_get_prediction_automodel_yolo11() -> None:
 
     # get full sized prediction
     prediction_result = get_prediction(
-        image=image, detection_model=yolo11_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
+        image=image, detection_model=yolo26_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
     )
     object_prediction_list = prediction_result.object_prediction_list
 
@@ -139,18 +139,18 @@ def test_prediction_category_remapping() -> None:
     from sahi.predict import get_prediction
 
     # init model
-    download_yolo11n_model()
+    download_yolo26n_model()
 
-    yolo11_detection_model = AutoDetectionModel.from_pretrained(
+    yolo26_detection_model = AutoDetectionModel.from_pretrained(
         model_type="ultralytics",
-        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping={"0": 1, "1": 2, "2": 0},
         load_at_init=False,
         image_size=IMAGE_SIZE,
     )
-    yolo11_detection_model.load_model()
+    yolo26_detection_model.load_model()
 
     # prepare image
     image_path = "tests/data/small-vehicles1.jpeg"
@@ -158,7 +158,7 @@ def test_prediction_category_remapping() -> None:
 
     # get full sized prediction
     prediction_result = get_prediction(
-        image=image, detection_model=yolo11_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
+        image=image, detection_model=yolo26_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
     )
     object_prediction_list = prediction_result.object_prediction_list
 
@@ -249,20 +249,20 @@ def test_get_sliced_prediction_mmdet() -> None:
     assert num_car == 15
 
 
-def test_get_prediction_yolo11() -> None:
-    """Test full-image prediction with YOLO11 model."""
+def test_get_prediction_yolo26() -> None:
+    """Test full-image prediction with YOLO26 model."""
     # init model
-    download_yolo11n_model()
+    download_yolo26n_model()
 
-    yolo11_detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+    yolo26_detection_model = UltralyticsDetectionModel(
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
         load_at_init=False,
         image_size=IMAGE_SIZE,
     )
-    yolo11_detection_model.load_model()
+    yolo26_detection_model.load_model()
 
     # prepare image
     image_path = "tests/data/small-vehicles1.jpeg"
@@ -270,7 +270,7 @@ def test_get_prediction_yolo11() -> None:
 
     # get full sized prediction
     prediction_result = get_prediction(
-        image=image, detection_model=yolo11_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
+        image=image, detection_model=yolo26_detection_model, shift_amount=[0, 0], full_shape=None, postprocess=None
     )
     object_prediction_list = prediction_result.object_prediction_list
 
@@ -293,20 +293,20 @@ def test_get_prediction_yolo11() -> None:
     assert num_car > 0
 
 
-def test_get_sliced_prediction_yolo11() -> None:
-    """Test sliced prediction with YOLO11 model."""
+def test_get_sliced_prediction_yolo26() -> None:
+    """Test sliced prediction with YOLO26 model."""
     # init model
-    download_yolo11n_model()
+    download_yolo26n_model()
 
-    yolo11_detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+    yolo26_detection_model = UltralyticsDetectionModel(
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
         load_at_init=False,
         image_size=IMAGE_SIZE,
     )
-    yolo11_detection_model.load_model()
+    yolo26_detection_model.load_model()
 
     # prepare image
     image_path = "tests/data/small-vehicles1.jpeg"
@@ -323,7 +323,7 @@ def test_get_sliced_prediction_yolo11() -> None:
     # get sliced prediction
     prediction_result = get_sliced_prediction(
         image=image_path,
-        detection_model=yolo11_detection_model,
+        detection_model=yolo26_detection_model,
         slice_height=slice_height,
         slice_width=slice_width,
         overlap_height_ratio=overlap_height_ratio,
@@ -412,22 +412,22 @@ def test_confidence_threshold_override_yolo26() -> None:
 
 def test_get_sliced_prediction_batch_size() -> None:
     """Test that different batch sizes produce identical results."""
-    download_yolo11n_model()
+    download_yolo26n_model()
 
-    yolo11_detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+    yolo26_detection_model = UltralyticsDetectionModel(
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
         load_at_init=False,
         image_size=IMAGE_SIZE,
     )
-    yolo11_detection_model.load_model()
+    yolo26_detection_model.load_model()
 
     image_path = "tests/data/small-vehicles1.jpeg"
     common_kwargs: dict[str, Any] = dict(
         image=image_path,
-        detection_model=yolo11_detection_model,
+        detection_model=yolo26_detection_model,
         slice_height=512,
         slice_width=512,
         overlap_height_ratio=0.1,
@@ -519,12 +519,12 @@ def test_mmdet_yolox_tiny_prediction() -> None:
     )
 
 
-def test_ultralytics_yolo11n_prediction() -> None:
-    """Test Ultralytics YOLO11n model prediction and export."""
+def test_ultralytics_yolo26n_prediction() -> None:
+    """Test Ultralytics YOLO26n model prediction and export."""
     from sahi.predict import predict
 
     # init model
-    download_yolo11n_model()
+    download_yolo26n_model()
 
     postprocess_type = "GREEDYNMM"
     match_metric = "IOS"
@@ -541,7 +541,7 @@ def test_ultralytics_yolo11n_prediction() -> None:
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="ultralytics",
-        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
         model_config_path=None,
         model_confidence_threshold=CONFIDENCE_THRESHOLD,
         model_device=MODEL_DEVICE,
@@ -577,7 +577,7 @@ def test_video_prediction() -> None:
         download_from_url(source_url, destination_path)
 
     # init model
-    download_yolo11n_model()
+    download_yolo26n_model()
 
     postprocess_type = "GREEDYNMM"
     match_metric = "IOS"
@@ -594,7 +594,7 @@ def test_video_prediction() -> None:
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="ultralytics",
-        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
         model_config_path=None,
         model_confidence_threshold=CONFIDENCE_THRESHOLD,
         model_device=MODEL_DEVICE,
@@ -632,7 +632,7 @@ def test_video_prediction() -> None:
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="ultralytics",
-        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
         model_config_path=None,
         model_confidence_threshold=CONFIDENCE_THRESHOLD,
         model_device=MODEL_DEVICE,
@@ -667,7 +667,7 @@ def test_video_prediction() -> None:
         shutil.rmtree(project_dir, ignore_errors=True)
     predict(
         model_type="ultralytics",
-        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
         model_config_path=None,
         model_confidence_threshold=CONFIDENCE_THRESHOLD,
         model_device=MODEL_DEVICE,
@@ -714,7 +714,7 @@ def test_source_image_is_decoded_once_per_sliced_prediction(monkeypatch: pytest.
         monkeypatch.setattr(module, "read_image_as_pil", counting_read, raising=False)
 
     model = UltralyticsDetectionModel(
-        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         image_size=IMAGE_SIZE,
