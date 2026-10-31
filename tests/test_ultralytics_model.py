@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-import sys
-
-import pytest
-
 from sahi.prediction import ObjectPrediction
 from sahi.utils.cv import read_image
 from sahi.utils.file import download_from_url
@@ -42,7 +38,6 @@ def test_load_yolo11_model() -> None:
     assert detection_model.model.task == "detect"
 
 
-@pytest.mark.skipif(sys.version_info < (3, 10), reason="ONNX model tests require Python 3.10 or higher")
 def test_load_yolo11_onnx_model() -> None:
     """Test loading a YOLO11 ONNX model."""
     from sahi.models.ultralytics import UltralyticsDetectionModel

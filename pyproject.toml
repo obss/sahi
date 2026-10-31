@@ -93,7 +93,7 @@ onnx = [
   "onnxruntime>=1.23.2;python_version>='3.14'",
 ]
 numba = ["numba>=0.59.0"]
-torchvision = ["sahi[torch]", "torchvision>=0.19.0"]
+torchvision = ["sahi[torch]", "torchvision>=0.28.0"]
 all = ["sahi[yolov5,ultralytics,torchvision,transformers,roboflow,onnx]"]
 
 ci = [

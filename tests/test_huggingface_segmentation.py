@@ -7,7 +7,6 @@ heads for MaskFormer/OneFormer, while Mask2Former uses one checkpoint per head.
 
 from __future__ import annotations
 
-import sys
 from importlib.util import find_spec
 
 import pytest
@@ -20,7 +19,6 @@ from sahi.utils.cv import read_image
 from tests.utils.huggingface import HuggingfaceConstants as C
 
 pytestmark = [
-    pytest.mark.skipif(sys.version_info[:2] < (3, 9), reason="transformers>=4.49.0 requires Python 3.9 or higher"),
     pytest.mark.skipif(find_spec("transformers") is None, reason="transformers not installed"),
 ]
 

@@ -21,11 +21,11 @@ cd sahi
 
 ### 2. 创建环境
 
-我们推荐使用 Python 3.10 进行开发：
+我们推荐使用 Python 3.12 进行开发：
 
 ```bash
 pip install uv
-uv venv --python 3.10
+uv venv --python 3.12
 source .venv/bin/activate  # Windows 用户: .venv\Scripts\activate
 ```
 
