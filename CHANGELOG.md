@@ -1,5 +1,34 @@
 # 📝 CHANGELOG
 
+## 🚀 SAHI v0.13.0 Release Notes
+
+A minor release that drops Python 3.8 and 3.9, raises the torch floor to 2.13.0 on every supported Python, and fixes seven bugs in slicing, COCO handling, shapely annotations and image normalization.
+
+### 💥 Breaking Changes
+
+- **Python 3.10 or newer is required** ([#1485](https://github.com/obss/sahi/pull/1485)). Python 3.8 and 3.9 are end of life and torch no longer ships wheels for them. Older Python versions keep installing sahi 0.12.8.
+- **The `torch` extra needs torch 2.13.0 or newer and the `torchvision` extra needs torchvision 0.28.0 or newer** ([#1485](https://github.com/obss/sahi/pull/1485), [#1488](https://github.com/obss/sahi/pull/1488)), which clears the torch security alerts that came from the old Python 3.8 and 3.9 pins.
+
+### 🐛 Fixes
+
+- **`shift_masks` moves the mask pixels to their place in the full image** ([#1471](https://github.com/obss/sahi/pull/1471)). It read each row of a boolean mask as a polygon, so the shifted masks were wrong.
+- **COCO annotations keep their `iscrowd` flag** ([#1472](https://github.com/obss/sahi/pull/1472)) when loaded, clipped and exported, instead of always being written as 0.
+- **Slicing skips zero-area annotations** ([#1473](https://github.com/obss/sahi/pull/1473)) instead of stopping with `ZeroDivisionError`.
+- **`get_subsampled_coco` filters category 0** ([#1479](https://github.com/obss/sahi/pull/1479)). `category_id=0` was treated as no category, so every category was subsampled.
+- **YOLO export only replaces the image suffix in label paths** ([#1480](https://github.com/obss/sahi/pull/1480)), so folders or file names that contain the suffix, such as `export.jpg/` or `photo.jpg.backup.jpg`, keep their names.
+- **Simplifying and buffering annotations made of several polygons works** ([#1481](https://github.com/obss/sahi/pull/1481)) instead of raising `ValueError`.
+- **`normalize_numpy_image` returns zeros for an all-black image** ([#1482](https://github.com/obss/sahi/pull/1482)) instead of NaN.
+- **Buffering annotations no longer warns about a deprecated shapely argument** ([#1489](https://github.com/obss/sahi/pull/1489)).
+
+### 🧹 Maintenance & CI
+
+- **CI keeps testing the oldest supported torch and torchvision** ([#1491](https://github.com/obss/sahi/pull/1491)). Dependabot no longer bumps their CI pins, which move only when the floor is raised.
+- **CI tests Python 3.10 to 3.14** ([#1485](https://github.com/obss/sahi/pull/1485)).
+
+### 📚 Documentation
+
+- **The test guide matches the current test suite and CI** ([#1488](https://github.com/obss/sahi/pull/1488)), and the contributing guide recommends Python 3.12 for development in every language.
+
 ## 🚀 SAHI v0.12.8 Release Notes
 
 A patch release that adds LibreYOLO as a detection backend, fixes seven bugs in COCO category remapping, slicing, mask conversion and box merging, and builds boolean masks faster.

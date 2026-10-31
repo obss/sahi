@@ -8,6 +8,35 @@ tags:
 
 # 📝 更新日志
 
+## 🚀 SAHI v0.13.0 发布说明
+
+此次版本不再支持 Python 3.8 和 3.9，所有支持的 Python 版本的 torch 最低版本均提升至 2.13.0，并修复了切片、COCO 处理、shapely 标注和图像归一化中的七个问题。
+
+### 💥 不兼容变更
+
+- **需要 Python 3.10 或更高版本** ([#1485](https://github.com/obss/sahi/pull/1485))。Python 3.8 和 3.9 已停止维护，torch 也不再为它们提供 wheel。旧版本 Python 会继续安装 sahi 0.12.8。
+- **`torch` 扩展需要 torch 2.13.0 或更高版本，`torchvision` 扩展需要 torchvision 0.28.0 或更高版本** ([#1485](https://github.com/obss/sahi/pull/1485)、[#1488](https://github.com/obss/sahi/pull/1488))，消除了由旧的 Python 3.8 和 3.9 版本锁定引起的 torch 安全警告。
+
+### 🐛 修复
+
+- **`shift_masks` 会把掩码像素移动到完整图像中的正确位置** ([#1471](https://github.com/obss/sahi/pull/1471))。此前它把布尔掩码的每一行当作多边形读取，导致平移后的掩码错误。
+- **COCO 标注保留 `iscrowd` 标记** ([#1472](https://github.com/obss/sahi/pull/1472))，在加载、裁剪和导出时不再总是写为 0。
+- **切片时跳过面积为 0 的标注** ([#1473](https://github.com/obss/sahi/pull/1473))，不再因 `ZeroDivisionError` 中断。
+- **`get_subsampled_coco` 可以按类别 0 过滤** ([#1479](https://github.com/obss/sahi/pull/1479))。此前 `category_id=0` 被当作未指定类别，导致所有类别都被子采样。
+- **YOLO 导出只替换标签路径中的图像后缀** ([#1480](https://github.com/obss/sahi/pull/1480))，因此包含该后缀的文件夹或文件名（例如 `export.jpg/` 或 `photo.jpg.backup.jpg`）会保持原名。
+- **由多个多边形组成的标注可以正常简化和缓冲** ([#1481](https://github.com/obss/sahi/pull/1481))，不再抛出 `ValueError`。
+- **`normalize_numpy_image` 对全黑图像返回 0** ([#1482](https://github.com/obss/sahi/pull/1482))，不再返回 NaN。
+- **缓冲标注时不再出现 shapely 参数弃用警告** ([#1489](https://github.com/obss/sahi/pull/1489))。
+
+### 🧹 维护与 CI
+
+- **CI 继续测试支持的最低 torch 和 torchvision 版本** ([#1491](https://github.com/obss/sahi/pull/1491))。Dependabot 不再更新它们在 CI 中的锁定版本，这些版本只会在提高最低版本时一起调整。
+- **CI 测试 Python 3.10 到 3.14** ([#1485](https://github.com/obss/sahi/pull/1485))。
+
+### 📚 文档
+
+- **测试指南与当前的测试套件和 CI 保持一致** ([#1488](https://github.com/obss/sahi/pull/1488))，所有语言的贡献指南都推荐使用 Python 3.12 进行开发。
+
 ## 🚀 SAHI v0.12.8 发布说明
 
 此补丁版本新增了 LibreYOLO 检测后端，修复了 COCO 类别重映射、切片、掩码转换和框合并中的七个问题，并加快了布尔掩码的生成速度。
