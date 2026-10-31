@@ -16,9 +16,9 @@ updates:
     commit-message:
       prefix: ⬆️
     target-branch: "main"
-    groups:
-      # torchvision pins an exact torch, so both have to move in one PR
-      pytorch:
-        patterns:
-          - "torch"
-          - "torchvision"
+    # The ci extra pins torch and torchvision to the supported floor on
+    # purpose, so they are raised by hand together with that floor. Security
+    # alerts for them still show up under the Security tab.
+    ignore:
+      - dependency-name: "torch"
+      - dependency-name: "torchvision"
