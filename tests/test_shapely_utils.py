@@ -180,3 +180,27 @@ class TestShapelyUtils:
         expected_area = poly1.area + poly2.area
         # allow small floating point tolerance
         assert abs(result.area - expected_area) < 1e-6
+
+    def test_get_simplified_shapely_annotation_multi_part(self) -> None:
+        """Test simplifying an annotation whose segmentation has several disjoint polygons."""
+        # a single instance split into two disjoint parts, as COCO encodes an occluded object
+        coco_segmentation = [[0, 0, 10, 0, 10, 10, 0, 10], [50, 50, 60, 50, 60, 60, 50, 60]]
+        shapely_annotation = ShapelyAnnotation.from_coco_segmentation(coco_segmentation)
+
+        simplified = shapely_annotation.get_simplified_shapely_annotation(tolerance=0.5)
+
+        assert isinstance(simplified.multipolygon, MultiPolygon)
+        assert len(simplified.multipolygon.geoms) == 2
+        assert simplified.area == 200
+
+    def test_get_buffered_shapely_annotation_multi_part(self) -> None:
+        """Test buffering an annotation whose segmentation has several disjoint polygons."""
+        coco_segmentation = [[0, 0, 10, 0, 10, 10, 0, 10], [50, 50, 60, 50, 60, 60, 50, 60]]
+        shapely_annotation = ShapelyAnnotation.from_coco_segmentation(coco_segmentation)
+
+        buffered = shapely_annotation.get_buffered_shapely_annotation(distance=1)
+
+        assert isinstance(buffered.multipolygon, MultiPolygon)
+        # the parts stay far apart, so buffering must not merge them
+        assert len(buffered.multipolygon.geoms) == 2
+        assert buffered.area > shapely_annotation.area
