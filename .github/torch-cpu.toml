@@ -1,0 +1,12 @@
+
+# Appended to pyproject.toml by CI only. uv sync has no torch backend setting,
+# so this sends torch and torchvision to the CPU index. The runners have no
+# GPU, and the CUDA wheels would add about 3 GB to every Linux cache.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+torchvision = [{ index = "pytorch-cpu" }]

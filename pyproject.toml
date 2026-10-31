@@ -119,9 +119,9 @@ ci = [
 
 # A torch wheel bundles its own CUDA runtime, so the wheel has to match the
 # machine rather than the requirement. "auto" reads the installed driver and
-# picks the matching build, falling back to the CPU wheels where there is no
-# GPU. CI pins it to cpu through UV_TORCH_BACKEND so the runners never pull a
-# CUDA wheel they cannot use.
+# picks the matching build for `uv pip install`. `uv sync` does not use this
+# setting and installs the default PyPI build, so CI switches torch to the CPU
+# index with .github/torch-cpu.toml.
 torch-backend = "auto"
 
 # Keep every OpenCV distribution on the same version: they all install into the
