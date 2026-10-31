@@ -16,3 +16,9 @@ updates:
     commit-message:
       prefix: ⬆️
     target-branch: "main"
+    groups:
+      # torchvision pins an exact torch, so both have to move in one PR
+      pytorch:
+        patterns:
+          - "torch"
+          - "torchvision"

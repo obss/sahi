@@ -141,6 +141,10 @@ def process_coco_annotations(
     """
     sliced_coco_annotation_list: list[CocoAnnotation] = []
     for coco_annotation in coco_annotation_list:
+        # A degenerate or sub-pixel annotation has area 0 (and no bbox when it has no
+        # area at all), so there is nothing to slice and no area ratio to filter by.
+        if coco_annotation.area == 0:
+            continue
         if annotation_inside_slice(coco_annotation.json, slice_bbox):
             sliced_coco_annotation = coco_annotation.get_sliced_coco_annotation(slice_bbox)
             if sliced_coco_annotation.area / coco_annotation.area >= min_area_ratio:
@@ -735,7 +739,7 @@ def shift_masks(masks: np.ndarray, offset: Sequence[int], full_shape: Sequence[i
     """Shift masks to the original image.
 
     Args:
-        masks (np.ndarray): masks that need to be shifted.
+        masks (np.ndarray): Boolean masks of shape (N, height, width) that need to be shifted.
         offset (Sequence[int]): The offset to translate with shape of (2, ).
         full_shape (Sequence[int]): A (height, width) tuple of the huge image's shape.
 
@@ -747,8 +751,8 @@ def shift_masks(masks: np.ndarray, offset: Sequence[int], full_shape: Sequence[i
         return masks
 
     shifted_masks = []
-    for mask_seg in masks:
-        mask = Mask(segmentation=mask_seg, shift_amount=list(offset[:2]), full_shape=list(full_shape[:2]))  # type: ignore[arg-type]
+    for bool_mask in masks:
+        mask = Mask.from_bool_mask(bool_mask, full_shape=list(full_shape[:2]), shift_amount=list(offset[:2]))
         mask = mask.get_shifted_mask()
         shifted_masks.append(mask.bool_mask)
 
