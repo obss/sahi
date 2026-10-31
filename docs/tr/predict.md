@@ -18,7 +18,7 @@ from sahi import AutoDetectionModel
 
 # init any model
 detection_model = AutoDetectionModel.from_pretrained(model_type='mmdet',...) # for MMDetection models
-detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',...) # for YOLOv8/YOLO11/YOLO26 models
+detection_model = AutoDetectionModel.from_pretrained(model_type='ultralytics',...) # YOLOv8/YOLO11/YOLO26 modelleri için
 detection_model = AutoDetectionModel.from_pretrained(model_type='huggingface',...) # for HuggingFace detection models
 detection_model = AutoDetectionModel.from_pretrained(model_type='torchvision',...) # for Torchvision detection models
 detection_model = AutoDetectionModel.from_pretrained(model_type='rtdetr',...) # for RT-DETR models
