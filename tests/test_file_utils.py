@@ -47,3 +47,41 @@ class TestFileUtils:
         with patch("sahi.utils.file.Path.exists", return_value=True):
             path = increment_path("test.txt", exist_ok=False)
             assert path == "test.txt2"
+
+    def test_download_from_url(self, tmp_path: Path) -> None:
+        """A finished download lands at the target path with no leftover part file."""
+        from sahi.utils.file import download_from_url
+
+        source = tmp_path / "source.bin"
+        source.write_bytes(b"weights")
+        target = tmp_path / "models" / "model.pt"
+
+        download_from_url(source.as_uri(), str(target))
+
+        assert target.read_bytes() == b"weights"
+        assert list(target.parent.iterdir()) == [target]
+
+    def test_download_from_url_interrupted(self, tmp_path: Path) -> None:
+        """An interrupted download leaves nothing at the target path, so the next call downloads again."""
+        import urllib.request
+
+        from sahi.utils.file import download_from_url
+
+        source = tmp_path / "source.bin"
+        source.write_bytes(b"weights")
+        target = tmp_path / "models" / "model.pt"
+
+        def fail_midway(url: str, filename: str) -> None:
+            Path(filename).write_bytes(b"wei")
+            raise ConnectionError("connection dropped")
+
+        with patch.object(urllib.request, "urlretrieve", side_effect=fail_midway):
+            try:
+                download_from_url(source.as_uri(), str(target))
+            except ConnectionError:
+                pass
+
+        assert list(target.parent.iterdir()) == []
+
+        download_from_url(source.as_uri(), str(target))
+        assert target.read_bytes() == b"weights"

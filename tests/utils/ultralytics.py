@@ -5,8 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-import requests
-from tqdm import tqdm
+from sahi.utils.file import download_from_url
 
 YOLO11N_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n.pt"
 YOLO11N_SEG_WEIGHTS_URL = "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n-seg.pt"
@@ -24,34 +23,9 @@ class UltralyticsConstants:
     YOLO26N_MODEL_PATH = "tests/data/models/yolo26n.pt"
 
 
-def download_file(url: str, save_path: str, chunk_size: int = 8192) -> None:
-    """Downloads a file from a given URL to the specified path.
-
-    Args:
-        url: URL to download the file from
-        save_path: Path where the file will be saved
-        chunk_size: Size of chunks for downloading
-    """
-    response = requests.get(url, stream=True, allow_redirects=True)
-    response.raise_for_status()
-    total_size = int(response.headers.get("content-length", 0))
-
-    # Ensure directory exists
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-
-    with (
-        open(save_path, "wb") as f,
-        tqdm(
-            desc=os.path.basename(save_path),
-            total=total_size,
-            unit="B",
-            unit_scale=True,
-            unit_divisor=1024,
-        ) as pbar,
-    ):
-        for data in response.iter_content(chunk_size=chunk_size):
-            size = f.write(data)
-            pbar.update(size)
+def download_file(url: str, save_path: str) -> None:
+    """Downloads a file from a given URL to the specified path."""
+    download_from_url(url, save_path)
 
 
 def download_yolo11n_model(destination_path: str | None = None) -> str:
