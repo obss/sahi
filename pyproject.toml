@@ -100,8 +100,8 @@ ci = [
   "sahi[transformers,roboflow,onnx]",
   # pin the floor the torch extra declares. A bare version also matches the
   # local build tag, so these hold whichever backend uv resolves.
-  "torch==2.13.0",
-  "torchvision==0.28.0",
+  "torch==2.14.1",
+  "torchvision==0.29.1",
   "pycocotools>=2.0.7",
   "sahi[ultrafast]",
   "ultralytics>=8.3.161",
