@@ -115,7 +115,7 @@ def get_prediction(
         >>> from sahi.predict import get_prediction
         >>> model = AutoDetectionModel.from_pretrained(
         ...     model_type="ultralytics",
-        ...     model_path="yolo11n.pt",
+        ...     model_path="yolo26n.pt",
         ...     confidence_threshold=0.3,
         ... )
         >>> # run with a different threshold without changing the model
@@ -275,7 +275,7 @@ def get_sliced_prediction(
         >>> from sahi.predict import get_sliced_prediction
         >>> model = AutoDetectionModel.from_pretrained(
         ...     model_type="ultralytics",
-        ...     model_path="yolo11n.pt",
+        ...     model_path="yolo26n.pt",
         ...     confidence_threshold=0.3,
         ... )
         >>> # sweep thresholds without recreating the model

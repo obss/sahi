@@ -1,7 +1,7 @@
 {
     "$schema": "https://context7.com/schema/context7.json",
     "projectTitle": "SAHI - Slicing Aided Hyper Inference",
-    "description": "A unified vision library providing a common API for multiple object detection and instance segmentation frameworks, supporting latest models like YOLO11/YOLO12, Roboflow Universe RF-DETR, HuggingFace DFine, with sliced inference, comprehensive COCO utilities, FiftyOne integration, error analysis, and advanced visualization tools",
+    "description": "A unified vision library providing a common API for multiple object detection and instance segmentation frameworks, supporting latest models like YOLO26/YOLO11, Roboflow Universe RF-DETR, HuggingFace DFine, with sliced inference, comprehensive COCO utilities, FiftyOne integration, error analysis, and advanced visualization tools",
     "folders": [
         "docs",
         "sahi/models",
@@ -23,7 +23,7 @@
     ],
     "rules": [
         "Use AutoDetectionModel.from_pretrained() to load any model - switch between Ultralytics/HuggingFace/Roboflow/MMDetection models by only changing model_type and model_path",
-        "SAHI provides unified API across frameworks - same predict() function works with YOLO11/YOLO12, Roboflow Universe models, HuggingFace models like ustc-community/dfine-small-coco without code changes",
+        "SAHI provides unified API across frameworks - same predict() function works with YOLO26/YOLO11, Roboflow Universe models, HuggingFace models like ustc-community/dfine-small-coco without code changes",
         "When using AutoDetectionModel.from_pretrained(): use 'model_path' parameter for file-based models (Ultralytics, HuggingFace), use 'model' parameter for Roboflow Universe models",
         "For academic papers requiring high mAP: use postprocess_type='NMS', postprocess_match_metric='IOU', and confidence_threshold=0.01",
         "For real-world applications: use postprocess_type='GREEDYNMM', postprocess_match_metric='IOS' for better performance with fewer false positives",
@@ -46,9 +46,9 @@
         "For error analysis: plots show performance breakdown by object size (small/medium/large) and error types",
         "Export predictions as cropped images using export_crop=True for dataset creation or further analysis",
         "For video inference: use frame_skip_interval to speed up processing, view_video=True for real-time display",
-        "Supports latest models: YOLO11/YOLO12 via model_type='ultralytics', Roboflow Universe models (e.g., RF-DETR) via model_type='roboflow', HuggingFace models like 'ustc-community/dfine-small-coco' via model_type='huggingface'",
-        "For YOLO11/YOLO12 OBB (oriented bounding box) models, SAHI automatically handles rotated box predictions and only supports NMS postprocessing",
-        "Example model loading: model_type='ultralytics' with model_path='yolo11n.pt', model_type='huggingface' with model_path='ustc-community/dfine-small-coco', model_type='roboflow' with model='rfdetr-base'",
+        "Supports latest models: YOLO26/YOLO11 via model_type='ultralytics', Roboflow Universe models (e.g., RF-DETR) via model_type='roboflow', HuggingFace models like 'ustc-community/dfine-small-coco' via model_type='huggingface'",
+        "For YOLO26 OBB (oriented bounding box) models, SAHI automatically handles rotated box predictions and only supports NMS postprocessing",
+        "Example model loading: model_type='ultralytics' with model_path='yolo26n.pt', model_type='huggingface' with model_path='ustc-community/dfine-small-coco', model_type='roboflow' with model='rfdetr-base'",
         "Roboflow Universe models: use simple string IDs like 'rfdetr-base' with model_type='roboflow' for easy access to pre-trained models",
         "Complete example: model = AutoDetectionModel.from_pretrained(model_type='roboflow', model='rfdetr-base', confidence_threshold=0.5)",
         "All models follow same API pattern: AutoDetectionModel.from_pretrained() \u2192 get_prediction() or get_sliced_prediction() \u2192 visualize results",
