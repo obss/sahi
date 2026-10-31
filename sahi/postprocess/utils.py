@@ -1,7 +1,5 @@
 """Utilities for postprocessing object predictions."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 
 import numpy as np
@@ -38,7 +36,7 @@ class ObjectPredictionList(Sequence):
         self.list: list[ObjectPrediction] = prediction_list
         super().__init__()
 
-    def __getitem__(self, i: int | list[int] | tuple[int, ...] | object) -> ObjectPredictionList:
+    def __getitem__(self, i: int | list[int] | tuple[int, ...] | object) -> "ObjectPredictionList":
         """Retrieve predictions by index, list of indices, or tensor-like.
 
         Args:
@@ -61,7 +59,7 @@ class ObjectPredictionList(Sequence):
     def __setitem__(
         self,
         i: int | list[int] | tuple[int, ...] | object,
-        elem: ObjectPrediction | ObjectPredictionList | list[ObjectPrediction],
+        elem: "ObjectPrediction | ObjectPredictionList | list[ObjectPrediction]",
     ) -> None:
         """Set predictions at the given index or indices.
 
@@ -101,7 +99,7 @@ class ObjectPredictionList(Sequence):
         """Return string representation of the prediction list."""
         return str(self.list)
 
-    def extend(self, object_prediction_list: ObjectPredictionList) -> None:
+    def extend(self, object_prediction_list: "ObjectPredictionList") -> None:
         """Extend this list with predictions from another ObjectPredictionList.
 
         Args:

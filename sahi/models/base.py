@@ -4,8 +4,6 @@ Provides a unified interface for loading, inference, and prediction conversion
 across different detection frameworks.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 import numpy as np

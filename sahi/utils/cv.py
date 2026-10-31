@@ -1,7 +1,5 @@
 """Computer vision utilities for image processing and visualization."""
 
-from __future__ import annotations
-
 import copy
 import os
 import random

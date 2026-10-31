@@ -6,8 +6,6 @@ made the one configuration that needs no metric at all the most expensive one,
 and reintroduced the out-of-memory failure from issue #1374 at large N.
 """
 
-from __future__ import annotations
-
 import numpy as np
 import pytest
 

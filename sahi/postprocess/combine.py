@@ -1,7 +1,5 @@
 """Postprocessing strategies for combining predictions from sliced inference."""
 
-from __future__ import annotations
-
 import importlib
 from abc import ABC, abstractmethod
 from collections.abc import Callable

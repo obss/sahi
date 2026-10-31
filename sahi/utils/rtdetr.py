@@ -1,7 +1,5 @@
 """RT-DETR model utilities and constants."""
 
-from __future__ import annotations
-
 from sahi.utils.file import download_from_url
 
 

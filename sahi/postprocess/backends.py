@@ -7,8 +7,6 @@ Usage:
     set_postprocess_backend("auto")    # auto-detect best available
 """
 
-from __future__ import annotations
-
 from sahi.utils.import_utils import is_available
 
 VALID_BACKENDS = ("auto", "numpy", "numba", "torchvision")

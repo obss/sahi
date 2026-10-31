@@ -1,7 +1,5 @@
 """Tests for prediction and model inference."""
 
-from __future__ import annotations
-
 import shutil
 import sys
 from collections import Counter

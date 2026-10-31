@@ -1,7 +1,5 @@
 """Parity tests for the sparse postprocess path against the dense matrix path."""
 
-from __future__ import annotations
-
 from typing import NamedTuple
 
 import numpy as np

@@ -15,8 +15,6 @@ Each loop also hands boxes back to the query as it finishes with them, so a
 crowded input shrinks the tree it is querying as it goes.
 """
 
-from __future__ import annotations
-
 import numpy as np
 from shapely import STRtree
 from shapely import box as shapely_box

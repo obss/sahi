@@ -1,7 +1,5 @@
 """Tests for the AutoDetectionModel registry."""
 
-from __future__ import annotations
-
 import ast
 from pathlib import Path
 

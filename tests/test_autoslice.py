@@ -1,7 +1,5 @@
 """Tests for image and COCO auto-slicing functionality."""
 
-from __future__ import annotations
-
 from PIL import Image
 
 from sahi.slicing import slice_coco, slice_image

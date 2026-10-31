@@ -4,8 +4,6 @@ Provides integration with Ultralytics YOLO models for object detection,
 instance segmentation, and oriented bounding box detection.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 import cv2

@@ -1,7 +1,5 @@
 """Tests for LibreYOLO detection model integration."""
 
-from __future__ import annotations
-
 import pytest
 
 from sahi import AutoDetectionModel

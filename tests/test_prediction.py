@@ -1,7 +1,5 @@
 """Tests for prediction module."""
 
-from __future__ import annotations
-
 import numpy as np
 
 from sahi.prediction import PredictionScore

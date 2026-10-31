@@ -1,7 +1,5 @@
 """Prediction classes for object detection results."""
 
-from __future__ import annotations
-
 import copy
 from typing import Any
 
@@ -109,7 +107,7 @@ class ObjectPrediction(ObjectAnnotation):
             full_shape=full_shape,
         )
 
-    def get_shifted_object_prediction(self) -> ObjectPrediction:
+    def get_shifted_object_prediction(self) -> "ObjectPrediction":
         """Get shifted version of ObjectPrediction.
 
         Shifts bbox and mask coords. Used for mapping sliced predictions over full image.

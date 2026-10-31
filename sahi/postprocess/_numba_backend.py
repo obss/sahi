@@ -9,8 +9,6 @@ For NMM (transitive merge), the metric matrix is JIT-computed but the
 merge logic runs in Python via the shared nmm_from_matrix function.
 """
 
-from __future__ import annotations
-
 import numba
 import numpy as np
 from numpy.typing import NDArray

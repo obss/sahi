@@ -1,7 +1,5 @@
 """Tests for HuggingFace detection model integration."""
 
-from __future__ import annotations
-
 from sahi.logger import logger
 from sahi.models.huggingface import HuggingfaceDetectionModel
 from sahi.predict import get_prediction, get_sliced_prediction

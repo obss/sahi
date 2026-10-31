@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from sahi.utils.compatibility import fix_full_shape_list, fix_shift_amount_list
 
 

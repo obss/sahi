@@ -1,7 +1,5 @@
 """Image slicing utilities for splitting large images into tiles."""
 
-from __future__ import annotations
-
 import concurrent.futures
 import os
 from collections.abc import Sequence

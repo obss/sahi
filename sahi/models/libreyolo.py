@@ -3,8 +3,6 @@
 LibreYOLO (https://github.com/LibreYOLO/libreyolo) is an MIT-licensed library with an Ultralytics compatible API.
 """
 
-from __future__ import annotations
-
 from sahi.models.ultralytics import UltralyticsDetectionModel
 
 
