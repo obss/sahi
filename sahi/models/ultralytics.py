@@ -77,10 +77,15 @@ class UltralyticsDetectionModel(DetectionModel):
                 Additional keyword arguments for model setup.
         """
         self.model = model
-        # set category_mapping
+        # Build category_mapping from the model's class names unless one was passed in
         if not self.category_mapping:
-            category_mapping = {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
-            self.category_mapping = category_mapping
+            self._category_mapping_from_model = True
+        if getattr(self, "_category_mapping_from_model", False):
+            self.category_mapping = self._category_mapping_from_model_names()
+
+    def _category_mapping_from_model_names(self) -> dict[str, str]:
+        """Map each class index to the class name the model currently reports."""
+        return {str(ind): category_name for ind, category_name in enumerate(self.category_names)}
 
     def perform_inference(self, image: np.ndarray) -> None:
         """Prediction is performed using self.model and the prediction result is set to self._original_predictions.
@@ -234,6 +239,10 @@ class UltralyticsDetectionModel(DetectionModel):
         assert self._original_predictions is not None
         assert self._original_shapes is not None
         original_predictions = self._original_predictions
+
+        # YOLOE and YOLO-World can rename their classes with set_classes after loading
+        if getattr(self, "_category_mapping_from_model", False):
+            self.category_mapping = self._category_mapping_from_model_names()
 
         # compatibility for sahi v0.8.15
         shift_amount_list_typed: list[list[int | float]] = fix_shift_amount_list(shift_amount_list)
