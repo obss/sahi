@@ -10,10 +10,10 @@ from sahi.utils.file import download_from_url
 
 from .utils.ultralytics import (
     UltralyticsConstants,
-    download_yolo11n_model,
-    download_yolo11n_obb_model,
-    download_yolo11n_onnx_model,
-    download_yolo11n_seg_model,
+    download_yolo26n_model,
+    download_yolo26n_obb_model,
+    download_yolo26n_onnx_model,
+    download_yolo26n_seg_model,
 )
 
 MODEL_DEVICE = "cpu"
@@ -21,14 +21,14 @@ CONFIDENCE_THRESHOLD = 0.3
 IMAGE_SIZE = 640
 
 
-def test_load_yolo11_model() -> None:
-    """Test loading a YOLO11 detection model."""
+def test_load_yolo26_model() -> None:
+    """Test loading a YOLO26 detection model."""
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
-    download_yolo11n_model()
+    download_yolo26n_model()
 
     detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsConstants.YOLO11N_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -40,15 +40,15 @@ def test_load_yolo11_model() -> None:
     assert detection_model.model.task == "detect"
 
 
-def test_load_yolo11_onnx_model() -> None:
-    """Test loading a YOLO11 ONNX model."""
+def test_load_yolo26_onnx_model() -> None:
+    """Test loading a YOLO26 ONNX model."""
     pytest.importorskip("onnxruntime", reason="onnxruntime is not installed")
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
-    download_yolo11n_onnx_model()
+    download_yolo26n_onnx_model()
 
     detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsConstants.YOLO11N_ONNX_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO26N_ONNX_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         load_at_init=True,
@@ -57,13 +57,15 @@ def test_load_yolo11_onnx_model() -> None:
     assert detection_model.model is not None
 
 
-def test_perform_inference_yolo11() -> None:
-    """Test inference with YOLO11 model."""
+def test_perform_inference_yolo26() -> None:
+    """Test inference with YOLO26 model."""
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
     # init model
+    download_yolo26n_model()
+
     detection_model = UltralyticsDetectionModel(
-        model_path="yolo11n.pt",
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -89,15 +91,15 @@ def test_perform_inference_yolo11() -> None:
         assert box[4].item() >= CONFIDENCE_THRESHOLD
 
 
-def test_yolo11_segmentation() -> None:
-    """Test YOLO11 segmentation model."""
+def test_yolo26_segmentation() -> None:
+    """Test YOLO26 segmentation model."""
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
     # init model
-    download_yolo11n_seg_model()
+    download_yolo26n_seg_model()
 
     detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsConstants.YOLO11N_SEG_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO26N_SEG_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
@@ -126,15 +128,15 @@ def test_yolo11_segmentation() -> None:
     assert len(masks.shape) == 3  # (num_predictions, height, width)
 
 
-def test_yolo11_obb() -> None:
-    """Test YOLO11 oriented bounding box model."""
+def test_yolo26_obb() -> None:
+    """Test YOLO26 oriented bounding box model."""
     from sahi.models.ultralytics import UltralyticsDetectionModel
 
     # init model
-    download_yolo11n_obb_model()
+    download_yolo26n_obb_model()
 
     detection_model = UltralyticsDetectionModel(
-        model_path=UltralyticsConstants.YOLO11N_OBB_MODEL_PATH,
+        model_path=UltralyticsConstants.YOLO26N_OBB_MODEL_PATH,
         confidence_threshold=CONFIDENCE_THRESHOLD,
         device=MODEL_DEVICE,
         category_remapping=None,
