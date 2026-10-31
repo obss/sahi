@@ -22,7 +22,7 @@ A minor release that drops Python 3.8 and 3.9, raises the torch floor to 2.13.0 
 
 ### 🧹 Maintenance & CI
 
-- **Dependabot updates torch and torchvision in one PR** ([#1485](https://github.com/obss/sahi/pull/1485)), since each torchvision release needs one exact torch version.
+- **CI keeps testing the oldest supported torch and torchvision** ([#1491](https://github.com/obss/sahi/pull/1491)). Dependabot no longer bumps their CI pins, which move only when the floor is raised.
 - **CI tests Python 3.10 to 3.14** ([#1485](https://github.com/obss/sahi/pull/1485)).
 
 ### 📚 Documentation

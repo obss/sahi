@@ -30,7 +30,7 @@ tags:
 
 ### 🧹 维护与 CI
 
-- **Dependabot 在同一个 PR 中更新 torch 和 torchvision** ([#1485](https://github.com/obss/sahi/pull/1485))，因为每个 torchvision 版本都需要一个确定的 torch 版本。
+- **CI 继续测试支持的最低 torch 和 torchvision 版本** ([#1491](https://github.com/obss/sahi/pull/1491))。Dependabot 不再更新它们在 CI 中的锁定版本，这些版本只会在提高最低版本时一起调整。
 - **CI 测试 Python 3.10 到 3.14** ([#1485](https://github.com/obss/sahi/pull/1485))。
 
 ### 📚 文档
