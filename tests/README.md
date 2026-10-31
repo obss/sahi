@@ -28,10 +28,11 @@ still runs. Some backends are also limited by Python version:
 - MMDetection tests only run on Python 3.11 and are not installed by the `ci`
   extra, so CI skips them.
 - Roboflow tests run on Python 3.12 and 3.13 on Linux.
+- ONNX tests skip on Python 3.15 until onnxruntime ships wheels for it.
 
 ## CI
 
-`.github/workflows/ci.yml` runs the suite on Python 3.10 to 3.14 on Ubuntu, and
+`.github/workflows/ci.yml` runs the suite on Python 3.10 to 3.15 on Ubuntu, and
 on Python 3.12 on macOS and Windows, followed by a few `sahi` CLI commands.
 
 ## Writing new tests

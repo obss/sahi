@@ -30,6 +30,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
@@ -90,7 +91,8 @@ roboflow = [
 onnx = [
   "onnx",
   "onnxruntime;python_version<'3.14'",
-  "onnxruntime>=1.23.2;python_version>='3.14'",
+  # onnxruntime has no cp315 wheel yet
+  "onnxruntime>=1.23.2;python_version=='3.14'",
 ]
 numba = ["numba>=0.59.0"]
 torchvision = ["sahi[torch]", "torchvision>=0.28.0"]
@@ -99,9 +101,12 @@ all = ["sahi[yolov5,ultralytics,torchvision,transformers,roboflow,onnx]"]
 ci = [
   "sahi[transformers,roboflow,onnx]",
   # pin the floor the torch extra declares. A bare version also matches the
-  # local build tag, so these hold whichever backend uv resolves.
-  "torch==2.13.0",
-  "torchvision==0.28.0",
+  # local build tag, so these hold whichever backend uv resolves. Python 3.15
+  # has no wheels for that floor, so it pins the first releases that do.
+  "torch==2.13.0;python_version<'3.15'",
+  "torch==2.15.0;python_version>='3.15'",
+  "torchvision==0.28.0;python_version<'3.15'",
+  "torchvision==0.29.2;python_version>='3.15'",
   "pycocotools>=2.0.7",
   "sahi[ultrafast]",
   "ultralytics>=8.3.161",
