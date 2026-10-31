@@ -141,6 +141,10 @@ def process_coco_annotations(
     """
     sliced_coco_annotation_list: list[CocoAnnotation] = []
     for coco_annotation in coco_annotation_list:
+        # A degenerate or sub-pixel annotation has area 0 (and no bbox when it has no
+        # area at all), so there is nothing to slice and no area ratio to filter by.
+        if coco_annotation.area == 0:
+            continue
         if annotation_inside_slice(coco_annotation.json, slice_bbox):
             sliced_coco_annotation = coco_annotation.get_sliced_coco_annotation(slice_bbox)
             if sliced_coco_annotation.area / coco_annotation.area >= min_area_ratio:

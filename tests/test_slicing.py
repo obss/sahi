@@ -8,8 +8,15 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from sahi.slicing import _slice_file_suffix, shift_bboxes, shift_masks, slice_coco, slice_image
-from sahi.utils.coco import Coco
+from sahi.slicing import (
+    _slice_file_suffix,
+    process_coco_annotations,
+    shift_bboxes,
+    shift_masks,
+    slice_coco,
+    slice_image,
+)
+from sahi.utils.coco import Coco, CocoAnnotation
 from sahi.utils.cv import read_image
 
 
@@ -160,6 +167,22 @@ class TestSlicing:
         assert coco_dict["annotations"][2]["bbox"] == [340, 204, 73, 171]
 
         shutil.rmtree(output_dir, ignore_errors=True)
+
+    @pytest.mark.parametrize(
+        "degenerate_annotation",
+        [
+            CocoAnnotation(segmentation=[[20, 20, 21, 20, 20.5, 21]], category_id=1, category_name="car"),
+            CocoAnnotation(bbox=[20, 20, 0, 5], category_id=1, category_name="car"),
+        ],
+        ids=["sub-pixel polygon", "zero-width bbox"],
+    )
+    def test_process_coco_annotations_skips_zero_area(self, degenerate_annotation: CocoAnnotation) -> None:
+        """A zero-area annotation is skipped instead of stopping the slicing."""
+        annotation = CocoAnnotation(bbox=[10, 10, 30, 30], category_id=1, category_name="car")
+
+        sliced = process_coco_annotations([annotation, degenerate_annotation], [0, 0, 50, 50], min_area_ratio=0.1)
+
+        assert [sliced_annotation.bbox for sliced_annotation in sliced] == [[10, 10, 30, 30]]
 
     def test_shift_bboxes(self) -> None:
         """Test shifting bounding boxes with different input types."""
