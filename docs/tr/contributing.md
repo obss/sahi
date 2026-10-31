@@ -21,11 +21,11 @@ cd sahi
 
 ### 2. Ortam Oluşturma
 
-Geliştirme için Python 3.10 kullanmanızı öneririz:
+Geliştirme için Python 3.12 kullanmanızı öneririz:
 
 ```bash
 pip install uv
-uv venv --python 3.10
+uv venv --python 3.12
 source .venv/bin/activate  # Windows kullanıcıları: .venv\Scripts\activate
 ```
 

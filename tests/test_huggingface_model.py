@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-import sys
-
-import pytest
-
 from sahi.logger import logger
 from sahi.models.huggingface import HuggingfaceDetectionModel
 from sahi.predict import get_prediction, get_sliced_prediction
@@ -19,10 +15,6 @@ try:
 except ImportError:
     AutoModelForObjectDetection = None
     AutoProcessor = None
-
-pytestmark = pytest.mark.skipif(
-    sys.version_info[:2] < (3, 9), reason="transformers>=4.49.0 requires Python 3.9 or higher"
-)
 
 MODEL_DEVICE = "cpu"
 CONFIDENCE_THRESHOLD = 0.5

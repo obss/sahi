@@ -1,109 +1,42 @@
 # SAHI Test Suite
 
-This directory contains the test suite for SAHI. The tests are organized by
-model type and functionality.
+Tests use pytest. Most files cover one model backend (for example
+`test_ultralytics_model.py`, `test_huggingface_model.py`,
+`test_mmdetection_model.py`) or one module (for example `test_slicing.py`,
+`test_coco_utils.py`).
 
-## Test Structure
-
-- **test_mmdetectionmodel.py** - MMDetection model tests (requires Python 3.11)
-- **test_huggingfacemodel.py** - HuggingFace model tests (requires Python 3.9+)
-- **test_ultralyticsmodel.py** - Ultralytics YOLO model tests
-- **test_predict.py** - General prediction functionality tests
-- Other test files for specific functionality
-
-## Running Tests
-
-### Running all tests (excluding MMDet)
+## Running tests
 
 ```bash
-# Install dependencies
-uv sync --extra dev --extra ci
+# install sahi with the dev tools and every test backend
+uv sync --group dev --extra ci
 
-# Run all tests except MMDet
-pytest -k "not mmdet"
+# run the whole suite in parallel
+uv run pytest -n auto
+
+# run a single file
+uv run pytest tests/test_slicing.py
 ```
 
-### Running MMDet tests separately (Python 3.11 only)
+Model weights are downloaded into `tests/data/models` on first use.
 
-```bash
-# Ensure you're using Python 3.11
-python --version  # Should show 3.11.x
+## Optional backends
 
-# Install MMDet dependencies
-uv sync --extra dev --extra mmdet
+Tests for a backend that is not installed skip themselves, so a partial install
+still runs. Some backends are also limited by Python version:
 
-# Run only MMDet tests
-pytest tests/test_mmdetectionmodel.py
-# Or run specific MMDet tests from test_predict.py
-pytest -k "mmdet"
-```
+- MMDetection tests only run on Python 3.11 and are not installed by the `ci`
+  extra, so CI skips them.
+- Roboflow tests run on Python 3.12 and 3.13 on Linux.
 
-### Running specific test categories
+## CI
 
-```bash
-# Run only Ultralytics tests
-pytest tests/test_ultralyticsmodel.py
+`.github/workflows/ci.yml` runs the suite on Python 3.10 to 3.14 on Ubuntu, and
+on Python 3.12 on macOS and Windows, followed by a few `sahi` CLI commands.
 
-# Run only HuggingFace tests (Python 3.9+)
-pytest tests/test_huggingfacemodel.py
+## Writing new tests
 
-# Run tests in parallel
-pytest -n auto
-```
-
-## CI/CD Setup
-
-The test suite is split into two GitHub Actions workflows:
-
-1. **Main CI** (`.github/workflows/ci.yml`):
-   - Runs on Python 3.8, 3.9, 3.10, 3.11, 3.12
-   - Excludes MMDet tests
-   - Tests core functionality and all other model integrations
-
-2. **MMDet CI** (`.github/workflows/mmdet.yml`):
-   - Runs only on Python 3.11
-   - Tests MMDetection integration separately
-   - Can fail without affecting the main CI pipeline
-
-This separation ensures that:
-
-- MMDet dependency conflicts don't affect other tests
-- MMDet failures don't block PRs
-- Simplified dependency management
-- Faster CI runs for the main test suite
-
-## Test Dependencies
-
-The test dependencies are organized in `pyproject.toml`:
-
-- `[project.optional-dependencies.dev]` - Basic development dependencies
-- `[project.optional-dependencies.ci]` - Main CI dependencies (no MMDet)
-- `[project.optional-dependencies.mmdet]` - MMDetection dependencies (Python
-  3.11 only)
-
-## Writing New Tests
-
-All tests use pytest format. When adding new tests:
-
-1. Use pytest assertions instead of unittest assertions
-2. Use pytest decorators for skipping tests conditionally
-3. Group related tests in the same file
-4. Add appropriate skip conditions for Python version or missing dependencies
-
-Example:
-
-```python
-import pytest
-import sys
-
-# Skip if Python version is too old
-pytestmark = pytest.mark.skipif(sys.version_info[:2] < (3, 9), reason="Feature requires Python 3.9+")
-
-
-def test_my_feature():
-    # Skip if optional dependency is missing
-    pytest.importorskip("optional_package")
-
-    # Your test code here
-    assert result == expected
-```
+- Use plain pytest assertions.
+- Skip with `pytest.importorskip("package")` when a test needs an optional
+  dependency.
+- Keep related tests in the same file.
