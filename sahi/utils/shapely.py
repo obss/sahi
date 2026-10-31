@@ -277,10 +277,10 @@ class ShapelyAnnotation:
 
         For more, check: https://shapely.readthedocs.io/en/stable/manual.html#object.buffer
         """
+        # resolution and quadsegs are older shapely names for quad_segs
         buffered_polygon = self.multipolygon.buffer(
             distance=distance,
-            resolution=resolution,
-            quadsegs=quadsegs,
+            quad_segs=quadsegs if quadsegs is not None else resolution,
             cap_style=cap_style,
             join_style=join_style,
             mitre_limit=mitre_limit,
