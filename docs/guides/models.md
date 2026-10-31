@@ -77,7 +77,7 @@ pip install ultralytics
 ```python
 detection_model = AutoDetectionModel.from_pretrained(
     model_type="yoloe",
-    model_path="yoloe-v8l-seg.pt",
+    model_path="yoloe-26l-seg-pf.pt",
     confidence_threshold=0.25,
     device="cuda:0",
 )
