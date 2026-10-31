@@ -1,5 +1,14 @@
 # 📝 CHANGELOG
 
+## 🚀 SAHI v0.13.1 Release Notes
+
+A patch release that adds Python 3.15 support.
+
+### 📦 Build
+
+- **Python 3.15 is supported and tested in CI** ([#1492](https://github.com/obss/sahi/pull/1492)). Core sahi installs and runs on 3.15. torch 2.15.0 and torchvision 0.29.2 are the first releases with Python 3.15 wheels, so installing the `torch` or `torchvision` extra on 3.15 picks those versions or newer.
+- **The `onnx` extra skips onnxruntime on Python 3.15** ([#1492](https://github.com/obss/sahi/pull/1492)) until onnxruntime ships wheels for it.
+
 ## 🚀 SAHI v0.13.0 Release Notes
 
 A minor release that drops Python 3.8 and 3.9, raises the torch floor to 2.13.0 on every supported Python, and fixes seven bugs in slicing, COCO handling, shapely annotations and image normalization.
