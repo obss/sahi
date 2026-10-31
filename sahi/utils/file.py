@@ -283,7 +283,21 @@ def download_from_url(from_url: str, to_path: str) -> None:
     if not os.path.exists(to_path):
         import urllib.request
 
-        urllib.request.urlretrieve(from_url, to_path)
+        # Download next to the target and move it into place once complete, so an
+        # interrupted or concurrent download never leaves a partial file at to_path.
+        part_path = f"{to_path}.{os.getpid()}.part"
+        try:
+            urllib.request.urlretrieve(from_url, part_path)
+            try:
+                os.replace(part_path, to_path)
+            except PermissionError:
+                # Windows cannot replace a file that is open elsewhere, which only
+                # happens when another process already finished the same download.
+                if not os.path.exists(to_path):
+                    raise
+        finally:
+            if os.path.exists(part_path):
+                os.remove(part_path)
 
 
 def is_colab() -> bool:
