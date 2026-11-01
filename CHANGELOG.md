@@ -1,5 +1,52 @@
 # 📝 CHANGELOG
 
+## 🚀 SAHI v0.14.0 Release Notes
+
+A minor release that moves the tests, docs and examples to YOLO26, defaults YOLOE to YOLOE-26, fixes bugs in the YOLOE, YOLO-World, torchvision, Hugging Face and mmdet wrappers, downloads and scripts, and makes COCO slicing and mask drawing faster with the same output.
+
+### 💥 Breaking Changes
+
+- **YOLOE loads `yoloe-26s-seg.pt` when no `model_path` is given** ([#1499](https://github.com/obss/sahi/pull/1499)) instead of `yoloe-11s-seg.pt`. Pass `model_path` to keep using YOLOE-11.
+- **The `hugging_face_universal_segmentation` model type is removed** ([#1498](https://github.com/obss/sahi/pull/1498)). It had no module behind it and always failed with `ModuleNotFoundError`. Use `huggingface_segmentation` for those models.
+
+### 🐛 Fixes
+
+- **YOLOE and YOLO-World predictions use the class names set with `set_classes`** ([#1499](https://github.com/obss/sahi/pull/1499)) instead of `'0'`, `'1'` and so on. A `category_mapping` you pass in is still kept.
+- **`model_type="yolo-world"` loads** ([#1498](https://github.com/obss/sahi/pull/1498)). The registered class name was misspelled, so it always failed with `AttributeError`.
+- **The torchvision wrapper keeps every image of a batch** ([#1502](https://github.com/obss/sahi/pull/1502)) with its own shift amount and full shape, instead of only the last image.
+- **Hugging Face panoptic segmentation keeps batch outputs paired with their slices** ([#1502](https://github.com/obss/sahi/pull/1502)). An image with no segments was dropped, so the predictions after it got the wrong slice positions.
+- **mmdet inference no longer has a path that raises `NameError`** ([#1502](https://github.com/obss/sahi/pull/1502)).
+- **`python -m sahi.scripts.slice_coco` runs** ([#1501](https://github.com/obss/sahi/pull/1501)). It passed the builtin `slice` to Fire instead of `slicer`.
+- **`predict` adds up the export time of every image** ([#1501](https://github.com/obss/sahi/pull/1501)) instead of keeping only the last one, and no longer raises `KeyError` with `verbose=2` when there are no images.
+- **`predict_fiftyone` counts the prediction time of sliced predictions** ([#1501](https://github.com/obss/sahi/pull/1501)).
+- **`sahi env` shows pillow and every installed OpenCV distribution** ([#1501](https://github.com/obss/sahi/pull/1501)), and no longer lists tensorflow, which sahi does not use.
+- **Downloads write to a temporary file first** ([#1495](https://github.com/obss/sahi/pull/1495), [#1504](https://github.com/obss/sahi/pull/1504)), so an interrupted download never leaves a broken model file that later runs would load. The YOLOv5 helpers used by the YOLOv5 notebook now go through the same download code.
+
+### ⚡ Performance
+
+All of these give the same output as before ([#1503](https://github.com/obss/sahi/pull/1503)).
+
+| Benchmark | v0.13.1 | v0.14.0 |
+|---|---|---|
+| `slice_coco` on 50 VisDrone images, 6493 sliced annotations | 1.48 s | 0.92 s |
+| Drawing 80 masks on a 4K image | 2.09 s | 0.15 s |
+| Drawing masks on 100 frames of the OpenCV `vtest.avi` video | 1.20 s | 0.12 s |
+
+- **Slicing computes each annotation's bbox and area once per image** instead of once per slice.
+- **Mask drawing blends only the area each mask covers** instead of the whole image.
+- **Sliced prediction and `SliceImageResult` indexing no longer rebuild the slice lists on every access**, and `predict` converts each image to an array once for all exports.
+
+### 🧹 Maintenance & CI
+
+- **Tests and CI commands use YOLO26** ([#1496](https://github.com/obss/sahi/pull/1496)) for detection, segmentation, OBB and ONNX export.
+- **CI installs CPU torch** ([#1494](https://github.com/obss/sahi/pull/1494)), which makes the CI caches about three times smaller.
+- **`from __future__ import annotations` is removed** ([#1500](https://github.com/obss/sahi/pull/1500)) now that Python 3.10 is the minimum, and ruff stops it from coming back.
+
+### 📚 Documentation
+
+- **The README, docs and examples use YOLO26** ([#1497](https://github.com/obss/sahi/pull/1497)) in English, Turkish and Chinese, and the Ultralytics notebook runs on CPU by default.
+- **The YOLOE docs and notebook use YOLOE-26** ([#1499](https://github.com/obss/sahi/pull/1499)) and explain that only the `-pf` models detect objects without prompts.
+
 ## 🚀 SAHI v0.13.1 Release Notes
 
 A patch release that adds Python 3.15 support.
