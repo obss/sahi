@@ -167,10 +167,7 @@ class MmdetDetectionModel(DetectionModel):
         if isinstance(image, np.ndarray):
             # https://github.com/obss/sahi/issues/265
             image = image[:, :, ::-1]
-        # compatibility with sahi v0.8.15
-        if not isinstance(image, list):
-            image_list = [image]
-        prediction_result = self.model(image_list)
+        prediction_result = self.model([image])
 
         self._original_predictions = prediction_result["predictions"]
 
