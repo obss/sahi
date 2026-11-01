@@ -1562,8 +1562,7 @@ class Coco:
                 file_name=coco_img.file_name, height=coco_img.height, width=coco_img.width, id=coco_img.id
             )
             for coco_ann in coco_img.annotations:
-                ann_dict: dict = coco_ann.json
-                if annotation_inside_slice(annotation=ann_dict, slice_bbox=img_dims):
+                if annotation_inside_slice(annotation={"bbox": coco_ann.bbox}, slice_bbox=img_dims):
                     shapely_ann = coco_ann.get_sliced_coco_annotation(img_dims)
                     bbox = ShapelyAnnotation.to_xywh(shapely_ann._shapely_annotation)
                     coco_ann_from_shapely = CocoAnnotation(

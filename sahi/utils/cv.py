@@ -92,8 +92,6 @@ def crop_object_predictions(
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     # add bbox and mask to image if present
     for ind, object_prediction in enumerate(object_prediction_list):
-        # deepcopy object_prediction_list so that the original is not altered
-        object_prediction = object_prediction.deepcopy()
         bbox = object_prediction.bbox.to_xyxy()
         category_id = object_prediction.category.id
         # crop detections
@@ -406,12 +404,8 @@ def apply_color_mask(image: np.ndarray, color: tuple[int, int, int]) -> np.ndarr
     Returns:
         np.ndarray: The resulting image with the applied color mask.
     """
-    r = np.zeros_like(image).astype(np.uint8)
-    g = np.zeros_like(image).astype(np.uint8)
-    b = np.zeros_like(image).astype(np.uint8)
-
-    (r[image == 1], g[image == 1], b[image == 1]) = color
-    colored_mask = np.stack([r, g, b], axis=2)
+    colored_mask = np.zeros((*image.shape, 3), dtype=np.uint8)
+    colored_mask[image == 1] = color
     return colored_mask
 
 
@@ -663,8 +657,6 @@ def visualize_object_predictions(
 
     # add masks or obb polygons to image if present
     for object_prediction in object_prediction_list:
-        # deepcopy object_prediction_list so that original is not altered
-        object_prediction = object_prediction.deepcopy()
         # arange label to be displayed
         label = f"{object_prediction.category.name}"
         if not hide_conf:
@@ -706,9 +698,14 @@ def visualize_object_predictions(
                         thickness=text_th,
                     )
             else:
-                # draw mask
-                rgb_mask = apply_color_mask(object_prediction.mask.bool_mask, color or (0, 0, 0))
-                image = cv2.addWeighted(image, 1, rgb_mask, 0.6, 0)
+                # draw mask, blending only the rows and columns it covers since the rest stays the same
+                bool_mask = object_prediction.mask.bool_mask
+                rows = np.flatnonzero(bool_mask.any(axis=1))
+                cols = np.flatnonzero(bool_mask.any(axis=0))
+                if rows.size:
+                    y1, y2, x1, x2 = rows[0], rows[-1] + 1, cols[0], cols[-1] + 1
+                    rgb_mask = apply_color_mask(bool_mask[y1:y2, x1:x2], color or (0, 0, 0))
+                    image[y1:y2, x1:x2] = cv2.addWeighted(image[y1:y2, x1:x2], 1, rgb_mask, 0.6, 0)
 
         # add bboxes to image if is_obb_pred=False
         if not is_obb_pred:
