@@ -3,8 +3,6 @@
 Contains classes for handling bounding boxes, categories, masks, and annotations.
 """
 
-from __future__ import annotations
-
 import copy
 from dataclasses import dataclass
 from typing import Any
@@ -95,7 +93,7 @@ class BoundingBox:
         """Return bounding box area."""
         return (self.maxx - self.minx) * (self.maxy - self.miny)
 
-    def get_expanded_box(self, ratio: float = 0.1, max_x: int | None = None, max_y: int | None = None) -> BoundingBox:
+    def get_expanded_box(self, ratio: float = 0.1, max_x: int | None = None, max_y: int | None = None) -> "BoundingBox":
         """Get an expanded bounding box by increasing its size by a given ratio.
 
         The expansion is applied equally in all directions. Optionally, the expanded box can be
@@ -155,7 +153,7 @@ class BoundingBox:
         """
         return self.to_xyxy()
 
-    def get_shifted_box(self) -> BoundingBox:
+    def get_shifted_box(self) -> "BoundingBox":
         """Get shifted BoundingBox.
 
         Returns:
@@ -245,7 +243,7 @@ class Mask:
         full_shape: list[int],
         mask_threshold: float = 0.5,
         shift_amount: list[int] | None = None,
-    ) -> Mask:
+    ) -> "Mask":
         """Create Mask from float mask array.
 
         Args:
@@ -274,7 +272,7 @@ class Mask:
         bool_mask: np.ndarray,
         full_shape: list[int],
         shift_amount: list[int] | None = None,
-    ) -> Mask:
+    ) -> "Mask":
         """Create Mask from boolean mask array.
 
         Args:
@@ -318,7 +316,7 @@ class Mask:
         """Returns the shift amount of the mask slice as [shift_x, shift_y]."""
         return [self.shift_x, self.shift_y]
 
-    def get_shifted_mask(self) -> Mask:
+    def get_shifted_mask(self) -> "Mask":
         """Return shifted mask."""
         # Confirm full_shape is specified
         if (self.full_shape_height is None) or (self.full_shape_width is None):
@@ -430,7 +428,7 @@ class ObjectAnnotation:
         category_name: str | None = None,
         shift_amount: list[int] | None = None,
         full_shape: list[int] | None = None,
-    ) -> ObjectAnnotation:
+    ) -> "ObjectAnnotation":
         """Create ObjectAnnotation from bool_mask (2D np.ndarray).
 
         Args:
@@ -463,7 +461,7 @@ class ObjectAnnotation:
         category_id: int | None = None,
         category_name: str | None = None,
         shift_amount: list[int] | None = None,
-    ) -> ObjectAnnotation:
+    ) -> "ObjectAnnotation":
         """Create ObjectAnnotation from coco segmentation format.
 
         The segmentation format is:
@@ -506,7 +504,7 @@ class ObjectAnnotation:
         category_name: str | None = None,
         shift_amount: list[int] | None = None,
         full_shape: list[int] | None = None,
-    ) -> ObjectAnnotation:
+    ) -> "ObjectAnnotation":
         """Create ObjectAnnotation from coco bbox [minx, miny, width, height].
 
         Args:
@@ -542,7 +540,7 @@ class ObjectAnnotation:
         full_shape: list[int],
         category_name: str | None = None,
         shift_amount: list[int] | None = None,
-    ) -> ObjectAnnotation:
+    ) -> "ObjectAnnotation":
         """Create ObjectAnnotation from COCO annotation dict.
 
         Converts a COCO formatted annotation dict (with fields "bbox",
@@ -584,7 +582,7 @@ class ObjectAnnotation:
         category_id: int | None = None,
         category_name: str | None = None,
         shift_amount: list[int] | None = None,
-    ) -> ObjectAnnotation:
+    ) -> "ObjectAnnotation":
         """Create ObjectAnnotation from shapely_utils.ShapelyAnnotation.
 
         Args:
@@ -613,7 +611,7 @@ class ObjectAnnotation:
         annotation: Any,
         shift_amount: list[int] | None = None,
         full_shape: list[int] | None = None,
-    ) -> ObjectAnnotation:
+    ) -> "ObjectAnnotation":
         """Create ObjectAnnotation from imantics.annotation.Annotation.
 
         Args:
@@ -700,7 +698,7 @@ class ObjectAnnotation:
             )
         return imantics_annotation
 
-    def deepcopy(self) -> ObjectAnnotation:
+    def deepcopy(self) -> "ObjectAnnotation":
         """Get deepcopy of current ObjectAnnotation instance.
 
         Returns:
@@ -713,7 +711,7 @@ class ObjectAnnotation:
         """Return an empty mask."""
         return Mask(segmentation=[], full_shape=[0, 0])
 
-    def get_shifted_object_annotation(self) -> ObjectAnnotation:
+    def get_shifted_object_annotation(self) -> "ObjectAnnotation":
         """Return shifted object annotation."""
         if self.mask:
             shifted_mask = self.mask.get_shifted_mask()

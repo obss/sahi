@@ -1,7 +1,5 @@
 """COCO dataset evaluation and analysis utilities."""
 
-from __future__ import annotations
-
 import itertools
 import json
 import os

@@ -1,7 +1,5 @@
 """Shapely-based geometry utilities for polygon and segmentation handling."""
 
-from __future__ import annotations
-
 from shapely.geometry import (
     CAP_STYLE,
     JOIN_STYLE,
@@ -70,7 +68,7 @@ class ShapelyAnnotation:
     @classmethod
     def from_coco_segmentation(
         cls, segmentation: list[list[float]] | list[list[int]], slice_bbox: list[float] | None = None
-    ) -> ShapelyAnnotation:
+    ) -> "ShapelyAnnotation":
         """Init ShapelyAnnotation from coco segmentation.
 
         Args:
@@ -84,7 +82,9 @@ class ShapelyAnnotation:
         return cls(multipolygon=shapely_multipolygon, slice_bbox=slice_bbox)
 
     @classmethod
-    def from_coco_bbox(cls, bbox: list[int] | list[float], slice_bbox: list[float] | None = None) -> ShapelyAnnotation:
+    def from_coco_bbox(
+        cls, bbox: list[int] | list[float], slice_bbox: list[float] | None = None
+    ) -> "ShapelyAnnotation":
         """Init ShapelyAnnotation from coco bbox.
 
         bbox (List[int]): [xmin, ymin, width, height] slice_bbox (List[int]): [x_min, y_min, x_max, y_max] Is used
@@ -251,13 +251,13 @@ class ShapelyAnnotation:
         """[xmin, ymin, xmax, ymax]."""
         return self.to_xyxy()
 
-    def get_convex_hull_shapely_annotation(self) -> ShapelyAnnotation:
+    def get_convex_hull_shapely_annotation(self) -> "ShapelyAnnotation":
         """Return convex hull of this annotation as a new ShapelyAnnotation."""
         shapely_multipolygon = MultiPolygon([self.multipolygon.convex_hull])
         shapely_annotation = ShapelyAnnotation(shapely_multipolygon)
         return shapely_annotation
 
-    def get_simplified_shapely_annotation(self, tolerance: float = 1) -> ShapelyAnnotation:
+    def get_simplified_shapely_annotation(self, tolerance: float = 1) -> "ShapelyAnnotation":
         """Return simplified version of this annotation as a new ShapelyAnnotation."""
         shapely_multipolygon = filter_polygons(self.multipolygon.simplify(tolerance))
         shapely_annotation = ShapelyAnnotation(shapely_multipolygon)
@@ -272,7 +272,7 @@ class ShapelyAnnotation:
         join_style: int = JOIN_STYLE.round,
         mitre_limit: float = 5.0,
         single_sided: bool = False,
-    ) -> ShapelyAnnotation:
+    ) -> "ShapelyAnnotation":
         """Approximates the present polygon to have a valid polygon shape.
 
         For more, check: https://shapely.readthedocs.io/en/stable/manual.html#object.buffer
@@ -289,7 +289,7 @@ class ShapelyAnnotation:
         shapely_annotation = ShapelyAnnotation(filter_polygons(buffered_polygon))
         return shapely_annotation
 
-    def get_intersection(self, polygon: Polygon) -> ShapelyAnnotation:
+    def get_intersection(self, polygon: Polygon) -> "ShapelyAnnotation":
         """Accepts shapely polygon object and returns the intersection in ShapelyAnnotation format."""
         # convert intersection polygon to list of tuples
         intersection = self.multipolygon.intersection(polygon)

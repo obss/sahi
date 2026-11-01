@@ -3,8 +3,6 @@
 Provides integration with Ultralytics YOLOv5 for object detection.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 import numpy as np

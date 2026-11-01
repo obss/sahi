@@ -1,7 +1,5 @@
 """MMDetection model utilities and helpers."""
 
-from __future__ import annotations
-
 import shutil
 import sys
 import urllib.request

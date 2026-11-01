@@ -5,8 +5,6 @@ For IOS and NMM, computes the IoU/IoS matrix on GPU via torch
 and runs the merge logic on CPU via shared functions.
 """
 
-from __future__ import annotations
-
 import numpy as np
 import torch
 import torchvision

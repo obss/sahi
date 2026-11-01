@@ -1,7 +1,5 @@
 """File I/O utilities for SAHI."""
 
-from __future__ import annotations
-
 import glob
 import json
 import ntpath

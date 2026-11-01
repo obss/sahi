@@ -1,7 +1,5 @@
 """Tests for high-level SAHI API."""
 
-from __future__ import annotations
-
 
 class TestHighLevelApi:
     """Test high-level SAHI API classes."""

@@ -1,7 +1,5 @@
 """Compatibility utilities for version handling."""
 
-from __future__ import annotations
-
 
 def fix_shift_amount_list(shift_amount_list: list | None) -> list[list[int | float]]:
     """Ensure shift_amount_list is in the expected nested list format.

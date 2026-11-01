@@ -4,8 +4,6 @@ Provides integration with Hugging Face Transformers library for object detection
 and instance segmentation models like DETR variants.
 """
 
-from __future__ import annotations
-
 import os
 from typing import Any
 

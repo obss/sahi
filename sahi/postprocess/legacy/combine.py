@@ -1,7 +1,5 @@
 """Legacy postprocessing implementations for object prediction merging."""
 
-from __future__ import annotations
-
 import copy
 
 import numpy as np

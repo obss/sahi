@@ -4,8 +4,6 @@ Provides integration with Facebook's Detectron2 framework for object detection
 and instance segmentation.
 """
 
-from __future__ import annotations
-
 import numpy as np
 
 from sahi.logger import logger

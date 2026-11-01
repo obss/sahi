@@ -1,7 +1,5 @@
 """Tests for class names when an Ultralytics model renames its classes after loading."""
 
-from __future__ import annotations
-
 from types import SimpleNamespace
 
 import numpy as np
@@ -15,10 +13,10 @@ class FakeTensor:
     def __init__(self, values: list[list[float]]) -> None:
         self.values = np.asarray(values, dtype=np.float32)
 
-    def cpu(self) -> FakeTensor:
+    def cpu(self) -> "FakeTensor":
         return self
 
-    def detach(self) -> FakeTensor:
+    def detach(self) -> "FakeTensor":
         return self
 
     def numpy(self) -> np.ndarray:

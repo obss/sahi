@@ -4,8 +4,6 @@ Supports MaskFormer, Mask2Former, and OneFormer for instance, semantic, and
 panoptic segmentation via Hugging Face Transformers.
 """
 
-from __future__ import annotations
-
 import os
 from enum import Enum
 from typing import Any

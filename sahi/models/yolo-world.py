@@ -3,8 +3,6 @@
 Provides integration with Ultralytics YOLO-World open-vocabulary detection models.
 """
 
-from __future__ import annotations
-
 from sahi.models.ultralytics import UltralyticsDetectionModel
 
 

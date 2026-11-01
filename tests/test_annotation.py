@@ -1,7 +1,5 @@
 """Tests for annotation module."""
 
-from __future__ import annotations
-
 import pytest
 
 from sahi.logger import logger

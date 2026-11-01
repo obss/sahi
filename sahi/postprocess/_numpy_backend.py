@@ -5,8 +5,6 @@ bounding box IoU/IoS computation. Large inputs are routed to
 ``_sparse_backend`` instead, which avoids the quadratic matrix entirely.
 """
 
-from __future__ import annotations
-
 import numpy as np
 
 from sahi.postprocess._sparse_backend import (

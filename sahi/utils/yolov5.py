@@ -1,7 +1,5 @@
 """YOLOv5 model utilities and constants."""
 
-from __future__ import annotations
-
 import urllib.request
 from os import path
 from pathlib import Path

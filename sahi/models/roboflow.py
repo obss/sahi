@@ -4,8 +4,6 @@ Provides integration with Roboflow's inference SDK for object detection and
 instance segmentation models.
 """
 
-from __future__ import annotations
-
 from itertools import chain, zip_longest
 from typing import Any
 

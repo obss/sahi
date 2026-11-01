@@ -4,8 +4,6 @@ Provides integration with OpenMMLab's MMDetection framework for object detection
 and instance segmentation.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 import numpy as np

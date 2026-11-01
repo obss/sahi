@@ -3,8 +3,6 @@
 Provides integration with Ultralytics RT-DETR real-time detection transformer models.
 """
 
-from __future__ import annotations
-
 from sahi.models.ultralytics import UltralyticsDetectionModel
 
 

@@ -4,8 +4,6 @@ Provides integration with PyTorch's TorchVision library for object detection
 and instance segmentation models.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 import numpy as np

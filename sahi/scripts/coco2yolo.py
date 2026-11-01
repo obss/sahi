@@ -1,7 +1,5 @@
 """Convert COCO dataset annotations to YOLO format."""
 
-from __future__ import annotations
-
 import fire
 
 from sahi.utils.coco import Coco

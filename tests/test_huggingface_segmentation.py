@@ -5,8 +5,6 @@ instance, semantic, and panoptic heads. A single checkpoint serves all three
 heads for MaskFormer/OneFormer, while Mask2Former uses one checkpoint per head.
 """
 
-from __future__ import annotations
-
 from importlib.util import find_spec
 
 import pytest

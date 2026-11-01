@@ -260,7 +260,7 @@ disable_error_code = ["attr-defined", "operator", "return", "assignment", "arg-t
 
 [tool.ruff.lint]
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
-select = ["E", "F", "I", "A", "Q", "W", "RUF", "UP", "FA", "ANN"]
+select = ["E", "F", "I", "A", "Q", "W", "RUF", "UP", "ANN", "TC004", "TID251"]
 ignore = ["A002", "A001", "ANN401"]
 # Allow autofix for all enabled rules (when `--fix`) is provided.
 fixable = [
@@ -314,6 +314,9 @@ unfixable = []
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 pylint.max-args = 20
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"__future__.annotations".msg = "Not needed on Python 3.10+, quote forward references instead."
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "double"

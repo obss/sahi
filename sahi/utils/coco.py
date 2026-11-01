@@ -1,7 +1,5 @@
 """COCO dataset format utilities and classes for handling annotations and predictions."""
 
-from __future__ import annotations
-
 import copy
 import os
 import random
@@ -237,7 +235,7 @@ class CocoAnnotation:
             shapely_annotation = ShapelyAnnotation.from_coco_bbox(bbox=bbox)
         self._shapely_annotation = shapely_annotation
 
-    def get_sliced_coco_annotation(self, slice_bbox: list[int]) -> CocoAnnotation:
+    def get_sliced_coco_annotation(self, slice_bbox: list[int]) -> "CocoAnnotation":
         """Get the annotation sliced by a bounding box.
 
         Args:
@@ -957,7 +955,7 @@ class Coco:
         # overwrite instance
         self.__dict__ = updated_coco.__dict__
 
-    def merge(self, coco: Coco, desired_name2id: dict | None = None, verbose: int = 1) -> None:
+    def merge(self, coco: "Coco", desired_name2id: dict | None = None, verbose: int = 1) -> None:
         """Combine the images/annotations/categories of given coco object with current one.
 
         Args:
@@ -1406,7 +1404,7 @@ class Coco:
         with open(yaml_path, "w") as outfile:
             yaml.dump(data, outfile, default_flow_style=None)
 
-    def _copy_without_images(self) -> Coco:
+    def _copy_without_images(self) -> "Coco":
         """Return a new Coco with the same settings and categories but no images."""
         coco = Coco(
             name=self.name,
@@ -1418,7 +1416,7 @@ class Coco:
         coco.categories = copy.deepcopy(self.categories)
         return coco
 
-    def get_subsampled_coco(self, subsample_ratio: int = 2, category_id: int | None = None) -> Coco:
+    def get_subsampled_coco(self, subsample_ratio: int = 2, category_id: int | None = None) -> "Coco":
         """Subsample images and return as Coco object.
 
         Args:
@@ -1479,7 +1477,7 @@ class Coco:
 
         return subsampled_coco
 
-    def get_upsampled_coco(self, upsample_ratio: int = 2, category_id: int | None = None) -> Coco:
+    def get_upsampled_coco(self, upsample_ratio: int = 2, category_id: int | None = None) -> "Coco":
         """Upsample images and return as Coco object.
 
         Args:
@@ -1519,7 +1517,7 @@ class Coco:
 
     def get_area_filtered_coco(
         self, min: int = 0, max_val: float = float("inf"), intervals_per_category: dict | None = None
-    ) -> Coco:
+    ) -> "Coco":
         """Filter annotations by area and return remaining images as Coco object.
 
         Args:
@@ -1552,7 +1550,7 @@ class Coco:
 
         return area_filtered_coco
 
-    def get_coco_with_clipped_bboxes(self) -> Coco:
+    def get_coco_with_clipped_bboxes(self) -> "Coco":
         """Limits overflowing bounding boxes to image dimensions."""
         from sahi.slicing import annotation_inside_slice
 
@@ -2118,7 +2116,7 @@ class DatasetClassCounts:
         """Calculate the frequency of images that contain each category."""
         return {cid: count / self.total_images for cid, count in self.counts.items()}
 
-    def __add__(self, o: DatasetClassCounts) -> DatasetClassCounts:
+    def __add__(self, o: "DatasetClassCounts") -> "DatasetClassCounts":
         """Add two DatasetClassCounts objects together."""
         total = self.total_images + o.total_images
         exclusive_keys = set(o.counts.keys()) - set(self.counts.keys())
