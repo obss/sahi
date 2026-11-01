@@ -1,8 +1,6 @@
 """YOLOv5 model utilities and constants."""
 
-import urllib.request
-from os import path
-from pathlib import Path
+from sahi.utils.file import download_from_url
 
 
 class Yolov5TestConstants:
@@ -20,27 +18,11 @@ class Yolov5TestConstants:
 
 def download_yolov5n_model(destination_path: str | None = None) -> None:
     """Download the YOLOv5-Nano model for testing."""
-    if destination_path is None:
-        destination_path = Yolov5TestConstants.YOLOV5N_MODEL_PATH
-
-    Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
-
-    if not path.exists(destination_path):
-        urllib.request.urlretrieve(
-            Yolov5TestConstants.YOLOV5N_MODEL_URL,
-            destination_path,
-        )
+    download_from_url(Yolov5TestConstants.YOLOV5N_MODEL_URL, destination_path or Yolov5TestConstants.YOLOV5N_MODEL_PATH)
 
 
 def download_yolov5s6_model(destination_path: str | None = None) -> None:
     """Download the YOLOv5s6 model for testing."""
-    if destination_path is None:
-        destination_path = Yolov5TestConstants.YOLOV5S6_MODEL_PATH
-
-    Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
-
-    if not path.exists(destination_path):
-        urllib.request.urlretrieve(
-            Yolov5TestConstants.YOLOV5S6_MODEL_URL,
-            destination_path,
-        )
+    download_from_url(
+        Yolov5TestConstants.YOLOV5S6_MODEL_URL, destination_path or Yolov5TestConstants.YOLOV5S6_MODEL_PATH
+    )
