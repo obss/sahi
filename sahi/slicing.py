@@ -137,16 +137,48 @@ def process_coco_annotations(
     Returns:
         (List[CocoAnnotation]): Sliced annotations.
     """
-    sliced_coco_annotation_list: list[CocoAnnotation] = []
+    return _slice_prepared_annotations(_prepare_coco_annotations(coco_annotation_list), slice_bbox, min_area_ratio)
+
+
+_PreparedAnnotations = tuple[list[CocoAnnotation], list[float], np.ndarray]
+
+
+def _prepare_coco_annotations(coco_annotation_list: list[CocoAnnotation]) -> _PreparedAnnotations:
+    """Compute the area and [left, top, right, bottom] box of each annotation once for all slices.
+
+    A degenerate or sub-pixel annotation has area 0 (and no bbox when it has no
+    area at all), so there is nothing to slice and no area ratio to filter by.
+    """
+    annotations: list[CocoAnnotation] = []
+    areas: list[float] = []
+    boxes: list[tuple[float, float, float, float]] = []
     for coco_annotation in coco_annotation_list:
-        # A degenerate or sub-pixel annotation has area 0 (and no bbox when it has no
-        # area at all), so there is nothing to slice and no area ratio to filter by.
-        if coco_annotation.area == 0:
+        area = coco_annotation.area
+        if area == 0:
             continue
-        if annotation_inside_slice(coco_annotation.json, slice_bbox):
-            sliced_coco_annotation = coco_annotation.get_sliced_coco_annotation(slice_bbox)
-            if sliced_coco_annotation.area / coco_annotation.area >= min_area_ratio:
-                sliced_coco_annotation_list.append(sliced_coco_annotation)
+        left, top, width, height = coco_annotation.bbox
+        annotations.append(coco_annotation)
+        areas.append(area)
+        boxes.append((left, top, left + width, top + height))
+    return annotations, areas, np.array(boxes, dtype=np.float64).reshape(-1, 4)
+
+
+def _slice_prepared_annotations(
+    prepared: _PreparedAnnotations, slice_bbox: list[int], min_area_ratio: float
+) -> list[CocoAnnotation]:
+    """Slice the annotations that overlap slice_bbox, using the same rule as annotation_inside_slice."""
+    annotations, areas, boxes = prepared
+    inside = (
+        (boxes[:, 0] < slice_bbox[2])
+        & (boxes[:, 1] < slice_bbox[3])
+        & (boxes[:, 2] > slice_bbox[0])
+        & (boxes[:, 3] > slice_bbox[1])
+    )
+    sliced_coco_annotation_list: list[CocoAnnotation] = []
+    for ind in np.flatnonzero(inside).tolist():
+        sliced_coco_annotation = annotations[ind].get_sliced_coco_annotation(slice_bbox)
+        if sliced_coco_annotation.area / areas[ind] >= min_area_ratio:
+            sliced_coco_annotation_list.append(sliced_coco_annotation)
     return sliced_coco_annotation_list
 
 
@@ -261,11 +293,12 @@ class SliceImageResult:
         """Get sliced image(s) by index or slice."""
 
         def _prepare_ith_dict(i: int) -> dict:
+            sliced_image = self._sliced_image_list[i]
             return {
-                "image": self.images[i],
-                "coco_image": self.coco_images[i],
-                "starting_pixel": self.starting_pixels[i],
-                "filename": self.filenames[i],
+                "image": sliced_image.image,
+                "coco_image": sliced_image.coco_image,
+                "starting_pixel": sliced_image.starting_pixel,
+                "filename": sliced_image.coco_image.file_name,
             }
 
         if isinstance(i, np.ndarray):
@@ -393,6 +426,8 @@ def slice_image(
     )
 
     suffix = _slice_file_suffix(image, out_ext)
+    prepared_annotations = _prepare_coco_annotations(coco_annotation_list) if coco_annotation_list is not None else None
+    min_area_ratio_val: float = min_area_ratio if min_area_ratio is not None else 0.1
 
     # iterate over slices
     for slice_bbox in slice_bboxes:
@@ -415,10 +450,9 @@ def slice_image(
         coco_image = CocoImage(file_name=slice_file_name, height=slice_height, width=slice_width)
 
         # append coco annotations (if present) to coco image
-        if coco_annotation_list is not None:
-            min_area_ratio_val: float = min_area_ratio if min_area_ratio is not None else 0.1
-            for sliced_coco_annotation in process_coco_annotations(
-                coco_annotation_list, slice_bbox, min_area_ratio_val
+        if prepared_annotations is not None:
+            for sliced_coco_annotation in _slice_prepared_annotations(
+                prepared_annotations, slice_bbox, min_area_ratio_val
             ):
                 coco_image.add_annotation(sliced_coco_annotation)
 
