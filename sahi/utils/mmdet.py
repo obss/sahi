@@ -39,8 +39,6 @@ def download_mmdet_cascade_mask_rcnn_model(destination_path: str | None = None) 
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_PATH
 
-    Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
-
     download_from_url(MmdetTestConstants.MMDET_CASCADEMASKRCNN_MODEL_URL, destination_path)
 
 
@@ -49,8 +47,6 @@ def download_mmdet_retinanet_model(destination_path: str | None = None) -> None:
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_RETINANET_MODEL_PATH
 
-    Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
-
     download_from_url(MmdetTestConstants.MMDET_RETINANET_MODEL_URL, destination_path)
 
 
@@ -58,8 +54,6 @@ def download_mmdet_yolox_tiny_model(destination_path: str | None = None) -> None
     """Download the YOLOX-Tiny model for testing."""
     if destination_path is None:
         destination_path = MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_PATH
-
-    Path(destination_path).parent.mkdir(parents=True, exist_ok=True)
 
     download_from_url(MmdetTestConstants.MMDET_YOLOX_TINY_MODEL_URL, destination_path)
 
