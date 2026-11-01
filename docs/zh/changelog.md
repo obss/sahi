@@ -8,6 +8,53 @@ tags:
 
 # 📝 更新日志
 
+## 🚀 SAHI v0.14.0 发布说明
+
+此次版本将测试、文档和示例切换到 YOLO26，YOLOE 默认使用 YOLOE-26，修复了 YOLOE、YOLO-World、torchvision、Hugging Face 和 mmdet 封装、下载以及脚本中的多个问题，并在输出不变的前提下加快了 COCO 切片和掩码绘制。
+
+### 💥 不兼容变更
+
+- **未指定 `model_path` 时，YOLOE 加载 `yoloe-26s-seg.pt`** ([#1499](https://github.com/obss/sahi/pull/1499))，而不是 `yoloe-11s-seg.pt`。如需继续使用 YOLOE-11，请传入 `model_path`。
+- **移除了 `hugging_face_universal_segmentation` 模型类型** ([#1498](https://github.com/obss/sahi/pull/1498))。它没有对应的模块，调用时总是报 `ModuleNotFoundError`。这些模型请使用 `huggingface_segmentation`。
+
+### 🐛 修复
+
+- **YOLOE 和 YOLO-World 的预测结果使用 `set_classes` 设置的类别名称** ([#1499](https://github.com/obss/sahi/pull/1499))，而不是 `'0'`、`'1'` 等。传入的 `category_mapping` 仍会保留。
+- **`model_type="yolo-world"` 可以正常加载** ([#1498](https://github.com/obss/sahi/pull/1498))。注册的类名拼写错误，导致总是报 `AttributeError`。
+- **torchvision 封装会保留批次中的每张图像** ([#1502](https://github.com/obss/sahi/pull/1502))，并使用各自的偏移量和完整尺寸，而不是只保留最后一张。
+- **Hugging Face 全景分割的批次输出与切片保持对应** ([#1502](https://github.com/obss/sahi/pull/1502))。没有分割结果的图像会被丢弃，导致其后的预测使用了错误的切片位置。
+- **mmdet 推理不再有会引发 `NameError` 的代码路径** ([#1502](https://github.com/obss/sahi/pull/1502))。
+- **`python -m sahi.scripts.slice_coco` 可以正常运行** ([#1501](https://github.com/obss/sahi/pull/1501))。它把内置的 `slice` 而不是 `slicer` 传给了 Fire。
+- **`predict` 会累加每张图像的导出时间** ([#1501](https://github.com/obss/sahi/pull/1501))，而不是只保留最后一张，并且在没有图像且 `verbose=2` 时不再报 `KeyError`。
+- **`predict_fiftyone` 会统计切片预测的预测时间** ([#1501](https://github.com/obss/sahi/pull/1501))。
+- **`sahi env` 会显示 pillow 和所有已安装的 OpenCV 发行版** ([#1501](https://github.com/obss/sahi/pull/1501))，并且不再列出 sahi 未使用的 tensorflow。
+- **下载会先写入临时文件** ([#1495](https://github.com/obss/sahi/pull/1495)、[#1504](https://github.com/obss/sahi/pull/1504))，因此中断的下载不会留下之后会被加载的损坏模型文件。YOLOv5 notebook 使用的 YOLOv5 辅助函数现在也使用同一套下载代码。
+
+### ⚡ 性能
+
+以下改进的输出与之前完全相同 ([#1503](https://github.com/obss/sahi/pull/1503))。
+
+| 基准测试 | v0.13.1 | v0.14.0 |
+|---|---|---|
+| 在 50 张 VisDrone 图像上运行 `slice_coco`，共 6493 个切片标注 | 1.48 秒 | 0.92 秒 |
+| 在 4K 图像上绘制 80 个掩码 | 2.09 秒 | 0.15 秒 |
+| 在 OpenCV `vtest.avi` 视频的 100 帧上绘制掩码 | 1.20 秒 | 0.12 秒 |
+
+- **切片时每个标注的边界框和面积在每张图像上只计算一次**，而不是每个切片计算一次。
+- **掩码绘制只混合每个掩码覆盖的区域**，而不是整张图像。
+- **切片预测和 `SliceImageResult` 索引不再在每次访问时重建切片列表**，并且 `predict` 对每张图像只转换一次数组供所有导出使用。
+
+### 🧹 维护与 CI
+
+- **测试和 CI 命令使用 YOLO26** ([#1496](https://github.com/obss/sahi/pull/1496))，覆盖检测、分割、OBB 和 ONNX 导出。
+- **CI 安装 CPU 版 torch** ([#1494](https://github.com/obss/sahi/pull/1494))，使 CI 缓存缩小到原来的约三分之一。
+- **移除了 `from __future__ import annotations`** ([#1500](https://github.com/obss/sahi/pull/1500))，因为最低版本已是 Python 3.10，并通过 ruff 防止它再次出现。
+
+### 📚 文档
+
+- **README、文档和示例使用 YOLO26** ([#1497](https://github.com/obss/sahi/pull/1497))，涵盖英文、土耳其文和中文，Ultralytics notebook 默认在 CPU 上运行。
+- **YOLOE 文档和 notebook 使用 YOLOE-26** ([#1499](https://github.com/obss/sahi/pull/1499))，并说明只有 `-pf` 模型无需提示即可检测目标。
+
 ## 🚀 SAHI v0.13.1 发布说明
 
 此补丁版本新增了对 Python 3.15 的支持。
