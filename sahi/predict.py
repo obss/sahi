@@ -704,6 +704,7 @@ def predict(
     # iterate over source images
     durations_in_seconds["prediction"] = 0
     durations_in_seconds["slice"] = 0
+    durations_in_seconds["export_files"] = 0
 
     input_type_str = "video frames" if source_is_video else "images"
     for ind, image_path in enumerate(
@@ -870,8 +871,7 @@ def predict(
             cv2.imshow(f"Prediction of {video_file_name!s}", result["image"])
             cv2.waitKey(1)
 
-        time_end = time.time() - time_start
-        durations_in_seconds["export_files"] = time_end
+        durations_in_seconds["export_files"] += time.time() - time_start
 
     # export coco results
     if dataset_json_path:
@@ -1073,7 +1073,7 @@ def predict_fiftyone(
                     exclude_classes_by_name=exclude_classes_by_name,
                     exclude_classes_by_id=exclude_classes_by_id,
                 )
-                durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
+            durations_in_seconds["prediction"] += prediction_result.durations_in_seconds["prediction"]
 
             # Save predictions to dataset
             sample[model_type] = fo.Detections(detections=prediction_result.to_fiftyone_detections())

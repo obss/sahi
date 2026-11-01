@@ -66,4 +66,4 @@ def slicer(
 
 
 if __name__ == "__main__":
-    fire.Fire(slice)
+    fire.Fire(slicer)
