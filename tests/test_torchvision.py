@@ -265,3 +265,24 @@ class TestTorchVisionDetectionModel:
         np.testing.assert_almost_equal(
             object_prediction_list[0].bbox.to_xywh(), [765.81, 259.37, 28.62, 24.63], decimal=1
         )
+
+
+def test_convert_original_predictions_keeps_every_image() -> None:
+    """Each image in a batch keeps its own predictions, shift amount and full shape."""
+    import torch
+
+    detection_model = TorchVisionDetectionModel(confidence_threshold=0.5, device="cpu", load_at_init=False)
+    detection_model._original_predictions = [
+        {
+            "boxes": torch.tensor([[10.0, 10.0, 20.0, 20.0]]),
+            "labels": torch.tensor([3]),
+            "scores": torch.tensor([0.9]),
+        }
+        for _ in range(2)
+    ]
+    detection_model.convert_original_predictions(shift_amount=[[0, 0], [100, 50]], full_shape=[[200, 200], [200, 200]])
+
+    per_image = detection_model.object_prediction_list_per_image
+    assert len(per_image) == 2
+    assert list(per_image[0][0].bbox.shift_amount) == [0, 0]
+    assert list(per_image[1][0].bbox.shift_amount) == [100, 50]

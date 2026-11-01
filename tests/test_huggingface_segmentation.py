@@ -121,3 +121,24 @@ def test_get_prediction_detects_cars() -> None:
     assert_valid_segments(result.object_prediction_list)
     car_segments = sum(p.category.name == "car" for p in result.object_prediction_list)
     assert car_segments >= 5
+
+
+def test_panoptic_conversion_keeps_images_without_segments() -> None:
+    """An image with no segments still gets an entry so batch outputs stay paired with their images."""
+    import torch
+
+    from sahi.models.huggingface_segmentation import _convert_panoptic_to_binary_masks
+
+    segmentation = torch.zeros((4, 4), dtype=torch.int32)
+    segmentation[1:3, 1:3] = 1
+    outputs = _convert_panoptic_to_binary_masks(
+        [
+            {"segmentation": None, "segments_info": []},
+            {"segmentation": segmentation, "segments_info": [{"id": 1, "label_id": 2, "score": 0.9}]},
+        ]
+    )
+
+    assert len(outputs) == 2
+    assert outputs[0] == {"segmentation": [], "segments_info": []}
+    assert outputs[1]["segments_info"] == [{"id": 1, "label_id": 2, "score": 0.9}]
+    assert int(outputs[1]["segmentation"][0].sum()) == 4

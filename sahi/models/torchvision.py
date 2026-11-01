@@ -161,9 +161,8 @@ class TorchVisionDetectionModel(DetectionModel):
         if full_shape_list is not None and isinstance(full_shape_list[0], int):
             full_shape_list = [full_shape_list]  # type: ignore[list-item]
 
-        for image_predictions in original_predictions:
-            object_prediction_list_per_image = []
-
+        object_prediction_list_per_image = []
+        for image_ind, image_predictions in enumerate(original_predictions):
             # get indices of boxes with score > confidence_threshold
             scores = image_predictions["scores"].cpu().detach().numpy()
             selected_indices = np.where(scores > self.confidence_threshold)[0]
@@ -185,12 +184,12 @@ class TorchVisionDetectionModel(DetectionModel):
             # create object_prediction_list
             object_prediction_list = []
 
-            shift_amount = shift_amount_list[0] if shift_amount_list else [0, 0]
-            full_shape = None if full_shape_list is None else full_shape_list[0]
+            shift_amount = shift_amount_list[image_ind] if shift_amount_list else [0, 0]
+            full_shape = None if full_shape_list is None else full_shape_list[image_ind]
 
             for ind in range(len(boxes)):
                 if masks is not None:
-                    segmentation = get_coco_segmentation_from_bool_mask(np.array(masks[ind]))
+                    segmentation = get_coco_segmentation_from_bool_mask(masks[ind])
                 else:
                     segmentation = None
 
