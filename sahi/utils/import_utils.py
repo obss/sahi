@@ -12,49 +12,48 @@ def get_package_info(package_name: str, verbose: bool = True) -> tuple[bool, str
     """Check whether a package is installed and retrieve its version.
 
     Args:
-        package_name: The name of the package to look up.
+        package_name: The distribution name (e.g. "pillow") or module name (e.g. "torch") of the package.
         verbose: If True, log the package version when available.
 
     Returns:
         is_available (bool): Whether the package is installed.
         version_string (str): Version string, or "N/A" if not installed.
     """
-    _is_available = is_available(package_name)
+    import importlib.metadata as _importlib_metadata
 
-    if _is_available:
-        try:
-            import importlib.metadata as _importlib_metadata
-
-            _version = _importlib_metadata.version(package_name)
-        except (ModuleNotFoundError, AttributeError):
-            try:
-                _version = importlib.import_module(package_name).__version__
-            except AttributeError:
-                _version = "unknown"
-        if verbose:
-            logger.pkg_info(f"{package_name} version {_version} is available.")
-    else:
+    try:
+        _version = _importlib_metadata.version(package_name)
+        _is_available = True
+    except _importlib_metadata.PackageNotFoundError:
+        _is_available = is_available(package_name)
         _version = "N/A"
+        if _is_available:
+            _version = getattr(importlib.import_module(package_name), "__version__", "unknown")
+
+    if _is_available and verbose:
+        logger.pkg_info(f"{package_name} version {_version} is available.")
 
     return _is_available, _version
 
 
 def print_environment_info() -> None:
     """Log version info for all commonly used SAHI dependency packages."""
-    get_package_info("torch")
-    get_package_info("torchvision")
-    get_package_info("tensorflow")
-    get_package_info("tensorflow-hub")
-    get_package_info("ultralytics")
-    get_package_info("yolov5")
-    get_package_info("mmdet")
-    get_package_info("mmcv")
-    get_package_info("detectron2")
-    get_package_info("transformers")
-    get_package_info("timm")
-    get_package_info("fiftyone")
-    get_package_info("pillow")
-    get_package_info("opencv-python")
+    for package_name in (
+        "torch",
+        "torchvision",
+        "ultralytics",
+        "yolov5",
+        "mmdet",
+        "mmcv",
+        "detectron2",
+        "transformers",
+        "timm",
+        "fiftyone",
+        "pillow",
+    ):
+        get_package_info(package_name)
+    for distribution, version in get_opencv_distribution_versions().items():
+        logger.pkg_info(f"{distribution} version {version} is available.")
 
 
 OPENCV_DISTRIBUTIONS = (
