@@ -12,6 +12,7 @@ from threading import Lock, Thread
 from typing import Any, Literal, TypeVar, cast
 
 import numpy as np
+import shapely
 from tqdm import tqdm
 
 from sahi.logger import logger
@@ -1946,6 +1947,7 @@ def create_coco_dict(
     image_index = 1
     annotation_id = 1
     coco_dict = dict(images=[], annotations=[], categories=categories)
+    exported_images = []
     for coco_image in images:
         # get coco annotations
         coco_annotations = coco_image.annotations
@@ -1972,22 +1974,39 @@ def create_coco_dict(
                 "file_name": coco_image.file_name,
             }
             coco_dict["images"].append(out_image)
+            exported_images.append((image_id, coco_annotations))
 
-            # do the same for image annotations
-            for coco_annotation in coco_annotations:
-                # create coco annotation object
-                out_annotation = {
-                    "iscrowd": coco_annotation.iscrowd,
-                    "image_id": image_id,
-                    "bbox": coco_annotation.bbox,
-                    "segmentation": coco_annotation.segmentation,
-                    "category_id": coco_annotation.category_id,
-                    "id": annotation_id,
-                    "area": coco_annotation.area,
-                }
-                coco_dict["annotations"].append(out_annotation)
-                # increment annotation id
-                annotation_id += 1
+    # compute [xmin, ymin, width, height] of all annotation geometries with vectorised shapely/numpy calls
+    annotation_xywh = shapely.bounds(
+        [
+            getattr(getattr(coco_annotation, "_shapely_annotation", None), "multipolygon", None)
+            for _, coco_annotations in exported_images
+            for coco_annotation in coco_annotations
+        ]
+    ).reshape(-1, 4)
+    annotation_xywh[:, 2:] -= annotation_xywh[:, :2]
+    annotation_xywh = annotation_xywh.tolist()
+
+    # do the same for image annotations
+    for image_id, coco_annotations in exported_images:
+        for coco_annotation in coco_annotations:
+            if type(coco_annotation).bbox is CocoAnnotation.bbox:
+                bbox = coco_annotation._shapely_annotation._finalize_xywh(annotation_xywh[annotation_id - 1])
+            else:
+                bbox = coco_annotation.bbox
+            # create coco annotation object
+            out_annotation = {
+                "iscrowd": coco_annotation.iscrowd,
+                "image_id": image_id,
+                "bbox": bbox,
+                "segmentation": coco_annotation.segmentation,
+                "category_id": coco_annotation.category_id,
+                "id": annotation_id,
+                "area": coco_annotation.area,
+            }
+            coco_dict["annotations"].append(out_annotation)
+            # increment annotation id
+            annotation_id += 1
 
     # return coco dict
     return coco_dict
