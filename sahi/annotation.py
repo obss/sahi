@@ -402,11 +402,15 @@ class ObjectAnnotation:
         xmin = max(bbox[0], 0)
         ymin = max(bbox[1], 0)
         if full_shape:
-            xmax = min(bbox[2], full_shape[1])
-            ymax = min(bbox[3], full_shape[0])
+            # clamp the minima too, otherwise a box that lies entirely past the right or
+            # bottom edge keeps its original minimum and comes out inverted
+            xmin = min(xmin, full_shape[1])
+            ymin = min(ymin, full_shape[0])
+            xmax = min(max(bbox[2], 0), full_shape[1])
+            ymax = min(max(bbox[3], 0), full_shape[0])
         else:
-            xmax = bbox[2]
-            ymax = bbox[3]
+            xmax = max(bbox[2], xmin)
+            ymax = max(bbox[3], ymin)
         bbox = [xmin, ymin, xmax, ymax]
         # set bbox - convert shift_amount to tuple for BoundingBox
         shift_amount_tuple: tuple[int, int] = (int(shift_amount[0]), int(shift_amount[1]))

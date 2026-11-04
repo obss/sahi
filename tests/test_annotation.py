@@ -164,3 +164,21 @@ class TestAnnotation:
         assert object_annotation3.bbox.maxy == bbox[3]
         assert object_annotation3.category.id == category_id
         assert object_annotation3.category.name == category_name
+
+    @pytest.mark.parametrize(
+        ("bbox", "expected"),
+        [
+            pytest.param([900, 100, 950, 200], [800, 100, 800, 200], id="past-right-edge"),
+            pytest.param([100, 700, 200, 750], [100, 600, 200, 600], id="past-bottom-edge"),
+            pytest.param([-90, 100, -10, 200], [0, 100, 0, 200], id="left-of-image"),
+            pytest.param([700, 100, 900, 200], [700, 100, 800, 200], id="crossing-right-edge"),
+        ],
+    )
+    def test_object_annotation_clamps_boxes_outside_image(self, bbox: list[int], expected: list[int]) -> None:
+        """Boxes reaching past an image edge stay the right way round after clamping."""
+        from sahi.annotation import ObjectAnnotation
+
+        annotation = ObjectAnnotation(bbox=bbox, category_id=0, full_shape=[600, 800])  # type: ignore[arg-type]
+
+        assert annotation.bbox.to_xyxy() == expected
+        assert annotation.bbox.area >= 0
