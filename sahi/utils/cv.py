@@ -327,6 +327,9 @@ def read_image_as_pil(
         image = os.fspath(image)
 
     if isinstance(image, Image.Image):
+        if image.mode != "RGB":
+            # an image path is converted to RGB below, an opened image has to match it
+            image = image.convert("RGB")
         if return_arr:
             return np.asarray(image)
         return image
