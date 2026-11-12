@@ -4,6 +4,7 @@ import copy
 import os
 import random
 import threading
+import warnings
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from multiprocessing import Pool
@@ -1676,12 +1677,17 @@ def export_single_yolo_image_and_corresponding_txt(
         yolo_image_path = str(parent_dir / (filename + filesuffix))
         name_increment += 1
     # create a symbolic link pointing to coco_image_path named yolo_image_path
-    if disable_symlink:
-        import shutil
+    import shutil
 
+    if disable_symlink:
         shutil.copy(coco_image_path, yolo_image_path)
     else:
-        os.symlink(coco_image_path, yolo_image_path)
+        try:
+            os.symlink(coco_image_path, yolo_image_path)
+        except OSError:
+            # creating symlinks needs a privilege most Windows accounts don't have
+            warnings.warn("symlinks can't be created here, copying images instead", stacklevel=2)
+            shutil.copy(coco_image_path, yolo_image_path)
     # calculate annotation normalization ratios
     width = coco_image.width
     height = coco_image.height

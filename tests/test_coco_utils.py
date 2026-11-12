@@ -771,6 +771,37 @@ class TestCocoUtils:
         assert area_filtered_coco.stats["num_images"] == len(area_filtered_coco.images)
         assert area_filtered_coco.stats["num_annotations"] == len(area_filtered_coco.json["annotations"])
 
+    def test_coco2yolo_copies_images_when_symlinks_fail(self) -> None:
+        """Test that images are copied when the platform refuses to create symlinks."""
+        import os
+        import shutil
+        from unittest import mock
+
+        import pytest
+
+        from sahi.utils.coco import Coco
+
+        coco_dict_path = "tests/data/coco_utils/combined_coco.json"
+        image_dir = "tests/data/coco_utils/"
+        output_dir = "tests/data/coco2yolo_no_symlink/"
+        if os.path.isdir(output_dir):
+            shutil.rmtree(output_dir, ignore_errors=True)
+        coco = Coco.from_coco_dict_or_path(coco_dict_path, image_dir=image_dir)
+
+        error = OSError("A required privilege is not held by the client")
+        with mock.patch("os.symlink", side_effect=error), pytest.warns(UserWarning, match="copying images"):
+            coco.export_as_yolo(output_dir=output_dir, train_split_rate=0.5, numpy_seed=0)
+
+        image_paths = [
+            os.path.join(root, name)
+            for root, _, names in os.walk(output_dir)
+            for name in names
+            if name.lower().endswith((".jpg", ".jpeg", ".png"))
+        ]
+        assert len(image_paths) == len(coco.images)
+        assert not any(os.path.islink(path) for path in image_paths)
+        shutil.rmtree(output_dir, ignore_errors=True)
+
     def test_export_coco_as_yolo(self) -> None:
         """Test exporting COCO dataset as YOLO format."""
         from sahi.utils.coco import Coco, export_coco_as_yolo
