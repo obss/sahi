@@ -368,6 +368,13 @@ def read_image_as_pil(
         return image_pil
     elif isinstance(image, np.ndarray):
         arr = _to_hwc(image)
+        # grayscale and RGBA arrays become RGB, as images in those modes do
+        if arr.ndim == 2:
+            arr = np.repeat(arr[:, :, np.newaxis], 3, axis=2)
+        elif arr.shape[2] == 1:
+            arr = np.repeat(arr, 3, axis=2)
+        elif arr.shape[2] == 4:
+            arr = arr[:, :, :3]
         if return_arr:
             return arr
         return Image.fromarray(arr)
