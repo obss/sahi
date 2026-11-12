@@ -420,6 +420,31 @@ class TestCocoUtils:
             assert [float(value) for value in values[1:]] == pytest.approx([0.25, 0.4, 0.3, 0.4])
             assert (output / image_name).read_bytes() == source.read_bytes()
 
+    def test_yolo_class_ids_are_positions_in_names(self, tmp_path: Path) -> None:
+        """Write each label with the position of its category in the data yaml names list."""
+        import yaml
+        from PIL import Image
+
+        from sahi.utils.coco import Coco
+
+        Image.new("RGB", (100, 100)).save(tmp_path / "photo.jpg")
+        coco_dict = {
+            "images": [{"id": 1, "file_name": "photo.jpg", "height": 100, "width": 100}],
+            "categories": [{"id": 1, "name": "human"}, {"id": 7, "name": "car"}],
+            "annotations": [
+                {"id": 1, "image_id": 1, "category_id": 1, "bbox": [10, 20, 30, 40], "segmentation": []},
+                {"id": 2, "image_id": 1, "category_id": 7, "bbox": [50, 50, 20, 20], "segmentation": []},
+            ],
+        }
+        output = tmp_path / "export"
+        coco = Coco.from_coco_dict_or_path(coco_dict, image_dir=str(tmp_path))
+
+        coco.export_as_yolo(output_dir=str(output), disable_symlink=True)
+
+        names = yaml.safe_load((output / "data.yml").read_text())["names"]
+        class_ids = [int(line.split()[0]) for line in (output / "train" / "photo.txt").read_text().splitlines()]
+        assert [names[class_id] for class_id in class_ids] == ["human", "car"]
+
     def test_update_categories(self) -> None:
         """Test updating categories in COCO dataset."""
         coco_path = "tests/data/coco_utils/terrain2_coco.json"
