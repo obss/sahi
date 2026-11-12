@@ -673,7 +673,7 @@ def predict(
         coco_json = []
     elif source and os.path.isdir(source):
         image_iterator = list_files(directory=source, contains=IMAGE_EXTENSIONS, verbose=verbose)
-    elif source and Path(source).suffix in VIDEO_EXTENSIONS:
+    elif source and Path(source).suffix.lower() in VIDEO_EXTENSIONS:
         source_is_video = True
         read_video_frame, output_video_writer, video_file_name, num_frames = get_video_reader(
             source, str(save_dir), frame_skip_interval, not novisual, view_video
