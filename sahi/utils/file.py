@@ -259,8 +259,9 @@ def increment_path(path: str | Path, exist_ok: bool = True, sep: str = "") -> st
     if (path.exists() and exist_ok) or (not path.exists()):
         return str(path)
     else:
-        dirs = glob.glob(f"{path}{sep}*")  # similar paths
-        matches = [re.search(rf"%s{sep}(\d+)" % path.stem, d) for d in dirs]
+        # the path is literal text: it may contain glob or regex characters, and dots
+        dirs = glob.glob(f"{glob.escape(str(path))}{sep}*")  # similar paths
+        matches = [re.search(rf"{re.escape(path.name + sep)}(\d+)", d) for d in dirs]
         indices = [int(m.groups()[0]) for m in matches if m]  # indices
         n = max(indices) + 1 if indices else 2  # increment number
         return f"{path}{sep}{n}"  # update path
