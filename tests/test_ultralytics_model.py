@@ -126,6 +126,42 @@ def test_yolo26_segmentation() -> None:
     assert len(masks.shape) == 3  # (num_predictions, height, width)
 
 
+def test_yolo26_segmentation_masks_match_boxes() -> None:
+    """Test that YOLO26 masks line up with their boxes when the model input is letterboxed."""
+    from sahi.models.ultralytics import UltralyticsDetectionModel
+
+    # init model
+    download_yolo26n_seg_model()
+
+    detection_model = UltralyticsDetectionModel(
+        model_path=UltralyticsConstants.YOLO26N_SEG_MODEL_PATH,
+        confidence_threshold=CONFIDENCE_THRESHOLD,
+        device=MODEL_DEVICE,
+        category_remapping=None,
+        load_at_init=True,
+        image_size=IMAGE_SIZE,
+    )
+
+    # a 16:9 image is padded from 640x360 to 640x384 before inference
+    image_path = "tests/data/small-vehicles1.jpeg"
+    image = read_image(image_path)[:576, :1024]
+    detection_model.perform_inference(image)
+    detection_model.convert_original_predictions()
+
+    boxes = detection_model.original_predictions[0][0].cpu().numpy()[:, :4]
+    object_prediction_list = detection_model.object_prediction_list
+    assert len(object_prediction_list) == len(boxes) > 0
+
+    # compare the box around each mask with the box the model predicted
+    for object_prediction, box in zip(object_prediction_list, boxes):
+        mask_box = object_prediction.bbox.to_xyxy()
+        intersection_width = min(mask_box[2], box[2]) - max(mask_box[0], box[0])
+        intersection_height = min(mask_box[3], box[3]) - max(mask_box[1], box[1])
+        intersection = max(intersection_width, 0) * max(intersection_height, 0)
+        union = object_prediction.bbox.area + (box[2] - box[0]) * (box[3] - box[1]) - intersection
+        assert intersection / union > 0.7
+
+
 def test_yolo26_obb() -> None:
     """Test YOLO26 oriented bounding box model."""
     from sahi.models.ultralytics import UltralyticsDetectionModel

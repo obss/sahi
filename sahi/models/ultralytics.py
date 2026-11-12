@@ -290,6 +290,14 @@ class UltralyticsDetectionModel(DetectionModel):
                 if masks_or_points is not None:
                     if self.has_mask:
                         bool_mask = masks_or_points[pred_ind]
+                        # The mask is in the letterboxed model input frame, cut the padding off first
+                        mask_height, mask_width = bool_mask.shape[:2]
+                        gain = min(mask_height / image_shape[0], mask_width / image_shape[1])
+                        content_height = max(round(image_shape[0] * gain), 1)
+                        content_width = max(round(image_shape[1] * gain), 1)
+                        top = round((mask_height - content_height) / 2 - 0.1)
+                        left = round((mask_width - content_width) / 2 - 0.1)
+                        bool_mask = bool_mask[top : top + content_height, left : left + content_width]
                         # Resize mask to original image size
                         bool_mask = cv2.resize(bool_mask.astype(np.uint8), (image_shape[1], image_shape[0]))
                         segmentation = get_coco_segmentation_from_bool_mask(bool_mask)
