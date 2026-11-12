@@ -247,3 +247,19 @@ def test_visualize_mask_matches_full_image_blend() -> None:
     inside_mask[y1 - 1 : y1 + 2, :] = inside_mask[y2 - 1 : y2 + 2, :] = False
     inside_mask[:, x1 - 1 : x1 + 2] = inside_mask[:, x2 - 1 : x2 + 2] = False
     np.testing.assert_array_equal(result[inside_mask], expected[inside_mask])
+
+
+@pytest.mark.parametrize("folder_name", ["r\u00e9sultats", "\u7d50\u679c"])
+def test_visuals_are_written_to_and_read_from_non_ascii_paths(tmp_path: Path, folder_name: str) -> None:
+    """Regression: OpenCV can't open non-ASCII paths on Windows, so nothing was saved there."""
+    from sahi.prediction import ObjectPrediction
+    from sahi.utils.cv import visualize_object_predictions
+
+    image = np.full((60, 80, 3), 90, dtype=np.uint8)
+    prediction = ObjectPrediction(bbox=[10, 10, 40, 40], category_id=0, category_name="car", full_shape=[60, 80])
+    output_dir = tmp_path / folder_name
+
+    visualize_object_predictions(image, [prediction], output_dir=str(output_dir), file_name="caf\u00e9")
+
+    assert [path.name for path in output_dir.iterdir()] == ["caf\u00e9.png"]
+    assert read_image(str(output_dir / "caf\u00e9.png")).shape == image.shape
