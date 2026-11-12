@@ -107,7 +107,39 @@ def crop_object_predictions(
             output_dir,
             file_name + "_box" + str(ind) + "_class" + str(category_id) + "." + export_format,
         )
-        cv2.imwrite(save_path, cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR))
+        _imwrite(save_path, cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR))
+
+
+def _is_non_ascii_windows_path(path: str) -> bool:
+    """OpenCV reads Windows paths in the ANSI code page, so it can't open these."""
+    return os.name == "nt" and not str(path).isascii()
+
+
+def _imread(path: str, flags: int | None = None) -> np.ndarray | None:
+    """cv2.imread that also reads from non-ASCII paths on Windows."""
+    if not _is_non_ascii_windows_path(path):
+        return cv2.imread(path) if flags is None else cv2.imread(path, flags)
+    try:
+        buffer = np.fromfile(path, dtype=np.uint8)
+    except OSError:
+        return None
+    if buffer.size == 0:
+        return None
+    return cv2.imdecode(buffer, cv2.IMREAD_COLOR if flags is None else flags)
+
+
+def _imwrite(path: str, image: np.ndarray) -> bool:
+    """cv2.imwrite that also writes to non-ASCII paths on Windows."""
+    if not _is_non_ascii_windows_path(path):
+        return cv2.imwrite(path, image)
+    success, buffer = cv2.imencode(os.path.splitext(path)[1], image)
+    if not success:
+        return False
+    try:
+        buffer.tofile(path)
+    except OSError:
+        return False
+    return True
 
 
 def convert_image_to(read_path: str, extension: str = "jpg", grayscale: bool = False) -> None:
@@ -118,14 +150,14 @@ def convert_image_to(read_path: str, extension: str = "jpg", grayscale: bool = F
         extension (str, optional): The desired file extension for the saved image. Defaults to "jpg".
         grayscale (bool, optional): Whether to convert the image to grayscale. Defaults to False.
     """
-    image = cv2.imread(read_path)
+    image = _imread(read_path)
     assert image is not None, f"Failed to read image: {read_path}"
     pre, _ = os.path.splitext(read_path)
     if grayscale:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         pre = pre + "_gray"
     save_path = pre + "." + extension
-    cv2.imwrite(save_path, image)
+    _imwrite(save_path, image)
 
 
 def read_large_image(image_path: str) -> tuple[np.ndarray, bool]:
@@ -143,7 +175,7 @@ def read_large_image(image_path: str) -> tuple[np.ndarray, bool]:
     # read image, cv2 fails on large files
     try:
         # convert to rgb (cv2 reads in bgr)
-        img_cv2 = cv2.imread(image_path, 1)
+        img_cv2 = _imread(image_path, 1)
         assert img_cv2 is not None, f"Failed to read image: {image_path}"
         image0 = cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB)
     except Exception as e:
@@ -169,7 +201,7 @@ def read_image(image_path: str) -> np.ndarray:
         numpy.ndarray: The loaded image as a numpy array.
     """
     # read image
-    image = cv2.imread(image_path)
+    image = _imread(image_path)
     assert image is not None, f"Failed to read image: {image_path}"
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # return image
@@ -240,7 +272,7 @@ def _read_local_image_as_arr(path: str, exif_fix: bool = True) -> np.ndarray | N
     if not exif_fix:
         flags |= cv2.IMREAD_IGNORE_ORIENTATION
     try:
-        bgr = cv2.imread(path, flags)
+        bgr = _imread(path, flags)
     except cv2.error:
         # over its pixel cap OpenCV raises rather than returning None; PIL reads these
         return None
@@ -606,7 +638,7 @@ def visualize_prediction(
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
         save_path = os.path.join(output_dir, (file_name or "unknown") + ".png")
-        cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        _imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
     elapsed_time = time.time() - elapsed_time
     return {"image": image, "elapsed_time": elapsed_time}
@@ -746,7 +778,7 @@ def visualize_object_predictions(
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         # save inference result
         save_path = str(Path(output_dir) / ((file_name or "") + "." + (export_format or "")))
-        cv2.imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        _imwrite(save_path, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
     elapsed_time = time.time() - elapsed_time
     return {"image": image, "elapsed_time": elapsed_time}
