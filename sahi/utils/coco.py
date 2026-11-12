@@ -1566,6 +1566,7 @@ class Coco:
                     shapely_ann = coco_ann.get_sliced_coco_annotation(img_dims)
                     bbox = ShapelyAnnotation.to_xywh(shapely_ann._shapely_annotation)
                     coco_ann_from_shapely = CocoAnnotation(
+                        segmentation=shapely_ann.segmentation if coco_ann.segmentation else None,
                         bbox=[int(x) for x in bbox],  # type: ignore[list-item]
                         category_id=coco_ann.category_id,
                         category_name=coco_ann.category_name,

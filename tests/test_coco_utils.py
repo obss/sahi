@@ -894,6 +894,46 @@ class TestCocoUtils:
         clipped_coco = Coco.from_coco_dict_or_path(get_coco_dict(), clip_bboxes_to_img_dims=True)
         assert [annotation["iscrowd"] for annotation in clipped_coco.json["annotations"]] == [0, 1]
 
+    def test_bbox_clipping_keeps_segmentation(self) -> None:
+        """Test that polygon annotations stay polygons when clipped to the image."""
+        from sahi.utils.coco import Coco
+
+        def get_coco_dict() -> dict:
+            return {
+                "images": [{"id": 1, "file_name": "a.jpg", "height": 100, "width": 100}],
+                "categories": [{"id": 1, "name": "person"}],
+                "annotations": [
+                    {
+                        "id": 1,
+                        "image_id": 1,
+                        "category_id": 1,
+                        "bbox": [50, 50, 20, 20],
+                        "segmentation": [[50, 50, 70, 50, 60, 70]],
+                    },
+                    {
+                        "id": 2,
+                        "image_id": 1,
+                        "category_id": 1,
+                        "bbox": [80, 10, 40, 20],
+                        "segmentation": [[80, 10, 120, 10, 120, 30, 80, 30]],
+                    },
+                    {"id": 3, "image_id": 1, "category_id": 1, "bbox": [0, 0, 10, 10], "segmentation": []},
+                ],
+            }
+
+        coco = Coco.from_coco_dict_or_path(get_coco_dict())
+        clipped_coco = Coco.from_coco_dict_or_path(get_coco_dict(), clip_bboxes_to_img_dims=True)
+        inside, overflowing, box_only = clipped_coco.images[0].annotations
+
+        assert sorted(zip(*[iter(inside.segmentation[0])] * 2)) == [(50, 50), (60, 70), (70, 50)]
+        assert inside.bbox == coco.images[0].annotations[0].bbox
+        assert inside.area == coco.images[0].annotations[0].area == 200
+        assert sorted(zip(*[iter(overflowing.segmentation[0])] * 2)) == [(80, 10), (80, 30), (100, 10), (100, 30)]
+        assert overflowing.bbox == [80, 10, 20, 20]
+        assert overflowing.area == 400
+        assert box_only.segmentation == []
+        assert box_only.bbox == [0, 0, 10, 10]
+
     def test_remove_invalid_coco_results_short_bbox(self) -> None:
         from sahi.utils.coco import remove_invalid_coco_results
 
