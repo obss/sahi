@@ -109,6 +109,35 @@ class TestTorchVisionDetectionModel:
             assert scores[score_ind] <= 1
             assert scores[score_ind] >= 0
 
+    def test_image_size_sets_longer_side(self) -> None:
+        """Test that image_size is the longer side of the model input for a non-square image."""
+        import torch
+
+        from sahi.models.torchvision import TorchVisionDetectionModel
+
+        # init model
+        torchvision_detection_model = TorchVisionDetectionModel(
+            config_path=TorchVisionConstants.FASTERRCNN_CONFIG_PATH,
+            confidence_threshold=CONFIDENCE_THRESHOLD,
+            device=MODEL_DEVICE,
+            category_remapping=None,
+            load_at_init=True,
+            image_size=IMAGE_SIZE,
+        )
+
+        # prepare image
+        image_path = "tests/data/small-vehicles1.jpeg"
+        image = read_image(image_path)
+
+        # perform inference
+        torchvision_detection_model.perform_inference(image)
+
+        # get the size the model resizes this image to
+        image_tensor = torch.zeros(3, image.shape[0], image.shape[1])
+        image_list, _ = torchvision_detection_model.model.transform([image_tensor])
+        assert image.shape[0] != image.shape[1]
+        assert max(image_list.image_sizes[0]) == IMAGE_SIZE
+
     def test_convert_original_predictions_without_mask_output(self) -> None:
         """Test converting predictions without mask output."""
         torchvision_detection_model = TorchVisionDetectionModel(
@@ -137,11 +166,11 @@ class TestTorchVisionDetectionModel:
         assert object_prediction_list[0].mask is None
 
         # compare
-        assert len(object_prediction_list) == 7
+        assert len(object_prediction_list) == 13
         assert object_prediction_list[0].category.id == 3
         assert object_prediction_list[0].category.name == "car"
         np.testing.assert_almost_equal(
-            object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
+            object_prediction_list[0].bbox.to_xywh(), [320.74, 319.55, 59.17, 46.51], decimal=1
         )
 
     def test_convert_original_predictions_with_mask_output(self) -> None:
@@ -172,10 +201,10 @@ class TestTorchVisionDetectionModel:
         assert object_prediction_list[0].mask is not None
 
         # compare
-        assert len(object_prediction_list) == 8
+        assert len(object_prediction_list) == 23
         assert object_prediction_list[0].category.id == 3
         assert object_prediction_list[0].category.name == "car"
-        np.testing.assert_allclose(object_prediction_list[0].bbox.to_xywh(), [317, 312, 60, 50], atol=1)
+        np.testing.assert_allclose(object_prediction_list[0].bbox.to_xywh(), [448, 306, 42, 34], atol=1)
 
     def test_get_prediction_torchvision(self) -> None:
         """Test full-image prediction with TorchVision model."""
@@ -205,11 +234,11 @@ class TestTorchVisionDetectionModel:
         object_prediction_list = prediction_result.object_prediction_list
 
         # compare
-        assert len(object_prediction_list) == 7
+        assert len(object_prediction_list) == 13
         assert object_prediction_list[0].category.id == 3
         assert object_prediction_list[0].category.name == "car"
         np.testing.assert_almost_equal(
-            object_prediction_list[0].bbox.to_xywh(), [315.79, 309.33, 64.28, 56.94], decimal=1
+            object_prediction_list[0].bbox.to_xywh(), [320.74, 319.55, 59.17, 46.51], decimal=1
         )
 
     def test_get_sliced_prediction_torchvision(self) -> None:
