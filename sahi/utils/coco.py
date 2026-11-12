@@ -3,7 +3,6 @@
 import copy
 import os
 import random
-import threading
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from multiprocessing import Pool
@@ -1108,24 +1107,20 @@ class Coco:
                     coco_image.add_annotation(coco_annotation)
                 _coco.add_image(coco_image)
 
-        chunk_size = dict_size / num_threads
-
         if use_threads is True:
+            threads = []
             for i in range(num_threads):
-                start = int(i * chunk_size)
-                finish = int(start + chunk_size)
-                if finish > dict_size:
-                    finish = dict_size
+                start = i * dict_size // num_threads
+                finish = (i + 1) * dict_size // num_threads
                 t = Thread(
                     target=fill_image_id_set,
                     args=(start, finish, coco_dict["images"], image_id_set, image_id_to_annotation_list, coco, lock),
                 )
                 t.start()
+                threads.append(t)
 
-            main_thread = threading.current_thread()
-            for t in threading.enumerate():
-                if t is not main_thread:
-                    t.join()
+            for t in threads:
+                t.join()
 
         else:
             for coco_image_dict in tqdm(coco_dict["images"], "Loading coco annotations"):
