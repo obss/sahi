@@ -52,3 +52,16 @@ def test_segm_backends_match(tmp_path: Path) -> None:
     dataset, result = paths
     kwargs = dict(dataset=dataset, type="segm", classwise=True)
     assert run(tmp_path, result, "pycocotools", **kwargs) == run(tmp_path, result, "ultrafast", **kwargs)
+
+
+def test_non_ascii_category_names(tmp_path: Path) -> None:
+    # COCO files are UTF-8, whatever the platform's default encoding is
+    data = json.loads((DATA / "dataset.json").read_text(encoding="utf-8"))
+    name = "собака"
+    data["categories"][0]["name"] = name
+    dataset = tmp_path / "dataset.json"
+    dataset.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+    results = run(tmp_path, DATA / "result.json", "pycocotools", dataset=dataset, classwise=True)
+
+    assert f"bbox_{name}_mAP50" in results["results_per_category"]

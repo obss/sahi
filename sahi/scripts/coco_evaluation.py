@@ -127,7 +127,7 @@ def evaluate_core(
     eval_results = OrderedDict()
 
     # Load dataset json and add empty 'info' field if missing
-    with open(dataset_path) as f:
+    with open(dataset_path, encoding="utf-8") as f:
         dataset_dict = json.load(f)
     if "info" not in dataset_dict:
         dataset_dict["info"] = {}
@@ -148,7 +148,7 @@ def evaluate_core(
             print(msg)
 
             iou_type = metric
-            with open(result_path) as json_file:
+            with open(result_path, encoding="utf-8") as json_file:
                 results = json.load(json_file)
             if not results:
                 print("The testing results of the whole dataset is empty.")
