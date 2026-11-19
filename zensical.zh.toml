@@ -16,18 +16,14 @@ nav = [
     {"切片推理原理" = "guides/sliced-inference.md"},
     {"模型集成" = "guides/models.md"},
     {"预测工具" = "predict.md"},
-    {"COCO 数据集操作" = "coco.md"},
     {"切片工具" = "slicing.md"},
     {"后处理后端" = "postprocess/backends.md"},
-    {"FiftyOne 可视化" = "fiftyone.md"},
     {"CLI 命令" = "cli.md"},
+    {"COCO 数据集操作" = "coco.md"},
+    {"FiftyOne 可视化" = "fiftyone.md"},
   ]},
   {"Notebooks" = "notebooks.md"},
   {"代码参考" = [
-    {"高层 API" = [
-      "predict.md",
-      "slicing.md",
-    ]},
     {"核心" = [
       "annotation.md",
       "prediction.md",
@@ -49,7 +45,6 @@ nav = [
       "models/roboflow.md",
     ]},
     {"后处理" = [
-      "postprocess/backends.md",
       "postprocess/combine.md",
       "postprocess/utils.md",
     ]},
@@ -76,10 +71,16 @@ features = [
   "content.action.edit",
   "content.tooltips",
   "content.code.annotate",
+  "content.tabs.link",
   "navigation.tabs",
   "navigation.tabs.sticky",
   "navigation.top",
   "navigation.indexes",
+  "navigation.footer",
+  "toc.follow",
+  "search.suggest",
+  "search.highlight",
+  "search.share",
 ]
 font.text = "Inter"
 font.code = "IBM Plex Mono"
@@ -132,6 +133,13 @@ link = "https://pypi.org/project/sahi"
 default_handler = "python"
 
 [project.plugins.mkdocstrings.handlers.python.options]
+separate_signature = true
+show_signature_annotations = true
+signature_crossrefs = true
+merge_init_into_class = true
+members_order = "source"
+docstring_section_style = "table"
+filters = ["!^_"]
 parameter_headings = true
 allow_inspection = true
 show_bases = true
@@ -154,6 +162,8 @@ permalink = true
 # --- PyMdown extensions ---
 
 [project.markdown_extensions.pymdownx.details]
+[project.markdown_extensions.abbr]
+
 [project.markdown_extensions.pymdownx.superfences]
 
 [project.markdown_extensions.pymdownx.tabbed]
