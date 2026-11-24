@@ -1600,10 +1600,12 @@ def export_yolo_images_and_txts_from_coco_object(
         logger.warning("symlink is not supported in colab, disabling it...")
         disable_symlink = True
     image_dir = coco.image_dir or ""
+    # yolo class ids are the positions of the categories in the data yaml `names` list
+    category_id_to_yolo_id = {category_id: ind for ind, category_id in enumerate(coco.category_mapping)}
     if mp:
         with Pool(processes=48) as pool:
             args = [
-                (coco_image, image_dir, output_dir, ignore_negative_samples, disable_symlink)
+                (coco_image, image_dir, output_dir, ignore_negative_samples, disable_symlink, category_id_to_yolo_id)
                 for coco_image in coco.images
             ]
             pool.starmap(
@@ -1613,7 +1615,7 @@ def export_yolo_images_and_txts_from_coco_object(
     else:
         for coco_image in tqdm(coco.images):
             export_single_yolo_image_and_corresponding_txt(
-                coco_image, image_dir, output_dir, ignore_negative_samples, disable_symlink
+                coco_image, image_dir, output_dir, ignore_negative_samples, disable_symlink, category_id_to_yolo_id
             )
 
 
@@ -1623,6 +1625,7 @@ def export_single_yolo_image_and_corresponding_txt(
     output_dir: str,
     ignore_negative_samples: bool = False,
     disable_symlink: bool = False,
+    category_id_to_yolo_id: dict[int, int] | None = None,
 ) -> None:
     """Generate YOLO formatted image symlink and annotation txt file.
 
@@ -1632,6 +1635,8 @@ def export_single_yolo_image_and_corresponding_txt(
         output_dir: Export directory.
         ignore_negative_samples: If True, ignores images without annotations.
         disable_symlink: If True, copies images instead of creating symlinks.
+        category_id_to_yolo_id: Maps each COCO category id to its YOLO class id. If None, category ids are
+            written unchanged.
     """
     # if coco_image contains any invalid annotations, skip it
     contains_invalid_annotations = False
@@ -1700,6 +1705,8 @@ def export_single_yolo_image_and_corresponding_txt(
             bbox_width = bbox_width * dw
             bbox_height = bbox_height * dh
             category_id = annotation.category_id
+            if category_id_to_yolo_id is not None:
+                category_id = category_id_to_yolo_id[category_id]
             yolo_bbox = (x_center, y_center, bbox_width, bbox_height)
             # save yolo annotation
             outfile.write(str(category_id) + " " + " ".join([str(value) for value in yolo_bbox]) + "\n")
