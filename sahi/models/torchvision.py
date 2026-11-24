@@ -110,7 +110,7 @@ class TorchVisionDetectionModel(DetectionModel):
             # we want to scale the longer dimension to the target size
             image_size = self.image_size * min_shape / max_shape
             self.model.transform.min_size = (image_size,)  # default is (800,)
-            self.model.transform.max_size = image_size  # default is 1333
+            self.model.transform.max_size = self.image_size  # default is 1333
 
         image_tensor = to_float_tensor(image)
         image_tensor = image_tensor.to(self.device)
