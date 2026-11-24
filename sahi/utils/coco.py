@@ -867,7 +867,8 @@ class Coco:
         """
         for coco_category in coco_category_list:
             if self.remapping_dict is not None:
-                coco_category["id"] = self.remapping_dict.get(coco_category["id"], coco_category["id"])
+                category_id = self.remapping_dict.get(coco_category["id"], coco_category["id"])
+                coco_category = {**coco_category, "id": category_id}
 
             self.add_category(CocoCategory.from_coco_category(coco_category))
 
@@ -1096,7 +1097,7 @@ class Coco:
                         # apply category remapping (id:id)
                         category_id = _coco.remapping_dict[coco_annotation_dict["category_id"]]
                         # update category id
-                        coco_annotation_dict["category_id"] = category_id
+                        coco_annotation_dict = {**coco_annotation_dict, "category_id": category_id}
                     else:
                         category_id = coco_annotation_dict["category_id"]
                     # get category name (id:name)
@@ -1143,7 +1144,7 @@ class Coco:
                         # apply category remapping (id:id)
                         category_id = coco.remapping_dict[coco_annotation_dict["category_id"]]
                         # update category id
-                        coco_annotation_dict["category_id"] = category_id
+                        coco_annotation_dict = {**coco_annotation_dict, "category_id": category_id}
                     else:
                         category_id = coco_annotation_dict["category_id"]
                     # get category name (id:name)
@@ -2177,7 +2178,8 @@ class CocoVid:
         """
         for coco_category in coco_category_list:
             if self.remapping_dict is not None:
-                coco_category["id"] = self.remapping_dict.get(coco_category["id"], coco_category["id"])
+                category_id = self.remapping_dict.get(coco_category["id"], coco_category["id"])
+                coco_category = {**coco_category, "id": category_id}
 
             self.add_category(CocoCategory.from_coco_category(coco_category))
 

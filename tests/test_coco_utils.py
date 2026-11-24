@@ -80,6 +80,33 @@ class TestCocoUtils:
         cocovid.add_categories_from_coco_category_list([{"id": 0, "name": "cat"}, {"id": 1, "name": "dog"}])
         assert cocovid.category_mapping == {1: "cat", 2: "dog"}
 
+    def test_coco_remapping_dict_keeps_input_dict(self) -> None:
+        """Test that remapping category ids leaves the given dict as it was, so it can be loaded again."""
+        import copy
+
+        from sahi.utils.coco import Coco, CocoVid
+
+        coco_dict = {
+            "images": [{"id": 1, "file_name": "a.jpg", "height": 100, "width": 100}],
+            "categories": [{"id": 1, "name": "cat"}, {"id": 2, "name": "dog"}],
+            "annotations": [
+                {"id": 1, "image_id": 1, "category_id": 1, "bbox": [0, 0, 10, 10], "segmentation": [], "area": 100},
+                {"id": 2, "image_id": 1, "category_id": 2, "bbox": [20, 20, 10, 10], "segmentation": [], "area": 100},
+            ],
+        }
+        original_coco_dict = copy.deepcopy(coco_dict)
+
+        for _ in range(2):
+            coco = Coco.from_coco_dict_or_path(coco_dict, remapping_dict={1: 0, 2: 1})
+            assert coco.category_mapping == {0: "cat", 1: "dog"}
+            assert [a.category_id for a in coco.images[0].annotations] == [0, 1]
+        assert coco_dict == original_coco_dict
+
+        category_list = [{"id": 1, "name": "cat"}, {"id": 2, "name": "dog"}]
+        cocovid = CocoVid(remapping_dict={1: 0, 2: 1})
+        cocovid.add_categories_from_coco_category_list(category_list)
+        assert category_list == [{"id": 1, "name": "cat"}, {"id": 2, "name": "dog"}]
+
     def test_coco_annotation(self) -> None:
         """Test CocoAnnotation creation from segmentation and bounding box."""
         from sahi.utils.coco import CocoAnnotation
