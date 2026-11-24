@@ -1,5 +1,33 @@
 # 📝 CHANGELOG
 
+## 🚀 SAHI v0.14.1 Release Notes
+
+A patch release that fixes bugs in COCO loading and export, image reading, torchvision and Ultralytics masks, video input and Windows paths, and makes `create_coco_dict` faster.
+
+### 🐛 Fixes
+
+- **Boxes that fall outside the image keep the right way round** ([#1507](https://github.com/obss/sahi/pull/1507)) when they are clamped to the image.
+- **Clipping COCO annotations to the image keeps polygons** ([#1509](https://github.com/obss/sahi/pull/1509)) instead of turning them into boxes.
+- **Remapping category ids leaves the given COCO dict unchanged** ([#1514](https://github.com/obss/sahi/pull/1514)), so it can be loaded again.
+- **`Coco.from_coco_dict_or_path` with `use_threads=True` loads every image** ([#1511](https://github.com/obss/sahi/pull/1511)) and waits for its own threads only.
+- **The COCO evaluation scripts read files as UTF-8** ([#1510](https://github.com/obss/sahi/pull/1510)).
+- **YOLO export writes class ids that match the names in the data yaml** ([#1518](https://github.com/obss/sahi/pull/1518)). Class ids are now the position of each category in `names`, so COCO files with ids that do not start at 0 export correctly.
+- **YOLO export copies images when symlinks cannot be created** ([#1519](https://github.com/obss/sahi/pull/1519)), as on most Windows accounts.
+- **Opened images and arrays in other modes are converted to RGB** ([#1513](https://github.com/obss/sahi/pull/1513)), the same way image paths are.
+- **`image_size` is the longer side of the torchvision model input** ([#1515](https://github.com/obss/sahi/pull/1515)). Non-square images were resized smaller than asked, so you may see more detections at the same `image_size`.
+- **Ultralytics masks line up with their boxes** ([#1516](https://github.com/obss/sahi/pull/1516)) by cutting the letterbox padding off before resizing.
+- **`.wmv` files and upper-case video file names are read as videos in `predict`** ([#1517](https://github.com/obss/sahi/pull/1517)).
+- **`increment_path` gives each run its own folder when the name has dots or brackets** ([#1512](https://github.com/obss/sahi/pull/1512)).
+- **Images are read and written at non-ASCII paths on Windows** ([#1520](https://github.com/obss/sahi/pull/1520)).
+
+### ⚡ Performance
+
+- **`create_coco_dict` computes the bboxes of all annotations in one batch** ([#1506](https://github.com/obss/sahi/pull/1506)) with the same output as before.
+
+### 📚 Documentation
+
+- **The Chinese site configuration matches the English one** ([#1521](https://github.com/obss/sahi/pull/1521)).
+
 ## 🚀 SAHI v0.14.0 Release Notes
 
 A minor release that moves the tests, docs and examples to YOLO26, defaults YOLOE to YOLOE-26, fixes bugs in the YOLOE, YOLO-World, torchvision, Hugging Face and mmdet wrappers, downloads and scripts, and makes COCO slicing and mask drawing faster with the same output.
