@@ -4,6 +4,7 @@ import shutil
 import sys
 from collections import Counter
 from os import path
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -686,6 +687,41 @@ def test_video_prediction() -> None:
         name="exp",
         verbose=1,
     )
+
+
+@pytest.mark.parametrize("file_name", ["clip.wmv", "CLIP.AVI"])
+def test_video_prediction_reads_source_as_video(tmp_path: Path, file_name: str) -> None:
+    """Test that wmv and upper-case video file names are read as videos."""
+    import cv2
+
+    # init model
+    download_yolo26n_model()
+
+    # prepare a short video, opencv picks the reader from the content and not from the file name
+    source = tmp_path / file_name
+    frame = cv2.resize(cv2.imread("tests/data/small-vehicles1.jpeg"), (320, 192))
+    video_path = tmp_path / "frames.avi"
+    video_writer = cv2.VideoWriter(str(video_path), cv2.VideoWriter_fourcc(*"MJPG"), 10, (320, 192))
+    for _ in range(3):
+        video_writer.write(frame)
+    video_writer.release()
+    video_path.rename(source)
+
+    result = predict(
+        model_type="ultralytics",
+        model_path=UltralyticsConstants.YOLO26N_MODEL_PATH,
+        model_confidence_threshold=CONFIDENCE_THRESHOLD,
+        model_device=MODEL_DEVICE,
+        source=str(source),
+        no_sliced_prediction=True,
+        image_size=IMAGE_SIZE,
+        novisual=True,
+        project=str(tmp_path / "predict_result"),
+        return_dict=True,
+        verbose=0,
+    )
+
+    assert result is not None
 
 
 def test_source_image_is_decoded_once_per_sliced_prediction(monkeypatch: pytest.MonkeyPatch) -> None:
