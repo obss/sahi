@@ -345,6 +345,17 @@ class TestCocoUtils:
         assert coco1.stats["num_images"] == len(coco1.images)
         assert coco1.stats["num_annotations"] == len(coco1.json["annotations"])
 
+    def test_coco_with_threads(self) -> None:
+        """Test that loading with threads keeps every image and annotation."""
+        from sahi.utils.coco import Coco
+
+        coco_path = "tests/data/coco_utils/terrain_all_coco.json"
+        threaded_coco = Coco.from_coco_dict_or_path(coco_path, use_threads=True)
+        coco = Coco.from_coco_dict_or_path(coco_path)
+
+        assert len(threaded_coco.images) == 3
+        assert threaded_coco.stats == coco.stats
+
     def test_split_coco_as_train_val(self) -> None:
         """Test splitting COCO dataset into train and validation sets."""
         from sahi.utils.coco import Coco
