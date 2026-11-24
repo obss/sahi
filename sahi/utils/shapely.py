@@ -215,16 +215,22 @@ class ShapelyAnnotation:
 
     def to_xywh(self) -> list[float]:
         """[xmin, ymin, width, height]."""
-        if self.multipolygon.area != 0:
-            coco_bbox, _ = get_bbox_from_shapely(self.multipolygon)
-            # fix coord by slice box
-            if self.slice_bbox:
-                minx = self.slice_bbox[0]
-                miny = self.slice_bbox[1]
-                coco_bbox[0] = coco_bbox[0] - minx
-                coco_bbox[1] = coco_bbox[1] - miny
-        else:
-            coco_bbox = []
+        return self._xywh_from_bounds(self.__multipolygon.bounds)
+
+    def _xywh_from_bounds(self, bounds: tuple[float, float, float, float] | list[float]) -> list[float]:
+        """Convert precomputed multipolygon bounds (minx, miny, maxx, maxy) to [xmin, ymin, width, height]."""
+        minx, miny, maxx, maxy = bounds
+        return self._finalize_xywh([minx, miny, maxx - minx, maxy - miny])
+
+    def _finalize_xywh(self, coco_bbox: list[float]) -> list[float]:
+        """Apply the empty-area and slice box rules to a raw [xmin, ymin, width, height] bbox."""
+        # reuse the area computed in the multipolygon setter
+        if self.__area == 0:
+            return []
+        # fix coord by slice box
+        if self.slice_bbox:
+            coco_bbox[0] = coco_bbox[0] - self.slice_bbox[0]
+            coco_bbox[1] = coco_bbox[1] - self.slice_bbox[1]
         return coco_bbox
 
     def to_coco_bbox(self) -> list[float]:
@@ -233,8 +239,8 @@ class ShapelyAnnotation:
 
     def to_xyxy(self) -> list[float]:
         """[xmin, ymin, xmax, ymax]."""
-        if self.multipolygon.area != 0:
-            _, voc_bbox = get_bbox_from_shapely(self.multipolygon)
+        if self.__area != 0:
+            _, voc_bbox = get_bbox_from_shapely(self.__multipolygon)
             # fix coord by slice box
             if self.slice_bbox:
                 minx = self.slice_bbox[0]
