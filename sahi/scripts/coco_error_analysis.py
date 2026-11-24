@@ -335,7 +335,7 @@ def _analyse_results(
     result_type_to_export_paths = {}
 
     # Load annotation file and add empty 'info' field if missing
-    with open(ann_file) as f:
+    with open(ann_file, encoding="utf-8") as f:
         ann_dict = json.load(f)
     if "info" not in ann_dict:
         ann_dict["info"] = {}
