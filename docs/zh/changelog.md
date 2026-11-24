@@ -8,6 +8,34 @@ tags:
 
 # 📝 更新日志
 
+## 🚀 SAHI v0.14.1 发布说明
+
+此次补丁版本修复了 COCO 加载与导出、图像读取、torchvision 与 Ultralytics 掩码、视频输入以及 Windows 路径中的问题，并加快了 `create_coco_dict`。
+
+### 🐛 修复
+
+- **超出图像范围的框在裁剪到图像内后方向保持正确** ([#1507](https://github.com/obss/sahi/pull/1507))。
+- **将 COCO 标注裁剪到图像内时会保留多边形** ([#1509](https://github.com/obss/sahi/pull/1509))，而不是变成矩形框。
+- **重映射类别 id 时不再修改传入的 COCO 字典** ([#1514](https://github.com/obss/sahi/pull/1514))，因此可以再次加载。
+- **`Coco.from_coco_dict_or_path` 在 `use_threads=True` 时会加载每张图像** ([#1511](https://github.com/obss/sahi/pull/1511))，并且只等待自己创建的线程。
+- **COCO 评估脚本以 UTF-8 读取文件** ([#1510](https://github.com/obss/sahi/pull/1510))。
+- **YOLO 导出写入的类别 id 与 data yaml 中的名称一致** ([#1518](https://github.com/obss/sahi/pull/1518))。类别 id 现在是每个类别在 `names` 中的位置，因此 id 不从 0 开始的 COCO 文件也能正确导出。
+- **无法创建符号链接时，YOLO 导出会复制图像** ([#1519](https://github.com/obss/sahi/pull/1519))，大多数 Windows 账户就是这种情况。
+- **其他模式的已打开图像和数组会转换为 RGB** ([#1513](https://github.com/obss/sahi/pull/1513))，与图像路径的处理方式一致。
+- **`image_size` 是 torchvision 模型输入的长边** ([#1515](https://github.com/obss/sahi/pull/1515))。非正方形图像之前被缩放得比设定的更小，因此相同 `image_size` 下可能检测到更多目标。
+- **Ultralytics 掩码与其框对齐** ([#1516](https://github.com/obss/sahi/pull/1516))，缩放前先去掉 letterbox 的填充部分。
+- **`predict` 会把 `.wmv` 文件和大写扩展名的视频文件名当作视频读取** ([#1517](https://github.com/obss/sahi/pull/1517))。
+- **名称中含有点或方括号时，`increment_path` 仍为每次运行创建独立的文件夹** ([#1512](https://github.com/obss/sahi/pull/1512))。
+- **在 Windows 上可以读写非 ASCII 路径下的图像** ([#1520](https://github.com/obss/sahi/pull/1520))。
+
+### ⚡ 性能
+
+- **`create_coco_dict` 一次性批量计算所有标注的边界框** ([#1506](https://github.com/obss/sahi/pull/1506))，输出与之前相同。
+
+### 📚 文档
+
+- **中文站点配置与英文站点保持一致** ([#1521](https://github.com/obss/sahi/pull/1521))。
+
 ## 🚀 SAHI v0.14.0 发布说明
 
 此次版本将测试、文档和示例切换到 YOLO26，YOLOE 默认使用 YOLOE-26，修复了 YOLOE、YOLO-World、torchvision、Hugging Face 和 mmdet 封装、下载以及脚本中的多个问题，并在输出不变的前提下加快了 COCO 切片和掩码绘制。
