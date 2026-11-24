@@ -177,6 +177,40 @@ class TestCvUtils:
         """Decoding straight to an array gives the same pixels as converting from PIL."""
         assert_decode_parity(image_path)
 
+    @pytest.mark.parametrize("mode", ["RGBA", "L", "LA", "P", "CMYK"])
+    @pytest.mark.parametrize("return_arr", [True, False])
+    def test_read_image_as_pil_reads_opened_image_like_its_path(
+        self, tmp_path: Path, mode: str, return_arr: bool
+    ) -> None:
+        """An opened image in another mode gives the same RGB pixels as its file path."""
+        image_path = tmp_path / "image.tif"
+        pixels = (np.arange(6 * 8 * 3) % 251).astype(np.uint8).reshape(6, 8, 3)
+        Image.fromarray(pixels).convert(mode).save(image_path)
+        from_path = np.asarray(read_image_as_pil(str(image_path)))
+
+        with Image.open(image_path) as image:
+            from_image = np.asarray(read_image_as_pil(image, return_arr=return_arr))
+
+        assert from_image.shape == (6, 8, 3)
+        np.testing.assert_array_equal(from_image, from_path)
+
+    @pytest.mark.parametrize("layout", ["HW", "HW1", "RGBA"])
+    @pytest.mark.parametrize("return_arr", [True, False])
+    def test_read_image_as_pil_reads_grayscale_and_rgba_arrays_as_rgb(self, layout: str, return_arr: bool) -> None:
+        """A grayscale or RGBA array gives the RGB pixels of the image in that mode."""
+        pixels = (np.arange(6 * 8 * 3) % 251).astype(np.uint8).reshape(6, 8, 3)
+        if layout == "RGBA":
+            array = np.dstack([pixels, np.full((6, 8), 255, dtype=np.uint8)])
+            expected = pixels
+        else:
+            gray = pixels[:, :, 0]
+            array = gray if layout == "HW" else gray[:, :, np.newaxis]
+            expected = np.repeat(gray[:, :, np.newaxis], 3, axis=2)
+
+        result = np.asarray(read_image_as_pil(array, return_arr=return_arr))
+
+        np.testing.assert_array_equal(result, expected)
+
     @pytest.mark.parametrize("name", list(DECODER_FIXTURES))
     @pytest.mark.parametrize("exif_fix", [True, False])
     def test_array_decode_matches_pil_decode_per_mode(self, tmp_path: Path, name: str, exif_fix: bool) -> None:
