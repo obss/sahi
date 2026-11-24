@@ -3,6 +3,8 @@
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 
 class TestFileUtils:
     """Test file utility functions."""
@@ -45,6 +47,20 @@ class TestFileUtils:
         with patch("sahi.utils.file.Path.exists", return_value=True):
             path = increment_path("test.txt", exist_ok=False)
             assert path == "test.txt2"
+
+    @pytest.mark.parametrize("name", ["exp", "v1.0", "exp(1)", "a+b", "run [v2]"])
+    def test_increment_path_never_returns_existing_path(self, tmp_path: Path, name: str) -> None:
+        """Repeated runs get distinct directories whatever characters the name contains."""
+        from sahi.utils.file import increment_path
+
+        created = []
+        for _ in range(4):
+            path = Path(increment_path(tmp_path / "runs [1]" / name, exist_ok=False))
+            assert not path.exists()
+            path.mkdir(parents=True)
+            created.append(path.name)
+
+        assert created == [name, f"{name}2", f"{name}3", f"{name}4"]
 
     def test_download_from_url(self, tmp_path: Path) -> None:
         """A finished download lands at the target path with no leftover part file."""
