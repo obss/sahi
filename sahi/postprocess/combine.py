@@ -314,6 +314,7 @@ def _apply_merge(
     keep_to_merge_list: dict[int, list[int]],
     match_metric: str,
     match_threshold: float,
+    recheck_match: bool = True,
 ) -> list[ObjectPrediction]:
     """Apply merge operations using the keep-to-merge mapping.
 
@@ -328,6 +329,9 @@ def _apply_merge(
         match_metric: Overlap metric used for the merge check, "IOU"
             or "IOS".
         match_threshold: Minimum overlap to confirm and apply a merge.
+        recheck_match: If True, a listed prediction is merged only when it
+            still matches the kept prediction as merged so far, and is
+            dropped otherwise. If False, every listed prediction is merged.
 
     Returns:
         List of merged ObjectPrediction instances.
@@ -345,7 +349,7 @@ def _apply_merge(
             if not isinstance(merge_pred, ObjectPrediction):
                 raise TypeError("Expected ObjectPrediction from single-item list")
 
-            if has_match(
+            if not recheck_match or has_match(
                 keep_pred,
                 merge_pred,
                 match_metric,
@@ -396,6 +400,9 @@ class NMMPostprocess(PostprocessPredictions):
 
     _agnostic_func = staticmethod(nmm)
     _batched_func = staticmethod(batched_nmm)
+    # A transitively merged box may not overlap the kept box itself, so
+    # checking it against the kept box again would drop it.
+    _recheck_match = False
 
     def __call__(self, object_predictions: list[ObjectPrediction]) -> list[ObjectPrediction]:
         """Apply Non-Maximum Merging to merge overlapping predictions.
@@ -410,7 +417,9 @@ class NMMPostprocess(PostprocessPredictions):
         preds_np = object_prediction_list.tonumpy()
         func = self._agnostic_func if self.class_agnostic else self._batched_func
         keep_to_merge = func(preds_np, match_threshold=self.match_threshold, match_metric=self.match_metric)
-        return _apply_merge(object_prediction_list, keep_to_merge, self.match_metric, self.match_threshold)
+        return _apply_merge(
+            object_prediction_list, keep_to_merge, self.match_metric, self.match_threshold, self._recheck_match
+        )
 
 
 class GreedyNMMPostprocess(NMMPostprocess):
@@ -423,6 +432,7 @@ class GreedyNMMPostprocess(NMMPostprocess):
 
     _agnostic_func = staticmethod(greedy_nmm)
     _batched_func = staticmethod(batched_greedy_nmm)
+    _recheck_match = True
 
 
 class LSNMSPostprocess(PostprocessPredictions):

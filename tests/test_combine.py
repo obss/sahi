@@ -359,6 +359,18 @@ class TestPostprocessClasses:
         assert len(result) == 1
         assert result[0].bbox.to_xyxy() == merged_box
 
+    @pytest.mark.parametrize("class_agnostic", [True, False])
+    def test_nmm_postprocess_keeps_transitive_merge(self, class_agnostic: bool) -> None:
+        """A box that only matches another merged box is merged into the keeper, not dropped."""
+        # IoU(A, B) = IoU(B, C) = 1/3 and IoU(A, C) = 0, so C joins A only through B
+        obj_preds = _make_object_predictions(
+            [make_pred(0, 0, 10, 10, 0.9, 1), make_pred(5, 0, 15, 10, 0.8, 1), make_pred(10, 0, 20, 10, 0.7, 1)]
+        )
+        pp = NMMPostprocess(match_threshold=0.3, match_metric="IOU", class_agnostic=class_agnostic)
+        result = pp(obj_preds)
+        assert len(result) == 1
+        assert result[0].bbox.to_xyxy() == [0, 0, 20, 10]
+
     def test_nms_postprocess_single(self) -> None:
         """Test NMSPostprocess with single prediction."""
         obj_preds = _make_object_predictions([make_pred(0, 0, 10, 10, 0.9, 1)])
